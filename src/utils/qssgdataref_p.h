@@ -40,6 +40,9 @@ struct QSSGDataView
     const T *begin() const { return mData; }
     const T *end() const { return mData + mSize; }
 
+    const T& first() const { Q_ASSERT(!isEmpty()); return *begin(); }
+    const T& last() const { Q_ASSERT(!isEmpty()); return *(end()-1); }
+
     const T &operator[](int index) const
     {
         Q_ASSERT(index > -1);
@@ -164,6 +167,14 @@ struct QSSGDataRef
 
     T *begin() const { return mData; }
     T *end() const { return mData + mSize; }
+
+    T& first() { Q_ASSERT(!isEmpty()); return *begin(); }
+    T& last() { Q_ASSERT(!isEmpty()); return *(end()-1); }
+
+    const T &first() const { Q_ASSERT(!isEmpty()); return *begin(); }
+    const T &last() const { Q_ASSERT(!isEmpty()); return *(end()-1); }
+
+    bool isEmpty() const { return (mSize == 0); }
 
     T &operator[](qsizetype index)
     {
