@@ -10,12 +10,12 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
-    qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+            &app, []() { QCoreApplication::exit(-1); },
+            Qt::QueuedConnection);
+    engine.loadFromModule("CustomGeometryExample", "Main");
 
     return app.exec();
 }

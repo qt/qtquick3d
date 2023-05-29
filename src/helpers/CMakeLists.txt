@@ -23,6 +23,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         infinitegrid_p.h infinitegrid.cpp
         proceduralskytexturedata.cpp proceduralskytexturedata_p.h
         qquick3dtexturedatafrontend_p.h qquick3dtexturedatafrontend.cpp
+        proceduralmesh_p.h proceduralmesh.cpp
         qtquick3dhelpersglobal_p.h
     QML_FILES
         AxisHelper.qml
@@ -41,6 +42,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         Qt::Qml
         Qt::Quick
         Qt::Quick3DPrivate
+        Qt::GuiPrivate
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )

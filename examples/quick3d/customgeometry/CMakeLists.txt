@@ -15,7 +15,6 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/customgeometry")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
 
 qt_add_executable(customgeometry
-    examplegeometry.cpp examplegeometry.h
     main.cpp
 )
 
@@ -34,9 +33,15 @@ target_link_libraries(customgeometry PUBLIC
 qt_add_qml_module(customgeometry
     URI CustomGeometryExample
     VERSION 1.0
-    QML_FILES main.qml
+    QML_FILES
+        Main.qml
+        TorusMesh.qml
+    SOURCES
+        examplegeometry.cpp examplegeometry.h
     RESOURCES qt_logo_rect.png
-    NO_RESOURCE_TARGET_PATH
+    RESOURCE_PREFIX "/qt/qml"
+    IMPORTS
+        QtQuick3D
 )
 
 install(TARGETS customgeometry

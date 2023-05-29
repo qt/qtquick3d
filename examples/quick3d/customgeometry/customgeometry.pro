@@ -14,8 +14,15 @@ SOURCES += \
 HEADERS += \
     examplegeometry.h
 
-RESOURCES += \
-    resources.qrc
+qml_resources.files = \
+    qmldir \
+    Main.qml \
+    TorusMesh.qml \
+    qt_logo_rect.png
+
+qml_resources.prefix = /qt/qml/CustomGeometryExample/
+
+RESOURCES += qml_resources
 
 OTHER_FILES += \
     doc/src/*.*

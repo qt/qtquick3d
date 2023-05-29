@@ -5,12 +5,12 @@
     \example customgeometry
     \ingroup quick3d-examples
     \title Qt Quick 3D - Custom Geometry Example
-    \brief Demonstrates providing custom vertex data from C++.
+    \brief Demonstrates providing custom vertex data from C++ and QML.
     \image customgeometry-example.jpg
 
     This example makes use of QQuick3DGeometry and \l{Model::geometry}{the
     geometry property} of Model to render a mesh with vertex, normal, and
-    texture coordinates specified from C++ instead of a pre-baked asset.
+    texture coordinates specified from C++ and QML instead of a pre-baked asset.
 
     In addition, the \l GridGeometry is also demonstrated. GridGeometry is a
     built-in QQuick3DGeometry implementation that provides a mesh with line
@@ -29,7 +29,7 @@
     Q_PROPERTY macro which are automatically exposed in our QML object. Now,
     let's look at the QML Model:
 
-    \snippet customgeometry/main.qml model triangle
+    \snippet customgeometry/Main.qml model triangle
 
     Note that we specify the \c geometry property to use our \c
     ExampleTriangleGeometry class, with the relevant properties specified. This
