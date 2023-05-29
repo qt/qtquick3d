@@ -39,6 +39,7 @@ QStringList AssimpImporter::inputExtensions() const
     extensions.append(QStringLiteral("gltf"));
     extensions.append(QStringLiteral("glb"));
     extensions.append(QStringLiteral("stl"));
+    extensions.append(QStringLiteral("ply"));
     return extensions;
 }
 

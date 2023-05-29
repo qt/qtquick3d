@@ -57,6 +57,7 @@ void tst_assetimport::importFile_data()
     QTest::newRow("gltf") << QString("gltf") << true;
     QTest::newRow("glb") << QString("glb") << true;
     QTest::newRow("stl") << QString("stl") << true;
+    QTest::newRow("ply") << QString("ply") << true;
 }
 
 void tst_assetimport::importFile()

@@ -55,6 +55,7 @@ TestModel {
   \li COLLADA (.dae)
   \li FBX (.fbx)
   \li STL (.stl)
+  \li PLY (.ply)
   \li GLTF2 (.gltf, .glb)
 \endlist
 

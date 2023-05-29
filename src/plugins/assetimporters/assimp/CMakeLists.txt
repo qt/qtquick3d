@@ -207,6 +207,8 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.inl
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.inl
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Importer.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Importer.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyLoader.cpp ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyLoader.h
+        ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyParser.cpp ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyParser.h
         ../../../3rdparty/assimp/src/contrib/pugixml/src/pugixml.hpp
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/utils.h
@@ -330,7 +332,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_OGRE_IMPORTER
         ASSIMP_BUILD_NO_OPENGEX_IMPORTER
         ASSIMP_BUILD_NO_OWN_ZLIB
-        ASSIMP_BUILD_NO_PLY_IMPORTER
         ASSIMP_BUILD_NO_Q3BSP_IMPORTER
         ASSIMP_BUILD_NO_Q3D_IMPORTER
         ASSIMP_BUILD_NO_RAW_IMPORTER
@@ -362,6 +363,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/AssetLib/STL
         ../../../3rdparty/assimp/src/code/AssetLib/glTF
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2
+        ../../../3rdparty/assimp/src/code/AssetLib/Ply
         ../../../3rdparty/assimp/src/contrib/poly2tri
         ../../../3rdparty/assimp/src/contrib/pugixml/src
         ../../../3rdparty/assimp/src/contrib/pugixml/contrib
