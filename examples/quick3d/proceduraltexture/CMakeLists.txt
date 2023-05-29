@@ -15,7 +15,6 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/proceduraltexture")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Quick3D)
 
 qt_add_executable(proceduraltexture
-    gradienttexture.cpp gradienttexture.h
     main.cpp
 )
 
@@ -34,8 +33,13 @@ target_link_libraries(proceduraltexture PUBLIC
 qt_add_qml_module(proceduraltexture
     URI ProceduralTextureExample
     VERSION 1.0
-    QML_FILES main.qml
-    NO_RESOURCE_TARGET_PATH
+    QML_FILES
+        Main.qml
+    SOURCES
+        gradienttexture.cpp gradienttexture.h
+    RESOURCE_PREFIX "/qt/qml"
+    IMPORTS
+        QtQuick3D
 )
 
 install(TARGETS proceduraltexture

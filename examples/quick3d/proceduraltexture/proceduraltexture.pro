@@ -7,11 +7,16 @@ SOURCES += \
     gradienttexture.cpp \
     main.cpp
 
-RESOURCES += \
-    qml.qrc
-
 HEADERS += \
     gradienttexture.h
+
+qml_resources.files = \
+    qmldir \
+    Main.qml
+
+qml_resources.prefix = /qt/qml/ProceduralTextureExample/
+
+RESOURCES += qml_resources
 
 CONFIG += qmltypes
 QML_IMPORT_NAME = ProceduralTextureExample

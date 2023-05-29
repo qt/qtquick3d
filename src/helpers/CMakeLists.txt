@@ -22,6 +22,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         instancerepeater.cpp instancerepeater_p.h
         infinitegrid_p.h infinitegrid.cpp
         proceduralskytexturedata.cpp proceduralskytexturedata_p.h
+        qquick3dtexturedatafrontend_p.h qquick3dtexturedatafrontend.cpp
         qtquick3dhelpersglobal_p.h
     QML_FILES
         AxisHelper.qml

@@ -5,12 +5,13 @@
     \example proceduraltexture
     \ingroup quick3d-examples
     \title Qt Quick 3D - Procedural Texture Example
-    \brief Demonstrates how to provide custom texture data from C++.
+    \brief Demonstrates how to provide custom texture data from C++ or QML
     \image proceduraltexture-example.jpg
 
     This example makes use of QQuick3DTextureData and \l{Texture::textureData}{the
-    textureData property} of Texture to provide texture data generated from C++
-    instead of loading it from a static asset.
+    textureData property} of Texture to provide texture data generated dynamically at
+    runtime instead of loading it from a static asset. For demonstration purposes
+    this example generates two gradient textures in C++ and QML respectively.
 
     First we define a C++ class for our texture data. We make it a subclass
     of QQuick3DTextureData. This is not stricly necessary, since there are no
@@ -34,6 +35,13 @@
     \snippet proceduraltexture/gradienttexture.cpp property
 
     Finally, we can use our new texture from QML:
-    \snippet proceduraltexture/main.qml model
+    \snippet proceduraltexture/Main.qml cppTexture
 
+    It is also possible to generate the same texture data in QML. In this case we
+    use the ProceduralTextureData component:
+    \snippet proceduraltexture/Main.qml qmlTexture
+
+    Just like in C++ we fill a QByteArray with image data that reflects the size and
+    format of the texture. When doing this from QML use the ArrayBuffer type to avoid
+    unnecessary type conversion.
 */

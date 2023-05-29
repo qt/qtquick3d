@@ -722,21 +722,35 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
 
 QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *textureData)
 {
-    const int bytesPerPixel = textureData->format().getSizeofFormat();
-    const int bitCount = bytesPerPixel * 8;
-    const int pitch = calculatePitch(calculateLine(textureData->size().width(), bitCount));
-    quint32 dataSize = quint32(textureData->size().height() * pitch);
-    if (textureData->depth() > 0)
-        dataSize *= textureData->depth();
     QSSGLoadedTexture *imageData = new QSSGLoadedTexture;
-    imageData->dataSizeInBytes = dataSize;
-    // We won't modifiy the data, but that is a nasty cast...
-    imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
-    imageData->width = textureData->size().width();
-    imageData->height = textureData->size().height();
-    imageData->depth = textureData->depth();
-    imageData->format = textureData->format();
-    imageData->components = textureData->format().getNumberOfComponent();
+
+    if (!textureData->format().isCompressedTextureFormat()) {
+        const int bytesPerPixel = textureData->format().getSizeofFormat();
+        const int bitCount = bytesPerPixel * 8;
+        const int pitch = calculatePitch(calculateLine(textureData->size().width(), bitCount));
+        quint32 dataSize = quint32(textureData->size().height() * pitch);
+        if (textureData->depth() > 0)
+            dataSize *= textureData->depth();
+        imageData->dataSizeInBytes = dataSize;
+        // We won't modifiy the data, but that is a nasty cast...
+        imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
+        imageData->width = textureData->size().width();
+        imageData->height = textureData->size().height();
+        imageData->depth = textureData->depth();
+        imageData->format = textureData->format();
+        imageData->components = textureData->format().getNumberOfComponent();
+    } else {
+        // Compressed Textures work a bit differently
+        // Fill out what makes sense, leave the rest at the default 0 and null.
+        imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
+        imageData->dataSizeInBytes = textureData->textureData().size();
+        // When we use depth we need to do slicing per layer for the uploads, but right now there it is non-trivial
+        // to determine the size of each "pixel" for compressed formats, so we don't support it for now.
+        // TODO: We need to force depth to 0 for now, as we don't support compressed 3D textures from texureData
+        imageData->width = textureData->size().width();
+        imageData->height = textureData->size().height();
+        imageData->format = textureData->format();
+    }
 
     // #TODO: add an API to make this explicit
     // For now we assume HDR formats are linear and everything else
