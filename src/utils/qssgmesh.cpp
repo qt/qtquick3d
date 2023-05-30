@@ -104,6 +104,14 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     inputStream >> header->fileId >> header->fileVersion >> header->flags >> header->sizeInBytes;
     if (!header->isValid()) {
         qWarning() << "Mesh data invalid";
+        if (header->fileId == MeshDataHeader::FILE_ID) {
+            if (header->fileVersion > MeshDataHeader::FILE_VERSION)
+                qWarning() << "File version " << header->fileVersion << " newer than " << MeshDataHeader::FILE_VERSION;
+            if (header->fileVersion < MeshDataHeader::LEGACY_MESH_FILE_VERSION)
+                qWarning() << "File version " << header->fileVersion << " older than " << MeshDataHeader::LEGACY_MESH_FILE_VERSION;
+        } else {
+            qWarning() << "Invalid file ID" << header->fileId;
+        }
         return 0;
     }
 
