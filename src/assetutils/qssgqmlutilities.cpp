@@ -583,6 +583,13 @@ using NodeNameMap = QHash<const QSSGSceneDesc::Node *, QString>;
 Q_GLOBAL_STATIC(NodeNameMap, g_nodeNameMap)
 using UniqueIdMap = QHash<QString, const QSSGSceneDesc::Node *>;
 Q_GLOBAL_STATIC(UniqueIdMap, g_idMap)
+// Normally g_idMap will contain all the ids but in some cases
+// (like Animation, not Node) the ids will just be stored
+// to avoid conflict.
+// Now, Animations will be processed after all the Nodes,
+// For Nodes, it is not used.
+using UniqueIdOthers = QSet<QString>;
+Q_GLOBAL_STATIC(UniqueIdOthers, g_idOthers)
 
 static QString getIdForNode(const QSSGSceneDesc::Node &node)
 {
@@ -620,6 +627,27 @@ static QString getIdForNode(const QSSGSceneDesc::Node &node)
         }
 
         sanitizedName = QStringLiteral("%1%2").arg(sanitizedName).arg(id++);
+    } while (--attempts);
+
+    return sanitizedName;
+}
+
+static QString getIdForAnimation(const QByteArray &inName)
+{
+    QString name = !inName.isEmpty() ? QString::fromUtf8(inName + "_timeline") : "timeline0"_L1;
+    QString sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
+
+    int attempts = 1000;
+    quint16 id = 0;
+    do {
+        if (const auto it = g_idMap->constFind(sanitizedName); it == g_idMap->constEnd()) {
+            if (const auto oIt = g_idOthers->constFind(sanitizedName); oIt == g_idOthers->constEnd()) {
+                g_idOthers->insert(sanitizedName);
+                return sanitizedName;
+            }
+        }
+
+        sanitizedName = QStringLiteral("%1%2").arg(sanitizedName).arg(++id);
     } while (--attempts);
 
     return sanitizedName;
@@ -1469,8 +1497,10 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
     QSSGQmlScopedIndent scopedIndent(output);
     // The duration property of the TimelineAnimation is an int...
     const int duration = qCeil(anim.length);
-    indent(output) << "id: " << sanitizeQmlId(QString::fromLocal8Bit(anim.name)) << "\n";
-    indent(output) << "objectName: \"" << anim.name << "\"\n";
+    // Use the same name for objectName and id
+    const QString objectName = getIdForAnimation(anim.name);
+    indent(output) << "id: " << objectName << "\n";
+    indent(output) << "objectName: \"" << objectName << "\"\n";
     indent(output) << "property real framesPerSecond: " << anim.framesPerSecond << "\n";
     indent(output) << "startFrame: 0\n";
     indent(output) << "endFrame: " << duration << "\n";
