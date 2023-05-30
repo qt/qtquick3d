@@ -197,8 +197,8 @@ clipping is essential to the design of 2D items, the application should make an 
 fall back to rendering to a texture. This can be achieved by adding \c{layer.enabled:
 true} to the top-level \c Item under the 3D node.
 
-\li As of Qt 6.0, keyboard, mouse, and touch input is not passed to the 2D items, so they
-will be non-interactive.
+\li As of Qt 6.2, input is passed to the 2D items as necessary. Input from pointing devices
+must occur within the \l{Item::childrenRect.x}{childrenRect} of the declared Items.
 
 \li While adding a 2D item tree into the 3D scene is fairly cheap, excess amounts
 (hundreds or more) of 2D subtrees within the 3D scene should be avoided, because in large
@@ -209,6 +209,6 @@ subtree.
 
 \endlist
 
-\sa {Qt Quick 3D - Quick Items Example}
+\sa {Qt Quick 3D - Quick Items Example}, QQuickItem::mapFromGlobal()
 
 */
