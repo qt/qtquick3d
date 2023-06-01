@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick.Controls
 
 Window {
     id: window

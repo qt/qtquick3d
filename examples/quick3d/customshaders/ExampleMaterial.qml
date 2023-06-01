@@ -6,6 +6,7 @@ import QtQuick3D
 
 //! [implementation]
 CustomMaterial {
+    id: root
     property real time: 0.0
     property real amplitude: 5.0
     property real alpha: 1.0
@@ -19,19 +20,19 @@ CustomMaterial {
     }
     Texture {
         id: texFromItem
-        sourceItem: texSrc
+        sourceItem: root.texSrc
     }
     property TextureInput tex: TextureInput {
-        enabled: texturing
-        texture: textureFromItem ? texFromItem : texFromFile
+        enabled: root.texturing
+        texture: root.textureFromItem ? texFromItem : texFromFile
     }
 
     shadingMode: CustomMaterial.Unshaded
-    sourceBlend: alpha < 1.0 ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
-    destinationBlend: alpha < 1.0 ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
+    sourceBlend: root.alpha < 1.0 ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
+    destinationBlend: root.alpha < 1.0 ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
     cullMode: CustomMaterial.BackFaceCulling
 
     vertexShader: "example.vert"
-    fragmentShader: texturing ? "example_tex.frag" : "example.frag"
+    fragmentShader: root.texturing ? "example_tex.frag" : "example.frag"
 }
 //! [implementation]
