@@ -121,13 +121,12 @@ Window {
         //! [material]
         CustomMaterial {
             id: cubeMaterial
-            property real uTime: 0
-            NumberAnimation on uTime {
-                from: 0
-                to: 1000000
-                duration: 1000000
-                loops: Animation.Infinite
+            property real uTime: frametimer.elapsedTime
+            FrameAnimation {
+                id: frametimer
+                running: true
             }
+
             vertexShader: "cubeMaterial.vert"
             fragmentShader: "cubeMaterial.frag"
         }
@@ -144,7 +143,7 @@ Window {
                 gridSpacing: instancedCube.cubeSize
                 randomSeed: 1522562186
             }
-            materials: cubeMaterial
+            materials: [ cubeMaterial ]
         }
         //! [model]
     }
