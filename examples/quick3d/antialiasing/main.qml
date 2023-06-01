@@ -7,28 +7,37 @@ import QtQuick3D.Helpers
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Window {
+ApplicationWindow {
+    id: window
     visible: true
     width: 800
     height: 600
     title: qsTr("Quick3D Antialiasing Example")
-    color: "black"
+
+    property bool isLandscape: width > height
 
     View3D {
         id: view3D
         property real animationValue: 0.0
-        anchors.fill: parent
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.left: window.isLandscape ? settingsPane.right : parent.left
+        anchors.top: window.isLandscape ? parent.top : settingsPane.bottom
 
-        SequentialAnimation on animationValue {
+        SequentialAnimation {
             id: modelAnimation
             running: false
             NumberAnimation {
+                target: view3D
+                property: "animationValue"
                 from: 0.0
                 to: 1.0
                 duration: 1000
                 easing.type: Easing.InOutQuad
             }
             NumberAnimation {
+                target: view3D
+                property: "animationValue"
                 from: 1.0
                 to: 0.0
                 duration: 1000
@@ -46,7 +55,7 @@ Window {
    //! [scene environment]
         environment: SceneEnvironment {
             id: sceneEnvironment
-            clearColor: "#f0f0f0"
+            clearColor: "#002b36"
             backgroundMode: SceneEnvironment.Color
 
             antialiasingMode: modeButton1.checked ? SceneEnvironment.NoAA : modeButton2.checked
@@ -62,6 +71,7 @@ Window {
 
         Node {
             id: scene
+            x: -80
 
             Model {
                 source: "#Cube"
@@ -99,125 +109,115 @@ Window {
     }
 
 
-    Frame {
-        background: Rectangle {
-            color: "#c0c0c0"
-            border.color: "#202020"
-        }
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.margins: 10
-        ColumnLayout {
-            id: settingsArea
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                font.bold: true
-                text: "antialiasingMode"
-            }
-            RadioButton {
-                id: modeButton1
-                checked: true
-                text: qsTr("NoAA")
-            }
-            RadioButton {
-                id: modeButton2
-                text: qsTr("SSAA")
-            }
-            RadioButton {
-                id: modeButton3
-                text: qsTr("MSAA")
-            }
-            RadioButton {
-                id: modeButton4
-                text: qsTr("ProgressiveAA")
-            }
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: "#909090"
-            }
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                font.bold: true
-                text: "antialiasingQuality"
-            }
-            ButtonGroup {
-                buttons: antialiasingQualityColumn.children
-            }
+    Pane {
+        id: settingsPane
+        width: window.isLandscape ? implicitWidth : window.width
+        height: window.isLandscape ? window.height : window.height * 0.33
+        ScrollView {
+            anchors.fill: parent
             ColumnLayout {
-                id: antialiasingQualityColumn
-                RadioButton {
-                    id: qualityButton1
-                    text: qsTr("Medium")
+                id: settingsArea
+                GroupBox {
+                    title: qsTr("Antialiasing Mode")
+                    ColumnLayout {
+                        RadioButton {
+                            id: modeButton1
+                            checked: true
+                            text: qsTr("NoAA")
+                        }
+                        RadioButton {
+                            id: modeButton2
+                            text: qsTr("SSAA")
+                        }
+                        RadioButton {
+                            id: modeButton3
+                            text: qsTr("MSAA")
+                        }
+                        RadioButton {
+                            id: modeButton4
+                            text: qsTr("ProgressiveAA")
+                        }
+                    }
                 }
-                RadioButton {
-                    id: qualityButton2
-                    checked: true
-                    text: qsTr("High")
+
+                GroupBox {
+                    title: qsTr("Antialiasing Quality")
+                    enabled: !modeButton1.checked
+                    ButtonGroup {
+                        buttons: antialiasingQualityColumn.children
+                    }
+                    ColumnLayout {
+                        id: antialiasingQualityColumn
+                        RadioButton {
+                            id: qualityButton1
+                            text: qsTr("Medium")
+                        }
+                        RadioButton {
+                            id: qualityButton2
+                            checked: true
+                            text: qsTr("High")
+                        }
+                        RadioButton {
+                            id: qualityButton3
+                            text: qsTr("VeryHigh")
+                        }
+                    }
                 }
-                RadioButton {
-                    id: qualityButton3
-                    text: qsTr("VeryHigh")
+
+                CheckBox {
+                    id: temporalModeButton
+                    text: qsTr("Enable Temporal AA")
                 }
-            }
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: "#909090"
-            }
-            CheckBox {
-                id: temporalModeButton
-                text: "temporalAAEnabled"
-            }
-            Item { width: 1; height: 10 }
-            Slider {
-                id: temporalStrengthSlider
-                from: 0.0
-                to: 2.0
-                value: 0.3
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.verticalCenter
-                    anchors.bottomMargin: 16
-                    text: "temporalAAStrength: " + temporalStrengthSlider.value.toFixed(2);
-                    z: 10
+
+                ColumnLayout {
+                    enabled: temporalModeButton.checked
+                    Label {
+                        text: qsTr("Temporal AA Strength")
+                    }
+
+                    RowLayout {
+                        Slider {
+                            id: temporalStrengthSlider
+                            from: 0.0
+                            to: 2.0
+                            value: 0.3
+                        }
+                        Label {
+                            text: temporalStrengthSlider.value.toFixed(1);
+                        }
+                    }
                 }
-            }
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: "#909090"
-            }
-            Button {
-                id: animationButton
-                Layout.alignment: Qt.AlignHCenter
-                text: "Animate!"
-                onClicked: {
-                    modelAnimation.restart();
+
+                Button {
+                    id: animationButton
+                    Layout.alignment: Qt.AlignHCenter
+                    text: "Animate!"
+                    onClicked: {
+                        modelAnimation.restart();
+                    }
                 }
             }
         }
     }
 
-    Item {
-        width: debugViewToggleText.implicitWidth
-        height: debugViewToggleText.implicitHeight
+    Pane {
+        anchors.top: view3D.top
         anchors.right: parent.right
         Label {
             id: debugViewToggleText
-            text: "Click here " + (dbg.visible ? "to hide DebugView" : "for DebugView")
+            text: dbg.visible ? "Hide DebugView" : "Show DebugView"
             anchors.right: parent.right
             anchors.top: parent.top
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: dbg.visible = !dbg.visible
-            DebugView {
-                y: debugViewToggleText.height * 2
-                anchors.right: parent.right
-                source: view3D
-                id: dbg
-                visible: false
+            MouseArea {
+                anchors.fill: parent
+                onClicked: dbg.visible = !dbg.visible
+                DebugView {
+                    y: debugViewToggleText.height * 2
+                    anchors.right: parent.right
+                    source: view3D
+                    id: dbg
+                    visible: false
+                }
             }
         }
     }
