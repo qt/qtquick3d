@@ -22,11 +22,17 @@ Node {
             loops: Animation.Infinite
             PropertyAnimation {
                 duration: Math.random() * (10000 - 1000) + 1000
-                to: Qt.vector3d(xRotation -  360, yRotation - 360, zRotation - 360)
-                from: Qt.vector3d(xRotation, yRotation, zRotation)
+                to: Qt.vector3d(weirdShape.xRotation -  360, weirdShape.yRotation - 360, weirdShape.zRotation - 360)
+                from: Qt.vector3d(weirdShape.xRotation, weirdShape.yRotation, weirdShape.zRotation)
             }
         }
 
-        materials: [ DefaultMaterial { diffuseColor: Qt.hsva(hue, 1.0, 1.0, 1.0) } ]
+        materials: [
+            PrincipledMaterial {
+                baseColor: Qt.hsva(weirdShape.hue, 1.0, 1.0, 1.0)
+                metalness: 0
+                roughness: 0.1
+            }
+        ]
     }
 }

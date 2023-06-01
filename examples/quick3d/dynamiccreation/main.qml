@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick3D
 
-Window {
+ApplicationWindow {
     id: window
     width: 1280
     height: 720
@@ -71,8 +71,6 @@ Window {
             PerspectiveCamera {
                 position: Qt.vector3d(0, 0, 600)
             }
-
-            eulerRotation.y: -90
 
             SequentialAnimation on eulerRotation.y {
                 loops: Animation.Infinite
