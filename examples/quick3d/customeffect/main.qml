@@ -4,7 +4,6 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
-import QtQuick3D.Effects
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -40,11 +39,11 @@ Window {
         Effect {
             id: eff2
             property real uRed: 0.0
-            SequentialAnimation on uRed {
+            SequentialAnimation {
                 running: radioEff2.checked || radioEff3.checked
-                loops: -1
-                NumberAnimation { from: 0; to: 1; duration: 2000 }
-                NumberAnimation { from: 1; to: 0; duration: 2000 }
+                loops: Animation.Infinite
+                NumberAnimation { target: eff2; property: "uRed"; from: 0; to: 1; duration: 2000 }
+                NumberAnimation { target: eff2; property: "uRed"; from: 1; to: 0; duration: 2000 }
             }
             property real uGreen: 1.0
             Shader {
@@ -69,11 +68,11 @@ Window {
             property TextureInput tex: qtLogo
             property real uRed: 1.0
             property real uGreen: 0.0
-            SequentialAnimation on uGreen {
+            SequentialAnimation {
                 running: radioEff4.checked
-                loops: -1
-                NumberAnimation { from: 0; to: 1; duration: 2000 }
-                NumberAnimation { from: 1; to: 0; duration: 2000 }
+                loops: Animation.Infinite
+                NumberAnimation { target: eff3; property: "uGreen"; from: 0; to: 1; duration: 2000 }
+                NumberAnimation { target: eff3; property: "uGreen"; from: 1; to: 0; duration: 2000 }
             }
 
             Buffer {
@@ -174,6 +173,8 @@ Window {
         ButtonGroup {
             buttons: [ radioEff1, radioEff2, radioEff3, radioEff4, radioEff5 ]
         }
+        // qmllint disable read-only-property
+        // QTBUG-114144
         RadioButton {
             id: radioEff1
             text: "Custom effect with fragment shader only"
@@ -224,5 +225,6 @@ Window {
                     env.effects = [];
             }
         }
+        // qmllint disable read-only-property
     }
 }
