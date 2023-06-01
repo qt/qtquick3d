@@ -71,7 +71,7 @@ Window {
             y: -1
             geometry: MorphGeometry {}
             morphTargets: [ morphtarget ]
-            materials: material
+            materials: [ material ]
         }
         //! [model]
     }
