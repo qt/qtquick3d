@@ -3,8 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick.Controls
-import QtQuick.Layouts
 
 Window {
     id: window
@@ -25,6 +23,7 @@ Window {
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_lowerAustria01-1024.hdr"
             }
+            skyboxBlurAmount: 0.1
         }
 
         PerspectiveCamera {
@@ -43,10 +42,14 @@ Window {
         }
 
         property real globalRotation: 0
-        NumberAnimation on globalRotation {
+
+        NumberAnimation {
+            target: v3d
+            property: "globalRotation"
             from: 0
             to: 360
             duration: 27000
+            running: true
             loops: Animation.Infinite
         }
 
@@ -60,8 +63,8 @@ Window {
             scale: Qt.vector3d(15, 15, 1)
             eulerRotation.x: -90
             materials: [
-                DefaultMaterial {
-                    diffuseColor: "white"
+                PrincipledMaterial  {
+                    baseColor: "white"
                 }
             ]
         }
@@ -158,6 +161,7 @@ Window {
                 //! [custom vertex]
                 materials: [
                     CustomMaterial {
+                        id: material
                         shadingMode: CustomMaterial.Shaded
                         vertexShader: "material_distortion.vert"
                         fragmentShader: "material_customlights.frag"
@@ -165,7 +169,15 @@ Window {
                         property real uAmplitude: 0.3
                         property color uDiffuse: "yellow"
                         property real uShininess: 50
-                        NumberAnimation on uTime { from: 0.0; to: 31.4; duration: 10000; loops: -1 }
+                        NumberAnimation {
+                            target: material
+                            property: "uTime"
+                            from: 0.0
+                            to: 31.4
+                            duration: 10000
+                            loops: Animation.Infinite
+                            running: true
+                        }
                     }
                 ]
                 //! [custom vertex]
