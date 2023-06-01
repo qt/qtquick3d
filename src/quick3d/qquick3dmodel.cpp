@@ -70,32 +70,40 @@ QT_BEGIN_NAMESPACE
 
     \section2 Custom geometry
 
-    In addition to using static meshes, it is possible to implement a \l {QQuick3DGeometry}{custom geometry} provider that
-    provides the model with custom vertex data at run-time. See the \l {Qt Quick 3D - Custom Geometry Example}{Custom Geometry Example}
-    for an example on how to create and use a custom material with your model.
+    In addition to using static meshes, you can implement a
+    \l {QQuick3DGeometry}{custom geometry} provider that provides the model with
+    custom vertex data at run-time. See the
+    \l {Qt Quick 3D - Custom Geometry Example}{Custom Geometry Example} for an
+    example on how to create and use a custom material with your model.
 
     \section1 Materials
 
-    A model can consist of several sub-meshes, each of which can have its own material.
-    The sub-mesh uses a material from the \l{materials} list, corresponding to its index.
-    If the number of materials is less than the sub-meshes, the last material in the list is used
-    for subsequent sub-meshes. This is demonstrated in the \l {Qt Quick 3D - Sub-mesh Example}{Sub-mesh example}.
+    A model can consist of several sub-meshes, each of which can have its own
+    material. The sub-mesh uses a material from the \l{materials} list,
+    corresponding to its index. If the number of materials is less than the
+    sub-meshes, the last material in the list is used for subsequent sub-meshes.
+    This is demonstrated in the
+    \l {Qt Quick 3D - Sub-mesh Example}{Sub-mesh example}.
 
-    There are currently three different materials that can be used with the model item,
-    the \l {PrincipledMaterial}, the \l {DefaultMaterial}, and the \l {CustomMaterial}.
+    You can use the following materials with the model item:
+    \l {PrincipledMaterial}, \l {DefaultMaterial}, and \l {CustomMaterial}.
 
     \section1 Picking
 
-    Picking is the process of sending a ray through the scene from some starting position to find which model(s) intersects
-    with the ray. In QtQuick3D the ray is normally sent from the view using 2D coordinates resulting from a touch or mouse
-    event. If a model was hit by the ray a \l {PickResult} will be returned with a handle to the model and information about
-    where the ray hit the model. For models that use \l {QQuick3DGeometry}{custom geometry} the picking is less accurate then
-    for static mesh data, as picking is only done against the models \l {Bounds}{bounding volume}.
-    If the ray goes through more then one model, the closest \l {Model::pickable}{pickable} model is selected.
+    \e Picking is the process of sending a ray through the scene from some
+    starting position to find which models intersect with the ray. In
+    Qt Quick 3D, the ray is normally sent from the view using 2D coordinates
+    resulting from a touch or mouse event. If a model was hit by the ray,
+    \l {PickResult} will be returned with a handle to the model and information
+    about where the ray hit the model. For models that use
+    \l {QQuick3DGeometry}{custom geometry}, the picking is less accurate than
+    for static mesh data, as picking is only done against the model's
+    \l {Bounds}{bounding volume}. If the ray goes through more than one model,
+    the closest \l {Model::pickable}{pickable} model is selected.
 
-    Note that models are not \l {Model::pickable}{pickable} by default, so to be able to \l {View3D::pick}{pick} a model
-    in the scene, the model will need to make it self discoverable by setting the \l {Model::pickable}{pickable} property to true.
-    Visit the \l {Qt Quick 3D - Picking example} to see how picking can be enabled.
+    Note that for models to be \l {Model::pickable}{pickable}, their
+    \l {Model::pickable}{pickable} property must be set to \c true. For more
+    information, see \l {Qt Quick 3D - Picking example}.
 
 */
 
