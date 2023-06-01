@@ -45,6 +45,7 @@ public:
     };
     Q_ENUM(MorphTargetAttribute)
     Q_DECLARE_FLAGS(MorphTargetAttributes , MorphTargetAttribute)
+    Q_FLAG(MorphTargetAttributes)
 
     explicit QQuick3DMorphTarget(QQuick3DObject *parent = nullptr);
     ~QQuick3DMorphTarget() override;
