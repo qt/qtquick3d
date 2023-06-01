@@ -15,7 +15,6 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/custominstancing")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
 
 qt_add_executable(custominstancing
-    cppinstancetable.cpp cppinstancetable.h
     main.cpp
 )
 
@@ -36,10 +35,14 @@ qt_add_qml_module(custominstancing
     VERSION 1.0
     QML_FILES
         main.qml
+    SOURCES
+        cppinstancetable.cpp cppinstancetable.h
     RESOURCES
         cubeMaterial.frag
         cubeMaterial.vert
     NO_RESOURCE_TARGET_PATH
+    IMPORTS
+        QtQuick3D
 )
 
 install(TARGETS custominstancing
