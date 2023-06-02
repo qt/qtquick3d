@@ -104,25 +104,25 @@ Window {
             Model {
                 scale: Qt.vector3d(100, 100, 100);
                 source: "meshes/marble_bust_01_LOD_0.mesh"
-                materials: marbleMaterial
+                materials: [ marbleMaterial ]
             }
 
             Model {
                 scale: Qt.vector3d(100, 100, 100);
                 source: "meshes/marble_bust_01_LOD_1.mesh"
-                materials: marbleMaterial
+                materials: [ marbleMaterial ]
             }
 
             Model {
                 scale: Qt.vector3d(100, 100, 100);
                 source: "meshes/marble_bust_01_LOD_2.mesh"
-                materials: marbleMaterial
+                materials: [ marbleMaterial ]
             }
 
             Model {
                 scale: Qt.vector3d(100, 100, 100);
                 source: "meshes/marble_bust_01_LOD_3.mesh"
-                materials: marbleMaterial
+                materials: [ marbleMaterial ]
             }
         }
         //! [example]
