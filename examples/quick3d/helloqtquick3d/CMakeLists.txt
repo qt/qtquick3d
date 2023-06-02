@@ -40,6 +40,8 @@ qt_add_qml_module(helloqtquick3d
         oldqtlogo.mesh
         qt_logo.png
     NO_RESOURCE_TARGET_PATH
+    IMPORTS
+        QtQuick3D
 )
 
 install(TARGETS helloqtquick3d
