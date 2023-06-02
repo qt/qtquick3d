@@ -141,13 +141,15 @@ Window {
         RotatingTeaPot {
             visible: checkBoxCustomMaterial.checked
             material: CustomMaterial {
+                id: customMaterial
                 vertexShader: "custom.vert"
                 property real uAmplitude: 0.5
                 property real uTime: 0.0
-                SequentialAnimation on uTime {
-                    loops: -1
-                    NumberAnimation { from: 0.0; to: 10.0; duration: 10000 }
-                    NumberAnimation { from: 10.0; to: 0.0; duration: 10000 }
+                SequentialAnimation {
+                    running: true
+                    loops: Animation.Infinite
+                    NumberAnimation { target: customMaterial; property: "uTime"; from: 0.0; to: 10.0; duration: 10000 }
+                    NumberAnimation { target: customMaterial; property: "uTime"; from: 10.0; to: 0.0; duration: 10000 }
                 }
             }
             animate: checkBoxAnimate.checked
