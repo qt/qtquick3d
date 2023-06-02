@@ -5,19 +5,30 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Slider {
+ColumnLayout {
+    id: root
     property string description
     property int precision: 2
-    from: 0.0
-    to: 1.0
-    value: 0.0
+    property alias from: slider.from
+    property alias to: slider.to
+    property alias value: slider.value
+
     Layout.fillWidth: true
-    Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.verticalCenter
-        anchors.topMargin: 6
+
+    spacing: -10
+
+    Slider {
+        id: slider
+        from: 0.0
+        to: 1.0
+        value: 0.0
+        Layout.fillWidth: true
+    }
+
+    Label {
+        id: label
         text: (parent.description.length == 0 ? "" : parent.description + ": ")
-                   + parent.value.toFixed(precision);
-        z: 10
+              + parent.value.toFixed(root.precision);
+        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
     }
 }

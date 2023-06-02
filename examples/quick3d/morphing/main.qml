@@ -13,40 +13,6 @@ Window {
     height: 800
     title: qsTr("Morphing Example")
 
-    Frame {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: 10
-        background: Rectangle {
-            color : "transparent"
-        }
-        RowLayout {
-            width: parent.width
-            spacing: 10
-//! [sliders]
-            Label { text: "Mouth:" }
-            RealSlider {
-                id: mouthSlider
-                from: 0.0
-                to: 1.0
-            }
-            Label { text: "Ears and eyebrows:" }
-            RealSlider {
-                id: earSlider
-                from: 0.0
-                to: 1.0
-            }
-            Label { text: "Cubify:" }
-            RealSlider {
-                id: cubeSlider
-                from: 0.0
-                to: 1.0
-            }
-//! [sliders]
-        }
-        z:1
-    }
     View3D {
         id: view
         anchors.fill: parent
@@ -108,5 +74,36 @@ Window {
             }
         }
 //! [model]
+    }
+
+    Pane {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        RowLayout {
+            width: parent.width
+            spacing: 10
+//! [sliders]
+            Label { text: "Mouth:"; }
+            RealSlider {
+                id: mouthSlider
+                from: 0.0
+                to: 1.0
+            }
+            Label { text: "Ears and eyebrows:" }
+            RealSlider {
+                id: earSlider
+                from: 0.0
+                to: 1.0
+            }
+            Label { text: "Cubify:" }
+            RealSlider {
+                id: cubeSlider
+                from: 0.0
+                to: 1.0
+            }
+//! [sliders]
+        }
+
     }
 }
