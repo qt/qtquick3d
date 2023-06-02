@@ -112,7 +112,6 @@ Window {
             anchors.horizontalCenter: mouseArea.horizontalCenter
             font.pixelSize: 17
             text: "Click me!"
-            color: "white"
 
             SequentialAnimation on color {
                 loops: Animation.Infinite
@@ -126,7 +125,8 @@ Window {
                     AnchorChanges {
                         target: clickme
                         anchors.top: undefined
-                        anchors.bottom: mouseArea.bottom
+                        // QTBUG-101364
+                        anchors.bottom: mouseArea.bottom // qmllint disable incompatible-type
                     }
                 }
             ]
