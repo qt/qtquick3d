@@ -120,6 +120,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
 
 void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipeline &shaderPipeline,
                                                                QSSGRhiContext *rhiCtx,
+                                                               const QSSGLayerRenderData &inData,
                                                                char *ubufData,
                                                                QSSGRhiGraphicsPipelineState *ps,
                                                                const QSSGRenderCustomMaterial &material,
@@ -132,6 +133,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
                                                      : renderable.modelContext.modelViewProjection);
 
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
+    QRhiTexture *lightmapTexture = inData.getLightmapTexture(renderable.modelContext);
 
     const auto &modelNode = renderable.modelContext.model;
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
@@ -161,7 +163,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
                                                           true,
                                                           renderable.renderableFlags.receivesReflections(),
                                                           depthAdjust,
-                                                          renderable.modelContext.lightmapTexture);
+                                                          lightmapTexture);
 }
 
 static const QRhiShaderResourceBinding::StageFlags CUSTOM_MATERIAL_VISIBILITY_ALL =
@@ -214,9 +216,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         if (!camera)
-            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, material, renderable, *layerData.camera, nullptr, nullptr);
+            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, layerData, ubufData, ps, material, renderable, *layerData.camera, nullptr, nullptr);
         else
-            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, material, renderable, *camera, nullptr, modelViewProjection);
+            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, layerData, ubufData, ps, material, renderable, *camera, nullptr, modelViewProjection);
         if (blendParticles)
             QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &renderable.modelContext.model, renderable.subset.offset);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
