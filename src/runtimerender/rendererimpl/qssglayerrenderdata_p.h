@@ -363,6 +363,7 @@ private:
     bool particlesEnabled = true;
     QSSGRenderShadowMapPtr shadowMapManager;
     QSSGRenderReflectionMapPtr reflectionMapManager;
+    QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
 };
 
 QT_END_NAMESPACE

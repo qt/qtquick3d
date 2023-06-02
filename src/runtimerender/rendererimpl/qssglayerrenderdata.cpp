@@ -1020,6 +1020,22 @@ void QSSGLayerRenderData::prepareModelMeshesForRenderInternal(const QSSGRenderCo
     bufferManager->commitBufferResourceUpdates();
 }
 
+void QSSGLayerRenderData::setLightmapTexture(const QSSGModelContext &modelContext, QRhiTexture *lightmapTexture)
+{
+    lightmapTextures[&modelContext] = lightmapTexture;
+}
+
+QRhiTexture *QSSGLayerRenderData::getLightmapTexture(const QSSGModelContext &modelContext) const
+{
+    QRhiTexture *ret = nullptr;
+    if (modelContext.model.hasLightmap()) {
+        const auto it = lightmapTextures.constFind(&modelContext);
+        ret = (it != lightmapTextures.cend()) ? *it : nullptr;
+    }
+
+    return ret;
+}
+
 // inModel is const to emphasize the fact that its members cannot be written
 // here: in case there is a scene shared between multiple View3Ds in different
 // QQuickWindows, each window may run this in their own render thread, while
@@ -1078,7 +1094,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
                 QSSGRenderImageTexture lmImageTexture = bufferManager->loadLightmap(model);
                 if (lmImageTexture.m_texture) {
                     renderableFlagsForModel.setRendersWithLightmap(true);
-                    theModelContext.lightmapTexture = lmImageTexture.m_texture;
+                    setLightmapTexture(theModelContext, lmImageTexture.m_texture);
                 }
             }
 
@@ -2128,6 +2144,7 @@ void QSSGLayerRenderData::resetForFrame()
     renderedDepthWriteObjects.clear();
     renderedBakedLightingModels.clear();
     renderableItem2Ds.clear();
+    lightmapTextures.clear();
     globalLights.clear();
     modelContexts.clear();
     features = QSSGShaderFeatures();

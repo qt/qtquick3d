@@ -68,6 +68,7 @@ static QSSGRhiShaderPipelinePtr shadersForParticleMaterial(QSSGRhiGraphicsPipeli
 
 static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeline,
                                              QSSGRhiContext *rhiCtx,
+                                             const QSSGLayerRenderData &inData,
                                              char *ubufData,
                                              QSSGRhiGraphicsPipelineState *ps,
                                              QSSGSubsetRenderable &subsetRenderable,
@@ -81,6 +82,8 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                                      : subsetRenderable.modelContext.modelViewProjection);
 
     const auto &modelNode = subsetRenderable.modelContext.model;
+    QRhiTexture *lightmapTexture = inData.getLightmapTexture(subsetRenderable.modelContext);
+
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
     const QMatrix4x4 &modelMatrix((subsetRenderable.modelContext.boneTexture) ? QMatrix4x4() : subsetRenderable.globalTransform);
@@ -108,7 +111,7 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                                           subsetRenderable.renderableFlags.receivesShadows(),
                                                           subsetRenderable.renderableFlags.receivesReflections(),
                                                           depthAdjust,
-                                                          subsetRenderable.modelContext.lightmapTexture);
+                                                          lightmapTexture);
 }
 
 void QSSGRenderer::releaseCachedResources()
@@ -1097,6 +1100,7 @@ static inline void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
 }
 
 static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
+                                            const QSSGLayerRenderData &inData,
                                             QSSGPassKey passKey,
                                             const QSSGLayerGlobalRenderProperties &globalRenderProperties,
                                             QSSGShadowMapEntry *pEntry,
@@ -1146,7 +1150,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
+            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
             if (blendParticles)
                 QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -1162,7 +1166,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             // inCamera is the shadow camera, not the same as inData.camera
-            customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
+            customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
                                                                  inCamera, depthAdjust, &modelViewProjection);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
         }
@@ -1293,7 +1297,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *camera, nullptr, alteredModelViewProjection);
+            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, *camera, nullptr, alteredModelViewProjection);
             if (blendParticles)
                 QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -1643,6 +1647,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                        const QSSGBoxPoints &receivingObjectsBox)
 {
     const QSSGLayerGlobalRenderProperties &globalRenderProperties = renderer.getLayerGlobalRenderProperties();
+    QSSG_ASSERT(globalRenderProperties.layer.renderData, return);
+    const QSSGLayerRenderData &layerData = *globalRenderProperties.layer.renderData;
 
     static const auto rhiRenderOneShadowMap = [](QSSGRhiContext *rhiCtx,
                                                  QSSGRhiGraphicsPipelineState *ps,
@@ -1824,7 +1830,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
-            rhiPrepareResourcesForShadowMap(rhiCtx, passKey, globalRenderProperties, pEntry, &ps, &depthAdjust,
+            rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, globalRenderProperties, pEntry, &ps, &depthAdjust,
                                             sortedOpaqueObjects, theCamera, true, 0);
 
             // Render into the 2D texture pEntry->m_rhiDepthMap, using
@@ -1860,7 +1866,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 theCameras[quint8(face)].calculateViewProjectionMatrix(pEntry->m_lightVP);
                 pEntry->m_lightCubeView[quint8(face)] = theCameras[quint8(face)].globalTransform.inverted(); // pre-calculate this for the material
 
-                rhiPrepareResourcesForShadowMap(rhiCtx, passKey, globalRenderProperties, pEntry, &ps, &depthAdjust,
+                rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, globalRenderProperties, pEntry, &ps, &depthAdjust,
                                                 sortedOpaqueObjects, theCameras[quint8(face)], false, quint8(face));
             }
 
@@ -2381,7 +2387,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             if (shaderPipeline) {
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
+                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             } else {
                 return false;
@@ -2396,7 +2402,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             if (shaderPipeline) {
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-                customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
+                customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
                                                                      *inData.camera, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             } else {

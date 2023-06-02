@@ -77,6 +77,7 @@ public:
 
     void updateUniformsForCustomMaterial(QSSGRhiShaderPipeline &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
+                                         const QSSGLayerRenderData &inData,
                                          char *ubufData,
                                          QSSGRhiGraphicsPipelineState *ps,
                                          const QSSGRenderCustomMaterial &material,
