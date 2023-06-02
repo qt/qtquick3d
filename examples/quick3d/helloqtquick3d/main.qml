@@ -42,7 +42,6 @@ Window {
                 id: timeline0
                 startFrame: 0
                 endFrame: 1000
-                currentFrame: 0
                 enabled: true
 
                 SequentialAnimation on currentFrame {
@@ -157,8 +156,10 @@ Window {
                 gridSpacing: 20
                 image: ":/qt_logo.png"
             }
-            materials: DefaultMaterial { diffuseColor: "white" }
-            NumberAnimation on r {
+            materials: PrincipledMaterial { baseColor: "white" }
+            NumberAnimation {
+                target: oldLogo
+                property: "r"
                 running: oldLogo.isRotating
                 from: 0
                 to: 360
