@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Item {
+    id: root
     property alias sliderValue: slider.value
     property alias fromValue: slider.from
     property alias toValue: slider.to
@@ -18,8 +19,8 @@ Item {
         id: rowLayout
         Slider {
             id: slider
-            from: fromValue
-            to: toValue
+            from: root.fromValue
+            to: root.toValue
             stepSize: 0.01
             Layout.minimumWidth: 200
             Layout.maximumWidth: 200

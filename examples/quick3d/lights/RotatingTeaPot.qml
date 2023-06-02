@@ -16,7 +16,7 @@ Model {
 
     property bool animate: true
     NumberAnimation on eulerRotation.y {
-        running: animate
+        running: teapotDefault.animate
         loops: Animation.Infinite
         duration: 5000
         from: 0
