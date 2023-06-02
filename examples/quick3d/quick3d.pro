@@ -11,7 +11,6 @@ SUBDIRS += \
     custommaterial \
     principledmaterial \
     proceduraltexture \
-    dynamictexture \
     dynamiccreation \
     quickitems \
     customgeometry \
