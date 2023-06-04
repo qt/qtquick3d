@@ -105,7 +105,7 @@ void QQuick3DObject::update()
 }
 
 /*!
-    \qmlproperty Object3D QtQuick::Object3D::parent
+    \qmlproperty Object3D QtQuick3D::Object3D::parent
     This property holds the parent of the Object3D in a 3D scene.
 
     \note An Object3D's parent may not necessarily be the same as its object
