@@ -241,7 +241,8 @@ float QQuick3DSceneEnvironment::aoDistance() const
 /*!
     \qmlproperty float QtQuick3D::SceneEnvironment::aoSoftness
 
-    This property how smooth the edges of the ambient occlusion shading are.
+    This property defines how smooth the edges of the ambient occlusion shading
+    are.
 
     The value must be between 0.0 and 50.0. The default value is 50.0.
 */
