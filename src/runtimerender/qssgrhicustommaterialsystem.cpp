@@ -138,7 +138,9 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
     const auto &modelNode = renderable.modelContext.model;
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
-    const QMatrix4x4 &modelMatrix((renderable.modelContext.boneTexture) ? QMatrix4x4() : renderable.globalTransform);
+
+
+    const QMatrix4x4 &modelMatrix(modelNode.usesBoneTexture() ? QMatrix4x4() : renderable.globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                           shaderPipeline,
@@ -291,7 +293,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             samplerBindingsSpecified.setBit(shaderPipeline->bindingForTexture("qt_particleTexture"));
 
         // Skinning
-        if (renderable.modelContext.boneTexture) {
+        if (QRhiTexture *boneTexture = layerData.getBonemapTexture(renderable.modelContext)) {
             int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
             if (binding >= 0) {
                 QRhiSampler *boneSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
@@ -303,7 +305,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                            });
                 bindings.addTexture(binding,
                                     QRhiShaderResourceBinding::VertexStage,
-                                    renderable.modelContext.boneTexture,
+                                    boneTexture,
                                     boneSampler);
                 samplerBindingsSpecified.setBit(binding);
             }
