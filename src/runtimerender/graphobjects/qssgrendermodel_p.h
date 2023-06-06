@@ -66,6 +66,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QString lightmapLoadPath;
     uint lightmapBaseResolution = 0;
     bool hasLightmap() const { return !lightmapKey.isEmpty(); }
+    bool usesBoneTexture() const { return ((skin != nullptr) || (skeleton != nullptr)); }
 
     float levelOfDetailBias = 1.0f; // values < 1.0 will decrease usage of LODs, values > 1.0 will increase usage of LODs
 

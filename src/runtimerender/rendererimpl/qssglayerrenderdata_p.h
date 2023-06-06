@@ -320,6 +320,9 @@ public:
     void setLightmapTexture(const QSSGModelContext &modelContext, QRhiTexture *lightmapTexture);
     [[nodiscard]] QRhiTexture *getLightmapTexture(const QSSGModelContext &modelContext) const;
 
+    void setBonemapTexture(const QSSGModelContext &modelContext, QRhiTexture *bonemapTexture);
+    [[nodiscard]] QRhiTexture *getBonemapTexture(const QSSGModelContext &modelContext) const;
+
     [[nodiscard]] QSSGRenderContextInterface *contextInterface() const;
 
     // Temp. API. Ideally there shouldn't be a reason for anyone to hold onto these,
@@ -364,6 +367,7 @@ private:
     QSSGRenderShadowMapPtr shadowMapManager;
     QSSGRenderReflectionMapPtr reflectionMapManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
+    QHash<const QSSGModelContext *, QRhiTexture *> bonemapTextures;
 };
 
 QT_END_NAMESPACE

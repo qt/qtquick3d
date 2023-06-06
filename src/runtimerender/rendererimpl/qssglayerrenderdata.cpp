@@ -1036,6 +1036,22 @@ QRhiTexture *QSSGLayerRenderData::getLightmapTexture(const QSSGModelContext &mod
     return ret;
 }
 
+void QSSGLayerRenderData::setBonemapTexture(const QSSGModelContext &modelContext, QRhiTexture *bonemapTexture)
+{
+    bonemapTextures[&modelContext] = bonemapTexture;
+}
+
+QRhiTexture *QSSGLayerRenderData::getBonemapTexture(const QSSGModelContext &modelContext) const
+{
+    QRhiTexture *ret = nullptr;
+    if (modelContext.model.usesBoneTexture()) {
+        const auto it = bonemapTextures.constFind(&modelContext);
+        ret = (it != bonemapTextures.cend()) ? *it : nullptr;
+    }
+
+    return ret;
+}
+
 // inModel is const to emphasize the fact that its members cannot be written
 // here: in case there is a scene shared between multiple View3Ds in different
 // QQuickWindows, each window may run this in their own render thread, while
@@ -1070,12 +1086,12 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
         // Prepare boneTexture for skinning
         if (model.skin) {
             auto boneTexture = bufferManager->loadSkinmap(model.skin);
-            theModelContext.boneTexture = boneTexture.m_texture;
+            setBonemapTexture(theModelContext, boneTexture.m_texture);
         } else if (model.skeleton) {
             auto boneTexture = bufferManager->loadSkinmap(&(model.skeleton->boneTexData));
-            theModelContext.boneTexture = boneTexture.m_texture;
+            setBonemapTexture(theModelContext, boneTexture.m_texture);
         } else {
-            theModelContext.boneTexture = nullptr;
+            setBonemapTexture(theModelContext, nullptr);
         }
 
         // many renderableFlags are the same for all the subsets
@@ -2145,6 +2161,7 @@ void QSSGLayerRenderData::resetForFrame()
     renderedBakedLightingModels.clear();
     renderableItem2Ds.clear();
     lightmapTextures.clear();
+    bonemapTextures.clear();
     globalLights.clear();
     modelContexts.clear();
     features = QSSGShaderFeatures();
