@@ -357,7 +357,7 @@ private:
                                                     RenderableNodeEntries &renderableModels,
                                                     bool globalPickingEnabled);
 
-    std::optional<QSSGFrameData> frameData;
+    QSSGFrameData frameData;
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set
     bool particlesEnabled = true;

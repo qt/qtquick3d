@@ -55,6 +55,7 @@ private:
 
     [[nodiscard]] QSSGLayerRenderData *getCurrent() const;
 
+    QSSGFrameData() = default;
     explicit QSSGFrameData(QSSGRenderer *renderer);
     QSSGRenderer *m_renderer = nullptr;
 };

@@ -1709,15 +1709,10 @@ void QSSGLayerRenderData::prepareForRender()
 
     QRect theViewport(renderer->contextInterface()->viewport());
 
-
-    bool hasRenderExtensions = false;
-    for (int i = 0; i != QSSGRenderLayer::RenderExtensionMode::Count; ++i)
-        hasRenderExtensions = hasRenderExtensions || bool(layer.renderExtensions[i].size());
-
-    if (hasRenderExtensions && !frameData.has_value())
-        frameData = QSSGFrameData(renderer);
-
-    frameData->clear();
+    // NOTE: The renderer won't change in practice (after being set the first time), but just update
+    // it anyways.
+    frameData.m_renderer = renderer;
+    frameData.clear();
 
     // Create base pipeline state
     ps = {}; // Reset
@@ -2011,7 +2006,7 @@ void QSSGLayerRenderData::prepareForRender()
             const auto &renderExtensions = layer.renderExtensions[i];
             auto &userPass = userPasses[i];
             for (auto rit = renderExtensions.crbegin(), rend = renderExtensions.crend(); rit != rend; ++rit) {
-                wasDirty |= (*rit)->prepareData(*frameData);
+                wasDirty |= (*rit)->prepareData(frameData);
                 userPass.extensions.push_back(*rit);
             }
         }
@@ -2361,10 +2356,7 @@ void QSSGLayerRenderData::maybeBakeLightmap()
 
 QSSGFrameData &QSSGLayerRenderData::getFrameData()
 {
-    if (!frameData.has_value())
-        frameData = QSSGFrameData(renderer);
-
-    return *frameData;
+    return frameData;
 }
 
 QSSGRenderableNodeEntry QSSGLayerRenderData::getNode(QSSGNodeId id) const
