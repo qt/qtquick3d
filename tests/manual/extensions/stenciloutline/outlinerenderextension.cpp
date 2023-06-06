@@ -119,7 +119,7 @@ void OutlineRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData 
             auto ps = basePs;
             ps.blendEnable = true;
             ps.depthWriteEnable = false;
-            ps.depthTestEnable = false;
+            ps.depthTestEnable = true;
             ps.usesStencilRef = true;
             ps.stencilWriteMask = 0;
             ps.stencilRef = 1;
