@@ -1,4 +1,4 @@
-// Copyright (C) 2019 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
@@ -8,21 +8,17 @@ import QtQuick3D
 import QtQuick3D.Helpers.impl
 
 Pane {
+    id: root
     property var source: null
     property bool resourceDetailsVisible: false
-    // yes it needs a fixed size when in detailed mode, the tables and stuff
-    // will size themselves to this
-    width: resourceDetailsVisible ? 600 : layout.contentWidth
-    height: layout.contentHeight
     opacity: 0.9
 
     ColumnLayout {
         id: layout
-        anchors.fill: parent
         RowLayout {
             Label {
                 Layout.fillWidth: true
-                text: source.renderStats.fps + " FPS"
+                text: root.source.renderStats.fps + " FPS"
                 font.pointSize: 14
             }
 
@@ -31,7 +27,7 @@ Pane {
             }
 
             CheckBox {
-                checked: resourceDetailsVisible
+                checked: root.resourceDetailsVisible
                 onCheckedChanged: {
                     resourceDetailsVisible = checked;
                 }
@@ -55,38 +51,39 @@ Pane {
 
         TimeLabel {
             text: "Frame: "
-            value: source.renderStats.frameTime
+            value: root.source.renderStats.frameTime
         }
 
         TimeLabel {
             text: "    Sync: "
-            value: source.renderStats.syncTime
+            value: root.source.renderStats.syncTime
         }
 
         TimeLabel {
             text: "    Prep: "
-            value: source.renderStats.renderPrepareTime
+            value: root.source.renderStats.renderPrepareTime
         }
 
         TimeLabel {
             text: "    Render: "
-            value: source.renderStats.renderTime
+            value: root.source.renderStats.renderTime
         }
 
         TimeLabel {
             text: "Max: "
-            value: source.renderStats.maxFrameTime
+            value: root.source.renderStats.maxFrameTime
         }
 
         TimeLabel {
             text: "GPU: "
-            value: source.renderStats.lastCompletedGpuTime
-            visible: source.renderStats.lastCompletedGpuTime > 0
+            value: root.source.renderStats.lastCompletedGpuTime
+            visible: root.source.renderStats.lastCompletedGpuTime > 0
         }
 
         Page {
             Layout.fillWidth: true
-            visible: resourceDetailsVisible
+            Layout.minimumWidth: 530
+            visible: root.resourceDetailsVisible
             header: TabBar {
                 id: tabBar
                 TabButton {
@@ -115,48 +112,48 @@ Pane {
                     id: summaryPane
                     ColumnLayout {
                         Label {
-                            text: "Graphics API: " + source.renderStats.graphicsApiName
-                            visible: resourceDetailsVisible
+                            text: "Graphics API: " + root.source.renderStats.graphicsApiName
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: source.renderStats.renderPassCount + " render passes"
-                            visible: resourceDetailsVisible
+                            text: root.source.renderStats.renderPassCount + " render passes"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: source.renderStats.drawCallCount + " draw calls"
-                            visible: resourceDetailsVisible
+                            text: root.source.renderStats.drawCallCount + " draw calls"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: source.renderStats.drawVertexCount + " vertices"
-                            visible: resourceDetailsVisible
+                            text: root.source.renderStats.drawVertexCount + " vertices"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: "Image assets: " + (source.renderStats.imageDataSize / 1024).toFixed(2) + " KB"
-                            visible: resourceDetailsVisible
+                            text: "Image assets: " + (root.source.renderStats.imageDataSize / 1024).toFixed(2) + " KB"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: "Mesh assets: " + (source.renderStats.meshDataSize / 1024).toFixed(2) + " KB"
-                            visible: resourceDetailsVisible
+                            text: "Mesh assets: " + (root.source.renderStats.meshDataSize / 1024).toFixed(2) + " KB"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: "Pipelines: " + source.renderStats.pipelineCount
-                            visible: resourceDetailsVisible
+                            text: "Pipelines: " + root.source.renderStats.pipelineCount
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: "Material build time: " + source.renderStats.materialGenerationTime + " ms"
-                            visible: resourceDetailsVisible
+                            text: "Material build time: " + root.source.renderStats.materialGenerationTime + " ms"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: "Effect build time: " + source.renderStats.effectGenerationTime + " ms"
-                            visible: resourceDetailsVisible
+                            text: "Effect build time: " + root.source.renderStats.effectGenerationTime + " ms"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: "Pipeline build time: " + source.renderStats.pipelineCreationTime + " ms"
-                            visible: resourceDetailsVisible
+                            text: "Pipeline build time: " + root.source.renderStats.pipelineCreationTime + " ms"
+                            visible: root.resourceDetailsVisible
                         }
                         Label {
-                            text: source.renderStats.vmemAllocCount + " vmem allocs with " + source.renderStats.vmemUsedBytes + " bytes"
-                            visible: resourceDetailsVisible && source.renderStats.vmemAllocCount > 0
+                            text: root.source.renderStats.vmemAllocCount + " vmem allocs with " + root.source.renderStats.vmemUsedBytes + " bytes"
+                            visible: root.resourceDetailsVisible && root.source.renderStats.vmemAllocCount > 0
                         }
                     }
                 }
@@ -165,7 +162,7 @@ Pane {
                     id: passesPane
                     RenderStatsPassesModel {
                         id: passesModel
-                        passData: source.renderStats.renderPassDetails
+                        passData: root.source.renderStats.renderPassDetails
                     }
                     ColumnLayout {
                         anchors.fill: parent
@@ -217,9 +214,10 @@ Pane {
                                 implicitWidth: parent.width + columnSpacing
                                 implicitHeight: parent.height + rowSpacing
                                 delegate: CustomTableItemDelegate {
+                                    required property string display
                                     text: display
-                                    color: passesTableView.palette.base
-                                    textColor: passesTableView.palette.text
+                                    color: TableView.view.palette.base
+                                    textColor: TableView.view.palette.text
                                 }
                             }
                         }
@@ -230,7 +228,7 @@ Pane {
                     id: texturesPane
                     RenderStatsTexturesModel {
                         id: texturesModel
-                        textureData: source.renderStats.textureDetails
+                        textureData: root.source.renderStats.textureDetails
                     }
                     ColumnLayout {
                         anchors.fill: parent
@@ -268,9 +266,10 @@ Pane {
                                 implicitWidth: parent.width + columnSpacing
                                 implicitHeight: parent.height + rowSpacing
                                 delegate: CustomTableItemDelegate {
+                                    required property string display
                                     text: display
-                                    color: texturesTableView.palette.base
-                                    textColor: texturesTableView.palette.text
+                                    color: TableView.view.palette.base
+                                    textColor: TableView.view.palette.text
                                 }
                             }
                         }
@@ -281,7 +280,7 @@ Pane {
                     id: meshesPane
                     RenderStatsMeshesModel {
                         id: meshesModel
-                        meshData: source.renderStats.meshDetails
+                        meshData: root.source.renderStats.meshDetails
                     }
                     ColumnLayout {
                         anchors.fill: parent
@@ -318,9 +317,10 @@ Pane {
                                 implicitWidth: parent.width + columnSpacing
                                 implicitHeight: parent.height + rowSpacing
                                 delegate: CustomTableItemDelegate {
+                                    required property string display
                                     text: display
-                                    color: meshesTableView.palette.base
-                                    textColor: meshesTableView.palette.text
+                                    color: TableView.view.palette.base
+                                    textColor: TableView.view.palette.text
                                 }
                             }
                         }
@@ -334,7 +334,7 @@ Pane {
                         width: parent.width
                         CheckBox {
                             text: "Wireframe mode"
-                            onCheckedChanged: source.environment.debugSettings.wireframeEnabled = checked
+                            onCheckedChanged: root.source.environment.debugSettings.wireframeEnabled = checked
                         }
                         RowLayout {
                             Label {
@@ -345,8 +345,8 @@ Pane {
                                 textRole: "text"
                                 valueRole: "value"
                                 implicitContentWidthPolicy: ComboBox.WidestText
-                                onActivated: source.environment.debugSettings.materialOverride = currentValue
-                                Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(source.environment.debugSettings.materialOverride)
+                                onActivated: root.source.environment.debugSettings.materialOverride = currentValue
+                                Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(root.source.environment.debugSettings.materialOverride)
                                 model: [
                                     { value: DebugSettings.None, text: "None"},
                                     { value: DebugSettings.BaseColor, text: "Base Color"},
@@ -366,11 +366,11 @@ Pane {
                         }
                         Button {
                             text: "Release cached resources"
-                            onClicked: source.renderStats.releaseCachedResources()
+                            onClicked: root.source.renderStats.releaseCachedResources()
                         }
                         Button {
                             text: "Bake lightmap"
-                            onClicked: source.bakeLightmap()
+                            onClicked: root.source.bakeLightmap()
                         }
                     }
                 }
