@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property real amount: 0.003 // 0 - 0.01
@@ -16,7 +15,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: emboss
+            shaders: [ emboss ]
         }
     ]
 }

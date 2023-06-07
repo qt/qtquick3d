@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property real edgeStrength: 0.5 // 0 - 1

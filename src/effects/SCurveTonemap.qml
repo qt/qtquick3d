@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property real shoulderSlope: 1.0   // 0.0 - 3.0
@@ -31,7 +30,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: tonemapShader
+            shaders: [ tonemapShader ]
             output: defaultOutput
         }
     ]

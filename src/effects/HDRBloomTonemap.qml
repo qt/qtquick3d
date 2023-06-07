@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     readonly property TextureInput downsample2: TextureInput {
@@ -112,7 +111,7 @@ Effect {
             output: downsample_buffer4
         },
         Pass {
-            shaders: combiner
+            shaders: [ combiner ]
             commands: [
                 BufferInput {
                     sampler: "downsample2"

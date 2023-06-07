@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property real radius: 0.25          // 0 - 1

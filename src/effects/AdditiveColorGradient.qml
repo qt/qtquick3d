@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property vector3d bottomColor: Qt.vector3d(0.0, 0.0, 0.0)
@@ -17,7 +16,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: additivecolorgradient
+            shaders: [ additivecolorgradient ]
         }
     ]
 }

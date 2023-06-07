@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property TextureInput maskTexture: TextureInput {
@@ -24,7 +23,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: chromaticAberration
+            shaders: [ chromaticAberration ]
         }
     ]
 }
