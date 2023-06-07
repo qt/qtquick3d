@@ -165,7 +165,7 @@ MainSceneEffect {
         passList.push(tonemapPass)
         tonemapPass.rebuildCommands();
 
-        sceneEffect.passes = passList
+        sceneEffect.passes = passList // qmllint disable read-only-property
     }
 
     Shader {
@@ -695,7 +695,7 @@ MainSceneEffect {
             if (sceneEffect.lensFlareEnabled) {
                 dynamicCommands.push(lensFlareBufferInput)
             }
-            tonemapPass.commands = dynamicCommands;
+            tonemapPass.commands = dynamicCommands; // qmllint disable read-only-property
         }
     }
 }

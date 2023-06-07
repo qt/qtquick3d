@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick3D
 
 Node {
+    id: root
     required property Camera camera
     required property var distances
     property real fadeDistance: 0.0
@@ -27,11 +28,11 @@ Node {
     }
 
     Connections {
-        target: camera
+        target: root.camera
         function onPositionChanged() {
             var distIndex = 0; // Handle distance index separately to allow non-node children
-            for (var i = 0; i < children.length; i++) {
-                var node = children[i];
+            for (var i = 0; i < root.children.length; i++) {
+                var node = root.children[i];
                 if (!(node instanceof Node))
                     continue;
                 if (node instanceof Model && node.instancing)

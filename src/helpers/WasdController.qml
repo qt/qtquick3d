@@ -42,21 +42,21 @@ Item {
     DragHandler {
         id: dragHandler
         target: null
-        enabled: mouseEnabled
+        enabled: root.mouseEnabled
         onCentroidChanged: {
-            mouseMoved(Qt.vector2d(centroid.position.x, centroid.position.y));
+            root.mouseMoved(Qt.vector2d(centroid.position.x, centroid.position.y));
         }
 
         onActiveChanged: {
             if (active)
-                mousePressed(Qt.vector2d(centroid.position.x, centroid.position.y));
+                root.mousePressed(Qt.vector2d(centroid.position.x, centroid.position.y));
             else
-                mouseReleased(Qt.vector2d(centroid.position.x, centroid.position.y));
+                root.mouseReleased(Qt.vector2d(centroid.position.x, centroid.position.y));
         }
     }
 
     TapHandler {
-        onTapped: root.forceActiveFocus()
+        onTapped: root.forceActiveFocus() // qmllint disable signal-handler-parameters
     }
 
     Keys.onPressed: (event)=> { if (keysEnabled) handleKeyPress(event) }
@@ -229,7 +229,7 @@ Item {
         function updatePosition(vector, speed, position)
         {
             if (shiftDown)
-                speed *= shiftSpeed;
+                speed *= root.shiftSpeed;
             else
                 speed *= root.speed
 
@@ -247,27 +247,27 @@ Item {
         }
 
         function processInput(frameDelta) {
-            if (controlledObject == undefined)
+            if (root.controlledObject == undefined)
                 return;
 
             if (moveForward)
-                updatePosition(controlledObject.forward, forwardSpeed * frameDelta, controlledObject.position);
+                updatePosition(root.controlledObject.forward, root.forwardSpeed * frameDelta, root.controlledObject.position);
             else if (moveBack)
-                updatePosition(negate(controlledObject.forward), backSpeed * frameDelta, controlledObject.position);
+                updatePosition(negate(root.controlledObject.forward), root.backSpeed * frameDelta, root.controlledObject.position);
 
             if (moveRight)
-                updatePosition(controlledObject.right, rightSpeed * frameDelta, controlledObject.position);
+                updatePosition(root.controlledObject.right, root.rightSpeed * frameDelta, root.controlledObject.position);
             else if (moveLeft)
-                updatePosition(negate(controlledObject.right), leftSpeed * frameDelta, controlledObject.position);
+                updatePosition(negate(root.controlledObject.right), root.leftSpeed * frameDelta, root.controlledObject.position);
 
             if (moveDown)
-                updatePosition(negate(controlledObject.up), downSpeed * frameDelta, controlledObject.position);
+                updatePosition(negate(root.controlledObject.up), root.downSpeed * frameDelta, root.controlledObject.position);
             else if (moveUp)
-                updatePosition(controlledObject.up, upSpeed, controlledObject.position);
+                updatePosition(root.controlledObject.up, root.upSpeed, root.controlledObject.position);
 
             if (useMouse) {
                 // Get the delta
-                var rotationVector = controlledObject.eulerRotation;
+                var rotationVector = root.controlledObject.eulerRotation;
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x

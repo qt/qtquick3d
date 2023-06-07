@@ -24,23 +24,23 @@ Item {
     implicitHeight: parent.height
 
     Connections {
-        target: camera
+        target: root.camera
         function onZChanged() {
             // Adjust near/far values based on distance
-            let distance = camera.z
+            let distance = root.camera.z
             if (distance < 1) {
-                camera.clipNear = 0.01
-                camera.clipFar = 100
+                root.camera.clipNear = 0.01
+                root.camera.clipFar = 100
                 if (camera.z === 0) {
                     console.warn("camera z set to 0, setting it to near clip")
-                    camera.z = camera.clipNear
+                    root.camera.z = camera.clipNear
                     }
             } else if (distance < 100) {
-                camera.clipNear = 0.1
-                camera.clipFar = 1000
+                root.camera.clipNear = 0.1
+                root.camera.clipFar = 1000
             } else {
-                camera.clipNear = 1
-                camera.clipFar = 10000
+                root.camera.clipNear = 1
+                root.camera.clipFar = 10000
             }
         }
     }
@@ -48,74 +48,74 @@ Item {
     DragHandler {
         id: dragHandler
         target: null
-        enabled: mouseEnabled
+        enabled: root.mouseEnabled
         acceptedModifiers: Qt.NoModifier
         onCentroidChanged: {
-            mouseMoved(Qt.vector2d(centroid.position.x, centroid.position.y), false);
+            root.mouseMoved(Qt.vector2d(centroid.position.x, centroid.position.y), false);
         }
 
         onActiveChanged: {
             if (active)
-                mousePressed(Qt.vector2d(centroid.position.x, centroid.position.y));
+                root.mousePressed(Qt.vector2d(centroid.position.x, centroid.position.y));
             else
-                mouseReleased(Qt.vector2d(centroid.position.x, centroid.position.y));
+                root.mouseReleased(Qt.vector2d(centroid.position.x, centroid.position.y));
         }
     }
 
     DragHandler {
         id: ctrlDragHandler
         target: null
-        enabled: mouseEnabled && panEnabled
+        enabled: root.mouseEnabled && root.panEnabled
         acceptedModifiers: Qt.ControlModifier
         onCentroidChanged: {
-            panEvent(Qt.vector2d(centroid.position.x, centroid.position.y));
+            root.panEvent(Qt.vector2d(centroid.position.x, centroid.position.y));
         }
 
         onActiveChanged: {
             if (active)
-                startPan(Qt.vector2d(centroid.position.x, centroid.position.y));
+                root.startPan(Qt.vector2d(centroid.position.x, centroid.position.y));
             else
-                endPan();
+                root.endPan();
         }
     }
 
     PinchHandler {
         id: pinchHandler
         target: null
-        enabled: mouseEnabled
+        enabled: root.mouseEnabled
 
         property real distance: 0.0
         onCentroidChanged: {
-            panEvent(Qt.vector2d(centroid.position.x, centroid.position.y))
+            root.panEvent(Qt.vector2d(centroid.position.x, centroid.position.y))
         }
 
         onActiveChanged: {
             if (active) {
-                startPan(Qt.vector2d(centroid.position.x, centroid.position.y))
+                root.startPan(Qt.vector2d(centroid.position.x, centroid.position.y))
                 distance = root.camera.z
             } else {
-                endPan()
+                root.endPan()
                 distance = 0.0
             }
         }
         onScaleChanged: {
-            camera.z = distance * (1 / scale)
+            root.camera.z = distance * (1 / scale)
         }
     }
 
     TapHandler {
-        onTapped: root.forceActiveFocus()
+        onTapped: root.forceActiveFocus() // qmllint disable signal-handler-parameters
     }
 
     WheelHandler {
         id: wheelHandler
         orientation: Qt.Vertical
         target: null
-        enabled: mouseEnabled
+        enabled: root.mouseEnabled
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
             let delta = -event.angleDelta.y * 0.01;
-            camera.z += camera.z * 0.1 * delta
+            root.camera.z += root.camera.z * 0.1 * delta
         }
     }
 
@@ -172,7 +172,7 @@ Item {
         function processInput(frameDelta) {
             if (useMouse) {
                 // Get the delta
-                var rotationVector = origin.eulerRotation;
+                var rotationVector = root.origin.eulerRotation;
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x

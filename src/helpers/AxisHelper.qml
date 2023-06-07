@@ -20,7 +20,7 @@ Node {
         source: "#Cube"
         position: Qt.vector3d(5000, 0, 0)
         scale: Qt.vector3d(100, .05, .05)
-        visible: enableAxisLines
+        visible: axisGrid_obj.enableAxisLines
 
         materials: DefaultMaterial {
             lighting: DefaultMaterial.NoLighting
@@ -33,7 +33,7 @@ Node {
         source: "#Cube"
         position: Qt.vector3d(0, 5000, 0)
         scale: Qt.vector3d(0.05, 100, 0.05)
-        visible: enableAxisLines
+        visible: axisGrid_obj.enableAxisLines
         materials: DefaultMaterial {
             lighting: DefaultMaterial.NoLighting
             diffuseColor: "green"
@@ -45,7 +45,7 @@ Node {
         source: "#Cube"
         position: Qt.vector3d(0, 0, 5000)
         scale: Qt.vector3d(0.05, 0.05, 100)
-        visible: enableAxisLines
+        visible: axisGrid_obj.enableAxisLines
         materials: DefaultMaterial {
             lighting: DefaultMaterial.NoLighting
             diffuseColor: "blue"
