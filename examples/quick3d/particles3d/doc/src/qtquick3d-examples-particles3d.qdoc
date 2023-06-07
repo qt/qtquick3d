@@ -3,6 +3,7 @@
 
 /*!
     \example particles3d
+    \examplecategory {Graphics}
     \ingroup quick3d-examples
     \title Qt Quick 3D - Particles 3D Testbed Example
     \brief Demonstrates how to use the Qt Quick 3D Particles3D module.
