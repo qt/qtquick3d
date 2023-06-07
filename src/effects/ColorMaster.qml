@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property real redStrength: 1.0      // 0 - 2
@@ -19,7 +18,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: colormaster
+            shaders: [ colormaster ]
         }
     ]
 }

@@ -3,9 +3,9 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
+    id: effectRoot
     // there are only here to get the sampler2Ds declared in the shader
     readonly property TextureInput sprite: TextureInput {
         texture: Texture {}
@@ -52,7 +52,7 @@ Effect {
         textureFilterOperation: Buffer.Nearest
         textureCoordOperation: Buffer.ClampToEdge
         bufferFlags: Buffer.SceneLifetime
-        sizeMultiplier: blurQuality
+        sizeMultiplier: effectRoot.blurQuality
     }
 
     Buffer {
@@ -62,7 +62,7 @@ Effect {
         textureFilterOperation: Buffer.Linear
         textureCoordOperation: Buffer.ClampToEdge
         bufferFlags: Buffer.None
-        sizeMultiplier: blurQuality
+        sizeMultiplier: effectRoot.blurQuality
     }
 
     passes: [
@@ -91,7 +91,7 @@ Effect {
             output: glowBuffer
         },
         Pass {
-            shaders: blend
+            shaders: [ blend ]
             commands: [
                 // the texture for glowBuffer will be INPUT in this pass
                 BufferInput {

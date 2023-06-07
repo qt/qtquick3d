@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property real amount: 0.5
@@ -16,7 +15,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: desaturate
+            shaders: [ desaturate ]
         }
     ]
 }

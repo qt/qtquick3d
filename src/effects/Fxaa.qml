@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     readonly property TextureInput sprite: TextureInput {
@@ -31,11 +30,11 @@ Effect {
 
     passes: [
         Pass {
-            shaders: rgbl
+            shaders: [ rgbl ]
             output: rgblBuffer
         },
         Pass {
-            shaders: blur
+            shaders: [ blur ]
             commands: [
                 // INPUT is the texture for rgblBuffer
                 BufferInput {

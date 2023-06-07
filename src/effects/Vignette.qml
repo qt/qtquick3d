@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property real vignetteStrength: 15 // 0 - 15
@@ -18,7 +17,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: vignette
+            shaders: [ vignette ]
         }
     ]
 }

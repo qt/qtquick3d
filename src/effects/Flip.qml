@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property bool flipHorizontally: true
@@ -17,7 +16,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: flip
+            shaders: [ flip ]
         }
     ]
 }

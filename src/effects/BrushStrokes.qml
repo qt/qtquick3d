@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Effect {
     property TextureInput noiseSample: TextureInput {
@@ -32,7 +31,7 @@ Effect {
 
     passes: [
         Pass {
-            shaders: brushstrokes
+            shaders: [ brushstrokes ]
         }
     ]
 }
