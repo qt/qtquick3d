@@ -16,7 +16,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
 
 qt_add_executable(principledmaterial
     main.cpp
-    imagehelper.h imagehelper.cpp
 )
 
 set_target_properties(principledmaterial PROPERTIES
@@ -66,7 +65,11 @@ qt_add_qml_module(principledmaterial
         meshes/frame.mesh
         meshes/logo_lines.mesh
         meshes/logo_points.mesh
+    SOURCES
+        imagehelper.h imagehelper.cpp
     NO_RESOURCE_TARGET_PATH
+    IMPORTS
+        QtQuick3D
 )
 
 install(TARGETS principledmaterial

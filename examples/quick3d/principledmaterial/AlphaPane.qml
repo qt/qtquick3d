@@ -1,4 +1,4 @@
-// Copyright (C) 2022 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -6,6 +6,10 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
 
+// qmllint disable missing-property
+// Disabling missing-property because the targetMaterial property
+// will either be a PrincipaledMaterial or SpecularGlossyMaterial
+// but the shared properties are not part of the common base class
 ScrollView {
     id: rootView
     required property Material targetMaterial
@@ -32,14 +36,14 @@ method it is important to set the correct Alpha mode to get the desired effect.`
         }
         RowLayout {
             Label {
-                text: "Alpha (" + targetMaterial.baseColor.a.toFixed(2) + ")"
+                text: "Alpha (" + rootView.targetMaterial.baseColor.a.toFixed(2) + ")"
                 Layout.fillWidth: true
             }
             Slider {
                 from: 0
                 to: 1
-                value: targetMaterial.baseColor.a
-                onValueChanged: targetMaterial.baseColor.a = value
+                value: rootView.targetMaterial.baseColor.a
+                onValueChanged: rootView.targetMaterial.baseColor.a = value
             }
         }
 
@@ -67,8 +71,8 @@ rendering leaves using on a plane and an image with alpha.`
             textRole: "text"
             valueRole: "value"
             implicitContentWidthPolicy: ComboBox.WidestText
-            onActivated: targetMaterial.alphaMode = currentValue
-            Component.onCompleted: currentIndex = indexOfValue(targetMaterial.alphaMode)
+            onActivated: rootView.targetMaterial.alphaMode = currentValue
+            Component.onCompleted: currentIndex = indexOfValue(rootView.targetMaterial.alphaMode)
             model: [
                 { value: PrincipledMaterial.Default, text: "Default"},
                 { value: PrincipledMaterial.Blend, text: "Blend"},
@@ -83,11 +87,11 @@ rendering leaves using on a plane and an image with alpha.`
             text: `## Alpha Cutoff
 To demonstrate the behavior of Alpha Cutoff with the *Mask* Alpha Mode we need to
 have a ${rootView.colorString} Color map with an Alpha map. Pressing the \"Enable Alpha Mask\"
-button will setup a ${specularGlossyMode ? "AlbedoMap" : "BaseColorMap"} that looks like this:`
+button will setup a ${rootView.specularGlossyMode ? "AlbedoMap" : "BaseColorMap"} that looks like this:`
         }
         Item {
-            height: 256
-            width: 256
+            implicitHeight: 256
+            implicitWidth: 256
             Image {
                 anchors.fill: parent
                 source: "maps/grid.png"
@@ -104,26 +108,26 @@ button will setup a ${specularGlossyMode ? "AlbedoMap" : "BaseColorMap"} that lo
         Button {
             property bool isEnabled: false
             property Texture revertTexture: null
-            text: isEnabled ? specularGlossyMode ? "Revert Albedo Map" : "Revert Base Color Map" : "Enable Alpha Mask"
+            text: isEnabled ? rootView.specularGlossyMode ? "Revert Albedo Map" : "Revert Base Color Map" : "Enable Alpha Mask"
             onClicked:  {
                 if (!isEnabled) {
-                    if (specularGlossyMode) {
-                        revertTexture = targetMaterial.albedoMap
-                        targetMaterial.albedoColor.a = 1.0
-                        targetMaterial.albedoMap = alphaGradientTexture
+                    if (rootView.specularGlossyMode) {
+                        revertTexture = rootView.targetMaterial.albedoMap
+                        rootView.targetMaterial.albedoColor.a = 1.0
+                        rootView.targetMaterial.albedoMap = alphaGradientTexture
                     } else {
-                        revertTexture = targetMaterial.baseColorMap
-                        targetMaterial.baseColor.a = 1.0
-                        targetMaterial.baseColorMap = alphaGradientTexture
+                        revertTexture = rootView.targetMaterial.baseColorMap
+                        rootView.targetMaterial.baseColor.a = 1.0
+                        rootView.targetMaterial.baseColorMap = alphaGradientTexture
                     }
-                    targetMaterial.alphaMode = PrincipledMaterial.Mask
-                    alphaModeComboBox.currentIndex = alphaModeComboBox.indexOfValue(targetMaterial.alphaMode)
+                    rootView.targetMaterial.alphaMode = PrincipledMaterial.Mask
+                    alphaModeComboBox.currentIndex = alphaModeComboBox.indexOfValue(rootView.targetMaterial.alphaMode)
                     isEnabled = true
                 } else {
                     if (specularGlossyMode)
-                        targetMaterial.albedoMap = revertTexture
+                        rootView.targetMaterial.albedoMap = revertTexture
                     else
-                        targetMaterial.baseColorMap = revertTexture
+                        rootView.targetMaterial.baseColorMap = revertTexture
                     revertTexture = null
                     isEnabled = false
                 }
@@ -137,35 +141,35 @@ button will setup a ${specularGlossyMode ? "AlbedoMap" : "BaseColorMap"} that lo
 
         RowLayout {
             Label {
-                text: "Alpha Cutoff (" + targetMaterial.alphaCutoff.toFixed(2) + ")"
+                text: "Alpha Cutoff (" + rootView.targetMaterial.alphaCutoff.toFixed(2) + ")"
                 Layout.fillWidth: true
             }
             Slider {
                 from: 0
                 to: 1
-                value: targetMaterial.alphaCutoff
-                onValueChanged: targetMaterial.alphaCutoff = value
+                value: rootView.targetMaterial.alphaCutoff
+                onValueChanged: rootView.targetMaterial.alphaCutoff = value
             }
         }
 
         VerticalSectionSeparator {}
 
         MarkdownLabel {
-            text: "## Culling
+            text: `## Culling
 While not strictly related to transparency the concept of face culling is
 relevant to getting the desired results. If you cut holes into the models
 you see that the inside faces of the models don't render.  This is because
 *Back Face* culling is on by default. The culling property decides which side
 of a triangle being rendered gets culled (discarded). By changing the cull
-mode of the material to *No Culling* both sides of geometry will be rendered"
+mode of the material to *No Culling* both sides of geometry will be rendered`
         }
         ComboBox {
             id: cullModeComboBox
             textRole: "text"
             valueRole: "value"
             implicitContentWidthPolicy: ComboBox.WidestText
-            onActivated: targetMaterial.cullMode = currentValue
-            Component.onCompleted: currentIndex = indexOfValue(targetMaterial.cullMode)
+            onActivated: rootView.targetMaterial.cullMode = currentValue
+            Component.onCompleted: currentIndex = indexOfValue(rootView.targetMaterial.cullMode)
             model: [
                 { value: Material.BackFaceCulling, text: "Back Face"},
                 { value: Material.FrontFaceCulling, text: "Front Face"},
@@ -176,7 +180,7 @@ mode of the material to *No Culling* both sides of geometry will be rendered"
         VerticalSectionSeparator {}
 
         MarkdownLabel {
-            text: "## Depth Draw Mode
+            text: `## Depth Draw Mode
 Maybe you noticed that when the Blend Alpha Mode is enabled that one of the
 models doesn't always look correct depending on the angle of viewing. That is
 because while the rendering order of individual models are determined based on
@@ -199,15 +203,15 @@ errors is *Opaque Prepass*. In this case before any item is rendered, a separate
 done where materials will write their opaque pixels to the depth buffer while skipping
 any transparent pixels. Then in the main pass everything is done as normal, but now will
 be rendered correctly.
-"
+`
         }
         ComboBox {
             id: depthDrawModeComboBox
             textRole: "text"
             valueRole: "value"
             implicitContentWidthPolicy: ComboBox.WidestText
-            onActivated: targetMaterial.depthDrawMode = currentValue
-            Component.onCompleted: currentIndex = indexOfValue(targetMaterial.depthDrawMode)
+            onActivated: rootView.targetMaterial.depthDrawMode = currentValue
+            Component.onCompleted: currentIndex = indexOfValue(rootView.targetMaterial.depthDrawMode)
             model: [
                 { value: Material.OpaqueOnlyDepthDraw, text: "Opaque Only"},
                 { value: Material.AlwaysDepthDraw, text: "Always"},
@@ -219,41 +223,41 @@ be rendered correctly.
         VerticalSectionSeparator {}
 
         MarkdownLabel {
-            text: "## Opacity
+            text: `## Opacity
 Another option for transparency is through the Opacity properties. Most effects
 can be achieved using only the above properties, but these additional properties
 will set the minimum level of opacity for the properties above.  It is also import
-to point out that by using any of these Opacity properties will force alpha blending."
+to point out that by using any of these Opacity properties will force alpha blending.`
         }
 
         RowLayout {
             Label {
-                text: "Opacity Factor  (" + targetMaterial.opacity.toFixed(2) + ")"
+                text: "Opacity Factor  (" + rootView.targetMaterial.opacity.toFixed(2) + ")"
                 Layout.fillWidth: true
             }
             Slider {
                 from: 0
                 to: 1
-                value: targetMaterial.opacity
-                onValueChanged: targetMaterial.opacity = value
+                value: rootView.targetMaterial.opacity
+                onValueChanged: rootView.targetMaterial.opacity = value
             }
         }
         MarkdownLabel {
-            text: "### Opacity (Map)
+            text: `### Opacity (Map)
 The Opacity Map property specifies a texture to sample the Opacity value
 from. Since the Opacity property is only a single floating point value between
 0.0 and 1.0, it's only necessary to use a single color channel of the image, or
 a greyscale image. By default PrincipledMaterial will use the value in the alpha
 channel of the texture, but it's possible to change which color channel is used.
-"
+`
         }
         ComboBox {
             id: opacityChannelComboBox
             textRole: "text"
             valueRole: "value"
             implicitContentWidthPolicy: ComboBox.WidestText
-            onActivated: targetMaterial.opacityChannel = currentValue
-            Component.onCompleted: currentIndex = indexOfValue(targetMaterial.opacityChannel)
+            onActivated: rootView.targetMaterial.opacityChannel = currentValue
+            Component.onCompleted: currentIndex = indexOfValue(rootView.targetMaterial.opacityChannel)
             model: [
                 { value: PrincipledMaterial.R, text: "Red Channel"},
                 { value: PrincipledMaterial.G, text: "Green Channel"},
@@ -262,25 +266,26 @@ channel of the texture, but it's possible to change which color channel is used.
             ]
         }
         MarkdownLabel {
-            text: "
+            text: `
 When using a Opacity Map the value sampled from the map file is multiplied by
 the value of the Opacity property. In practice this means that the maximum
 Opacity value possible will be the value set by the Opacity map is the
 value in the Opacity property. So most of the time when using a Opacity
 Map it will make sense to leave the value of Opacity to 1.0.
-"
+`
         }
         Button {
             text: "Reset Opacity Value"
-            onClicked: targetMaterial.opacity = 1.0
+            onClicked: rootView.targetMaterial.opacity = 1.0
         }
 
         TextureSourceControl {
             defaultClearColor: "white"
             defaultTexture: "maps/metallic/metallic.jpg"
             onTargetTextureChanged: {
-                targetMaterial.opacityMap = targetTexture
+                rootView.targetMaterial.opacityMap = targetTexture
             }
         }
     }
 }
+// qmllint enable missing-property

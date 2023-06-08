@@ -147,7 +147,7 @@ Window {
             Model {
                 id: cube
                 source: "#Cube"
-                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                materials: viewport.specularGlossyMode ? [ specularGlossyMaterial ] : [ basicMaterial ]
                 pickable: true
             }
 
@@ -156,7 +156,7 @@ Window {
                 x: -200
                 scale: Qt.vector3d(1.5, 1.5, 1.5)
                 source: "#Sphere"
-                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                materials: viewport.specularGlossyMode ? [ specularGlossyMaterial ] : [ basicMaterial ]
                 pickable: true
             }
 
@@ -164,7 +164,7 @@ Window {
                 id: monkeyMesh
                 x: 250
                 source: "meshes/suzanne.mesh"
-                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                materials: viewport.specularGlossyMode ? [ specularGlossyMaterial ] : [ basicMaterial ]
                 pickable: true
             }
 
@@ -173,7 +173,7 @@ Window {
                 y: 200
                 x: -100
                 source: "meshes/logo_lines.mesh"
-                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                materials: viewport.specularGlossyMode ? [ specularGlossyMaterial ] : [ basicMaterial ]
                 pickable: true
                 visible: false
             }
@@ -183,7 +183,7 @@ Window {
                 y: 200
                 x: 100
                 source: "meshes/logo_points.mesh"
-                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                materials: viewport.specularGlossyMode ? [ specularGlossyMaterial ] : [ basicMaterial ]
                 pickable: true
                 visible: false
             }
