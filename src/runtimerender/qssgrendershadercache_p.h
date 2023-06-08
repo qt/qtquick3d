@@ -190,6 +190,8 @@ public:
 
     void releaseCachedResources();
 
+    QQsbInMemoryCollection &persistentShaderBakingCache() { return m_persistentShaderBakingCache; }
+
     QSSGRhiShaderPipelinePtr tryGetRhiShaderPipeline(const QByteArray &inKey,
                                                      const QSSGShaderFeatures &inFeatures);
 
