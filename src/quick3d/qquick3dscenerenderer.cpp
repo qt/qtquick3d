@@ -353,7 +353,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             const auto &renderer = m_sgContext->renderer();
             QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
             Q_ASSERT(theRenderData);
-            QRhiTexture *theDepthTexture = theRenderData->depthMapPass.rhiDepthTexture.texture;
+            QRhiTexture *theDepthTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::DepthTexture)->texture;
             QVector2D cameraClipRange(m_layer->renderedCamera->clipNear, m_layer->renderedCamera->clipFar);
 
             currentTexture = m_effectSystem->process(*m_layer->firstEffect,

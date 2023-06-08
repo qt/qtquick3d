@@ -348,6 +348,9 @@ public:
                                   float minThreshold,
                                   float maxThreshold);
 
+    [[nodiscard]] QSSGRhiRenderableTexture *getRenderResult(QSSGFrameData::RenderResult id) { return &renderResults[size_t(id)]; }
+    [[nodiscard]] const QSSGRhiRenderableTexture *getRenderResult(QSSGFrameData::RenderResult id) const { return &renderResults[size_t(id)]; }
+
 private:
     friend class QSSGRenderer;
     friend class QSSGFrameData;
@@ -395,6 +398,7 @@ private:
     QSSGRenderReflectionMapPtr reflectionMapManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
     QHash<const QSSGModelContext *, QRhiTexture *> bonemapTextures;
+    QSSGRhiRenderableTexture renderResults[3] {};
 };
 
 QT_END_NAMESPACE
