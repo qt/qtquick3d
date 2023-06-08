@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty enumeration QQuick3D::DebugSettings::materialOverride
+    \qmlproperty enumeration QtQuick3D::DebugSettings::materialOverride
     \since 6.5
 
     This property changes how all materials are rendered to only reflect a
@@ -124,7 +124,7 @@ void QQuick3DDebugSettings::update()
 }
 
 /*!
-    \qmlproperty bool QQuick3D::DebugSettings::wireframeEnabled
+    \qmlproperty bool QtQuick3D::DebugSettings::wireframeEnabled
     \since 6.5
 
     This property changes how all materials are rendered by changing the polygon
