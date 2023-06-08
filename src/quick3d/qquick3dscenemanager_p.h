@@ -55,6 +55,7 @@ public:
 
 Q_SIGNALS:
     void releaseCachedResources();
+    void renderContextInterfaceChanged();
 
 private:
     Q_INVOKABLE void onReleaseCachedResources();

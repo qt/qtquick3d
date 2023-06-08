@@ -493,6 +493,7 @@ void QQuick3DWindowAttachment::setRci(const std::shared_ptr<QSSGRenderContextInt
 {
     QSSG_CHECK_X(m_rci == nullptr || m_rci.use_count() == 1, "Old render context was not released!");
     m_rci = rciptr;
+    emit renderContextInterfaceChanged();
 }
 
 void QQuick3DWindowAttachment::registerSceneManager(QQuick3DSceneManager &manager)
