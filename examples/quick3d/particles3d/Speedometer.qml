@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -28,12 +28,12 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#161610"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
-            position: Qt.vector3d(0, 100, 600 - separation * 100)
+            position: Qt.vector3d(0, 100, 600 - mainWindow.separation * 100)
         }
 
         PointLight {
@@ -56,7 +56,7 @@ Item {
             id: speedometerComponent
 
             position: Qt.vector3d(0, 100, 0)
-            eulerRotation.x: 90 - separation * 75
+            eulerRotation.x: 90 - mainWindow.separation * 75
 
             // Light which follows the needle
             PointLight {
@@ -64,8 +64,8 @@ Item {
                 function getNeedleAngle(startAngle) {
                     return Math.sin(startAngle +
                                     (-(180 / 360) +
-                                     (-gaugeItem.value * meterTicksAngle / 360) +
-                                     (meterTicksAngle / 2 + 180) / 360) * 2 * Math.PI);
+                                     (-gaugeItem.value * mainWindow.meterTicksAngle / 360) +
+                                     (mainWindow.meterTicksAngle / 2 + 180) / 360) * 2 * Math.PI);
                 }
 
                 readonly property real lightRadius: 120
@@ -79,7 +79,7 @@ Item {
             }
 
             Model {
-                y: -4 - separation * 100
+                y: -4 - mainWindow.separation * 100
                 source: "meshes/meter_background.mesh"
                 scale: Qt.vector3d(30, 30, 30)
                 materials: PrincipledMaterial {
@@ -93,7 +93,7 @@ Item {
                 }
             }
             Model {
-                y: -35 - separation * 100
+                y: -35 - mainWindow.separation * 100
                 source: "#Sphere"
                 scale: Qt.vector3d(1.6, 0.2, 1.6)
                 materials: PrincipledMaterial {
@@ -101,7 +101,7 @@ Item {
                 }
             }
             Model {
-                y: -separation * 60
+                y: -mainWindow.separation * 60
                 source: "#Cylinder"
                 scale: Qt.vector3d(0.2, 0.8, 0.2)
                 materials: PrincipledMaterial {
@@ -109,7 +109,7 @@ Item {
                 }
             }
             Model {
-                y: 30 - separation * 60
+                y: 30 - mainWindow.separation * 60
                 source: "#Sphere"
                 scale: Qt.vector3d(0.4, 0.1, 0.4)
                 materials: PrincipledMaterial {
@@ -119,7 +119,7 @@ Item {
 
             // Speedometer labels
             Model {
-                y: 25 + separation * 20
+                y: 25 + mainWindow.separation * 20
                 source: "#Rectangle"
                 scale: Qt.vector3d(4, 4, 4)
                 eulerRotation.x: -90
@@ -132,7 +132,7 @@ Item {
             }
 
             Model {
-                y: separation * 60
+                y: mainWindow.separation * 60
                 source: "meshes/meter_edge.mesh"
                 scale: Qt.vector3d(30, 30, 30)
                 materials: PrincipledMaterial {
@@ -146,24 +146,28 @@ Item {
                 property real value: 0
                 property real needleSize: 180
 
-                SequentialAnimation on value {
+                SequentialAnimation {
                     running: checkBoxAnimateSpeed.checked
                     loops: Animation.Infinite
                     NumberAnimation {
+                        target: gaugeItem
+                        property: "value"
                         duration: 8000
                         to: 1
                         easing.type: Easing.InOutQuad
                     }
                     NumberAnimation {
+                        target: gaugeItem
+                        property: "value"
                         duration: 8000
                         to: 0
                         easing.type: Easing.InOutQuad
                     }
                 }
 
-                y: 20 - separation * 60
+                y: 20 - mainWindow.separation * 60
                 eulerRotation.z: 90
-                eulerRotation.y: -meterTicksAngle * value + (meterTicksAngle/2 - 90)
+                eulerRotation.y: -mainWindow.meterTicksAngle * value + (mainWindow.meterTicksAngle/2 - 90)
 
                 Model {
                     position.y: gaugeItem.needleSize / 2
@@ -171,7 +175,7 @@ Item {
                     scale: Qt.vector3d(0.05, gaugeItem.needleSize * 0.01, 0.2)
                     materials: PrincipledMaterial {
                         baseColor: "#606060"
-                        opacity: particleNeedle ? 0.0 : 1.0
+                        opacity: mainWindow.particleNeedle ? 0.0 : 1.0
                     }
 
                     ParticleEmitter3D {
@@ -195,7 +199,7 @@ Item {
                     // This system rotates together with the needle
                     ParticleSystem3D {
                         id: psystemNeedle
-                        running: particleNeedle
+                        running: mainWindow.particleNeedle
                         visible: running
                         SpriteParticle3D {
                             id: needleParticle
@@ -263,7 +267,7 @@ Item {
                     blendMode: SpriteParticle3D.Screen
                 }
                 ParticleEmitter3D {
-                    y: 40 + separation * 60
+                    y: 40 + mainWindow.separation * 60
                     particle: particleSpark2
                     scale: Qt.vector3d(3.8, 0, 3.8)
                     shape: ParticleShape3D {
@@ -282,7 +286,7 @@ Item {
                     fadeInDuration: 2000
                 }
                 PointRotator3D {
-                    particles: particleSpark2
+                    particles: [ particleSpark2 ]
                     magnitude: -20
                 }
             }

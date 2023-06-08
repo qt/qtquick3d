@@ -1,10 +1,11 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
-import QtQuick3D.Helpers
 import QtQuick.Timeline
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -57,8 +58,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#404040"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         Node {
@@ -151,10 +152,10 @@ Item {
                 id: particle
                 delegate: modelComponent
                 endNode: translateNode
-                modelBlendMode: blendModeSelectionBox.selection
+                modelBlendMode: blendModeSelectionBox.index
                 endTime: 1500
                 activationNode: actNode
-                emitMode: emitModeSelectionBox.selection
+                emitMode: emitModeSelectionBox.index
             }
 
             ParticleEmitter3D {
@@ -225,7 +226,7 @@ Item {
             Button {
                 id: playButton
                 Layout.leftMargin: 14
-                icon.source: timelineAnimation.running ? "qrc:/qml/images/icon_pause.png" : "qrc:/qml/images/icon_play.png"
+                icon.source: timelineAnimation.running ? "qrc:/images/icon_pause.png" : "qrc:/images/icon_play.png"
                 icon.width: toolbar.height - 10
                 icon.height: toolbar.height - 10
                 icon.color: "transparent"

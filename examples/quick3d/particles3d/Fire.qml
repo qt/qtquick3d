@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -20,8 +20,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#000000"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -31,23 +31,30 @@ Item {
 
         // Light following the fire
         PointLight {
+            id: pointLight
             property real animatedBrightness: 0.1
             position: fireEmitter.position
-            brightness: 0.04 * smokeStrength + 0.4 * fireStrength + animatedBrightness * sparklesStrength;
+            brightness: 0.04 * mainWindow.smokeStrength + 0.4 * mainWindow.fireStrength + animatedBrightness * mainWindow.sparklesStrength;
             // Add some liveness to the light
-            SequentialAnimation on animatedBrightness {
+            SequentialAnimation{
                 loops: Animation.Infinite
                 NumberAnimation {
+                    target: pointLight
+                    property: "animatedBrightness"
                     to: 0.12
                     duration: 1000
                     easing.type: Easing.OutElastic
                 }
                 NumberAnimation {
+                    target: pointLight
+                    property: "animatedBrightness"
                     to: 0.05
                     duration: 1500
                     easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
+                    target: pointLight
+                    property: "animatedBrightness"
                     to: 0.1
                     duration: 2500
                     easing.type: Easing.InElastic
@@ -114,10 +121,10 @@ Item {
                 particleScaleVariation: 3
                 particleEndScaleVariation: 5
                 velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 20 + fireStrength, 0)
-                    directionVariation: Qt.vector3d(10 + fireStrength * 0.2, 10, 0)
+                    direction: Qt.vector3d(0, 20 + mainWindow.fireStrength, 0)
+                    directionVariation: Qt.vector3d(10 + mainWindow.fireStrength * 0.2, 10, 0)
                 }
-                emitRate: fireStrength * 2
+                emitRate: mainWindow.fireStrength * 2
                 lifeSpan: 1000
                 lifeSpanVariation: 500
                 // Animate the fire position
@@ -160,10 +167,10 @@ Item {
                 particleRotationVariation: Qt.vector3d(180, 180, 0)
                 particleRotationVelocityVariation: Qt.vector3d(400, 400, 0)
                 velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 50 + sparklesStrength, 0)
-                    directionVariation: Qt.vector3d(50, 10 + sparklesStrength * 0.5, 0)
+                    direction: Qt.vector3d(0, 50 + mainWindow.sparklesStrength, 0)
+                    directionVariation: Qt.vector3d(50, 10 + mainWindow.sparklesStrength * 0.5, 0)
                 }
-                emitRate: sparklesStrength * 4
+                emitRate: mainWindow.sparklesStrength * 4
                 lifeSpan: 500
                 lifeSpanVariation: 500
             }
@@ -197,18 +204,18 @@ Item {
                 particleEndScaleVariation: 15
                 particleRotationVariation: Qt.vector3d(0, 0, 180)
                 particleRotationVelocityVariation: Qt.vector3d(0, 0, 40)
-                emitRate: smokeStrength * 0.5
+                emitRate: mainWindow.smokeStrength * 0.5
                 lifeSpan: 3000
                 lifeSpanVariation: 1000
                 velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 50 + smokeStrength * 0.1, 0)
+                    direction: Qt.vector3d(0, 50 + mainWindow.smokeStrength * 0.1, 0)
                     directionVariation: Qt.vector3d(20, 20, 0)
                 }
             }
 
             Gravity3D {
                 // Add gravity to sparkles
-                particles: particleSparkle
+                particles: [ particleSparkle ]
                 magnitude: 200
             }
         }

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -68,8 +68,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#202020"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -122,7 +122,7 @@ Item {
         }
 
         Node {
-            eulerRotation: Qt.vector3d(20, -40 + cubeRotation, -10 + cubeRotation)
+            eulerRotation: Qt.vector3d(20, -40 + mainWindow.cubeRotation, -10 + mainWindow.cubeRotation)
 
             Model {
                 id: qtCube
@@ -286,7 +286,7 @@ Item {
                 background: Rectangle {
                     color : "transparent"
                 }
-                icon.source: timelineAnimation.running ? "qrc:/qml/images/icon_pause.png" : "qrc:/qml/images/icon_play.png"
+                icon.source: timelineAnimation.running ? "qrc:/images/icon_pause.png" : "qrc:/images/icon_play.png"
                 icon.width: Layout.minimumWidth
                 icon.height: Layout.minimumHeight
                 icon.color: "transparent"

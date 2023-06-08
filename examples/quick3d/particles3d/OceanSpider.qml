@@ -1,5 +1,7 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick3D
@@ -16,14 +18,18 @@ Item {
     anchors.fill: parent
 
     // Animate tentacle movement
-    SequentialAnimation on tentacleWideness {
+    SequentialAnimation {
         loops: Animation.Infinite
         NumberAnimation {
+            target: mainWindow
+            property: "tentacleWideness"
             to: 30
             duration: 6000
             easing.type: Easing.InOutQuad
         }
         NumberAnimation {
+            target: mainWindow
+            property: "tentacleWideness"
             to: -30
             duration: 6000
             easing.type: Easing.InOutQuad
@@ -57,15 +63,15 @@ Item {
 
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         // Camera rotating the spider
         Node {
             PerspectiveCamera {
                 id: camera
-                position: Qt.vector3d(0, 0, cameraDistanceSmoothed)
+                position: Qt.vector3d(0, 0, mainWindow.cameraDistanceSmoothed)
             }
 
             NumberAnimation on eulerRotation.y {
@@ -111,20 +117,20 @@ Item {
                 }
                 normalStrength: 0.8
             }
-            materials: spiderMaterial
+            materials: [ spiderMaterial ]
             Model {
                 source: "#Cone"
                 scale: Qt.vector3d(0.4, 0.5, 0.5)
                 position: Qt.vector3d(20, 10, -20)
                 eulerRotation: Qt.vector3d(-40, -80, 0)
-                materials: spiderMaterial
+                materials: [ spiderMaterial ]
             }
             Model {
                 source: "#Cone"
                 scale: Qt.vector3d(0.4, 0.5, 0.5)
                 position: Qt.vector3d(-20, 10, -20)
                 eulerRotation: Qt.vector3d(-40, 80, 0)
-                materials: spiderMaterial
+                materials: [ spiderMaterial ]
             }
             SequentialAnimation on y {
                 loops: Animation.Infinite
@@ -148,27 +154,35 @@ Item {
                     sprite: Texture {
                         source: "images/dot.png"
                     }
-                    maxAmount: 8 * tentacleEmitRate * 1.5
+                    maxAmount: 8 * mainWindow.tentacleEmitRate * 1.5
                     color: "#000000"
                     colorVariation: Qt.vector4d(0.0, 0.0, 0.0, 0.2)
                     fadeInEffect: SpriteParticle3D.FadeNone
                     fadeOutDuration: 800
                     billboard: true
-                    SequentialAnimation on color {
+                    SequentialAnimation {
                         loops: Animation.Infinite
                         ColorAnimation {
+                            target: tentacleParticle
+                            property: "color"
                             to: "#202000"
                             duration: 2000
                         }
                         ColorAnimation {
+                            target: tentacleParticle
+                            property: "color"
                             to: "#200000"
                             duration: 2000
                         }
                         ColorAnimation {
+                            target: tentacleParticle
+                            property: "color"
                             to: "#000020"
                             duration: 2000
                         }
                         ColorAnimation {
+                            target: tentacleParticle
+                            property: "color"
                             to: "#002000"
                             duration: 2000
                         }
@@ -190,7 +204,7 @@ Item {
                         }
                         particleScale: 6.0
                         particleEndScale: 0.5
-                        emitRate: tentacleEmitRate
+                        emitRate: mainWindow.tentacleEmitRate
                         lifeSpan: 1500
                     }
                 }

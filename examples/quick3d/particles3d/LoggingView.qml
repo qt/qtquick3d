@@ -1,13 +1,16 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick3D.Particles3D
 import QtQuick.Controls
+import QtQuick3D.Particles3D
 
 Frame {
-    property var particleSystems
-    readonly property bool loggingEnabled: settings.showLoggingView
+    id: root
+    required property list<ParticleSystem3D> particleSystems
+    readonly property bool loggingEnabled: AppSettings.showLoggingView
     property bool intervalInstant: false
     property real itemWidth: (width - loggingButton.width - intervalButton.width) / 7
 
@@ -16,13 +19,13 @@ Frame {
 
     Component.onCompleted: {
         for (const psystem of particleSystems)
-            psystem.logging = settings.showLoggingView;
+            psystem.logging = AppSettings.showLoggingView;
     }
 
     // Background
     background: Rectangle {
         color: "#80000000"
-        visible: loggingEnabled
+        visible: root.loggingEnabled
     }
 
     Button {
@@ -30,8 +33,8 @@ Frame {
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
         anchors.rightMargin: 10
-        opacity: loggingEnabled ? 1.0 : 0.4
-        icon.source: "qrc:/qml/images/icon_logging.png"
+        opacity: root.loggingEnabled ? 1.0 : 0.4
+        icon.source: "qrc:/images/icon_logging.png"
         icon.width: 32
         icon.height: 32
         icon.color: "transparent"
@@ -39,9 +42,9 @@ Frame {
             color: "transparent"
         }
         onClicked: {
-            settings.showLoggingView = !settings.showLoggingView
-            for (const psystem of particleSystems) {
-                psystem.logging = settings.showLoggingView;
+            AppSettings.showLoggingView = !AppSettings.showLoggingView
+            for (const psystem of root.particleSystems) {
+                psystem.logging = AppSettings.showLoggingView;
             }
         }
     }
@@ -51,9 +54,9 @@ Frame {
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: loggingButton.left
         anchors.rightMargin: 0
-        visible: loggingEnabled
-        opacity: intervalInstant ? 1.0 : 0.2
-        icon.source: "qrc:/qml/images/icon_interval.png"
+        visible: root.loggingEnabled
+        opacity: root.intervalInstant ? 1.0 : 0.2
+        icon.source: "qrc:/images/icon_interval.png"
         icon.width: 32
         icon.height: 32
         icon.color: "transparent"
@@ -61,64 +64,66 @@ Frame {
             color: "transparent"
         }
         onClicked: {
-            intervalInstant = !intervalInstant;
-            var interval = intervalInstant ? 0 : 1000;
-            for (const psystem of particleSystems)
+            root.intervalInstant = !root.intervalInstant;
+            var interval = root.intervalInstant ? 0 : 1000;
+            for (const psystem of root.particleSystems)
                 psystem.loggingData.loggingInterval = interval;
         }
     }
 
     Component {
-        id: systemItem
+        id: systemComponent
         Row {
+            id: systemItem
+            required property ParticleSystem3D modelData
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
-                text: modelData.seed
+                font.pointSize: AppSettings.fontSizeSmall
+                text: systemItem.modelData.seed
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
-                text: modelData.loggingData.updates
+                font.pointSize: AppSettings.fontSizeSmall
+                text: systemItem.modelData.loggingData.updates
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
-                text: modelData.loggingData.particlesMax
+                font.pointSize: AppSettings.fontSizeSmall
+                text: systemItem.modelData.loggingData.particlesMax
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
-                text: modelData.loggingData.particlesUsed
+                font.pointSize: AppSettings.fontSizeSmall
+                text: systemItem.modelData.loggingData.particlesUsed
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
-                text: modelData.loggingData.time.toFixed(4)
+                font.pointSize: AppSettings.fontSizeSmall
+                text: systemItem.modelData.loggingData.time.toFixed(4)
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
-                text: modelData.loggingData.timeAverage.toFixed(4)
+                font.pointSize: AppSettings.fontSizeSmall
+                text: systemItem.modelData.loggingData.timeAverage.toFixed(4)
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
-                text: modelData.loggingData.timeDeviation.toFixed(4)
+                font.pointSize: AppSettings.fontSizeSmall
+                text: systemItem.modelData.loggingData.timeDeviation.toFixed(4)
             }
         }
     }
@@ -127,61 +132,61 @@ Frame {
         id: tableContent
         width: parent.width
         anchors.verticalCenter: parent.verticalCenter
-        visible: loggingEnabled
+        visible: root.loggingEnabled
         Row {
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 text: qsTr("SEED")
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 text: qsTr("UPDATES")
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 text: qsTr("P. MAX")
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 text: qsTr("P. USED")
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 text: qsTr("TIME")
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 text: qsTr("TIME AVG.")
             }
             Text {
-                width: itemWidth
+                width: root.itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 text: qsTr("TIME DEV.")
             }
         }
         Repeater {
-            model: particleSystems
-            delegate: systemItem
+            model: root.particleSystems
+            delegate: systemComponent
         }
     }
 }

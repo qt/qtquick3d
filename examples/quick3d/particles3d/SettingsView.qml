@@ -1,13 +1,12 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 
 Item {
     id: rootItem
-    property real showState: settings.showSettingsView ? 1.0 : 0.0
+    property real showState: AppSettings.showSettingsView ? 1.0 : 0.0
 
     default property alias content: settingsArea.children
 
@@ -15,21 +14,21 @@ Item {
     height: settingsDrawer.height
 
     Button {
-        x: (settingsDrawer.visible) ? settingsDrawer.x - width : rootWindow.width - width
+        x: (settingsDrawer.visible) ? settingsDrawer.x - width : Window.window.width - width
         anchors.top: parent.top
-        width: rootWindow.iconSize
+        width: AppSettings.iconSize
         height: width
-        opacity: showState * 0.6 + 0.4
+        opacity: rootItem.showState * 0.6 + 0.4
         visible: opacity
         icon.width: width * 0.3
         icon.height: height * 0.3
-        icon.source: "qrc:/qml/images/icon_settings.png"
+        icon.source: "qrc:/images/icon_settings.png"
         icon.color: "transparent"
         background: Rectangle {
             color: "transparent"
         }
         onClicked: {
-            settings.showSettingsView = !settings.showSettingsView;
+            AppSettings.showSettingsView = !AppSettings.showSettingsView;
         }
     }
 
@@ -42,7 +41,7 @@ Item {
         topInset: -20
         bottomInset: -20
         topMargin: 10
-        visible: settings.showSettingsView
+        visible: AppSettings.showSettingsView
 
         background: Rectangle {
             color: "#80404040"
