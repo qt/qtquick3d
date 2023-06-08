@@ -196,6 +196,18 @@ static void initBakerForPersistentUse(QShaderBaker *, QRhi *)
 }
 #endif // QT_QUICK3D_HAS_RUNTIME_SHADERS
 
+static bool s_autoDiskCacheEnabled = true;
+
+static bool isAutoDiskCacheEnabled()
+{
+    // these three mirror QOpenGLShaderProgram/QQuickGraphicsConfiguration/QSGRhiSupport
+    static const bool diskCacheDisabled = qEnvironmentVariableIntValue("QT_DISABLE_SHADER_DISK_CACHE")
+                                          || qEnvironmentVariableIntValue("QSG_RHI_DISABLE_DISK_CACHE");
+    const bool attrDiskCacheDisabled = (qApp ? qApp->testAttribute(Qt::AA_DisableShaderDiskCache) : false);
+    return (!diskCacheDisabled && !attrDiskCacheDisabled && s_autoDiskCacheEnabled);
+
+}
+
 static inline bool ensureWritableDir(const QString &name)
 {
     QDir::root().mkpath(name);
@@ -237,12 +249,7 @@ QSSGShaderCache::QSSGShaderCache(QSSGRhiContext &ctx,
     : m_rhiContext(ctx),
       m_initBaker(initBakeFn)
 {
-    // Mirrors QOpenGLShaderProgram/QQuickGraphicsConfiguration/QSGRhiSupport.
-    m_autoDiskCacheEnabled = !QCoreApplication::instance()->testAttribute(Qt::AA_DisableShaderDiskCache)
-            && !qEnvironmentVariableIntValue("QT_DISABLE_SHADER_DISK_CACHE")
-            && !qEnvironmentVariableIntValue("QSG_RHI_DISABLE_DISK_CACHE");
-
-    if (m_autoDiskCacheEnabled) {
+    if (isAutoDiskCacheEnabled()) {
         const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
         m_persistentShaderStorageFileName = persistentQsbcFileName();
         if (!m_persistentShaderStorageFileName.isEmpty()) {
@@ -638,6 +645,17 @@ void ShaderBaker::setStatusCallback(StatusCallback cb)
     QMutexLocker locker(&*s_statusMutex);
     s_statusCallback = cb;
 }
+
+void ShaderCache::setAutomaticDiskCache(bool enable)
+{
+    s_autoDiskCacheEnabled = enable;
+}
+
+bool ShaderCache::isAutomaticDiskCacheEnabled()
+{
+    return ::isAutoDiskCacheEnabled();
+}
+
 }
 
 QT_END_NAMESPACE
