@@ -176,7 +176,6 @@ private:
     InitBakerFunc m_initBaker;
     QQsbInMemoryCollection m_persistentShaderBakingCache;
     QString m_persistentShaderStorageFileName;
-    bool m_autoDiskCacheEnabled;
 
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
@@ -229,6 +228,15 @@ namespace ShaderBaker
     using StatusCallback = void(*)(const QByteArray &descKey, Status status, const QString &err, QShader::Stage stage);
     Q_QUICK3DRUNTIMERENDER_EXPORT void setStatusCallback(StatusCallback cb);
 }
+
+namespace ShaderCache
+{
+    // Used by DS and the QML puppet!
+    // Note: Needs to be called before any QSSGShaderCache instance is created.
+    Q_QUICK3DRUNTIMERENDER_EXPORT void setAutomaticDiskCache(bool enable);
+    Q_QUICK3DRUNTIMERENDER_EXPORT bool isAutomaticDiskCacheEnabled();
+}
+
 }
 
 QT_END_NAMESPACE
