@@ -1,4 +1,4 @@
-// Copyright (C) 2022 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -49,8 +49,8 @@ RowLayout {
     }
     Item {
         visible: selectTextureChoice.checked
-        width: 256
-        height: 256
+        implicitWidth: 256
+        implicitHeight: 256
         Image {
             id: previewImage
             anchors.fill: parent
@@ -61,7 +61,7 @@ RowLayout {
             Texture {
                 id: selectedTexture
                 source: root.defaultTexture
-                mappingMode: envMapMode ? Texture.Environment : Texture.UV
+                mappingMode: root.envMapMode ? Texture.Environment : Texture.UV
             }
         }
     }
@@ -69,8 +69,8 @@ RowLayout {
 
     Rectangle {
         id: loadTextureFrame
-        width: 256
-        height: 256
+        implicitWidth: 256
+        implicitHeight: 256
         color: "transparent"
         border.color: "black"
         visible: loadImageChoice.checked
@@ -98,7 +98,7 @@ RowLayout {
         Texture {
             id: loadTextureTexture
             source: loadTextureFrame.textureSource
-            mappingMode: envMapMode ? Texture.Environment : Texture.UV
+            mappingMode: root.envMapMode ? Texture.Environment : Texture.UV
         }
 
         ImageHelper {
@@ -120,8 +120,8 @@ RowLayout {
     ColumnLayout {
         visible: drawerChoice.checked
         Rectangle {
-            width: 260
-            height: 260
+            implicitWidth: 260
+            implicitHeight: 260
             color: "transparent"
             border.color: "black"
             Canvas {
@@ -230,7 +230,7 @@ RowLayout {
                                     drawer.commands.push(command)
                                     isDrawing = false;
                                     drawer.requestPaint();
-                                } else if (stampMode) {
+                                } else if (root.stampMode) {
                                     drawer.stampCommands.push(Qt.point(mouse.x, mouse.y));
                                     drawer.requestPaint();
                                 }
@@ -243,8 +243,8 @@ RowLayout {
             spacing: 0
             Rectangle {
                 id: whiteBrush
-                width: 25
-                height: 25
+                implicitWidth: 25
+                implicitHeight: 25
                 color: "white"
                 border.color: "black"
                 MouseArea {
@@ -256,8 +256,8 @@ RowLayout {
             }
             Rectangle {
                 id: blackBrush
-                width: 25
-                height: 25
+                implicitWidth: 25
+                implicitHeight: 25
                 color: "black"
                 border.color: "black"
                 MouseArea {
@@ -269,8 +269,8 @@ RowLayout {
             }
             Rectangle {
                 id: redBrush
-                width: 25
-                height: 25
+                implicitWidth: 25
+                implicitHeight: 25
                 color: "red"
                 border.color: "black"
                 MouseArea {
@@ -282,8 +282,8 @@ RowLayout {
             }
             Rectangle {
                 id: greenBrush
-                width: 25
-                height: 25
+                implicitWidth: 25
+                implicitHeight: 25
                 color: "green"
                 border.color: "black"
                 MouseArea {
@@ -295,8 +295,8 @@ RowLayout {
             }
             Rectangle {
                 id: blueBrush
-                width: 25
-                height: 25
+                implicitWidth: 25
+                implicitHeight: 25
                 color: "blue"
                 border.color: "black"
                 MouseArea {
@@ -340,7 +340,7 @@ RowLayout {
     Texture {
         id: drawerTexture
         sourceItem: drawerChoice.checked ? drawer : null
-        mappingMode: envMapMode ? Texture.Environment : Texture.UV
+        mappingMode: root.envMapMode ? Texture.Environment : Texture.UV
     }
 
 }
