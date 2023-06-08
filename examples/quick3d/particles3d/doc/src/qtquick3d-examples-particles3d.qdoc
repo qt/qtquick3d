@@ -49,7 +49,7 @@
     timing and groups all the other related elements like particles, emitters,
     and affectors together.
 
-    \snippet particles3d/qml/Snowing.qml particle system
+    \snippet particles3d/Snowing.qml particle system
 
     Then we create a \l SpriteParticle3D which is a visual 2D texture particle.
     If we would need a 3D model particles we could alternatively use \l ModelParticle3D.
@@ -57,7 +57,7 @@
     so that optimal buffer sizes get allocated. Here our snowflakes are white, with varied
     opacity and they fade in and out in 1000ms.
 
-    \snippet particles3d/qml/Snowing.qml sprite particle
+    \snippet particles3d/Snowing.qml sprite particle
 
     Next we will need \l ParticleEmitter3D to emit the above \c snowParticle particles.
     The \l {ParticleEmitter3D::shape}{shape} property defines area where emitting is done.
@@ -67,11 +67,11 @@
     seconds and the \l {ParticleEmitter3D::emitRate}{emiting rate} is controlled with
     the settings sliders.
 
-    \snippet particles3d/qml/Snowing.qml particle emitter
+    \snippet particles3d/Snowing.qml particle emitter
 
     Usually also some affectors are used to make the particles movement more interesting.
     In this Snowing example we use \l Wander3D to get the snowflakes flying with wavy curves
     as well as \l PointRotator3D to simulate windy weather.
 
-    \snippet particles3d/qml/Snowing.qml particle affectors
+    \snippet particles3d/Snowing.qml particle affectors
 */

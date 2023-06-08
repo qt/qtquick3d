@@ -1,10 +1,9 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
-import QtQuick.Controls
 
 Item {
     id: mainWindow
@@ -18,8 +17,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#202020"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -98,7 +97,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Enabling\nEmitter"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -116,15 +115,19 @@ Item {
                     }
                     lifeSpan: 3000
                     emitRate: 0.1
-                    SequentialAnimation on emitRate {
+                    SequentialAnimation {
                         running: true
                         loops: Animation.Infinite
                         NumberAnimation {
+                            target: emitter2
+                            property: "emitRate"
                             duration: 2000
                             easing.type: Easing.InOutQuad
                             to: 100
                         }
                         NumberAnimation {
+                            target: emitter2
+                            property: "emitRate"
                             duration: 2000
                             easing.type: Easing.InOutQuad
                             to: 0.1
@@ -137,7 +140,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Animated\nemitRate"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -169,7 +172,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Burst"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -202,7 +205,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Emit and\nBurst"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }

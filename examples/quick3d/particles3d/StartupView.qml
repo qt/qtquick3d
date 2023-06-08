@@ -1,5 +1,7 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick3D
@@ -8,6 +10,8 @@ import QtQuick.Controls
 
 Item {
     id: mainView
+
+    required property Loader loader
 
     readonly property real listItemWidth: 180
     readonly property real listItemHeight: 40
@@ -119,8 +123,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#000000"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -129,17 +133,22 @@ Item {
         }
 
         PointLight {
+            id: pointLight
             position: Qt.vector3d(200, 200, 400)
             brightness: 50
             ambientColor: Qt.rgba(0.5, 0.3, 0.1, 1.0)
-            SequentialAnimation on brightness {
+            SequentialAnimation {
                 loops: Animation.Infinite
                 NumberAnimation {
+                    target: pointLight
+                    property: "brightness"
                     to: 400
                     duration: 2000
                     easing.type: Easing.OutElastic
                 }
                 NumberAnimation {
+                    target: pointLight
+                    property: "brightness"
                     to: 50
                     duration: 6000
                     easing.type: Easing.InOutQuad
@@ -224,6 +233,10 @@ Item {
     Component {
         id: listComponent
         Button {
+            id: button
+            required property string name
+            required property string file
+
             width: mainView.listItemWidth
             height: mainView.listItemHeight
             background: Rectangle {
@@ -231,17 +244,17 @@ Item {
                 border.width: 0.5
                 border.color: "#d0808080"
                 color: "#d0404040"
-                opacity: hovered ? 1.0 : 0.5
+                opacity: button.hovered ? 1.0 : 0.5
             }
             contentItem: Text {
                 anchors.centerIn: parent
                 color: "#f0f0f0"
-                font.pointSize: settings.fontSizeSmall
-                text: name
+                font.pointSize: AppSettings.fontSizeSmall
+                text: button.name
             }
 
             onClicked: {
-                loader.source = file
+                mainView.loader.source = button.file
             }
         }
     }
@@ -253,7 +266,7 @@ Item {
         anchors.topMargin: 20
         text: qsTr("Qt Quick 3D - Particles3D")
         color: "#f0f0f0"
-        font.pointSize: settings.fontSizeLarge
+        font.pointSize: AppSettings.fontSizeLarge
     }
 
     Row {
@@ -270,7 +283,7 @@ Item {
         }
         ListView {
             id: examplesListView
-            visible: !showOnlyDemos
+            visible: !mainView.showOnlyDemos
             width: mainView.listItemWidth
             height: count * mainView.listItemHeight
             model: testsModel

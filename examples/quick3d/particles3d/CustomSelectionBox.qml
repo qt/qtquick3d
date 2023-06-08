@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -10,6 +10,7 @@ Item {
     property string text
     property string selection
     property alias values: combo.model
+    property alias index: combo.currentIndex
     property real parentWidth
 
     width: rowLayout.width
@@ -19,13 +20,13 @@ Item {
         id: rowLayout
         ComboBox {
             id: combo
-            displayText: text + ": " + model[currentIndex]
-            textRole: text
-            anchors.rightMargin: 0
-            implicitWidth: Math.max(parentWidth - 5, 100)
+            displayText: comboBox.text + ": " + model[currentIndex]
+            textRole: comboBox.text
+            implicitWidth: Math.max(comboBox.parentWidth - 5, 100)
 
             delegate: ItemDelegate {
                 id: lightDelegate
+                required property string modelData
                 text: modelData
                 anchors.left: parent.left
                 anchors.right: parent.right

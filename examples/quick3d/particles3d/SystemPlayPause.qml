@@ -1,5 +1,7 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick3D
@@ -44,8 +46,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#202020"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -130,7 +132,7 @@ Item {
             ModelParticle3D {
                 id: particleTrailModel
                 delegate: particleComponent
-                maxAmount: maxEmitterCount * 8 * trailEmitRate
+                maxAmount: mainWindow.maxEmitterCount * 8 * mainWindow.trailEmitRate
                 fadeInDuration: 200
                 fadeOutDuration: 500
                 color: "#808080"
@@ -140,13 +142,13 @@ Item {
             ModelParticle3D {
                 id: particleWhite
                 delegate: particleComponent
-                maxAmount: maxEmitterCount * 8
+                maxAmount: mainWindow.maxEmitterCount * 8
                 color: "#ffffff"
             }
             ModelParticle3D {
                 id: particleRed
                 delegate: particleComponent
-                maxAmount: burstCount * 3
+                maxAmount: mainWindow.burstCount * 3
                 color: "#ff0000"
             }
             SpriteParticle3D {
@@ -154,7 +156,7 @@ Item {
                 sprite: Texture {
                     source: "images/star2.png"
                 }
-                maxAmount: maxEmitterCount * 8
+                maxAmount: mainWindow.maxEmitterCount * 8
                 color: "#ffff00"
                 particleScale: 30.0
             }
@@ -163,7 +165,7 @@ Item {
                 sprite: Texture {
                     source: "images/star2.png"
                 }
-                maxAmount: maxEmitterCount * 8 * trailEmitRate
+                maxAmount: mainWindow.maxEmitterCount * 8 * mainWindow.trailEmitRate
                 fadeInDuration: 200
                 fadeOutDuration: 500
                 color: "#999900"
@@ -182,7 +184,7 @@ Item {
                 velocity: VectorDirection3D {
                     directionVariation: Qt.vector3d(20, 20, 20)
                 }
-                emitRate: trailEmitRate
+                emitRate: mainWindow.trailEmitRate
                 lifeSpan: 1000
             }
             TrailEmitter3D {
@@ -195,7 +197,7 @@ Item {
                 velocity: VectorDirection3D {
                     directionVariation: Qt.vector3d(20, 20, 20)
                 }
-                emitRate: trailEmitRate
+                emitRate: mainWindow.trailEmitRate
                 lifeSpan: 1000
             }
 
@@ -231,7 +233,7 @@ Item {
         onClicked: {
             var pos = view3D.mapTo3DScene(Qt.vector3d(mouseX, mouseY, camera.z));
             burstEmitter.setPosition(pos);
-            burstEmitter.burst(burstCount);
+            burstEmitter.burst(mainWindow.burstCount);
         }
     }
 
@@ -241,14 +243,14 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             Button {
                 text: psystem.running ? qsTr("Stop") : qsTr("Start")
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 onClicked: {
                     psystem.running = !psystem.running;
                 }
             }
             Button {
                 text: psystem.paused ? qsTr("Continue") : qsTr("Pause")
-                font.pointSize: settings.fontSizeSmall
+                font.pointSize: AppSettings.fontSizeSmall
                 enabled: psystem.running
                 onClicked: {
                     psystem.paused = !psystem.paused;
@@ -298,7 +300,7 @@ Item {
         Item { width: 1; height: 20 }
         CustomLabel {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Model Emitters: " + modelEmittersAmount
+            text: "Model Emitters: " + mainWindow.modelEmittersAmount
         }
         Item { width: 1; height: 5 }
         Row {
@@ -306,25 +308,25 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             Button {
                 text: qsTr("Add")
-                font.pointSize: settings.fontSizeSmall
-                enabled: modelEmittersAmount < 10
-                onClicked: createModelEmitter();
+                font.pointSize: AppSettings.fontSizeSmall
+                enabled: mainWindow.modelEmittersAmount < 10
+                onClicked: mainWindow.createModelEmitter();
             }
             Button {
                 text: qsTr("Remove")
-                font.pointSize: settings.fontSizeSmall
-                enabled: modelEmittersAmount > 0
+                font.pointSize: AppSettings.fontSizeSmall
+                enabled: mainWindow.modelEmittersAmount > 0
                 onClicked: {
-                    let instance = modelEmitters.pop();
+                    let instance = mainWindow.modelEmitters.pop();
                     instance.destroy();
-                    modelEmittersAmount = modelEmitters.length;
+                    modelEmittersAmount = mainWindow.modelEmitters.length;
                 }
             }
         }
         Item { width: 1; height: 20 }
         CustomLabel {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Sprite Emitters: " + spriteEmittersAmount
+            text: "Sprite Emitters: " + mainWindow.spriteEmittersAmount
         }
         Item { width: 1; height: 5 }
         Row {
@@ -332,18 +334,18 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             Button {
                 text: qsTr("Add")
-                font.pointSize: settings.fontSizeSmall
-                enabled: spriteEmittersAmount < 10
-                onClicked: createSpriteEmitter();
+                font.pointSize: AppSettings.fontSizeSmall
+                enabled: mainWindow.spriteEmittersAmount < 10
+                onClicked: mainWindow.createSpriteEmitter();
             }
             Button {
                 text: qsTr("Remove")
-                font.pointSize: settings.fontSizeSmall
-                enabled: spriteEmittersAmount > 0
+                font.pointSize: AppSettings.fontSizeSmall
+                enabled: mainWindow.spriteEmittersAmount > 0
                 onClicked: {
-                    let instance = spriteEmitters.pop();
+                    let instance = mainWindow.spriteEmitters.pop();
                     instance.destroy();
-                    spriteEmittersAmount = spriteEmitters.length;
+                    spriteEmittersAmount = mainWindow.spriteEmitters.length;
                 }
             }
         }

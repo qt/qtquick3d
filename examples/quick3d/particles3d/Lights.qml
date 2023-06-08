@@ -4,16 +4,16 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
-import QtQuick.Controls
 
 Item {
+    id: root
     anchors.fill: parent
 
     Timer {
         id: lightsUpdateTimer
         interval: 0
         triggeredOnStart: true
-        onTriggered: updateLightsArray();
+        onTriggered: root.updateLightsArray();
     }
 
     // Update the lights array of the particles
@@ -26,7 +26,7 @@ Item {
         if (checkBoxSpotLightUse.checked)
             newLights.push(lightSpot);
         // Particles to use the enabled lights
-        spriteParticle.lights = newLights;
+        spriteParticle.lights = newLights; // qmllint disable read-only-property
     }
 
     View3D {

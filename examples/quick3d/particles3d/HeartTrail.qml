@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -17,24 +17,29 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#000000"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         // Particles light
         PointLight {
+            id: pointLight
             property real animatedBrightness: 1.0
             position: psystemStar.position
             brightness: sliderLightBrightness.sliderValue * animatedBrightness
             // Add some liveness to the light
-            SequentialAnimation on animatedBrightness {
+            SequentialAnimation {
                 loops: Animation.Infinite
                 NumberAnimation {
+                    target: pointLight
+                    property: "animatedBrightness"
                     to: 1.2
                     duration: 1200
                     easing.type: Easing.OutElastic
                 }
                 NumberAnimation {
+                    target: pointLight
+                    property: "animatedBrightness"
                     to: 1.0
                     duration: 1600
                     easing.type: Easing.OutElastic

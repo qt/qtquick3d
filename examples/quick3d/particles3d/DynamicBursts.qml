@@ -1,10 +1,9 @@
-// Copyright (C) 2022 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
-import QtQuick.Controls
 
 Item {
     id: mainWindow
@@ -22,8 +21,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#000000"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -69,7 +68,7 @@ Item {
                 colorTable: Texture {
                     source: "images/color_table3.png"
                 }
-                lights: light1
+                lights: [ light1 ]
             }
             SpriteParticle3D {
                 id: explosionParticle
@@ -84,7 +83,7 @@ Item {
                 colorTable: Texture {
                     source: "images/color_table3.png"
                 }
-                lights: light1
+                lights: [ light1 ]
             }
             SpriteParticle3D {
                 id: smokeParticle
@@ -102,7 +101,7 @@ Item {
                 unifiedColorVariation: true
                 fadeOutEffect: Particle3D.FadeOpacity
                 fadeOutDuration: 2000
-                lights: light1
+                lights: [ light1 ]
             }
 
             ParticleEmitter3D {
@@ -155,21 +154,21 @@ Item {
                 lifeSpanVariation: 1000
                 velocity: VectorDirection3D {
                     direction: Qt.vector3d(0, 0, 0)
-                    directionVariation: Qt.vector3d(smokeAmount * 0.6, smokeAmount * 0.6, 0)
+                    directionVariation: Qt.vector3d(mainWindow.smokeAmount * 0.6, mainWindow.smokeAmount * 0.6, 0)
                 }
                 depthBias: -20
                 emitBursts: [
                     DynamicBurst3D {
                         enabled: checkBoxStartBurst.checked
                         triggerMode: DynamicBurst3D.TriggerStart
-                        amount: smokeAmount
-                        amountVariation: smokeAmount * 0.4
+                        amount: mainWindow.smokeAmount
+                        amountVariation: mainWindow.smokeAmount * 0.4
                     },
                     DynamicBurst3D {
                         enabled: checkBoxEndBurst.checked
                         triggerMode: DynamicBurst3D.TriggerEnd
-                        amount: smokeAmount
-                        amountVariation: smokeAmount * 0.4
+                        amount: mainWindow.smokeAmount
+                        amountVariation: mainWindow.smokeAmount * 0.4
                     }
                 ]
             }
@@ -188,15 +187,15 @@ Item {
                     position: Qt.vector3d(0, 300, 0)
                     positionVariation: Qt.vector3d(100, 100, 0)
                     normalized: true
-                    magnitude: 20 + explosionAmount * 0.2
+                    magnitude: 20 + mainWindow.explosionAmount * 0.2
                     magnitudeVariation: magnitude * 0.5
                 }
                 emitBursts: [
                     DynamicBurst3D {
                         enabled: checkBoxExplosionBurst.checked
                         triggerMode: DynamicBurst3D.TriggerEnd
-                        amount: explosionAmount
-                        amountVariation: explosionAmount * 0.4
+                        amount: mainWindow.explosionAmount
+                        amountVariation: mainWindow.explosionAmount * 0.4
                     }
                 ]
             }
@@ -229,7 +228,7 @@ Item {
         }
         CustomSlider {
             id: smokeSlider
-            sliderValue: smokeAmount
+            sliderValue: mainWindow.smokeAmount
             fromValue: 5
             toValue: 50
             onSliderValueChanged: smokeAmount = sliderValue;
@@ -244,10 +243,10 @@ Item {
         }
         CustomSlider {
             id: explosionSlider
-            sliderValue: explosionAmount
+            sliderValue: mainWindow.explosionAmount
             fromValue: 20
             toValue: 200
-            onSliderValueChanged: explosionAmount = sliderValue;
+            onSliderValueChanged: mainWindow.explosionAmount = sliderValue;
         }
     }
 

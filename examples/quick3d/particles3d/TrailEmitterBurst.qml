@@ -18,8 +18,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#202020"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -176,7 +176,7 @@ Item {
 
     Text {
         anchors.centerIn: parent
-        font.pointSize: settings.fontSizeLarge
+        font.pointSize: AppSettings.fontSizeLarge
         color: "#ffffff"
         text: qsTr("Click to burst!")
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -60,7 +60,7 @@ Item {
                 maxAmount: 60
                 color: Qt.rgba(0.5, 0.5, 0.5, 0.5)
                 colorVariation: Qt.vector4d(0.5, 0.5, 0.5, 0.15)
-                sortMode: sortModeSelectionBox.selection
+                sortMode: sortModeSelectionBox.index
             }
 
             SpriteParticle3D {
@@ -69,7 +69,7 @@ Item {
                 colorVariation: Qt.vector4d(0.5, 0.5, 0.5, 0.05)
                 maxAmount: 60
                 billboard: true
-                sortMode: sortModeSelectionBox.selection
+                sortMode: sortModeSelectionBox.index
             }
 
             // Emitters, one per particle
@@ -97,8 +97,11 @@ Item {
         }
 
         Node {
+            id: cameraController
             property real rot: 0.0
-            PropertyAnimation on rot {
+            PropertyAnimation {
+                target: cameraController
+                property: "rot"
                 from: 0.0
                 to: 360.0
                 duration: 10000

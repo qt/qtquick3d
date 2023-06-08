@@ -1,4 +1,4 @@
-// Copyright (C) 2022 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -15,8 +15,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#101010"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
         PerspectiveCamera {
             id: camera
@@ -42,8 +42,11 @@ Item {
             }
         }
         Node {
+            id: spheres
             property real angle: 0.0
-            NumberAnimation on angle {
+            NumberAnimation {
+                target: spheres
+                property: "angle"
                 from: 0.0
                 to: 360.0
                 duration: 5000
@@ -79,7 +82,9 @@ Item {
 
             property real particleScaleFactor : 1.0 + Math.abs(Math.cos(2.0 * Math.PI * scaleTemp))
             property real scaleTemp: 0.0
-            NumberAnimation on scaleTemp {
+            NumberAnimation {
+                target: psystem
+                property: "scaleTemp"
                 from: 0.0
                 to: 1.0
                 duration: 400

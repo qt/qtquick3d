@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -16,8 +16,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#202020"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: settings.antialiasingMode
-            antialiasingQuality: settings.antialiasingQuality
+            antialiasingMode: AppSettings.antialiasingMode
+            antialiasingQuality: AppSettings.antialiasingQuality
         }
 
         PerspectiveCamera {
@@ -163,7 +163,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "StartVelocity"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -185,7 +185,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Camera"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -207,7 +207,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "NoAlign"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -228,7 +228,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Billboard"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -249,7 +249,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "NoBillboard"
-                        font.pointSize: settings.fontSizeLarge
+                        font.pointSize: AppSettings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -37,7 +37,7 @@ Item {
         Label {
             id: propText
             color: "#f0f0f0"
-            font.pointSize: settings.fontSizeSmall
+            font.pointSize: AppSettings.fontSizeSmall
             Layout.minimumWidth: 150
             Layout.maximumWidth: 150
             opacity: checkBox.checked ? 1.0 : 0.5

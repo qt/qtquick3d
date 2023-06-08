@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -27,8 +27,6 @@ Item {
         width: parent.width
         Slider {
             id: slider
-            from: fromValue
-            to: toValue
             stepSize: 0.01
             Layout.minimumWidth: 200
             Layout.fillWidth: true
@@ -60,7 +58,7 @@ Item {
             id: valueText
             text: slider.value.toFixed(2)
             color: "#f0f0f0"
-            font.pointSize: settings.fontSizeSmall
+            font.pointSize: AppSettings.fontSizeSmall
             font.bold: true
             Layout.minimumWidth: 60
         }
