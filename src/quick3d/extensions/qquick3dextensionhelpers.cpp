@@ -20,12 +20,10 @@ QQuick3DExtensionHelpers::QQuick3DExtensionHelpers()
 }
 
 /*!
-    \fn QQuick3DExtensionHelpers::getNodeId(const QQuick3DObject &node)
-    \a node a QQuick3D node object.
-    \return a \c QSSGNodeId that can be used to retrieve the corresponding \a {node}{node's} object
-    in the engine.
+    \return a \c QSSGNodeId that can be used to retrieve the object in the engine
+    corresponding to \a node.
 
-    \sa QSSGFrameData::getNode()
+    //! \sa QSSGFrameData::getNode()
 */
 QSSGNodeId QQuick3DExtensionHelpers::getNodeId(const QQuick3DObject &node)
 {
@@ -34,12 +32,10 @@ QSSGNodeId QQuick3DExtensionHelpers::getNodeId(const QQuick3DObject &node)
 }
 
 /*!
-    \fn QQuick3DExtensionHelpers::getResourceId(const QQuick3DObject &resource)
-    \a resource a QQuick3D resource object.
     \return a \c QSSGResourceId that can be used to retrieve the corresponding \a resource object
     in the engine.
 
-    \sa QSSGFrameData::getResource()
+    //! \sa QSSGFrameData::getResource()
 */
 QSSGResourceId QQuick3DExtensionHelpers::getResourceId(const QQuick3DObject &resource)
 {
