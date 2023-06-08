@@ -650,13 +650,17 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
         isClipDepthZeroToOne = rhi->isClipDepthZeroToOne();
     }
 
+    const QSSGRhiRenderableTexture *depthTexture = theData.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
+    const QSSGRhiRenderableTexture *ssaoTexture = theData.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
+    const QSSGRhiRenderableTexture *screenTexture = theData.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
+
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
                                               theData.cameraData.value(), // ensured/checked further up in this function
                                               theData.getShadowMapManager().get(),
-                                              theData.depthMapPass.rhiDepthTexture.texture,
-                                              theData.ssaoMapPass.rhiAoTexture.texture,
-                                              theData.screenMapPass.rhiScreenTexture.texture,
+                                              depthTexture->texture,
+                                              ssaoTexture->texture,
+                                              screenTexture->texture,
                                               theLayer.lightProbe,
                                               theLayer.probeHorizon,
                                               theLayer.probeExposure,

@@ -122,7 +122,7 @@ public:
     const QSSGRenderCamera *camera = nullptr;
     AmbientOcclusion ao;
     QSSGRhiGraphicsPipelineState ps;
-    QSSGRhiRenderableTexture rhiAoTexture;
+    QSSGRhiRenderableTexture *rhiAoTexture = nullptr;
     QSSGRhiShaderPipelinePtr ssaoShaderPipeline;
 };
 
@@ -137,7 +137,7 @@ public:
     QSSGRenderableObjectList sortedOpaqueObjects;
     QSSGRenderableObjectList sortedTransparentObjects;
     QSSGRhiGraphicsPipelineState ps;
-    QSSGRhiRenderableTexture rhiDepthTexture;
+    QSSGRhiRenderableTexture *rhiDepthTexture = nullptr;
 };
 
 class ScreenMapPass : public QSSGRenderPass
@@ -148,7 +148,7 @@ public:
     Type passType() const final { return Type::Standalone; }
     void release() final;
 
-    QSSGRhiRenderableTexture rhiScreenTexture;
+    QSSGRhiRenderableTexture *rhiScreenTexture = nullptr;
     QSSGRenderPass *skyboxPass = nullptr;
     QSSGShaderFeatures shaderFeatures;
     QSSGRenderableObjectList sortedOpaqueObjects;

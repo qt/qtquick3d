@@ -2166,6 +2166,9 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     delete m_lightmapper;
     for (auto &pass : activePasses)
         pass->release();
+
+    for (auto &renderResult : renderResults)
+        renderResult.reset();
 }
 
 static void sortInstances(QByteArray &sortedData, QList<QSSGRhiSortData> &sortData, const void *instances,

@@ -279,19 +279,20 @@ void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
 
-    rhiDepthTexture = &data.depthMapPass.rhiDepthTexture;
+    rhiAoTexture = data.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
+    rhiDepthTexture = data.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
     camera = data.camera;
-    QSSG_ASSERT_X((camera && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing camera or depth texture", return);
+    QSSG_ASSERT_X((camera && rhiDepthTexture && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing camera or required texture(s)", return);
 
     ssaoShaderPipeline = data.renderer->getRhiSsaoShader();
     ambientOcclusion = { data.layer.aoStrength, data.layer.aoDistance, data.layer.aoSoftness, data.layer.aoBias, data.layer.aoSamplerate, data.layer.aoDither };
 
     ps = data.getPipelineState();
     const auto &layerPrepResult = data.layerPrepResult;
-    const bool ready = rhiPrepareAoTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), &rhiAoTexture);
+    const bool ready = rhiAoTexture && rhiPrepareAoTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), rhiAoTexture);
 
     if (Q_UNLIKELY(!ready))
-        rhiAoTexture.reset();
+        rhiAoTexture = nullptr;
 }
 
 void SSAOMapPass::renderPass(QSSGRenderer &renderer)
@@ -307,8 +308,7 @@ void SSAOMapPass::renderPass(QSSGRenderer &renderer)
     // NOTE:
 
     // CONDITION: SSAO enabled
-    QSSG_ASSERT(camera, return);
-    QSSG_ASSERT(rhiDepthTexture && rhiDepthTexture->isValid(), return);
+    QSSG_ASSERT(camera && rhiDepthTexture && rhiDepthTexture->isValid(), return);
 
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
@@ -318,16 +318,17 @@ void SSAOMapPass::renderPass(QSSGRenderer &renderer)
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D SSAO map"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
-    if (Q_LIKELY(rhiAoTexture.isValid()))
+    if (Q_LIKELY(rhiAoTexture && rhiAoTexture->isValid())) {
         rhiRenderAoTexture(rhiCtx.get(),
                            this,
                            renderer,
                            *ssaoShaderPipeline,
                            ps,
                            ambientOcclusion,
-                           rhiAoTexture,
+                           *rhiAoTexture,
                            *rhiDepthTexture,
                            *camera);
+    }
 
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("ssao_map"));
@@ -336,8 +337,8 @@ void SSAOMapPass::renderPass(QSSGRenderer &renderer)
 void SSAOMapPass::release()
 {
     rhiDepthTexture = nullptr;
+    rhiAoTexture = nullptr;
     camera = nullptr;
-    rhiAoTexture.reset();
     ps = {};
     ao = AmbientOcclusion();
 }
@@ -352,17 +353,18 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     const auto &layerPrepResult = data.layerPrepResult;
     bool ready = false;
     ps = data.getPipelineState();
-    if (Q_LIKELY(rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), &rhiDepthTexture))) {
+    rhiDepthTexture = data.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
+    if (Q_LIKELY(rhiDepthTexture && rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), rhiDepthTexture))) {
         sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
         sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
-        ready = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiDepthTexture.rpDesc, data,
+        ready = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiDepthTexture->rpDesc, data,
                                     sortedOpaqueObjects, sortedTransparentObjects,
                                     QSSGRhiDrawCallDataKey::DepthTexture,
                                     1);
     }
 
     if (Q_UNLIKELY(!ready))
-        rhiDepthTexture.reset();
+        rhiDepthTexture = nullptr;
 }
 
 void DepthMapPass::renderPass(QSSGRenderer &renderer)
@@ -385,10 +387,10 @@ void DepthMapPass::renderPass(QSSGRenderer &renderer)
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D depth texture"));
 
-    if (Q_LIKELY(rhiDepthTexture.isValid())) {
+    if (Q_LIKELY(rhiDepthTexture && rhiDepthTexture->isValid())) {
         bool needsSetViewport = true;
-        cb->beginPass(rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiDepthTexture.rt));
+        cb->beginPass(rhiDepthTexture->rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiDepthTexture->rt));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         // NB! We do not pass sortedTransparentObjects in the 4th
         // argument to stay compatible with the 5.15 code base,
@@ -408,7 +410,7 @@ void DepthMapPass::renderPass(QSSGRenderer &renderer)
 
 void DepthMapPass::release()
 {
-    rhiDepthTexture.reset();
+    rhiDepthTexture = nullptr;
     sortedOpaqueObjects.clear();
     sortedTransparentObjects.clear();
     ps = {};
@@ -422,6 +424,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    rhiScreenTexture = data.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
     auto &layer = data.layer;
     const auto &layerPrepResult = data.layerPrepResult;
     wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
@@ -445,7 +448,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     }
 
     bool ready = false;
-    if (Q_LIKELY(rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), wantsMips, &rhiScreenTexture))) {
+    if (Q_LIKELY(rhiScreenTexture && rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), wantsMips, rhiScreenTexture))) {
         ready = true;
         // NB: not compatible with disabling LayerEnableDepthTest
         // because there are effectively no "opaque" objects then.
@@ -454,11 +457,11 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         shaderFeatures.disableTonemapping();
         const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
         for (const auto &handle : sortedOpaqueObjects)
-            rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture.rpDesc, &ps, shaderFeatures, 1);
+            rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1);
     }
 
     if (Q_UNLIKELY(!ready))
-        rhiScreenTexture.reset();
+        rhiScreenTexture = nullptr;
 }
 
 void ScreenMapPass::renderPass(QSSGRenderer &renderer)
@@ -481,9 +484,9 @@ void ScreenMapPass::renderPass(QSSGRenderer &renderer)
 
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
 
-    if (Q_LIKELY(rhiScreenTexture.isValid())) {
-        cb->beginPass(rhiScreenTexture.rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiScreenTexture.rt));
+    if (Q_LIKELY(rhiScreenTexture && rhiScreenTexture->isValid())) {
+        cb->beginPass(rhiScreenTexture->rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiScreenTexture->rt));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
         bool needsSetViewport = true;
@@ -496,7 +499,7 @@ void ScreenMapPass::renderPass(QSSGRenderer &renderer)
         QRhiResourceUpdateBatch *rub = nullptr;
         if (wantsMips) {
             rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-            rub->generateMips(rhiScreenTexture.texture);
+            rub->generateMips(rhiScreenTexture->texture);
         }
         cb->endPass(rub);
         QSSGRHICTX_STAT(rhiCtx, endRenderPass());
@@ -508,7 +511,7 @@ void ScreenMapPass::renderPass(QSSGRenderer &renderer)
 
 void ScreenMapPass::release()
 {
-    rhiScreenTexture.reset();
+    rhiScreenTexture = nullptr;
     if (skyboxPass) {
         // NOTE: The screen map pass is prepped and rendered before we render the skybox to the main render target,
         // i.e., we are not interfering with the skybox pass' state. Just make sure sure to leave the skybox pass
@@ -527,7 +530,7 @@ void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderDat
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    rhiScreenTexture = &data.screenMapPass.rhiScreenTexture;
+    rhiScreenTexture = data.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
     QSSG_ASSERT_X(rhiScreenTexture && rhiScreenTexture->isValid(), "Invalid screen texture!", return);
 
     const auto &layer = data.layer;

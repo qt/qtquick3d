@@ -16,6 +16,26 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \brief QSSGFrameData::getRenderPassResult(QSSGFrameData::RenderResult id)
+    \return The renderable texture result from \a id. Null if no matching \a id was found.
+
+    \note Even if the function returns a non-null result, the returned \l QSSGRhiRenderableTexture
+    might not be ready unless the pass rendering to the texture has been executed.
+
+    \note The returned value is only valid within the current frame. On each new frame
+    the renderable will be reset and should therefore be queried again.
+*/
+const QSSGRhiRenderableTexture *QSSGFrameData::getRenderResult(RenderResult id) const
+{
+    const QSSGRhiRenderableTexture *res = nullptr;
+    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
+    if (QSSG_GUARD(data && (std::size(data->renderResults) > RenderResultT(id))))
+        res = data->getRenderResult(id);
+
+    return res;
+}
+
+/*!
     \fn QSSGFrameData::getPipelineState() const
     \return Base pipeline state for this frame
  */

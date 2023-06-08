@@ -36,6 +36,17 @@ struct QSSGRenderMesh;
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGFrameData
 {
 public:
+    enum class RenderResult : quint32
+    {
+        AoTexture,
+        DepthTexture,
+        ScreenTexture
+    };
+
+    using RenderResultT = std::underlying_type_t<RenderResult>;
+
+    const QSSGRhiRenderableTexture *getRenderResult(RenderResult id) const;
+
     [[nodiscard]] QSSGRhiGraphicsPipelineState getPipelineState() const;
 
     [[nodiscard]] QSSGRenderableNodeEntry getNode(QSSGNodeId id) const;
