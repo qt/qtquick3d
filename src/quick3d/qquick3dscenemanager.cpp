@@ -377,7 +377,7 @@ QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
         if (QSSG_GUARD_X(rc, "QQuickWindow has no QSGRenderContext, this should not happen")) {
             // QSGRenderContext signals are emitted on the render thread, if there is one; use DirectConnection
             connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, this, &QQuick3DWindowAttachment::onReleaseCachedResources, Qt::DirectConnection);
-            connect(rc, &QSGRenderContext::invalidated, this, &QQuick3DWindowAttachment::onReleaseCachedResources, Qt::DirectConnection);
+            connect(rc, &QSGRenderContext::invalidated, this, &QQuick3DWindowAttachment::onInvalidated, Qt::DirectConnection);
         }
 
         // We put this in the back of the queue to allow any clean-up of resources to happen first.
@@ -435,6 +435,18 @@ void QQuick3DWindowAttachment::onReleaseCachedResources()
     if (m_rci)
         m_rci->releaseCachedResources();
     Q_EMIT releaseCachedResources();
+}
+
+void QQuick3DWindowAttachment::onInvalidated()
+{
+    // If the SG RenderContex is invalidated and we're the only one holding onto the SSG
+    // RenderContextInterface then just release it. If the application is not going down
+    // a new RCI will be created/set during the next sync.
+    if (m_rci.use_count() == 1) {
+        onReleaseCachedResources();
+        m_rci.reset();
+        emit renderContextInterfaceChanged();
+    }
 }
 
 bool QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders)

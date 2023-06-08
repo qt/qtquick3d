@@ -59,6 +59,7 @@ Q_SIGNALS:
 
 private:
     Q_INVOKABLE void onReleaseCachedResources();
+    Q_INVOKABLE void onInvalidated();
 
     QPointer<QQuickWindow> m_window;
     std::shared_ptr<QSSGRenderContextInterface> m_rci;
