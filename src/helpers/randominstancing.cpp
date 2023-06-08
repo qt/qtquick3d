@@ -148,7 +148,7 @@ QT_BEGIN_NAMESPACE
     \sa position, color, rotation, scale, customData
 */
 /*!
-    \qmlproperty enumeration QtQuick3D::RandomInstancing::colorModel
+    \qmlproperty enumeration RandomInstancing::colorModel
 
     This property controls how the color range is interpreted.
 

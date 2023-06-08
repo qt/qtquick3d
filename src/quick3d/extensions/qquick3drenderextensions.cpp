@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 
     \brief Abstract class for implementing user side render extensions.
 
-    \sa QSSGRenderExtension
+    //! \sa QSSGRenderExtension
 */
 
 QQuick3DRenderExtension::QQuick3DRenderExtension(QQuick3DObject *parent)

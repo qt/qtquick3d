@@ -23,7 +23,7 @@
 */
 
 /*!
-    \qmlproperty url QtQuick3D::RuntimeLoader::source
+    \qmlproperty url RuntimeLoader::source
 
     This property holds the location of the source file containing the 3D asset.
     Changing this property will unload the current asset and attempt to load an asset from
@@ -33,7 +33,7 @@
 */
 
 /*!
-    \qmlproperty enumeration QtQuick3D::RuntimeLoader::status
+    \qmlproperty enumeration RuntimeLoader::status
 
     This property holds the status of the latest load operation.
 
@@ -48,7 +48,7 @@
 */
 
 /*!
-    \qmlproperty string QtQuick3D::RuntimeLoader::errorString
+    \qmlproperty string RuntimeLoader::errorString
 
     This property holds a human-readable string indicating the status of the latest load operation.
 
@@ -56,7 +56,7 @@
 */
 
 /*!
-    \qmlproperty Bounds QtQuick3D::RuntimeLoader::bounds
+    \qmlproperty Bounds RuntimeLoader::bounds
 
     This property describes the extents of the bounding volume around the imported model.
 
@@ -66,7 +66,7 @@
 */
 
 /*!
-    \qmlproperty QtQuick3D::Instancing QtQuick3D::RuntimeLoader::instancing
+    \qmlproperty Instancing RuntimeLoader::instancing
 
     If this property is set, the imported model will not be rendered normally. Instead, a number of
     instances will be rendered, as defined by the instance table.

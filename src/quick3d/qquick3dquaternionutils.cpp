@@ -27,26 +27,26 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::fromAxisAndAngle(vector3d axis, real angle)
+    \qmlmethod quaternion QtQuick3D::Quaternion::fromAxisAndAngle(vector3d axis, real angle)
     Creates a quaternion from \a axis and \a angle.
     Returns the resulting quaternion.
  */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::fromAxisAndAngle(real x, real y, real z, real angle)
+    \qmlmethod quaternion QtQuick3D::Quaternion::fromAxisAndAngle(real x, real y, real z, real angle)
     Creates a quaternion from \a x, \a y, \a z, and \a angle.
     Returns the resulting quaternion.
  */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::fromAxesAndAngles(vector3d axis1, real angle1,
+    \qmlmethod quaternion QtQuick3D::Quaternion::fromAxesAndAngles(vector3d axis1, real angle1,
                                                                  vector3d axis2, real angle2)
     Creates a quaternion from \a axis1, \a angle1, \a axis2, and \a angle2.
     Returns the resulting quaternion.
  */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::fromAxesAndAngles(vector3d axis1, real angle1,
+    \qmlmethod quaternion QtQuick3D::Quaternion::fromAxesAndAngles(vector3d axis1, real angle1,
                                                                  vector3d axis2, real angle2,
                                                                  vector3d axis3, real angle3)
     Creates a quaternion from \a axis1, \a angle1, \a axis2, \a angle2, \a axis3, and \a angle3.
@@ -54,19 +54,19 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::fromEulerAngles(vector3d eulerAngles)
+    \qmlmethod quaternion QtQuick3D::Quaternion::fromEulerAngles(vector3d eulerAngles)
     Creates a quaternion from \a eulerAngles.
     Returns the resulting quaternion.
  */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::fromEulerAngles(real x, real y, real z)
+    \qmlmethod quaternion QtQuick3D::Quaternion::fromEulerAngles(real x, real y, real z)
     Creates a quaternion from \a x, \a y, and \a z.
     Returns the resulting quaternion.
  */
 
 /*!
-    \qmlmethod quaternion Quick3D::Quaternion::lookAt(vector3d sourcePosition, vector3d targetPosition,
+    \qmlmethod quaternion QtQuick3D::Quaternion::lookAt(vector3d sourcePosition, vector3d targetPosition,
                                                       vector3d forwardDirection, vector3d upDirection)
     Creates a quaternion from \a sourcePosition, \a targetPosition, \a forwardDirection, and
     \a upDirection.  This is used for getting a rotation value for pointing at a particular target,

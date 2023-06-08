@@ -5,7 +5,7 @@
     \example proceduraltexture
     \ingroup quick3d-examples
     \title Qt Quick 3D - Procedural Texture Example
-    \brief Demonstrates how to provide custom texture data from C++ or QML
+    \brief Demonstrates how to provide custom texture data from C++ or QML.
     \image proceduraltexture-example.jpg
 
     This example makes use of QQuick3DTextureData and \l{Texture::textureData}{the
