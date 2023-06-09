@@ -82,24 +82,24 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmltype Bounds
+    \qmltype bounds
     \inqmlmodule QtQuick3D
     \since 5.15
     \brief Specifies the bounds of a model.
 
-    Bounds specify a bounding box with minimum and maximum points.
-    Bounds is a readonly property of the model.
+    bounds specify a bounding box with minimum and maximum points.
+    bounds is a readonly property of the model.
 */
 
 /*!
-    \qmlproperty vector3d Bounds::minimum
+    \qmlproperty vector3d bounds::minimum
 
     Specifies the minimum point of the model bounds.
     \sa maximum
 */
 
 /*!
-    \qmlproperty vector3d Bounds::maximum
+    \qmlproperty vector3d bounds::maximum
 
     Specifies the maximum point of the model bounds.
     \sa minimum
