@@ -227,7 +227,7 @@ Window {
         anchors.fill: view
         //! [mouse area]
 
-        onClicked: {
+        onClicked: (mouse) => {
             // Get screen coordinates of the click
             pickPosition.text = "(" + mouse.x + ", " + mouse.y + ")"
             //! [pick result]
