@@ -22,14 +22,19 @@ Window {
         PerspectiveCamera {
             id: camera
             property real cameraAnimation: 1
-            SequentialAnimation on cameraAnimation {
+            SequentialAnimation {
                 loops: Animation.Infinite
+                running: true
                 NumberAnimation {
+                    target: camera
+                    property: "cameraAnimation"
                     to: -1
                     duration: 5000
                     easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
+                    target: camera
+                    property: "cameraAnimation"
                     to: 1
                     duration: 5000
                     easing.type: Easing.InOutQuad
