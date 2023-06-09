@@ -1,5 +1,7 @@
-// Copyright (C) 2020 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick3D
@@ -68,7 +70,7 @@ Window {
         function endGame() {
             if (targetsNode.currentTargets == 0) {
                 // If we managed to get all targets down -> bonus points!
-                timeBonus = currentTime;
+                timeBonus = mainWindow.currentTime;
                 ballsBonus = currentBalls * 10;
             }
             gameOn = false;
@@ -111,7 +113,7 @@ Window {
             shadowFactor: 50
             quadraticFade: 2
             ambientColor: "#202020"
-            brightness: gameOn ? 200 : 40
+            brightness: mainWindow.gameOn ? 200 : 40
             Behavior on brightness {
                 NumberAnimation {
                     duration: 1000
@@ -124,7 +126,7 @@ Window {
         //! [ball handling]
         MouseArea {
             anchors.fill: parent
-            enabled: gameOn && !ballModel.ballMoving
+            enabled: mainWindow.gameOn && !ballModel.ballMoving
             onPressed: {
                 ballModel.moveBall(mouseX, mouseY);
             }
@@ -144,7 +146,7 @@ Window {
             property real directionY: 0
             // How many ms the ball flies
             readonly property real speed: 2000
-            readonly property real ballScale: ballSize / 100
+            readonly property real ballScale: mainWindow.ballSize / 100
             property var moves: []
             readonly property int maxMoves: 5
             readonly property bool ballMoving: ballAnimation.running
@@ -167,13 +169,13 @@ Window {
             function resetBall() {
                 moves = [];
                 x = 0;
-                y = ballSize/2;
+                y = mainWindow.ballSize/2;
                 z = 400;
             }
 
             function moveBall(posX, posY) {
-                var pos = view3D.mapTo3DScene(Qt.vector3d(posX, posY, ballModel.z + ballSize));
-                pos.y = Math.max(ballSize / 2, pos.y);
+                var pos = view3D.mapTo3DScene(Qt.vector3d(posX, posY, ballModel.z + mainWindow.ballSize));
+                pos.y = Math.max(mainWindow.ballSize / 2, pos.y);
                 var point = {"x": pos.x, "y": pos.y };
                 moves.push(point);
                 if (moves.length > maxMoves) moves.shift();
@@ -183,7 +185,7 @@ Window {
             }
 
             function throwBall() {
-                currentBalls--;
+                mainWindow.currentBalls--;
                 var moveX = 0;
                 var moveY = 0;
                 if (moves.length >= 2) {
@@ -224,7 +226,7 @@ Window {
                         target: ballModel
                         property: "y"
                         duration: ballModel.speed * (2 / 3)
-                        to: ballSize / 4
+                        to: mainWindow.ballSize / 4
                         easing.type: Easing.OutBounce
                     }
                 }
@@ -237,7 +239,7 @@ Window {
                 }
 
                 onFinished: {
-                    if (currentBalls <= 0)
+                    if (mainWindow.currentBalls <= 0)
                         view3D.endGame();
                     ballModel.resetBall();
                 }
@@ -255,7 +257,7 @@ Window {
             //! [ball collisions]
             onZChanged: {
                 // Loop through target items and detect collisions
-                var hitMargin = ballSize / 2 + targetSize / 2;
+                var hitMargin = mainWindow.ballSize / 2 + mainWindow.targetSize / 2;
                 for (var i = 0; i < targetsNode.targets.length; ++i) {
                     var target = targetsNode.targets[i];
                     var targetPos = target.scenePosition;
@@ -314,23 +316,27 @@ Window {
 
                 function hit() {
                     targetsNode.removeTarget(this);
-                    score += points;
+                    mainWindow.score += points;
                     hitAnimation.start();
                     var burstPos = targetNode.mapPositionToScene(Qt.vector3d(0, 0, 0));
                     hitParticleEmitter.burst(100, 200, burstPos);
                 }
 
                 y: startPosY + posY
-                SequentialAnimation on posY {
-                    running: gameOn && !hitAnimation.running
+                SequentialAnimation {
+                    running: mainWindow.gameOn && !hitAnimation.running
                     loops: Animation.Infinite
                     NumberAnimation {
+                        target: targetNode
+                        property: "posY"
                         from: 0
                         to: 150
                         duration: 3000
                         easing.type: Easing.InOutQuad
                     }
                     NumberAnimation {
+                        target: targetNode
+                        property: "posY"
                         to: 0
                         duration: 1500
                         easing.type: Easing.InOutQuad
@@ -368,11 +374,11 @@ Window {
                 Model {
                     id: targetModel
 
-                    readonly property real targetScale: (1 + hide) * (targetSize / 100)
+                    readonly property real targetScale: (1 + targetNode.hide) * (mainWindow.targetSize / 100)
 
                     source: "#Cube"
                     scale: Qt.vector3d(targetScale, targetScale, targetScale)
-                    opacity: 0.99 - hide * 2
+                    opacity: 0.99 - targetNode.hide * 2
                     materials: DefaultMaterial {
                         diffuseMap: Texture {
                             source: "images/qt_logo.jpg"
@@ -391,10 +397,10 @@ Window {
                 }
                 Text {
                     anchors.centerIn: parent
-                    scale: 1 + pointsOpacity
-                    opacity: pointsOpacity
+                    scale: 1 + targetNode.pointsOpacity
+                    opacity: targetNode.pointsOpacity
                     text: targetNode.points
-                    font.pixelSize: 60 * px
+                    font.pixelSize: 60 * mainWindow.px
                     color: "#808000"
                     style: Text.Outline
                     styleColor: "#f0f000"
@@ -505,10 +511,12 @@ Window {
     }
 
     // Game time counter
-    NumberAnimation on currentTime {
-        running: gameOn
-        duration: gameTime * 1000
-        from: gameTime
+    NumberAnimation {
+        target: mainWindow
+        property: "currentTime"
+        running: mainWindow.gameOn
+        duration: mainWindow.gameTime * 1000
+        from: mainWindow.gameTime
         to: 0
         onFinished: {
             view3D.endGame();
@@ -518,23 +526,23 @@ Window {
     // Show time, balls and score
     Item {
         width: parent.width
-        height: 60 * px
+        height: 60 * mainWindow.px
         Text {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.leftMargin: 20 * px
-            font.pixelSize: 26 * px
+            anchors.leftMargin: 20 * mainWindow.px
+            font.pixelSize: 26 * mainWindow.px
             color: "#ffffff"
             style: Text.Outline
             styleColor: "#000000"
-            text: currentTime.toFixed(2)
+            text: mainWindow.currentTime.toFixed(2)
         }
         Image {
             anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: 1 * px
+            anchors.verticalCenterOffset: 1 * mainWindow.px
             anchors.right: ballCountText.left
-            anchors.rightMargin: 8 * px
-            width: 26 * px
+            anchors.rightMargin: 8 * mainWindow.px
+            width: 26 * mainWindow.px
             height: width
             mipmap: true
             source: "images/ball_icon.png"
@@ -543,20 +551,20 @@ Window {
             id: ballCountText
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
-            anchors.rightMargin: 20 * px
-            font.pixelSize: 26 * px
+            anchors.rightMargin: 20 * mainWindow.px
+            font.pixelSize: 26 * mainWindow.px
             color: "#ffffff"
             style: Text.Outline
             styleColor: "#000000"
-            text: currentBalls
+            text: mainWindow.currentBalls
         }
         Text {
             anchors.centerIn: parent
-            font.pixelSize: 36 * px
+            font.pixelSize: 36 * mainWindow.px
             color: "#ffffff"
             style: Text.Outline
             styleColor: "#000000"
-            text: score
+            text: mainWindow.score
         }
     }
 
@@ -567,7 +575,7 @@ Window {
         height: width * 0.6
         fillMode: Image.PreserveAspectFit
         source: "images/quickball.png"
-        opacity: !gameOn
+        opacity: !mainWindow.gameOn
         scale: 2.0 - opacity
         Behavior on opacity {
             NumberAnimation {
@@ -579,10 +587,10 @@ Window {
 
     // Show bonus and total score when the game ends
     Item {
-        property bool show: playingStarted && !gameOn
+        property bool show: mainWindow.playingStarted && !mainWindow.gameOn
 
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: -200 * px
+        anchors.verticalCenterOffset: -200 * mainWindow.px
         onShowChanged: {
             if (show) {
                 showScoreAnimation.start();
@@ -622,37 +630,37 @@ Window {
         Text {
             id: timeBonusText
             anchors.horizontalCenter: parent.horizontalCenter
-            y: opacity * 60 * px
-            font.pixelSize: 26 * px
+            y: opacity * 60 * mainWindow.px
+            font.pixelSize: 26 * mainWindow.px
             color: "#ffffff"
             style: Text.Outline
             styleColor: "#000000"
             textFormat: Text.StyledText
-            text: qsTr("TIME BONUS <b>%1</b>").arg(timeBonus)
+            text: qsTr("TIME BONUS <b>%1</b>").arg(mainWindow.timeBonus)
             opacity: 0
         }
         Text {
             id: ballsBonusText
             anchors.horizontalCenter: parent.horizontalCenter
-            y: timeBonusText.y + opacity * 40 * px
-            font.pixelSize: 26 * px
+            y: timeBonusText.y + opacity * 40 * mainWindow.px
+            font.pixelSize: 26 * mainWindow.px
             color: "#ffffff"
             style: Text.Outline
             styleColor: "#000000"
             textFormat: Text.StyledText
-            text: qsTr("BALLS BONUS <b>%1</b>").arg(ballsBonus)
+            text: qsTr("BALLS BONUS <b>%1</b>").arg(mainWindow.ballsBonus)
             opacity: 0
         }
         Text {
             id: totalScoreText
             anchors.horizontalCenter: parent.horizontalCenter
-            y: ballsBonusText.y + opacity * 60 * px
-            font.pixelSize: 66 * px
+            y: ballsBonusText.y + opacity * 60 * mainWindow.px
+            font.pixelSize: 66 * mainWindow.px
             color: "#ffffff"
             style: Text.Outline
             styleColor: "#000000"
             textFormat: Text.StyledText
-            text: qsTr("SCORE <b>%1</b>").arg(score + timeBonus + ballsBonus)
+            text: qsTr("SCORE <b>%1</b>").arg(mainWindow.score + mainWindow.timeBonus + mainWindow.ballsBonus)
             opacity: 0
         }
     }
@@ -660,11 +668,11 @@ Window {
     RoundButton {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 40 * px
-        width: 140 * px
-        height: 60 * px
-        visible: !gameOn
-        font.pixelSize: 26 * px
+        anchors.bottomMargin: 40 * mainWindow.px
+        width: 140 * mainWindow.px
+        height: 60 * mainWindow.px
+        visible: !mainWindow.gameOn
+        font.pixelSize: 26 * mainWindow.px
         text: qsTr("START")
         onClicked: {
             view3D.startGame();
