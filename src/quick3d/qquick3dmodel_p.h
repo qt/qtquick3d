@@ -40,6 +40,7 @@ class Q_QUICK3D_EXPORT QQuick3DBounds3
     Q_GADGET
     Q_PROPERTY(QVector3D minimum READ minimum CONSTANT)
     Q_PROPERTY(QVector3D maximum READ maximum CONSTANT)
+    QML_VALUE_TYPE(bounds)
 
 public:
     QVector3D minimum() const
