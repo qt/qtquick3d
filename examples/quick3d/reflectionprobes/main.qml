@@ -35,7 +35,7 @@ Window {
         DirectionalLight { }
 
         Model {
-            property real angle: 0
+            property real angle
             source: "#Sphere"
             x: Math.cos(angle) * 100
             z: Math.sin(angle) * 100

@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Controls
 
 Item {
+    id: root
     width: settingsDrawer.width
     height: parent.height
 
@@ -25,7 +26,7 @@ Item {
     Button {
         x: settingsDrawer.visible ? (settingsDrawer.x + settingsDrawer.width) : 0
         anchors.top: parent.top
-        width: iconSize
+        width: root.iconSize
         height: width
         icon.width: width * 0.3
         icon.height: height * 0.3
