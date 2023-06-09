@@ -20,7 +20,9 @@ Window {
         property double modelRotation: 0
         property double modelHeight: 0
 
-        NumberAnimation on modelRotation {
+        NumberAnimation {
+            target: screenSpaceReflectionsView
+            property: "modelRotation"
             running: true
             from: 0
             to: 360
@@ -28,15 +30,19 @@ Window {
             loops: Animation.Infinite
         }
 
-        SequentialAnimation on modelHeight {
+        SequentialAnimation {
             running: true
             loops: Animation.Infinite
             NumberAnimation {
+                target: screenSpaceReflectionsView
+                property: "modelHeight"
                 from: -5
                 to: 20
                 duration: 1000
             }
             NumberAnimation {
+                target: screenSpaceReflectionsView
+                property: "modelHeight"
                 from: 20
                 to: -5
                 duration: 1000
