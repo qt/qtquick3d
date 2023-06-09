@@ -50,15 +50,19 @@ Window {
             id: camera
             z: 300
 
-            SequentialAnimation on z {
+            SequentialAnimation {
                 running: cbAutoMove.checked
                 loops: -1
                 NumberAnimation {
+                    target: camera
+                    property: "z"
                     from: 600
                     to: -600
                     duration: 5000
                 }
                 NumberAnimation {
+                    target: camera
+                    property: "z"
                     from: -600
                     to: 600
                     duration: 5000
