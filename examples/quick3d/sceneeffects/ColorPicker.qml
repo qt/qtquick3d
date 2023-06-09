@@ -17,7 +17,7 @@ Item {
         id: border
         color: "transparent"
         border.width: 2
-        border.color: isHovered ? palette.dark : palette.alternateBase
+        border.color: colorPicker.isHovered ? palette.dark : palette.alternateBase
         anchors.fill: parent
 
         Image {
@@ -60,8 +60,8 @@ Item {
             spacing: 0
 
             Item {
-                width: 135
-                height: 135
+                implicitWidth: 135
+                implicitHeight: 135
                 ShaderEffect {
                     id: hsvWheel
                     anchors.centerIn: parent
@@ -167,7 +167,7 @@ Item {
                 alphaSection.alphaValue = root.color.a * 255
             }
             ColumnLayout {
-                width: 250
+                implicitWidth: 250
                 SectionLayout {
                     title: "RGB"
                     id: rgbSection

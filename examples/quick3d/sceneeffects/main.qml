@@ -13,6 +13,7 @@ import QtQuick3D.Helpers
 import QtQuick3D.AssetUtils
 
 Window {
+    id: rootWindow
     visible: true
     width: 1280
     height: 720
@@ -21,7 +22,7 @@ Window {
 
     SettingsPage {
         id: settingsPage
-        camera: view3D.camera
+        camera: view3D.camera as PerspectiveCamera
         sceneEnvironment: env
         anchors.left: parent.left
         anchors.top: pane.bottom
@@ -178,7 +179,7 @@ Window {
 
         RuntimeLoader {
             id: importNode
-            source: importUrl
+            source: rootWindow.importUrl
             instancing: instancingButton.checked ? instancing : null
             onBoundsChanged: helper.updateBounds(bounds)
         }

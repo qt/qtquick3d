@@ -10,7 +10,7 @@ import QtQuick3D.Helpers
 Rectangle {
     id: toolPage
 
-    required property Camera camera
+    required property PerspectiveCamera camera
     required property var sceneEnvironment
     required property Texture lutTexture
 
@@ -35,9 +35,9 @@ Rectangle {
                         textRole: "text"
                         valueRole: "value"
                         implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: sceneEnvironment.antialiasingMode = currentValue
+                        onActivated: toolPage.sceneEnvironment.antialiasingMode = currentValue
 
-                        Component.onCompleted: antialiasingModeComboBox.currentIndex = antialiasingModeComboBox.indexOfValue(sceneEnvironment.antialiasingMode)
+                        Component.onCompleted: antialiasingModeComboBox.currentIndex = antialiasingModeComboBox.indexOfValue(toolPage.sceneEnvironment.antialiasingMode)
 
                         model: [
                             { value: SceneEnvironment.NoAA, text: "No Antialiasing"},
@@ -48,7 +48,7 @@ Rectangle {
                     }
                 }
                 RowLayout {
-                    visible: sceneEnvironment.antialiasingMode !== SceneEnvironment.NoAA
+                    visible: toolPage.sceneEnvironment.antialiasingMode !== SceneEnvironment.NoAA
                     Label {
                         text: "AA Quality"
                         Layout.fillWidth: true
@@ -59,8 +59,8 @@ Rectangle {
                         textRole: "text"
                         valueRole: "value"
                         implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: sceneEnvironment.antialiasingQuality = currentValue
-                        Component.onCompleted: antialiasingQualityComboBox.currentIndex = antialiasingQualityComboBox.indexOfValue(sceneEnvironment.antialiasingQuality)
+                        onActivated: toolPage.sceneEnvironment.antialiasingQuality = currentValue
+                        Component.onCompleted: antialiasingQualityComboBox.currentIndex = antialiasingQualityComboBox.indexOfValue(toolPage.sceneEnvironment.antialiasingQuality)
                         model: [
                             { value: SceneEnvironment.Medium, text: "Medium"},
                             { value: SceneEnvironment.High, text: "High"},
@@ -70,40 +70,40 @@ Rectangle {
                 }
                 CheckBox {
                     text: "Enable FXAA"
-                    checked: sceneEnvironment.fxaaEnabled
+                    checked: toolPage.sceneEnvironment.fxaaEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.fxaaEnabled = checked
+                        toolPage.sceneEnvironment.fxaaEnabled = checked
                     }
                 }
 
                 CheckBox {
                     text: "Enable Temporal AA"
-                    checked: sceneEnvironment.temporalAAEnabled
+                    checked: toolPage.sceneEnvironment.temporalAAEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.temporalAAEnabled = checked
+                        toolPage.sceneEnvironment.temporalAAEnabled = checked
                     }
                 }
 
                 RowLayout {
-                    visible: sceneEnvironment.temporalAAEnabled
+                    visible: toolPage.sceneEnvironment.temporalAAEnabled
                     Label {
-                        text: "Temporal AA Strength (" + sceneEnvironment.temporalAAStrength.toFixed(2) + ")"
+                        text: "Temporal AA Strength (" + toolPage.sceneEnvironment.temporalAAStrength.toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.temporalAAStrength
+                        value: toolPage.sceneEnvironment.temporalAAStrength
                         onValueChanged:
-                            sceneEnvironment.temporalAAStrength = value
+                            toolPage.sceneEnvironment.temporalAAStrength = value
                     }
                 }
 
                 CheckBox {
                     text: "Enable Specular AA"
-                    checked: sceneEnvironment.specularAAEnabled
+                    checked: toolPage.sceneEnvironment.specularAAEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.specularAAEnabled = checked
+                        toolPage.sceneEnvironment.specularAAEnabled = checked
                     }
                 }
             }
@@ -115,49 +115,49 @@ Rectangle {
 
                 CheckBox {
                     text: "Enable SSAO"
-                    checked: sceneEnvironment.aoEnabled
+                    checked: toolPage.sceneEnvironment.aoEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.aoEnabled = checked
+                        toolPage.sceneEnvironment.aoEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Strength (" + (sceneEnvironment.aoStrength).toFixed(2) + ")"
+                        text: "Strength (" + (toolPage.sceneEnvironment.aoStrength).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 100.0
-                        value: sceneEnvironment.aoStrength
+                        value: toolPage.sceneEnvironment.aoStrength
                         onValueChanged: {
-                            sceneEnvironment.aoStrength = value
+                            toolPage.sceneEnvironment.aoStrength = value
                         }
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Softness (" + (sceneEnvironment.aoSoftness).toFixed(2) + ")"
+                        text: "Softness (" + (toolPage.sceneEnvironment.aoSoftness).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 50.0
-                        value: sceneEnvironment.aoSoftness
+                        value: toolPage.sceneEnvironment.aoSoftness
                         onValueChanged:
-                            sceneEnvironment.aoSoftness = value
+                            toolPage.sceneEnvironment.aoSoftness = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Distance (" + (sceneEnvironment.aoDistance).toFixed(2) + ")"
+                        text: "Distance (" + (toolPage.sceneEnvironment.aoDistance).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 5.0
-                        value: sceneEnvironment.aoDistance
+                        value: toolPage.sceneEnvironment.aoDistance
                         onValueChanged:
-                            sceneEnvironment.aoDistance = value
+                            toolPage.sceneEnvironment.aoDistance = value
                     }
                 }
                 RowLayout {
@@ -171,9 +171,9 @@ Rectangle {
                         textRole: "text"
                         valueRole: "value"
                         implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: sceneEnvironment.aoSampleRate = currentValue
+                        onActivated: toolPage.sceneEnvironment.aoSampleRate = currentValue
 
-                        Component.onCompleted: aoSampleRateComboBox.currentIndex = aoSampleRateComboBox.indexOfValue(sceneEnvironment.aoSampleRate)
+                        Component.onCompleted: aoSampleRateComboBox.currentIndex = aoSampleRateComboBox.indexOfValue(toolPage.sceneEnvironment.aoSampleRate)
 
                         model: [
                             { value: 2, text: "2"},
@@ -184,23 +184,23 @@ Rectangle {
                 }
                 RowLayout {
                     Label {
-                        text: "Bias (" + (sceneEnvironment.aoBias).toFixed(2) + ")"
+                        text: "Bias (" + (toolPage.sceneEnvironment.aoBias).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: -1.0
                         to: 1.0
                         stepSize: 0.01
-                        value: sceneEnvironment.aoBias
+                        value: toolPage.sceneEnvironment.aoBias
                         onValueChanged:
-                            sceneEnvironment.aoBias = value
+                            toolPage.sceneEnvironment.aoBias = value
                     }
                 }
                 CheckBox {
                     text: "Enable AO Dither"
-                    checked: sceneEnvironment.aoDither
+                    checked: toolPage.sceneEnvironment.aoDither
                     onCheckedChanged: {
-                        sceneEnvironment.aoDither = checked
+                        toolPage.sceneEnvironment.aoDither = checked
                     }
                 }
             }
@@ -212,19 +212,19 @@ Rectangle {
 
                 CheckBox {
                     text: "Enabled"
-                    checked: sceneEnvironment.depthOfFieldEnabled
+                    checked: toolPage.sceneEnvironment.depthOfFieldEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.depthOfFieldEnabled = checked
+                        toolPage.sceneEnvironment.depthOfFieldEnabled = checked
                     }
                 }
 
                 Label {
-                    text: "Focus Distance (" + (sceneEnvironment.depthOfFieldFocusDistance).toFixed(2) + ")"
+                    text: "Focus Distance (" + (toolPage.sceneEnvironment.depthOfFieldFocusDistance).toFixed(2) + ")"
                     Layout.fillWidth: true
                 }
 
                 Label {
-                    text: "Focus Range (" + (sceneEnvironment.depthOfFieldFocusRange).toFixed(2) +")"
+                    text: "Focus Range (" + (toolPage.sceneEnvironment.depthOfFieldFocusRange).toFixed(2) +")"
                     Layout.fillWidth: true
                 }
 
@@ -239,34 +239,34 @@ Rectangle {
 
                 RangeSlider {
                     id: dofFocusSlider
-                    from: camera.clipNear
-                    to: camera.clipFar
+                    from: toolPage.camera.clipNear
+                    to: toolPage.camera.clipFar
                     Layout.fillWidth: true
                     Component.onCompleted: {
-                        first.value = sceneEnvironment.depthOfFieldFocusDistance - sceneEnvironment.depthOfFieldFocusRange * 0.5
-                        second.value = sceneEnvironment.depthOfFieldFocusDistance + sceneEnvironment.depthOfFieldFocusRange * 0.5
+                        first.value = toolPage.sceneEnvironment.depthOfFieldFocusDistance - toolPage.sceneEnvironment.depthOfFieldFocusRange * 0.5
+                        second.value = toolPage.sceneEnvironment.depthOfFieldFocusDistance + toolPage.sceneEnvironment.depthOfFieldFocusRange * 0.5
                     }
                     first.onMoved: {
-                        sceneEnvironment.depthOfFieldFocusRange = second.value - first.value
-                        sceneEnvironment.depthOfFieldFocusDistance = first.value + sceneEnvironment.depthOfFieldFocusRange * 0.5
+                        toolPage.sceneEnvironment.depthOfFieldFocusRange = second.value - first.value
+                        toolPage.sceneEnvironment.depthOfFieldFocusDistance = first.value + toolPage.sceneEnvironment.depthOfFieldFocusRange * 0.5
                     }
                     second.onMoved: {
-                        sceneEnvironment.depthOfFieldFocusRange = second.value - first.value
-                        sceneEnvironment.depthOfFieldFocusDistance = first.value + sceneEnvironment.depthOfFieldFocusRange * 0.5
+                        toolPage.sceneEnvironment.depthOfFieldFocusRange = second.value - first.value
+                        toolPage.sceneEnvironment.depthOfFieldFocusDistance = first.value + toolPage.sceneEnvironment.depthOfFieldFocusRange * 0.5
                     }
                 }
 
                 RowLayout {
                     Label {
-                        text: "Blur Amount (" + (sceneEnvironment.depthOfFieldBlurAmount).toFixed(2) + ")"
+                        text: "Blur Amount (" + (toolPage.sceneEnvironment.depthOfFieldBlurAmount).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 25.0
-                        value: sceneEnvironment.depthOfFieldBlurAmount
+                        value: toolPage.sceneEnvironment.depthOfFieldBlurAmount
                         onValueChanged:
-                            sceneEnvironment.depthOfFieldBlurAmount = value
+                            toolPage.sceneEnvironment.depthOfFieldBlurAmount = value
                     }
                 }
 
@@ -279,14 +279,14 @@ Rectangle {
 
                 CheckBox {
                     text: "Enabled"
-                    checked: sceneEnvironment.fog.enabled
+                    checked: toolPage.sceneEnvironment.fog.enabled
                     onCheckedChanged: {
-                        sceneEnvironment.fog.enabled = checked
+                        toolPage.sceneEnvironment.fog.enabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Density (" + sceneEnvironment.fog.density.toFixed(2) + ")"
+                        text: "Density (" + toolPage.sceneEnvironment.fog.density.toFixed(2) + ")"
                     }
                     Slider {
                         id: valDensity
@@ -294,8 +294,8 @@ Rectangle {
                         Layout.fillWidth: true
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.fog.density
-                        onValueChanged: sceneEnvironment.fog.density = value
+                        value: toolPage.sceneEnvironment.fog.density
+                        onValueChanged: toolPage.sceneEnvironment.fog.density = value
                     }
                 }
                 RowLayout {
@@ -304,22 +304,22 @@ Rectangle {
                         Layout.fillWidth: true
                     }
                     ColorPicker {
-                        color: sceneEnvironment.fog.color
-                        onColorChanged: sceneEnvironment.fog.color = color
+                        color: toolPage.sceneEnvironment.fog.color
+                        onColorChanged: toolPage.sceneEnvironment.fog.color = color
                     }
                 }
 
                 // DEPTH FOG
                 CheckBox {
                     text: "Depth fog enabled"
-                    checked: sceneEnvironment.fog.depthEnabled
+                    checked: toolPage.sceneEnvironment.fog.depthEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.fog.depthEnabled = checked
+                        toolPage.sceneEnvironment.fog.depthEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Near (" + sceneEnvironment.fog.depthNear.toFixed(2) + ") / Far (" + sceneEnvironment.fog.depthFar.toFixed(2) + ")"
+                        text: "Near (" + toolPage.sceneEnvironment.fog.depthNear.toFixed(2) + ") / Far (" + toolPage.sceneEnvironment.fog.depthFar.toFixed(2) + ")"
                     }
                     RangeSlider {
                         id: valDepth
@@ -327,15 +327,15 @@ Rectangle {
                         Layout.fillWidth: true
                         from: -1000.0
                         to: 1000.0
-                        first.value: sceneEnvironment.fog.depthNear
-                        second.value: sceneEnvironment.fog.depthFar
-                        first.onValueChanged: sceneEnvironment.fog.depthNear = first.value
-                        second.onValueChanged: sceneEnvironment.fog.depthFar = second.value
+                        first.value: toolPage.sceneEnvironment.fog.depthNear
+                        second.value: toolPage.sceneEnvironment.fog.depthFar
+                        first.onValueChanged: toolPage.sceneEnvironment.fog.depthNear = first.value
+                        second.onValueChanged: toolPage.sceneEnvironment.fog.depthFar = second.value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Curve (" + sceneEnvironment.fog.depthCurve.toFixed(2) + ")"
+                        text: "Curve (" + toolPage.sceneEnvironment.fog.depthCurve.toFixed(2) + ")"
                     }
                     Slider {
                         id: valDepthCurve
@@ -343,22 +343,22 @@ Rectangle {
                         Layout.fillWidth: true
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.fog.depthCurve
-                        onValueChanged: sceneEnvironment.fog.depthCurve = value
+                        value: toolPage.sceneEnvironment.fog.depthCurve
+                        onValueChanged: toolPage.sceneEnvironment.fog.depthCurve = value
                     }
                 }
 
                 // HEIGHT FOG
                 CheckBox {
                     text: "Height fog enabled"
-                    checked: sceneEnvironment.fog.heightEnabled
+                    checked: toolPage.sceneEnvironment.fog.heightEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.fog.heightEnabled = checked
+                        toolPage.sceneEnvironment.fog.heightEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Least Intense Y (" + sceneEnvironment.fog.leastIntenseY.toFixed(2) + ")"
+                        text: "Least Intense Y (" + toolPage.sceneEnvironment.fog.leastIntenseY.toFixed(2) + ")"
                     }
                     Slider {
                         id: valHeightMin
@@ -366,13 +366,13 @@ Rectangle {
                         Layout.fillWidth: true
                         from: -1000.0
                         to: 1000.0
-                        value: sceneEnvironment.fog.leastIntenseY
-                        onValueChanged: sceneEnvironment.fog.leastIntenseY = value
+                        value: toolPage.sceneEnvironment.fog.leastIntenseY
+                        onValueChanged: toolPage.sceneEnvironment.fog.leastIntenseY = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Most Intense Y (" + sceneEnvironment.fog.mostIntenseY.toFixed(2) + ")"
+                        text: "Most Intense Y (" + toolPage.sceneEnvironment.fog.mostIntenseY.toFixed(2) + ")"
                     }
                     Slider {
                         id: valHeightMax
@@ -380,13 +380,13 @@ Rectangle {
                         Layout.fillWidth: true
                         from: -1000.0
                         to: 1000.0
-                        value: sceneEnvironment.fog.mostIntenseY
-                        onValueChanged: sceneEnvironment.fog.mostIntenseY = value
+                        value: toolPage.sceneEnvironment.fog.mostIntenseY
+                        onValueChanged: toolPage.sceneEnvironment.fog.mostIntenseY = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Curve (" + sceneEnvironment.fog.heightCurve.toFixed(2) + ")"
+                        text: "Curve (" + toolPage.sceneEnvironment.fog.heightCurve.toFixed(2) + ")"
                     }
                     Slider {
                         id: valHeightCurve
@@ -394,22 +394,22 @@ Rectangle {
                         Layout.fillWidth: true
                         from: 0.0
                         to: 100.0
-                        value: sceneEnvironment.fog.heightCurve
-                        onValueChanged: sceneEnvironment.fog.heightCurve = value
+                        value: toolPage.sceneEnvironment.fog.heightCurve
+                        onValueChanged: toolPage.sceneEnvironment.fog.heightCurve = value
                     }
                 }
 
                 // TRANSMISSION
                 CheckBox {
                     text: "Light transmission enabled"
-                    checked: sceneEnvironment.fog.transmitEnabled
+                    checked: toolPage.sceneEnvironment.fog.transmitEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.fog.transmitEnabled = checked
+                        toolPage.sceneEnvironment.fog.transmitEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Curve (" + sceneEnvironment.fog.transmitCurve.toFixed(2) + ")"
+                        text: "Curve (" + toolPage.sceneEnvironment.fog.transmitCurve.toFixed(2) + ")"
                     }
                     Slider {
                         id: valTransmitCurve
@@ -417,28 +417,28 @@ Rectangle {
                         Layout.fillWidth: true
                         from: 0.0
                         to: 100.0
-                        value: sceneEnvironment.fog.transmitCurve
-                        onValueChanged: sceneEnvironment.fog.transmitCurve = value
+                        value: toolPage.sceneEnvironment.fog.transmitCurve
+                        onValueChanged: toolPage.sceneEnvironment.fog.transmitCurve = value
                     }
                 }
 
                 Button {
                     text: "Reset to Defaults"
                     onClicked: {
-                        sceneEnvironment.fog.enabled = false
-                        sceneEnvironment.fog.depthEnabled = false
-                        sceneEnvironment.fog.heightEnabled = false
-                        sceneEnvironment.fog.transmitEnabled = false
+                        toolPage.sceneEnvironment.fog.enabled = false
+                        toolPage.sceneEnvironment.fog.depthEnabled = false
+                        toolPage.sceneEnvironment.fog.heightEnabled = false
+                        toolPage.sceneEnvironment.fog.transmitEnabled = false
 
-                        sceneEnvironment.fog.density = 1.0;
-                        sceneEnvironment.fog.color = Qt.rgba(0.5, 0.6, 0.7, 1.0);
-                        sceneEnvironment.fog.depthNear = 10.0;
-                        sceneEnvironment.fog.depthFar = 1000.0;
-                        sceneEnvironment.fog.depthCurve = 1.0;
-                        sceneEnvironment.fog.leastIntenseY = 10.0;
-                        sceneEnvironment.fog.mostIntenseY = 0.0;
-                        sceneEnvironment.fog.heightCurve = 1.0;
-                        sceneEnvironment.fog.transmitCurve = 1.0;
+                        toolPage.sceneEnvironment.fog.density = 1.0;
+                        toolPage.sceneEnvironment.fog.color = Qt.rgba(0.5, 0.6, 0.7, 1.0);
+                        toolPage.sceneEnvironment.fog.depthNear = 10.0;
+                        toolPage.sceneEnvironment.fog.depthFar = 1000.0;
+                        toolPage.sceneEnvironment.fog.depthCurve = 1.0;
+                        toolPage.sceneEnvironment.fog.leastIntenseY = 10.0;
+                        toolPage.sceneEnvironment.fog.mostIntenseY = 0.0;
+                        toolPage.sceneEnvironment.fog.heightCurve = 1.0;
+                        toolPage.sceneEnvironment.fog.transmitCurve = 1.0;
                     }
                 }
             }
@@ -450,101 +450,101 @@ Rectangle {
 
                 CheckBox {
                     text: "Enable Glow"
-                    checked: sceneEnvironment.glowEnabled
+                    checked: toolPage.sceneEnvironment.glowEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.glowEnabled = checked
+                        toolPage.sceneEnvironment.glowEnabled = checked
                     }
                 }
                 CheckBox {
                     text: "High Quality Mode"
-                    checked: sceneEnvironment.glowQualityHigh
+                    checked: toolPage.sceneEnvironment.glowQualityHigh
                     onCheckedChanged: {
-                        sceneEnvironment.glowQualityHigh = checked
+                        toolPage.sceneEnvironment.glowQualityHigh = checked
                     }
                 }
                 CheckBox {
                     text: "Use Bicubic Upscale"
-                    checked: sceneEnvironment.glowUseBicubicUpscale
+                    checked: toolPage.sceneEnvironment.glowUseBicubicUpscale
                     onCheckedChanged: {
-                        sceneEnvironment.glowUseBicubicUpscale = checked
+                        toolPage.sceneEnvironment.glowUseBicubicUpscale = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Strength (" + (sceneEnvironment.glowStrength).toFixed(2) + ")"
+                        text: "Strength (" + (toolPage.sceneEnvironment.glowStrength).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 2.0
-                        value: sceneEnvironment.glowStrength
+                        value: toolPage.sceneEnvironment.glowStrength
                         onValueChanged:
-                            sceneEnvironment.glowStrength = value
+                            toolPage.sceneEnvironment.glowStrength = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Intensity (" + (sceneEnvironment.glowIntensity).toFixed(2) + ")"
+                        text: "Intensity (" + (toolPage.sceneEnvironment.glowIntensity).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 2.0
-                        value: sceneEnvironment.glowIntensity
+                        value: toolPage.sceneEnvironment.glowIntensity
                         onValueChanged:
-                            sceneEnvironment.glowIntensity = value
+                            toolPage.sceneEnvironment.glowIntensity = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Bloom (" + (sceneEnvironment.glowBloom).toFixed(2) + ")"
+                        text: "Bloom (" + (toolPage.sceneEnvironment.glowBloom).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.glowBloom
+                        value: toolPage.sceneEnvironment.glowBloom
                         onValueChanged:
-                            sceneEnvironment.glowBloom = value
+                            toolPage.sceneEnvironment.glowBloom = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "HDR Upper Threshold (" + (sceneEnvironment.glowHDRMaximumValue).toFixed(2) + ")"
+                        text: "HDR Upper Threshold (" + (toolPage.sceneEnvironment.glowHDRMaximumValue).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 256.0
-                        value: sceneEnvironment.glowHDRMaximumValue
+                        value: toolPage.sceneEnvironment.glowHDRMaximumValue
                         onValueChanged:
-                            sceneEnvironment.glowHDRMaximumValue = value
+                            toolPage.sceneEnvironment.glowHDRMaximumValue = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "HDR Lower Threshold (" + (sceneEnvironment.glowHDRMinimumValue).toFixed(2) + ")"
+                        text: "HDR Lower Threshold (" + (toolPage.sceneEnvironment.glowHDRMinimumValue).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 4.0
-                        value: sceneEnvironment.glowHDRMinimumValue
+                        value: toolPage.sceneEnvironment.glowHDRMinimumValue
                         onValueChanged:
-                            sceneEnvironment.glowHDRMinimumValue = value
+                            toolPage.sceneEnvironment.glowHDRMinimumValue = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "HDR Scale (" + (sceneEnvironment.glowHDRScale).toFixed(2) + ")"
+                        text: "HDR Scale (" + (toolPage.sceneEnvironment.glowHDRScale).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 4.0
-                        value: sceneEnvironment.glowHDRScale
+                        value: toolPage.sceneEnvironment.glowHDRScale
                         onValueChanged:
-                            sceneEnvironment.glowHDRScale = value
+                            toolPage.sceneEnvironment.glowHDRScale = value
                     }
                 }
                 RowLayout {
@@ -558,9 +558,9 @@ Rectangle {
                         textRole: "text"
                         valueRole: "value"
                         implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: sceneEnvironment.glowBlendMode = currentValue
+                        onActivated: toolPage.sceneEnvironment.glowBlendMode = currentValue
 
-                        Component.onCompleted: glowBlendModeComboBox.currentIndex = glowBlendModeComboBox.indexOfValue(sceneEnvironment.glowBlendMode)
+                        Component.onCompleted: glowBlendModeComboBox.currentIndex = glowBlendModeComboBox.indexOfValue(toolPage.sceneEnvironment.glowBlendMode)
 
                         model: [
                             { value: ExtendedSceneEnvironment.GlowBlendMode.Additive, text: "Additive"},
@@ -580,14 +580,14 @@ Rectangle {
 
                     function updateGlowLevels(value, enable) {
                         if (enable)
-                           sceneEnvironment.glowLevel |= value
+                           toolPage.sceneEnvironment.glowLevel |= value
                         else
-                           sceneEnvironment.glowLevel &= ~value
+                           toolPage.sceneEnvironment.glowLevel &= ~value
                     }
 
                     ColumnLayout {
                         id: glowLevelCheckBoxes
-                        function isChecked(flag) { return ((sceneEnvironment.glowLevel & flag) === flag) }
+                        function isChecked(flag) { return ((toolPage.sceneEnvironment.glowLevel & flag) === flag) }
                         CheckBox {
                             text: qsTr("One")
                             checked: glowLevelCheckBoxes.isChecked(ExtendedSceneEnvironment.GlowLevel.One)
@@ -642,16 +642,16 @@ Rectangle {
                 Button {
                     text: "Reset to Defaults"
                     onClicked: {
-                        sceneEnvironment.glowQualityHigh = false
-                        sceneEnvironment.glowUseBicubicUpscale = false
-                        sceneEnvironment.glowStrength = 1.0
-                        sceneEnvironment.glowIntensity = 0.8
-                        sceneEnvironment.glowBloom = 0.0
-                        sceneEnvironment.glowBlendMode = 2
-                        sceneEnvironment.glowHDRMaximumValue = 12.0
-                        sceneEnvironment.glowHDRScale = 2.0
-                        sceneEnvironment.glowHDRMinimumValue = 1.0
-                        sceneEnvironment.glowLevel = 1
+                        toolPage.sceneEnvironment.glowQualityHigh = false
+                        toolPage.sceneEnvironment.glowUseBicubicUpscale = false
+                        toolPage.sceneEnvironment.glowStrength = 1.0
+                        toolPage.sceneEnvironment.glowIntensity = 0.8
+                        toolPage.sceneEnvironment.glowBloom = 0.0
+                        toolPage.sceneEnvironment.glowBlendMode = 2
+                        toolPage.sceneEnvironment.glowHDRMaximumValue = 12.0
+                        toolPage.sceneEnvironment.glowHDRScale = 2.0
+                        toolPage.sceneEnvironment.glowHDRMinimumValue = 1.0
+                        toolPage.sceneEnvironment.glowLevel = 1
                     }
                 }
 
@@ -672,8 +672,8 @@ Rectangle {
                         textRole: "text"
                         valueRole: "value"
                         implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: sceneEnvironment.tonemapMode = currentValue
-                        Component.onCompleted: tonemappingModeComboBox.currentIndex = tonemappingModeComboBox.indexOfValue(sceneEnvironment.tonemapMode)
+                        onActivated: toolPage.sceneEnvironment.tonemapMode = currentValue
+                        Component.onCompleted: tonemappingModeComboBox.currentIndex = tonemappingModeComboBox.indexOfValue(toolPage.sceneEnvironment.tonemapMode)
                         model: [
                             { value: SceneEnvironment.TonemapModeNone, text: "None"},
                             { value: SceneEnvironment.TonemapModeAces, text: "ACES"},
@@ -686,60 +686,60 @@ Rectangle {
 
                 RowLayout {
                     Label {
-                        text: "Exposure (" + (sceneEnvironment.exposure).toFixed(2) + ")"
+                        text: "Exposure (" + (toolPage.sceneEnvironment.exposure).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 10.0
-                        value: sceneEnvironment.exposure
+                        value: toolPage.sceneEnvironment.exposure
                         onValueChanged:
-                            sceneEnvironment.exposure = value
+                            toolPage.sceneEnvironment.exposure = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "White Point (" + (sceneEnvironment.whitePoint).toFixed(2) + ")"
+                        text: "White Point (" + (toolPage.sceneEnvironment.whitePoint).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.whitePoint
+                        value: toolPage.sceneEnvironment.whitePoint
                         onValueChanged:
-                            sceneEnvironment.whitePoint = value
+                            toolPage.sceneEnvironment.whitePoint = value
                     }
                 }
 
                 RowLayout {
                     Label {
-                        text: "Sharpness Amount (" + (sceneEnvironment.sharpnessAmount).toFixed(2) + ")"
+                        text: "Sharpness Amount (" + (toolPage.sceneEnvironment.sharpnessAmount).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.sharpnessAmount
+                        value: toolPage.sceneEnvironment.sharpnessAmount
                         onValueChanged:
-                            sceneEnvironment.sharpnessAmount = value
+                            toolPage.sceneEnvironment.sharpnessAmount = value
                     }
                 }
 
                 CheckBox {
                     text: "Enable Dithering"
-                    checked: sceneEnvironment.ditheringEnabled
+                    checked: toolPage.sceneEnvironment.ditheringEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.ditheringEnabled = checked
+                        toolPage.sceneEnvironment.ditheringEnabled = checked
                     }
                 }
                 Button {
                     text: "Reset to Defaults"
                     onClicked: {
-                        sceneEnvironment.tonemapMode = SceneEnvironment.TonemapModeLinear
-                        sceneEnvironment.exposure = 1.0
-                        sceneEnvironment.whitePoint = 1.0
-                        sceneEnvironment.sharpnessAmount = 0.0
-                        sceneEnvironment.ditheringEnabled = false
+                        toolPage.sceneEnvironment.tonemapMode = SceneEnvironment.TonemapModeLinear
+                        toolPage.sceneEnvironment.exposure = 1.0
+                        toolPage.sceneEnvironment.whitePoint = 1.0
+                        toolPage.sceneEnvironment.sharpnessAmount = 0.0
+                        toolPage.sceneEnvironment.ditheringEnabled = false
                     }
                 }
             }
@@ -750,60 +750,60 @@ Rectangle {
                 title: "Adjustments"
                 CheckBox {
                     text: "Enable Color Adjustments"
-                    checked: sceneEnvironment.colorAdjustmentsEnabled
+                    checked: toolPage.sceneEnvironment.colorAdjustmentsEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.colorAdjustmentsEnabled = checked
+                        toolPage.sceneEnvironment.colorAdjustmentsEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Brightness (" + (sceneEnvironment.adjustmentBrightness).toFixed(2) + ")"
+                        text: "Brightness (" + (toolPage.sceneEnvironment.adjustmentBrightness).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.01
                         to: 8.0
                         stepSize: 0.01
-                        value: sceneEnvironment.adjustmentBrightness
+                        value: toolPage.sceneEnvironment.adjustmentBrightness
                         onValueChanged:
-                            sceneEnvironment.adjustmentBrightness = value
+                            toolPage.sceneEnvironment.adjustmentBrightness = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Contrast (" + (sceneEnvironment.adjustmentContrast).toFixed(2) + ")"
+                        text: "Contrast (" + (toolPage.sceneEnvironment.adjustmentContrast).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.01
                         to: 8.0
                         stepSize: 0.01
-                        value: sceneEnvironment.adjustmentContrast
+                        value: toolPage.sceneEnvironment.adjustmentContrast
                         onValueChanged:
-                            sceneEnvironment.adjustmentContrast = value
+                            toolPage.sceneEnvironment.adjustmentContrast = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Saturation (" + (sceneEnvironment.adjustmentSaturation).toFixed(2) + ")"
+                        text: "Saturation (" + (toolPage.sceneEnvironment.adjustmentSaturation).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.01
                         to: 8.0
                         stepSize: 0.01
-                        value: sceneEnvironment.adjustmentSaturation
+                        value: toolPage.sceneEnvironment.adjustmentSaturation
                         onValueChanged:
-                            sceneEnvironment.adjustmentSaturation = value
+                            toolPage.sceneEnvironment.adjustmentSaturation = value
                     }
                 }
                 Button {
                     text: "Reset to Defaults"
                     onClicked: {
                         //sceneEnvironment.bcsAdjustments = Qt.vector3d(1.0, 1.0, 1.0);
-                        sceneEnvironment.adjustmentBrightness = 1.0
-                        sceneEnvironment.adjustmentContrast = 1.0
-                        sceneEnvironment.adjustmentSaturation = 1.0
+                        toolPage.sceneEnvironment.adjustmentBrightness = 1.0
+                        toolPage.sceneEnvironment.adjustmentContrast = 1.0
+                        toolPage.sceneEnvironment.adjustmentSaturation = 1.0
                     }
                 }
             }
@@ -814,22 +814,22 @@ Rectangle {
                 title: "Color Grading"
                 CheckBox {
                     text: "Enable"
-                    checked: sceneEnvironment.lutEnabled
+                    checked: toolPage.sceneEnvironment.lutEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.lutEnabled = checked
+                        toolPage.sceneEnvironment.lutEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Alpha Filtering (" + (sceneEnvironment.lutFilterAlpha).toFixed(2) + ")"
+                        text: "Alpha Filtering (" + (toolPage.sceneEnvironment.lutFilterAlpha).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.lutFilterAlpha
+                        value: toolPage.sceneEnvironment.lutFilterAlpha
                         onValueChanged:
-                            sceneEnvironment.lutFilterAlpha = value
+                            toolPage.sceneEnvironment.lutFilterAlpha = value
                     }
                 }
 
@@ -844,8 +844,8 @@ Rectangle {
                         textRole: "text"
                         valueRole: "value"
                         implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: lutTexture.source = currentValue
-                        Component.onCompleted: lutSourceTextureComboBox.currentIndex = lutSourceTextureComboBox.indexOfValue(lutTexture.source)
+                        onActivated: toolPage.lutTexture.source = currentValue
+                        Component.onCompleted: lutSourceTextureComboBox.currentIndex = lutSourceTextureComboBox.indexOfValue(toolPage.lutTexture.source)
                         model: [
                             { value: Qt.url("qrc:/luts/grayscale.png"), text: "Greyscale"},
                             { value: Qt.url("qrc:/luts/identity.png"), text: "Identity"},
@@ -856,8 +856,8 @@ Rectangle {
                 Button {
                     text: "Reset to Defaults"
                     onClicked: {
-                        sceneEnvironment.lutFilterAlpha = 1.0;
-                        lutTexture.source = Qt.url("qrc:/luts/identity.png");
+                        toolPage.sceneEnvironment.lutFilterAlpha = 1.0;
+                        toolPage.lutTexture.source = Qt.url("qrc:/luts/identity.png");
                     }
                 }
             }
@@ -868,22 +868,22 @@ Rectangle {
                 title: "Vignette"
                 CheckBox {
                     text: "Enable"
-                    checked: sceneEnvironment.vignetteEnabled
+                    checked: toolPage.sceneEnvironment.vignetteEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.vignetteEnabled = checked
+                        toolPage.sceneEnvironment.vignetteEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Vignette Strength(" + (sceneEnvironment.vignetteStrength).toFixed(2) + ")"
+                        text: "Vignette Strength(" + (toolPage.sceneEnvironment.vignetteStrength).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 15.0
-                        value: sceneEnvironment.vignetteStrength
+                        value: toolPage.sceneEnvironment.vignetteStrength
                         onValueChanged:
-                            sceneEnvironment.vignetteStrength = value
+                            toolPage.sceneEnvironment.vignetteStrength = value
                     }
                 }
                 RowLayout {
@@ -892,30 +892,30 @@ Rectangle {
                         Layout.fillWidth: true
                     }
                     ColorPicker {
-                        color: sceneEnvironment.vignetteColor
+                        color: toolPage.sceneEnvironment.vignetteColor
                         onColorChanged:
-                            sceneEnvironment.vignetteColor = color
+                            toolPage.sceneEnvironment.vignetteColor = color
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Vignette Radius(" + (sceneEnvironment.vignetteRadius).toFixed(2) + ")"
+                        text: "Vignette Radius(" + (toolPage.sceneEnvironment.vignetteRadius).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 5.0
-                        value: sceneEnvironment.vignetteRadius
+                        value: toolPage.sceneEnvironment.vignetteRadius
                         onValueChanged:
-                            sceneEnvironment.vignetteRadius = value
+                            toolPage.sceneEnvironment.vignetteRadius = value
                     }
                 }
                 Button {
                     text: "Reset to Defaults"
                     onClicked: {
-                        sceneEnvironment.vignetteStrength = 15.0
-                        sceneEnvironment.vignetteColor = Qt.rgba(0.5, 0.5, 0.5, 1.0)
-                        sceneEnvironment.vignetteRadius = 0.35
+                        toolPage.sceneEnvironment.vignetteStrength = 15.0
+                        toolPage.sceneEnvironment.vignetteColor = Qt.rgba(0.5, 0.5, 0.5, 1.0)
+                        toolPage.sceneEnvironment.vignetteRadius = 0.35
                     }
                 }
             }
@@ -926,143 +926,143 @@ Rectangle {
                 title: "Lens Flare"
                 CheckBox {
                     text: "Enable"
-                    checked: sceneEnvironment.lensFlareEnabled
+                    checked: toolPage.sceneEnvironment.lensFlareEnabled
                     onCheckedChanged: {
-                        sceneEnvironment.lensFlareEnabled = checked
+                        toolPage.sceneEnvironment.lensFlareEnabled = checked
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Bloom Scale(" + (sceneEnvironment.lensFlareBloomScale).toFixed(2) + ")"
+                        text: "Bloom Scale(" + (toolPage.sceneEnvironment.lensFlareBloomScale).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 20.0
-                        value: sceneEnvironment.lensFlareBloomScale
+                        value: toolPage.sceneEnvironment.lensFlareBloomScale
                         onValueChanged:
-                            sceneEnvironment.lensFlareBloomScale = value
+                            toolPage.sceneEnvironment.lensFlareBloomScale = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Bloom Bias(" + (sceneEnvironment.lensFlareBloomBias).toFixed(2) + ")"
+                        text: "Bloom Bias(" + (toolPage.sceneEnvironment.lensFlareBloomBias).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 10.0
-                        value: sceneEnvironment.lensFlareBloomBias
+                        value: toolPage.sceneEnvironment.lensFlareBloomBias
                         onValueChanged:
-                            sceneEnvironment.lensFlareBloomBias = value
+                            toolPage.sceneEnvironment.lensFlareBloomBias = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Ghost Dispersal(" + (sceneEnvironment.lensFlareGhostDispersal).toFixed(2) + ")"
+                        text: "Ghost Dispersal(" + (toolPage.sceneEnvironment.lensFlareGhostDispersal).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.lensFlareGhostDispersal
+                        value: toolPage.sceneEnvironment.lensFlareGhostDispersal
                         onValueChanged:
-                            sceneEnvironment.lensFlareGhostDispersal = value
+                            toolPage.sceneEnvironment.lensFlareGhostDispersal = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Ghost Count(" + (sceneEnvironment.lensFlareGhostCount) + ")"
+                        text: "Ghost Count(" + (toolPage.sceneEnvironment.lensFlareGhostCount) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0
                         to: 20
                         stepSize: 1
-                        value: sceneEnvironment.lensFlareGhostCount
+                        value: toolPage.sceneEnvironment.lensFlareGhostCount
                         onValueChanged:
-                            sceneEnvironment.lensFlareGhostCount = value
+                            toolPage.sceneEnvironment.lensFlareGhostCount = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Halo Width(" + (sceneEnvironment.lensFlareHaloWidth).toFixed(2) + ")"
+                        text: "Halo Width(" + (toolPage.sceneEnvironment.lensFlareHaloWidth).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.lensFlareHaloWidth
+                        value: toolPage.sceneEnvironment.lensFlareHaloWidth
                         onValueChanged:
-                            sceneEnvironment.lensFlareHaloWidth = value
+                            toolPage.sceneEnvironment.lensFlareHaloWidth = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Stretch Aspect(" + (sceneEnvironment.lensFlareStretchToAspect).toFixed(2) + ")"
+                        text: "Stretch Aspect(" + (toolPage.sceneEnvironment.lensFlareStretchToAspect).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 1.0
-                        value: sceneEnvironment.lensFlareStretchToAspect
+                        value: toolPage.sceneEnvironment.lensFlareStretchToAspect
                         onValueChanged:
-                            sceneEnvironment.lensFlareStretchToAspect = value
+                            toolPage.sceneEnvironment.lensFlareStretchToAspect = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Distortion(" + (sceneEnvironment.lensFlareDistortion).toFixed(2) + ")"
+                        text: "Distortion(" + (toolPage.sceneEnvironment.lensFlareDistortion).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 20.0
-                        value: sceneEnvironment.lensFlareDistortion
+                        value: toolPage.sceneEnvironment.lensFlareDistortion
                         onValueChanged:
-                            sceneEnvironment.lensFlareDistortion = value
+                            toolPage.sceneEnvironment.lensFlareDistortion = value
                     }
                 }
                 RowLayout {
                     Label {
-                        text: "Blur Amount(" + (sceneEnvironment.lensFlareBlurAmount).toFixed(2) + ")"
+                        text: "Blur Amount(" + (toolPage.sceneEnvironment.lensFlareBlurAmount).toFixed(2) + ")"
                         Layout.fillWidth: true
                     }
                     Slider {
                         from: 0.0
                         to: 50.0
-                        value: sceneEnvironment.lensFlareBlurAmount
+                        value: toolPage.sceneEnvironment.lensFlareBlurAmount
                         onValueChanged:
-                            sceneEnvironment.lensFlareBlurAmount = value
+                            toolPage.sceneEnvironment.lensFlareBlurAmount = value
                     }
                 }
                 CheckBox {
                     text: "Apply Lens Dirt"
-                    checked: sceneEnvironment.lensFlareApplyDirtTexture
+                    checked: toolPage.sceneEnvironment.lensFlareApplyDirtTexture
                     onCheckedChanged: {
-                        sceneEnvironment.lensFlareApplyDirtTexture = checked
+                        toolPage.sceneEnvironment.lensFlareApplyDirtTexture = checked
                     }
                 }
                 CheckBox {
                     text: "Apply Starburst"
-                    checked: sceneEnvironment.lensFlareApplyStarburstTexture
+                    checked: toolPage.sceneEnvironment.lensFlareApplyStarburstTexture
                     onCheckedChanged: {
-                        sceneEnvironment.lensFlareApplyStarburstTexture = checked
+                        toolPage.sceneEnvironment.lensFlareApplyStarburstTexture = checked
                     }
                 }
                 Button {
                     text: "Reset to Defaults"
                     onClicked: {
-                        sceneEnvironment.lensFlareBloomScale = 10
-                        sceneEnvironment.lensFlareBloomBias = 2.75
-                        sceneEnvironment.lensFlareGhostDispersal = 0.5
-                        sceneEnvironment.lensFlareGhostCount = 4
-                        sceneEnvironment.lensFlareHaloWidth = 0.25
-                        sceneEnvironment.lensFlareStretchToAspect = 0.5
-                        sceneEnvironment.lensFlareDistortion = 5
-                        sceneEnvironment.lensFlareBlurAmount = 3
-                        sceneEnvironment.lensFlareApplyDirtTexture = true
-                        sceneEnvironment.lensFlareApplyStarburstTexture = true
+                        toolPage.sceneEnvironment.lensFlareBloomScale = 10
+                        toolPage.sceneEnvironment.lensFlareBloomBias = 2.75
+                        toolPage.sceneEnvironment.lensFlareGhostDispersal = 0.5
+                        toolPage.sceneEnvironment.lensFlareGhostCount = 4
+                        toolPage.sceneEnvironment.lensFlareHaloWidth = 0.25
+                        toolPage.sceneEnvironment.lensFlareStretchToAspect = 0.5
+                        toolPage.sceneEnvironment.lensFlareDistortion = 5
+                        toolPage.sceneEnvironment.lensFlareBlurAmount = 3
+                        toolPage.sceneEnvironment.lensFlareApplyDirtTexture = true
+                        toolPage.sceneEnvironment.lensFlareApplyStarburstTexture = true
                     }
                 }
             }
