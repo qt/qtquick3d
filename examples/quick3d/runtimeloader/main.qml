@@ -14,6 +14,7 @@ import QtQuick3D.Helpers
 import QtQuick3D.AssetUtils
 
 Window {
+    id: windowRoot
     visible: true
     width: 1280
     height: 720
@@ -149,7 +150,7 @@ Window {
         //! [runtimeloader]
         RuntimeLoader {
             id: importNode
-            source: importUrl
+            source: windowRoot.importUrl
             instancing: instancingButton.checked ? instancing : null
             onBoundsChanged: helper.updateBounds(bounds)
         }
