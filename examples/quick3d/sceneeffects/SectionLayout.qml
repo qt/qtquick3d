@@ -24,7 +24,7 @@ Rectangle {
         Rectangle {
             id: sectionHeader
             Layout.fillWidth: true
-            height: 24
+            implicitHeight: 24
             color: palette.alternateBase
 
             RowLayout {
