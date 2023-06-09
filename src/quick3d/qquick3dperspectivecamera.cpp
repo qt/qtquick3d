@@ -69,7 +69,8 @@ QQuick3DPerspectiveCamera::QQuick3DPerspectiveCamera(QQuick3DNode *parent)
     This property defines the near clip plane of the PerspectiveCamera's frustum. Geometry which
     is closer to the \l Camera than the near clip plane will not be visible.
 
-    The default value is 10.0.
+    The default value is 10.0. The unit depends on the user's geometry units,
+    and the value is relative to the global camera position.
 */
 
 float QQuick3DPerspectiveCamera::clipNear() const
@@ -83,7 +84,8 @@ float QQuick3DPerspectiveCamera::clipNear() const
     This property defines the far clip plane of the PerspectiveCamera's frustum. Geometry which
     is further away from the \l Camera than the far clip plane will not be visible.
 
-    The default value is 10000.0.
+    The default value is 10000.0. The unit depends on the user's geometry units,
+    and the value is relative to the global camera position.
 */
 
 float QQuick3DPerspectiveCamera::clipFar() const

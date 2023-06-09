@@ -99,7 +99,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real Light::shadowMapFar
     The property determines the maximum distance for the shadow map. Smaller
     values improve the precision and effects of the map.
-    The default value is 5000.
+    The default value is 5000. Unit is points in local coordinate space.
 */
 
 /*!
