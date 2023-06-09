@@ -128,6 +128,7 @@ void QSSGRenderFrameBuffer::attach(QSSGRenderFrameBufferAttachment attachment,
         if (theRelTarget != QSSGRenderTextureTargetType::Unknown && theRelTarget != target)
             m_backend->renderTargetAttach(m_bufferHandle, attachment, QSSGRenderBackend::QSSGRenderBackendTextureObject(nullptr), theRelTarget);
 
+        buffer.texture2D()->applyTextureParams();
         m_backend->renderTargetAttach(m_bufferHandle, attachment, buffer.texture2D()->handle(), target);
         // buffer.GetTexture2D()->addRef();
         m_attachmentBits |= attachmentBit;

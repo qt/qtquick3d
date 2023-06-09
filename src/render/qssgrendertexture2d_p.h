@@ -142,6 +142,8 @@ public:
      */
     void bind() override;
 
+    void applyTextureParams();
+
     /**
      * @brief Query if texture needs coordinate swizzle
      *
