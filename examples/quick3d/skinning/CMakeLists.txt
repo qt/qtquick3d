@@ -16,7 +16,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Quick3D)
 
 qt_add_executable(skinning
     main.cpp
-    skingeometry.cpp skingeometry.h
 )
 
 set_target_properties(skinning PROPERTIES
@@ -38,7 +37,11 @@ qt_add_qml_module(skinning
         main.qml
         SimpleSkinning.qml
         SimpleSkinningNew.qml
+    SOURCES
+        skingeometry.cpp skingeometry.h
     NO_RESOURCE_TARGET_PATH
+    IMPORTS
+        QtQuick3D
 )
 
 install(TARGETS skinning
