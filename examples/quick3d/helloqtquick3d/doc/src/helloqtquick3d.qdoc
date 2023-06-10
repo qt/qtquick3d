@@ -5,7 +5,7 @@
     \example helloqtquick3d
     \ingroup quick3d-examples
     \title Hello Qt Quick 3D Example
-    \brief Demonstrates simple instanced drawing
+    \brief Demonstrates simple instanced drawing.
     \image helloqtquick3d.jpg
 
     This example demonstrates instanced rendering using a custom \l QQuick3DInstancing subclass.
