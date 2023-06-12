@@ -254,7 +254,7 @@ QSSGShaderCache::QSSGShaderCache(QSSGRhiContext &ctx,
         m_persistentShaderStorageFileName = persistentQsbcFileName();
         if (!m_persistentShaderStorageFileName.isEmpty()) {
             const bool skipCacheFile = qEnvironmentVariableIntValue("QT_QUICK3D_NO_SHADER_CACHE_LOAD");
-            if (!skipCacheFile && QFileInfo(m_persistentShaderStorageFileName).exists()) {
+            if (!skipCacheFile && QFileInfo::exists(m_persistentShaderStorageFileName)) {
                 if (shaderDebug)
                     qDebug("Attempting to seed material shader cache from %s", qPrintable(m_persistentShaderStorageFileName));
                 if (m_persistentShaderBakingCache.load(m_persistentShaderStorageFileName)) {
