@@ -1464,7 +1464,7 @@ void QQuick3DSceneEnvironment::setGridFlags(uint newGridFlags)
 }
 
 /*!
-    \qmlproperty float SceneEnvironment::aoEnabled
+    \qmlproperty bool SceneEnvironment::aoEnabled
     \since 6.5
 
     Enable or disable ambient occlusion.
