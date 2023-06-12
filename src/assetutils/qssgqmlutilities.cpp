@@ -18,6 +18,7 @@
 #include <QtGui/qimagereader.h>
 
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 
@@ -1677,8 +1678,11 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
 void writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream, const QDir &outDir)
 {
     using namespace QSSGSceneDesc;
+
+    QSSG_ASSERT(node.scene != nullptr, return);
+
     if (node.runtimeType == Material::RuntimeType::CustomMaterial) {
-        QString sourceDir = node.scene ? node.scene->sourceDir : QString{};
+        QString sourceDir = node.scene->sourceDir;
         OutputContext output { stream, outDir, sourceDir, 0, OutputContext::Resource };
         writeImportHeader(output);
         writeQml(static_cast<const Material &>(node), output);
