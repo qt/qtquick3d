@@ -15,7 +15,7 @@ Item {
         anchors.fill: parent
         id: backgroundSourceImage
         sourceRect: Qt.rect(0, 0, width, height)
-        sourceItem: targetView
+        sourceItem: root.backgroundItem
         visible: false
     }
 

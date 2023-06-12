@@ -9,14 +9,6 @@ set(materialeditor_asset_prefix "/qt-project.org/imports/QtQuick3D/MaterialEdito
 qt_internal_add_tool(${target_name}
     TOOLS_TARGET Quick3D
     SOURCES
-        materialadapter.h materialadapter.cpp
-        resourceserver.h resourceserver.cpp
-        resourceclient.h resourceclient.cpp
-        syntaxhighlighter.h syntaxhighlighter.cpp
-        uniformmodel.h uniformmodel.cpp
-        custommaterial.h custommaterial.cpp
-        message.h message.cpp
-        buildmessage.h buildmessage.cpp
         main.cpp
     LIBRARIES
         Qt::Core
@@ -56,6 +48,14 @@ qt_internal_add_qml_module(${target_name}
         syntaxhighlighter.h syntaxhighlighter.cpp
         uniformmodel.h uniformmodel.cpp
         buildmessage.h buildmessage.cpp
+        materialadapter.h materialadapter.cpp
+        resourceserver.h resourceserver.cpp
+        resourceclient.h resourceclient.cpp
+        syntaxhighlighter.h syntaxhighlighter.cpp
+        uniformmodel.h uniformmodel.cpp
+        custommaterial.h custommaterial.cpp
+        message.h message.cpp
+        buildmessage.h buildmessage.cpp
     QML_FILES
         main.qml
         ShaderEditor.qml
@@ -68,6 +68,8 @@ qt_internal_add_qml_module(${target_name}
         SaveChangesDialog.qml
         UniformManagerPane.qml
     NO_PLUGIN
+    IMPORTS
+        QtQuick3D
 )
 
 qt_add_resources(${target_name}

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
@@ -8,7 +8,6 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtCore
 
-import QtQuick3D
 import QtQuick3D.MaterialEditor
 
 ApplicationWindow {
@@ -19,7 +18,7 @@ ApplicationWindow {
     title: qsTr("Custom Material Editor")
 
     // Context property (see main.cpp)
-    property url projectFolder: _qtProjectDir
+    property url projectFolder: _qtProjectDir // qmllint disable unqualified
 
     Settings {
         id: settings
@@ -48,7 +47,7 @@ ApplicationWindow {
         id: openMaterialDialog
         title: "Open a Material Project File"
         nameFilters: [ "Material Editor Project (*.qmp)"]
-        currentFolder: projectFolder
+        currentFolder: window.projectFolder
         onAccepted: {
             if (openMaterialDialog.selectedFile !== null)
                 materialAdapter.loadMaterial(openMaterialDialog.selectedFile);
@@ -58,7 +57,7 @@ ApplicationWindow {
     FileDialog {
         id: saveAsDialog
         fileMode: FileDialog.SaveFile
-        currentFolder: projectFolder
+        currentFolder: window.projectFolder
         nameFilters: [ "Material Editor Project (*.qmp)"]
         onAccepted: materialAdapter.saveMaterial(selectedFile)
 
@@ -69,7 +68,7 @@ ApplicationWindow {
         id: fragmentShaderImportDialog
         title: "Fragment Shader to import"
         nameFilters: [ "Fragment Shader (*.frag *.fs *.glsl)" ]
-        currentFolder: projectFolder
+        currentFolder: window.projectFolder
         onAccepted: {
             if (fragmentShaderImportDialog.selectedFile !== null) {
                 materialAdapter.importFragmentShader(fragmentShaderImportDialog.selectedFile)
@@ -81,7 +80,7 @@ ApplicationWindow {
         id: vertexShaderImportDialog
         title: "Vertex Shader to import"
         nameFilters: [ "Vertex Shader (*.vert *.vs *.glsl)" ]
-        currentFolder: projectFolder
+        currentFolder: window.projectFolder
         onAccepted: {
             if (vertexShaderImportDialog.selectedFile !== null) {
                 materialAdapter.importVertexShader(vertexShaderImportDialog.selectedFile)
@@ -94,7 +93,7 @@ ApplicationWindow {
         title: "Choose file"
         nameFilters: [ "QML Componen (*.qml)" ]
         fileMode: FileDialog.SaveFile
-        currentFolder: projectFolder
+        currentFolder: window.projectFolder
         onAccepted: {
             if (selectedFile !== null)
                 componentFilePath.text = selectedFile
@@ -190,7 +189,8 @@ ApplicationWindow {
 
     function saveAction() {
         // 1. No file name(s) given (call saveAs)
-        if (materialAdapter.materialSaveFile.toString().length > 0)
+        let materialSaveFileUrl = new URL(materialAdapter.materialSaveFile)
+        if (materialSaveFileUrl.toString().length > 0)
             materialAdapter.save()
         else
             saveAsAction()
@@ -227,24 +227,24 @@ ApplicationWindow {
     menuBar: MenuBar {
         Menu {
             title: qsTr("&File")
-            Action { text: qsTr("&New..."); onTriggered: newAction(); }
-            Action { text: qsTr("&Open..."); onTriggered: openAction(); }
-            Action { text: qsTr("&Save"); onTriggered: saveAction(); }
-            Action { text: qsTr("Save &As..."); onTriggered: saveAsAction(); }
+            Action { text: qsTr("&New..."); onTriggered: window.newAction(); }
+            Action { text: qsTr("&Open..."); onTriggered: window.openAction(); }
+            Action { text: qsTr("&Save"); onTriggered: window.saveAction(); }
+            Action { text: qsTr("Save &As..."); onTriggered: window.saveAsAction(); }
             MenuSeparator { }
             Menu {
                 title: qsTr("Import")
-                Action { text: qsTr("Fragment Shader"); onTriggered: importFragmentShader(); }
-                Action { text: qsTr("Vertex Shader"); onTriggered: importVertexShader(); }
+                Action { text: qsTr("Fragment Shader"); onTriggered: window.importFragmentShader(); }
+                Action { text: qsTr("Vertex Shader"); onTriggered: window.importVertexShader(); }
             }
-            Action { text: qsTr("Export"); onTriggered: exportMaterial(); }
+            Action { text: qsTr("Export"); onTriggered: window.exportMaterial(); }
 
             MenuSeparator { }
-            Action { text: qsTr("&Quit"); onTriggered: quitAction(); }
+            Action { text: qsTr("&Quit"); onTriggered: window.quitAction(); }
         }
         Menu {
             title: qsTr("&Help")
-            Action { text: qsTr("&About"); onTriggered: aboutAction(); }
+            Action { text: qsTr("&About"); onTriggered: window.aboutAction(); }
         }
     }
 
@@ -291,7 +291,7 @@ ApplicationWindow {
         onVertexStatusChanged: {
             if (vertexStatus.status !== ShaderConstants.Success) {
                 editorView.tabBarInfoView.currentIndex = 1
-                printShaderStatusError(ShaderConstants.Vertex, vertexStatus)
+                window.printShaderStatusError(ShaderConstants.Vertex, vertexStatus)
             } else if (fragmentStatus.status === ShaderConstants.Success){
                 // both work, clear
                 editorView.outputTextItem.text = "";
@@ -300,7 +300,7 @@ ApplicationWindow {
         onFragmentStatusChanged: {
             if (fragmentStatus.status !== ShaderConstants.Success) {
                 editorView.tabBarInfoView.currentIndex = 1
-                printShaderStatusError(ShaderConstants.Fragment, fragmentStatus)
+                window.printShaderStatusError(ShaderConstants.Fragment, fragmentStatus)
             } else if (vertexStatus.status === ShaderConstants.Success) {
                 // both work, clear
                 editorView.outputTextItem.text = "";

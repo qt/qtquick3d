@@ -8,6 +8,7 @@ import QtQuick3D
 import QtQuick3D.MaterialEditor
 
 Pane {
+    id: root
     required property MaterialAdapter targetMaterial
 
     ColumnLayout {
@@ -21,8 +22,8 @@ Pane {
                 textRole: "text"
                 valueRole: "value"
                 implicitContentWidthPolicy: ComboBox.WidestText
-                onActivated: targetMaterial.sourceBlend = currentValue
-                Component.onCompleted: currentIndex = indexOfValue(targetMaterial.sourceBlend)
+                onActivated: root.targetMaterial.sourceBlend = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(root.targetMaterial.sourceBlend)
                 model: [
                     { value: CustomMaterial.NoBlend, text: qsTr("No Blend") },
                     { value: CustomMaterial.Zero, text: qsTr("Zero") },
@@ -53,8 +54,8 @@ Pane {
                 textRole: "text"
                 valueRole: "value"
                 implicitContentWidthPolicy: ComboBox.WidestText
-                onActivated: targetMaterial.destinationBlend = currentValue
-                Component.onCompleted: currentIndex = indexOfValue(targetMaterial.destinationBlend)
+                onActivated: root.targetMaterial.destinationBlend = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(root.targetMaterial.destinationBlend)
 
                 model: [
                     { value: CustomMaterial.NoBlend, text: qsTr("No Blend") },
@@ -86,8 +87,8 @@ Pane {
                 textRole: "text"
                 valueRole: "value"
                 implicitContentWidthPolicy: ComboBox.WidestText
-                onActivated: targetMaterial.cullMode = currentValue
-                Component.onCompleted: currentIndex = indexOfValue(targetMaterial.cullMode)
+                onActivated: root.targetMaterial.cullMode = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(root.targetMaterial.cullMode)
                 model: [
                     { value: CustomMaterial.BackFaceCulling, text: qsTr("Back Face Culling") },
                     { value: CustomMaterial.FrontFaceCulling, text: qsTr("Front Face Culling") },
@@ -105,8 +106,8 @@ Pane {
                 textRole: "text"
                 valueRole: "value"
                 implicitContentWidthPolicy: ComboBox.WidestText
-                onActivated: targetMaterial.depthDrawMode = currentValue
-                Component.onCompleted: currentIndex = indexOfValue(targetMaterial.depthDrawMode)
+                onActivated: root.targetMaterial.depthDrawMode = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(root.targetMaterial.depthDrawMode)
                 model: [
                     { value: CustomMaterial.OpaqueOnlyDepthDraw, text: qsTr("Opaque Only") },
                     { value: CustomMaterial.AlwaysDepthDraw, text: qsTr("Always") },
@@ -125,8 +126,8 @@ Pane {
                 textRole: "text"
                 valueRole: "value"
                 implicitContentWidthPolicy: ComboBox.WidestText
-                onActivated: targetMaterial.shadingMode = currentValue
-                Component.onCompleted: currentIndex = indexOfValue(targetMaterial.shadingMode)
+                onActivated: root.targetMaterial.shadingMode = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(root.targetMaterial.shadingMode)
                 model: [
                     { value: CustomMaterial.Shaded, text: qsTr("Shaded") },
                     { value: CustomMaterial.Unshaded, text: qsTr("Unshaded") }
