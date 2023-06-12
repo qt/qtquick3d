@@ -1,10 +1,11 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
-import QtQuick3D.Helpers
 import QtQuick.Timeline
 import ModelBlendParticlesExample
 
@@ -122,7 +123,7 @@ Window {
                 id: particle
                 delegate: modelComponent
                 endNode: translateNode
-                modelBlendMode: blendModeSelectionBox.selection
+                modelBlendMode: blendModeSelectionBox.index
                 endTime: 2500
             }
 

@@ -10,7 +10,7 @@ Rectangle {
 
     ListModel {
         id: list
-
+        // qmllint disable missing-property
         ListElement {
             name: "Panel One"
             notes: [
@@ -36,6 +36,7 @@ Rectangle {
                 ListElement { noteText: "You can close them by re-clicking" }
             ]
         }
+        // qmllint enable missing-property
     }
 
     ListView {

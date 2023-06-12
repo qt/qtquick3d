@@ -27,8 +27,8 @@ Item {
         width: parent.width
         Slider {
             id: slider
-            from: fromValue
-            to: toValue
+            from: rootItem.fromValue
+            to: rootItem.toValue
             stepSize: 0.01
             Layout.minimumWidth: 200
             Layout.fillWidth: true

@@ -40,7 +40,7 @@ Item {
         anchors.top: parent.top
         width: 16 + Math.max(rootItem.width, rootItem.height) * 0.05
         height: width
-        opacity: showState * 0.6 + 0.4
+        opacity: rootItem.showState * 0.6 + 0.4
         visible: opacity
         Image {
             anchors.centerIn: parent
@@ -52,7 +52,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                settings.showSettingsView = !settings.showSettingsView;
+                settings.showSettingsView = !settings.showSettingsView; // qmllint disable unqualified
             }
         }
     }

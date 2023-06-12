@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Helpers
 
 Window {
     id: window
@@ -22,11 +21,15 @@ Window {
             clearColor: "black"
         }
 
-        Doors { id: door }
+        Doors {
+            id: door
+            targetItem: object2d
+        }
 
         //! [picking]
         TapHandler {
             gesturePolicy: TapHandler.WithinBounds
+            // qmllint disable signal-handler-parameters
             onTapped: {
                 var result = view.pick(point.position.x, point.position.y);
                 if (result.objectHit) {
@@ -40,6 +43,7 @@ Window {
 
                 }
             }
+            // qmllint enable signal-handler-parameters
         }
         //! [picking]
     }

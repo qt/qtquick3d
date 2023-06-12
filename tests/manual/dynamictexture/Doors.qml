@@ -7,6 +7,7 @@ import QtQuick
 Node {
     id: doorRoot
     property PerspectiveCamera activeCamera: camera
+    required property Item targetItem
 
     PointLight {
         id: lamp
@@ -34,7 +35,7 @@ Node {
     DefaultMaterial {
         id: doorMaterial
         diffuseMap: Texture {
-            sourceItem: object2d
+            sourceItem: doorRoot.targetItem
         }
     }
     //! [material]
@@ -53,7 +54,7 @@ Node {
 
     //! [model content]
         source: "meshes/door1.mesh"
-        materials: doorMaterial
+        materials: [ doorMaterial ]
         pickable: true
     //! [model content]
 
@@ -61,8 +62,7 @@ Node {
         states: State {
             name: "opened"
             PropertyChanges {
-                target: door1
-                eulerRotation.y: 90
+                door1.eulerRotation.y: 90
             }
         }
         transitions: Transition {
@@ -103,13 +103,12 @@ Node {
         pivot.x: -20
         source: "meshes/door2.mesh"
         pickable: true
-        materials: doorMaterial
+        materials: [ doorMaterial ]
 
         states: State {
             name: "opened"
             PropertyChanges {
-                target: door2
-                eulerRotation.y: -90
+                door2.eulerRotation.y: -90
             }
         }
         transitions: Transition {
