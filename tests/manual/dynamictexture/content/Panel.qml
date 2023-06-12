@@ -1,6 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 Image {
@@ -10,13 +12,18 @@ Image {
     height: ListView.view.height
     fillMode: Image.PreserveAspectCrop
 
+    required property string name
+    required property var notes
+
+    // qmllint disable signal-handler-parameters
     TapHandler {
-        objectName: name
+        objectName: corkPanel.name
         onTapped: corkPanel.Window.activeFocusItem.focus = false
     }
+    // qmllint enable signal-handler-parameters
 
     Text {
-        text: name
+        text: corkPanel.name
         x: 15
         y: 8
         height: 40
@@ -30,12 +37,13 @@ Image {
     }
 
     Repeater {
-        model: notes
+        model: corkPanel.notes
         Item {
             id: fulcrum
 
             x: 100 + Math.random() * (corkPanel.width - 0.5 * paper.width)
             y: 50 + Math.random() * (corkPanel.height - 0.5 * paper.height)
+            required property string noteText
 
             Item {
                 id: note
@@ -69,11 +77,11 @@ Image {
                     readOnly: false
                     selectByMouse: activeFocus
                     rotation: -8
-                    text: noteText
+                    text: fulcrum.noteText
                     wrapMode: Text.Wrap
                 }
 
-                rotation: -flickable.horizontalVelocity / 100
+                rotation: -flickable.horizontalVelocity / 100 // qmllint disable unqualified
                 Behavior on rotation {
                     SpringAnimation { spring: 2.0; damping: 0.15 }
                 }
@@ -90,8 +98,13 @@ Image {
             states: State {
                 name: "pressed"
                 when: text.activeFocus
-                PropertyChanges { target: note; rotation: 8; scale: 1 }
-                PropertyChanges { target: fulcrum; z: 8 }
+                PropertyChanges {
+                    note.rotation: 8
+                    note.scale: 1
+                }
+                PropertyChanges {
+                    fulcrum.z: 8
+                }
             }
 
             transitions: Transition {

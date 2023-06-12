@@ -10,6 +10,7 @@ Item {
     property string text
     property string selection
     property alias values: combo.model
+    property alias index: combo.currentIndex
 
     width: rowLayout.width
     height: rowLayout.height
@@ -18,13 +19,13 @@ Item {
         id: rowLayout
         ComboBox {
             id: combo
-            displayText: text + ": " + model[currentIndex]
-            textRole: text
-            anchors.rightMargin: 0
-            width: 400
+            displayText: comboBox.text + ": " + model[currentIndex]
+            textRole: comboBox.text
+            implicitWidth: 400
 
             delegate: ItemDelegate {
                 id: lightDelegate
+                required property string modelData
                 text: modelData
                 anchors.left: parent.left
                 anchors.right: parent.right

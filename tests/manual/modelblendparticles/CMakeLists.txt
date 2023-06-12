@@ -5,7 +5,6 @@ qt_internal_add_manual_test(manual_test_modelblendparticles
     GUI
     SOURCES
         main.cpp
-        testgeometry.h
     LIBRARIES
         Qt::Gui
         Qt::Quick
@@ -25,6 +24,10 @@ qt_add_qml_module(manual_test_modelblendparticles
         images/icon_pause.png
         images/icon_play.png
         images/icon_settings.png
+    SOURCES
+        testgeometry.h
     NO_RESOURCE_TARGET_PATH
+    IMPORTS
+        QtQuick3D
 )
 
