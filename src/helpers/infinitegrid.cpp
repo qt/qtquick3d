@@ -87,7 +87,7 @@ void QQuick3DInfiniteGrid::setGridInterval(float newGridInterval)
         return;
     m_gridInterval = newGridInterval;
     emit gridIntervalChanged();
-    if (m_sceneEnv)
+    if (m_sceneEnv && !qFuzzyIsNull(m_gridInterval))
         m_sceneEnv->setGridScale(0.1 / m_gridInterval);
 }
 
@@ -104,7 +104,8 @@ void QQuick3DInfiniteGrid::componentComplete()
         m_sceneEnv = sceneEnv;
         Q_ASSERT(m_sceneEnv);
         m_sceneEnv->setGridEnabled(m_visible);
-        m_sceneEnv->setGridScale(0.1 / m_gridInterval);
+        if (!qFuzzyIsNull(m_gridInterval))
+            m_sceneEnv->setGridScale(0.1 / m_gridInterval);
         updateGridFlags();
     } else {
         qWarning("InfiniteGrid needs to be a child of SceneEnvironment.");
