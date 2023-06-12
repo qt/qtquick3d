@@ -368,8 +368,10 @@ QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGScen
 
     // Some resources such as Skin have properties related with the node
     // hierarchy. Therefore, resources are handled after nodes.
-    for (const auto &resource : scene.resources)
-        setProperties(static_cast<QQuick3DObject &>(*resource->obj), *resource, scene.sourceDir);
+    for (const auto &resource : scene.resources) {
+        if (resource->obj != nullptr) // A mesh node has no runtime object.
+            setProperties(static_cast<QQuick3DObject &>(*resource->obj), *resource, scene.sourceDir);
+    }
 
     // Usually it makes sense to only enable 1 timeline at a time
     // so for now we just enable the first one.
