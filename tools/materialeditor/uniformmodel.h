@@ -15,9 +15,20 @@ class UniformModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
 public:
-    using UniformType = CustomMaterial::Uniform::Type;
-    Q_ENUM(UniformType)
     using UniformTable = CustomMaterial::UniformTable;
+    // This enum is used in QML to get the type of the uniform
+    // but should map to CustomMaterial::Uniform::Type
+    enum UniformType {
+        Bool,
+        Int,
+        Float,
+        Vec2,
+        Vec3,
+        Vec4,
+        Mat44,
+        Sampler,
+    };
+    Q_ENUM(UniformType)
 
     enum UniformModelRoles {
         Type = Qt::UserRole + 1,

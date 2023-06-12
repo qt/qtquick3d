@@ -47,11 +47,11 @@ class MaterialAdapter : public QObject
     Q_PROPERTY(bool unsavedChanges READ unsavedChanges WRITE setUnsavedChanges NOTIFY unsavedChangesChanged)
     Q_PROPERTY(QUrl materialSaveFile READ materialSaveFile WRITE setMaterialSaveFile NOTIFY materialSaveFileChanged)
 
-    Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
-    Q_PROPERTY(DepthDrawMode depthDrawMode READ depthDrawMode WRITE setDepthDrawMode NOTIFY depthDrawModeChanged)
-    Q_PROPERTY(ShadingMode shadingMode READ shadingMode WRITE setShadingMode NOTIFY shadingModeChanged)
-    Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
-    Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
+    Q_PROPERTY(QQuick3DMaterial::CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
+    Q_PROPERTY(QQuick3DMaterial::DepthDrawMode depthDrawMode READ depthDrawMode WRITE setDepthDrawMode NOTIFY depthDrawModeChanged)
+    Q_PROPERTY(QQuick3DCustomMaterial::ShadingMode shadingMode READ shadingMode WRITE setShadingMode NOTIFY shadingModeChanged)
+    Q_PROPERTY(QQuick3DCustomMaterial::BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
+    Q_PROPERTY(QQuick3DCustomMaterial::BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
 
     QML_ELEMENT
 public:

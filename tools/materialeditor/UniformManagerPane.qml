@@ -1,14 +1,14 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick3D
 import QtQuick.Dialogs
 import QtQuick3D.MaterialEditor
-import Qt.labs.qmlmodels
 
 Pane {
     id: uniformManagerPane
@@ -22,8 +22,8 @@ Pane {
                 id: tableControls
 
                 function insertUniform() {
-                    let rowCount = materialAdapter.uniformModel.rowCount;
-                    if (materialAdapter.uniformModel.insertRow(rowCount, typeComboBox.currentIndex, uniformNameTextInput.text))
+                    let rowCount = uniformManagerPane.materialAdapter.uniformModel.rowCount;
+                    if (uniformManagerPane.materialAdapter.uniformModel.insertRow(rowCount, typeComboBox.currentIndex, uniformNameTextInput.text))
                         uniformNameTextInput.text = ""
                 }
 
@@ -36,14 +36,14 @@ Pane {
                     textRole: "text"
                     valueRole: "value"
                     model: [
-                        { value: uniformModel.Bool, text: "bool" },
-                        { value: uniformModel.Int, text: "int" },
-                        { value: uniformModel.Float, text: "float" },
-                        { value: uniformModel.Vec2, text: "vec2" },
-                        { value: uniformModel.Vec3, text: "vec3" },
-                        { value: uniformModel.Vec4, text: "vec4" },
-                        { value: uniformModel.Mat44, text: "mat44" },
-                        { value: uniformModel.Sampler, text: "sampler" }
+                        { value: UniformModel.Bool, text: "bool" },
+                        { value: UniformModel.Int, text: "int" },
+                        { value: UniformModel.Float, text: "float" },
+                        { value: UniformModel.Vec2, text: "vec2" },
+                        { value: UniformModel.Vec3, text: "vec3" },
+                        { value: UniformModel.Vec4, text: "vec4" },
+                        { value: UniformModel.Mat44, text: "mat44" },
+                        { value: UniformModel.Sampler, text: "sampler" }
                     ]
                 }
 
@@ -147,28 +147,35 @@ Pane {
                 }
 
                 delegate: Item {
+                    id: delegateRoot
+                    required property int type
+                    required property string name
+                    required property var value
+                    required property int index
+
+
                     width: ListView.view.width
                     height: typeLabel.implicitHeight
                     Row {
                         Label {
                             id: typeLabel
                             width: uniformTable.columnWidth(0)
-                            text: uniformTable.typeStrings[type]
+                            text: uniformTable.typeStrings[delegateRoot.type]
                         }
                         Label {
                             width: uniformTable.columnWidth(1)
-                            text: name
+                            text: delegateRoot.name
                         }
                         Label {
                             width: uniformTable.columnWidth(2)
                             Layout.fillWidth: true
-                            text: uniformTable.convertValueToString(value, type)
+                            text: uniformTable.convertValueToString(delegateRoot.value, delegateRoot.type)
                         }
                     }
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            uniformTable.currentIndex = index
+                            uniformTable.currentIndex = delegateRoot.index
                         }
                     }
                 }
@@ -189,9 +196,17 @@ Pane {
             }
 
             Repeater {
+                id: delegateRepeater
                 anchors.fill: parent
                 model: uniformModel
                 Item {
+                    id: editorRoot
+
+                    required property int index
+                    required property int type
+                    required property string name
+                    required property var model
+
                     anchors.fill: parent
                     anchors.margins: 10
                     visible: index === uniformTable.currentIndex
@@ -205,7 +220,7 @@ Pane {
                             anchors.fill: parent
                             id: headerLayout
                             Label {
-                                text: "Uniform: " + name
+                                text: "Uniform: " + editorRoot.name
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -214,7 +229,7 @@ Pane {
                                 text: "Remove"
                                 Layout.alignment: Qt.AlignRight
                                 onClicked: {
-                                    materialAdapter.uniformModel.removeRow(uniformTable.currentIndex, 1)
+                                    uniformManagerPane.materialAdapter.uniformModel.removeRow(uniformTable.currentIndex, 1)
                                 }
                             }
                         }
@@ -226,9 +241,10 @@ Pane {
                         anchors.right: parent.right
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
-                        sourceComponent: editors[type]
+                        sourceComponent: editors[editorRoot.type]
 
-                        property var editors: [
+
+                        readonly property list<Component> editors: [
                             boolEditor,
                             intEditor,
                             floatEditor,
@@ -243,21 +259,21 @@ Pane {
                             id: boolEditor
                             CheckBox {
                                 text: "value"
-                                checked: model.value
-                                onCheckedChanged: model.value = checked
+                                checked: editorRoot.model.value
+                                onCheckedChanged: editorRoot.model.value = checked
                             }
                         }
 
                         Component {
                             id: intEditor
                             TextField {
-                                text: model.value
+                                text: editorRoot.model.value
                                 validator: IntValidator {
                                     locale: "C"
                                 }
                                 onEditingFinished:{
                                     if (acceptableInput)
-                                        model.value = parseInt(text)
+                                        editorRoot.model.value = parseInt(text)
                                 }
                             }
                         }
@@ -267,7 +283,7 @@ Pane {
                             ColumnLayout {
                                 TextField {
                                     Layout.fillWidth: true
-                                    text: model.value
+                                    text: editorRoot.model.value
                                     validator: DoubleValidator {
                                         locale: "C"
                                     }
@@ -275,7 +291,7 @@ Pane {
                                         if (acceptableInput) {
                                             var floatValue = parseFloat(text);
                                             floatSlider.updateMinMax(floatValue);
-                                            model.value = floatValue;
+                                            editorRoot.value = floatValue;
                                         }
                                     }
                                 }
@@ -292,10 +308,10 @@ Pane {
                                     from: 0.0
                                     to: 1.0
                                     onValueChanged: {
-                                        model.value = value;
+                                        editorRoot.model.value = value;
                                     }
                                     Component.onCompleted: {
-                                        updateMinMax(model.value);
+                                        updateMinMax(editorRoot.model.value);
                                     }
                                 }
                             }
@@ -310,13 +326,13 @@ Pane {
                                     }
                                     TextField {
                                         id: xField
-                                        text: model.value.x
+                                        text: editorRoot.model.value.x
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished: {
                                             if (acceptableInput)
-                                                model.value = Qt.vector2d(parseFloat(text), model.value.y)
+                                                editorRoot.model.value = Qt.vector2d(parseFloat(text), editorRoot.model.value.y)
                                         }
                                     }
                                 }
@@ -326,13 +342,13 @@ Pane {
                                     }
                                     TextField {
                                         id: yField
-                                        text: model.value.y
+                                        text: editorRoot.model.value.y
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished: {
                                             if (acceptableInput)
-                                                model.value = Qt.vector2d(model.value.x, parseFloat(text))
+                                                editorRoot.model.value = Qt.vector2d(editorRoot.model.value.x, parseFloat(text))
                                         }
                                     }
                                 }
@@ -348,13 +364,13 @@ Pane {
                                     }
                                     TextField {
                                         id: xField
-                                        text: model.value.x
+                                        text: editorRoot.model.value.x
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.vector3d(parseFloat(text), model.value.y, model.value.z)
+                                                editorRoot.model.value = Qt.vector3d(parseFloat(text), editorRoot.model.value.y, editorRoot.model.value.z)
                                         }
                                     }
                                 }
@@ -364,13 +380,13 @@ Pane {
                                     }
                                     TextField {
                                         id: yField
-                                        text: model.value.y
+                                        text: editorRoot.model.value.y
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.vector3d(model.value.x, parseFloat(text), model.value.z)
+                                                editorRoot.model.value = Qt.vector3d(editorRoot.model.value.x, parseFloat(text), editorRoot.model.value.z)
                                         }
                                     }
                                 }
@@ -380,13 +396,13 @@ Pane {
                                     }
                                     TextField {
                                         id: zField
-                                        text: model.value.z
+                                        text: editorRoot.model.value.z
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.vector3d(model.value.x, model.value.y, parseFloat(text))
+                                                editorRoot.model.value = Qt.vector3d(editorRoot.model.value.x, editorRoot.model.value.y, parseFloat(text))
                                         }
                                     }
                                 }
@@ -402,13 +418,13 @@ Pane {
                                     }
                                     TextField {
                                         id: xField
-                                        text: model.value.x
+                                        text: editorRoot.model.value.x
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.vector4d(parseFloat(text), model.value.y, model.value.z, model.value.w)
+                                                editorRoot.model.value = Qt.vector4d(parseFloat(text), editorRoot.model.value.y, editorRoot.model.value.z, editorRoot.model.value.w)
                                         }
                                     }
                                 }
@@ -418,13 +434,13 @@ Pane {
                                     }
                                     TextField {
                                         id: yField
-                                        text: model.value.y
+                                        text: editorRoot.model.value.y
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.vector4d(model.value.x, parseFloat(text), model.value.z, model.value.w)
+                                                editorRoot.model.value = Qt.vector4d(editorRoot.model.value.x, parseFloat(text), editorRoot.model.value.z, editorRoot.model.value.w)
                                         }
                                     }
                                 }
@@ -434,13 +450,13 @@ Pane {
                                     }
                                     TextField {
                                         id: zField
-                                        text: model.value.z
+                                        text: editorRoot.model.value.z
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.vector4d(model.value.x, model.value.y, parseFloat(text), model.value.w)
+                                                editorRoot.model.value = Qt.vector4d(editorRoot.model.value.x, editorRoot.model.value.y, parseFloat(text), editorRoot.model.value.w)
                                         }
                                     }
                                 }
@@ -450,13 +466,13 @@ Pane {
                                     }
                                     TextField {
                                         id: wField
-                                        text: model.value.w
+                                        text: editorRoot.model.value.w
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.vector4d(model.value.x, model.value.y, model.value.z, parseFloat(text))
+                                                editorRoot.model.value = Qt.vector4d(editorRoot.model.value.x, editorRoot.model.value.y, editorRoot.model.value.z, parseFloat(text))
                                         }
                                     }
                                 }
@@ -468,217 +484,217 @@ Pane {
                             ColumnLayout {
                                 RowLayout {
                                     TextField {
-                                        text: model.value.m11
+                                        text: editorRoot.model.value.m11
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(parseFloat(text), model.value.m12, model.value.m13 , model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(parseFloat(text), editorRoot.model.value.m12, editorRoot.model.value.m13 , editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m12
+                                        text: editorRoot.model.value.m12
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, parseFloat(text), model.value.m13 , model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, parseFloat(text), editorRoot.model.value.m13 , editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m13
+                                        text: editorRoot.model.value.m13
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, parseFloat(text), model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, parseFloat(text), editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m14
+                                        text: editorRoot.model.value.m14
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, parseFloat(text),
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
-                                        }
-                                    }
-                                }
-                                RowLayout {
-                                    TextField {
-                                        text: model.value.m21
-                                        validator: DoubleValidator {
-                                            locale: "C"
-                                        }
-                                        onEditingFinished:{
-                                            if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           parseFloat(text), model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
-                                        }
-                                    }
-                                    TextField {
-                                        text: model.value.m22
-                                        validator: DoubleValidator {
-                                            locale: "C"
-                                        }
-                                        onEditingFinished:{
-                                            if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, parseFloat(text), model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
-                                        }
-                                    }
-                                    TextField {
-                                        text: model.value.m23
-                                        validator: DoubleValidator {
-                                            locale: "C"
-                                        }
-                                        onEditingFinished:{
-                                            if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, parseFloat(text), model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
-                                        }
-                                    }
-                                    TextField {
-                                        text: model.value.m24
-                                        validator: DoubleValidator {
-                                            locale: "C"
-                                        }
-                                        onEditingFinished:{
-                                            if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, parseFloat(text),
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, parseFloat(text),
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                 }
                                 RowLayout {
                                     TextField {
-                                        text: model.value.m31
+                                        text: editorRoot.model.value.m21
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           parseFloat(text), model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            parseFloat(text), editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m32
+                                        text: editorRoot.model.value.m22
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, parseFloat(text), model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, parseFloat(text), editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m33
+                                        text: editorRoot.model.value.m23
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, parseFloat(text), model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, parseFloat(text), editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m34
+                                        text: editorRoot.model.value.m24
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, parseFloat(text),
-                                                                           model.value.m41, model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, parseFloat(text),
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                 }
                                 RowLayout {
                                     TextField {
-                                        text: model.value.m41
+                                        text: editorRoot.model.value.m31
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           parseFloat(text), model.value.m42, model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            parseFloat(text), editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m42
+                                        text: editorRoot.model.value.m32
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, parseFloat(text), model.value.m43, model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, parseFloat(text), editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m43
+                                        text: editorRoot.model.value.m33
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, parseFloat(text), model.value.m44)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, parseFloat(text), editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
                                         }
                                     }
                                     TextField {
-                                        text: model.value.m44
+                                        text: editorRoot.model.value.m34
                                         validator: DoubleValidator {
                                             locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
-                                                model.value = Qt.matrix4x4(model.value.m11, model.value.m12, model.value.m13, model.value.m14,
-                                                                           model.value.m21, model.value.m22, model.value.m23, model.value.m24,
-                                                                           model.value.m31, model.value.m32, model.value.m33, model.value.m34,
-                                                                           model.value.m41, model.value.m42, model.value.m43, parseFloat(text))
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, parseFloat(text),
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
+                                        }
+                                    }
+                                }
+                                RowLayout {
+                                    TextField {
+                                        text: editorRoot.model.value.m41
+                                        validator: DoubleValidator {
+                                            locale: "C"
+                                        }
+                                        onEditingFinished:{
+                                            if (acceptableInput)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            parseFloat(text), editorRoot.model.value.m42, editorRoot.model.value.m43, editorRoot.model.value.m44)
+                                        }
+                                    }
+                                    TextField {
+                                        text: editorRoot.model.value.m42
+                                        validator: DoubleValidator {
+                                            locale: "C"
+                                        }
+                                        onEditingFinished:{
+                                            if (acceptableInput)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, parseFloat(text), editorRoot.model.value.m43, editorRoot.model.value.m44)
+                                        }
+                                    }
+                                    TextField {
+                                        text: editorRoot.model.value.m43
+                                        validator: DoubleValidator {
+                                            locale: "C"
+                                        }
+                                        onEditingFinished:{
+                                            if (acceptableInput)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, parseFloat(text), editorRoot.model.value.m44)
+                                        }
+                                    }
+                                    TextField {
+                                        text: editorRoot.model.value.m44
+                                        validator: DoubleValidator {
+                                            locale: "C"
+                                        }
+                                        onEditingFinished:{
+                                            if (acceptableInput)
+                                                editorRoot.model.value = Qt.matrix4x4(editorRoot.model.value.m11, editorRoot.model.value.m12, editorRoot.model.value.m13, editorRoot.model.value.m14,
+                                                                                            editorRoot.model.value.m21, editorRoot.model.value.m22, editorRoot.model.value.m23, editorRoot.model.value.m24,
+                                                                                            editorRoot.model.value.m31, editorRoot.model.value.m32, editorRoot.model.value.m33, editorRoot.model.value.m34,
+                                                                                            editorRoot.model.value.m41, editorRoot.model.value.m42, editorRoot.model.value.m43, parseFloat(text))
                                         }
                                     }
                                 }
@@ -703,10 +719,10 @@ Pane {
                                 FileDialog {
                                     id: textureSourceDialog
                                     title: "Open an Image File"
-                                    nameFilters: [ materialAdapter.getSupportedImageFormatsFilter()]
+                                    nameFilters: [ uniformManagerPane.materialAdapter.getSupportedImageFormatsFilter()]
                                     onAccepted: {
                                         if (textureSourceDialog.selectedFile !== null) {
-                                            model.value = textureSourceDialog.selectedFile
+                                            editorRoot.model.value = textureSourceDialog.selectedFile
                                             previewImage.source = textureSourceDialog.selectedFile
                                         }
                                     }
@@ -714,7 +730,6 @@ Pane {
                             }
                         }
                     }
-
                 }
             }
         }

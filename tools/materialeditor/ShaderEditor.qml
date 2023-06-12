@@ -1,9 +1,10 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 import QtQuick3D.MaterialEditor
 
 Flickable {
@@ -39,10 +40,10 @@ Flickable {
     Column {
         id: lineNumbers
         anchors.left: parent.left
-        anchors.leftMargin: marginsLeft
-        anchors.topMargin:  marginsTop
-        y: marginsTop
-        width: lineCountWidth
+        anchors.leftMargin: flickable.marginsLeft
+        anchors.topMargin:  flickable.marginsTop
+        y: flickable.marginsTop
+        width: flickable.lineCountWidth
 
         function labelAt(lineNr) {
             if (lineNr > 0) {
@@ -65,11 +66,12 @@ Flickable {
             id: repeater
             model: textArea.lineCount
             delegate: Label {
+                required property int index
                 font: textArea.font
                 width: parent.width
                 horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter
-                height: rowHeight
+                height: flickable.rowHeight
                 renderType: Text.NativeRendering
                 text: index+1
             }
@@ -80,7 +82,7 @@ Flickable {
         y: 4
         height: parent.height
         anchors.left: lineNumbers.right
-        anchors.leftMargin: marginsLeft
+        anchors.leftMargin: flickable.marginsLeft
         width: 1
         color: "#ddd"
     }

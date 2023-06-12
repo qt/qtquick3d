@@ -41,21 +41,21 @@ QVariant UniformModel::data(const QModelIndex &index, int role) const
         switch (uniform.type) {
         case CustomMaterial::Uniform::Type::Sampler:
             return QVariant::fromValue(uniform.imagePath);
-        case UniformModel::UniformType::Bool:
+        case CustomMaterial::Uniform::Type::Bool:
             return QVariant::fromValue(uniform.b);
-        case UniformModel::UniformType::Int:
+        case CustomMaterial::Uniform::Type::Int:
             return QVariant::fromValue(uniform.i);
-        case UniformModel::UniformType::Float:
+        case CustomMaterial::Uniform::Type::Float:
             return QVariant::fromValue(uniform.f);
-        case UniformModel::UniformType::Vec2:
+        case CustomMaterial::Uniform::Type::Vec2:
             return QVariant::fromValue(uniform.vec2);
-        case UniformModel::UniformType::Vec3:
+        case CustomMaterial::Uniform::Type::Vec3:
             return QVariant::fromValue(uniform.vec3);
-        case UniformModel::UniformType::Vec4:
+        case CustomMaterial::Uniform::Type::Vec4:
             return QVariant::fromValue(uniform.vec4);
-        case UniformModel::UniformType::Mat44:
+        case CustomMaterial::Uniform::Type::Mat44:
             return QVariant::fromValue(uniform.m44);
-        case UniformModel::UniformType::Last:
+        case CustomMaterial::Uniform::Type::Last:
             break;
         }
     }
@@ -87,36 +87,36 @@ bool UniformModel::setData(const QModelIndex &index, const QVariant &value, int 
     if (role == Type) {
         const auto v = value.toInt(&ok);
         if (ok)
-            uniform.type = static_cast<UniformType>(v);
+            uniform.type = static_cast<CustomMaterial::Uniform::Type>(v);
     } else if (role == Name) {
         uniform.name = value.toString().toUtf8();
     } else if (role == Value) {
         switch (uniform.type) {
-        case UniformModel::UniformType::Bool:
+        case CustomMaterial::Uniform::Type::Bool:
             uniform.b = value.toBool();
             break;
-        case UniformModel::UniformType::Int:
+        case CustomMaterial::Uniform::Type::Int:
             uniform.i = value.toInt();
             break;
-        case UniformModel::UniformType::Float:
+        case CustomMaterial::Uniform::Type::Float:
             uniform.f = value.toFloat();
             break;
-        case UniformModel::UniformType::Vec2:
+        case CustomMaterial::Uniform::Type::Vec2:
             uniform.vec2 = value.value<QVector2D>();
             break;
-        case UniformModel::UniformType::Vec3:
+        case CustomMaterial::Uniform::Type::Vec3:
             uniform.vec3 = value.value<QVector3D>();
             break;
-        case UniformModel::UniformType::Vec4:
+        case CustomMaterial::Uniform::Type::Vec4:
             uniform.vec4 = value.value<QVector4D>();
             break;
-        case UniformModel::UniformType::Mat44:
+        case CustomMaterial::Uniform::Type::Mat44:
             uniform.m44 = value.value<QMatrix4x4>();
             break;
-        case UniformModel::UniformType::Sampler:
+        case CustomMaterial::Uniform::Type::Sampler:
             uniform.imagePath = value.toUrl().path();
             break;
-        case UniformModel::UniformType::Last:
+        case CustomMaterial::Uniform::Type::Last:
             break;
         }
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
@@ -7,10 +7,12 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtCore
 import QtQuick3D
+import QtQuick3D.Helpers
 
 Item {
     id: previewControls
     required property View3D targetView
+    required property OrbitCameraController orbitCamera
     property alias modelSource: modelComboBox.currentValue
     property alias enableIBL: iblEnableButton.checked
     property alias enableDirectionalLight: directionalLightEnabledButton.checked
@@ -25,7 +27,7 @@ Item {
     FrostedGlass {
         width: parent.width
         height: layout.implicitHeight
-        backgroundItem: targetView
+        backgroundItem: previewControls.targetView
         backgroundRect: Qt.rect(0, 0, width, height)
 //        range: 0.05
 //        blur: 0.005
@@ -67,9 +69,9 @@ Item {
         Button {
             text: "Reset View"
             onClicked: {
-                targetView.cameraOrigin.rotation = Qt.quaternion(1, 0, 0, 0)
-                targetView.camera.rotation = Qt.quaternion(1, 0, 0, 0)
-                targetView.camera.position = Qt.vector3d(0, 0, 300)
+                previewControls.orbitCamera.origin.rotation = Qt.quaternion(1, 0, 0, 0)
+                previewControls.orbitCamera.camera.rotation = Qt.quaternion(1, 0, 0, 0)
+                previewControls.orbitCamera.camera.position = Qt.vector3d(0, 0, 300)
                 environmentOrientationSlider.value = 0
             }
         }
@@ -86,18 +88,18 @@ Item {
         }
 
         Label {
-            visible: enableIBL
+            visible: previewControls.enableIBL
             text: "Environment Orientation"
         }
         Slider {
-            visible: enableIBL
+            visible: previewControls.enableIBL
             id: environmentOrientationSlider
             Layout.fillWidth: true
             from: -180
             to: 180
             value: 0
             onValueChanged: {
-                targetView.environment.probeOrientation = Qt.vector3d(0, value, 0)
+                previewControls.targetView.environment.probeOrientation = Qt.vector3d(0, value, 0)
             }
         }
         ToolButton {

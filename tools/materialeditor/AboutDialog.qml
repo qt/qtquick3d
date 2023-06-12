@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
@@ -21,12 +21,12 @@ Dialog {
         Label {
             text: qsTr("Material Editor %1").arg(Qt.application.version)
             font.bold: true
-            font.pixelSize: Qt.application.font.pixelSize * 1.1
+            font.pixelSize: Application.font.pixelSize * 1.1
             Layout.fillWidth: true
         }
 
         Label {
-            text: qsTr("Copyright (C) 2021 The Qt Company Ltd.")
+            text: qsTr("Copyright (C) 2023 The Qt Company Ltd.")
         }
     }
 }

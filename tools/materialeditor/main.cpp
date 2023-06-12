@@ -4,11 +4,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include "resourceserver.h"
-#include "resourceclient.h"
-
-#include "materialadapter.h"
-
 #include <QtQuick3D>
 
 #include <QtCore/qcommandlineparser.h>
