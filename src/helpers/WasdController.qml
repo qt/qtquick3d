@@ -263,7 +263,7 @@ Item {
             if (moveDown)
                 updatePosition(negate(controlledObject.up), downSpeed * frameDelta, controlledObject.position);
             else if (moveUp)
-                updatePosition(controlledObject.up, upSpeed, controlledObject.position);
+                updatePosition(controlledObject.up, upSpeed * frameDelta, controlledObject.position);
 
             if (useMouse) {
                 // Get the delta
