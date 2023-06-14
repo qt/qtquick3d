@@ -208,7 +208,7 @@ private:
     [[nodiscard]] constexpr static inline bool fuzzyQuaternionCompare(const QQuaternion &a, const QQuaternion &b)
     {
         // This 'e' will give better precision than qtbase's qFuzzyCompare for QQuaternion
-        constexpr float e = 0.0000001f;
+        constexpr float e = std::numeric_limits<float>::epsilon();
         return (qAbs(1.0f - qAbs(QQuaternion::dotProduct(a, b))) <= e);
     }
 
