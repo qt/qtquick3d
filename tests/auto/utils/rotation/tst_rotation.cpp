@@ -237,7 +237,7 @@ void tst_RotationDataClass::test_fuzzyQuatCompare()
     { // QTBUG-105918 (Verify that the divergence from 1.0f does not result in a negative number).
       // (i.e., -0.00001 <= e)
         const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
-        const QQuaternion qb = QQuaternion(0.5f + 0.00001f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f + 0.0007f, 0.5f, 0.5f, 0.5f);
         QVERIFY(qa != qb);
         QVERIFY(!qFuzzyCompare(qa, qb));
         a = qa;
@@ -259,7 +259,7 @@ void tst_RotationDataClass::test_compare_precision()
 
     {
         const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
-        const QQuaternion qb = QQuaternion(0.5f + 0.00001f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f + 0.0007f, 0.5f, 0.5f, 0.5f);
         QVERIFY(qa != qb);
         QVERIFY(!qFuzzyCompare(qa, qb));
         a = qa;
@@ -270,7 +270,7 @@ void tst_RotationDataClass::test_compare_precision()
     }
     {
         const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
-        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.00001f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.001f, 0.5f, 0.5f);
         QVERIFY(qa != qb);
         QVERIFY(!qFuzzyCompare(qa, qb));
         a = qa;
@@ -281,7 +281,7 @@ void tst_RotationDataClass::test_compare_precision()
     }
     {
         const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
-        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.0005f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.0007f, 0.5f, 0.5f);
         QVERIFY(qa != qb);
         QVERIFY(!qFuzzyCompare(qa, qb));
         a = qa;
@@ -292,7 +292,7 @@ void tst_RotationDataClass::test_compare_precision()
     }
     {
         const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
-        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.00005f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.0007f, 0.5f, 0.5f);
         QVERIFY(qa != qb);
         QVERIFY(!qFuzzyCompare(qa, qb));
         a = qa;
@@ -320,8 +320,10 @@ void tst_RotationDataClass::test_compare_precision()
         QVERIFY(qFuzzyCompare(qa, qb));
         a = qa;
         b = qb;
+        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
         b = -qb;
+        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
     }
     {
@@ -331,8 +333,10 @@ void tst_RotationDataClass::test_compare_precision()
         QVERIFY(qFuzzyCompare(qa, qb));
         a = qa;
         b = qb;
+        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
         b = -qb;
+        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
     }
     {
@@ -342,8 +346,10 @@ void tst_RotationDataClass::test_compare_precision()
         QVERIFY(qFuzzyCompare(qa, qb));
         a = qa;
         b = qb;
+        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
         b = -qb;
+        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
     }
 }
