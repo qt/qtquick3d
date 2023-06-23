@@ -1026,7 +1026,7 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
 static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipelineState *ps, QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection, const QVector3D &cameraPosition)
 {
     // TODO: non-static so it can be used from QSSGCustomMaterialSystem::rhiPrepareRenderable()?
-    const bool instancing = renderable->prepareInstancing(rhiCtx, cameraDirection, cameraPosition, renderable->instancingLodMin, renderable->instancingLodMax);
+    const bool instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, renderable, cameraDirection, cameraPosition, renderable->instancingLodMin, renderable->instancingLodMax);
     int instanceBufferBinding = 0;
     if (instancing) {
         // set up new bindings for instanced buffers

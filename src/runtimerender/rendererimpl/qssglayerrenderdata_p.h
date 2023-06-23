@@ -332,6 +332,13 @@ public:
     const QSSGRenderShadowMapPtr &getShadowMapManager() const { return shadowMapManager; }
     const QSSGRenderReflectionMapPtr &getReflectionMapManager() const { return reflectionMapManager; }
 
+    static bool prepareInstancing(QSSGRhiContext *rhiCtx,
+                                  QSSGSubsetRenderable *renderable,
+                                  const QVector3D &cameraDirection,
+                                  const QVector3D &cameraPosition,
+                                  float minThreshold,
+                                  float maxThreshold);
+
 private:
     friend class QSSGRenderer;
     friend class QSSGFrameData;

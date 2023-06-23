@@ -346,8 +346,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
                          const QSSGShaderLightListView &inLights);
 
     [[nodiscard]] const QSSGRenderGraphObject &getMaterial() const { return material; }
-
-    bool prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection, const QVector3D &cameraPosition, float minThreshold, float maxThreshold);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
