@@ -90,7 +90,6 @@ public:
     QSSGRhiQuadRenderer *rhiQuadRenderer();
     QSSGRhiCubeRenderer *rhiCubeRenderer();
 
-    // Callback during the layer render process.
     void beginLayerRender(QSSGLayerRenderData &inLayer);
     void endLayerRender();
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
