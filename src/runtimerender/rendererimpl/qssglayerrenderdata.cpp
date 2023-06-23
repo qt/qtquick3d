@@ -1712,6 +1712,7 @@ void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNode
                 skeletonNode->boneCount = skeletonNode->boneData.size() / 2 / 4 / 16;
                 const int boneTexWidth = qCeil(qSqrt(skeletonNode->boneCount * 4 * 2));
                 skeletonNode->boneTexData.setSize(QSize(boneTexWidth, boneTexWidth));
+                skeletonNode->boneData.resize(boneTexWidth * boneTexWidth * 16);
                 skeletonNode->boneTexData.setTextureData(skeletonNode->boneData);
             }
             const int numMorphTarget = modelNode->morphTargets.size();
