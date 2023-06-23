@@ -31,7 +31,7 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class QSSGRenderableObjectFlag
+enum class QSSGRenderableObjectFlag : quint32
 {
     HasTransparency = 1 << 0,
     CompletelyTransparent = 1 << 1,
@@ -345,16 +345,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
                          QSSGShaderDefaultMaterialKey inShaderKey,
                          const QSSGShaderLightListView &inLights);
 
-    const QSSGRenderDefaultMaterial &defaultMaterial() const
-    {
-        Q_ASSERT(QSSGRenderGraphObject::isMaterial(material.type) && material.type != QSSGRenderGraphObject::Type::CustomMaterial);
-        return static_cast<const QSSGRenderDefaultMaterial &>(material);
-    }
-    const QSSGRenderCustomMaterial &customMaterial() const
-    {
-        Q_ASSERT(material.type == QSSGRenderGraphObject::Type::CustomMaterial);
-        return static_cast<const QSSGRenderCustomMaterial &>(material);
-    }
+    [[nodiscard]] const QSSGRenderGraphObject &getMaterial() const { return material; }
+
     bool prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection, const QVector3D &cameraPosition, float minThreshold, float maxThreshold);
 };
 
