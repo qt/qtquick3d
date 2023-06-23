@@ -229,13 +229,14 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                 QSSGSubsetRenderable &cmr(static_cast<QSSGSubsetRenderable &>(*renderable));
                 auto pipelineState = layerData.getPipelineState();
                 const auto &cms = renderContext->customMaterialSystem();
+                const auto &material = static_cast<const QSSGRenderCustomMaterial &>(cmr.getMaterial());
                 auto shaderPipeline = cms->shadersForCustomMaterial(&pipelineState,
-                                                                    cmr.customMaterial(),
+                                                                    material,
                                                                     cmr,
                                                                     features);
 
                 if (shaderPipeline) {
-                    shaderString = cmr.customMaterial().m_shaderPathKey;
+                    shaderString = material.m_shaderPathKey;
                     const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
                     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);
                     const auto vertexStage = shaderPipeline->vertexStage();

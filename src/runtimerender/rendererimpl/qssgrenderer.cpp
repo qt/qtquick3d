@@ -285,9 +285,10 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetR
 
     // Otherwise, build new shader code and run the resulting shaders through
     // the shader conditioning pipeline.
+    const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(renderable.getMaterial());
     QSSGMaterialVertexPipeline vertexPipeline(shaderProgramGenerator,
                                               shaderKeyProperties,
-                                              renderable.defaultMaterial().adapter);
+                                              material.adapter);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
                                                                   vertexPipeline,
@@ -1142,7 +1143,8 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         QSSGRhiShaderPipelinePtr shaderPipeline;
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*theObject));
         if (theObject->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset) {
-            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
+            const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
+            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullMode);
             const bool blendParticles = subsetRenderable.renderer->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
             shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, objectFeatureSet);
@@ -1157,16 +1159,17 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             if (blendParticles)
                 QSSGParticleRenderer::prepareParticlesForModel(*shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
         } else if (theObject->type == QSSGSubsetRenderable::Type::CustomMaterialMeshSubset) {
-            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
+            const auto &material = static_cast<const QSSGRenderCustomMaterial &>(subsetRenderable.getMaterial());
+            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
-            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, subsetRenderable.customMaterial(), subsetRenderable, objectFeatureSet);
+            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, material, subsetRenderable, objectFeatureSet);
             if (!shaderPipeline)
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             // inCamera is the shadow camera, not the same as inData.camera
-            customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
+            customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, material, subsetRenderable,
                                                                  inCamera, depthAdjust, &modelViewProjection);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
         }
@@ -1340,8 +1343,9 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             ps->samples = samples;
 
-            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
-            fillTargetBlend(&ps->targetBlend, subsetRenderable.defaultMaterial().blendMode);
+            const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
+            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullMode);
+            fillTargetBlend(&ps->targetBlend, material.blendMode);
 
             ps->ia = subsetRenderable.subset.rhi.ia;
             QVector3D cameraDirection = inData.cameraData->direction;
@@ -1516,7 +1520,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     case QSSGRenderableObject::Type::CustomMaterialMeshSubset:
     {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
-        const QSSGRenderCustomMaterial &material(subsetRenderable.customMaterial());
+        const QSSGRenderCustomMaterial &material = static_cast<const QSSGRenderCustomMaterial &>(subsetRenderable.getMaterial());
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
 
         featureSet.set(QSSGShaderFeatures::Feature::LightProbe, inData.layer.lightProbe || material.m_iblProbe);
@@ -2381,7 +2385,8 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
-            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
+            const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
+            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullMode);
 
             shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
             if (shaderPipeline) {
@@ -2394,15 +2399,18 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             }
         } else if (obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
-            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
+
+            const auto &customMaterial = static_cast<const QSSGRenderCustomMaterial &>(subsetRenderable.getMaterial());
+
+            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(customMaterial.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
-            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, subsetRenderable.customMaterial(), subsetRenderable, featureSet);
+            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, customMaterial, subsetRenderable, featureSet);
 
             if (shaderPipeline) {
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-                customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
+                customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, customMaterial, subsetRenderable,
                                                                      *inData.camera, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             } else {
