@@ -181,8 +181,6 @@ using QSSGMaterialListView = QSSGDataView<QSSGRenderGraphObject *>;
 
 struct QSSGRenderableObject;
 
-typedef void (*TRenderFunction)(QSSGRenderableObject &inObject, const QVector2D &inCameraProperties);
-
 struct QSSGRenderableObject;
 
 struct QSSGRenderableNodeEntry
