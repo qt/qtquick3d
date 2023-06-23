@@ -229,9 +229,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             QSSGParticleRenderer::prepareParticlesForModel(*shaderPipeline, rhiCtx, bindings, &renderable.modelContext.model);
         bool instancing = false;
         if (!camera)
-            instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraData->direction, layerData.cameraData->position, renderable.instancingLodMin, renderable.instancingLodMax);
+            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, layerData.cameraData->direction, layerData.cameraData->position, renderable.instancingLodMin, renderable.instancingLodMax);
         else
-            instancing = renderable.prepareInstancing(rhiCtx, camera->getScalingCorrectDirection(), camera->getGlobalPos(), renderable.instancingLodMin, renderable.instancingLodMax);
+            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, camera->getScalingCorrectDirection(), camera->getGlobalPos(), renderable.instancingLodMin, renderable.instancingLodMax);
 
         ps->samples = samples;
 

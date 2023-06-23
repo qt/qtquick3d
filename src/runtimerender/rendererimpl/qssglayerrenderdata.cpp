@@ -2265,8 +2265,15 @@ static void cullLodInstances(QByteArray &lodData, const void *instances, int cou
     }
 }
 
-bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection, const QVector3D &cameraPosition, float minThreshold, float maxThreshold)
+bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
+                                            QSSGSubsetRenderable *renderable,
+                                            const QVector3D &cameraDirection,
+                                            const QVector3D &cameraPosition,
+                                            float minThreshold,
+                                            float maxThreshold)
 {
+    auto &modelContext = renderable->modelContext;
+    auto &instanceBuffer = renderable->instanceBuffer; // intentional ref2ptr
     if (!modelContext.model.instancing() || instanceBuffer)
         return instanceBuffer;
     auto *table = modelContext.model.instanceTable;
