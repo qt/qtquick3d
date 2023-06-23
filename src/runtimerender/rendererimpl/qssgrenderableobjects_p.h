@@ -181,8 +181,6 @@ using QSSGMaterialListView = QSSGDataView<QSSGRenderGraphObject *>;
 
 struct QSSGRenderableObject;
 
-struct QSSGRenderableObject;
-
 struct QSSGRenderableNodeEntry
 {
     QSSGRenderNode *node = nullptr;
