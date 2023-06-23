@@ -179,8 +179,6 @@ using QSSGShaderLightListView = QSSGDataView<QSSGShaderLight>;
 
 struct QSSGRenderableObject;
 
-typedef void (*TRenderFunction)(QSSGRenderableObject &inObject, const QVector2D &inCameraProperties);
-
 struct QSSGRenderableObject;
 
 // Used for sorting
