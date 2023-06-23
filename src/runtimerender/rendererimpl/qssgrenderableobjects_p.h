@@ -179,8 +179,6 @@ using QSSGShaderLightListView = QSSGDataView<QSSGShaderLight>;
 
 struct QSSGRenderableObject;
 
-struct QSSGRenderableObject;
-
 // Used for sorting
 struct QSSGRenderableObjectHandle
 {
