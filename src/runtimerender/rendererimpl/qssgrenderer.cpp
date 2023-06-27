@@ -2188,7 +2188,7 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
     return true;
 }
 
-void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer, QSSGRenderCamera &inCamera, QSSGRenderer &renderer)
+void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRenderLayer &layer, QSSGRenderCamera &inCamera, QSSGRenderer &renderer)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare grid"));
@@ -2198,7 +2198,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &laye
     int uniformBinding = 0;
     const int ubufSize = 64 * 2 * sizeof(float) + 4 * sizeof(float) + 4 * sizeof(quint32); // 2x mat4 + 4x float + 1x bool
 
-    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::Main })); // Change to Grid?
+    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ passKey, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::Main })); // Change to Grid?
 
     QRhi *rhi = rhiCtx->rhi();
     if (!dcd.ubuf) {

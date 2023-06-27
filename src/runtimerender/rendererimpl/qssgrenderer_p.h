@@ -265,7 +265,7 @@ void rhiRenderAoTexture(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRendere
 
 bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex);
 
-void rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer,
+void rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRenderLayer &layer,
                     QSSGRenderCamera &inCamera, QSSGRenderer &renderer);
 
 

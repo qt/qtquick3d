@@ -2022,6 +2022,9 @@ void QSSGLayerRenderData::prepareForRender()
     if (overlayPass.hasData())
         activePasses.push_back(&overlayPass);
 
+    if (layer.gridEnabled)
+        activePasses.push_back(&infiniteGridPass);
+
     if (const auto &dbgDrawSystem = renderer->contextInterface()->debugDrawSystem(); dbgDrawSystem && dbgDrawSystem->isEnabled() && dbgDrawSystem->hasContent())
         activePasses.push_back(&debugDrawPass);
 }

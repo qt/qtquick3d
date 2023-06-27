@@ -723,10 +723,6 @@ void MainPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
             rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
     }
 
-
-    if (layer.gridEnabled)
-        rhiPrepareGrid(rhiCtx.get(), layer, *camera, renderer);
-
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("prepare_renderables"));
 }
@@ -837,20 +833,6 @@ void MainPass::renderPass(QSSGRenderer &renderer)
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("transparent_pass"));
     Q_TRACE(QSSG_renderPass_exit);
-
-    // 6. Infinite grid
-    if (layer.gridEnabled) {
-        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render grid"));
-        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render grid"));
-        const auto &shaderPipeline = renderer.getRhiGridShader();
-        Q_ASSERT(shaderPipeline);
-        ps.shaderPipeline = shaderPipeline.get();
-        QRhiShaderResourceBindings *srb = layer.gridSrb;
-        QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-        renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
-        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("render_grid"));
-    }
 }
 
 void MainPass::release()
@@ -861,6 +843,44 @@ void MainPass::release()
     sortedTransparentObjects.clear();
     sortedScreenTextureObjects.clear();
     item2Ds.clear();
+}
+
+void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    auto camera = data.camera;
+    QSSG_ASSERT(camera, return);
+    layer = &data.layer;
+    QSSG_ASSERT(layer, return);
+
+    ps = data.getPipelineState();
+    ps.blendEnable = true;
+    RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, *camera, renderer);
+}
+
+void InfiniteGridPass::renderPass(QSSGRenderer &renderer)
+{
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render grid"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render grid"));
+    const auto &shaderPipeline = renderer.getRhiGridShader();
+    Q_ASSERT(shaderPipeline);
+    ps.shaderPipeline = shaderPipeline.get();
+    QRhiShaderResourceBindings *srb = layer->gridSrb;
+    QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+    renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("render_grid"));
+}
+
+void InfiniteGridPass::release()
+{
+    ps = {};
+    layer = nullptr;
 }
 
 void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
