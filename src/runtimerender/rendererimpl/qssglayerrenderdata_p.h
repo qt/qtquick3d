@@ -253,6 +253,7 @@ public:
     static constexpr size_t USERPASSES = 2; // See QSSGRenderLayer::RenderExtensionMode::Count
     UserPass userPasses[USERPASSES];
     MainPass mainPass;
+    InfiniteGridPass infiniteGridPass;
     DebugDrawPass debugDrawPass;
 
     // Built-in passes
