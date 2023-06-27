@@ -23,13 +23,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 
-//#define QT_QUICK3D_MESH_LOD_DEBUG
-//#define QT_QUICK3D_MESH_LOD_NORMALS_DEBUG
-
-#if defined(QT_QUICK3D_MESH_LOD_DEBUG) || defined(QT_QUICK3D_MESH_LOD_NORMALS_DEBUG)
-#include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
-#endif
-
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -1066,6 +1059,9 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
     const auto &bufferManager = contextInterface.bufferManager();
 
+    const auto &debugDrawSystem = renderer->contextInterface()->debugDrawSystem();
+    const bool maybeDebugDraw = debugDrawSystem && debugDrawSystem->isEnabled();
+
     bool wasDirty = false;
 
     for (const QSSGRenderableNodeEntry &renderable : renderableModels) {
@@ -1191,17 +1187,15 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
                 QSSGBounds3 transformedBounds = theSubset.bounds;
                 if (camera->type != QSSGRenderGraphObject::Type::OrthographicCamera) {
                     transformedBounds.transform(model.globalTransform);
-#ifdef QT_QUICK3D_MESH_LOD_DEBUG
-                    renderer->contextInterface()->debugDrawSystem()->drawBounds(transformedBounds, QColor(Qt::red));
-#endif
+                    if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLod))
+                        debugDrawSystem->drawBounds(transformedBounds, QColor(Qt::red));
                     const QVector3D cameraNormal = camera->getScalingCorrectDirection();
                     const QVector3D cameraPosition = camera->getGlobalPos();
                     const QSSGPlane cameraPlane = QSSGPlane(cameraPosition, cameraNormal);
                     const QVector3D lodSupportMin = transformedBounds.getSupport(-cameraNormal);
                     const QVector3D lodSupportMax = transformedBounds.getSupport(cameraNormal);
-#ifdef QT_QUICK3D_MESH_LOD_DEBUG
-                    renderer->contextInterface()->debugDrawSystem()->drawPoint(lodSupportMin, QColor("orange"));
-#endif
+                    if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLod))
+                        debugDrawSystem->drawPoint(lodSupportMin, QColor("orange"));
 
                     const float distanceMin = cameraPlane.distance(lodSupportMin);
                     const float distanceMax = cameraPlane.distance(lodSupportMax);
@@ -1234,123 +1228,14 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
                     subsetLevelOfDetail = 0;
                 else
                     subsetLevelOfDetail = currentLod + 1;
-#ifdef QT_QUICK3D_MESH_LOD_DEBUG
-                auto levelOfDetailColor = [](int lod) -> QColor {
-                    static QVector<QColor> colors = {
-                        QColor(Qt::white),
-                        QColor(Qt::red),
-                        QColor(Qt::green),
-                        QColor(Qt::blue),
-                        QColor(Qt::yellow),
-                        QColor(Qt::cyan),
-                        QColor(Qt::magenta),
-                        QColor(Qt::darkRed),
-                        QColor(Qt::darkGreen),
-                        QColor(Qt::darkBlue),
-                        QColor(Qt::darkCyan),
-                        QColor(Qt::darkMagenta),
-                        QColor(Qt::darkYellow)
-                    };
-
-                    if (lod >= colors.count()) {
-                        return QColor(Qt::darkGray);
-                    }
-
-                    return colors[lod];
-                };
-                renderer->contextInterface()->debugDrawSystem()->drawBounds(transformedBounds, levelOfDetailColor(subsetLevelOfDetail));
-#endif
+                if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLod))
+                    debugDrawSystem->drawBounds(transformedBounds, QSSGDebugDrawSystem::levelOfDetailColor(subsetLevelOfDetail));
             }
-
-#ifdef QT_QUICK3D_MESH_LOD_NORMALS_DEBUG
-            auto debugNormals = [=](const QSSGRenderModel &model, const QSSGRenderSubset &theSubset, quint32 subsetLevelOfDetail, float lineLength) {
-                QSSGMesh::Mesh mesh;
-                if (model.geometry)
-                    mesh = bufferManager->loadMeshData(model.geometry);
-                else
-                    mesh = bufferManager->loadMeshData(model.meshPath);
-
-                if (!mesh.isValid())
-                    return; // invalid mesh
-
-                QByteArray vertexData = mesh.vertexBuffer().data;
-                if (vertexData.isEmpty())
-                    return; // no vertex dat
-                quint32 vertexStride = mesh.vertexBuffer().stride;
-                QByteArray indexData = mesh.indexBuffer().data;
-                if (indexData.isEmpty())
-                    return; // no index data, not what we're after
-                if (mesh.indexBuffer().componentType != QSSGMesh::Mesh::ComponentType::UnsignedInt32)
-                    return; // not uint3d, not what we're after either
-
-                quint32 positionOffset = UINT_MAX;
-                quint32 normalOffset = UINT_MAX;
-
-                for (const QSSGMesh::Mesh::VertexBufferEntry &vbe : mesh.vertexBuffer().entries) {
-                    if (vbe.name == QSSGMesh::MeshInternal::getPositionAttrName()) {
-                        positionOffset = vbe.offset;
-                        if (vbe.componentType != QSSGMesh::Mesh::ComponentType::Float32 &&
-                            vbe.componentCount != 3)
-                            return; // not a vec3, some weird stuff
-                    } else if (vbe.name == QSSGMesh::MeshInternal::getNormalAttrName()) {
-                        normalOffset = vbe.offset;
-                        if (vbe.componentType != QSSGMesh::Mesh::ComponentType::Float32 &&
-                            vbe.componentCount != 3)
-                            return; // not a vec3, really weird normals I guess
-                    }
-                }
-
-                const auto globalTransform = model.globalTransform;
-                // Draw original vertex normals as blue lines
-                {
-                    // Get Indexes
-                    const quint32 *p = reinterpret_cast<const quint32 *>(indexData.constData());
-                    const char *vp = vertexData.constData();
-                    p += theSubset.offset;
-                    for (uint i = 0; i < theSubset.count; ++i) {
-                        const quint32 index = *(p + i);
-                        const char * posPtr = vp + (index * vertexStride) + positionOffset;
-                        const float *fPosPtr = reinterpret_cast<const float *>(posPtr);
-                        QVector3D position(fPosPtr[0], fPosPtr[1], fPosPtr[2]);
-                        const char * normalPtr = vp + (index * vertexStride) + normalOffset;
-                        const float *fNormalPtr = reinterpret_cast<const float *>(normalPtr);
-                        QVector3D normal(fNormalPtr[0], fNormalPtr[1], fNormalPtr[2]);
-                        position = globalTransform.map(position);
-                        normal = mat33::transform(theModelContext.normalMatrix, normal);
-                        normal = normal.normalized();
-                        renderer->contextInterface()->debugDrawSystem()->drawLine(position, position + (normal * lineLength), QColor(Qt::blue));
-                    }
-                }
-
-                // Draw lod vertex normals as red lines
-                if (subsetLevelOfDetail != 0) {
-                    // Get Indexes
-                    const quint32 *p = reinterpret_cast<const quint32 *>(indexData.constData());
-                    const char *vp = vertexData.constData();
-                    p += theSubset.lodOffset(subsetLevelOfDetail);
-                    const quint32 indexCount = theSubset.lodCount(subsetLevelOfDetail);
-                    for (uint i = 0; i < indexCount; ++i) {
-                        const quint32 index = *(p + i);
-                        const char * posPtr = vp + (index * vertexStride) + positionOffset;
-                        const float *fPosPtr = reinterpret_cast<const float *>(posPtr);
-                        QVector3D position(fPosPtr[0], fPosPtr[1], fPosPtr[2]);
-                        const char * normalPtr = vp + (index * vertexStride) + normalOffset;
-                        const float *fNormalPtr = reinterpret_cast<const float *>(normalPtr);
-                        QVector3D normal(fNormalPtr[0], fNormalPtr[1], fNormalPtr[2]);
-                        position = globalTransform.map(position);
-                        normal = mat33::transform(theModelContext.normalMatrix, normal);
-                        normal = normal.normalized();
-                        renderer->contextInterface()->debugDrawSystem()->drawLine(position, position + (normal * lineLength), QColor(Qt::red));
-                    }
-                }
-            };
-#endif
 
             QVector3D theModelCenter(theSubset.bounds.center());
             theModelCenter = mat44::transform(model.globalTransform, theModelCenter);
-#ifdef QT_QUICK3D_MESH_LOD_NORMALS_DEBUG
-            debugNormals(model, theSubset, subsetLevelOfDetail, (theModelCenter - camera->getGlobalPos()).length() * 0.01);
-#endif
+            if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLodNormal))
+                debugDrawSystem->debugNormals(*bufferManager, theModelContext, theSubset, subsetLevelOfDetail, (theModelCenter - camera->getGlobalPos()).length() * 0.01);
 
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
@@ -2136,6 +2021,9 @@ void QSSGLayerRenderData::prepareForRender()
     auto &overlayPass = userPasses[QSSGRenderLayer::RenderExtensionMode::Overlay];
     if (overlayPass.hasData())
         activePasses.push_back(&overlayPass);
+
+    if (const auto &dbgDrawSystem = renderer->contextInterface()->debugDrawSystem(); dbgDrawSystem && dbgDrawSystem->isEnabled() && dbgDrawSystem->hasContent())
+        activePasses.push_back(&debugDrawPass);
 }
 
 void QSSGLayerRenderData::resetForFrame()

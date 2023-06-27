@@ -1,7 +1,12 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "graphobjects/qssgrendermodel_p.h"
 #include "qssgdebugdrawsystem_p.h"
+
+#include "qssgrendermesh_p.h"
+#include "resourcemanager/qssgrenderbuffermanager_p.h"
+#include "rendererimpl/qssgrenderableobjects_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -167,6 +172,11 @@ void QSSGDebugDrawSystem::recordRenderDebugObjects(QSSGRhiContext *rhiCtx,
     m_pointsSize = 0;
 }
 
+void QSSGDebugDrawSystem::setEnabled(bool v)
+{
+    modes = v ? (modes | ModeFlagT(Mode::Other)) : (modes & ~ModeFlagT(Mode::Other));
+}
+
 void QSSGDebugDrawSystem::generateLine(const LineData &line, QVector<VertexData> &vertexArray, QVector<quint32> &indexArray)
 {
     const QVector3D color = {line.color.redF(), line.color.greenF(), line.color.blueF()};
@@ -220,6 +230,114 @@ void QSSGDebugDrawSystem::generateBox(const BoundsData &bounds, QVector<VertexDa
     indexArray.append(offset + 1);
     indexArray.append(offset + 7);
 
+}
+
+QColor QSSGDebugDrawSystem::levelOfDetailColor(quint32 lod)
+{
+    static const QColor colors[] {
+        QColor(Qt::white),
+        QColor(Qt::red),
+        QColor(Qt::green),
+        QColor(Qt::blue),
+        QColor(Qt::yellow),
+        QColor(Qt::cyan),
+        QColor(Qt::magenta),
+        QColor(Qt::darkRed),
+        QColor(Qt::darkGreen),
+        QColor(Qt::darkBlue),
+        QColor(Qt::darkCyan),
+        QColor(Qt::darkMagenta),
+        QColor(Qt::darkYellow),
+        QColor(Qt::darkGray)
+    };
+
+    const size_t idx = qBound<size_t>(0, lod, std::size(colors) - 1);
+    return colors[idx];
+}
+
+void QSSGDebugDrawSystem::debugNormals(QSSGBufferManager &bufferManager, const QSSGModelContext &theModelContext, const QSSGRenderSubset &theSubset, quint32 subsetLevelOfDetail, float lineLength)
+{
+    const auto &model = theModelContext.model;
+
+    QSSGMesh::Mesh mesh;
+    if (model.geometry)
+        mesh = bufferManager.loadMeshData(model.geometry);
+    else
+        mesh = bufferManager.loadMeshData(model.meshPath);
+
+    if (!mesh.isValid())
+        return; // invalid mesh
+
+    QByteArray vertexData = mesh.vertexBuffer().data;
+    if (vertexData.isEmpty())
+        return; // no vertex dat
+    quint32 vertexStride = mesh.vertexBuffer().stride;
+    QByteArray indexData = mesh.indexBuffer().data;
+    if (indexData.isEmpty())
+        return; // no index data, not what we're after
+    if (mesh.indexBuffer().componentType != QSSGMesh::Mesh::ComponentType::UnsignedInt32)
+        return; // not uint3d, not what we're after either
+
+    quint32 positionOffset = UINT_MAX;
+    quint32 normalOffset = UINT_MAX;
+
+    for (const QSSGMesh::Mesh::VertexBufferEntry &vbe : mesh.vertexBuffer().entries) {
+        if (vbe.name == QSSGMesh::MeshInternal::getPositionAttrName()) {
+            positionOffset = vbe.offset;
+            if (vbe.componentType != QSSGMesh::Mesh::ComponentType::Float32 &&
+                vbe.componentCount != 3)
+                return; // not a vec3, some weird stuff
+        } else if (vbe.name == QSSGMesh::MeshInternal::getNormalAttrName()) {
+            normalOffset = vbe.offset;
+            if (vbe.componentType != QSSGMesh::Mesh::ComponentType::Float32 &&
+                vbe.componentCount != 3)
+                return; // not a vec3, really weird normals I guess
+        }
+    }
+
+    const auto globalTransform = model.globalTransform;
+    // Draw original vertex normals as blue lines
+    {
+        // Get Indexes
+        const quint32 *p = reinterpret_cast<const quint32 *>(indexData.constData());
+        const char *vp = vertexData.constData();
+        p += theSubset.offset;
+        for (uint i = 0; i < theSubset.count; ++i) {
+            const quint32 index = *(p + i);
+            const char * posPtr = vp + (index * vertexStride) + positionOffset;
+            const float *fPosPtr = reinterpret_cast<const float *>(posPtr);
+            QVector3D position(fPosPtr[0], fPosPtr[1], fPosPtr[2]);
+            const char * normalPtr = vp + (index * vertexStride) + normalOffset;
+            const float *fNormalPtr = reinterpret_cast<const float *>(normalPtr);
+            QVector3D normal(fNormalPtr[0], fNormalPtr[1], fNormalPtr[2]);
+            position = globalTransform.map(position);
+            normal = mat33::transform(theModelContext.normalMatrix, normal);
+            normal = normal.normalized();
+            drawLine(position, position + (normal * lineLength), QColor(Qt::blue));
+        }
+    }
+
+           // Draw lod vertex normals as red lines
+    if (subsetLevelOfDetail != 0) {
+        // Get Indexes
+        const quint32 *p = reinterpret_cast<const quint32 *>(indexData.constData());
+        const char *vp = vertexData.constData();
+        p += theSubset.lodOffset(subsetLevelOfDetail);
+        const quint32 indexCount = theSubset.lodCount(subsetLevelOfDetail);
+        for (uint i = 0; i < indexCount; ++i) {
+            const quint32 index = *(p + i);
+            const char * posPtr = vp + (index * vertexStride) + positionOffset;
+            const float *fPosPtr = reinterpret_cast<const float *>(posPtr);
+            QVector3D position(fPosPtr[0], fPosPtr[1], fPosPtr[2]);
+            const char * normalPtr = vp + (index * vertexStride) + normalOffset;
+            const float *fNormalPtr = reinterpret_cast<const float *>(normalPtr);
+            QVector3D normal(fNormalPtr[0], fNormalPtr[1], fNormalPtr[2]);
+            position = globalTransform.map(position);
+            normal = mat33::transform(theModelContext.normalMatrix, normal);
+            normal = normal.normalized();
+            drawLine(position, position + (normal * lineLength), QColor(Qt::red));
+        }
+    }
 }
 
 QT_END_NAMESPACE

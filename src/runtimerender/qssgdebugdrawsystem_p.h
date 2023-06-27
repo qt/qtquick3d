@@ -23,6 +23,10 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QSSGRenderSubset;
+class QSSGBufferManager;
+struct QSSGModelContext;
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDebugDrawSystem
 {
     Q_DISABLE_COPY(QSSGDebugDrawSystem)
@@ -49,7 +53,21 @@ public:
                                   QRhiShaderResourceBindings *srb,
                                   QRhiRenderPassDescriptor *rpDesc);
 
+    void setEnabled(bool v);
+    [[nodiscard]] bool isEnabled() const { return Mode(modes) != Mode::None; }
+
 private:
+    friend class QSSGLayerRenderData;
+
+    enum class Mode : quint8
+    {
+        None,
+        MeshLod = 0x1,
+        MeshLodNormal = 0x2,
+        Other = 0x4
+    };
+    using ModeFlagT = std::underlying_type_t<Mode>;
+
     struct LineData {
         QVector3D startPoint;
         QVector3D endPoint;
@@ -68,6 +86,10 @@ private:
     void generateLine(const LineData &line, QVector<VertexData> &vertexArray, QVector<quint32> &indexArray);
     void generateBox(const BoundsData &bounds, QVector<VertexData> &vertexArray, QVector<quint32> &indexArray);
 
+    // Internal helper functions
+    [[nodiscard]] bool isEnabled(Mode mode) const { return ((ModeFlagT(mode) & modes) != 0); }
+    [[nodiscard]] static QColor levelOfDetailColor(quint32 lod);
+    void debugNormals(QSSGBufferManager &bufferManager, const QSSGModelContext &theModelContext, const QSSGRenderSubset &theSubset, quint32 subsetLevelOfDetail, float lineLength);
 
     quint32 m_indexSize = 0;
     quint32 m_pointsSize = 0;
@@ -81,6 +103,8 @@ private:
     QSSGRhiBufferPtr m_lineVertexBuffer;
     QSSGRhiBufferPtr m_lineIndexBuffer;
     QSSGRhiBufferPtr m_pointVertexBuffer;
+
+    ModeFlagT modes { 0 };
 };
 
 QT_END_NAMESPACE

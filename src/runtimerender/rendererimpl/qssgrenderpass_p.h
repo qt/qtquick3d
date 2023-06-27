@@ -180,6 +180,17 @@ public:
     QSSGRhiGraphicsPipelineState ps;
 };
 
+class DebugDrawPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void release() final;
+
+    QSSGRhiGraphicsPipelineState ps;
+};
+
 class QSSGRenderExtension;
 
 class UserPass : public QSSGRenderPass
