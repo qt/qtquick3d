@@ -10,15 +10,13 @@ This is the QML frontend for using the spatial renderer and scenegraph. For the
 time being, all 3D content goes through offscreen textures (FBO)s so that they
 can be composed into Qt Quick scenes (as a QQuickItem).
 
-Qt Quick 3D provides the following QML types:
-
-\section1 QtQuick3D QML Types
-
 Import the QtQuick3D module with the following statement:
 
-\code
+\qml
 import QtQuick3D
-\endcode
+\endqml
+
+\section1 QtQuick3D QML Types
 
 \generatelist qmltypesbymodule QtQuick3D
 
@@ -26,9 +24,9 @@ import QtQuick3D
 
 Import the QtQuick3D.Helpers module with the following statement:
 
-\code
+\qml
 import QtQuick3D.Helpers
-\endcode
+\endqml
 
 \generatelist qmltypesbymodule QtQuick3D.Helpers
 
@@ -36,9 +34,9 @@ import QtQuick3D.Helpers
 
 Import the QtQuick3D.AssetUtils module with the following statement:
 
-\code
+\qml
 import QtQuick3D.AssetUtils
-\endcode
+\endqml
 
 \generatelist qmltypesbymodule QtQuick3D.AssetUtils
 
@@ -46,9 +44,9 @@ import QtQuick3D.AssetUtils
 
 Import the QtQuick3D.Particles3D module with the following statement:
 
-\code
+\qml
 import QtQuick3D.Particles3D
-\endcode
+\endqml
 
 \generatelist qmltypesbymodule QtQuick3D.Particles3D
 
