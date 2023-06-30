@@ -178,21 +178,6 @@ public:
     QSSGRhiGraphicsPipelineState ps {};
 };
 
-class MainPass : public QSSGRenderPass
-{
-public:
-    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::Main; }
-    void release() final;
-
-    QSSGRenderableObjectList sortedOpaqueObjects;
-    QSSGRenderableObjectList sortedTransparentObjects;
-    QVector<QSSGRenderItem2D *> item2Ds;
-    QSSGShaderFeatures shaderFeatures;
-    QSSGRhiGraphicsPipelineState ps;
-};
-
 class OpaquePass : public QSSGRenderPass
 {
 public:
@@ -202,6 +187,19 @@ public:
     void release() final;
 
     QSSGRenderableObjectList sortedOpaqueObjects;
+    QSSGRhiGraphicsPipelineState ps;
+    QSSGShaderFeatures shaderFeatures;
+};
+
+class TransparentPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void release() final;
+
+    QSSGRenderableObjectList sortedTransparentObjects;
     QSSGRhiGraphicsPipelineState ps;
     QSSGShaderFeatures shaderFeatures;
 };
@@ -231,6 +229,18 @@ public:
     QSSGRenderLayer *layer = nullptr;
     QSSGRhiGraphicsPipelineState ps;
     bool skipTonemapping = false;
+};
+
+class Item2DPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void release() final;
+
+    QList<QSSGRenderItem2D *> item2Ds;
+    QSSGRhiGraphicsPipelineState ps {};
 };
 
 class InfiniteGridPass : public QSSGRenderPass

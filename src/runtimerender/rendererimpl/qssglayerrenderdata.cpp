@@ -1643,6 +1643,12 @@ void QSSGLayerRenderData::prepareForRender()
                        layer.scissorRect.height() };
     }
 
+    ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
+    ps.blendEnable = false;
+
+    // Enable Wireframe mode
+    ps.polygonMode = layer.wireframeMode ? QRhiGraphicsPipeline::Line : QRhiGraphicsPipeline::Fill;
+
     bool wasDirty = false;
     bool wasDataDirty = false;
     wasDirty = layer.isDirty();
@@ -2028,10 +2034,14 @@ void QSSGLayerRenderData::prepareForRender()
             activePasses.push_back(&skyboxPass);
     }
 
+    if (renderableItem2DsCount > 0)
+        activePasses.push_back(&item2DPass);
+
     if (thePrepResult.flags.requiresScreenTexture())
         activePasses.push_back(&reflectionPass);
 
-    activePasses.push_back(&mainPass);
+    if (transparentObjects.size() > 0)
+        activePasses.push_back(&transparentPass);
 
     auto &overlayPass = userPasses[QSSGRenderLayer::RenderExtensionMode::Overlay];
     if (overlayPass.hasData())
