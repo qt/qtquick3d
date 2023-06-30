@@ -81,7 +81,7 @@ public:
     void release() final;
 
     std::shared_ptr<QSSGRenderReflectionMap> reflectionMapManager;
-    QVector<QSSGRenderReflectionProbe *> reflectionProbes;
+    QList<QSSGRenderReflectionProbe *> reflectionProbes;
     QSSGRenderableObjectList reflectionPassObjects;
     QSSGRhiGraphicsPipelineState ps;
 };
@@ -157,11 +157,25 @@ public:
     void release() final;
 
     QSSGRhiRenderableTexture rhiScreenTexture;
+    QSSGRenderPass *skyboxPass = nullptr;
     QSSGShaderFeatures shaderFeatures;
     QSSGRenderableObjectList sortedOpaqueObjects;
     QSSGRhiGraphicsPipelineState ps;
     QColor clearColor{Qt::transparent};
     bool wantsMips = false;
+};
+
+class ScreenReflectionPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void release() final;
+
+    QSSGRenderableObjectList sortedScreenTextureObjects;
+    const QSSGRhiRenderableTexture *rhiScreenTexture = nullptr;
+    QSSGRhiGraphicsPipelineState ps {};
 };
 
 class MainPass : public QSSGRenderPass
@@ -174,10 +188,49 @@ public:
 
     QSSGRenderableObjectList sortedOpaqueObjects;
     QSSGRenderableObjectList sortedTransparentObjects;
-    QSSGRenderableObjectList sortedScreenTextureObjects;
     QVector<QSSGRenderItem2D *> item2Ds;
     QSSGShaderFeatures shaderFeatures;
     QSSGRhiGraphicsPipelineState ps;
+};
+
+class OpaquePass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void release() final;
+
+    QSSGRenderableObjectList sortedOpaqueObjects;
+    QSSGRhiGraphicsPipelineState ps;
+    QSSGShaderFeatures shaderFeatures;
+};
+
+class SkyboxPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void release() final;
+
+    QSSGRenderLayer *layer = nullptr;
+    QSSGRhiGraphicsPipelineState ps;
+    bool skipTonemapping = false;
+    bool skipPrep = false;
+};
+
+class SkyboxCubeMapPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void release() final;
+
+    QSSGRenderLayer *layer = nullptr;
+    QSSGRhiGraphicsPipelineState ps;
+    bool skipTonemapping = false;
 };
 
 class InfiniteGridPass : public QSSGRenderPass

@@ -2016,6 +2016,21 @@ void QSSGLayerRenderData::prepareForRender()
     if (underlayPass.hasData())
         activePasses.push_back(&underlayPass);
 
+    if (opaqueObjects.size() > 0)
+        activePasses.push_back(&opaquePass);
+
+    // NOTE: When the a screen texture is used, the skybox pass will be called twice. First from
+    // the screen texture pass and later as part of the normal run through the list.
+    if (renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::TexelFetch)) { // TODO:
+        if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap)
+            activePasses.push_back(&skyboxCubeMapPass);
+        else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
+            activePasses.push_back(&skyboxPass);
+    }
+
+    if (thePrepResult.flags.requiresScreenTexture())
+        activePasses.push_back(&reflectionPass);
+
     activePasses.push_back(&mainPass);
 
     auto &overlayPass = userPasses[QSSGRenderLayer::RenderExtensionMode::Overlay];
@@ -2057,7 +2072,6 @@ void QSSGLayerRenderData::resetForFrame()
     globalLights.clear();
     modelContexts.clear();
     features = QSSGShaderFeatures();
-    plainSkyBoxPrepared = false;
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer)

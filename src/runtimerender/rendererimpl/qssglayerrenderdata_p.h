@@ -250,14 +250,18 @@ public:
     SSAOMapPass ssaoMapPass;
     DepthMapPass depthMapPass;
     ScreenMapPass screenMapPass;
+    ScreenReflectionPass reflectionPass;
+    SkyboxPass skyboxPass;
+    SkyboxCubeMapPass skyboxCubeMapPass;
     static constexpr size_t USERPASSES = 2; // See QSSGRenderLayer::RenderExtensionMode::Count
     UserPass userPasses[USERPASSES];
+    OpaquePass opaquePass;
     MainPass mainPass;
     InfiniteGridPass infiniteGridPass;
     DebugDrawPass debugDrawPass;
 
     // Built-in passes
-    QVarLengthArray<QSSGRenderPass *, 12> activePasses;
+    QVarLengthArray<QSSGRenderPass *, 16> activePasses;
 
     QSSGRenderLayer &layer;
     QSSGRenderer *renderer = nullptr;
@@ -306,8 +310,6 @@ public:
 
     bool interactiveLightmapBakingRequested = false;
     QSSGLightmapper::Callback lightmapBakingOutputCallback;
-
-    bool plainSkyBoxPrepared = false;
 
     [[nodiscard]] QSSGRenderableNodeEntry getNode(QSSGNodeId id) const;
     [[nodiscard]] QSSGRenderableNodeEntry takeNode(QSSGNodeId id);
