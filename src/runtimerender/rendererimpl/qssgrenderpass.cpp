@@ -612,188 +612,6 @@ void ScreenReflectionPass::release()
     ps = {};
 }
 
-// MAIN PASS
-void MainPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
-{
-    using namespace RenderHelpers;
-
-    // INPUT: Everything available
-
-    // DEPENDECY: Result from previous passes
-
-    // OUTPUT: Screen
-
-    // NOTE: (Does not write to the depth buffer as that's done in the ZPrePass).
-
-    // CONDITION: Always
-
-    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
-    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    auto camera = data.camera;
-    QSSG_ASSERT(camera, return);
-
-    ps = data.getPipelineState();
-    ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
-    ps.blendEnable = false;
-
-    auto &layer = data.layer;
-    shaderFeatures = data.getShaderFeatures();
-
-    {
-        const auto &clippingFrustum = data.clippingFrustum;
-        sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
-        const auto &transparentObject = data.getSortedTransparentRenderableObjects();
-        if (clippingFrustum.has_value())
-            QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), transparentObject, sortedTransparentObjects);
-        else
-            sortedTransparentObjects = transparentObject;
-    }
-    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
-    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
-    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
-    const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());;
-    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));;
-
-    ps.depthTestEnable = depthTestEnableDefault;
-    // enable depth write for opaque objects when there was no Z prepass
-    ps.depthWriteEnable = depthWriteEnableDefault;
-
-    // Enable Wireframe mode
-    ps.polygonMode = layer.wireframeMode ? QRhiGraphicsPipeline::Line : QRhiGraphicsPipeline::Fill;
-
-    // make the buffer copies and other stuff we put on the command buffer in
-    // here show up within a named section in tools like RenderDoc when running
-    // with QSG_RHI_PROFILE=1 (which enables debug markers)
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare renderables"));
-    Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D prepare renderables"));
-    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-
-    QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
-    const int samples = rhiCtx->mainPassSampleCount();
-
-    // objects rendered by Qt Quick 2D
-    ps.depthTestEnable = depthTestEnableDefault;
-    ps.depthWriteEnable = depthWriteEnableDefault;
-    ps.blendEnable = false;
-
-    item2Ds = data.getRenderableItem2Ds();
-    for (const auto &item2D: std::as_const(item2Ds)) {
-        // Set the projection matrix
-        if (!item2D->m_renderer)
-            continue;
-        if (item2D->m_renderer && item2D->m_renderer->currentRhi() != renderer.contextInterface()->rhi()) {
-            static bool contextWarningShown = false;
-            if (!contextWarningShown) {
-                qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
-                contextWarningShown = true;
-            }
-            continue;
-        }
-
-        auto layerPrepResult = data.layerPrepResult;
-
-        const auto &renderTarget = rhiCtx->renderTarget();
-        item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
-        const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
-        if (layer.scissorRect.isValid()) {
-            QRect effScissor = layer.scissorRect & layerPrepResult->viewport.toRect();
-            QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult->viewport,
-                                                            effScissor,
-                                                            rhiCtx->rhi()->isYUpInNDC());
-            item2D->m_renderer->setProjectionMatrix(correctionMat * item2D->MVP);
-            item2D->m_renderer->setViewportRect(effScissor);
-        } else {
-            item2D->m_renderer->setProjectionMatrix(item2D->MVP);
-            item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
-        }
-        item2D->m_renderer->setDeviceRect(deviceRect);
-        QRhiRenderPassDescriptor *oldRp = nullptr;
-        if (item2D->m_rp) {
-            // Changing render target, and so incompatible renderpass
-            // descriptors should be uncommon, but possible.
-            if (!item2D->m_rp->isCompatible(rhiCtx->mainRenderPassDescriptor()))
-                std::swap(item2D->m_rp, oldRp);
-        }
-        if (!item2D->m_rp) {
-            // Do not pass our object to the Qt Quick scenegraph. It may
-            // hold on to it, leading to lifetime and ownership issues.
-            // Rather, create a dedicated, compatible object.
-            item2D->m_rp = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
-            QSSG_CHECK(item2D->m_rp);
-        }
-        item2D->m_renderer->setRenderTarget({ renderTarget, item2D->m_rp, rhiCtx->commandBuffer() });
-        delete oldRp;
-        item2D->m_renderer->prepareSceneInline();
-    }
-
-    // transparent objects (or, without LayerEnableDepthTest, all objects)
-    ps.blendEnable = true;
-    ps.depthWriteEnable = false;
-
-    for (const auto &handle : std::as_const(sortedTransparentObjects)) {
-        QSSGRenderableObject *theObject = handle.obj;
-        const auto depthWriteMode = theObject->depthWriteMode;
-        ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && (data.zPrePassPass.state != ZPrePassPass::State::Active));
-        if (!(theObject->renderableFlags.isCompletelyTransparent()))
-            rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
-    }
-
-    cb->debugMarkEnd();
-    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("prepare_renderables"));
-}
-
-void MainPass::renderPass(QSSGRenderer &renderer)
-{
-    using namespace RenderHelpers;
-
-    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
-    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-
-    bool needsSetViewport = true;
-
-    // 4. Item2Ds
-    if (!item2Ds.isEmpty()) {
-        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));
-        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render 2D sub-scene"));
-        for (const auto &item : std::as_const(item2Ds)) {
-            QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
-            if (item2D->m_renderer && item2D->m_renderer->currentRhi() == renderer.contextInterface()->rhi())
-                item2D->m_renderer->renderSceneInline();
-        }
-        cb->debugMarkEnd();
-        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("2D_sub_scene"));
-    }
-
-    // 5. Non-opaque objects
-    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
-    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Quick3D render alpha"));
-    // If scissorRect is set, Item2Ds will be drawn by a workaround of modifying
-    // viewport, not using actual 3D scissor test.
-    // It means non-opaque objects may be affected by this viewport setting.
-    needsSetViewport = true;
-    for (const auto &handle : std::as_const(sortedTransparentObjects)) {
-        QSSGRenderableObject *theObject = handle.obj;
-        if (!theObject->renderableFlags.isCompletelyTransparent())
-            rhiRenderRenderable(rhiCtx.get(), ps, *theObject, &needsSetViewport);
-    }
-    cb->debugMarkEnd();
-    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("transparent_pass"));
-    Q_TRACE(QSSG_renderPass_exit);
-}
-
-void MainPass::release()
-{
-    ps = {};
-    shaderFeatures = {};
-    sortedOpaqueObjects.clear();
-    sortedTransparentObjects.clear();
-    item2Ds.clear();
-}
-
 void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
@@ -823,9 +641,6 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     ps.depthTestEnable = depthTestEnableDefault;
     // enable depth write for opaque objects when there was no Z prepass
     ps.depthWriteEnable = depthWriteEnableDefault;
-
-    // Enable Wireframe mode
-    ps.polygonMode = layer.wireframeMode ? QRhiGraphicsPipeline::Line : QRhiGraphicsPipeline::Fill;
 
     shaderFeatures = data.getShaderFeatures();
 
@@ -869,6 +684,80 @@ void OpaquePass::renderPass(QSSGRenderer &renderer)
 void OpaquePass::release()
 {
     sortedOpaqueObjects.clear();
+    ps = {};
+    shaderFeatures = {};
+}
+
+void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    auto camera = data.camera;
+    QSSG_ASSERT(camera, return);
+
+    QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
+    const int samples = rhiCtx->mainPassSampleCount();
+
+    ps = data.getPipelineState();
+
+    const auto &layer = data.layer;
+
+    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
+    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
+    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
+    const bool depthTestEnableDefault = layerEnableDepthTest && (!data.getSortedOpaqueRenderableObjects().isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
+
+    // transparent objects (or, without LayerEnableDepthTest, all objects)
+    ps.blendEnable = true;
+    ps.depthTestEnable = depthTestEnableDefault;
+    ps.depthWriteEnable = false;
+
+    shaderFeatures = data.getShaderFeatures();
+
+    { // Frustum culling
+        const auto &clippingFrustum = data.clippingFrustum;
+        const auto &transparentObject = data.getSortedTransparentRenderableObjects();
+        if (clippingFrustum.has_value())
+            QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), transparentObject, sortedTransparentObjects);
+        else
+            sortedTransparentObjects = transparentObject;
+    }
+
+    for (const auto &handle : std::as_const(sortedTransparentObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        const auto depthWriteMode = theObject->depthWriteMode;
+        ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && (data.zPrePassPass.state != ZPrePassPass::State::Active));
+        if (!(theObject->renderableFlags.isCompletelyTransparent()))
+            RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
+    }
+}
+
+void TransparentPass::renderPass(QSSGRenderer &renderer)
+{
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Quick3D render alpha"));
+    // If scissorRect is set, Item2Ds will be drawn by a workaround of modifying
+    // viewport, not using actual 3D scissor test.
+    // It means non-opaque objects may be affected by this viewport setting.
+    bool needsSetViewport = true;
+    for (const auto &handle : std::as_const(sortedTransparentObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        if (!theObject->renderableFlags.isCompletelyTransparent())
+            RenderHelpers::rhiRenderRenderable(rhiCtx.get(), ps, *theObject, &needsSetViewport);
+    }
+    cb->debugMarkEnd();
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("transparent_pass"));
+    Q_TRACE(QSSG_renderPass_exit);
+}
+
+void TransparentPass::release()
+{
+    sortedTransparentObjects.clear();
     ps = {};
     shaderFeatures = {};
 }
@@ -962,6 +851,105 @@ void SkyboxCubeMapPass::release()
 {
     ps = {};
     layer = nullptr;
+}
+
+void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    const auto &layer = data.layer;
+
+    ps = data.getPipelineState();
+
+    // NOTE: If there are opaque objects the opaque pass has already been done (this will need to be solved better later).
+    const auto &sortedOpaqueObjects = data.opaquePass.sortedOpaqueObjects;
+
+    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
+    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
+    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
+    const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
+    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));
+
+    // objects rendered by Qt Quick 2D
+    ps.depthTestEnable = depthTestEnableDefault;
+    ps.depthWriteEnable = depthWriteEnableDefault;
+    ps.blendEnable = false;
+
+    item2Ds = data.getRenderableItem2Ds();
+    for (const auto &item2D: std::as_const(item2Ds)) {
+        // Set the projection matrix
+        if (!item2D->m_renderer)
+            continue;
+        if (item2D->m_renderer && item2D->m_renderer->currentRhi() != renderer.contextInterface()->rhi()) {
+            static bool contextWarningShown = false;
+            if (!contextWarningShown) {
+                qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
+                contextWarningShown = true;
+            }
+            continue;
+        }
+
+        auto layerPrepResult = data.layerPrepResult;
+
+        const auto &renderTarget = rhiCtx->renderTarget();
+        item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
+        const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
+        if (layer.scissorRect.isValid()) {
+            QRect effScissor = layer.scissorRect & layerPrepResult->viewport.toRect();
+            QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult->viewport,
+                                                            effScissor,
+                                                            rhiCtx->rhi()->isYUpInNDC());
+            item2D->m_renderer->setProjectionMatrix(correctionMat * item2D->MVP);
+            item2D->m_renderer->setViewportRect(effScissor);
+        } else {
+            item2D->m_renderer->setProjectionMatrix(item2D->MVP);
+            item2D->m_renderer->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
+        }
+        item2D->m_renderer->setDeviceRect(deviceRect);
+        QRhiRenderPassDescriptor *oldRp = nullptr;
+        if (item2D->m_rp) {
+            // Changing render target, and so incompatible renderpass
+            // descriptors should be uncommon, but possible.
+            if (!item2D->m_rp->isCompatible(rhiCtx->mainRenderPassDescriptor()))
+                std::swap(item2D->m_rp, oldRp);
+        }
+        if (!item2D->m_rp) {
+            // Do not pass our object to the Qt Quick scenegraph. It may
+            // hold on to it, leading to lifetime and ownership issues.
+            // Rather, create a dedicated, compatible object.
+            item2D->m_rp = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
+            QSSG_CHECK(item2D->m_rp);
+        }
+        item2D->m_renderer->setRenderTarget({ renderTarget, item2D->m_rp, rhiCtx->commandBuffer() });
+        delete oldRp;
+        item2D->m_renderer->prepareSceneInline();
+    }
+}
+
+void Item2DPass::renderPass(QSSGRenderer &renderer)
+{
+    QSSG_ASSERT(!item2Ds.isEmpty(), return);
+
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render 2D sub-scene"));
+    for (const auto &item : std::as_const(item2Ds)) {
+        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
+        if (item2D->m_renderer && item2D->m_renderer->currentRhi() == renderer.contextInterface()->rhi())
+            item2D->m_renderer->renderSceneInline();
+    }
+    cb->debugMarkEnd();
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("2D_sub_scene"));
+}
+
+void Item2DPass::release()
+{
+    item2Ds.clear();
+    ps = {};
 }
 
 void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)

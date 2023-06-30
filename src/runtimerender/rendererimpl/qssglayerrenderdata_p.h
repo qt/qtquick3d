@@ -251,12 +251,13 @@ public:
     DepthMapPass depthMapPass;
     ScreenMapPass screenMapPass;
     ScreenReflectionPass reflectionPass;
+    Item2DPass item2DPass;
     SkyboxPass skyboxPass;
     SkyboxCubeMapPass skyboxCubeMapPass;
     static constexpr size_t USERPASSES = 2; // See QSSGRenderLayer::RenderExtensionMode::Count
     UserPass userPasses[USERPASSES];
     OpaquePass opaquePass;
-    MainPass mainPass;
+    TransparentPass transparentPass;
     InfiniteGridPass infiniteGridPass;
     DebugDrawPass debugDrawPass;
 
