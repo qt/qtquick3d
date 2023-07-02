@@ -227,30 +227,16 @@ void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
     renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
 
-    const auto &layer = data.layer;
-    const bool hasItem2Ds = data.renderableItem2Ds.isEmpty();
-    bool zPrePass = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass)
-            && layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)
-            && (!renderedDepthWriteObjects.isEmpty() || hasItem2Ds);
-    if (zPrePass || !renderedOpaqueDepthPrepassObjects.isEmpty()) {
-        cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
-        Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D prepare Z prepass"));
-        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        if (!zPrePass) {
-            state = { State::Forced };
-            rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
-                                {}, renderedOpaqueDepthPrepassObjects,
-                                QSSGRhiDrawCallDataKey::ZPrePass,
-                                rhiCtx->mainPassSampleCount());
-        } else if (rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
-                                    renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects,
-                                    QSSGRhiDrawCallDataKey::ZPrePass,
-                                    rhiCtx->mainPassSampleCount())) {
-                state = { State::Active };
-        }
-        cb->debugMarkEnd();
-        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("prepare_z_prepass"));
-    }
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
+    Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D prepare Z prepass"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    active = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
+                                         renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects,
+                                         QSSGRhiDrawCallDataKey::ZPrePass,
+                                         rhiCtx->mainPassSampleCount());
+    data.setZPrePassPrepResult(active);
+    cb->debugMarkEnd();
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("prepare_z_prepass"));
 }
 
 void ZPrePassPass::renderPass(QSSGRenderer &renderer)
@@ -263,20 +249,13 @@ void ZPrePassPass::renderPass(QSSGRenderer &renderer)
     bool needsSetViewport = true;
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-    if (state == State::Active) {
+    if (active) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render Z prepass"));
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
         rhiRenderDepthPass(rhiCtx.get(), ps, renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
         cb->debugMarkEnd();
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("render_z_prepass"));
-    } else if (state == State::Forced) {
-        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render Z forced prepass"));
-        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z forced prepass"));
-        rhiRenderDepthPass(rhiCtx.get(), ps, {}, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
-        cb->debugMarkEnd();
-        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("render_z_prepass_forced"));
     }
 }
 
@@ -285,7 +264,7 @@ void ZPrePassPass::release()
     renderedDepthWriteObjects.clear();
     renderedOpaqueDepthPrepassObjects.clear();
     ps = {};
-    state = { State::Disabled };
+    active = false;
 }
 
 // SSAO PASS
@@ -447,8 +426,6 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     const auto &layerPrepResult = data.layerPrepResult;
     wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
-    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
-    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
     ps = data.getPipelineState();
 
     if (layer.background == QSSGRenderLayer::Background::Color)
@@ -466,14 +443,6 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             data.skyboxPass.skipTonemapping = tonemappingEnabled;
         }
     }
-
-    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
-    const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
-    // enable depth write for opaque objects when there was no Z prepass
-    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));
-
-    ps.depthTestEnable = depthTestEnableDefault;
-    ps.depthWriteEnable = depthWriteEnableDefault;
 
     bool ready = false;
     if (Q_LIKELY(rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), wantsMips, &rhiScreenTexture))) {
@@ -578,7 +547,7 @@ void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderDat
         const auto depthWriteMode = theObject->depthWriteMode;
         ps.blendEnable = theObject->renderableFlags.hasTransparency();
         ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never || depthWriteMode == QSSGDepthDrawMode::OpaquePrePass
-                                 || (data.zPrePassPass.state == ZPrePassPass::State::Active) || !layerEnableDepthTest);
+                                 || data.isZPrePassActive() || !layerEnableDepthTest);
         RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
     }
 }
@@ -621,8 +590,6 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     ps = data.getPipelineState();
 
-    auto &layer = data.layer;
-
     { // Frustum culling
         const auto &clippingFrustum = data.clippingFrustum;
         const auto &opaqueObjects = data.getSortedOpaqueRenderableObjects();
@@ -632,17 +599,10 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
             sortedOpaqueObjects = opaqueObjects;
     }
 
-    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
-    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
-    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
-    const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
-    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));
-
-    ps.depthTestEnable = depthTestEnableDefault;
-    // enable depth write for opaque objects when there was no Z prepass
-    ps.depthWriteEnable = depthWriteEnableDefault;
-
     shaderFeatures = data.getShaderFeatures();
+
+    const auto &layer = data.layer;
+    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
 
     ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
     ps.blendEnable = false;
@@ -656,7 +616,7 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         const auto depthWriteMode = theObject->depthWriteMode;
         ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never ||
                                 depthWriteMode == QSSGDepthDrawMode::OpaquePrePass ||
-                                (data.zPrePassPass.state == ZPrePassPass::State::Active) || !layerEnableDepthTest);
+                                data.isZPrePassActive() || !layerEnableDepthTest);
         RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
     }
 }
@@ -700,16 +660,8 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
 
     ps = data.getPipelineState();
 
-    const auto &layer = data.layer;
-
-    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
-    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
-    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
-    const bool depthTestEnableDefault = layerEnableDepthTest && (!data.getSortedOpaqueRenderableObjects().isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
-
     // transparent objects (or, without LayerEnableDepthTest, all objects)
     ps.blendEnable = true;
-    ps.depthTestEnable = depthTestEnableDefault;
     ps.depthWriteEnable = false;
 
     shaderFeatures = data.getShaderFeatures();
@@ -723,10 +675,11 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
             sortedTransparentObjects = transparentObject;
     }
 
+    const bool zPrePassActive = data.isZPrePassActive();
     for (const auto &handle : std::as_const(sortedTransparentObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
-        ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && (data.zPrePassPass.state != ZPrePassPass::State::Active));
+        ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && !zPrePassActive);
         if (!(theObject->renderableFlags.isCompletelyTransparent()))
             RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
     }
@@ -861,18 +814,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     ps = data.getPipelineState();
 
-    // NOTE: If there are opaque objects the opaque pass has already been done (this will need to be solved better later).
-    const auto &sortedOpaqueObjects = data.opaquePass.sortedOpaqueObjects;
-
-    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
-    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
-    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
-    const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
-    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));
-
     // objects rendered by Qt Quick 2D
-    ps.depthTestEnable = depthTestEnableDefault;
-    ps.depthWriteEnable = depthWriteEnableDefault;
     ps.blendEnable = false;
 
     item2Ds = data.getRenderableItem2Ds();

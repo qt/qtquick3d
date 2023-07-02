@@ -89,14 +89,6 @@ public:
 class ZPrePassPass : public QSSGRenderPass
 {
 public:
-    enum class State
-    {
-        Disabled,
-        Active,
-        Forced
-    };
-
-    // Note: prep phase, there's also the render phase... Should both be specified here?
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::Main; }
@@ -105,7 +97,7 @@ public:
     QSSGRenderableObjectList renderedDepthWriteObjects;
     QSSGRenderableObjectList renderedOpaqueDepthPrepassObjects;
     QSSGRhiGraphicsPipelineState ps;
-    State state { State::Disabled };
+    bool active = false;
 };
 
 class SSAOMapPass : public QSSGRenderPass

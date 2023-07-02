@@ -329,6 +329,10 @@ public:
     [[nodiscard]] QRhiTexture *getBonemapTexture(const QSSGModelContext &modelContext) const;
 
     [[nodiscard]] QSSGRenderContextInterface *contextInterface() const;
+    // Note: temp. API to report the state of the z-prepass step
+    [[nodiscard]] bool isZPrePassActive() const { return zPrePassActive; }
+    void setZPrePassPrepResult(bool res) { zPrePassActive = res; }
+
 
     // Temp. API. Ideally there shouldn't be a reason for anyone to hold onto these,
     // but we follow the existing pattern for now.
@@ -376,6 +380,17 @@ private:
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set
     bool particlesEnabled = true;
+    bool hasDepthWriteObjects = false;
+    bool zPrePassActive = false;
+    enum class DepthPrepassObject : quint8
+    {
+        None = 0x0,
+        ScreenTexture = 0x1,
+        Transparent = 0x2,
+        Opaque = 0x4
+    };
+    using DepthPrepassObjectStateT = std::underlying_type_t<DepthPrepassObject>;
+    DepthPrepassObjectStateT depthPrepassObjectsState { DepthPrepassObjectStateT(DepthPrepassObject::None) };
     QSSGRenderShadowMapPtr shadowMapManager;
     QSSGRenderReflectionMapPtr reflectionMapManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
