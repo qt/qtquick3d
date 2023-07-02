@@ -397,30 +397,36 @@ void QSSGLayerRenderData::updateSortedDepthObjectsListImp()
     if (!renderedDepthWriteObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty())
         return;
 
-    const auto &sortedOpaqueObjects = getSortedOpaqueRenderableObjects(); // front to back
-    const auto &sortedTransparentObjects = getSortedTransparentRenderableObjects(); // back to front
-    const auto &sortedScreenTextureObjects = getSortedScreenTextureRenderableObjects(); // back to front
     if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
-        for (const auto &opaqueObject : sortedOpaqueObjects) {
-            const auto depthMode = opaqueObject.obj->depthWriteMode;
-            if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
-                renderedDepthWriteObjects.append(opaqueObject);
-            else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                renderedOpaqueDepthPrepassObjects.append(opaqueObject);
+        if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::Opaque)) != 0) {
+            const auto &sortedOpaqueObjects = getSortedOpaqueRenderableObjects(); // front to back
+            for (const auto &opaqueObject : sortedOpaqueObjects) {
+                const auto depthMode = opaqueObject.obj->depthWriteMode;
+                if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
+                    renderedDepthWriteObjects.append(opaqueObject);
+                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                    renderedOpaqueDepthPrepassObjects.append(opaqueObject);
+            }
         }
-        for (const auto &transparentObject : sortedTransparentObjects) {
-            const auto depthMode = transparentObject.obj->depthWriteMode;
-            if (depthMode == QSSGDepthDrawMode::Always)
-                renderedDepthWriteObjects.append(transparentObject);
-            else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                renderedOpaqueDepthPrepassObjects.append(transparentObject);
+        if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::Transparent)) != 0) {
+            const auto &sortedTransparentObjects = getSortedTransparentRenderableObjects(); // back to front
+            for (const auto &transparentObject : sortedTransparentObjects) {
+                const auto depthMode = transparentObject.obj->depthWriteMode;
+                if (depthMode == QSSGDepthDrawMode::Always)
+                    renderedDepthWriteObjects.append(transparentObject);
+                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                    renderedOpaqueDepthPrepassObjects.append(transparentObject);
+            }
         }
-        for (const auto &screenTextureObject : sortedScreenTextureObjects) {
-            const auto depthMode = screenTextureObject.obj->depthWriteMode;
-            if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
-                renderedDepthWriteObjects.append(screenTextureObject);
-            else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                renderedOpaqueDepthPrepassObjects.append(screenTextureObject);
+        if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::ScreenTexture)) != 0) {
+            const auto &sortedScreenTextureObjects = getSortedScreenTextureRenderableObjects(); // back to front
+            for (const auto &screenTextureObject : sortedScreenTextureObjects) {
+                const auto depthMode = screenTextureObject.obj->depthWriteMode;
+                if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
+                    renderedDepthWriteObjects.append(screenTextureObject);
+                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                    renderedOpaqueDepthPrepassObjects.append(screenTextureObject);
+            }
         }
     }
 }
@@ -1368,12 +1374,23 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
 
         if (!handled) {
             for (auto &ro : renderableSubsets) {
-                if (ro.renderableFlags.requiresScreenTexture())
+                const auto depthMode = ro.depthWriteMode;
+                hasDepthWriteObjects |= (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly);
+                enum ObjectType : quint8 { ScreenTexture, Transparent, Opaque };
+                static constexpr DepthPrepassObject ppState[][2] = { {DepthPrepassObject::None, DepthPrepassObject::ScreenTexture},
+                                                                     {DepthPrepassObject::None, DepthPrepassObject::Transparent},
+                                                                     {DepthPrepassObject::None, DepthPrepassObject::Opaque} };
+
+                if (ro.renderableFlags.requiresScreenTexture()) {
+                    depthPrepassObjectsState |= DepthPrepassObjectStateT(ppState[ObjectType::ScreenTexture][size_t(depthMode == QSSGDepthDrawMode::OpaquePrePass)]);
                     screenTextureObjects.push_back({&ro, ro.camdistSq});
-                else if (ro.renderableFlags.hasTransparency())
+                } else if (ro.renderableFlags.hasTransparency()) {
+                    depthPrepassObjectsState |= DepthPrepassObjectStateT(ppState[ObjectType::Transparent][size_t(depthMode == QSSGDepthDrawMode::OpaquePrePass)]);
                     transparentObjects.push_back({&ro, ro.camdistSq});
-                else
+                } else {
+                    depthPrepassObjectsState |= DepthPrepassObjectStateT(ppState[ObjectType::Opaque][size_t(depthMode == QSSGDepthDrawMode::OpaquePrePass)]);
                     opaqueObjects.push_back({&ro, ro.camdistSq});
+                }
 
                 if (ro.renderableFlags.usedInBakedLighting())
                     bakedLightingObjects.push_back({&ro, ro.camdistSq});
@@ -1995,6 +2012,17 @@ void QSSGLayerRenderData::prepareForRender()
         }
     }
 
+    const bool hasItem2Ds = (renderableItem2DsCount > 0);
+    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
+    const bool layerEnabledDepthPrePass = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass);
+    const bool depthTestEnableDefault = layerEnableDepthTest && (!opaqueObjects.isEmpty() || depthPrepassObjectsState || hasDepthWriteObjects);
+    const bool zPrePassForced = (depthPrepassObjectsState != 0);
+    zPrePassActive = zPrePassForced || (layerEnabledDepthPrePass && layerEnableDepthTest && (hasDepthWriteObjects || hasItem2Ds));
+    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layerEnabledDepthPrePass || !zPrePassActive);
+
+    ps.depthTestEnable = depthTestEnableDefault;
+    ps.depthWriteEnable = depthWriteEnableDefault;
+
     // Prepare passes
     QSSG_ASSERT(activePasses.isEmpty(), activePasses.clear());
     // If needed, generate a depth texture with the opaque objects. This
@@ -2012,7 +2040,9 @@ void QSSGLayerRenderData::prepareForRender()
         activePasses.push_back(&shadowMapPass);
 
     activePasses.push_back(&reflectionMapPass);
-    activePasses.push_back(&zPrePassPass);
+
+    if (zPrePassActive)
+        activePasses.push_back(&zPrePassPass);
 
     // Screen texture with opaque objects.
     if (thePrepResult.flags.requiresScreenTexture())
@@ -2022,7 +2052,9 @@ void QSSGLayerRenderData::prepareForRender()
     if (underlayPass.hasData())
         activePasses.push_back(&underlayPass);
 
-    if (opaqueObjects.size() > 0)
+    const bool hasOpaqueObjects = (opaqueObjects.size() > 0);
+
+    if (hasOpaqueObjects)
         activePasses.push_back(&opaquePass);
 
     // NOTE: When the a screen texture is used, the skybox pass will be called twice. First from
@@ -2034,13 +2066,14 @@ void QSSGLayerRenderData::prepareForRender()
             activePasses.push_back(&skyboxPass);
     }
 
-    if (renderableItem2DsCount > 0)
+    if (hasItem2Ds)
         activePasses.push_back(&item2DPass);
 
     if (thePrepResult.flags.requiresScreenTexture())
         activePasses.push_back(&reflectionPass);
 
-    if (transparentObjects.size() > 0)
+    // Note: Transparent pass includeds opaque objects when layerEnableDepthTest is false.
+    if (transparentObjects.size() > 0 || (!layerEnableDepthTest && hasOpaqueObjects))
         activePasses.push_back(&transparentPass);
 
     auto &overlayPass = userPasses[QSSGRenderLayer::RenderExtensionMode::Overlay];
@@ -2082,6 +2115,9 @@ void QSSGLayerRenderData::resetForFrame()
     globalLights.clear();
     modelContexts.clear();
     features = QSSGShaderFeatures();
+    hasDepthWriteObjects = false;
+    depthPrepassObjectsState = { DepthPrepassObjectStateT(DepthPrepassObject::None) };
+    zPrePassActive = false;
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer)
