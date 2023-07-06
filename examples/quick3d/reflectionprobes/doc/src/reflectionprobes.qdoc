@@ -3,7 +3,7 @@
 
 /*!
     \example reflectionprobes
-    \examplecategory {Graphics}
+    \examplecategory {Graphics & Multimedia}
     \ingroup quick3d-examples
     \title Qt Quick 3D - Reflection Probes Example
     \brief Demonstrates the use of reflection probes in Qt Quick 3D.
