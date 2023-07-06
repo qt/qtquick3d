@@ -1491,7 +1491,7 @@ static void generateKeyframeData(const QSSGSceneDesc::Animation::Channel &channe
 #endif // QT_QUICK3D_ENABLE_RT_ANIMATIONS
 }
 
-void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index, OutputContext &output, bool useBinaryKeyframes = true)
+QPair<QString, QString> writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index, OutputContext &output, bool useBinaryKeyframes = true, bool generateTimelineAnimations = true)
 {
     indent(output) << "Timeline {\n";
 
@@ -1499,24 +1499,32 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
     // The duration property of the TimelineAnimation is an int...
     const int duration = qCeil(anim.length);
     // Use the same name for objectName and id
-    const QString objectName = getIdForAnimation(anim.name);
-    indent(output) << "id: " << objectName << "\n";
-    indent(output) << "objectName: \"" << objectName << "\"\n";
+    const QString animationId = getIdForAnimation(anim.name);
+    indent(output) << "id: " << animationId << "\n";
+    QString animationName = animationId;
+    if (!anim.name.isEmpty())
+        animationName = QString::fromLocal8Bit(anim.name);
+    indent(output) << "objectName: \"" << animationName << "\"\n";
     indent(output) << "property real framesPerSecond: " << anim.framesPerSecond << "\n";
     indent(output) << "startFrame: 0\n";
     indent(output) << "endFrame: " << duration << "\n";
     indent(output) << "currentFrame: 0\n";
-    indent(output) << "enabled: true\n";
-    indent(output) << "animations: TimelineAnimation {\n";
-    {
-        QSSGQmlScopedIndent scopedIndent(output);
-        indent(output) << "duration: " << duration << "\n";
-        indent(output) << "from: 0\n";
-        indent(output) << "to: " << duration << "\n";
-        indent(output) << "running: true\n";
-        indent(output) << "loops: Animation.Infinite\n";
+    // Only generate the TimelineAnimation component here if requested
+    // enabled is only set to true up front if we expect to autoplay
+    // the generated TimelineAnimation
+    if (generateTimelineAnimations) {
+        indent(output) << "enabled: true\n";
+        indent(output) << "animations: TimelineAnimation {\n";
+        {
+            QSSGQmlScopedIndent scopedIndent(output);
+            indent(output) << "duration: " << duration << "\n";
+            indent(output) << "from: 0\n";
+            indent(output) << "to: " << duration << "\n";
+            indent(output) << "running: true\n";
+            indent(output) << "loops: Animation.Infinite\n";
+        }
+        indent(output) << blockEnd(output);
     }
-    indent(output) << blockEnd(output);
 
     for (const auto &channel : anim.channels) {
         QString id = getIdForNode(*channel->target);
@@ -1560,6 +1568,7 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
         }
         indent(output) << blockEnd(output);
     }
+    return {animationName, animationId};
 }
 
 void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir, const QJsonObject &optionsObject)
@@ -1594,6 +1603,7 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
         outputOptions |= OutputContext::Options::DesignStudioWorkarounds;
 
     const bool useBinaryKeyframes = checkBooleanOption("useBinaryKeyframes"_L1, options);
+    const bool generateTimelineAnimations = !checkBooleanOption("manualAnimations"_L1, options);
 
     OutputContext output { stream, outdir, scene.sourceDir, 0, OutputContext::Header, outputOptions };
 
@@ -1615,11 +1625,27 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     qsizetype animId = 0;
     stream << "\n";
     stream << indent() << "// Animations:\n";
+    QList<QPair<QString, QString>> animationMap;
     for (const auto &cld : scene.animations) {
         QSSGQmlScopedIndent scopedIndent(output);
-        writeQmlForAnimation(*cld, animId++, output, useBinaryKeyframes);
+        auto mapValues = writeQmlForAnimation(*cld, animId++, output, useBinaryKeyframes, generateTimelineAnimations);
+        animationMap.append(mapValues);
         indent(output) << blockEnd(output);
     }
+
+    if (!generateTimelineAnimations) {
+        // Expose a map of timelines
+        stream << "\n";
+        stream << indent() << "// An exported mapping of Timelines (--manualAnimations)\n";
+        stream << indent() << "property var timelineMap: {\n";
+        QSSGQmlScopedIndent scopedIndent(output);
+        for (const auto &mapValues : animationMap) {
+            QSSGQmlScopedIndent scopedIndent(output);
+            indent(output) << "\"" << mapValues.first << "\": " << mapValues.second << ",\n";
+        }
+        indent(output) << blockEnd(output);
+    }
+
 
     // close the root
     indent(output) << blockEnd(output);

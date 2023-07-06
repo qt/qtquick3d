@@ -193,6 +193,12 @@
             "value": true,
             "type": "Boolean"
         },
+        "manualAnimations": {
+            "name": "Use Manual Animations",
+            "description": "No TimelineAnimations are generated for Timelines so that they can be manually controlled",
+            "value": false,
+            "type": "Boolean"
+        },
         "generateLightmapUV": {
             "name": "Generate Lightmap UVs",
             "description": "Unwrap mesh to generate lightmap UV channel",
