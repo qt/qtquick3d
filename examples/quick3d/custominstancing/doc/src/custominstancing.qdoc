@@ -3,7 +3,7 @@
 
 /*!
     \example custominstancing
-    \examplecategory {Graphics}
+    \examplecategory {Graphics & Multimedia}
     \ingroup quick3d-examples
     \title Qt Quick 3D - Custom Instanced Rendering
     \brief Demonstrates instancing with custom materials and a C++ instance table.

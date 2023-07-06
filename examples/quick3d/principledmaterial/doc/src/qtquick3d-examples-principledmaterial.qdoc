@@ -3,7 +3,7 @@
 
 /*!
     \example principledmaterial
-    \examplecategory {Graphics}
+    \examplecategory {Graphics & Multimedia}
     \ingroup quick3d-examples
     \title Qt Quick 3D - Principled Material Example
     \brief Demonstrates the use of Principled Material.
