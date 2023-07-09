@@ -643,7 +643,8 @@ Model {
     source: "#Sphere"
     scale: Qt.vector3d(2, 2, 2)
     materials: CustomMaterial {
-    fragmentShader: "material.frag"
+        fragmentShader: "material.frag"
+    }
 }
 \endqml
 \badcode
