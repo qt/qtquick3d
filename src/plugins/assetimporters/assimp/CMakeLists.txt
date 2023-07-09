@@ -49,6 +49,7 @@ qt_internal_add_plugin(AssimpImporterPlugin
     LIBRARIES
         Qt::Core
         Qt::Gui
+        Qt::Qml
         Qt::Quick3DAssetImportPrivate
         Qt::Quick3DAssetUtilsPrivate
         Qt::Quick3DPrivate

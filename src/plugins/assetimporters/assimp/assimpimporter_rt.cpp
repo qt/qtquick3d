@@ -8,6 +8,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qbytearrayalgorithms.h>
 #include <QtGui/QQuaternion>
+#include <QtQml/QQmlFile>
 
 #include <QtQuick3DAssetImport/private/qssgassetimporterfactory_p.h>
 #include <QtQuick3DAssetImport/private/qssgassetimporter_p.h>
@@ -23,6 +24,8 @@
 #include <assimp/material.h>
 #include <assimp/GltfMaterial.h>
 #include <assimp/importerdesc.h>
+#include <assimp/IOSystem.hpp>
+#include <assimp/IOStream.hpp>
 
 // ASSIMP INC
 
@@ -158,6 +161,120 @@ struct SceneInfo
     QDir workingDir;
     Options opt;
 };
+
+class ResourceIOStream : public Assimp::IOStream
+{
+public:
+    ResourceIOStream(const char *pFile, const char *pMode);
+
+    // IOStream interface
+    size_t Read(void *pvBuffer, size_t pSize, size_t pCount) override;
+    size_t Write(const void *pvBuffer, size_t pSize, size_t pCount) override;
+    aiReturn Seek(size_t pOffset, aiOrigin pOrigin) override;
+    size_t Tell() const override;
+    size_t FileSize() const override;
+    void Flush() override;
+
+private:
+    QFile file;
+};
+
+ResourceIOStream::ResourceIOStream(const char *pFile, const char *pMode) : file(QString::fromStdString(pFile))
+{
+    QByteArray mode = QByteArray(pMode);
+    QFile::OpenMode openMode = QFile::NotOpen;
+    if (mode.startsWith("r"))
+        openMode |= QFile::ReadOnly;
+    else if (mode.startsWith("w"))
+        openMode |= QFile::WriteOnly;
+    if (mode.endsWith("t"))
+        openMode |= QFile::Text;
+    file.open(openMode);
+}
+
+size_t ResourceIOStream::Read(void *pvBuffer, size_t pSize, size_t pCount)
+{
+    size_t ret = 0;
+    auto buffer = static_cast<char *>(pvBuffer);
+    for (ret = 0; ret < pCount; ret++) {
+        size_t read = file.read(buffer, pSize);
+        if (read != pSize)
+            return ret;
+        buffer += read;
+    }
+    return ret;
+}
+
+size_t ResourceIOStream::Write(const void *pvBuffer, size_t pSize, size_t pCount)
+{
+    Q_UNIMPLEMENTED();
+    return 0;
+}
+
+aiReturn ResourceIOStream::Seek(size_t pOffset, aiOrigin pOrigin)
+{
+    switch (pOrigin) {
+    case aiOrigin_SET:
+        file.seek(pOffset);
+        break;
+    case aiOrigin_CUR:
+        file.seek(file.pos() + pOffset);
+        break;
+    case aiOrigin_END:
+        file.seek(file.size() + pOffset);
+        break;
+    default:
+        return aiReturn_FAILURE;
+    }
+    return aiReturn_SUCCESS;
+}
+
+size_t ResourceIOStream::Tell() const
+{
+    return file.pos();
+}
+
+size_t ResourceIOStream::FileSize() const
+{
+    return file.size();
+}
+
+void ResourceIOStream::Flush()
+{
+}
+
+class ResourceIOSystem : public Assimp::IOSystem
+{
+public:
+    ResourceIOSystem();
+    // IOSystem interface
+    bool Exists(const char *pFile) const override;
+    char getOsSeparator() const override;
+    Assimp::IOStream *Open(const char *pFile, const char *pMode) override;
+    void Close(Assimp::IOStream *pFile) override;
+};
+
+ResourceIOSystem::ResourceIOSystem() : Assimp::IOSystem() { }
+
+bool ResourceIOSystem::Exists(const char *pFile) const
+{
+    return QFile::exists(QString::fromStdString(pFile));
+}
+
+char ResourceIOSystem::getOsSeparator() const
+{
+    return QDir::separator().toLatin1();
+}
+
+Assimp::IOStream *ResourceIOSystem::Open(const char *pFile, const char *pMode)
+{
+    return new ResourceIOStream(pFile, pMode);
+}
+
+void ResourceIOSystem::Close(Assimp::IOStream *pFile)
+{
+    delete pFile;
+}
 
 static void setNodeProperties(QSSGSceneDesc::Node &target,
                               const aiNode &source,
@@ -1557,9 +1674,9 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
 {
     auto filePath = url.path();
 
-    const bool maybeLocalFile = (url.scheme().isEmpty() || url.isLocalFile());
+    const bool maybeLocalFile = QQmlFile::isLocalFile(url);
     if (maybeLocalFile && !QFileInfo::exists(filePath))
-        filePath = url.toLocalFile();
+        filePath = QQmlFile::urlToLocalFileOrQrc(url);
 
     auto sourceFile = QFileInfo(filePath);
     if (!sourceFile.exists())
@@ -1578,6 +1695,9 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
     // Remove primitives that are not Triangles
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
     importer->SetPropertyInteger(AI_CONFIG_IMPORT_COLLADA_USE_COLLADA_NAMES, 1);
+
+    if (filePath.startsWith(":"))
+        importer->SetIOHandler(new ResourceIOSystem);
 
     auto sourceScene = importer->ReadFile(filePath.toStdString(), postProcessSteps);
     if (!sourceScene) {
