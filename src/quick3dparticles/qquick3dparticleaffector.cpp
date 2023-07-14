@@ -116,7 +116,7 @@ QQmlListProperty<QQuick3DParticle> QQuick3DParticleAffector::particles()
 
 void QQuick3DParticleAffector::appendParticle(QQuick3DParticle *n) {
     m_particles.append(n);
-    m_connections.insert(n, QObject::connect(n, &QObject::destroyed, [this](QObject *obj) {
+    m_connections.insert(n, QObject::connect(n, &QObject::destroyed, this, [this](QObject *obj) {
         QQuick3DParticle *particle = qobject_cast<QQuick3DParticle *>(obj);
         m_particles.removeAll(particle);
         QObject::disconnect(m_connections[particle]);
@@ -144,7 +144,7 @@ void QQuick3DParticleAffector::replaceParticle(qsizetype index, QQuick3DParticle
     QObject::disconnect(m_connections[remove]);
     m_connections.remove(remove);
     m_particles[index] = n;
-    m_connections.insert(n, QObject::connect(n, &QObject::destroyed, [this](QObject *obj) {
+    m_connections.insert(n, QObject::connect(n, &QObject::destroyed, this, [this](QObject *obj) {
         QQuick3DParticle *particle = qobject_cast<QQuick3DParticle *>(obj);
         m_particles.removeAll(particle);
         QObject::disconnect(m_connections[particle]);

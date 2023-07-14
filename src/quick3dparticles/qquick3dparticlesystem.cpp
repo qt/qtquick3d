@@ -72,7 +72,7 @@ QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
     , m_logging(false)
     , m_loggingData(new QQuick3DParticleSystemLogging(this))
 {
-    connect(m_loggingData, &QQuick3DParticleSystemLogging::loggingIntervalChanged, [this]() {
+    connect(m_loggingData, &QQuick3DParticleSystemLogging::loggingIntervalChanged, &m_loggingTimer, [this]() {
         m_loggingTimer.setInterval(m_loggingData->m_loggingInterval);
     });
 }

@@ -24,13 +24,13 @@ QT_BEGIN_NAMESPACE
 QQuick3DParticleSpriteParticle::QQuick3DParticleSpriteParticle(QQuick3DNode *parent)
     : QQuick3DParticle(parent)
 {
-    m_connections.insert("maxAmount", QObject::connect(this, &QQuick3DParticle::maxAmountChanged, [this]() {
+    m_connections.insert("maxAmount", QObject::connect(this, &QQuick3DParticle::maxAmountChanged, this, [this]() {
         handleMaxAmountChanged(m_maxAmount);
     }));
-    m_connections.insert("system", QObject::connect(this, &QQuick3DParticle::systemChanged, [this]() {
+    m_connections.insert("system", QObject::connect(this, &QQuick3DParticle::systemChanged, this, [this]() {
         handleSystemChanged(system());
     }));
-    m_connections.insert("sortMode", QObject::connect(this, &QQuick3DParticle::sortModeChanged, [this]() {
+    m_connections.insert("sortMode", QObject::connect(this, &QQuick3DParticle::sortModeChanged, this, [this]() {
         markNodesDirty();
     }));
 }

@@ -20,10 +20,10 @@ QQuick3DParticleModelParticle::QQuick3DParticleModelParticle(QQuick3DNode *paren
     : QQuick3DParticle(parent)
     , m_initialScale(1.0f, 1.0f, 1.0f)
 {
-    QObject::connect(this, &QQuick3DParticle::maxAmountChanged, [this]() {
+    QObject::connect(this, &QQuick3DParticle::maxAmountChanged, this, [this]() {
         handleMaxAmountChanged(m_maxAmount);
     });
-    QObject::connect(this, &QQuick3DParticle::sortModeChanged, [this]() {
+    QObject::connect(this, &QQuick3DParticle::sortModeChanged, this, [this]() {
         handleSortModeChanged(sortMode());
     });
 }

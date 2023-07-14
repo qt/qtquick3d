@@ -18,12 +18,12 @@ ResourceClient::ResourceClient(const QString &serverName)
 void ResourceClient::init()
 {
     const int timeout = 10000;
-    QObject::connect(&m_socket, &QLocalSocket::readyRead, [this]() {
+    QObject::connect(&m_socket, &QLocalSocket::readyRead, this, [this]() {
         const auto message = Message::getMessage(m_socket);
         if (message->type() != Message::Type::Invalid)
             Q_EMIT messageReceived(message);
     });
-    QObject::connect(&m_socket, &QLocalSocket::errorOccurred, [this]() {
+    QObject::connect(&m_socket, &QLocalSocket::errorOccurred, this, [this]() {
         qDebug("client: Error occurred when connecting to: \'%s\'\n - %s", qPrintable(m_serverName), qPrintable(m_socket.errorString()));
     });
 

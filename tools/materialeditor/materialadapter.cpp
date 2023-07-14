@@ -625,7 +625,7 @@ void MaterialAdapter::setUniformModel(UniformModel *newUniformModel)
     m_uniformModel = newUniformModel;
     if (m_uniformModel) {
         m_uniformModel->setModelData(&uniformTable);
-        connect(m_uniformModel, &UniformModel::dataChanged, [this]() {
+        connect(m_uniformModel, &UniformModel::dataChanged, this, [this]() {
             updateMaterialDescription();
         });
     }
