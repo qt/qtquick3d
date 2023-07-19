@@ -5,6 +5,7 @@
     \example custommorphing
     \ingroup quick3d-examples
     \title Qt Quick 3D - Custom Morphing Animation
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates writing C++ custom geometry with a morph target.
     \image custommorphing.png
 

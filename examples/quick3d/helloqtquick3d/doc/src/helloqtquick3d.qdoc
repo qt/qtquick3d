@@ -5,6 +5,7 @@
     \example helloqtquick3d
     \ingroup quick3d-examples
     \title Hello Qt Quick 3D Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates simple instanced drawing.
     \image helloqtquick3d.jpg
 

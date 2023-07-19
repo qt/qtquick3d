@@ -5,6 +5,7 @@
     \example intro
     \ingroup quick3d-examples
     \title Qt Quick 3D - Introduction
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how to render a scene in Qt Quick 3D.
     \image intro.png
 

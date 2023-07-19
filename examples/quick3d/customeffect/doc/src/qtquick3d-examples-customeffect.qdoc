@@ -5,6 +5,7 @@
     \example customeffect
     \ingroup quick3d-examples
     \title Qt Quick 3D - Custom Effect Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates writing custom post-processing effects.
     \image customeffect-example.jpg
 

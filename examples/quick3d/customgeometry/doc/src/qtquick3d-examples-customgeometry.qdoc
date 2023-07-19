@@ -5,6 +5,7 @@
     \example customgeometry
     \ingroup quick3d-examples
     \title Qt Quick 3D - Custom Geometry Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates providing custom vertex data from C++.
     \image customgeometry-example.jpg
 

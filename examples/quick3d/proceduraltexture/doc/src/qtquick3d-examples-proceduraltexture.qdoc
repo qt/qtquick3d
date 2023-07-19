@@ -5,6 +5,7 @@
     \example proceduraltexture
     \ingroup quick3d-examples
     \title Qt Quick 3D - Procedural Texture Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how to provide custom texture data from C++.
     \image proceduraltexture-example.jpg
 

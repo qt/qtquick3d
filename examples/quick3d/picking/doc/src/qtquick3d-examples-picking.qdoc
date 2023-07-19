@@ -5,6 +5,7 @@
     \example picking
     \ingroup quick3d-examples
     \title Qt Quick 3D - Picking example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates picking of models.
 
     This example demonstrates picking. There are 3 different animated models which can be picked.
