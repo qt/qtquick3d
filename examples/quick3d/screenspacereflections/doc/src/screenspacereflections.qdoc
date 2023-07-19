@@ -5,6 +5,7 @@
     \example screenspacereflections
     \ingroup quick3d-examples
     \title Qt Quick 3D - Screen Space Reflections Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates reflections in Qt Quick 3D.
     \image screenspacereflections-example.jpg
 

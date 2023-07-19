@@ -5,6 +5,7 @@
     \example dynamiccreation
     \ingroup quick3d-examples
     \title Qt Quick 3D - Dynamic Model Creation Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates dynamic model creation.
 
     This example demonstrates creating models dynamically in an application. 10 models are created

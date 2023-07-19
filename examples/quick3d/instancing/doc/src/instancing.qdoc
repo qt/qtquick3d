@@ -5,6 +5,7 @@
     \example instancing
     \ingroup quick3d-examples
     \title Qt Quick 3D - Instanced Rendering Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how to do instanced rendering in Qt Quick 3D.
     \image instancing.jpg
 

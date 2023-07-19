@@ -5,6 +5,7 @@
     \example submeshes
     \ingroup quick3d-examples
     \title Qt Quick 3D - Sub-mesh Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how assign materials to sub-meshes.
     \image submeshes-example.png
 

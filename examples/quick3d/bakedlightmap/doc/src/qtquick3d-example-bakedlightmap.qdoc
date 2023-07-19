@@ -5,6 +5,7 @@
     \example bakedlightmap
     \ingroup quick3d-examples
     \title Qt Quick 3D - Baked Lightmap Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates the use of baked lightmaps in a 3D scene.
     \image bakedlightmap-example.jpg
 

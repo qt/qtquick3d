@@ -5,6 +5,7 @@
     \example custommaterial
     \ingroup quick3d-examples
     \title Qt Quick 3D - Custom Materials Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates writing shaded custom materials.
     \image custommaterial-example.jpg
 

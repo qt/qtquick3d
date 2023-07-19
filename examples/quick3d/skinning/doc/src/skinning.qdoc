@@ -5,6 +5,7 @@
     \example skinning
     \ingroup quick3d-examples
     \title Qt Quick 3D - Simple Skinning Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how to render a simple skinning animation in Qt Quick 3D.
     \image skinning.png
 

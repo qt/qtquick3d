@@ -5,6 +5,7 @@
     \example antialiasing
     \ingroup quick3d-examples
     \title Qt Quick 3D - Antialiasing Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates the antialiasing modes in Qt Quick 3D.
     \image antialiasing-example.png
 
