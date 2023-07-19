@@ -5,6 +5,7 @@
     \example quickball
     \ingroup quick3d-examples
     \title Qt Quick 3D - Quick Ball Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how to create a simple game using Quick3D.
     \image quickball-example.jpg
 

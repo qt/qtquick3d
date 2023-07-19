@@ -5,6 +5,7 @@
     \example runtimeloader
     \ingroup quick3d-examples
     \title Qt Quick 3D - RuntimeLoader Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how assets can be loaded at runtime.
     \image runtimeloader-example.jpg
 

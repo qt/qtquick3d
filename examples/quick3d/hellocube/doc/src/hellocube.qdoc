@@ -5,6 +5,7 @@
     \example hellocube
     \ingroup quick3d-examples
     \title Qt Quick 3D - HelloCube Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how to render 2D and 3D objects together in Qt Quick 3D.
     \image hellocube.png
 

@@ -5,6 +5,7 @@
     \example morphing
     \ingroup quick3d-examples
     \title Qt Quick 3D - Morphing Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates how to control morphing animations in Qt Quick 3D.
     \image morphing.png
 

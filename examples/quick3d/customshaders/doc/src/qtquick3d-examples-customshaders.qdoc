@@ -5,6 +5,7 @@
     \example customshaders
     \ingroup quick3d-examples
     \title Qt Quick 3D - Custom Shaders Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates the use of custom vertex and fragment shaders.
 
     This example demonstrates using a material with completely custom vertex

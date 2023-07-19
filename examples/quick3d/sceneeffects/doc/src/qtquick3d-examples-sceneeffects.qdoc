@@ -6,6 +6,7 @@
     \ingroup quick3d-examples
     \examplecategory {Graphics & Multimedia}
     \title Qt Quick 3D - Scene Effects Example
+    \examplecategory {Data Visualization & 3D}
     \brief Demonstrates the use of ExtendedSceneEnvironment.
     \image sceneeffects-example.jpg
 
