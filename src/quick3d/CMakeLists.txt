@@ -69,6 +69,8 @@ qt_internal_add_qml_module(Quick3D
         qquick3dspecularglossymaterial.cpp qquick3dspecularglossymaterial_p.h
         qquick3dfog.cpp qquick3dfog_p.h
         qquick3dlightmapbaker.cpp qquick3dlightmapbaker_p.h
+    NO_UNITY_BUILD_SOURCES
+        qquick3dspecularglossymaterial.cpp # redefinition of 'ensureNormalized' (from qquick3dprincipledmaterial.cpp)
     DEFINES
         QT_BUILD_QUICK3D_LIB
     LIBRARIES
