@@ -283,7 +283,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.append("    qt_vertBinormal = attr_binormal;");
         vertexShader.addIncoming("attr_binormal", "vec3");
     }
-    if (meshHasColors && materialAdapter->isVertexColorsEnabled()) {
+    if (meshHasColors) {
         vertexShader.append("    qt_vertColor = attr_color;");
         vertexShader.addIncoming("attr_color", "vec4");
     }
