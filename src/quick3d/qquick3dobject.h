@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DObjectPrivate;
 class QQuick3DSceneManager;
-struct QSSGRenderGraphObject;
+class QSSGRenderGraphObject;
 
 class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
 {

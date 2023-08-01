@@ -21,29 +21,30 @@
 #include <QtCore/QString>
 #include <QtCore/QDebug>
 
-#define QSSG_DEBUG_ID 0
-
 QT_BEGIN_NAMESPACE
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 {
+    Q_DISABLE_COPY_MOVE(QSSGRenderGraphObject)
+public:
     // Types should be setup on construction. Change the type
     // at your own risk as the type is used for RTTI purposes.
     // See QSSGRenderGraphObject, QQuick3DObject and QSSceneDesc (asset useage).
 
-    enum BaseType : quint16
-    {
-        Node = 0x10,
-        Light = 0x20,
-        Camera = 0x40,
-        Renderable = 0x80,
-        Resource = 0x100,
-        Material = 0x200,
-        Texture = 0x400,
-        Extension = 0x800
+    enum BaseType : quint32 {
+        // Internal types
+        Node = 0x1000,
+        Light = 0x2000,
+        Camera = 0x4000,
+        Renderable = 0x8000,
+        Resource = 0x10000,
+        Material = 0x20000,
+        Texture = 0x40000,
+        Extension = 0x80000,
+        User =   0x80000000
     };
 
-    enum class Type : quint16 {
+    enum class Type : quint32 {
         Unknown = 0,
         // Nodes
         Node = BaseType::Node,
@@ -83,81 +84,86 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         // Textures
         Image2D = BaseType::Texture | BaseType::Resource, // Resource
         ImageCube, // Resource
-        RenderExtension = BaseType::Extension // Extension
+        RenderExtension = BaseType::Extension, // Extension
+        // User types E.g.: (User | Node) + 1)
     };
+    using TypeT = std::underlying_type_t<Type>;
 
-    Q_REQUIRED_RESULT static inline constexpr bool isNodeType(Type type) Q_DECL_NOTHROW
+    enum class Flags : quint32 {
+        HasGraphicsResources = 0x1
+    };
+    using FlagT = std::underlying_type_t<Flags>;
+
+    [[nodiscard]] static inline constexpr bool isNodeType(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Node);
+        return (TypeT(type) & BaseType::Node);
     }
 
-    Q_REQUIRED_RESULT static inline constexpr bool isLight(Type type) Q_DECL_NOTHROW
+    [[nodiscard]] static inline constexpr bool isLight(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Light);
+        return (TypeT(type) & BaseType::Light);
     }
 
-    Q_REQUIRED_RESULT static inline constexpr bool isCamera(Type type) Q_DECL_NOTHROW
+    [[nodiscard]] static inline constexpr bool isCamera(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Camera);
+        return (TypeT(type) & BaseType::Camera);
     }
 
-    Q_REQUIRED_RESULT static inline constexpr bool isMaterial(Type type) Q_DECL_NOTHROW
+    [[nodiscard]] static inline constexpr bool isMaterial(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Material);
+        return (TypeT(type) & BaseType::Material);
     }
 
-    Q_REQUIRED_RESULT static inline constexpr bool isTexture(Type type) Q_DECL_NOTHROW
+    [[nodiscard]] static inline constexpr bool isTexture(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Texture);
+        return (TypeT(type) & BaseType::Texture);
     }
 
-    Q_REQUIRED_RESULT static inline constexpr bool isRenderable(Type type) Q_DECL_NOTHROW
+    [[nodiscard]] static inline constexpr bool isRenderable(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Renderable);
+        return (TypeT(type) & BaseType::Renderable);
     }
 
-    Q_REQUIRED_RESULT static inline constexpr bool isResource(Type type) Q_DECL_NOTHROW
+    [[nodiscard]] static inline constexpr bool isResource(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Resource);
+        return (TypeT(type) & BaseType::Resource);
     }
 
     [[nodiscard]] static inline constexpr bool isExtension(Type type) noexcept
     {
-        return (quint16(type) & BaseType::Extension);
+        return (TypeT(type) & BaseType::Extension);
     }
 
-    // These require special handling, see cleanupNodes() in the scene manager.
-    Q_REQUIRED_RESULT static inline constexpr bool hasGraphicsResources(Type type) Q_DECL_NOTHROW
+    // Note: This could have been a non-static member, as we never create or use
+    // user types we do the built-in types; In any case just follow the existing pattern.
+    [[nodiscard]] static inline constexpr bool isUserType(Type type) noexcept
     {
-        return ((type == Type::Model)
-                || (isTexture(type))
-                || (type == Type::Geometry)
-                || (type == Type::TextureData)
-                || (type == Type::ResourceLoader));
+        return (TypeT(type) & BaseType::User);
     }
 
-    // Id's help debugging the object and are optionally set
-#if QSSG_DEBUG_ID
-    QByteArray id;
-#endif
-    // Type is used for RTTI purposes down the road.
-    Type type;
+    // Objects tagged with HasGraphicsResources get special handling and will be queued for release
+    // on the render thread after the frame has been submitted. See cleanupNodes() in the scene manager.
+    [[nodiscard]] inline bool hasGraphicsResources() noexcept
+    {
+        return ((flags & FlagT(Flags::HasGraphicsResources)) != 0);
+    }
+
+    const Type type;
+    FlagT flags { 0 };
     Q_QUICK3D_PROFILE_ID
 
-    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType) : type(inType) {}
+    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType);
+    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType, FlagT inFlags) : type(inType), flags(inFlags) {}
     virtual ~QSSGRenderGraphObject();
 
-    Q_DISABLE_COPY_MOVE(QSSGRenderGraphObject)
-
-    static const char *asString(QSSGRenderGraphObject::Type type);
-    static QDebug debugPrintImpl(QDebug stream, QSSGRenderGraphObject::Type type);
-
-    friend QDebug operator<<(QDebug stream, QSSGRenderGraphObject::Type type)
-    {
-        return debugPrintImpl(stream, type);
-    }
-
+#ifndef QT_NO_DEBUG_STREAM
+    friend Q_QUICK3DRUNTIMERENDER_EXPORT QDebug operator<<(QDebug stream, QSSGRenderGraphObject::Type type);
+#endif
 };
+
+#ifndef QT_NO_DEBUG_STREAM
+Q_QUICK3DRUNTIMERENDER_EXPORT QDebug operator<<(QDebug, QSSGRenderGraphObject::Type type);
+#endif
 
 QT_END_NAMESPACE
 

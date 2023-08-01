@@ -286,7 +286,7 @@ bool QQuick3DSceneManager::cleanupNodes()
         // Some nodes will trigger resource cleanups that need to
         // happen at a specified time (when graphics backend is active)
         // So build another queue for graphics assets marked for removal
-        if (QSSGRenderGraphObject::hasGraphicsResources(node->type)) {
+        if (node->hasGraphicsResources()) {
             wattached->queueForCleanup(node);
             if (node->type == QSSGRenderGraphObject::Type::ResourceLoader)
                 resourceLoaders.remove(node);
@@ -569,7 +569,7 @@ void QQuick3DWindowAttachment::unregisterSceneManager(QQuick3DSceneManager &mana
 
 void QQuick3DWindowAttachment::queueForCleanup(QSSGRenderGraphObject *obj)
 {
-    Q_ASSERT(QSSGRenderGraphObject::hasGraphicsResources(obj->type));
+    Q_ASSERT(obj->hasGraphicsResources());
     pendingResourceCleanupQueue.push_back(obj);
 }
 
