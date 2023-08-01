@@ -7,10 +7,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRenderGraphObject::~QSSGRenderGraphObject() {}
-
-const char *QSSGRenderGraphObject::asString(Type type)
+static const char *asString(QSSGRenderGraphObject::Type type)
 {
+    using Type = QSSGRenderGraphObject::Type;
 #define RETURN_AS_STRING(T) case T: return #T;
     switch (type) {
         RETURN_AS_STRING(Type::Unknown)
@@ -51,10 +50,29 @@ const char *QSSGRenderGraphObject::asString(Type type)
     return nullptr;
 }
 
-QDebug QSSGRenderGraphObject::debugPrintImpl(QDebug stream, Type type)
+static QSSGRenderGraphObject::FlagT flagForType(QSSGRenderGraphObject::Type type)
 {
-    stream.nospace() << "QSSGRenderGraphObject" << '{' << asString(type) << '}';
-    return stream;
+    const bool hasGraphicsResources = ((type == QSSGRenderGraphObject::Type::Model)
+                                       || (QSSGRenderGraphObject::isTexture(type))
+                                       || (type == QSSGRenderGraphObject::Type::Geometry)
+                                       || (type == QSSGRenderGraphObject::Type::TextureData)
+                                       || (type == QSSGRenderGraphObject::Type::ResourceLoader));
+    return hasGraphicsResources ? QSSGRenderGraphObject::FlagT(QSSGRenderGraphObject::Flags::HasGraphicsResources)
+                                : 0;
 }
+
+QSSGRenderGraphObject::QSSGRenderGraphObject(Type inType)
+    : type(inType)
+    , flags(flagForType(inType)) {}
+
+QSSGRenderGraphObject::~QSSGRenderGraphObject() {}
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug dbg, const QSSGRenderGraphObject::Type type)
+{
+    dbg.nospace() << "QSSGRenderGraphObject" << '{' << asString(type) << '}';
+    return dbg;
+}
+#endif
 
 QT_END_NAMESPACE

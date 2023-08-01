@@ -908,7 +908,7 @@ public:
     QSet<QSSGRenderLayer *> dynamicDataSources;
 };
 
-struct QSSGRenderGraphObject;
+class QSSGRenderGraphObject;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
 {
