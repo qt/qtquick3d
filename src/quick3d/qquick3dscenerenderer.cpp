@@ -1353,7 +1353,7 @@ void QQuick3DSGRenderNode::prepare()
 
     queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().get());
 
-    qreal dpr = window->devicePixelRatio();
+    qreal dpr = window->effectiveDevicePixelRatio();
     const QSizeF itemSize = renderer->surfaceSize() / dpr;
     QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
     viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
@@ -1463,11 +1463,11 @@ void QQuick3DSGDirectRenderer::prepare()
 
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
-            const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
+            const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->effectiveDevicePixelRatio());
 
             Q_TRACE_SCOPE(QSSG_prepareFrame, vp.width(), vp.height());
             m_renderer->beginFrame();
-            m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
+            m_renderer->rhiPrepare(vp, m_window->effectiveDevicePixelRatio());
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(vp.width()) | quint64(vp.height()) << 32, m_renderer->profilingId);
 
             if (renderStats)
@@ -1503,7 +1503,7 @@ void QQuick3DSGDirectRenderer::render()
                 // flipping based on QSHADER_ macros) This is just better for
                 // performance and the shaders are very simple so introducing a
                 // uniform block and branching dynamically would be an overkill.
-                QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
+                QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->effectiveDevicePixelRatio());
 
                 const auto &shaderPipeline = renderer->getRhiSimpleQuadShader();
 
