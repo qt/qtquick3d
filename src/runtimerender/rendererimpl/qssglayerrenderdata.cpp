@@ -571,6 +571,9 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
         if (inImage.m_indexUV == 1)
             theKeyProp.setUsesUV1(inShaderKey, true);
 
+        if (texture.m_flags.isLinear())
+            theKeyProp.setLinear(inShaderKey, true);
+
         if (ioFirstImage == nullptr)
             ioFirstImage = theImage;
         else

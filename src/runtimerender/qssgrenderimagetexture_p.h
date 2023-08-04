@@ -25,7 +25,8 @@ class QRhiTexture;
 enum class QSSGRenderImageTextureFlagValue
 {
     HasTransparency = 1 << 0,
-    RGBE8 = 1 << 1
+    RGBE8 = 1 << 1,
+    Linear = 1 << 2
 };
 
 struct QSSGRenderImageTextureFlags : public QFlags<QSSGRenderImageTextureFlagValue>
@@ -35,6 +36,9 @@ struct QSSGRenderImageTextureFlags : public QFlags<QSSGRenderImageTextureFlagVal
 
     bool isRgbe8() const { return this->operator&(QSSGRenderImageTextureFlagValue::RGBE8); }
     void setRgbe8(bool inValue) { setFlag(QSSGRenderImageTextureFlagValue::RGBE8, inValue); }
+
+    bool isLinear() const { return this->operator&(QSSGRenderImageTextureFlagValue::Linear); }
+    void setLinear(bool inValue) { setFlag(QSSGRenderImageTextureFlagValue::Linear, inValue); }
 };
 
 struct QSSGRenderImageTexture

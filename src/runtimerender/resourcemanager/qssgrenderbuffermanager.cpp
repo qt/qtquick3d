@@ -901,6 +901,8 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     int depth = 0;
     if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
         texture.m_flags.setRgbe8(true);
+    if (!inTexture->isSRGB)
+        texture.m_flags.setLinear(true);
     if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->textureFileData.isValid())) {
         // Before creating an environment map, check if the provided texture is a
         // pre-baked environment map

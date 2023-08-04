@@ -1250,7 +1250,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         const auto &names = imageStringTable[int(baseImage->m_mapType)];
         // Diffuse and BaseColor maps need to converted to linear color space
         fragmentShader.addInclude("tonemapping.glsllib");
-        fragmentShader << "    vec4 qt_base_texture_color = qt_sRGBToLinear(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << "));\n";
+        if (keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::BaseColorMap].isLinear(inKey))
+            fragmentShader << "    vec4 qt_base_texture_color = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
+        else
+            fragmentShader << "    vec4 qt_base_texture_color = qt_sRGBToLinear(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << "));\n";
         fragmentShader << "    qt_diffuseColor *= qt_base_texture_color;\n";
     }
 
