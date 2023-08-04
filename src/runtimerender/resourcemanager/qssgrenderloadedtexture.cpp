@@ -511,6 +511,7 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
         imageData->height = height;
         imageData->format = format;
         imageData->components = format.getNumberOfComponent();
+        imageData->isSRGB = false;
 
         // Allocate a scanline worth of RGBE data
         RGBE *scanline = new RGBE[width];
