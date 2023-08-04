@@ -354,7 +354,8 @@ bool Semantic::visit(FunctionCallExpressionAST *ast)
             _expr.type = funTy->returnType();
         } else if (const OverloadSet *overloads = id.type->asOverloadSetType()) {
             QVector<Function *> candidates;
-            foreach (Function *f, overloads->functions()) {
+            const auto functions = overloads->functions();
+            for (Function *f : functions) {
                 if (f->argumentCount() == actuals.size()) {
                     int argc = 0;
                     for (; argc < actuals.size(); ++argc) {
@@ -371,9 +372,9 @@ bool Semantic::visit(FunctionCallExpressionAST *ast)
 
             if (candidates.isEmpty()) {
                 // ### error, unresolved call.
-                Q_ASSERT(! overloads->functions().isEmpty());
+                Q_ASSERT(!functions.isEmpty());
 
-                _expr.type = overloads->functions().constFirst()->returnType();
+                _expr.type = functions.front()->returnType();
             } else {
                 _expr.type = candidates.constFirst()->returnType();
 

@@ -310,7 +310,7 @@ bool ArrayType::isLessThan(const Type *other) const
 QList<Symbol *> Struct::members() const
 {
     QList<Symbol *> m;
-    foreach (Symbol *s, _members) {
+    for (Symbol *s : _members) {
         if (! s->name().isEmpty())
             m.append(s);
     }
@@ -324,7 +324,7 @@ void Struct::add(Symbol *member)
 
 Symbol *Struct::find(const QString &name) const
 {
-    foreach (Symbol *s, _members) {
+    for (Symbol *s : _members) {
         if (s->name() == name)
             return s;
     }
@@ -413,7 +413,7 @@ bool Function::isLessThan(const Type *other) const
 QList<Symbol *> Function::members() const
 {
     QList<Symbol *> m;
-    foreach (Argument *arg, _arguments) {
+    for (Argument *arg : _arguments) {
         if (! arg->name().isEmpty())
             m.append(arg);
     }
@@ -422,7 +422,7 @@ QList<Symbol *> Function::members() const
 
 Symbol *Function::find(const QString &name) const
 {
-    foreach (Argument *arg, _arguments) {
+    for (Argument *arg : _arguments) {
         if (arg->name() == name)
             return arg;
     }
