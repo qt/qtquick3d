@@ -68,9 +68,16 @@ private:
     Stage m_stage;
 };
 
+// To prevent the same type from being exported twice into qmltypes
+// (for value type and for the enums)
+struct ShaderBuildMessageDerived : public ShaderBuildMessage
+{
+    Q_GADGET
+};
+
 namespace ShaderEnums {
 Q_NAMESPACE
-QML_FOREIGN_NAMESPACE(ShaderBuildMessage)
+QML_FOREIGN_NAMESPACE(ShaderBuildMessageDerived)
 QML_NAMED_ELEMENT(ShaderConstants)
 }
 
