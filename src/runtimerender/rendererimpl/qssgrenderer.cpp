@@ -607,7 +607,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         shaderPipeline = generateRhiShaderPipeline(inRenderable, inFeatureSet);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inRenderable.material.profilingId);
-        // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
+        // make skey useable as a key for the QHash (makes a copy of the materialKey, instead of just referencing)
         skey.detach();
         // insert it no matter what, no point in trying over and over again
         m_shaderMap.insert(skey, shaderPipeline);

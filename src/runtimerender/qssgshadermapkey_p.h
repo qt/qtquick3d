@@ -23,18 +23,13 @@
 struct QSSGShaderMapKey
 {
     QByteArray m_name;
-    const QSSGShaderFeatures *m_featuresOrig;
-    QSSGShaderFeatures m_featuresCopy;
-    QSSGShaderDefaultMaterialKey *m_materialKeyOrig;
+    const QSSGShaderFeatures m_featuresOrig;
+    const QSSGShaderDefaultMaterialKey *m_materialKeyOrig;
     QSSGShaderDefaultMaterialKey m_materialKeyCopy;
     size_t m_hashCode;
 
     void detach()
     {
-        if (m_featuresOrig) {
-            m_featuresCopy = *m_featuresOrig;
-            m_featuresOrig = nullptr;
-        }
         if (m_materialKeyOrig) {
             m_materialKeyCopy = *m_materialKeyOrig;
             m_materialKeyOrig = nullptr;
@@ -43,8 +38,8 @@ struct QSSGShaderMapKey
 
     QSSGShaderMapKey(const QByteArray &inName,
                      const QSSGShaderFeatures &inFeatures,
-                     QSSGShaderDefaultMaterialKey &inMaterialKey)
-        : m_name(inName), m_featuresOrig(&inFeatures), m_materialKeyOrig(&inMaterialKey)
+                     const QSSGShaderDefaultMaterialKey &inMaterialKey)
+        : m_name(inName), m_featuresOrig(inFeatures), m_materialKeyOrig(&inMaterialKey)
     {
         m_hashCode = qHash(m_name) ^ qHash(m_featuresOrig) ^ qHash(m_materialKeyOrig->hash());
     }
@@ -60,9 +55,7 @@ inline bool operator==(const QSSGShaderMapKey &a, const QSSGShaderMapKey &b) Q_D
     if (!(*keyA == *keyB))
         return false;
 
-    const QSSGShaderFeatures *featuresA = a.m_featuresOrig ? a.m_featuresOrig : &a.m_featuresCopy;
-    const QSSGShaderFeatures *featuresB = b.m_featuresOrig ? b.m_featuresOrig : &b.m_featuresCopy;
-    return *featuresA == *featuresB;
+    return (a.m_featuresOrig == b.m_featuresOrig);
 }
 
 inline size_t qHash(const QSSGShaderMapKey &key, size_t seed)
