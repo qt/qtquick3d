@@ -11,6 +11,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
 #include "qquick3dnode_p_p.h"
 
+#include <QtGui/rhi/qrhi.h>
+
 QT_BEGIN_NAMESPACE
 
 /*

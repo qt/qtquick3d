@@ -13,8 +13,6 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <qtquick3d_tracepoints_p.h>
 
-#include <QtQuick3D/QQuick3DObject>
-
 QT_BEGIN_NAMESPACE
 
 static inline QMatrix4x4 correctMVPForScissor(QRectF viewportRect, QRect scissorRect, bool isYUp) {
