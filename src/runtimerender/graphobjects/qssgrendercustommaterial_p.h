@@ -16,15 +16,18 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
-
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qvector.h>
 #include <rhi/qrhi.h>
 
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderexports_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+
 QT_BEGIN_NAMESPACE
 
+struct QSSGRenderImage;
 struct QSSGShaderMaterialAdapter;
 class QQuick3DShaderUtilsTextureInput;
 class QQuick3DTexture;

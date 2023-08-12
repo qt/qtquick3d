@@ -23,6 +23,8 @@ QT_BEGIN_NAMESPACE
 
 class QSGNode;
 class QSGRenderer;
+class QRhiRenderPassDescriptor;
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
 {
     Q_DISABLE_COPY(QSSGRenderItem2D)

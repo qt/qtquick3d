@@ -15,11 +15,11 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 QT_BEGIN_NAMESPACE
+
+struct QSSGRenderSkeleton;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderJoint : public QSSGRenderNode
 {
