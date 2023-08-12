@@ -159,7 +159,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                 pEntry->m_rhiPrefilterRenderTargetsMap.insert(mipLevel, renderTargets);
             }
 
-            const auto &prefilterShaderStages = m_context.shaderCache()->loadBuiltinForRhi("reflectionprobeprefilter");
+            const auto &prefilterShaderStages = m_context.shaderCache()->getBuiltInRhiShaders().getRhiReflectionprobePreFilterShader();
 
             const QSSGRhiSamplerDescription samplerMipMapDesc {
                 QRhiSampler::Linear,
@@ -222,7 +222,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
             if (!pEntry->m_prefilterPipeline->create())
                 qWarning("failed to create pre-filter reflection map pipeline state");
 
-            const auto &irradianceShaderStages = m_context.shaderCache()->loadBuiltinForRhi("environmentmapprefilter");
+            const auto &irradianceShaderStages = m_context.shaderCache()->getBuiltInRhiShaders().getRhienvironmentmapPreFilterShader(false /* isRGBE */);
 
             pEntry->m_irradiancePipeline = rhi->newGraphicsPipeline();
             pEntry->m_irradiancePipeline->setCullMode(QRhiGraphicsPipeline::Front);

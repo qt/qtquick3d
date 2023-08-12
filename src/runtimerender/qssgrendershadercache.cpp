@@ -247,7 +247,8 @@ static inline QString persistentQsbcFileName()
 QSSGShaderCache::QSSGShaderCache(QSSGRhiContext &ctx,
                                  const InitBakerFunc initBakeFn)
     : m_rhiContext(ctx),
-      m_initBaker(initBakeFn)
+      m_initBaker(initBakeFn),
+      m_builtInShaders(*this)
 {
     if (isAutoDiskCacheEnabled()) {
         const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();

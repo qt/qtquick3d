@@ -209,6 +209,7 @@ public:
     Type passType() const final { return Type::Main; }
     void release() final;
 
+    QSSGRhiShaderPipelinePtr skyBoxCubeShader;
     QSSGRenderLayer *layer = nullptr;
     QSSGRhiGraphicsPipelineState ps;
     bool skipTonemapping = false;
@@ -234,6 +235,7 @@ public:
     Type passType() const final { return Type::Main; }
     void release() final;
 
+    QSSGRhiShaderPipelinePtr gridShader;
     QSSGRhiGraphicsPipelineState ps {};
     QSSGRenderLayer *layer = nullptr;
 };
@@ -246,6 +248,7 @@ public:
     Type passType() const final { return Type::Main; }
     void release() final;
 
+    QSSGRhiShaderPipelinePtr debugObjectShader;
     QSSGRhiGraphicsPipelineState ps;
 };
 

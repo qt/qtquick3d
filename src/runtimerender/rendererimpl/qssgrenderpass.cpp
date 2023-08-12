@@ -285,7 +285,8 @@ void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     camera = data.camera;
     QSSG_ASSERT_X((camera && rhiDepthTexture && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing camera or required texture(s)", return);
 
-    ssaoShaderPipeline = data.renderer->getRhiSsaoShader();
+    const auto &shaderCache = renderer.contextInterface()->shaderCache();
+    ssaoShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSsaoShader();
     aoSettings = { data.layer.aoStrength, data.layer.aoDistance, data.layer.aoSoftness, data.layer.aoBias, data.layer.aoSamplerate, data.layer.aoDither };
 
     ps = data.getPipelineState();
@@ -759,9 +760,12 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render skybox"));
-    QSSGRenderLayer::TonemapMode tonemapMode = skipTonemapping ? QSSGRenderLayer::TonemapMode::None : layer->tonemapMode;
 
-    auto shaderPipeline = renderer.getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8);
+    // Note: We get the shader here, as the screen map pass might modify the state of
+    // the tonemap mode.
+    QSSGRenderLayer::TonemapMode tonemapMode = skipTonemapping ? QSSGRenderLayer::TonemapMode::None : layer->tonemapMode;
+    const auto &shaderCache = renderer.contextInterface()->shaderCache();
+    auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8);
     QSSG_CHECK(shaderPipeline);
     ps.shaderPipeline = shaderPipeline.get();
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
@@ -789,6 +793,9 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     ps = data.getPipelineState();
     ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
+    const auto &shaderCache = renderer.contextInterface()->shaderCache();
+    skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader();
+
     RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, *camera, renderer);
 }
 
@@ -796,16 +803,15 @@ void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    QSSG_ASSERT(layer, return);
+    QSSG_ASSERT(layer && skyBoxCubeShader, return);
 
     QRhiShaderResourceBindings *srb = layer->skyBoxSrb;
     QSSG_ASSERT(srb, return);
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render skybox"));
-    auto shaderPipeline = renderer.getRhiSkyBoxCubeShader();
-    QSSG_CHECK(shaderPipeline);
-    ps.shaderPipeline = shaderPipeline.get();
+
+    ps.shaderPipeline = skyBoxCubeShader.get();
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
     renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_cube"));
@@ -914,6 +920,9 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
+    const auto &shaderCache = renderer.contextInterface()->shaderCache();
+    gridShader = shaderCache->getBuiltInRhiShaders().getRhiGridShader();
+
     ps = data.getPipelineState();
     ps.blendEnable = true;
     RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, *camera, renderer);
@@ -922,15 +931,13 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
 void InfiniteGridPass::renderPass(QSSGRenderer &renderer)
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
-    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QSSG_ASSERT(gridShader && rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render grid"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render grid"));
-    const auto &shaderPipeline = renderer.getRhiGridShader();
-    Q_ASSERT(shaderPipeline);
-    ps.shaderPipeline = shaderPipeline.get();
+    ps.shaderPipeline = gridShader.get();
     QRhiShaderResourceBindings *srb = layer->gridSrb;
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
@@ -950,6 +957,8 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     auto camera = data.camera;
     QSSG_ASSERT(camera, return);
 
+    const auto &shaderCache = renderer.contextInterface()->shaderCache();
+    debugObjectShader = shaderCache->getBuiltInRhiShaders().getRhiDebugObjectShader();
     ps = data.getPipelineState();
 
     // debug objects
@@ -980,7 +989,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 void DebugDrawPass::renderPass(QSSGRenderer &renderer)
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
-    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QSSG_ASSERT(debugObjectShader && rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
     const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
@@ -988,9 +997,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
         cb->debugMarkBegin(QByteArrayLiteral("Quick 3D debug objects"));
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick 3D debug objects"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        auto shaderPipeline = renderer.getRhiDebugObjectShader();
-        QSSG_CHECK(shaderPipeline);
-        ps.shaderPipeline = shaderPipeline.get();
+        ps.shaderPipeline = debugObjectShader.get();
         QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ this, nullptr, nullptr, 0 });
         QRhiShaderResourceBindings *srb = dcd.srb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();

@@ -92,6 +92,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         HejlDawson,
         Filmic
     };
+    static size_t constexpr TonemapModeCount = 5;
 
     enum class LayerFlag
     {

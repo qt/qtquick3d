@@ -21,6 +21,7 @@
 #include <QtQuick3DUtils/private/qqsbcollection_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererimplshaders_p.h>
 
 #include <QtCore/QString>
 #include <QtCore/qcryptographichash.h>
@@ -169,6 +170,8 @@ public:
 
     using InitBakerFunc = void (*)(QShaderBaker *baker, QRhi *rhi);
 private:
+    friend class QSSGBuiltInRhiShaderCache;
+
     typedef QHash<QSSGShaderCacheKey, QSSGRhiShaderPipelinePtr> TRhiShaderMap;
     QSSGRhiContext &m_rhiContext; // Not own, the RCI owns us and the QSSGRhiContext.
     TRhiShaderMap m_rhiShaders;
@@ -176,6 +179,9 @@ private:
     InitBakerFunc m_initBaker;
     QQsbInMemoryCollection m_persistentShaderBakingCache;
     QString m_persistentShaderStorageFileName;
+    QSSGBuiltInRhiShaderCache m_builtInShaders;
+
+    QSSGRhiShaderPipelinePtr loadBuiltinForRhi(const QByteArray &inKey);
 
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
@@ -211,7 +217,7 @@ public:
                                            const QSSGShaderFeatures &inFeatures,
                                            QSSGRhiShaderPipeline::StageFlags stageFlags);
 
-    QSSGRhiShaderPipelinePtr loadBuiltinForRhi(const QByteArray &inKey);
+    QSSGBuiltInRhiShaderCache &getBuiltInRhiShaders() { return m_builtInShaders; }
 
     static QByteArray resourceFolder();
     static QByteArray shaderCollectionFile();

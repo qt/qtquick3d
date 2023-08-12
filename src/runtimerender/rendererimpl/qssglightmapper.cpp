@@ -793,14 +793,15 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             // Vertex inputs (just like the sampler uniforms) must match exactly on
             // the shader and the application side, cannot just leave out or have
             // unused inputs.
-            QSSGRenderer::LightmapUVRasterizationShaderMode shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::Default;
+            QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::Default;
             if (hasUV0) {
-                shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::Uv;
+                shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::Uv;
                 if (hasTangentAndBinormal)
-                    shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::UvTangent;
+                    shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::UvTangent;
             }
 
-            const auto &lmUvRastShaderPipeline = renderer->getRhiLightmapUVRasterizationShader(shaderVariant);
+            const auto &shaderCache = renderer->contextInterface()->shaderCache();
+            const auto &lmUvRastShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiLightmapUVRasterizationShader(shaderVariant);
             if (!lmUvRastShaderPipeline) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load shaders"));
                 return false;
@@ -1487,7 +1488,8 @@ bool QSSGLightmapperPrivate::postProcess()
                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
         bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, lightmapTex.get(), nearestSampler);
         renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, resUpd);
-        const auto &lmDilatePipeline = renderer->getRhiLightmapDilateShader();
+        const auto &shaderCache = renderer->contextInterface()->shaderCache();
+        const auto &lmDilatePipeline = shaderCache->getBuiltInRhiShaders().getRhiLightmapDilateShader();
         if (!lmDilatePipeline) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load shaders"));
             return false;

@@ -35,8 +35,9 @@ static QSSGRhiShaderPipelinePtr shadersForParticleMaterial(QSSGRhiGraphicsPipeli
                                                            QSSGParticlesRenderable &particleRenderable)
 {
     const auto &renderer(particleRenderable.renderer);
+    const auto &shaderCache = renderer->contextInterface()->shaderCache();
     auto featureLevel = particleRenderable.particles.m_featureLevel;
-    const auto &shaderPipeline = renderer->getRhiParticleShader(featureLevel);
+    const auto &shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiParticleShader(featureLevel);
     if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.get();
     return shaderPipeline;
@@ -1157,8 +1158,10 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         const QSize size = map->pixelSize();
         ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-        const auto &blurXPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurXShader()
-                                                  : renderer.getRhiCubemapShadowBlurXShader();
+        const auto &shaderCache = renderer.contextInterface()->shaderCache();
+
+        const auto &blurXPipeline = orthographic ? shaderCache->getBuiltInRhiShaders().getRhiOrthographicShadowBlurXShader()
+                                                  : shaderCache->getBuiltInRhiShaders().getRhiCubemapShadowBlurXShader();
         if (!blurXPipeline)
             return;
         ps.shaderPipeline = blurXPipeline.get();
@@ -1206,8 +1209,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
         // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
 
-        const auto &blurYPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurYShader()
-                                                 : renderer.getRhiCubemapShadowBlurYShader();
+        const auto &blurYPipeline = orthographic ? shaderCache->getBuiltInRhiShaders().getRhiOrthographicShadowBlurYShader()
+                                                 : shaderCache->getBuiltInRhiShaders().getRhiCubemapShadowBlurYShader();
         if (!blurYPipeline)
             return;
         ps.shaderPipeline = blurYPipeline.get();
@@ -1414,9 +1417,10 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
+                const auto &shaderCache = renderer.contextInterface()->shaderCache();
                 const bool isSkyBox = inData.layer.background == QSSGRenderLayer::Background::SkyBox;
-                const auto &shaderPipeline = isSkyBox ? renderer.getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8)
-                                                      : renderer.getRhiSkyBoxCubeShader();
+                const auto &shaderPipeline = isSkyBox ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8)
+                                                      : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader();
                 Q_ASSERT(shaderPipeline);
                 ps->shaderPipeline = shaderPipeline.get();
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
