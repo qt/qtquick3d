@@ -149,12 +149,10 @@ void SGFramebufferObjectNode::render()
         if (renderer->renderStats())
             renderer->renderStats()->endRender(dumpRenderTimes);
 
-        if (renderer->m_sgContext->renderer()->rendererRequestsFrames()
-                || renderer->requestedFramesCount > 0) {
+        if (renderer->requestedFramesCount > 0) {
             scheduleRender();
             requestFullUpdate(window);
-            if (renderer->requestedFramesCount > 0)
-                renderer->requestedFramesCount--;
+            renderer->requestedFramesCount--;
         }
     }
 }
@@ -1171,11 +1169,8 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QLis
     if (layerNode->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA) {
         // with progressive AA, we need a number of extra frames after the last dirty one
         // if we always reset requestedFramesCount when dirty, we will get the extra frames eventually
-        extraFramesToRender = int(layerNode->antialiasingQuality);
-
-        // RHI: +1 since we need a normal frame to start with, and we're not copying that from the screen
-        if (m_sgContext->rhiContext()->isValid())
-            extraFramesToRender += 1;
+        // +1 since we need a normal frame to start with, and we're not copying that from the screen
+        extraFramesToRender = int(layerNode->antialiasingQuality) + 1;
     } else if (layerNode->temporalAAEnabled) {
         // When temporalAA is on and antialiasing mode changes,
         // layer needs to be re-rendered (at least) MAX_TEMPORAL_AA_LEVELS times
@@ -1406,11 +1401,9 @@ void QQuick3DSGDirectRenderer::prepare()
                 queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
                 auto quadRenderer = m_renderer->m_sgContext->renderer()->rhiQuadRenderer();
                 quadRenderer->prepareQuad(m_renderer->m_sgContext->rhiContext().get(), nullptr);
-                if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames()
-                        || m_renderer->requestedFramesCount > 0) {
+                if (m_renderer->requestedFramesCount > 0) {
                     requestRender();
-                    if (m_renderer->requestedFramesCount > 0)
-                        m_renderer->requestedFramesCount--;
+                    m_renderer->requestedFramesCount--;
                 }
             }
         }

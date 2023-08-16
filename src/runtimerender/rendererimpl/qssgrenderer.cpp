@@ -414,11 +414,6 @@ void QSSGRenderer::endLayerRender()
     m_currentLayer = nullptr;
 }
 
-bool QSSGRenderer::rendererRequestsFrames() const
-{
-    return m_progressiveAARenderRequest;
-}
-
 using RenderableList = QVarLengthArray<const QSSGRenderNode *>;
 static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
 {
