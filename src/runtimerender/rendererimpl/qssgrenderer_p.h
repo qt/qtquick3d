@@ -109,10 +109,6 @@ public:
 
     QSSGRenderContextInterface *contextInterface() const { return m_contextInterface; }
 
-    // Returns true if the renderer expects new frame to be rendered
-    // Happens when progressive AA is enabled
-    bool rendererRequestsFrames() const;
-
     enum class LightmapUVRasterizationShaderMode {
         Default,
         Uv,
@@ -204,7 +200,6 @@ private:
     QMatrix4x4 m_viewProjection;
     QByteArray m_generatedShaderString;
 
-    bool m_progressiveAARenderRequest = false;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
 
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
