@@ -124,13 +124,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     enum RenderExtensionMode { Underlay, Overlay, Count };
     QList<QSSGRenderExtension *> renderExtensions[RenderExtensionMode::Count];
 
-    // If a layer has a valid texture path (one that resolves to either a
-    // an on-disk image or a offscreen renderer), then it does not render its
-    // own source path.  Instead, it renders the offscreen renderer.  Used in this manner,
-    // offscreen renderer's also have the option (if they support it) to render directly to the
-    // render target given a specific viewport (that is also scissored if necessary).
-    QString texturePath;
-
     QSSGRenderLayer::AAMode antialiasingMode;
     QSSGRenderLayer::AAQuality antialiasingQuality;
 
