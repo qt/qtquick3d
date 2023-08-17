@@ -240,7 +240,7 @@ QVector3D QSSGRenderNode::getScalingCorrectDirection() const
 {
     QMatrix3x3 theDirMatrix = globalTransform.normalMatrix();
     QVector3D theOriginalDir(0, 0, -1);
-    QVector3D retval = mat33::transform(theDirMatrix, theOriginalDir);
+    QVector3D retval = QSSGUtils::mat33::transform(theDirMatrix, theOriginalDir);
     // Should already be normalized, but whatever
     retval.normalize();
     return retval;
@@ -248,7 +248,7 @@ QVector3D QSSGRenderNode::getScalingCorrectDirection() const
 
 QVector3D QSSGRenderNode::getGlobalPivot() const
 {
-    QVector3D retval(mat44::getPosition(localTransform));
+    QVector3D retval(QSSGUtils::mat44::getPosition(localTransform));
     retval.setZ(retval.z() * -1);
 
     if (parent && parent->type != QSSGRenderGraphObject::Type::Layer) {

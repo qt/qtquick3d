@@ -259,7 +259,7 @@ static QSSGCameraRenderData getCameraDataImpl(const QSSGRenderCamera *camera)
         if (camera->enableFrustumClipping) {
             QSSGClipPlane nearPlane;
             QMatrix3x3 theUpper33(camera->globalTransform.normalMatrix());
-            QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
+            QVector3D dir(QSSGUtils::mat33::transform(theUpper33, QVector3D(0, 0, -1)));
             dir.normalize();
             nearPlane.normal = dir;
             QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;
@@ -1188,7 +1188,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
                 // Accounts for FOV
                 float lodDistanceMultiplier = camera->getLevelOfDetailMultiplier();
                 float distanceThreshold = 0.0f;
-                const auto scale = mat44::getScale(model.globalTransform);
+                const auto scale = QSSGUtils::mat44::getScale(model.globalTransform);
                 float modelScale = qMax(scale.x(), qMax(scale.y(), scale.z()));
                 QSSGBounds3 transformedBounds = theSubset.bounds;
                 if (camera->type != QSSGRenderGraphObject::Type::OrthographicCamera) {
@@ -1239,7 +1239,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
             }
 
             QVector3D theModelCenter(theSubset.bounds.center());
-            theModelCenter = mat44::transform(model.globalTransform, theModelCenter);
+            theModelCenter = QSSGUtils::mat44::transform(model.globalTransform, theModelCenter);
             if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLodNormal))
                 debugDrawSystem->debugNormals(*bufferManager, theModelContext, theSubset, subsetLevelOfDetail, (theModelCenter - camera->getGlobalPos()).length() * 0.01);
 
@@ -1428,7 +1428,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
 
         float opacity = particles.globalOpacity;
         QVector3D center(particles.m_particleBuffer.bounds().center());
-        center = mat44::transform(particles.globalTransform, center);
+        center = QSSGUtils::mat44::transform(particles.globalTransform, center);
 
         QSSGRenderableImage *firstImage = nullptr;
         if (particles.m_sprite) {

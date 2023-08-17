@@ -376,9 +376,9 @@ QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphO
 
     if (m_dirtyFlags.testFlag(DirtyFlag::ColorDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::ColorDirty, false);
-        light->m_diffuseColor = color::sRGBToLinear(m_color).toVector3D();
+        light->m_diffuseColor = QSSGUtils::color::sRGBToLinear(m_color).toVector3D();
         light->m_specularColor = light->m_diffuseColor;
-        light->m_ambientColor = color::sRGBToLinear(m_ambientColor).toVector3D();
+        light->m_ambientColor = QSSGUtils::color::sRGBToLinear(m_ambientColor).toVector3D();
     }
 
     if (m_dirtyFlags.testFlag(DirtyFlag::BrightnessDirty)) {
