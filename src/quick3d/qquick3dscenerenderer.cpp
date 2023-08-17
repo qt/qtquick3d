@@ -671,7 +671,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     QColor currentUserBackgroundColor = view3D->environment()->clearColor();
     if (m_userBackgroundColor != currentUserBackgroundColor) {
         m_userBackgroundColor = currentUserBackgroundColor;
-        m_linearBackgroundColor = color::sRGBToLinearColor(m_userBackgroundColor);
+        m_linearBackgroundColor = QSSGUtils::color::sRGBToLinearColor(m_userBackgroundColor);
         const QVector3D tc = tonemapRgb(QVector3D(m_linearBackgroundColor.redF(),
                                                   m_linearBackgroundColor.greenF(),
                                                   m_linearBackgroundColor.blueF()),
@@ -989,7 +989,7 @@ std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const 
     // First invert the y so we are dealing with numbers in a normal coordinate space.
     // Second, move into our layer's coordinate space
     QVector2D correctCoords(position.x(), viewportSize.y() - position.y());
-    QVector2D theLocalMouse = toRectRelative(viewportRect, correctCoords);
+    QVector2D theLocalMouse = QSSGUtils::rect::toRectRelative(viewportRect, correctCoords);
     if ((theLocalMouse.x() < 0.0f || theLocalMouse.x() >= viewportSize.x() || theLocalMouse.y() < 0.0f
          || theLocalMouse.y() >= viewportSize.y()))
         return std::nullopt;
@@ -1140,7 +1140,7 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     if (environment->fog() && environment->fog()->isEnabled()) {
         layerNode.fog.enabled = true;
         const QQuick3DFog *fog = environment->fog();
-        layerNode.fog.color = color::sRGBToLinear(fog->color()).toVector3D();
+        layerNode.fog.color = QSSGUtils::color::sRGBToLinear(fog->color()).toVector3D();
         layerNode.fog.density = fog->density();
         layerNode.fog.depthEnabled = fog->isDepthEnabled();
         layerNode.fog.depthBegin = fog->depthNear();

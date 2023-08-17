@@ -881,7 +881,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
         material->blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode(m_blendMode);
 
     if (m_dirtyAttributes & DiffuseDirty) {
-        material->color = color::sRGBToLinear(m_diffuseColor);
+        material->color = QSSGUtils::color::sRGBToLinear(m_diffuseColor);
         if (!m_diffuseMap)
             material->colorMap = nullptr;
         else
@@ -911,7 +911,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
             material->specularMap = m_specularMap->getRenderImage();
 
         material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel(m_specularModel);
-        material->specularTint = color::sRGBToLinear(m_specularTint).toVector3D();
+        material->specularTint = QSSGUtils::color::sRGBToLinear(m_specularTint).toVector3D();
         material->ior = m_indexOfRefraction;
         material->fresnelPower = m_fresnelPower;
         material->specularAmount = m_specularAmount;

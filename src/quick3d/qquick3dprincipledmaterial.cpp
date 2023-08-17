@@ -1277,7 +1277,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         else
             material->colorMap = m_baseColorMap->getRenderImage();
 
-        material->color = color::sRGBToLinear(m_baseColor);
+        material->color = QSSGUtils::color::sRGBToLinear(m_baseColor);
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
@@ -1418,7 +1418,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->thicknessChannel = channelMapping(m_thicknessChannel);
 
         material->attenuationDistance = m_attenuationDistance;
-        material->attenuationColor = color::sRGBToLinear(m_attenuationColor).toVector3D();
+        material->attenuationColor = QSSGUtils::color::sRGBToLinear(m_attenuationColor).toVector3D();
     }
 
     if (m_dirtyAttributes & VertexColorsDirty)

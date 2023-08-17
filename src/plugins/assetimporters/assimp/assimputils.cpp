@@ -528,7 +528,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
 
                     QVector3D faceNormal = QVector3D::crossProduct(v1 - v0, v2 - v0);
                     // This normalizes the vector in place and returns the magnitude
-                    const float faceArea = vec3::normalize(faceNormal);
+                    const float faceArea = QSSGUtils::vec3::normalize(faceNormal);
                     // It is possible that the simplifyMesh process gave us a degenerate triangle
                     // (all three at the same point, or on the same line) or such a small triangle
                     // that a float value doesn't have enough resolution. In that case cull the
@@ -580,7 +580,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
                 }
 
                 // By normalizing here we get an averaged value of all smoothed normals
-                vec3::normalize(newNormal);
+                QSSGUtils::vec3::normalize(newNormal);
 
                 // Now that we know what the smoothed normal would be, check how differnt
                 // that normal is from the normal that is already stored in the current

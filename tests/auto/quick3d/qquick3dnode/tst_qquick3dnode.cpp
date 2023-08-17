@@ -40,29 +40,29 @@ void tst_QQuick3DNode::testProperties()
     nodeItem.setX(x);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QCOMPARE(x, nodeItem.x());
-    QVERIFY(qFuzzyCompare(x, mat44::getPosition(node->localTransform).x()));
+    QVERIFY(qFuzzyCompare(x, QSSGUtils::mat44::getPosition(node->localTransform).x()));
 
     const float y = 60.0f;
     nodeItem.setY(y);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QCOMPARE(y, nodeItem.y());
-    QVERIFY(qFuzzyCompare(y, mat44::getPosition(node->localTransform).y()));
+    QVERIFY(qFuzzyCompare(y, QSSGUtils::mat44::getPosition(node->localTransform).y()));
 
     const float z = 70.0f;
     nodeItem.setZ(z);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QCOMPARE(z, nodeItem.z());
-    QVERIFY(qFuzzyCompare(z, mat44::getPosition(node->localTransform).z()));
+    QVERIFY(qFuzzyCompare(z, QSSGUtils::mat44::getPosition(node->localTransform).z()));
 
     QVector3D pos1(x, y, z);
     QCOMPARE(pos1, nodeItem.position());
-    QVERIFY(qFuzzyCompare(pos1, mat44::getPosition(node->localTransform)));
+    QVERIFY(qFuzzyCompare(pos1, QSSGUtils::mat44::getPosition(node->localTransform)));
 
     pos1 *= 2.0;
     nodeItem.setPosition(pos1);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QCOMPARE(pos1, nodeItem.position());
-    QVERIFY(qFuzzyCompare(pos1, mat44::getPosition(node->localTransform)));
+    QVERIFY(qFuzzyCompare(pos1, QSSGUtils::mat44::getPosition(node->localTransform)));
 
     // Rotation, Scale, Pivot
     QCOMPARE(nodeItem.rotation(), QQuaternion());
@@ -73,13 +73,13 @@ void tst_QQuick3DNode::testProperties()
     nodeItem.setRotation(rot);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QCOMPARE(rot, nodeItem.rotation());
-    QVERIFY(qFuzzyCompare(rot, QQuaternion::fromRotationMatrix(mat44::getUpper3x3(node->localTransform))));
+    QVERIFY(qFuzzyCompare(rot, QQuaternion::fromRotationMatrix(QSSGUtils::mat44::getUpper3x3(node->localTransform))));
 
     QVector3D scale(0.5, 1.0, 2.0);
     nodeItem.setScale(scale);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QCOMPARE(scale, nodeItem.scale());
-    QVERIFY(qFuzzyCompare(scale, mat44::getScale(node->localTransform)));
+    QVERIFY(qFuzzyCompare(scale, QSSGUtils::mat44::getScale(node->localTransform)));
 
     QVector3D pivot(10, 20, 30);
     nodeItem.setPivot(pivot);

@@ -1108,7 +1108,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 // Accounts for FOV
                 float lodDistanceMultiplier = camera->getLevelOfDetailMultiplier();
                 float distanceThreshold = 0.0f;
-                const auto scale = mat44::getScale(model.globalTransform);
+                const auto scale = QSSGUtils::mat44::getScale(model.globalTransform);
                 float modelScale = qMax(scale.x(), qMax(scale.y(), scale.z()));
                 QSSGBounds3 transformedBounds = theSubset.bounds;
                 if (camera->type != QSSGRenderGraphObject::Type::OrthographicCamera) {
@@ -1269,11 +1269,10 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 #endif
 
             QVector3D theModelCenter(theSubset.bounds.center());
-            theModelCenter = mat44::transform(model.globalTransform, theModelCenter);
+            theModelCenter = QSSGUtils::mat44::transform(model.globalTransform, theModelCenter);
 #ifdef QT_QUICK3D_MESH_LOD_NORMALS_DEBUG
             debugNormals(model, theSubset, subsetLevelOfDetail, (theModelCenter - camera->getGlobalPos()).length() * 0.01);
 #endif
-
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
@@ -1421,7 +1420,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
 
         float opacity = particles.globalOpacity;
         QVector3D center(particles.m_particleBuffer.bounds().center());
-        center = mat44::transform(particles.globalTransform, center);
+        center = QSSGUtils::mat44::transform(particles.globalTransform, center);
 
         QSSGRenderableImage *firstImage = nullptr;
         if (particles.m_sprite) {
@@ -1923,7 +1922,7 @@ void QSSGLayerRenderData::prepareForRender()
         if (camera->enableFrustumClipping) {
             QSSGClipPlane nearPlane;
             QMatrix3x3 theUpper33(camera->globalTransform.normalMatrix());
-            QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
+            QVector3D dir(QSSGUtils::mat33::transform(theUpper33, QVector3D(0, 0, -1)));
             dir.normalize();
             nearPlane.normal = dir;
             QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;

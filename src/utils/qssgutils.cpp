@@ -10,37 +10,37 @@
 
 QT_BEGIN_NAMESPACE
 
-float vec2::magnitude(const QVector2D &v)
+float QSSGUtils::vec2::magnitude(const QVector2D &v)
 {
     return ::sqrtf(v.x() * v.x() + v.y() * v.y());
 }
 
-bool vec3::isFinite(const QVector3D &v)
+bool QSSGUtils::vec3::isFinite(const QVector3D &v)
 {
     return qIsFinite(v.x()) && qIsFinite(v.y()) && qIsFinite(v.z());
 }
 
-float vec3::magnitude(const QVector3D &v)
+float QSSGUtils::vec3::magnitude(const QVector3D &v)
 {
     return sqrtf(v.x() * v.x() + v.y() * v.y() + v.z() * v.z());
 }
 
-float vec3::magnitudeSquared(const QVector3D &v)
+float QSSGUtils::vec3::magnitudeSquared(const QVector3D &v)
 {
     return v.x() * v.x() + v.y() * v.y() + v.z() * v.z();
 }
 
 // This special normalize function normalizes a vector in place
 // and returns the magnnitude (needed for compatiblity)
-float vec3::normalize(QVector3D &v)
+float QSSGUtils::vec3::normalize(QVector3D &v)
 {
-    const float m = vec3::magnitude(v);
+    const float m = QSSGUtils::vec3::magnitude(v);
     if (m > 0)
         v /= m;
     return m;
 }
 
-QVector3D mat33::transform(const QMatrix3x3 &m, const QVector3D &v)
+QVector3D QSSGUtils::mat33::transform(const QMatrix3x3 &m, const QVector3D &v)
 {
     const QVector3D c0 = QVector3D(m(0, 0), m(1, 0), m(2, 0));
     const QVector3D c1 = QVector3D(m(0, 1), m(1, 1), m(2, 1));
@@ -48,13 +48,13 @@ QVector3D mat33::transform(const QMatrix3x3 &m, const QVector3D &v)
     return c0 * v.x() + c1 * v.y() + c2 * v.z();
 }
 
-QMatrix3x3 mat44::getUpper3x3(const QMatrix4x4 &m)
+QMatrix3x3 QSSGUtils::mat44::getUpper3x3(const QMatrix4x4 &m)
 {
     const float values[9] = { m(0, 0), m(0, 1), m(0, 2), m(1, 0), m(1, 1), m(1, 2), m(2, 0), m(2, 1), m(2, 2) };
     return QMatrix3x3(values);
 }
 
-void mat44::normalize(QMatrix4x4 &m)
+void QSSGUtils::mat44::normalize(QMatrix4x4 &m)
 {
     QVector4D c0 = m.column(0);
     QVector4D c1 = m.column(1);
@@ -72,34 +72,34 @@ void mat44::normalize(QMatrix4x4 &m)
     m.setColumn(3, c3);
 }
 
-QVector3D mat44::rotate(const QMatrix4x4 &m, const QVector3D &v)
+QVector3D QSSGUtils::mat44::rotate(const QMatrix4x4 &m, const QVector3D &v)
 {
-    const QVector4D tmp = mat44::rotate(m, QVector4D(v.x(), v.y(), v.z(), 1.0f));
+    const QVector4D tmp = QSSGUtils::mat44::rotate(m, QVector4D(v.x(), v.y(), v.z(), 1.0f));
     return QVector3D(tmp.x(), tmp.y(), tmp.z());
 }
 
-QVector4D mat44::rotate(const QMatrix4x4 &m, const QVector4D &v)
+QVector4D QSSGUtils::mat44::rotate(const QMatrix4x4 &m, const QVector4D &v)
 {  
     return m.column(0) * v.x() + m.column(1) * v.y() + m.column(2) * v.z();
 }
 
-QVector3D mat44::transform(const QMatrix4x4 &m, const QVector3D &v)
+QVector3D QSSGUtils::mat44::transform(const QMatrix4x4 &m, const QVector3D &v)
 {
-    const QVector4D tmp = mat44::transform(m, QVector4D(v.x(), v.y(), v.z(), 1.0f));
+    const QVector4D tmp = QSSGUtils::mat44::transform(m, QVector4D(v.x(), v.y(), v.z(), 1.0f));
     return QVector3D(tmp.x(), tmp.y(), tmp.z());
 }
 
-QVector4D mat44::transform(const QMatrix4x4 &m, const QVector4D &v)
+QVector4D QSSGUtils::mat44::transform(const QMatrix4x4 &m, const QVector4D &v)
 {
     return m.column(0) * v.x() + m.column(1) * v.y() + m.column(2) * v.z() + m.column(3) * v.w();
 }
 
-QVector3D mat44::getPosition(const QMatrix4x4 &m)
+QVector3D QSSGUtils::mat44::getPosition(const QMatrix4x4 &m)
 {
     return QVector3D(m(0, 3), m(1, 3), m(2, 3));
 }
 
-QVector3D mat44::getScale(const QMatrix4x4 &m)
+QVector3D QSSGUtils::mat44::getScale(const QMatrix4x4 &m)
 {
     const float scaleX = m.column(0).length();
     const float scaleY = m.column(1).length();
@@ -107,29 +107,29 @@ QVector3D mat44::getScale(const QMatrix4x4 &m)
     return QVector3D(scaleX, scaleY, scaleZ);
 }
 
-bool quant::isFinite(const QQuaternion &q)
+bool QSSGUtils::quat::isFinite(const QQuaternion &q)
 {
     return qIsFinite(q.x()) && qIsFinite(q.y()) && qIsFinite(q.z()) && qIsFinite(q.scalar());
 }
 
-float quant::magnitude(const QQuaternion &q)
+float QSSGUtils::quat::magnitude(const QQuaternion &q)
 {
     return std::sqrt(q.x() * q.x() + q.y() * q.y() + q.z() * q.z() + q.scalar() * q.scalar());
 }
 
-bool quant::isSane(const QQuaternion &q)
+bool QSSGUtils::quat::isSane(const QQuaternion &q)
 {
     const float unitTolerance = float(1e-2);
     return isFinite(q) && qAbs(magnitude(q) - 1) < unitTolerance;
 }
 
-bool quant::isUnit(const QQuaternion &q)
+bool QSSGUtils::quat::isUnit(const QQuaternion &q)
 {
     const float unitTolerance = float(1e-4);
     return isFinite(q) && qAbs(magnitude(q) - 1) < unitTolerance;
 }
 
-QVector3D quant::rotated(const QQuaternion &q, const QVector3D &v)
+QVector3D QSSGUtils::quat::rotated(const QQuaternion &q, const QVector3D &v)
 {
     const float vx = 2.0f * v.x();
     const float vy = 2.0f * v.y();
@@ -141,7 +141,7 @@ QVector3D quant::rotated(const QQuaternion &q, const QVector3D &v)
                      (vz * w2 + (q.x() * vy - q.y() * vx) * q.scalar() + q.z() * dot2));
 }
 
-QVector3D quant::inverseRotated(const QQuaternion &q, const QVector3D &v)
+QVector3D QSSGUtils::quat::inverseRotated(const QQuaternion &q, const QVector3D &v)
 {
     const float vx = 2.0f * v.x();
     const float vy = 2.0f * v.y();
@@ -158,7 +158,7 @@ const char *nonNull(const char *src)
     return src == nullptr ? "" : src;
 }
 
-QVector4D color::sRGBToLinear(const QColor &color)
+QVector4D QSSGUtils::color::sRGBToLinear(const QColor &color)
 {
     const QVector3D rgb(color.redF(), color.greenF(), color.blueF());
     const float C1 = 0.305306011f;
@@ -167,7 +167,7 @@ QVector4D color::sRGBToLinear(const QColor &color)
     return QVector4D(rgb * (rgb * (rgb * C1 + C2) + C3), color.alphaF());
 }
 
-QColor color::sRGBToLinearColor(const QColor &color)
+QColor QSSGUtils::color::sRGBToLinearColor(const QColor &color)
 {
     const QVector4D c = sRGBToLinear(color);
     return QColor::fromRgbF(c.x(), c.y(), c.z(), c.w());

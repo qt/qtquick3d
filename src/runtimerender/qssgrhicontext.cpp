@@ -381,7 +381,7 @@ void QSSGRhiShaderPipeline::setUniformValue(char *ubufData, const char *name, co
         break;
     case QSSGRenderShaderDataType::Rgba:
     {
-        const QVector4D v = color::sRGBToLinear(inValue.value<QColor>());
+        const QVector4D v = QSSGUtils::color::sRGBToLinear(inValue.value<QColor>());
         setUniform(ubufData, name, &v, 4 * sizeof(float));
     }
         break;
@@ -727,7 +727,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
         QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
 
         for (size_t i = 0; i < itemCount; ++i) {
-            const QVector4D vi = color::sRGBToLinear(v[i]);
+            const QVector4D vi = QSSGUtils::color::sRGBToLinear(v[i]);
             memcpy(p + i * std140BaseTypeSize, &vi, ua->typeSize);
         }
     }

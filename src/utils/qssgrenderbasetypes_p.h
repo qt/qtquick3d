@@ -417,45 +417,6 @@ enum class QSSGDepthDrawMode
     OpaquePrePass
 };
 
-// Return coordinates in pixels but relative to this rect.
-inline QVector2D toRectRelative(const QRectF &r, const QVector2D &absoluteCoordinates)
-{
-    return QVector2D(absoluteCoordinates.x() - float(r.x()), absoluteCoordinates.y() - float(r.y()));
-}
-
-inline QVector2D halfDims(const QRectF &r)
-{
-    return QVector2D(float(r.width() / 2.0), float(r.height() / 2.0));
-}
-
-// Take coordinates in global space and move local space where 0,0 is the center
-// of the rect but return value in pixels, not in normalized -1,1 range
-inline QVector2D toNormalizedRectRelative(const QRectF &r, QVector2D absoluteCoordinates)
-{
-    // normalize them
-    const QVector2D relativeCoords(toRectRelative(r, absoluteCoordinates));
-    const QVector2D halfD(halfDims(r));
-    const QVector2D normalized((relativeCoords.x() / halfD.x()) - 1.0f, (relativeCoords.y() / halfD.y()) - 1.0f);
-    return QVector2D(normalized.x() * halfD.x(), normalized.y() * halfD.y());
-}
-
-inline QVector2D relativeToNormalizedCoordinates(const QRectF &r, QVector2D rectRelativeCoords)
-{
-    return { (rectRelativeCoords.x() / halfDims(r).x()) - 1.0f, (rectRelativeCoords.y() / halfDims(r).y()) - 1.0f };
-}
-
-// Normalized coordinates are in the range of -1,1 where -1 is the left, bottom edges
-// and 1 is the top,right edges.
-inline QVector2D absoluteToNormalizedCoordinates(const QRectF &r, const QVector2D &absoluteCoordinates)
-{
-    return relativeToNormalizedCoordinates(r, toRectRelative(r, absoluteCoordinates));
-}
-
-inline QVector2D toAbsoluteCoords(const QRectF &r, const QVector2D &inRelativeCoords)
-{
-    return QVector2D(inRelativeCoords.x() + float(r.x()), inRelativeCoords.y() + float(r.y()));
-}
-
 template<typename TDataType>
 struct QSSGRenderGenericVec2
 {

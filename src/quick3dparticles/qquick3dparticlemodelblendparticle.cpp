@@ -536,7 +536,7 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
     QMatrix4x4 transform = m_model->sceneTransform();
     if (m_model->parentNode())
         transform = m_model->parentNode()->sceneTransform().inverted() * transform;
-    const QVector3D scale = mat44::getScale(transform);
+    const QVector3D scale = QSSGUtils::mat44::getScale(transform);
     // Take max component scale for a conservative bounds estimation
     const float scaleMax = qMax(scale.x(), qMax(scale.y(), scale.z()));
     m_maxTriangleRadius *= scaleMax;

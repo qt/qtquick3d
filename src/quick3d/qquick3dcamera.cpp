@@ -158,7 +158,7 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
     // Transform position
     const QMatrix4x4 sceneToCamera = sceneTransform().inverted();
     const QMatrix4x4 projectionViewMatrix = cameraNode->projection * sceneToCamera;
-    const QVector4D transformedScenePos = mat44::transform(projectionViewMatrix, scenePosRightHand);
+    const QVector4D transformedScenePos = QSSGUtils::mat44::transform(projectionViewMatrix, scenePosRightHand);
 
     if (qFuzzyIsNull(transformedScenePos.w()) || qIsNaN(transformedScenePos.w()))
         return QVector3D(0, 0, 0);
@@ -170,13 +170,13 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
     // can be used as argument to viewportToscene() to reverse the call.
     const QVector4D clipNearPos(scenePosView.x(), scenePosView.y(), -1, 1);
     auto invProj = projectionViewMatrix.inverted();
-    const QVector4D clipNearPosTransformed = mat44::transform(invProj, clipNearPos);
+    const QVector4D clipNearPosTransformed = QSSGUtils::mat44::transform(invProj, clipNearPos);
     if (qFuzzyIsNull(clipNearPosTransformed.w()) || qIsNaN(clipNearPosTransformed.w()))
         return QVector3D(0, 0, 0);
     const QVector4D clipNearPosScene = clipNearPosTransformed / clipNearPosTransformed.w();
     QVector4D clipFarPos = clipNearPos;
     clipFarPos.setZ(0);
-    const QVector4D clipFarPosTransformed = mat44::transform(invProj, clipFarPos);
+    const QVector4D clipFarPosTransformed = QSSGUtils::mat44::transform(invProj, clipFarPos);
     if (qFuzzyIsNull(clipFarPosTransformed.w()) || qIsNaN(clipFarPosTransformed.w()))
         return QVector3D(0, 0, 0);
     const QVector4D clipFarPosScene = clipFarPosTransformed / clipFarPosTransformed.w();
@@ -232,8 +232,8 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
     // Transform position to scene
     const QMatrix4x4 sceneToCamera = sceneTransform().inverted();
     const QMatrix4x4 projectionViewMatrixInv = (cameraNode->projection * sceneToCamera).inverted();
-    const QVector4D transformedClipNearPos = mat44::transform(projectionViewMatrixInv, clipNearPos);
-    const QVector4D transformedClipFarPos = mat44::transform(projectionViewMatrixInv, clipFarPos);
+    const QVector4D transformedClipNearPos = QSSGUtils::mat44::transform(projectionViewMatrixInv, clipNearPos);
+    const QVector4D transformedClipFarPos = QSSGUtils::mat44::transform(projectionViewMatrixInv, clipFarPos);
 
     if (qFuzzyIsNull(transformedClipNearPos.w()) || qIsNaN(transformedClipNearPos.w()) ||
         qFuzzyIsNull(transformedClipFarPos.w()) || qIsNaN(transformedClipFarPos.w()))

@@ -2028,9 +2028,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             lightData.position[1] = globalPos.y();
             lightData.position[2] = globalPos.z();
             lightData.position[3] = 1.0f;
-            lightData.constantAttenuation = aux::translateConstantAttenuation(theLight->m_constantFade);
-            lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
-            lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+            lightData.constantAttenuation = QSSGUtils::aux::translateConstantAttenuation(theLight->m_constantFade);
+            lightData.linearAttenuation = QSSGUtils::aux::translateLinearAttenuation(theLight->m_linearFade);
+            lightData.quadraticAttenuation = QSSGUtils::aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
             lightData.coneAngle = 180.0f;
             if (theLight->type == QSSGRenderLight::Type::SpotLight) {
                 const float coneAngle = theLight->m_coneAngle;

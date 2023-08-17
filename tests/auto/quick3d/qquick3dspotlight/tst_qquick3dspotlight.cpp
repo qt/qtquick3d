@@ -112,9 +112,9 @@ void tst_QQuick3DSpotLight::testProperties()
     float coneAngle = 60.0f;
     float innerConeAngle = 20.0f;
     QColor color1("#12345678");
-    QVector3D color1Vec3 = color::sRGBToLinear(color1).toVector3D();
+    QVector3D color1Vec3 = QSSGUtils::color::sRGBToLinear(color1).toVector3D();
     QColor color2("#cccccccc");
-    QVector3D color2Vec3 = color::sRGBToLinear(color2).toVector3D();
+    QVector3D color2Vec3 = QSSGUtils::color::sRGBToLinear(color2).toVector3D();
     light.setColor(color1);
     light.setAmbientColor(color2);
     light.setConeAngle(coneAngle);
