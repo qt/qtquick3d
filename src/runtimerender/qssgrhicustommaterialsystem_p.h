@@ -53,7 +53,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialSystem
                             const QSSGRenderCustomMaterial &inMaterial,
                             const QByteArray &inPropertyName,
                             const QVariant &propertyValue,
-                            QSSGRenderShaderDataType inPropertyType,
+                            QSSGRenderShaderValue::Type inPropertyType,
                             QSSGRhiShaderPipeline &shaderPipeline);
 
 public:

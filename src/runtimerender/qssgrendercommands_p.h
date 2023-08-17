@@ -141,16 +141,16 @@ struct QSSGApplyInstanceValue : public QSSGCommand
     // Name of value to apply in shader
     QByteArray m_propertyName;
     // type of value
-    QSSGRenderShaderDataType m_valueType;
+    QSSGRenderShaderValue::Type m_valueType;
     // offset in the effect data section of value.
     quint32 m_valueOffset;
-    QSSGApplyInstanceValue(const QByteArray &inName, QSSGRenderShaderDataType inValueType, quint32 inValueOffset)
+    QSSGApplyInstanceValue(const QByteArray &inName, QSSGRenderShaderValue::Type inValueType, quint32 inValueOffset)
         : QSSGCommand(CommandType::ApplyInstanceValue), m_propertyName(inName), m_valueType(inValueType), m_valueOffset(inValueOffset)
     {
     }
     // Default will attempt to apply all effect values to the currently bound shader
     QSSGApplyInstanceValue()
-        : QSSGCommand(CommandType::ApplyInstanceValue), m_valueType(QSSGRenderShaderDataType::Unknown), m_valueOffset(0)
+        : QSSGCommand(CommandType::ApplyInstanceValue), m_valueType(QSSGRenderShaderValue::Unknown), m_valueOffset(0)
     {
     }
     void addDebug(QDebug &stream) const {

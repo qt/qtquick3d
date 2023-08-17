@@ -44,8 +44,8 @@ struct ShaderType
 };
 
 Q_QUICK3D_EXPORT QByteArray uniformTypeName(QMetaType type);
-Q_QUICK3D_EXPORT QByteArray uniformTypeName(QSSGRenderShaderDataType type);
-Q_QUICK3D_EXPORT QSSGRenderShaderDataType uniformType(QMetaType type);
+Q_QUICK3D_EXPORT QByteArray uniformTypeName(QSSGRenderShaderValue::Type type);
+Q_QUICK3D_EXPORT QSSGRenderShaderValue::Type uniformType(QMetaType type);
 }
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject

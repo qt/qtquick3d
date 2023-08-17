@@ -310,9 +310,9 @@ public:
     };
     Q_DECLARE_FLAGS(UniformFlags, UniformFlag)
 
-    void setUniformValue(char *ubufData, const char *name, const QVariant &value, QSSGRenderShaderDataType type);
+    void setUniformValue(char *ubufData, const char *name, const QVariant &value, QSSGRenderShaderValue::Type type);
     void setUniform(char *ubufData, const char *name, const void *data, size_t size, int *storeIndex = nullptr, UniformFlags flags = {});
-    void setUniformArray(char *ubufData, const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex = nullptr);
+    void setUniformArray(char *ubufData, const char *name, const void *data, size_t itemCount, QSSGRenderShaderValue::Type type, int *storeIndex = nullptr);
     int bindingForTexture(const char *name, int hint = -1);
 
     void setLightsEnabled(bool enable) { m_lightsEnabled = enable; }

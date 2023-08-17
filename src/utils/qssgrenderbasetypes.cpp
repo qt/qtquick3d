@@ -199,6 +199,129 @@ const char *QSSGRenderTextureFormat::toString() const
     Q_UNREACHABLE_RETURN(nullptr);
 }
 
+qint32 QSSGRenderTextureFormat::getSizeofFormat() const noexcept
+{
+    switch (format) {
+    case R8:
+        return 1;
+    case R16F:
+        return 2;
+    case R16:
+        return 2;
+    case R32I:
+        return 4;
+    case R32F:
+        return 4;
+    case RGBE8:
+    case RGBA8:
+        return 4;
+    case RGB8:
+        return 3;
+    case RGB565:
+        return 2;
+    case RGBA5551:
+        return 2;
+    case Alpha8:
+        return 1;
+    case Luminance8:
+        return 1;
+    case LuminanceAlpha8:
+        return 1;
+    case Depth16:
+        return 2;
+    case Depth24:
+        return 3;
+    case Depth32:
+        return 4;
+    case Depth24Stencil8:
+        return 4;
+    case RGB9E5:
+        return 4;
+    case SRGB8:
+        return 3;
+    case SRGB8A8:
+        return 4;
+    case RGBA16F:
+        return 8;
+    case RG16F:
+        return 4;
+    case RG32F:
+        return 8;
+    case RGBA32F:
+        return 16;
+    case RGB32F:
+        return 12;
+    case R11G11B10:
+        return 4;
+    default:
+        break;
+    }
+    Q_ASSERT(false);
+    return 0;
+}
+
+qint32 QSSGRenderTextureFormat::getNumberOfComponent() const noexcept
+{
+    switch (format) {
+    case R8:
+        return 1;
+    case R16F:
+        return 1;
+    case R16:
+        return 1;
+    case R32I:
+        return 1;
+    case R32F:
+        return 1;
+    case RGBA8:
+        return 4;
+    case RGB8:
+        return 3;
+    case RGB565:
+        return 3;
+    case RGBA5551:
+        return 4;
+    case Alpha8:
+        return 1;
+    case Luminance8:
+        return 1;
+    case LuminanceAlpha8:
+        return 2;
+    case Depth16:
+        return 1;
+    case Depth24:
+        return 1;
+    case Depth32:
+        return 1;
+    case Depth24Stencil8:
+        return 2;
+    case RGB9E5:
+        return 3;
+    case SRGB8:
+        return 3;
+    case SRGB8A8:
+        return 4;
+    case RGBA16F:
+        return 4;
+    case RG16F:
+        return 2;
+    case RG32F:
+        return 2;
+    case RGBA32F:
+        return 4;
+    case RGB32F:
+        return 3;
+    case R11G11B10:
+        return 3;
+    case RGBE8:
+        return 4;
+    default:
+        break;
+    }
+    Q_ASSERT(false);
+    return 0;
+}
+
 void QSSGRenderTextureFormat::decodeToFloat(void *inPtr, qint32 byteOfs, float *outPtr) const
 {
     Q_ASSERT(byteOfs >= 0);
@@ -287,6 +410,29 @@ void QSSGRenderTextureFormat::decodeToFloat(void *inPtr, qint32 byteOfs, float *
 }
 void QSSGRenderTextureFormat::encodeToPixel(float *inPtr, void *outPtr, qint32 byteOfs) const
 {
+    struct M8E8
+    {
+        quint8 m;
+        quint8 e;
+        M8E8() : m(0), e(0){
+        }
+        M8E8(const float val) {
+            float l2 = 1.f + std::floor(log2f(val));
+            float mm = val / powf(2.f, l2);
+            m = quint8(mm * 255.f);
+            e = quint8(l2 + 128);
+        }
+        M8E8(const float val, quint8 exp) {
+            if (val <= 0) {
+                m = e = 0;
+                return;
+            }
+            float mm = val / powf(2.f, exp - 128);
+            m = quint8(mm * 255.f);
+            e = exp;
+        }
+    };
+
     Q_ASSERT(byteOfs >= 0);
     quint8 *dest = reinterpret_cast<quint8 *>(outPtr);
     switch (format) {

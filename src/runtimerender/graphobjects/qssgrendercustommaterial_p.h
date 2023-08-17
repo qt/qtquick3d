@@ -42,7 +42,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QQuick3DShaderUtilsTextureInput *texInput = nullptr;
         QSSGRenderImage *texImage = nullptr;
         QByteArray name;
-        QSSGRenderShaderDataType shaderDataType;
+        QSSGRenderShaderValue::Type shaderDataType;
         QSSGRenderTextureFilterOp minFilterType = QSSGRenderTextureFilterOp::Linear;
         QSSGRenderTextureFilterOp magFilterType = QSSGRenderTextureFilterOp::Linear;
         QSSGRenderTextureFilterOp mipFilterType = QSSGRenderTextureFilterOp::Linear;
@@ -60,12 +60,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     struct Property
     {
         Property() = default;
-        Property(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType shaderDataType, int pid = -1)
+        Property(const QByteArray &name, const QVariant &value, QSSGRenderShaderValue::Type shaderDataType, int pid = -1)
             : name(name), value(value), shaderDataType(shaderDataType), pid(pid)
         { }
         QByteArray name;
         QVariant value;
-        QSSGRenderShaderDataType shaderDataType;
+        QSSGRenderShaderValue::Type shaderDataType;
         int pid;
     };
     using PropertyList = QList<Property>;
