@@ -92,9 +92,9 @@ void tst_QQuick3DDirectionalLight::testProperties()
     QVERIFY(!node->m_castShadow);
 
     QColor color1("#12345678");
-    QVector3D color1Vec3 = color::sRGBToLinear(color1).toVector3D();
+    QVector3D color1Vec3 = QSSGUtils::color::sRGBToLinear(color1).toVector3D();
     QColor color2("#cccccccc");
-    QVector3D color2Vec3 = color::sRGBToLinear(color2).toVector3D();
+    QVector3D color2Vec3 = QSSGUtils::color::sRGBToLinear(color2).toVector3D();
     light.setColor(color1);
     light.setAmbientColor(color2);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));

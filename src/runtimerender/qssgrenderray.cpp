@@ -30,10 +30,10 @@ QSSGRenderRay::RayData QSSGRenderRay::createRayData(const QMatrix4x4 &globalTran
 {
     using DirectionOp = RayData::DirectionOp;
     QMatrix4x4 originTransform = globalTransform.inverted();
-    QVector3D transformedOrigin = mat44::transform(originTransform, ray.origin);
+    QVector3D transformedOrigin = QSSGUtils::mat44::transform(originTransform, ray.origin);
     float *outOriginTransformPtr(originTransform.data());
     outOriginTransformPtr[12] = outOriginTransformPtr[13] = outOriginTransformPtr[14] = 0.0f;
-    const QVector3D &transformedDirection = mat44::rotate(originTransform, ray.direction).normalized();
+    const QVector3D &transformedDirection = QSSGUtils::mat44::rotate(originTransform, ray.direction).normalized();
     static auto getInverseAndDirOp = [](const QVector3D &dir, QVector3D &invDir, DirectionOp (&dirOp)[3]) {
         for (int i = 0; i != 3; ++i) {
             const float axisDir = dir[i];
@@ -60,9 +60,9 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::createIntersectionResult(const 
     const QVector3D &scaledDir = data.direction * hit.min;
     const QVector3D &localPosition = scaledDir + data.origin;
     // ray length squared
-    const QVector3D &globalPosition = mat44::transform(data.globalTransform, localPosition);
+    const QVector3D &globalPosition = QSSGUtils::mat44::transform(data.globalTransform, localPosition);
     const QVector3D &cameraToLocal = data.ray.origin - globalPosition;
-    const float rayLenSquared = vec3::magnitudeSquared(cameraToLocal);
+    const float rayLenSquared = QSSGUtils::vec3::magnitudeSquared(cameraToLocal);
     // UV coordinates
     const auto &boundsMin = bounds.minimum;
     const auto &boundsMax = bounds.maximum;
@@ -252,11 +252,11 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
                                            u * triangle->uvCoord2 +
                                            v * triangle->uvCoord3;
             // Get the intersection point in scene coordinates
-            const QVector3D sceneIntersectionPos = mat44::transform(data.globalTransform,
+            const QVector3D sceneIntersectionPos = QSSGUtils::mat44::transform(data.globalTransform,
                                                                     localIntersectionPoint);
             const QVector3D hitVector = data.ray.origin - sceneIntersectionPos;
             // Get the magnitude of the hit vector
-            const float rayLengthSquared = vec3::magnitudeSquared(hitVector);
+            const float rayLengthSquared = QSSGUtils::vec3::magnitudeSquared(hitVector);
             results.append(IntersectionResult(rayLengthSquared,
                                               uvCoordinate,
                                               sceneIntersectionPos,
@@ -275,10 +275,10 @@ std::optional<QVector2D> QSSGRenderRay::relative(const QMatrix4x4 &inGlobalTrans
 {
     QMatrix4x4 theOriginTransform = inGlobalTransform.inverted();
 
-    QVector3D theTransformedOrigin = mat44::transform(theOriginTransform, origin);
+    QVector3D theTransformedOrigin = QSSGUtils::mat44::transform(theOriginTransform, origin);
     float *outOriginTransformPtr(theOriginTransform.data());
     outOriginTransformPtr[12] = outOriginTransformPtr[13] = outOriginTransformPtr[14] = 0.0f;
-    QVector3D theTransformedDirection = mat44::rotate(theOriginTransform, direction);
+    QVector3D theTransformedDirection = QSSGUtils::mat44::rotate(theOriginTransform, direction);
 
     // The XY plane is going to be a plane with either positive or negative Z direction that runs
     // through

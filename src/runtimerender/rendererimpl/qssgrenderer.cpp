@@ -564,7 +564,7 @@ void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSG
             // Intersection
             const QVector3D intersectionPoint = inRay.origin + inRay.direction * intersectionTime;
             const QMatrix4x4 inverseGlobalTransform = item2D.globalTransform.inverted();
-            const QVector3D localIntersectionPoint = mat44::transform(inverseGlobalTransform, intersectionPoint);
+            const QVector3D localIntersectionPoint = QSSGUtils::mat44::transform(inverseGlobalTransform, intersectionPoint);
             const QVector2D qmlCoordinate(localIntersectionPoint.x(), -localIntersectionPoint.y());
             outIntersectionResultList.push_back(QSSGRenderPickResult { &item2D,
                                                                        intersectionTime * intersectionTime,

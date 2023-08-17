@@ -1067,7 +1067,7 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         else
             material->colorMap = m_albedoMap->getRenderImage();
 
-        material->color = color::sRGBToLinear(m_albedo);
+        material->color = QSSGUtils::color::sRGBToLinear(m_albedo);
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
@@ -1098,7 +1098,7 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         else
             material->specularMap = m_specularMap->getRenderImage();
 
-        material->specularTint = color::sRGBToLinear(m_specular).toVector3D();
+        material->specularTint = QSSGUtils::color::sRGBToLinear(m_specular).toVector3D();
     }
 
     if (m_dirtyAttributes & OpacityDirty) {
@@ -1188,7 +1188,7 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         material->thicknessChannel = channelMapping(m_thicknessChannel);
 
         material->attenuationDistance = m_attenuationDistance;
-        material->attenuationColor = color::sRGBToLinear(m_attenuationColor).toVector3D();
+        material->attenuationColor = QSSGUtils::color::sRGBToLinear(m_attenuationColor).toVector3D();
     }
 
     if (m_dirtyAttributes & VertexColorsDirty)

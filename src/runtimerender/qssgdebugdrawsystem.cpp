@@ -311,7 +311,7 @@ void QSSGDebugDrawSystem::debugNormals(QSSGBufferManager &bufferManager, const Q
             const float *fNormalPtr = reinterpret_cast<const float *>(normalPtr);
             QVector3D normal(fNormalPtr[0], fNormalPtr[1], fNormalPtr[2]);
             position = globalTransform.map(position);
-            normal = mat33::transform(theModelContext.normalMatrix, normal);
+            normal = QSSGUtils::mat33::transform(theModelContext.normalMatrix, normal);
             normal = normal.normalized();
             drawLine(position, position + (normal * lineLength), QColor(Qt::blue));
         }
@@ -333,7 +333,7 @@ void QSSGDebugDrawSystem::debugNormals(QSSGBufferManager &bufferManager, const Q
             const float *fNormalPtr = reinterpret_cast<const float *>(normalPtr);
             QVector3D normal(fNormalPtr[0], fNormalPtr[1], fNormalPtr[2]);
             position = globalTransform.map(position);
-            normal = mat33::transform(theModelContext.normalMatrix, normal);
+            normal = QSSGUtils::mat33::transform(theModelContext.normalMatrix, normal);
             normal = normal.normalized();
             drawLine(position, position + (normal * lineLength), QColor(Qt::red));
         }

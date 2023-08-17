@@ -177,7 +177,7 @@ QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoo
                                               const QRectF &inViewport) const
 {
     QSSGRenderRay theRay;
-    QVector2D normalizedCoords = relativeToNormalizedCoordinates(inViewport, inViewportRelativeCoords);
+    QVector2D normalizedCoords = QSSGUtils::rect::relativeToNormalizedCoordinates(inViewport, inViewportRelativeCoords);
     QVector3D &outOrigin(theRay.origin);
     QVector3D &outDir(theRay.direction);
     QVector2D inverseFrustumScale(1.0f / frustumScale.x(), 1.0f / frustumScale.y());
@@ -201,10 +201,10 @@ QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoo
         outDir.setZ(-1.0f);
     }
 
-    outOrigin = mat44::transform(globalTransform, outOrigin);
+    outOrigin = QSSGUtils::mat44::transform(globalTransform, outOrigin);
     QMatrix3x3 theNormalMatrix = calculateNormalMatrix();
 
-    outDir = mat33::transform(theNormalMatrix, outDir);
+    outDir = QSSGUtils::mat33::transform(theNormalMatrix, outDir);
     outDir.normalize();
 
     return theRay;

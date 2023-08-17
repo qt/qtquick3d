@@ -86,7 +86,7 @@ void BenchFrustumCulling::initTestCase()
 
         QMatrix3x3 theUpper33(camera.globalTransform.normalMatrix());
 
-        QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
+        QVector3D dir(QSSGUtils::mat33::transform(theUpper33, QVector3D(0, 0, -1)));
         dir.normalize();
         nearPlane.normal = dir;
         QVector3D theGlobalPos = camera.getGlobalPos() + camera.clipNear * dir;

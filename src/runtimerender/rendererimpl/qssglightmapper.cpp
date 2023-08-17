@@ -485,7 +485,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
                 float *fNormalPtr = reinterpret_cast<float *>(normalPtr);
                 QVector3D normal(fNormalPtr[0], fNormalPtr[1], fNormalPtr[2]);
                 pos = worldTransform.map(pos);
-                normal = mat33::transform(normalMatrix, normal).normalized();
+                normal = QSSGUtils::mat33::transform(normalMatrix, normal).normalized();
                 *fPosPtr++ = pos.x();
                 *fPosPtr++ = pos.y();
                 *fPosPtr++ = pos.z();
@@ -525,9 +525,9 @@ bool QSSGLightmapperPrivate::commitGeometry()
             } else {
                 light.type = Light::Point;
             }
-            light.constantAttenuation = aux::translateConstantAttenuation(sl.light->m_constantFade);
-            light.linearAttenuation = aux::translateLinearAttenuation(sl.light->m_linearFade);
-            light.quadraticAttenuation = aux::translateQuadraticAttenuation(sl.light->m_quadraticFade);
+            light.constantAttenuation = QSSGUtils::aux::translateConstantAttenuation(sl.light->m_constantFade);
+            light.linearAttenuation = QSSGUtils::aux::translateLinearAttenuation(sl.light->m_linearFade);
+            light.quadraticAttenuation = QSSGUtils::aux::translateQuadraticAttenuation(sl.light->m_quadraticFade);
         } else {
             light.type = Light::Directional;
         }

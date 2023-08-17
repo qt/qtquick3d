@@ -385,7 +385,7 @@ static inline QQuick3DInstancing::InstanceTableEntry calculate(const QVector3D &
     xform(1, 3) += position[1];
     xform(2, 3) += position[2];
 
-    auto linearColor = color::sRGBToLinear(color);
+    auto linearColor = QSSGUtils::color::sRGBToLinear(color);
 
     return {
         xform.row(0),
@@ -451,7 +451,7 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntryFr
     xform(1, 3) += position[1];
     xform(2, 3) += position[2];
 
-    auto linearColor = color::sRGBToLinear(color);
+    auto linearColor = QSSGUtils::color::sRGBToLinear(color);
 
     return {
         xform.row(0),
