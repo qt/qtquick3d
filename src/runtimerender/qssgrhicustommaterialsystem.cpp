@@ -536,12 +536,12 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                                                   const QSSGRenderCustomMaterial &inMaterial,
                                                   const QByteArray &inPropertyName,
                                                   const QVariant &propertyValue,
-                                                  QSSGRenderShaderDataType inPropertyType,
+                                                  QSSGRenderShaderValue::Type inPropertyType,
                                                   QSSGRhiShaderPipeline &shaderPipeline)
 {
     Q_UNUSED(inMaterial);
 
-    if (inPropertyType == QSSGRenderShaderDataType::Texture) {
+    if (inPropertyType == QSSGRenderShaderValue::Texture) {
         QSSGRenderCustomMaterial::TextureProperty *textureProperty =
                 reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
         QSSGRenderImage *image = textureProperty->texImage;

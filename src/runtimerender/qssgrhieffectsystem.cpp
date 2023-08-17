@@ -589,27 +589,27 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
     QMatrix4x4 mvp;
     if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
         mvp.data()[5] = -1.0f;
-    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_modelViewProjection", mvp, QSSGRenderShaderDataType::Matrix4x4);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_modelViewProjection", mvp, QSSGRenderShaderValue::Matrix4x4);
 
     QVector2D size(inputSize.width(), inputSize.height());
-    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_inputSize", size, QSSGRenderShaderDataType::Vec2);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_inputSize", size, QSSGRenderShaderValue::Vec2);
 
     size = QVector2D(outputSize.width(), outputSize.height());
-    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_outputSize", size, QSSGRenderShaderDataType::Vec2);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_outputSize", size, QSSGRenderShaderValue::Vec2);
 
     float fc = float(m_sgContext->frameCount());
-    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_frame_num", fc, QSSGRenderShaderDataType::Float);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_frame_num", fc, QSSGRenderShaderValue::Float);
 
     // Bames and values for uniforms that are also used by default and/or
     // custom materials must always match, effects must not deviate.
 
-    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_cameraProperties", m_cameraClipRange, QSSGRenderShaderDataType::Vec2);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_cameraProperties", m_cameraClipRange, QSSGRenderShaderValue::Vec2);
 
     float vp = rhi->isYUpInFramebuffer() ? 1.0f : -1.0f;
-    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_normalAdjustViewportFactor", vp, QSSGRenderShaderDataType::Float);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_normalAdjustViewportFactor", vp, QSSGRenderShaderValue::Float);
 
     const float nearClip = rhi->isClipDepthZeroToOne() ? 0.0f : -1.0f;
-    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_nearClipValue", nearClip, QSSGRenderShaderDataType::Float);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_nearClipValue", nearClip, QSSGRenderShaderValue::Float);
 
     if (m_depthTexture) {
         static const QSSGRhiSamplerDescription depthSamplerDesc {

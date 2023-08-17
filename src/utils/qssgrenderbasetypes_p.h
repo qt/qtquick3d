@@ -16,9 +16,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DUtils/private/qssgdataref_p.h>
-
-#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
+#include <QtQuick3DUtils/qtquick3dutilsexports.h>
 
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
@@ -63,7 +61,7 @@ enum class QSSGRenderWinding // stored in mesh files, the values must not change
     CounterClockwise
 };
 
-struct Q_QUICK3DUTILS_PRIVATE_EXPORT QSSGRenderTextureFormat
+struct Q_QUICK3DUTILS_EXPORT QSSGRenderTextureFormat
 {
     static constexpr quint8 DepthTextureFlag = 1u << 6;
     static constexpr quint8 CompressedTextureFlag = 1u << 7;
@@ -189,151 +187,9 @@ struct Q_QUICK3DUTILS_PRIVATE_EXPORT QSSGRenderTextureFormat
 
     [[nodiscard]] const char *toString() const;
 
-    qint32 getSizeofFormat() const
-    {
-        switch (format) {
-        case R8:
-            return 1;
-        case R16F:
-            return 2;
-        case R16:
-            return 2;
-        case R32I:
-            return 4;
-        case R32F:
-            return 4;
-        case RGBE8:
-        case RGBA8:
-            return 4;
-        case RGB8:
-            return 3;
-        case RGB565:
-            return 2;
-        case RGBA5551:
-            return 2;
-        case Alpha8:
-            return 1;
-        case Luminance8:
-            return 1;
-        case LuminanceAlpha8:
-            return 1;
-        case Depth16:
-            return 2;
-        case Depth24:
-            return 3;
-        case Depth32:
-            return 4;
-        case Depth24Stencil8:
-            return 4;
-        case RGB9E5:
-            return 4;
-        case SRGB8:
-            return 3;
-        case SRGB8A8:
-            return 4;
-        case RGBA16F:
-            return 8;
-        case RG16F:
-            return 4;
-        case RG32F:
-            return 8;
-        case RGBA32F:
-            return 16;
-        case RGB32F:
-            return 12;
-        case R11G11B10:
-            return 4;
-        default:
-            break;
-        }
-        Q_ASSERT(false);
-        return 0;
-    }
+    [[nodiscard]] qint32 getSizeofFormat() const noexcept;
 
-    qint32 getNumberOfComponent() const
-    {
-        switch (format) {
-        case R8:
-            return 1;
-        case R16F:
-            return 1;
-        case R16:
-            return 1;
-        case R32I:
-            return 1;
-        case R32F:
-            return 1;
-        case RGBA8:
-            return 4;
-        case RGB8:
-            return 3;
-        case RGB565:
-            return 3;
-        case RGBA5551:
-            return 4;
-        case Alpha8:
-            return 1;
-        case Luminance8:
-            return 1;
-        case LuminanceAlpha8:
-            return 2;
-        case Depth16:
-            return 1;
-        case Depth24:
-            return 1;
-        case Depth32:
-            return 1;
-        case Depth24Stencil8:
-            return 2;
-        case RGB9E5:
-            return 3;
-        case SRGB8:
-            return 3;
-        case SRGB8A8:
-            return 4;
-        case RGBA16F:
-            return 4;
-        case RG16F:
-            return 2;
-        case RG32F:
-            return 2;
-        case RGBA32F:
-            return 4;
-        case RGB32F:
-            return 3;
-        case R11G11B10:
-            return 3;
-        case RGBE8:
-            return 4;
-        default:
-            break;
-        }
-        Q_ASSERT(false);
-        return 0;
-    }
-
-    struct M8E8
-    {
-        quint8 m;
-        quint8 e;
-        M8E8() : m(0), e(0){
-        }
-        M8E8(const float val) {
-            float l2 = 1.f + std::floor(log2f(val));
-            float mm = val / powf(2.f, l2);
-            m = quint8(mm * 255.f);
-            e = quint8(l2 + 128);
-        }
-        M8E8(const float val, quint8 exp) {
-            if (val <= 0) {
-                m = e = 0;
-                return;
-            }
-            float mm = val / powf(2.f, exp - 128);
-            m = quint8(mm * 255.f);
-            e = exp;
-        }
-    };
+    [[nodiscard]] qint32 getNumberOfComponent() const noexcept;
 
     void decodeToFloat(void *inPtr, qint32 byteOfs, float *outPtr) const;
     void encodeToPixel(float *inPtr, void *outPtr, qint32 byteOfs) const;
@@ -355,49 +211,6 @@ enum class QSSGRenderTextureCoordOp : quint8
     ClampToEdge,
     MirroredRepeat,
     Repeat
-};
-
-struct QSSGRenderVertexBufferEntry
-{
-    QByteArray m_name;
-    /** Datatype of the this entry points to in the buffer */
-    QSSGRenderComponentType m_componentType;
-    /** Number of components of each data member. 1,2,3, or 4.  Don't be stupid.*/
-    quint32 m_numComponents;
-    /** Offset from the beginning of the buffer of the first item */
-    quint32 m_firstItemOffset;
-
-    QSSGRenderVertexBufferEntry(const QByteArray &nm,
-                                QSSGRenderComponentType type,
-                                quint32 numComponents,
-                                quint32 firstItemOffset = 0)
-        : m_name(nm), m_componentType(type), m_numComponents(numComponents), m_firstItemOffset(firstItemOffset)
-    {
-    }
-
-    QSSGRenderVertexBufferEntry()
-        : m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0), m_firstItemOffset(0)
-    {
-    }
-
-    QSSGRenderVertexBufferEntry(const QSSGRenderVertexBufferEntry &inOther)
-        : m_name(inOther.m_name)
-        , m_componentType(inOther.m_componentType)
-        , m_numComponents(inOther.m_numComponents)
-        , m_firstItemOffset(inOther.m_firstItemOffset)
-    {
-    }
-
-    QSSGRenderVertexBufferEntry &operator=(const QSSGRenderVertexBufferEntry &inOther)
-    {
-        if (this != &inOther) {
-            m_name = inOther.m_name;
-            m_componentType = inOther.m_componentType;
-            m_numComponents = inOther.m_numComponents;
-            m_firstItemOffset = inOther.m_firstItemOffset;
-        }
-        return *this;
-    }
 };
 
 enum class QSSGCullFaceMode
@@ -456,47 +269,53 @@ struct QSSGRenderGenericVec4
     }
 };
 
-typedef QSSGRenderGenericVec2<bool> bool_2;
-typedef QSSGRenderGenericVec3<bool> bool_3;
-typedef QSSGRenderGenericVec4<bool> bool_4;
-typedef QSSGRenderGenericVec2<quint32> quint32_2;
-typedef QSSGRenderGenericVec3<quint32> quint32_3;
-typedef QSSGRenderGenericVec4<quint32> quint32_4;
-typedef QSSGRenderGenericVec2<qint32> qint32_2;
-typedef QSSGRenderGenericVec3<qint32> qint32_3;
-typedef QSSGRenderGenericVec4<qint32> qint32_4;
-
-enum class QSSGRenderShaderDataType : quint32
+namespace QSSGRenderShaderValue
 {
-    Unknown = 0,
-    Integer, // qint32,
-    IntegerVec2, // qint32_2,
-    IntegerVec3, // qint32_3,
-    IntegerVec4, // qint32_4,
-    Boolean, // bool
-    BooleanVec2, // bool_2,
-    BooleanVec3, // bool_3,
-    BooleanVec4, // bool_4,
-    Float, // float,
-    Vec2, // QVector2D,
-    Vec3, // QVector3D,
-    Vec4, // QVector4D,
-    UnsignedInteger, // quint32,
-    UnsignedIntegerVec2, // quint32_2,
-    UnsignedIntegerVec3, // quint32_3,
-    UnsignedIntegerVec4, // quint32_4,
-    Matrix3x3, // QMatrix3x3,
-    Matrix4x4, // QMatrix4x4,
-    Rgba, // QColor
-    Size, // QSize
-    SizeF, // QSizeF
-    Point, // QPoint
-    PointF, // QPointF
-    Rect, // QRect
-    RectF, // QRectF
-    Quaternion, // QQuaternion
-    Texture,
-};
+    enum Type : quint32
+    {
+        Unknown = 0,
+        Integer, // qint32,
+        IntegerVec2, // qint32_2,
+        IntegerVec3, // qint32_3,
+        IntegerVec4, // qint32_4,
+        Boolean, // bool
+        BooleanVec2, // bool_2,
+        BooleanVec3, // bool_3,
+        BooleanVec4, // bool_4,
+        Float, // float,
+        Vec2, // QVector2D,
+        Vec3, // QVector3D,
+        Vec4, // QVector4D,
+        UnsignedInteger, // quint32,
+        UnsignedIntegerVec2, // quint32_2,
+        UnsignedIntegerVec3, // quint32_3,
+        UnsignedIntegerVec4, // quint32_4,
+        Matrix3x3, // QMatrix3x3,
+        Matrix4x4, // QMatrix4x4,
+        Rgba, // QColor
+        Size, // QSize
+        SizeF, // QSizeF
+        Point, // QPoint
+        PointF, // QPointF
+        Rect, // QRect
+        RectF, // QRectF
+        Quaternion, // QQuaternion
+        Texture,
+    };
+
+    using vec2 = QVector2D;
+    using vec3 = QVector3D;
+    using vec4 = QVector4D;
+    using bvec2 = QSSGRenderGenericVec2<bool>;
+    using bvec3 = QSSGRenderGenericVec3<bool>;
+    using bvec4 = QSSGRenderGenericVec4<bool>;
+    using ivec2 = QSSGRenderGenericVec2<qint32>;
+    using ivec3 = QSSGRenderGenericVec3<qint32>;
+    using ivec4 = QSSGRenderGenericVec4<qint32>;
+    using uvec2 = QSSGRenderGenericVec2<quint32>;
+    using uvec3 = QSSGRenderGenericVec3<quint32>;
+    using uvec4 = QSSGRenderGenericVec4<quint32>;
+}
 
 enum class QSSGRenderTextureTypeValue
 {
@@ -533,7 +352,7 @@ static constexpr QSSGRenderTextureCubeFace QSSGRenderTextureCubeFaces[] {
 constexpr QSSGRenderTextureCubeFaceT QSSGRenderTextureCubeFaceMask { 0xf };
 constexpr QSSGRenderTextureCubeFace QSSGRenderTextureCubeFaceNone { QSSGRenderTextureCubeFaceT(1 << 4) };
 
-class Q_QUICK3DUTILS_PRIVATE_EXPORT QSSGBaseTypeHelpers
+class Q_QUICK3DUTILS_EXPORT QSSGBaseTypeHelpers
 {
     QSSGBaseTypeHelpers() = default;
 public:

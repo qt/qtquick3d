@@ -250,170 +250,171 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
               -1);
 }
 
-void QSSGRhiShaderPipeline::setUniformValue(char *ubufData, const char *name, const QVariant &inValue, QSSGRenderShaderDataType inType)
+void QSSGRhiShaderPipeline::setUniformValue(char *ubufData, const char *name, const QVariant &inValue, QSSGRenderShaderValue::Type inType)
 {
+    using namespace QSSGRenderShaderValue;
     switch (inType) {
-    case QSSGRenderShaderDataType::Integer:
+    case QSSGRenderShaderValue::Integer:
     {
         const qint32 v = inValue.toInt();
         setUniform(ubufData, name, &v, sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::IntegerVec2:
+    case QSSGRenderShaderValue::IntegerVec2:
     {
-        const qint32_2 v = inValue.value<qint32_2>();
+        const ivec2 v = inValue.value<ivec2>();
         setUniform(ubufData, name, &v, 2 * sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::IntegerVec3:
+    case QSSGRenderShaderValue::IntegerVec3:
     {
-        const qint32_3 v = inValue.value<qint32_3>();
+        const ivec3 v = inValue.value<ivec3>();
         setUniform(ubufData, name, &v, 3 * sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::IntegerVec4:
+    case QSSGRenderShaderValue::IntegerVec4:
     {
-        const qint32_4 v = inValue.value<qint32_4>();
+        const ivec4 v = inValue.value<ivec4>();
         setUniform(ubufData, name, &v, 4 * sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::Boolean:
+    case QSSGRenderShaderValue::Boolean:
     {
         // whatever bool is does not matter, what matters is that the GLSL bool is 4 bytes
         const qint32 v = inValue.value<bool>();
         setUniform(ubufData, name, &v, sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::BooleanVec2:
+    case QSSGRenderShaderValue::BooleanVec2:
     {
-        const bool_2 b = inValue.value<bool_2>();
-        const qint32_2 v(b.x, b.y);
+        const bvec2 b = inValue.value<bvec2>();
+        const ivec2 v(b.x, b.y);
         setUniform(ubufData, name, &v, 2 * sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::BooleanVec3:
+    case QSSGRenderShaderValue::BooleanVec3:
     {
-        const bool_3 b = inValue.value<bool_3>();
-        const qint32_3 v(b.x, b.y, b.z);
+        const bvec3 b = inValue.value<bvec3>();
+        const ivec3 v(b.x, b.y, b.z);
         setUniform(ubufData, name, &v, 3 * sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::BooleanVec4:
+    case QSSGRenderShaderValue::BooleanVec4:
     {
-        const bool_4 b = inValue.value<bool_4>();
-        const qint32_4 v(b.x, b.y, b.z, b.w);
+        const bvec4 b = inValue.value<bvec4>();
+        const ivec4 v(b.x, b.y, b.z, b.w);
         setUniform(ubufData, name, &v, 4 * sizeof(qint32));
     }
         break;
-    case QSSGRenderShaderDataType::Float:
+    case QSSGRenderShaderValue::Float:
     {
         const float v = inValue.value<float>();
         setUniform(ubufData, name, &v, sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Vec2:
+    case QSSGRenderShaderValue::Vec2:
     {
         const QVector2D v = inValue.value<QVector2D>();
         setUniform(ubufData, name, &v, 2 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Vec3:
+    case QSSGRenderShaderValue::Vec3:
     {
         const QVector3D v = inValue.value<QVector3D>();
         setUniform(ubufData, name, &v, 3 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Vec4:
+    case QSSGRenderShaderValue::Vec4:
     {
         const QVector4D v = inValue.value<QVector4D>();
         setUniform(ubufData, name, &v, 4 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Rgba:
+    case QSSGRenderShaderValue::Rgba:
     {
         const QVector4D v = QSSGUtils::color::sRGBToLinear(inValue.value<QColor>());
         setUniform(ubufData, name, &v, 4 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedInteger:
+    case QSSGRenderShaderValue::UnsignedInteger:
     {
         const quint32 v = inValue.value<quint32>();
         setUniform(ubufData, name, &v, sizeof(quint32));
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedIntegerVec2:
+    case QSSGRenderShaderValue::UnsignedIntegerVec2:
     {
-        const quint32_2 v = inValue.value<quint32_2>();
+        const uvec2 v = inValue.value<uvec2>();
         setUniform(ubufData, name, &v, 2 * sizeof(quint32));
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedIntegerVec3:
+    case QSSGRenderShaderValue::UnsignedIntegerVec3:
     {
-        const quint32_3 v = inValue.value<quint32_3>();
+        const uvec3 v = inValue.value<uvec3>();
         setUniform(ubufData, name, &v, 3 * sizeof(quint32));
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedIntegerVec4:
+    case QSSGRenderShaderValue::UnsignedIntegerVec4:
     {
-        const quint32_4 v = inValue.value<quint32_4>();
+        const uvec4 v = inValue.value<uvec4>();
         setUniform(ubufData, name, &v, 4 * sizeof(quint32));
     }
         break;
-    case QSSGRenderShaderDataType::Matrix3x3:
+    case QSSGRenderShaderValue::Matrix3x3:
     {
         const QMatrix3x3 m = inValue.value<QMatrix3x3>();
         setUniform(ubufData, name, m.constData(), 12 * sizeof(float), nullptr, QSSGRhiShaderPipeline::UniformFlag::Mat3);
     }
         break;
-    case QSSGRenderShaderDataType::Matrix4x4:
+    case QSSGRenderShaderValue::Matrix4x4:
     {
         const QMatrix4x4 v = inValue.value<QMatrix4x4>();
         setUniform(ubufData, name, v.constData(), 16 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Size:
+    case QSSGRenderShaderValue::Size:
     {
         const QSize s = inValue.value<QSize>();
         float v[2] = { float(s.width()), float(s.height()) };
         setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::SizeF:
+    case QSSGRenderShaderValue::SizeF:
     {
         const QSizeF s = inValue.value<QSizeF>();
         float v[2] = { float(s.width()), float(s.height()) };
         setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Point:
+    case QSSGRenderShaderValue::Point:
     {
         const QPoint p = inValue.value<QPoint>();
         float v[2] = { float(p.x()), float(p.y()) };
         setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::PointF:
+    case QSSGRenderShaderValue::PointF:
     {
         const QPointF p = inValue.value<QPointF>();
         float v[2] = { float(p.x()), float(p.y()) };
         setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Rect:
+    case QSSGRenderShaderValue::Rect:
     {
         const QRect r = inValue.value<QRect>();
         float v[4] = { float(r.x()), float(r.y()), float(r.width()), float(r.height()) };
         setUniform(ubufData, name, v, 4 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::RectF:
+    case QSSGRenderShaderValue::RectF:
     {
         const QRectF r = inValue.value<QRectF>();
         float v[4] = { float(r.x()), float(r.y()), float(r.width()), float(r.height()) };
         setUniform(ubufData, name, v, 4 * sizeof(float));
     }
         break;
-    case QSSGRenderShaderDataType::Quaternion:
+    case QSSGRenderShaderValue::Quaternion:
     {
         const QQuaternion q = inValue.value<QQuaternion>();
         float v[4] = { float(q.x()), float(q.y()), float(q.z()), float(q.scalar()) };
@@ -502,8 +503,10 @@ void QSSGRhiShaderPipeline::setUniform(char *ubufData, const char *name, const v
 // Quick3D uniform buffer is std140 type and all array data should be stored in this rule.
 // You can check it in glspec45.core.pdf's 7.6.2.2.(4)
 // https://www.khronos.org/registry/OpenGL/specs/gl/glspec45.core.pdf
-void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex)
+void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, const void *data, size_t itemCount, QSSGRenderShaderValue::Type type, int *storeIndex)
 {
+    using namespace QSSGRenderShaderValue;
+
     QSSGRhiShaderUniformArray *ua = nullptr;
     constexpr size_t std140BaseTypeSize = 4 * sizeof(float);
 
@@ -556,7 +559,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
     char *p = ubufData + ua->offset;
 
     switch (type) {
-    case QSSGRenderShaderDataType::Integer:
+    case QSSGRenderShaderValue::Integer:
     {
         const qint32 *v = static_cast<const qint32 *>(data);
         if (sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
@@ -570,9 +573,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::IntegerVec2:
+    case QSSGRenderShaderValue::IntegerVec2:
     {
-        const qint32_2 *v = static_cast<const qint32_2 *>(data);
+        const ivec2 *v = static_cast<const ivec2 *>(data);
         if (2 * sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
             ua->typeSize = 2 * sizeof(qint32);
             ua->itemCount = itemCount;
@@ -584,9 +587,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::IntegerVec3:
+    case QSSGRenderShaderValue::IntegerVec3:
     {
-        const qint32_3 *v = static_cast<const qint32_3 *>(data);
+        const QSSGRenderShaderValue::ivec3 *v = static_cast<const QSSGRenderShaderValue::ivec3 *>(data);
         if (3 * sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
             ua->typeSize = 3 * sizeof(qint32);
             ua->itemCount = itemCount;
@@ -598,9 +601,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::IntegerVec4:
+    case QSSGRenderShaderValue::IntegerVec4:
     {
-        const qint32_4 *v = static_cast<const qint32_4 *>(data);
+        const ivec4 *v = static_cast<const ivec4 *>(data);
         if (4 * sizeof(qint32) != ua->typeSize || itemCount != ua->itemCount) {
             ua->typeSize = 4 * sizeof(qint32);
             ua->itemCount = itemCount;
@@ -611,7 +614,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
         memcpy(p, v, ua->typeSize * ua->itemCount);
     }
         break;
-    case QSSGRenderShaderDataType::Float:
+    case QSSGRenderShaderValue::Float:
     {
         const float *v = static_cast<const float *>(data);
         if (sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
@@ -625,7 +628,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::Vec2:
+    case QSSGRenderShaderValue::Vec2:
     {
         const QVector2D *v = static_cast<const QVector2D *>(data);
         if (2 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
@@ -639,7 +642,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::Vec3:
+    case QSSGRenderShaderValue::Vec3:
     {
         const QVector3D *v = static_cast<const QVector3D *>(data);
         if (3 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
@@ -653,7 +656,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::Vec4:
+    case QSSGRenderShaderValue::Vec4:
     {
         const QVector4D *v = static_cast<const QVector4D *>(data);
         if (4 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
@@ -666,7 +669,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
         memcpy(p, v, ua->typeSize * ua->itemCount);
     }
         break;
-    case QSSGRenderShaderDataType::Rgba:
+    case QSSGRenderShaderValue::Rgba:
     {
         const QColor *v = static_cast<const QColor *>(data);
         if (4 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
@@ -682,7 +685,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
         }
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedInteger:
+    case QSSGRenderShaderValue::UnsignedInteger:
     {
         const quint32 *v = static_cast<const quint32 *>(data);
         if (sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
@@ -696,9 +699,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedIntegerVec2:
+    case QSSGRenderShaderValue::UnsignedIntegerVec2:
     {
-        const quint32_2 *v = static_cast<const quint32_2 *>(data);
+        const uvec2 *v = static_cast<const uvec2 *>(data);
         if (2 * sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
             ua->typeSize = 2 * sizeof(quint32);
             ua->itemCount = itemCount;
@@ -710,9 +713,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedIntegerVec3:
+    case QSSGRenderShaderValue::UnsignedIntegerVec3:
     {
-        const quint32_3 *v = static_cast<const quint32_3 *>(data);
+        const uvec3 *v = static_cast<const uvec3 *>(data);
         if (3 * sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
             ua->typeSize = 3 * sizeof(quint32);
             ua->itemCount = itemCount;
@@ -724,9 +727,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::UnsignedIntegerVec4:
+    case QSSGRenderShaderValue::UnsignedIntegerVec4:
     {
-        const quint32_4 *v = static_cast<const quint32_4 *>(data);
+        const uvec4 *v = static_cast<const uvec4 *>(data);
         if (4 * sizeof(quint32) != ua->typeSize || itemCount != ua->itemCount) {
             ua->typeSize = 4 * sizeof(quint32);
             ua->itemCount = itemCount;
@@ -737,7 +740,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
         memcpy(p, v, ua->typeSize * ua->itemCount);
     }
         break;
-    case QSSGRenderShaderDataType::Matrix3x3:
+    case QSSGRenderShaderValue::Matrix3x3:
     {
         const QMatrix3x3 *v = static_cast<const QMatrix3x3 *>(data);
         if (12 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
@@ -754,7 +757,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
         }
     }
         break;
-    case QSSGRenderShaderDataType::Matrix4x4:
+    case QSSGRenderShaderValue::Matrix4x4:
     {
         const QMatrix4x4 *v = static_cast<const QMatrix4x4 *>(data);
         if (16 * sizeof(float) != ua->typeSize || itemCount != ua->itemCount) {
@@ -768,17 +771,17 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             memcpy(p + i * ua->typeSize, &v[i] , ua->typeSize);
     }
         break;
-    case QSSGRenderShaderDataType::Boolean:
-    case QSSGRenderShaderDataType::BooleanVec2:
-    case QSSGRenderShaderDataType::BooleanVec3:
-    case QSSGRenderShaderDataType::BooleanVec4:
-    case QSSGRenderShaderDataType::Size:
-    case QSSGRenderShaderDataType::SizeF:
-    case QSSGRenderShaderDataType::Point:
-    case QSSGRenderShaderDataType::PointF:
-    case QSSGRenderShaderDataType::Rect:
-    case QSSGRenderShaderDataType::RectF:
-    case QSSGRenderShaderDataType::Quaternion:
+    case QSSGRenderShaderValue::Boolean:
+    case QSSGRenderShaderValue::BooleanVec2:
+    case QSSGRenderShaderValue::BooleanVec3:
+    case QSSGRenderShaderValue::BooleanVec4:
+    case QSSGRenderShaderValue::Size:
+    case QSSGRenderShaderValue::SizeF:
+    case QSSGRenderShaderValue::Point:
+    case QSSGRenderShaderValue::PointF:
+    case QSSGRenderShaderValue::Rect:
+    case QSSGRenderShaderValue::RectF:
+    case QSSGRenderShaderValue::Quaternion:
     default:
         qWarning("Attempted to set uniform %s value with type %d that is unsupported for uniform arrays",
                  name, int(type));

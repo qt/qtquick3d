@@ -28,6 +28,49 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QSSGRenderVertexBufferEntry
+{
+    QByteArray m_name;
+    /** Datatype of the this entry points to in the buffer */
+    QSSGRenderComponentType m_componentType;
+    /** Number of components of each data member. 1,2,3, or 4.  Don't be stupid.*/
+    quint32 m_numComponents;
+    /** Offset from the beginning of the buffer of the first item */
+    quint32 m_firstItemOffset;
+
+    QSSGRenderVertexBufferEntry(const QByteArray &nm,
+                                QSSGRenderComponentType type,
+                                quint32 numComponents,
+                                quint32 firstItemOffset = 0)
+        : m_name(nm), m_componentType(type), m_numComponents(numComponents), m_firstItemOffset(firstItemOffset)
+    {
+    }
+
+    QSSGRenderVertexBufferEntry()
+        : m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0), m_firstItemOffset(0)
+    {
+    }
+
+    QSSGRenderVertexBufferEntry(const QSSGRenderVertexBufferEntry &inOther)
+        : m_name(inOther.m_name)
+        , m_componentType(inOther.m_componentType)
+        , m_numComponents(inOther.m_numComponents)
+        , m_firstItemOffset(inOther.m_firstItemOffset)
+    {
+    }
+
+    QSSGRenderVertexBufferEntry &operator=(const QSSGRenderVertexBufferEntry &inOther)
+    {
+        if (this != &inOther) {
+            m_name = inOther.m_name;
+            m_componentType = inOther.m_componentType;
+            m_numComponents = inOther.m_numComponents;
+            m_firstItemOffset = inOther.m_firstItemOffset;
+        }
+        return *this;
+    }
+};
+
 namespace QSSGMesh {
 
 struct AssetVertexEntry;

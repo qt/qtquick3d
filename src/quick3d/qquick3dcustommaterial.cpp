@@ -1518,7 +1518,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                     textureProperties.push_back({texture, name});
             } else {
                 const auto type = uniformType(propType);
-                if (type != QSSGRenderShaderDataType::Unknown) {
+                if (type != QSSGRenderShaderValue::Unknown) {
                     uniforms.append({ uniformTypeName(propType), name });
                     customMaterial->m_properties.push_back({ name, propValue, uniformType(propType), i});
                     if (newBackendNode) {
@@ -1540,7 +1540,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             QSSGRenderCustomMaterial::TextureProperty textureData;
             textureData.texInput = &texture;
             textureData.name = name;
-            textureData.shaderDataType = QSSGRenderShaderDataType::Texture;
+            textureData.shaderDataType = QSSGRenderShaderValue::Texture;
 
             if (newBackendNode) {
                 connect(&texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
@@ -1579,7 +1579,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                         textureProperties.push_back({texture, name});
                 } else {
                     const auto type = uniformType(propType);
-                    if (type != QSSGRenderShaderDataType::Unknown) {
+                    if (type != QSSGRenderShaderValue::Unknown) {
                         uniforms.append({ uniformTypeName(propType), name });
                         customMaterial->m_properties.push_back({ name, propValue,
                                                                  uniformType(propType), -1 /* aka. dynamic property */});

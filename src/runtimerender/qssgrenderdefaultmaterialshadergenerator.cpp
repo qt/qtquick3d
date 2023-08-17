@@ -1953,13 +1953,13 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     if (morphSize > 0) {
         if (inMorphWeights.mSize >= morphSize) {
             shaders.setUniformArray(ubufData, "qt_morphWeights", inMorphWeights.mData, morphSize,
-                                     QSSGRenderShaderDataType::Float, &cui.morphWeightsIdx);
+                                     QSSGRenderShaderValue::Float, &cui.morphWeightsIdx);
         } else {
             const QList<float> zeroWeights(morphSize - inMorphWeights.mSize, 0.0f);
             QList<float> newWeights(inMorphWeights.mData, inMorphWeights.mData + inMorphWeights.mSize);
             newWeights.append(zeroWeights);
             shaders.setUniformArray(ubufData, "qt_morphWeights", newWeights.constData(), morphSize,
-                                     QSSGRenderShaderDataType::Float, &cui.morphWeightsIdx);
+                                     QSSGRenderShaderValue::Float, &cui.morphWeightsIdx);
         }
     }
 

@@ -621,7 +621,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     textureProperties.push_back({texture, name});
             } else {
                 const auto type = uniformType(propType);
-                if (type != QSSGRenderShaderDataType::Unknown) {
+                if (type != QSSGRenderShaderValue::Unknown) {
                     uniforms.append({ uniformTypeName(propType), name });
                     effectNode->properties.push_back({ name, uniformTypeName(propType),
                                                        propValue, uniformType(propType), i});
@@ -649,7 +649,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             if (texture.enabled && tex)
                 texProp.texImage = tex->getRenderImage();
 
-            texProp.shaderDataType = QSSGRenderShaderDataType::Texture;
+            texProp.shaderDataType = QSSGRenderShaderValue::Texture;
 
             if (tex) {
                 texProp.minFilterType = tex->minFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
@@ -699,7 +699,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                         textureProperties.push_back({texture, name});
                 } else {
                     const auto type = uniformType(propType);
-                    if (type != QSSGRenderShaderDataType::Unknown) {
+                    if (type != QSSGRenderShaderValue::Unknown) {
                         uniforms.append({ uniformTypeName(propType), name });
                         effectNode->properties.push_back({ name, uniformTypeName(propType),
                                                            propValue, uniformType(propType), -1 /* aka. dynamic property */});
