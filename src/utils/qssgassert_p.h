@@ -24,6 +24,12 @@ Q_QUICK3DUTILS_PRIVATE_EXPORT void qssgWriteAssertLocation(const char *msg);
 
 QT_END_NAMESPACE
 
+#ifdef QT_DEBUG
+#define QSSG_DEBUG_COND(cond) (cond)
+#else
+#define QSSG_DEBUG_COND(cond) (true || (cond))
+#endif // QT_DEBUG
+
 #define QSSG_ASSERT_STRINGIFY_HELPER(x) #x
 #define QSSG_ASSERT_STRINGIFY(x) QSSG_ASSERT_STRINGIFY_HELPER(x)
 #define QSSG_ASSERT_STRING_X(msg) QT_PREPEND_NAMESPACE(qssgWriteAssertLocation)(msg)
