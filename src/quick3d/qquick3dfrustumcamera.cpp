@@ -33,14 +33,24 @@ QT_BEGIN_NAMESPACE
     The FrustumCamera type provides a PerspectiveCamera where the frustum bounds can be
     customized. This can be useful for creating asymmetrical frustums.
 
-    The following example creates a FrustumCamera at position [0, 200, 300] in the scene, with a
-    30 degree downward pitch, and where the intersection of the frustum and the near plane is
-    given by the rectangle that has a bottom left corner at [-5, -5], and a top right corner
-    at [5, 5].
+    The following example creates a FrustumCamera at [0, 0, 100] in the scene.
+    The \l {PerspectiveCamera::clipNear}{near plane} is placed 100 units in front of the camera at the origin.
+    The intersection of the frustum and the near plane is then given by the rectangle that has a bottom left corner at [-5, -5],
+    and a top right corner at [5, 5], and continues until it intersect the
+    \l {PerspectiveCamera::clipFar}{far plane}, which is located 1000 units from the camera at [0, 0, -900].
+
+    \note The \l{PerspectiveCamera::fieldOfViewOrientation}{vertical field of view} angle is
+    a product of the distance between the camera, the \l {PerspectiveCamera::clipNear}{near plane}
+    and the length between the \c top and \c bottom of the near plane.
+
+    \note If the top and bottom, or left right, values are asymmetric,
+    the apex of the frustum will be shifted, effectively offsetting the camera from its location.
+
     \code
     FrustumCamera {
-        position: Qt.vector3d(0, 200, 300)
-        eulerRotation.x: -30
+        position: Qt.vector3d(0, 0, 100)
+        clipNear: 100
+        clipFar: 1000
         top: 5
         bottom: -5
         left: -5
@@ -61,7 +71,8 @@ QQuick3DFrustumCamera::QQuick3DFrustumCamera(QQuick3DNode *parent)
 /*!
     \qmlproperty real FrustumCamera::top
 
-    This property defines the top of the frustum on the near plane, relative to its center.
+    The \c top value specifies the top of the {PerspectiveCamera::clipNear}{near clip plane},
+    relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::top() const
 {
@@ -71,7 +82,8 @@ float QQuick3DFrustumCamera::top() const
 /*!
     \qmlproperty real FrustumCamera::bottom
 
-    This property defines the bottom of the frustum on the near plane, relative to its center.
+    The \c bottom value specifies the bottom of the {PerspectiveCamera::clipNear}{near clip plane},
+    relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::bottom() const
 {
@@ -81,7 +93,8 @@ float QQuick3DFrustumCamera::bottom() const
 /*!
     \qmlproperty real FrustumCamera::right
 
-    This property defines the right side of the frustum on the near plane, relative to its center.
+    The \c right value specifies the right of the {PerspectiveCamera::clipNear}{near clip plane},
+    relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::right() const
 {
@@ -91,7 +104,8 @@ float QQuick3DFrustumCamera::right() const
 /*!
     \qmlproperty real FrustumCamera::left
 
-    This property defines the left side of the frustum on the near plane, relative to its center.
+    The \c left value specifies the left of the {PerspectiveCamera::clipNear}{near clip plane},
+    relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::left() const
 {
