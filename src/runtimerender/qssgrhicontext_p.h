@@ -709,6 +709,14 @@ struct QSSGRhiDrawCallData
     size_t renderTargetDescriptionHash = 0;
     QVector<quint32> renderTargetDescription;
     QSSGRhiGraphicsPipelineState ps;
+
+    void reset()
+    {
+        delete ubuf;
+        ubuf = nullptr;
+        srb = nullptr;
+        pipeline = nullptr;
+    }
 };
 
 struct QSSGRhiRenderableTexture
