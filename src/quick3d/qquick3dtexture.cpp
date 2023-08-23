@@ -84,7 +84,7 @@ QT_BEGIN_NAMESPACE
     \li \image spheremap.png
     \endtable
 
-    \sa {Qt Quick 3D - Dynamic Texture Example}, {Qt Quick 3D - Procedural Texture Example}
+    \sa {Qt Quick 3D - Procedural Texture Example}
 */
 
 QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
