@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
     about where the ray hit the model. For models that use
     \l {QQuick3DGeometry}{custom geometry}, the picking is less accurate than
     for static mesh data, as picking is only done against the model's
-    \l {Bounds}{bounding volume}. If the ray goes through more than one model,
+    \l {bounds}{bounding volume}. If the ray goes through more than one model,
     the closest \l {Model::pickable}{pickable} model is selected.
 
     Note that for models to be \l {Model::pickable}{pickable}, their
