@@ -917,8 +917,15 @@ QSSGRhiContext::~QSSGRhiContext()
 
 void QSSGRhiContext::releaseCachedResources()
 {
-    for (QSSGRhiDrawCallData &dcd : m_drawCallData)
-        releaseDrawCallData(dcd);
+    for (QSSGRhiDrawCallData &dcd : m_drawCallData) {
+        // We don't call releaseDrawCallData() here, since we're anyways
+        // are going to delete the non-owned resources further down and
+        // there's no point in removing each of those one-by-one, as is
+        // the case with releaseDrawCallData().
+        // This speeds up the release of cached resources greatly when there
+        // are many entries in the map, also at application shutdown.
+        dcd.reset();
+    }
 
     m_drawCallData.clear();
 
