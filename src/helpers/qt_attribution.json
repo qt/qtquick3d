@@ -1,7 +1,7 @@
 [
     {
         "Id": "proceduralsky",
-        "Name": "ProceduralSky",
+        "Name": "Godot Engine: ProceduralSky",
         "QDocModule": "qtquick3d",
         "QtUsage": "Used in the Qt Quick 3D module.",
         "Files": "proceduralskytexturedata.cpp",
