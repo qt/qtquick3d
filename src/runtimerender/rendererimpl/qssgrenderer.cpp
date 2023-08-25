@@ -1047,7 +1047,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
                                                 const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                                 QSSGRenderCamera &inCamera,
                                                 QSSGRenderer &renderer,
-                                                int cubeFace)
+                                                QSSGRenderTextureCubeFace cubeFace)
 {
     using namespace RenderHelpers;
 
@@ -1109,13 +1109,15 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                             QSSGRenderCamera &inCamera,
                                             bool orthographic,
-                                            int cubeFace)
+                                            QSSGRenderTextureCubeFace cubeFace)
 {
     QSSGShaderFeatures featureSet;
     if (orthographic)
         featureSet.set(QSSGShaderFeatures::Feature::OrthoShadowPass, true);
     else
         featureSet.set(QSSGShaderFeatures::Feature::CubeShadowPass, true);
+
+    const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
 
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
@@ -1134,8 +1136,9 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             const bool hasSkinning = renderer->defaultMaterialShaderKeyProperties().m_boneCount.getValue(renderable.shaderDescription) > 0;
             modelViewProjection = hasSkinning ? pEntry->m_lightVP
                                               : pEntry->m_lightVP * renderable.globalTransform;
+            const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(renderable.subset.offset) << 3));
             dcd = &rhiCtx->drawCallData({ passKey, &renderable.modelContext.model,
-                                          pEntry, cubeFace + int(renderable.subset.offset << 3), QSSGRhiDrawCallDataKey::Shadow });
+                                          pEntry, entryIdx });
         }
 
         QSSGRhiShaderResourceBindingList bindings;
@@ -1214,7 +1217,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, pEntry->m_rhiRenderPassDesc, srb),
                                                                                   pEntry->m_rhiRenderPassDesc,
                                                                                   srb);
-            subsetRenderable.rhiRenderData.shadowPass.srb[cubeFace] = srb;
+            subsetRenderable.rhiRenderData.shadowPass.srb[cubeFaceIdx] = srb;
         }
     }
 }
@@ -1255,7 +1258,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                          int samples,
                                          QSSGRenderCamera *inCamera,
                                          QMatrix4x4 *alteredModelViewProjection,
-                                         int cubeFace,
+                                         QSSGRenderTextureCubeFace cubeFace,
                                          QSSGReflectionMapEntry *entry)
 {
     QSSGRenderCamera *camera = inData.camera;
@@ -1267,10 +1270,10 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
 
-        if (cubeFace < 0 && subsetRenderable.reflectionProbeIndex >= 0 && subsetRenderable.renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections))
+        if ((cubeFace == QSSGRenderTextureCubeFaceNone) && subsetRenderable.reflectionProbeIndex >= 0 && subsetRenderable.renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections))
             featureSet.set(QSSGShaderFeatures::Feature::ReflectionProbe, true);
 
-        if (cubeFace >= 0) {
+        if ((cubeFace != QSSGRenderTextureCubeFaceNone)) {
             // Disable tonemapping for the reflection pass
             featureSet.disableTonemapping();
         }
@@ -1291,11 +1294,19 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             const auto &modelNode = subsetRenderable.modelContext.model;
             const bool blendParticles = subsetRenderable.renderer->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
-            QSSGRhiDrawCallData &dcd(cubeFace >= 0 ? rhiCtx->drawCallData({ passKey, &modelNode,
-                                                                            entry, cubeFace + int(subsetRenderable.subset.offset << 3),
-                                                                            QSSGRhiDrawCallDataKey::Reflection })
-                                                   : rhiCtx->drawCallData({ passKey, &modelNode,
-                                                                            &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
+
+            // NOTE:
+            // - entryIdx should 0 for QSSGRenderTextureCubeFaceNone.
+            // In all other cases the entryIdx is a combination of the cubeface idx and the subset offset, where the lower bits
+            // are the cubeface idx.
+            const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+            const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(subsetRenderable.subset.offset) << 3));
+            // If there's an entry we merge that with the address of the material
+            const auto entryPartA = reinterpret_cast<quintptr>(&subsetRenderable.material);
+            const auto entryPartB = reinterpret_cast<quintptr>(entry);
+            const void *entryId = reinterpret_cast<const void *>(entryPartA ^ entryPartB);
+
+            QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ passKey, &modelNode, entryId, entryIdx });
 
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
@@ -1481,8 +1492,8 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 srbChanged = true;
             }
 
-            if (cubeFace >= 0)
-                subsetRenderable.rhiRenderData.reflectionPass.srb[cubeFace] = srb;
+            if (cubeFace != QSSGRenderTextureCubeFaceNone)
+                subsetRenderable.rhiRenderData.reflectionPass.srb[cubeFaceIdx] = srb;
             else
                 subsetRenderable.rhiRenderData.mainPass.srb = srb;
 
@@ -1493,12 +1504,12 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
                 && dcd.ps == *ps)
             {
-                if (cubeFace >= 0)
+                if (cubeFace != QSSGRenderTextureCubeFaceNone)
                     subsetRenderable.rhiRenderData.reflectionPass.pipeline = dcd.pipeline;
                 else
                     subsetRenderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
             } else {
-                if (cubeFace >= 0) {
+                if (cubeFace != QSSGRenderTextureCubeFaceNone) {
                     subsetRenderable.rhiRenderData.reflectionPass.pipeline = rhiCtx->pipeline(pipelineKey,
                                                                                               renderPassDescriptor,
                                                                                               srb);
@@ -1524,10 +1535,10 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         featureSet.set(QSSGShaderFeatures::Feature::LightProbe, inData.layer.lightProbe || material.m_iblProbe);
 
-        if (cubeFace < 0 && subsetRenderable.reflectionProbeIndex >= 0 && subsetRenderable.renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections))
+        if ((cubeFace == QSSGRenderTextureCubeFaceNone) && subsetRenderable.reflectionProbeIndex >= 0 && subsetRenderable.renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections))
             featureSet.set(QSSGShaderFeatures::Feature::ReflectionProbe, true);
 
-        if (cubeFace >= 0) {
+        if (cubeFace != QSSGRenderTextureCubeFaceNone) {
             // Disable tonemapping for the reflection pass
             featureSet.disableTonemapping();
         }
@@ -1557,7 +1568,7 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                         const QSSGRhiGraphicsPipelineState &state,
                                         QSSGRenderableObject &object,
                                         bool *needsSetViewport,
-                                        int cubeFace)
+                                        QSSGRenderTextureCubeFace cubeFace)
 {
     switch (object.type) {
     case QSSGRenderableObject::Type::DefaultMaterialMeshSubset:
@@ -1567,9 +1578,10 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         QRhiGraphicsPipeline *ps = subsetRenderable.rhiRenderData.mainPass.pipeline;
         QRhiShaderResourceBindings *srb = subsetRenderable.rhiRenderData.mainPass.srb;
 
-        if (cubeFace >= 0) {
+        if (cubeFace != QSSGRenderTextureCubeFaceNone) {
+            const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
             ps = subsetRenderable.rhiRenderData.reflectionPass.pipeline;
-            srb = subsetRenderable.rhiRenderData.reflectionPass.srb[cubeFace];
+            srb = subsetRenderable.rhiRenderData.reflectionPass.srb[cubeFaceIdx];
         }
 
         if (!ps || !srb)
@@ -1742,7 +1754,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         // construct a key that is unique for this frame (we use a dynamic buffer
         // so even if the same key gets used in the next frame, just updating the
         // contents on the same QRhiBuffer is ok due to QRhi's internal double buffering)
-        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ map, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ShadowBlur });
+        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ map, nullptr, nullptr, 0 });
         if (!dcd.ubuf) {
             dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 8);
             dcd.ubuf->create();
@@ -1834,7 +1846,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
             rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, globalRenderProperties, pEntry, &ps, &depthAdjust,
-                                            sortedOpaqueObjects, theCamera, true, 0);
+                                            sortedOpaqueObjects, theCamera, true, QSSGRenderTextureCubeFaceNone);
 
             // Render into the 2D texture pEntry->m_rhiDepthMap, using
             // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
@@ -1870,7 +1882,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 pEntry->m_lightCubeView[quint8(face)] = theCameras[quint8(face)].globalTransform.inverted(); // pre-calculate this for the material
 
                 rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, globalRenderProperties, pEntry, &ps, &depthAdjust,
-                                                sortedOpaqueObjects, theCameras[quint8(face)], false, quint8(face));
+                                                sortedOpaqueObjects, theCameras[quint8(face)], false, face);
             }
 
             for (const auto face : QSSGRenderTextureCubeFaces) {
@@ -1962,10 +1974,11 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
         setupCubeReflectionCameras(reflectionProbes[i], theCameras);
         const bool swapYFaces = !rhi->isYUpInFramebuffer();
         for (const auto face : QSSGRenderTextureCubeFaces) {
-            theCameras[quint8(face)].calculateViewProjectionMatrix(pEntry->m_viewProjection);
+            const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(face);
+            theCameras[cubeFaceIdx].calculateViewProjectionMatrix(pEntry->m_viewProjection);
 
             rhiPrepareResourcesForReflectionMap(rhiCtx, passKey, inData, pEntry, ps,
-                                                reflectionPassObjects, theCameras[quint8(face)], renderer, quint8(face));
+                                                reflectionPassObjects, theCameras[cubeFaceIdx], renderer, face);
         }
         QRhiRenderPassDescriptor *renderPassDesc = nullptr;
         for (auto face : QSSGRenderTextureCubeFaces) {
@@ -2002,7 +2015,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
 
             bool needsSetViewport = true;
             for (const auto &handle : reflectionPassObjects)
-                rhiRenderRenderable(rhiCtx, *ps, *handle.obj, &needsSetViewport, quint8(face));
+                rhiRenderRenderable(rhiCtx, *ps, *handle.obj, &needsSetViewport, face);
 
             cb->endPass();
             QSSGRHICTX_STAT(rhiCtx, endRenderPass());
@@ -2107,7 +2120,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     //        vec2 cameraProperties;
 
     const int UBUF_SIZE = 72;
-    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ passKey, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::AoTexture }));
+    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ passKey, nullptr, nullptr, 0 }));
     if (!dcd.ubuf) {
         dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
         dcd.ubuf->create();
@@ -2197,7 +2210,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
     int uniformBinding = 0;
     const int ubufSize = 64 * 2 * sizeof(float) + 4 * sizeof(float) + 4 * sizeof(quint32); // 2x mat4 + 4x float + 1x bool
 
-    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ passKey, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::Main })); // Change to Grid?
+    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ passKey, nullptr, nullptr, 0 })); // Change to Grid?
 
     QRhi *rhi = rhiCtx->rhi();
     if (!dcd.ubuf) {
@@ -2242,7 +2255,7 @@ void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                              QSSGRenderCamera &inCamera,
                              QSSGRenderer &renderer,
                              QSSGReflectionMapEntry *entry = nullptr,
-                             int cubeFace = -1)
+                             QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone)
 {
     const bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
     const QSSGRenderImageTexture lightProbeTexture =
@@ -2250,7 +2263,7 @@ void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                         : renderer.contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
     const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
     if (hasValidTexture) {
-        if (cubeFace < 0)
+        if (cubeFace == QSSGRenderTextureCubeFaceNone)
             layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
 
         QSSGRhiShaderResourceBindingList bindings;
@@ -2267,8 +2280,9 @@ void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                             QRhiShaderResourceBinding::FragmentStage,
                             lightProbeTexture.m_texture, sampler);
 
-        QSSGRhiDrawCallData &dcd(cubeFace >= 0 ? rhiCtx->drawCallData({ passKey, nullptr, entry, cubeFace, QSSGRhiDrawCallDataKey::Reflection })
-                                               : rhiCtx->drawCallData({ passKey, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
+        const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+        const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * cubeFaceIdx;
+        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ passKey, nullptr, entry, entryIdx });
 
         QRhi *rhi = rhiCtx->rhi();
         if (!dcd.ubuf) {
@@ -2307,10 +2321,12 @@ void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
 
         bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
 
-        if (cubeFace >= 0)
-            entry->m_skyBoxSrbs[cubeFace] = rhiCtx->srb(bindings);
-        else
+        if (cubeFace != QSSGRenderTextureCubeFaceNone) {
+            const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+            entry->m_skyBoxSrbs[cubeFaceIdx] = rhiCtx->srb(bindings);
+        } else {
             layer.skyBoxSrb = rhiCtx->srb(bindings);
+        }
 
         if (cubeMapMode)
             renderer.rhiCubeRenderer()->prepareCube(rhiCtx, nullptr);
@@ -2340,7 +2356,7 @@ void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
                                                      QSSGRenderCamera &inCamera,
                                                      QSSGRenderer &renderer,
                                                      QSSGReflectionMapEntry *entry,
-                                                     int cubeFace)
+                                                     QSSGRenderTextureCubeFace cubeFace)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox for reflection cube map"));
@@ -2357,7 +2373,6 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                         QSSGLayerRenderData &inData,
                                         const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                         const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
-                                        QSSGRhiDrawCallDataKey::Selector ubufSel,
                                         int samples)
 {
     static const auto rhiPrepareDepthPassForObject = [](QSSGRhiContext *rhiCtx,
@@ -2365,8 +2380,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                                         QSSGLayerRenderData &inData,
                                                         QSSGRenderableObject *obj,
                                                         QRhiRenderPassDescriptor *rpDesc,
-                                                        QSSGRhiGraphicsPipelineState *ps,
-                                                        QSSGRhiDrawCallDataKey::Selector ubufSel) {
+                                                        QSSGRhiGraphicsPipelineState *ps) {
         QSSGRhiShaderPipelinePtr shaderPipeline;
 
         const bool isOpaqueDepthPrePass = obj->depthWriteMode == QSSGDepthDrawMode::OpaquePrePass;
@@ -2379,7 +2393,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
             const void *modelNode = &subsetRenderable.modelContext.model;
-            dcd = &rhiCtx->drawCallData({ passKey, modelNode, &subsetRenderable.material, 0, ubufSel });
+            dcd = &rhiCtx->drawCallData({ passKey, modelNode, &subsetRenderable.material, 0 });
         }
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
@@ -2466,12 +2480,12 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     ps.targetBlend.colorWrite = {};
 
     for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects) {
-        if (!rhiPrepareDepthPassForObject(rhiCtx, passKey, inData, handle.obj, rpDesc, &ps, ubufSel))
+        if (!rhiPrepareDepthPassForObject(rhiCtx, passKey, inData, handle.obj, rpDesc, &ps))
             return false;
     }
 
     for (const QSSGRenderableObjectHandle &handle : sortedTransparentObjects) {
-        if (!rhiPrepareDepthPassForObject(rhiCtx, passKey, inData, handle.obj, rpDesc, &ps, ubufSel))
+        if (!rhiPrepareDepthPassForObject(rhiCtx, passKey, inData, handle.obj, rpDesc, &ps))
             return false;
     }
 

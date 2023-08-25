@@ -651,39 +651,23 @@ inline void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShader
 
 // The lookup keys can be somewhat complicated due to having to handle cases
 // like "render a model in a shared scene between multiple View3Ds" (here both
-// the View3D ('layer') and the model ('model') act as the lookup key since
+// the View3D ('layer/cid') and the model ('model') act as the lookup key since
 // while the model is the same, we still want different uniform buffers per
 // View3D), or the case of shadow maps where the shadow map (there can be as
-// many as lights) is taken into account too ('entry').
+// many as lights) is taken into account too ('entry') together with an entry index
+// where more resolution is needed (e.g., cube maps).
 //
 struct QSSGRhiDrawCallDataKey
 {
-    enum Selector {
-        Main,
-        Shadow,
-        ShadowBlur,
-        ZPrePass,
-        DepthTexture,
-        AoTexture,
-        ComputeMipmap,
-        SkyBox,
-        ProgressiveAA,
-        Effects,
-        Item2D,
-        Reflection,
-        Lightmap,
-        DebugObjects
-    };
-    const void *layer;
-    const void *model;
-    const void *entry;
-    int index;
-    Selector selector;
+    const void *cid = nullptr; // Usually the sub-pass (see usage of QSSGPassKey)
+    const void *model = nullptr;
+    const void *entry = nullptr;
+    quintptr entryIdx = 0;
 };
 
 inline bool operator==(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) Q_DECL_NOTHROW
 {
-    return a.selector == b.selector && a.layer == b.layer && a.model == b.model && a.entry == b.entry && a.index == b.index;
+    return a.cid == b.cid && a.model == b.model && a.entry == b.entry && a.entryIdx == b.entryIdx;
 }
 
 inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) Q_DECL_NOTHROW
@@ -693,11 +677,10 @@ inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDat
 
 inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) Q_DECL_NOTHROW
 {
-    return qHash(quintptr(k.layer)
+    return qHash(quintptr(k.cid)
                  ^ quintptr(k.model)
                  ^ quintptr(k.entry)
-                 ^ quintptr(k.selector)
-                 ^ quintptr(k.index), seed);
+                 ^ quintptr(k.entryIdx), seed);
 }
 
 struct QSSGRhiDrawCallData

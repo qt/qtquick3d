@@ -51,12 +51,12 @@ public:
                                      QRhiRenderPassDescriptor *renderPassDescriptor,
                                      int samples,
                                      QSSGRenderCamera *camera = nullptr,
-                                     int cubeFace = -1,
+                                     QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
                                      QSSGReflectionMapEntry *entry = nullptr);
     static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                     QSSGParticlesRenderable &renderable,
                                     bool *needsSetViewport,
-                                    int cubeFace,
+                                    QSSGRenderTextureCubeFace cubeFace,
                                     const QSSGRhiGraphicsPipelineState &state);
     static void prepareParticlesForModel(QSSGRhiShaderPipeline &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
