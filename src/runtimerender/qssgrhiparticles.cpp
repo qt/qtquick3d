@@ -330,16 +330,14 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
                                                 QRhiRenderPassDescriptor *renderPassDescriptor,
                                                 int samples,
                                                 QSSGRenderCamera *camera,
-                                                int cubeFace,
+                                                QSSGRenderTextureCubeFace cubeFace,
                                                 QSSGReflectionMapEntry *entry)
 {
     const void *node = &renderable.particles;
     const bool needsConversion = !rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
 
-    QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ passKey, node,
-                                                    nullptr, 0, QSSGRhiDrawCallDataKey::Main })
-                                          : rhiCtx->drawCallData({ passKey, node,
-                                                                   entry, cubeFace, QSSGRhiDrawCallDataKey::Reflection }));
+    const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+    QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ passKey, node, entry, cubeFaceIdx });
     shaderPipeline.ensureUniformBuffer(&dcd.ubuf);
 
     char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
@@ -494,10 +492,10 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
         srbChanged = true;
     }
 
-    if (cubeFace < 0)
+    if (cubeFace == QSSGRenderTextureCubeFaceNone)
         renderable.rhiRenderData.mainPass.srb = srb;
     else
-        renderable.rhiRenderData.reflectionPass.srb[cubeFace] = srb;
+        renderable.rhiRenderData.reflectionPass.srb[cubeFaceIdx] = srb;
 
     const QSSGGraphicsPipelineStateKey pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
     if (dcd.pipeline
@@ -506,12 +504,12 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
             && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
             && dcd.ps == *ps)
     {
-        if (cubeFace < 0)
+        if (cubeFace == QSSGRenderTextureCubeFaceNone)
             renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
         else
             renderable.rhiRenderData.reflectionPass.pipeline = dcd.pipeline;
     } else {
-        if (cubeFace < 0) {
+        if (cubeFace == QSSGRenderTextureCubeFaceNone) {
             renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
                                                                           renderPassDescriptor,
                                                                           srb);
@@ -579,15 +577,16 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRhiShaderPipeline &shade
 void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                QSSGParticlesRenderable &renderable,
                                                bool *needsSetViewport,
-                                               int cubeFace,
+                                               QSSGRenderTextureCubeFace cubeFace,
                                                const QSSGRhiGraphicsPipelineState &state)
 {
     QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
     QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
 
-    if (cubeFace >= 0) {
+    if (cubeFace != QSSGRenderTextureCubeFaceNone) {
+        const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
         ps = renderable.rhiRenderData.reflectionPass.pipeline;
-        srb = renderable.rhiRenderData.reflectionPass.srb[cubeFace];
+        srb = renderable.rhiRenderData.reflectionPass.srb[cubeFaceIdx];
     }
 
     if (!ps || !srb)

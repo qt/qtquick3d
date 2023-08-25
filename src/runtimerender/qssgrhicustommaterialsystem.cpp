@@ -180,7 +180,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                     QRhiRenderPassDescriptor *renderPassDescriptor,
                                                     int samples,
                                                     QSSGRenderCamera *camera,
-                                                    int cubeFace,
+                                                    QSSGRenderTextureCubeFace cubeFace,
                                                     QMatrix4x4 *modelViewProjection,
                                                     QSSGReflectionMapEntry *entry)
 {
@@ -205,15 +205,18 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QSSGRhiShaderResourceBindingList bindings;
         const auto &modelNode = renderable.modelContext.model;
 
-        QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ passKey,
-                                                        &modelNode,
-                                                        &material,
-                                                        0,
-                                                        QSSGRhiDrawCallDataKey::Main })
-                                              : rhiCtx->drawCallData({ passKey,
-                                                                       &modelNode,
-                                                                       entry, cubeFace + int(renderable.subset.offset << 3),
-                                                                       QSSGRhiDrawCallDataKey::Reflection }));
+        // NOTE:
+        // - entryIdx should 0 for QSSGRenderTextureCubeFaceNone.
+        // In all other cases the entryIdx is a combination of the cubeface idx and the subset offset, where the lower bits
+        // are the cubeface idx.
+        const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+        const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(renderable.subset.offset) << 3));
+        // As the entry might be null we create an entry key consisting of the entry and the material.
+        const auto entryPartA = reinterpret_cast<quintptr>(&material);
+        const auto entryPartB = reinterpret_cast<quintptr>(entry);
+        const void *entryKey = reinterpret_cast<const void *>(entryPartA ^ entryPartB);
+
+        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ passKey, &modelNode, entryKey, entryIdx });
 
         shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
@@ -493,10 +496,10 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             srbChanged = true;
         }
 
-        if (cubeFace < 0)
+        if (cubeFace == QSSGRenderTextureCubeFaceNone)
             renderable.rhiRenderData.mainPass.srb = srb;
         else
-            renderable.rhiRenderData.reflectionPass.srb[cubeFace] = srb;
+            renderable.rhiRenderData.reflectionPass.srb[cubeFaceIdx] = srb;
 
         const QSSGGraphicsPipelineStateKey pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
         if (dcd.pipeline
@@ -505,12 +508,12 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
                 && dcd.ps == *ps)
         {
-            if (cubeFace < 0)
+            if (cubeFace == QSSGRenderTextureCubeFaceNone)
                 renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
             else
                 renderable.rhiRenderData.reflectionPass.pipeline = dcd.pipeline;
         } else {
-            if (cubeFace < 0) {
+            if (cubeFace == QSSGRenderTextureCubeFaceNone) {
                 renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
                                                                               renderPassDescriptor,
                                                                               srb);
@@ -581,15 +584,16 @@ void QSSGCustomMaterialSystem::applyRhiShaderPropertyValues(char *ubufData,
 void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                    QSSGSubsetRenderable &renderable,
                                                    bool *needsSetViewport,
-                                                   int cubeFace,
+                                                   QSSGRenderTextureCubeFace cubeFace,
                                                    const QSSGRhiGraphicsPipelineState &state)
 {
     QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
     QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
 
-    if (cubeFace >= 0) {
+    if (cubeFace != QSSGRenderTextureCubeFaceNone) {
+        const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
         ps = renderable.rhiRenderData.reflectionPass.pipeline;
-        srb = renderable.rhiRenderData.reflectionPass.srb[cubeFace];
+        srb = renderable.rhiRenderData.reflectionPass.srb[cubeFaceIdx];
     }
 
     if (!ps || !srb)

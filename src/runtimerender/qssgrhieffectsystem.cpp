@@ -495,7 +495,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     if (m_currentShaderPipeline) {
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
         const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-        QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+        QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
         m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     } else {
@@ -545,7 +545,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     const void *cacheKey1 = reinterpret_cast<const void *>(this);
     const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-    QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+    QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
     m_currentUBufData = nullptr;
 

@@ -243,7 +243,6 @@ bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                          QSSGLayerRenderData &inData,
                          const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                          const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
-                         QSSGRhiDrawCallDataKey::Selector ubufSel,
                          int samples);
 
 void rhiRenderDepthPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineState &ps,
@@ -273,7 +272,7 @@ void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKe
                                       QSSGRenderCamera &inCamera,
                                       QSSGRenderer &renderer,
                                       QSSGReflectionMapEntry *entry,
-                                      int cubeFace);
+                                      QSSGRenderTextureCubeFace cubeFace);
 
 Q_QUICK3DRUNTIMERENDER_EXPORT void rhiPrepareRenderable(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                                                        const QSSGLayerRenderData &inData,
@@ -284,14 +283,14 @@ Q_QUICK3DRUNTIMERENDER_EXPORT void rhiPrepareRenderable(QSSGRhiContext *rhiCtx, 
                                                        int samples,
                                                        QSSGRenderCamera *inCamera = nullptr,
                                                        QMatrix4x4 *alteredModelViewProjection = nullptr,
-                                                       int cubeFace = -1,
+                                                       QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
                                                        QSSGReflectionMapEntry *entry = nullptr);
 
 Q_QUICK3DRUNTIMERENDER_EXPORT void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                        const QSSGRhiGraphicsPipelineState &state,
                                                        QSSGRenderableObject &object,
                                                        bool *needsSetViewport,
-                                                       int cubeFace = -1);
+                                                       QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone);
 
 bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
 

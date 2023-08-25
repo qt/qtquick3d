@@ -560,12 +560,17 @@ enum class QSSGRenderTextureCubeFace : quint8
     NegZ
 };
 
+using QSSGRenderTextureCubeFaceT = std::underlying_type_t<QSSGRenderTextureCubeFace>;
+
 // Same order as expected by QRHI!
 static constexpr QSSGRenderTextureCubeFace QSSGRenderTextureCubeFaces[] {
     QSSGRenderTextureCubeFace::PosX, QSSGRenderTextureCubeFace::NegX,
     QSSGRenderTextureCubeFace::PosY, QSSGRenderTextureCubeFace::NegY,
     QSSGRenderTextureCubeFace::PosZ, QSSGRenderTextureCubeFace::NegZ
 };
+
+constexpr QSSGRenderTextureCubeFaceT QSSGRenderTextureCubeFaceMask { 0xf };
+constexpr QSSGRenderTextureCubeFace QSSGRenderTextureCubeFaceNone { QSSGRenderTextureCubeFaceT(1 << 4) };
 
 class Q_QUICK3DUTILS_PRIVATE_EXPORT QSSGBaseTypeHelpers
 {
@@ -591,6 +596,8 @@ public:
     { return (face == QSSGRenderTextureCubeFaces[5]) ? QSSGRenderTextureCubeFaces[0] : QSSGRenderTextureCubeFace(quint8(face) + 1); }
     static constexpr QSSGRenderTextureCubeFace prev(QSSGRenderTextureCubeFace face)
     { return (face == QSSGRenderTextureCubeFaces[0]) ? QSSGRenderTextureCubeFaces[5] : QSSGRenderTextureCubeFace(quint8(face) - 1); }
+
+    static constexpr QSSGRenderTextureCubeFaceT indexOfCubeFace(QSSGRenderTextureCubeFace face) noexcept { return QSSGRenderTextureCubeFaceT(face) & 0xf; }
 };
 
 QT_END_NAMESPACE

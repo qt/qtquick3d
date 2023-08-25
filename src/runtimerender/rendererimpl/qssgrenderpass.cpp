@@ -232,7 +232,6 @@ void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     active = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
                                          renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects,
-                                         QSSGRhiDrawCallDataKey::ZPrePass,
                                          rhiCtx->mainPassSampleCount());
     data.setZPrePassPrepResult(active);
     cb->debugMarkEnd();
@@ -359,7 +358,6 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
         ready = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiDepthTexture->rpDesc, data,
                                     sortedOpaqueObjects, sortedTransparentObjects,
-                                    QSSGRhiDrawCallDataKey::DepthTexture,
                                     1);
     }
 
@@ -949,7 +947,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     if (debugDraw && debugDraw->hasContent()) {
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         debugDraw->prepareGeometry(rhiCtx.get(), rub);
-        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ this, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::DebugObjects });
+        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ this, nullptr, nullptr, 0 });
         if (!dcd.ubuf) {
             dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64);
             dcd.ubuf->create();
@@ -983,7 +981,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
         auto shaderPipeline = renderer.getRhiDebugObjectShader();
         QSSG_CHECK(shaderPipeline);
         ps.shaderPipeline = shaderPipeline.get();
-        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ this, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::DebugObjects });
+        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ this, nullptr, nullptr, 0 });
         QRhiShaderResourceBindings *srb = dcd.srb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         debugDraw->recordRenderDebugObjects(rhiCtx.get(), &ps, srb, rpDesc);

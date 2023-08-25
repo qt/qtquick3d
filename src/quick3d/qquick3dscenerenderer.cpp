@@ -383,7 +383,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     const auto &shaderPipeline = renderer->getRhiProgressiveAAShader();
                     QRhiResourceUpdateBatch *rub = nullptr;
 
-                    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ m_layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ProgressiveAA }));
+                    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ m_layer, nullptr, nullptr, 0 }));
                     QRhiBuffer *&ubuf = dcd.ubuf;
                     const int ubufSize = 2 * sizeof(float);
                     if (!ubuf) {

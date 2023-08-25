@@ -86,7 +86,8 @@ public:
                                          const QVector2D *depthAdjust,
                                          const QMatrix4x4 *alteredModelViewProjection);
 
-    void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps, QSSGPassKey passKey,
+    void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
+                              QSSGPassKey passKey,
                               QSSGSubsetRenderable &renderable,
                               const QSSGShaderFeatures &featureSet,
                               const QSSGRenderCustomMaterial &material,
@@ -94,7 +95,7 @@ public:
                               QRhiRenderPassDescriptor *renderPassDescriptor,
                               int samples,
                               QSSGRenderCamera *camera = nullptr,
-                              int cubeFace = -1,
+                              QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
                               QMatrix4x4 *modelViewProjection = nullptr,
                               QSSGReflectionMapEntry *entry = nullptr);
     void applyRhiShaderPropertyValues(char *ubufData,
@@ -103,7 +104,7 @@ public:
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                              QSSGSubsetRenderable &renderable,
                              bool *needsSetViewport,
-                             int cubeFace,
+                             QSSGRenderTextureCubeFace cubeFace,
                              const QSSGRhiGraphicsPipelineState &state);
 };
 
