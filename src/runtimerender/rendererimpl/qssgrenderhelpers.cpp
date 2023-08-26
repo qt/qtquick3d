@@ -70,7 +70,7 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                                           ps,
                                                           subsetRenderable.material,
                                                           subsetRenderable.shaderDescription,
-                                                          renderer->defaultMaterialShaderKeyProperties(),
+                                                          inData.getDefaultMaterialPropertyTable(),
                                                           camera,
                                                           mvp,
                                                           subsetRenderable.modelContext.normalMatrix,
@@ -467,6 +467,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
         rhiPrepareSkyBoxForReflectionMap(rhiCtx, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
 
     QSSGShaderFeatures features = inData.getShaderFeatures();
+    const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject &inObject = *handle.obj;
@@ -474,7 +475,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
         QMatrix4x4 modelViewProjection;
         if (inObject.type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || inObject.type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &renderable(static_cast<QSSGSubsetRenderable &>(inObject));
-            const bool hasSkinning = renderer.defaultMaterialShaderKeyProperties().m_boneCount.getValue(renderable.shaderDescription) > 0;
+            const bool hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(renderable.shaderDescription) > 0;
             modelViewProjection = hasSkinning ? pEntry->m_viewProjection
                                               : pEntry->m_viewProjection * renderable.globalTransform;
         }
@@ -529,6 +530,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         featureSet.set(QSSGShaderFeatures::Feature::CubeShadowPass, true);
 
     const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+    const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
@@ -542,9 +544,8 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         QSSGRhiDrawCallData *dcd = nullptr;
         QMatrix4x4 modelViewProjection;
         QSSGSubsetRenderable &renderable(static_cast<QSSGSubsetRenderable &>(*theObject));
-        const auto &renderer(renderable.renderer);
         if (theObject->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || theObject->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
-            const bool hasSkinning = renderer->defaultMaterialShaderKeyProperties().m_boneCount.getValue(renderable.shaderDescription) > 0;
+            const bool hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(renderable.shaderDescription) > 0;
             modelViewProjection = hasSkinning ? pEntry->m_lightVP
                                               : pEntry->m_lightVP * renderable.globalTransform;
             const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(renderable.subset.offset) << 3));
@@ -558,7 +559,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         if (theObject->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset) {
             const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.cullMode);
-            const bool blendParticles = subsetRenderable.renderer->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
+            const bool blendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
             shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, objectFeatureSet);
             if (!shaderPipeline)
@@ -576,7 +577,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(material.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
-            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, material, subsetRenderable, objectFeatureSet);
+            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, material, subsetRenderable, inData.getDefaultMaterialPropertyTable(), objectFeatureSet);
             if (!shaderPipeline)
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
@@ -676,6 +677,8 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     if (inCamera)
         camera = inCamera;
 
+    const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
+
     switch (inObject.type) {
     case QSSGRenderableObject::Type::DefaultMaterialMeshSubset:
     {
@@ -703,7 +706,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // the previous frame.
             QSSGRhiShaderResourceBindingList bindings;
             const auto &modelNode = subsetRenderable.modelContext.model;
-            const bool blendParticles = subsetRenderable.renderer->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
+            const bool blendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
 
             // NOTE:
@@ -1827,7 +1830,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(customMaterial.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
-            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, customMaterial, subsetRenderable, featureSet);
+            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, customMaterial, subsetRenderable, inData.getDefaultMaterialPropertyTable(), featureSet);
 
             if (shaderPipeline) {
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);

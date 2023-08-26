@@ -198,8 +198,7 @@ public:
                                quint32 inImageIndex, QSSGRenderDefaultMaterial *inMaterial = nullptr);
 
     void setVertexInputPresence(const QSSGRenderableObjectFlags &renderableFlags,
-                                QSSGShaderDefaultMaterialKey &key,
-                                QSSGRenderer *renderer);
+                                QSSGShaderDefaultMaterialKey &key);
 
     // Load meshes as needed
     static void prepareModelMeshes(const QSSGRenderContextInterface &contextInterface,
@@ -333,6 +332,11 @@ public:
     [[nodiscard]] bool isZPrePassActive() const { return zPrePassActive; }
     void setZPrePassPrepResult(bool res) { zPrePassActive = res; }
 
+    // Exposed as const, as we often need to use this to look-up values from a specific key.
+    [[nodiscard]] const QSSGShaderDefaultMaterialKeyProperties &getDefaultMaterialPropertyTable() const
+    {
+        return defaultMaterialShaderKeyProperties;
+    }
 
     // Temp. API. Ideally there shouldn't be a reason for anyone to hold onto these,
     // but we follow the existing pattern for now.
@@ -379,6 +383,9 @@ private:
                                                     RenderableNodeEntries &renderableModels,
                                                     bool globalPickingEnabled);
 
+    // Note: Re-used to avoid expensive initialization.
+    // - Should be revisit, as we can do better.
+    QSSGShaderDefaultMaterialKeyProperties defaultMaterialShaderKeyProperties;
     QSSGFrameData frameData;
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set

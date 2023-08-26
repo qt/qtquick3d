@@ -39,11 +39,6 @@ public:
     QSSGRenderer();
     ~QSSGRenderer();
 
-    QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
-    {
-        return m_defaultMaterialShaderKeyProperties;
-    }
-
     void setRenderContextInterface(QSSGRenderContextInterface *ctx);
 
     // Returns true if this layer or a sibling was dirty.
@@ -85,7 +80,7 @@ public:
     static QSSGRhiShaderPipelinePtr generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, QSSGShaderLibraryManager &shaderLibraryManager,
                                                                   QSSGShaderCache &shaderCache,
                                                                   QSSGProgramGenerator &shaderProgramGenerator,
-                                                                  QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                  const QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
                                                                   const QSSGShaderFeatures &featureSet,
                                                                   QByteArray &shaderString);
 
@@ -186,8 +181,6 @@ private:
     QSSGLayerRenderData *m_currentLayer = nullptr;
     QMatrix4x4 m_viewProjection;
     QByteArray m_generatedShaderString;
-
-    QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
 
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
 

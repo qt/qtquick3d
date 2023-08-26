@@ -201,7 +201,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         const auto &features = layerData.getShaderFeatures();
 
-        auto &materialPropertis = layerData.renderer->defaultMaterialShaderKeyProperties();
+        const auto &propertyTable = layerData.getDefaultMaterialPropertyTable();
 
         QSSGRenderableObject *renderable = nullptr;
         if (!layerData.opaqueObjects.isEmpty())
@@ -211,7 +211,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         auto generateShader = [&](const QSSGShaderFeatures &features) {
             if ((renderable->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset)) {
-                auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), *shaderLibraryManager, *shaderCache, *shaderProgramGenerator, materialPropertis, features, shaderString);
+                auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), *shaderLibraryManager, *shaderCache, *shaderProgramGenerator, propertyTable, features, shaderString);
                 if (shaderPipeline != nullptr) {
                     const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
                     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);
@@ -233,6 +233,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                 auto shaderPipeline = cms->shadersForCustomMaterial(&pipelineState,
                                                                     material,
                                                                     cmr,
+                                                                    propertyTable,
                                                                     features);
 
                 if (shaderPipeline) {

@@ -53,6 +53,7 @@ void QSSGCustomMaterialSystem::releaseCachedResources()
 QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                                             const QSSGRenderCustomMaterial &material,
                                                                             QSSGSubsetRenderable &renderable,
+                                                                            const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties,
                                                                             const QSSGShaderFeatures &featureSet)
 {
     QElapsedTimer timer;
@@ -73,7 +74,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
         // NB this key calculation must replicate exactly what the generator does in generateMaterialRhiShader()
         QByteArray shaderString = material.m_shaderPathKey;
         QSSGShaderDefaultMaterialKey matKey(renderable.shaderDescription);
-        matKey.toString(shaderString, context->renderer()->defaultMaterialShaderKeyProperties());
+        matKey.toString(shaderString, defaultMaterialShaderKeyProperties);
 
         // Try the persistent (disk-based) cache.
         const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(featureSet));
@@ -84,13 +85,13 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
             Q_TRACE_SCOPE(QSSG_generateShader);
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
             QSSGMaterialVertexPipeline vertexPipeline(*context->shaderProgramGenerator(),
-                                                      context->renderer()->defaultMaterialShaderKeyProperties(),
+                                                      defaultMaterialShaderKeyProperties,
                                                       material.adapter);
 
             shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
                                                                                     vertexPipeline,
                                                                                     renderable.shaderDescription,
-                                                                                    context->renderer()->defaultMaterialShaderKeyProperties(),
+                                                                                    defaultMaterialShaderKeyProperties,
                                                                                     featureSet,
                                                                                     renderable.material,
                                                                                     renderable.lights,
@@ -139,6 +140,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
 
+    const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
     const QMatrix4x4 &modelMatrix(modelNode.usesBoneTexture() ? QMatrix4x4() : renderable.globalTransform);
 
@@ -148,7 +150,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
                                                           ps,
                                                           material,
                                                           renderable.shaderDescription,
-                                                          context->renderer()->defaultMaterialShaderKeyProperties(),
+                                                          defaultMaterialShaderKeyProperties,
                                                           camera,
                                                           mvp,
                                                           renderable.modelContext.normalMatrix,
@@ -197,9 +199,11 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
     const QSSGCullFaceMode cullMode = material.m_cullMode;
 
-    const bool blendParticles = renderable.renderer->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(renderable.shaderDescription);
+    const auto &defaultMaterialShaderKeyProperties = layerData.getDefaultMaterialPropertyTable();
 
-    const auto &shaderPipeline = shadersForCustomMaterial(ps, material, renderable, featureSet);
+    const bool blendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(renderable.shaderDescription);
+
+    const auto &shaderPipeline = shadersForCustomMaterial(ps, material, renderable, defaultMaterialShaderKeyProperties, featureSet);
 
     if (shaderPipeline) {
         QSSGRhiShaderResourceBindingList bindings;

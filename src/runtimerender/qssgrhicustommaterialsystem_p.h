@@ -73,6 +73,7 @@ public:
     QSSGRhiShaderPipelinePtr shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                       const QSSGRenderCustomMaterial &material,
                                                       QSSGSubsetRenderable &renderable,
+                                                      const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties,
                                                       const QSSGShaderFeatures &featureSet);
 
     void updateUniformsForCustomMaterial(QSSGRhiShaderPipeline &shaderPipeline,

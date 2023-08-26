@@ -174,7 +174,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetR
                                                                      QSSGShaderLibraryManager &shaderLibraryManager,
                                                                      QSSGShaderCache &shaderCache,
                                                                      QSSGProgramGenerator &shaderProgramGenerator,
-                                                                     QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                     const QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
                                                                      const QSSGShaderFeatures &featureSet,
                                                                      QByteArray &shaderString)
 {
@@ -232,7 +232,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRende
     const auto &theCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
     const auto &shaderLibraryManager = contextInterface()->shaderLibraryManager();
-    return generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
+    return generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, m_currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
 }
 
 void QSSGRenderer::beginFrame(QSSGRenderLayer *layer)

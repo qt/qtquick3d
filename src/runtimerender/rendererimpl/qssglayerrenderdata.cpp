@@ -467,13 +467,13 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
 {
     QSSGShaderDefaultMaterialKey theGeneratedKey(qHash(features));
     const bool lighting = inLightingType != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
-    renderer->defaultMaterialShaderKeyProperties().m_hasLighting.setValue(theGeneratedKey, lighting);
+    defaultMaterialShaderKeyProperties.m_hasLighting.setValue(theGeneratedKey, lighting);
     if (lighting) {
-        renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
+        defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
 
         quint32 numLights = quint32(lights.size());
         Q_ASSERT(numLights <= QSSGShaderDefaultMaterialKeyProperties::LightCount);
-        renderer->defaultMaterialShaderKeyProperties().m_lightCount.setValue(theGeneratedKey, numLights);
+        defaultMaterialShaderKeyProperties.m_lightCount.setValue(theGeneratedKey, numLights);
 
         int shadowMapCount = 0;
         for (int lightIdx = 0, lightEnd = lights.size(); lightIdx < lightEnd; ++lightIdx) {
@@ -487,9 +487,9 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
             if (castsShadows)
                 ++shadowMapCount;
 
-            renderer->defaultMaterialShaderKeyProperties().m_lightFlags[lightIdx].setValue(theGeneratedKey, !isDirectional);
-            renderer->defaultMaterialShaderKeyProperties().m_lightSpotFlags[lightIdx].setValue(theGeneratedKey, isSpot);
-            renderer->defaultMaterialShaderKeyProperties().m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castsShadows);
+            defaultMaterialShaderKeyProperties.m_lightFlags[lightIdx].setValue(theGeneratedKey, !isDirectional);
+            defaultMaterialShaderKeyProperties.m_lightSpotFlags[lightIdx].setValue(theGeneratedKey, isSpot);
+            defaultMaterialShaderKeyProperties.m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castsShadows);
         }
     }
     return theGeneratedKey;
@@ -531,7 +531,7 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
         }
 
         QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, inMapType, inImage, texture);
-        QSSGShaderKeyImageMap &theKeyProp = renderer->defaultMaterialShaderKeyProperties().m_imageMaps[inImageIndex];
+        QSSGShaderKeyImageMap &theKeyProp = defaultMaterialShaderKeyProperties.m_imageMaps[inImageIndex];
 
         theKeyProp.setEnabled(inShaderKey, true);
         switch (inImage.m_mappingMode) {
@@ -585,7 +585,7 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
             QSSGRenderDefaultMaterial::TextureChannelMapping value = QSSGRenderDefaultMaterial::R;
 
             const quint32 scIndex = inImageIndex - QSSGShaderDefaultMaterialKeyProperties::SingleChannelImagesFirst;
-            QSSGShaderKeyTextureChannel &channelKey = renderer->defaultMaterialShaderKeyProperties().m_textureChannels[scIndex];
+            QSSGShaderKeyTextureChannel &channelKey = defaultMaterialShaderKeyProperties.m_textureChannels[scIndex];
             switch (inImageIndex) {
             case QSSGShaderDefaultMaterialKeyProperties::OpacityMap:
                 value = inMaterial->opacityChannel;
@@ -642,8 +642,7 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
 }
 
 void QSSGLayerRenderData::setVertexInputPresence(const QSSGRenderableObjectFlags &renderableFlags,
-                                                            QSSGShaderDefaultMaterialKey &key,
-                                                            QSSGRenderer *renderer)
+                                                 QSSGShaderDefaultMaterialKey &key)
 {
     quint32 vertexAttribs = 0;
     if (renderableFlags.hasAttributePosition())
@@ -664,7 +663,7 @@ void QSSGLayerRenderData::setVertexInputPresence(const QSSGRenderableObjectFlags
         vertexAttribs |= QSSGShaderKeyVertexAttribute::Color;
     if (renderableFlags.hasAttributeJointAndWeight())
         vertexAttribs |= QSSGShaderKeyVertexAttribute::JointAndWeight;
-    renderer->defaultMaterialShaderKeyProperties().m_vertexAttributes.setValue(key, vertexAttribs);
+    defaultMaterialShaderKeyProperties.m_vertexAttributes.setValue(key, vertexAttribs);
 }
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterialForRender(
@@ -689,43 +688,43 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
     QSSGRenderableImage *firstImage = nullptr;
 
-    renderer->defaultMaterialShaderKeyProperties().m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
+    defaultMaterialShaderKeyProperties.m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
 
     // isDoubleSided
-    renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey, theMaterial->cullMode == QSSGCullFaceMode::Disabled);
+    defaultMaterialShaderKeyProperties.m_isDoubleSided.setValue(theGeneratedKey, theMaterial->cullMode == QSSGCullFaceMode::Disabled);
 
     // default materials never define their on position
-    renderer->defaultMaterialShaderKeyProperties().m_overridesPosition.setValue(theGeneratedKey, false);
+    defaultMaterialShaderKeyProperties.m_overridesPosition.setValue(theGeneratedKey, false);
 
     // default materials dont make use of raw projection or inverse projection matrices
-    renderer->defaultMaterialShaderKeyProperties().m_usesProjectionMatrix.setValue(theGeneratedKey, false);
-    renderer->defaultMaterialShaderKeyProperties().m_usesInverseProjectionMatrix.setValue(theGeneratedKey, false);
+    defaultMaterialShaderKeyProperties.m_usesProjectionMatrix.setValue(theGeneratedKey, false);
+    defaultMaterialShaderKeyProperties.m_usesInverseProjectionMatrix.setValue(theGeneratedKey, false);
     // nor they do rely on VAR_COLOR
-    renderer->defaultMaterialShaderKeyProperties().m_usesVarColor.setValue(theGeneratedKey, false);
+    defaultMaterialShaderKeyProperties.m_usesVarColor.setValue(theGeneratedKey, false);
 
     // alpha Mode
-    renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
+    defaultMaterialShaderKeyProperties.m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
 
     // vertex attribute presence flags
-    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer);
+    setVertexInputPresence(renderableFlags, theGeneratedKey);
 
     // set the flag indicating the need for gl_PointSize
-    renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
+    defaultMaterialShaderKeyProperties.m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
 
     // propagate the flag indicating the presence of a lightmap
-    renderer->defaultMaterialShaderKeyProperties().m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
+    defaultMaterialShaderKeyProperties.m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
 
-    renderer->defaultMaterialShaderKeyProperties().m_specularGlossyEnabled.setValue(theGeneratedKey, theMaterial->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial);
+    defaultMaterialShaderKeyProperties.m_specularGlossyEnabled.setValue(theGeneratedKey, theMaterial->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial);
 
     // debug modes
-    renderer->defaultMaterialShaderKeyProperties().m_debugMode.setValue(theGeneratedKey, int(layer.debugMode));
+    defaultMaterialShaderKeyProperties.m_debugMode.setValue(theGeneratedKey, int(layer.debugMode));
 
     // fog
-    renderer->defaultMaterialShaderKeyProperties().m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
+    defaultMaterialShaderKeyProperties.m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
 
-    if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
+    if (!defaultMaterialShaderKeyProperties.m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
         features.set(QSSGShaderFeatures::Feature::LightProbe, true);
-        renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, true);
+        defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, true);
         // features.set(ShaderFeatureDefines::enableIblFov(),
         // m_Renderer.GetLayerRenderData()->m_Layer.m_ProbeFov < 180.0f );
     }
@@ -755,17 +754,17 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
         const bool specularEnabled = theMaterial->isSpecularEnabled();
         const bool metalnessEnabled = theMaterial->isMetalnessEnabled();
-        renderer->defaultMaterialShaderKeyProperties().m_specularEnabled.setValue(theGeneratedKey, (specularEnabled || metalnessEnabled));
+        defaultMaterialShaderKeyProperties.m_specularEnabled.setValue(theGeneratedKey, (specularEnabled || metalnessEnabled));
         if (specularEnabled || metalnessEnabled)
-            renderer->defaultMaterialShaderKeyProperties().m_specularModel.setSpecularModel(theGeneratedKey, theMaterial->specularModel);
+            defaultMaterialShaderKeyProperties.m_specularModel.setSpecularModel(theGeneratedKey, theMaterial->specularModel);
 
-        renderer->defaultMaterialShaderKeyProperties().m_fresnelEnabled.setValue(theGeneratedKey, theMaterial->isFresnelEnabled());
+        defaultMaterialShaderKeyProperties.m_fresnelEnabled.setValue(theGeneratedKey, theMaterial->isFresnelEnabled());
 
-        renderer->defaultMaterialShaderKeyProperties().m_vertexColorsEnabled.setValue(theGeneratedKey,
+        defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.setValue(theGeneratedKey,
                                                                                       theMaterial->isVertexColorsEnabled());
-        renderer->defaultMaterialShaderKeyProperties().m_clearcoatEnabled.setValue(theGeneratedKey,
+        defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey,
                                                                                    theMaterial->isClearcoatEnabled());
-        renderer->defaultMaterialShaderKeyProperties().m_transmissionEnabled.setValue(theGeneratedKey,
+        defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey,
                                                                                       theMaterial->isTransmissionEnabled());
 
         // Run through the material's images and prepare them for render.
@@ -888,42 +887,42 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     else
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 
-    renderer->defaultMaterialShaderKeyProperties().m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
+    defaultMaterialShaderKeyProperties.m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
 
     // isDoubleSided
-    renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey,
+    defaultMaterialShaderKeyProperties.m_isDoubleSided.setValue(theGeneratedKey,
                                                                             inMaterial.m_cullMode == QSSGCullFaceMode::Disabled);
 
     // Does the material override the position output
     const bool overridesPosition = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition);
-    renderer->defaultMaterialShaderKeyProperties().m_overridesPosition.setValue(theGeneratedKey, overridesPosition);
+    defaultMaterialShaderKeyProperties.m_overridesPosition.setValue(theGeneratedKey, overridesPosition);
 
     // Optional usage of PROJECTION_MATRIX and/or INVERSE_PROJECTION_MATRIX
     const bool usesProjectionMatrix = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix);
-    renderer->defaultMaterialShaderKeyProperties().m_usesProjectionMatrix.setValue(theGeneratedKey, usesProjectionMatrix);
+    defaultMaterialShaderKeyProperties.m_usesProjectionMatrix.setValue(theGeneratedKey, usesProjectionMatrix);
     const bool usesInvProjectionMatrix = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix);
-    renderer->defaultMaterialShaderKeyProperties().m_usesInverseProjectionMatrix.setValue(theGeneratedKey, usesInvProjectionMatrix);
+    defaultMaterialShaderKeyProperties.m_usesInverseProjectionMatrix.setValue(theGeneratedKey, usesInvProjectionMatrix);
 
     // vertex attribute presence flags
-    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer);
+    setVertexInputPresence(renderableFlags, theGeneratedKey);
 
     // set the flag indicating the need for gl_PointSize
-    renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
+    defaultMaterialShaderKeyProperties.m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
 
     // propagate the flag indicating the presence of a lightmap
-    renderer->defaultMaterialShaderKeyProperties().m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
+    defaultMaterialShaderKeyProperties.m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
 
     // debug modes
-    renderer->defaultMaterialShaderKeyProperties().m_debugMode.setValue(theGeneratedKey, int(layer.debugMode));
+    defaultMaterialShaderKeyProperties.m_debugMode.setValue(theGeneratedKey, int(layer.debugMode));
 
     // fog
-    renderer->defaultMaterialShaderKeyProperties().m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
+    defaultMaterialShaderKeyProperties.m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
 
     // Knowing whether VAR_COLOR is used becomes relevant when there is no
     // custom vertex shader, but VAR_COLOR is present in the custom fragment
     // snippet, because that case needs special care.
     const bool usesVarColor = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::VarColor);
-    renderer->defaultMaterialShaderKeyProperties().m_usesVarColor.setValue(theGeneratedKey, usesVarColor);
+    defaultMaterialShaderKeyProperties.m_usesVarColor.setValue(theGeneratedKey, usesVarColor);
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending))
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
@@ -1258,32 +1257,32 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
                 // Blend particles
-                renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, usesBlendParticles);
+                defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, usesBlendParticles);
 
                 // Skin
                 const auto boneCount = model.skin ? model.skin->boneCount :
                                                     model.skeleton ? model.skeleton->boneCount : 0;
-                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneCount);
-                renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
+                defaultMaterialShaderKeyProperties.m_boneCount.setValue(theGeneratedKey, boneCount);
+                defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
                 // Instancing
-                renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
+                defaultMaterialShaderKeyProperties.m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
                 // Morphing
-                renderer->defaultMaterialShaderKeyProperties().m_targetCount.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetCount.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetCount);
-                renderer->defaultMaterialShaderKeyProperties().m_targetPositionOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetPositionOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::PositionSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetNormalOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetNormalOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::NormalSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetTangentOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetTangentOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TangentSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetBinormalOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetBinormalOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::BinormalSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord0Offset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetTexCoord0Offset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord0Semantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord1Offset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetTexCoord1Offset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord1Semantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetColorOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetColorOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::ColorSemantic]);
 
                 new (theRenderableObject) QSSGSubsetRenderable(QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset,
@@ -1314,37 +1313,37 @@ bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &re
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
                 if (model.particleBuffer && model.particleBuffer->particleCount())
-                    renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, true);
+                    defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, true);
                 else
-                    renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, false);
+                    defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, false);
 
                 // Skin
                 const auto boneCount = model.skin ? model.skin->boneCount :
                                                     model.skeleton ? model.skeleton->boneCount : 0;
-                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneCount);
-                renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
+                defaultMaterialShaderKeyProperties.m_boneCount.setValue(theGeneratedKey, boneCount);
+                defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
 
                 // Instancing
                 bool usesInstancing = theModelContext.model.instancing()
                         && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
-                renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
+                defaultMaterialShaderKeyProperties.m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
                 // Morphing
-                renderer->defaultMaterialShaderKeyProperties().m_targetCount.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetCount.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetCount);
-                renderer->defaultMaterialShaderKeyProperties().m_targetPositionOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetPositionOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::PositionSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetNormalOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetNormalOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::NormalSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetTangentOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetTangentOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TangentSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetBinormalOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetBinormalOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::BinormalSemantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord0Offset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetTexCoord0Offset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord0Semantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord1Offset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetTexCoord1Offset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord1Semantic]);
-                renderer->defaultMaterialShaderKeyProperties().m_targetColorOffset.setValue(theGeneratedKey,
+                defaultMaterialShaderKeyProperties.m_targetColorOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::ColorSemantic]);
 
                 if (theMaterial.m_iblProbe)
