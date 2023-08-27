@@ -485,6 +485,11 @@ int QSSGRhiShaderPipeline::offsetOfUniform(const QByteArray &name)
     return -1;
 }
 
+static QString getUBMemberSizeWarning(QLatin1StringView name, qsizetype correctedSize, qsizetype requestedSize)
+{
+    return QStringLiteral("Uniform block member '%1' got %2 bytes whereas the true size is %3").arg(name, QString::number(correctedSize), QString::number(requestedSize));
+}
+
 void QSSGRhiShaderPipeline::setUniform(char *ubufData, const char *name, const void *data, size_t size, int *storeIndex, UniformFlags flags)
 {
     int index = -1;
@@ -519,15 +524,7 @@ void QSSGRhiShaderPipeline::setUniform(char *ubufData, const char *name, const v
             auto it = m_ub0.constFind(QByteArray::fromRawData(u.name, strlen(u.name)));
             if (it != m_ub0.constEnd()) {
                 u.offset = it->offset;
-#ifdef QT_DEBUG
-                if (int(u.size) != it->size) {
-                    qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",
-                             it->name.constData(),
-                             int(u.size),
-                             it->size);
-                    return;
-                }
-#endif
+                QSSG_ASSERT_X(QSSG_DEBUG_COND(int(u.size) == it->size), qPrintable(getUBMemberSizeWarning(QLatin1StringView(it->name), u.size, it->size)), return);
             }
         }
         if (u.offset == SIZE_MAX) {
@@ -559,6 +556,13 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
 {
     QSSGRhiShaderUniformArray *ua = nullptr;
     constexpr size_t std140BaseTypeSize = 4 * sizeof(float);
+
+    static const auto checkSize = [std140BaseTypeSize](QSSGRhiShaderUniformArray *ua) -> bool {
+        Q_UNUSED(std140BaseTypeSize); // Silence clang warning about unneeded lambda capture (MSVC requires it be captrued).
+        const size_t uniformSize = std140BaseTypeSize < ua->typeSize ? ua->typeSize * ua->itemCount : std140BaseTypeSize * ua->itemCount;
+        QSSG_ASSERT_X(uniformSize == ua->size, qPrintable(getUBMemberSizeWarning(QLatin1StringView(ua->name), uniformSize, ua->size)), return false);
+        return true;
+    };
 
     if (!storeIndex || *storeIndex == -1) {
         int index = -1;
@@ -599,21 +603,6 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
         return;
     }
 
-#ifdef QT_DEBUG
-    auto checkSize = [std140BaseTypeSize](QSSGRhiShaderUniformArray *ua) -> bool {
-        Q_UNUSED(std140BaseTypeSize); // Silence clang warning about unneeded lambda capture
-        const size_t uniformSize = std140BaseTypeSize < ua->typeSize ? ua->typeSize * ua->itemCount : std140BaseTypeSize * ua->itemCount;
-        if (uniformSize != ua->size) {
-            qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",
-                     ua->name,
-                     int(uniformSize),
-                     int(ua->size));
-            return false;
-        }
-        return true;
-    };
-#endif
-
     char *p = ubufData + ua->offset;
 
     switch (type) {
@@ -624,10 +613,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = sizeof(qint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -639,10 +627,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 2 * sizeof(qint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -654,10 +641,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 3 * sizeof(qint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -669,10 +655,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 4 * sizeof(qint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         memcpy(p, v, ua->typeSize * ua->itemCount);
     }
         break;
@@ -683,10 +668,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = sizeof(float);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -698,10 +682,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 2 * sizeof(float);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -713,10 +696,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 3 * sizeof(float);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -728,10 +710,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 4 * sizeof(float);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         memcpy(p, v, ua->typeSize * ua->itemCount);
     }
         break;
@@ -742,10 +723,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 4 * sizeof(float);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i) {
             const QVector4D vi = color::sRGBToLinear(v[i]);
             memcpy(p + i * std140BaseTypeSize, &vi, ua->typeSize);
@@ -759,10 +739,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = sizeof(quint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -774,10 +753,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 2 * sizeof(quint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -789,10 +767,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 3 * sizeof(quint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (size_t i = 0; i < itemCount; ++i)
             memcpy(p + i * std140BaseTypeSize, &v[i], ua->typeSize);
     }
@@ -804,10 +781,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 4 * sizeof(quint32);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         memcpy(p, v, ua->typeSize * ua->itemCount);
     }
         break;
@@ -818,10 +794,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 12 * sizeof(float);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (uint i = 0; i < ua->itemCount; ++i) {
             memcpy(p + i * ua->typeSize, v[i].constData(), 3 * sizeof(float));
             memcpy(p + i * ua->typeSize + 4 * sizeof(float), v[i].constData() + 3, 3 * sizeof(float));
@@ -836,10 +811,9 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
             ua->typeSize = 16 * sizeof(float);
             ua->itemCount = itemCount;
         }
-#ifdef QT_DEBUG
-        if (!checkSize(ua))
-            return;
-#endif
+
+        QSSG_ASSERT(QSSG_DEBUG_COND(checkSize(ua)), return);
+
         for (uint i = 0; i < ua->itemCount; ++i)
             memcpy(p + i * ua->typeSize, &v[i] , ua->typeSize);
     }
