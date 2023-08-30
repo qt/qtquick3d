@@ -29,6 +29,7 @@ class Q_QUICK3D_EXPORT QQuick3DRenderExtension : public QQuick3DObject
     Q_OBJECT
     QML_NAMED_ELEMENT(RenderExtension)
     QML_UNCREATABLE("RenderExtension is an abstract type")
+    QML_ADDED_IN_VERSION(6, 6)
 public:
     explicit QQuick3DRenderExtension(QQuick3DObject *parent = nullptr);
     virtual ~QQuick3DRenderExtension();
