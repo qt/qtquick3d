@@ -50,6 +50,8 @@ Q_TRACE_POINT(qtquick3d, QSSG_renderFrame_entry, int width, int height);
 Q_TRACE_POINT(qtquick3d, QSSG_renderFrame_exit);
 Q_TRACE_POINT(qtquick3d, QSSG_synchronize_entry, QQuick3DViewport *view3D, const QSize &size, float dpr);
 Q_TRACE_POINT(qtquick3d, QSSG_synchronize_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_renderPass_entry, const QString &renderPass);
+Q_TRACE_POINT(qtquick3d, QSSG_renderPass_exit);
 
 static bool dumpRenderTimes = false;
 

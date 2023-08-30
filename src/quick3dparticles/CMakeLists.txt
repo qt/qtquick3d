@@ -75,6 +75,11 @@ qt_internal_add_qml_module(Quick3DParticles
     GENERATE_PRIVATE_CPP_EXPORTS
 )
 
+qt_internal_generate_tracepoints(Quick3DParticles quick3d
+    SOURCES
+        qquick3dparticlesystem.cpp
+)
+
 if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
     add_subdirectory(designer)
 endif()

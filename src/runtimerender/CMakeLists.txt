@@ -195,8 +195,6 @@ qt_internal_extend_target(Quick3DRuntimeRender CONDITION NOT QT_FEATURE_system_z
 
 qt_internal_generate_tracepoints(Quick3DRuntimeRender quick3d
     SOURCES
-        ../quick3d/qquick3dscenerenderer.cpp
-        ../quick3dparticles/qquick3dparticlesystem.cpp
         qssgrhicontext.cpp
         resourcemanager/qssgrenderbuffermanager.cpp
         qssgrendershadercache.cpp
