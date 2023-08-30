@@ -28,6 +28,7 @@ class ProceduralMeshSubset : public QObject {
     Q_PROPERTY(unsigned int count READ count WRITE setCount NOTIFY countChanged FINAL)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
     QML_NAMED_ELEMENT(ProceduralMeshSubset)
+    QML_ADDED_IN_VERSION(6, 6)
 
 public:
     int offset() const;
@@ -66,6 +67,7 @@ class ProceduralMesh : public QQuick3DGeometry
     Q_PROPERTY(QQmlListProperty<ProceduralMeshSubset> subsets READ subsets FINAL)
     Q_PROPERTY(PrimitiveMode primitiveMode READ primitiveMode WRITE setPrimitiveMode NOTIFY primitiveModeChanged FINAL)
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(6, 6)
 public:
     enum PrimitiveMode {
         Points,
