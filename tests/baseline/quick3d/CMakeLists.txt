@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Generated from quick3d.pro.
 
 #####################################################################
@@ -6,27 +9,30 @@
 
 # Collect test data
 list(APPEND test_data "../data")
+set(BASELINE_DIR "../../../../qtbase/tests/baseline/shared")
 
-qt_internal_add_test(tst_qquick3d
+qt_internal_add_test(tst_baseline_qquick3d
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
-        ../shared/baselineprotocol.cpp ../shared/baselineprotocol.h
-        ../shared/lookup3.cpp
-        ../shared/qbaselinetest.cpp ../shared/qbaselinetest.h
-        tst_quick3d.cpp
+        ${BASELINE_DIR}/baselineprotocol.cpp
+        ${BASELINE_DIR}/baselineprotocol.h
+        ${BASELINE_DIR}/lookup3.cpp
+        ${BASELINE_DIR}/qbaselinetest.cpp
+        ${BASELINE_DIR}/qbaselinetest.h
+        tst_baseline_quick3d.cpp
     DEFINES
-        QMAKESPEC=\\\"\\\"
+        QMAKESPEC=""
     INCLUDE_DIRECTORIES
-        ../shared
-    PUBLIC_LIBRARIES
+        ${BASELINE_DIR}
+    LIBRARIES
         Qt::Gui
         Qt::Network
     TESTDATA ${test_data}
 )
 
 # special case begin
-add_dependencies(tst_qquick3d Qt6::Quick3D)
-add_dependencies(tst_qquick3d qquick3d_qmlscenegrabber)
+add_dependencies(tst_baseline_qquick3d Qt6::Quick3D)
+add_dependencies(tst_baseline_qquick3d qquick3d_qmlscenegrabber)
 # special case end
 
 ## Scopes:
