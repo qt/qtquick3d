@@ -104,6 +104,11 @@ qt_internal_extend_target(qquick3dplugin
         Qt::Quick3DPrivate
 )
 
+qt_internal_generate_tracepoints(Quick3D quick3d
+    SOURCES
+        qquick3dscenerenderer.cpp
+)
+
 set_property(SOURCE qquick3dgeometry.cpp PROPERTY SKIP_AUTOMOC ON) # special case
 set_property(SOURCE qquick3dtexturedata.cpp PROPERTY SKIP_AUTOMOC ON) # special case
 
