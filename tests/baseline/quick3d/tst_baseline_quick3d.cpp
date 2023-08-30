@@ -240,4 +240,4 @@ int main(int argc, char *argv[])
     return _realmain(argc, argv);
 }
 
-#include "tst_quick3d.moc"
+#include "tst_baseline_quick3d.moc"

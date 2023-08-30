@@ -9,5 +9,8 @@ if(NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
     find_package(Qt6BuildInternals REQUIRED COMPONENTS STANDALONE_TEST)
 endif()
 
-add_subdirectory(scenegrabber)
-add_subdirectory(quick3d)
+# Special case: test includes the QBaselineTest module sources from qtbase directly
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../qtbase/tests/baseline/shared")
+    add_subdirectory(scenegrabber)
+    add_subdirectory(quick3d)
+endif()
