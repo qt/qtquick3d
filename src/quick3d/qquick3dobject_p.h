@@ -55,34 +55,40 @@ public:
         static_assert(std::is_base_of_v<QQuick3DObject, SceneContext>, "The scene context must be a QQuick3DObject");
         static_assert(std::is_member_function_pointer_v<Setter>, "The assumption is that the setter is a member function!");
         static_assert(sizeof(ConnectionKey::Handle) >= sizeof(Setter), "The handle needs to be able to store the value of the setter");
-        auto sceneManager = QQuick3DObjectPrivate::get(sceneContext)->sceneManager;
-        auto &connectionMap = QQuick3DObjectPrivate::get(sceneContext)->connectionMap;
-        union
-        {
-            Setter s;
-            ConnectionKey::Handle h;
-        }; s = setter;
-        ConnectionKey key{static_cast<QObject *>(callContext), h};
-        // disconnect previous destruction listener
-        if (oldO) {
-            // NOTE: If the old object is inside the QObject's dtor (e.g., QObject::destroyed) we can't
-            // call deref (and there's no point anymore either).
-            if (auto old3dO = qobject_cast<QQuick3DObject *>(oldO))
-                QQuick3DObjectPrivate::derefSceneManager(old3dO);
+        // Sanity check: Make sure we have a valid context. If the sceneContext != callContext and we're here because the
+        // watched object just got destroyed by the parent (QObject dtor) and that parent also is used as the sceneContext
+        // then there's nothing more to do; all involved parties are being destroyed, so just bail out.
+        const bool validContext = static_cast<QObject *>(sceneContext) != static_cast<QObject *>(callContext) ? qobject_cast<QQuick3DObject *>(sceneContext) != nullptr : true;
+        if (validContext) {
+            auto sceneManager = QQuick3DObjectPrivate::get(sceneContext)->sceneManager;
+            auto &connectionMap = QQuick3DObjectPrivate::get(sceneContext)->connectionMap;
+            union
+            {
+                Setter s;
+                ConnectionKey::Handle h;
+            }; s = setter;
+            ConnectionKey key{static_cast<QObject *>(callContext), h};
+            // disconnect previous destruction listener
+            if (oldO) {
+                // NOTE: If the old object is inside the QObject's dtor (e.g., QObject::destroyed) we can't
+                // call deref (and there's no point anymore either).
+                if (auto old3dO = qobject_cast<QQuick3DObject *>(oldO))
+                    QQuick3DObjectPrivate::derefSceneManager(old3dO);
 
-            auto it = connectionMap.constFind(key);
-            if (it != connectionMap.cend()) {
-                QObject::disconnect(*it);
-                connectionMap.erase(it);
+                auto it = connectionMap.constFind(key);
+                if (it != connectionMap.cend()) {
+                    QObject::disconnect(*it);
+                    connectionMap.erase(it);
+                }
             }
-        }
 
-        // Watch new object
-        if (newO) {
-            if (sceneManager)
-                QQuick3DObjectPrivate::refSceneManager(newO, *sceneManager);
-            auto connection = QObject::connect(newO, &QObject::destroyed, callContext, [callContext, setter](){ (callContext->*setter)(nullptr); });
-            connectionMap.insert(key, connection);
+            // Watch new object
+            if (newO) {
+                if (sceneManager)
+                    QQuick3DObjectPrivate::refSceneManager(newO, *sceneManager);
+                auto connection = QObject::connect(newO, &QObject::destroyed, callContext, [callContext, setter](){ (callContext->*setter)(nullptr); });
+                connectionMap.insert(key, connection);
+            }
         }
     }
 
