@@ -364,13 +364,79 @@ Pane {
                                 ]
                             }
                         }
-                        Button {
-                            text: "Release cached resources"
-                            onClicked: root.source.renderStats.releaseCachedResources()
+                        RowLayout {
+                            spacing: 20
+                            Button {
+                                text: "Release cached resources"
+                                onClicked: root.source.renderStats.releaseCachedResources()
+                            }
+                            Button {
+                                text: "Bake lightmap"
+                                onClicked: root.source.bakeLightmap()
+                            }
                         }
-                        Button {
-                            text: "Bake lightmap"
-                            onClicked: root.source.bakeLightmap()
+                        RowLayout {
+                            Label {
+                                text: "Render mode override"
+                            }
+                            ComboBox {
+                                id: renderModeOverrideComboBox
+                                textRole: "text"
+                                valueRole: "value"
+                                implicitContentWidthPolicy: ComboBox.WidestText
+                                onActivated: root.source.renderMode = currentValue
+                                Component.onCompleted: renderModeOverrideComboBox.currentIndex = renderModeOverrideComboBox.indexOfValue(root.source.renderMode)
+                                model: [
+                                    { value: View3D.Offscreen, text: "Offscreen" },
+                                    { value: View3D.Underlay, text: "Underlay" },
+                                    { value: View3D.Overlay, text: "Overlay" },
+                                    { value: View3D.Inline, text: "Inline" }
+                                ]
+                            }
+                        }
+
+                        Label {
+                            text: "Backing texture pixel size is " + root.source.effectiveTextureSize
+                            visible: root.source.renderMode === View3D.Offscreen
+                        }
+                        CheckBox {
+                            id: explicitTextureSizeCheckBox
+                            visible: root.source.renderMode === View3D.Offscreen
+                            text: "Explicit backing texture size"
+                            onCheckedChanged: {
+                                if (checked) {
+                                    root.source.explicitTextureWidth = explicitWidthSlider.value;
+                                    root.source.explicitTextureHeight = explicitHeightSlider.value;
+                                } else {
+                                    root.source.explicitTextureWidth = 0;
+                                    root.source.explicitTextureHeight = 0;
+                                }
+                            }
+                        }
+                        RowLayout {
+                            visible: root.source.renderMode === View3D.Offscreen && explicitTextureSizeCheckBox.checked
+                            Label {
+                                text: "Width: " + explicitWidthSlider.value.toFixed(0) + " px"
+                            }
+                            Slider {
+                                id: explicitWidthSlider
+                                from: 16
+                                to: 2048
+                                value: 1280
+                                onValueChanged: { root.source.explicitTextureWidth = value; root.source.explicitTextureHeight = explicitHeightSlider.value }
+                                Layout.maximumWidth: 100
+                            }
+                            Label {
+                                text: "Height: " + explicitHeightSlider.value.toFixed(0) + " px"
+                            }
+                            Slider {
+                                id: explicitHeightSlider
+                                from: 16
+                                to: 2048
+                                value: 720
+                                onValueChanged: { root.source.explicitTextureHeight = value; root.source.explicitTextureWidth = explicitWidthSlider.value }
+                                Layout.maximumWidth: 100
+                            }
                         }
                     }
                 }

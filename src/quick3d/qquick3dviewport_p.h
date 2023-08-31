@@ -55,6 +55,9 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(QQuickShaderEffectSource::Format renderFormat READ renderFormat WRITE setRenderFormat NOTIFY renderFormatChanged FINAL REVISION(6, 4))
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(QQmlListProperty<QQuick3DObject> extensions READ extensions FINAL REVISION(6, 6))
+    Q_PROPERTY(int explicitTextureWidth READ explicitTextureWidth WRITE setExplicitTextureWidth NOTIFY explicitTextureWidthChanged FINAL REVISION(6, 7))
+    Q_PROPERTY(int explicitTextureHeight READ explicitTextureHeight WRITE setExplicitTextureHeight NOTIFY explicitTextureHeightChanged FINAL REVISION(6, 7))
+    Q_PROPERTY(QSize effectiveTextureSize READ effectiveTextureSize NOTIFY effectiveTextureSizeChanged FINAL REVISION(6, 7))
     Q_CLASSINFO("DefaultProperty", "data")
 
     QML_NAMED_ELEMENT(View3D)
@@ -104,6 +107,10 @@ public:
 
     QQmlListProperty<QQuick3DObject> extensions();
 
+    Q_REVISION(6, 7) int explicitTextureWidth() const;
+    Q_REVISION(6, 7) int explicitTextureHeight() const;
+    Q_REVISION(6, 7) QSize effectiveTextureSize() const;
+
     // Private helpers
     [[nodiscard]] bool extensionListDirty() const { return m_extensionListDirty; }
     [[nodiscard]] const QList<QQuick3DObject *> &extensionList() const { return m_extensions; }
@@ -125,6 +132,8 @@ public Q_SLOTS:
     void setImportScene(QQuick3DNode *inScene);
     void setRenderMode(QQuick3DViewport::RenderMode renderMode);
     Q_REVISION(6, 4) void setRenderFormat(QQuickShaderEffectSource::Format format);
+    Q_REVISION(6, 7) void setExplicitTextureWidth(int width);
+    Q_REVISION(6, 7) void setExplicitTextureHeight(int height);
     void cleanupDirectRenderer();
 
     // Setting this true enables picking for all the models, regardless of
@@ -143,6 +152,9 @@ Q_SIGNALS:
     void importSceneChanged();
     void renderModeChanged();
     Q_REVISION(6, 4) void renderFormatChanged();
+    Q_REVISION(6, 7) void explicitTextureWidthChanged();
+    Q_REVISION(6, 7) void explicitTextureHeightChanged();
+    Q_REVISION(6, 7) void effectiveTextureSizeChanged();
 
 private:
     friend class QQuick3DExtensionListHelper;
@@ -185,6 +197,9 @@ private:
     bool m_renderModeDirty = false;
     RenderMode m_renderMode = Offscreen;
     QQuickShaderEffectSource::Format m_renderFormat = QQuickShaderEffectSource::RGBA8;
+    int m_explicitTextureWidth = 0;
+    int m_explicitTextureHeight = 0;
+    QSize m_effectiveTextureSize;
     QQuick3DRenderStats *m_renderStats = nullptr;
     bool m_enableInputProcessing = false;
     QQuick3DLightmapBaker *m_lightmapBaker = nullptr;

@@ -769,6 +769,94 @@ void QQuick3DViewport::setRenderFormat(QQuickShaderEffectSource::Format format)
     update();
 }
 
+/*!
+    \qmlproperty int QtQuick3D::View3D::explicitTextureWidth
+    \since 6.7
+
+    The width, in pixels, of the item's associated texture. Relevant when a
+    fixed texture size is desired that does not depend on the item's size. This
+    size has no effect on the geometry of the item (its size and placement
+    within the scene), which means the texture's content will appear scaled up
+    or down (and possibly stretched) onto the item's area.
+
+    By default the value is \c 0. A value of 0 means that texture's size
+    follows the item's size. (\c{texture size in pixels} = \c{item's logical
+    size} * \c{device pixel ratio}).
+
+    \note This property is relevant only when \l renderMode is set to \c
+    Offscreen. Its value is ignored otherwise.
+
+    \sa explicitTextureHeight, effectiveTextureSize, DebugView
+*/
+int QQuick3DViewport::explicitTextureWidth() const
+{
+    return m_explicitTextureWidth;
+}
+
+void QQuick3DViewport::setExplicitTextureWidth(int width)
+{
+    if (m_explicitTextureWidth == width)
+        return;
+
+    m_explicitTextureWidth = width;
+    emit explicitTextureWidthChanged();
+    update();
+}
+
+/*!
+    \qmlproperty int QtQuick3D::View3D::explicitTextureHeight
+    \since 6.7
+
+    The height, in pixels, of the item's associated texture. Relevant when a
+    fixed texture size is desired that does not depend on the item's size. This
+    size has no effect on the geometry of the item (its size and placement
+    within the scene), which means the texture's content will appear scaled up
+    or down (and possibly stretched) onto the item's area.
+
+    By default the value is \c 0. A value of 0 means that texture's size
+    follows the item's size. (\c{texture size in pixels} = \c{item's logical
+    size} * \c{device pixel ratio}).
+
+    \note This property is relevant only when \l renderMode is set to \c
+    Offscreen. Its value is ignored otherwise.
+
+    \sa explicitTextureWidth, effectiveTextureSize, DebugView
+*/
+int QQuick3DViewport::explicitTextureHeight() const
+{
+    return m_explicitTextureHeight;
+}
+
+void QQuick3DViewport::setExplicitTextureHeight(int height)
+{
+    if (m_explicitTextureHeight == height)
+        return;
+
+    m_explicitTextureHeight = height;
+    emit explicitTextureHeightChanged();
+    update();
+}
+
+/*!
+    \qmlproperty size QtQuick3D::View3D::effectiveTextureSize
+    \since 6.7
+
+    This property exposes the size, in pixels, of the underlying color (and
+    depth/stencil) buffers. It is provided for use on the GUI (main) thread, in
+    QML bindings or JavaScript.
+
+    This is a read-only property.
+
+    \note This property is relevant only when \l renderMode is set to
+    \c Offscreen.
+
+    \sa explicitTextureWidth, explicitTextureHeight, DebugView
+*/
+QSize QQuick3DViewport::effectiveTextureSize() const
+{
+    return m_effectiveTextureSize;
+}
+
 
 /*!
     \qmlmethod vector3d View3D::mapFrom3DScene(vector3d scenePos)
@@ -1044,12 +1132,23 @@ QSGNode *QQuick3DViewport::setupOffscreenRenderer(QSGNode *node)
         n->quickFbo = this;
         connect(window(), SIGNAL(screenChanged(QScreen*)), n, SLOT(handleScreenChange()));
     }
-    QSize minFboSize = QQuickItemPrivate::get(this)->sceneGraphContext()->minimumFBOSize();
-    QSize desiredFboSize(qMax<int>(minFboSize.width(), width()),
-                         qMax<int>(minFboSize.height(), height()));
 
-    n->devicePixelRatio = window()->effectiveDevicePixelRatio();
-    desiredFboSize *= n->devicePixelRatio;
+    const qreal dpr = window()->effectiveDevicePixelRatio();
+    const QSize minFboSize = QQuickItemPrivate::get(this)->sceneGraphContext()->minimumFBOSize();
+    QSize desiredFboSize = QSize(m_explicitTextureWidth, m_explicitTextureHeight);
+    if (desiredFboSize.isEmpty()) {
+        desiredFboSize = QSize(width(), height()) * dpr;
+        n->devicePixelRatio = dpr;
+    } else {
+        n->devicePixelRatio = 1.0;
+    }
+    desiredFboSize.setWidth(qMax(minFboSize.width(), desiredFboSize.width()));
+    desiredFboSize.setHeight(qMax(minFboSize.height(), desiredFboSize.height()));
+
+    if (desiredFboSize != m_effectiveTextureSize) {
+        m_effectiveTextureSize = desiredFboSize;
+        emit effectiveTextureSizeChanged();
+    }
 
     n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
     n->setRect(0, 0, width(), height());
@@ -1080,6 +1179,11 @@ QSGNode *QQuick3DViewport::setupInlineRenderer(QSGNode *node)
             return nullptr;
     }
 
+    if (!m_effectiveTextureSize.isEmpty()) {
+        m_effectiveTextureSize = QSize();
+        emit effectiveTextureSizeChanged();
+    }
+
     const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
 
     // checkIsVisible, not isVisible, because, for example, a
@@ -1105,6 +1209,11 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
             return;
         m_directRenderer = new QQuick3DSGDirectRenderer(sceneRenderer, window(), renderMode);
         connect(window(), &QQuickWindow::sceneGraphInvalidated, this, &QQuick3DViewport::cleanupDirectRenderer, Qt::DirectConnection);
+    }
+
+    if (!m_effectiveTextureSize.isEmpty()) {
+        m_effectiveTextureSize = QSize();
+        emit effectiveTextureSizeChanged();
     }
 
     const QSizeF targetSize = window()->effectiveDevicePixelRatio() * QSizeF(width(), height());
