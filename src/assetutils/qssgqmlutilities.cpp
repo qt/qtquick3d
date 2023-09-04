@@ -678,13 +678,12 @@ static QString toQuotedString(const QString &text) { return QStringLiteral("\"%1
 static inline QString getMeshFolder() { return QStringLiteral("meshes/"); }
 static inline QString getMeshExtension() { return QStringLiteral(".mesh"); }
 
-QString getMeshSourceName(const QByteArrayView &name)
+QString getMeshSourceName(const QString &name)
 {
     const auto meshFolder = getMeshFolder();
     const auto extension = getMeshExtension();
 
-    const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(QString::fromUtf8(name));
-    return QString(meshFolder + sanitizedName +  extension);
+    return QString(meshFolder + name +  extension);
 }
 
 static inline QString getTextureFolder() { return QStringLiteral("maps/"); }
@@ -781,7 +780,8 @@ static std::pair<QString, QString> meshAssetName(const QSSGSceneDesc::Scene &sce
     // Returns {name, notValidReason}
 
     const auto meshFolder = getMeshFolder();
-    const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
+    const auto meshId = QSSGQmlUtilities::getIdForNode(meshNode);
+    const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshId);
     Q_ASSERT(scene.meshStorage.size() > meshNode.idx);
     const auto &mesh = scene.meshStorage.at(meshNode.idx);
 
