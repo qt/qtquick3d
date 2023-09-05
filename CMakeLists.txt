@@ -19,8 +19,8 @@ qt_internal_project_setup()
 
 include(src/quick3d/Qt6Quick3DMacros.cmake)
 
-if(VXWORKS OR WATCHOS)
-    message(NOTICE "Skipping the build as the condition \"NOT VXWORKS AND NOT WATCHOS\" is not met.")
+if(WATCHOS)
+    message(NOTICE "Skipping the build as the condition \"NOT WATCHOS\" is not met.")
     return()
 endif()
 if(NOT TARGET Qt::Quick)
