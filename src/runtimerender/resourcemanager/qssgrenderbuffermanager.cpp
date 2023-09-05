@@ -1581,7 +1581,11 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
             meshItr.value().usageCounts[currentLayer]++;
             return meshItr.value().mesh;
         } else {
-            releaseMesh(inMeshPath);
+            // Re-Insert the mesh with a new name and a "zero" usage count, this will cause the
+            // mesh to be released before the next frame starts.
+            auto *mesh = meshItr->mesh;
+            meshMap.erase(meshItr);
+            meshMap.insert(QSSGRenderPath(inMeshPath.path() + u"@reaped"), { mesh, {{currentLayer, 0}}, 0, {} });
         }
     }
 
