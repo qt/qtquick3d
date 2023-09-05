@@ -100,6 +100,12 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION QT_FEATURE_system_assim
         WrapQuick3DAssimp::WrapQuick3DAssimp
 )
 
+if(VXWORKS)
+    set(VXWORKS_ADDITIONAL_DEFINES "RAPIDJSON_HAS_CXX11_RVALUE_REFS=1")
+else()
+    set(VXWORKS_ADDITIONAL_DEFINES "")
+endif()
+
 qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_assimp OR (CMAKE_CROSSCOMPILING AND host_build)
     SOURCES
         ../../../3rdparty/assimp/config.h
@@ -347,6 +353,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         RAPIDJSON_HAS_STDSTRING=1
         RAPIDJSON_NOMEMBERITERATORCLASS
         ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS
+        ${VXWORKS_ADDITIONAL_DEFINES}
     INCLUDE_DIRECTORIES
         ../../../3rdparty/assimp
         ../../../3rdparty/assimp/..
