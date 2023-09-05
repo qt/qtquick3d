@@ -1576,7 +1576,7 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
         // So now we have a hint, e.g "qlm_xxxx.mesh" that says that if that
         // file exists, then we should prefer that because it has the lightmap
         // UV unwrapping and associated rebuilding already done.
-        if (QFileInfo(options.meshFileOverride).exists()) {
+        if (QFile::exists(options.meshFileOverride)) {
             resultSourcePath = options.meshFileOverride;
             result = loadMeshData(QSSGRenderPath(options.meshFileOverride));
         }
