@@ -56,6 +56,7 @@ Item {
     }
 
     TapHandler {
+        acceptedButtons: dragHandler.acceptedButtons
         onTapped: root.forceActiveFocus() // qmllint disable signal-handler-parameters
     }
 
