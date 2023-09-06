@@ -5,6 +5,7 @@
 \page qtquick3d-architecture.html
 \title Qt Quick 3D Architecture
 \brief An overview of the architecture of Qt Quick 3D
+\ingroup explanations-2dand3dgraphics
 
 Qt Quick 3D extends Qt Quick to support the rendering of 3D content. It adds
 extensive functionality, including several new public QML imports, as well as
