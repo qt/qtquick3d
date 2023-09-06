@@ -200,6 +200,8 @@ private:
     int m_explicitTextureWidth = 0;
     int m_explicitTextureHeight = 0;
     QSize m_effectiveTextureSize;
+    float m_widthMultiplier = 1.0f;
+    float m_heightMultiplier = 1.0f;
     QQuick3DRenderStats *m_renderStats = nullptr;
     bool m_enableInputProcessing = false;
     QQuick3DLightmapBaker *m_lightmapBaker = nullptr;

@@ -71,7 +71,10 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
         If it's no longer a "hit" on sceneParentNode, returns the last-good point.
     */
     QPointF map(const QPointF &viewportPoint) override {
-        std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(viewportPoint * dpr);
+        QPointF point = viewportPoint;
+        point.rx() *= scaleX;
+        point.ry() *= scaleY;
+        std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(point);
         if (rayResult.has_value()) {
             auto pickResult = renderer->syncPickOne(rayResult.value(), sceneParentNode);
             auto ret = pickResult.m_localUVCoords.toPointF();
@@ -95,7 +98,8 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
     QQuick3DSceneRenderer *renderer = nullptr;
     QSSGRenderNode *sceneParentNode = nullptr;
     QQuickItem* targetItem = nullptr;
-    qreal dpr = 1;
+    qreal scaleX = 1;
+    qreal scaleY = 1;
     bool uvCoordsArePixels = false; // if false, they are in the range 0..1
     QPointF lastGoodMapping;
 
@@ -937,8 +941,8 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     if (!renderer)
         return QQuick3DPickResult();
 
-    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
-                           qreal(y) * window()->effectiveDevicePixelRatio());
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio() * m_widthMultiplier,
+                           qreal(y) * window()->effectiveDevicePixelRatio() * m_heightMultiplier);
     std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
     if (!rayResult.has_value())
         return QQuick3DPickResult();
@@ -965,8 +969,8 @@ QList<QQuick3DPickResult> QQuick3DViewport::pickAll(float x, float y) const
     if (!renderer)
         return QList<QQuick3DPickResult>();
 
-    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
-                           qreal(y) * window()->effectiveDevicePixelRatio());
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio() * m_widthMultiplier,
+                           qreal(y) * window()->effectiveDevicePixelRatio() * m_heightMultiplier);
     std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
     if (!rayResult.has_value())
         return QList<QQuick3DPickResult>();
@@ -1139,7 +1143,14 @@ QSGNode *QQuick3DViewport::setupOffscreenRenderer(QSGNode *node)
     if (desiredFboSize.isEmpty()) {
         desiredFboSize = QSize(width(), height()) * dpr;
         n->devicePixelRatio = dpr;
+        // 1:1 mapping between the backing texture and the on-screen quad
+        m_widthMultiplier = 1.0f;
+        m_heightMultiplier = 1.0f;
     } else {
+        QSize itemPixelSize = QSize(width(), height()) * dpr;
+        // not 1:1 maping between the backing texture and the on-screen quad
+        m_widthMultiplier = desiredFboSize.width() / float(itemPixelSize.width());
+        m_heightMultiplier = desiredFboSize.height() / float(itemPixelSize.height());
         n->devicePixelRatio = 1.0;
     }
     desiredFboSize.setWidth(qMax(minFboSize.width(), desiredFboSize.width()));
@@ -1423,7 +1434,8 @@ bool QQuick3DViewport::forwardEventToSubscenes(QPointerEvent *event,
                 transform->renderer = renderer;
                 transform->sceneParentNode = static_cast<QSSGRenderNode*>(frontendObjectPrivate->spatialNode);
                 transform->targetItem = subsceneRoot;
-                transform->dpr = window()->effectiveDevicePixelRatio();
+                transform->scaleX = window()->effectiveDevicePixelRatio() * m_widthMultiplier;
+                transform->scaleY = window()->effectiveDevicePixelRatio() * m_heightMultiplier;
                 transform->uvCoordsArePixels = item2Dcase;
                 transform->setOnDeliveryAgent(da);
                 qCDebug(lcPick) << event->type() << "created ViewportTransformHelper on" << da;
@@ -1481,7 +1493,10 @@ QVarLengthArray<QSSGRenderPickResult, 20> QQuick3DViewport::getPickResults(QQuic
 QVarLengthArray<QSSGRenderPickResult, 20> QQuick3DViewport::getPickResults(QQuick3DSceneRenderer *renderer, const QEventPoint &eventPoint) const
 {
     QVarLengthArray<QSSGRenderPickResult, 20> pickResults;
-    const QPointF realPosition = eventPoint.position() * window()->effectiveDevicePixelRatio();
+    QPointF realPosition = eventPoint.position() * window()->effectiveDevicePixelRatio();
+    // correct when mapping is not 1:1 due to explicit backing texture size
+    realPosition.rx() *= m_widthMultiplier;
+    realPosition.ry() *= m_heightMultiplier;
     std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(realPosition);
     if (rayResult.has_value())
         pickResults = renderer->syncPickAll(rayResult.value());
