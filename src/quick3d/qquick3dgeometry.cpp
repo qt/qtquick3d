@@ -249,6 +249,8 @@ QByteArray QQuick3DGeometry::vertexData() const
 }
 
 /*!
+    \since 6.6
+
     Returns the target buffer data set by setTargetData.
 */
 QByteArray QQuick3DGeometry::targetData() const
@@ -289,6 +291,7 @@ QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
 }
 
 /*!
+    \since 6.6
     Returns the number of morph target attributes defined for this geometry.
 
     \sa targetAttribute
@@ -300,6 +303,8 @@ int QQuick3DGeometry::targetAttributeCount() const
 }
 
 /*!
+    \since 6.6
+
     Returns morph target attribute definition number \a index
 
     The attribute definitions are numbered from 0 to \c {attributeCount() - 1}
@@ -401,6 +406,8 @@ void QQuick3DGeometry::setVertexData(int offset, const QByteArray &data)
 }
 
 /*!
+    \since 6.6
+
     Sets the morph target buffer \a data. The buffer should hold all the
     morph target data.
 
@@ -414,7 +421,9 @@ void QQuick3DGeometry::setTargetData(const QByteArray &data)
 }
 
 /*!
+    \since 6.6
     \overload
+
     Updates a subset of the morph target buffer. \a offset specifies the offset in
     bytes, \a data specifies the size and the data.
 
@@ -642,6 +651,8 @@ void QQuick3DGeometry::addAttribute(const Attribute &attribute)
 }
 
 /*!
+    \since 6.6
+
     Adds morph target attribute description. Each attribute has a \a targetId which the
     attribute belongs to, a \a semantic, which specifies the usage of the attribute and the
     number of components it has, an \a offset from the beginning to the vertex to the attribute
@@ -680,6 +691,7 @@ void QQuick3DGeometry::addTargetAttribute(quint32 targetId,
 }
 
 /*!
+    \since 6.6
     \overload
 
     Adds morph target attribute description. Each attribute has a targetId which the
