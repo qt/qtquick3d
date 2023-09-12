@@ -11,6 +11,7 @@
 #include <QtMath>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <private/qtexturefilereader_p.h>
 
@@ -503,9 +504,10 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
         const int bytesPerPixel = format.getSizeofFormat();
         const int bitCount = bytesPerPixel * 8;
         const int pitch = calculatePitch(calculateLine(width, bitCount));
-        const quint32 dataSize = quint32(height * pitch);
+        const size_t dataSize = height * pitch;
+        QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
         imageData = new QSSGLoadedTexture;
-        imageData->dataSizeInBytes = dataSize;
+        imageData->dataSizeInBytes = quint32(dataSize);
         imageData->data = ::malloc(dataSize);
         imageData->width = width;
         imageData->height = height;
@@ -596,10 +598,11 @@ QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRe
     const int bytesPerPixel = format.getSizeofFormat();
     const int bitCount = bytesPerPixel * 8;
     const int pitch = calculatePitch(calculateLine(exrImage.width, bitCount));
-    const quint32 dataSize = quint32(exrImage.height * pitch);
+    const size_t dataSize = exrImage.height * pitch;
+    QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
     imageData = new QSSGLoadedTexture;
-    imageData->dataSizeInBytes = dataSize;
-    imageData->data = ::malloc(dataSize);
+    imageData->dataSizeInBytes = quint32(dataSize);
+    imageData->data = ::malloc(imageData->dataSizeInBytes);
     imageData->width = exrImage.width;
     imageData->height = exrImage.height;
     imageData->format = format;
@@ -729,10 +732,11 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *tex
         const int bytesPerPixel = textureData->format().getSizeofFormat();
         const int bitCount = bytesPerPixel * 8;
         const int pitch = calculatePitch(calculateLine(textureData->size().width(), bitCount));
-        quint32 dataSize = quint32(textureData->size().height() * pitch);
+        size_t dataSize = size_t(textureData->size().height()) * pitch;
         if (textureData->depth() > 0)
             dataSize *= textureData->depth();
-        imageData->dataSizeInBytes = dataSize;
+        QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
+        imageData->dataSizeInBytes = quint32(dataSize);
         // We won't modifiy the data, but that is a nasty cast...
         imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
         imageData->width = textureData->size().width();
@@ -744,7 +748,9 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *tex
         // Compressed Textures work a bit differently
         // Fill out what makes sense, leave the rest at the default 0 and null.
         imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
-        imageData->dataSizeInBytes = textureData->textureData().size();
+        const size_t dataSize = textureData->textureData().size();
+        QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
+        imageData->dataSizeInBytes = quint32(dataSize);
         // When we use depth we need to do slicing per layer for the uploads, but right now there it is non-trivial
         // to determine the size of each "pixel" for compressed formats, so we don't support it for now.
         // TODO: We need to force depth to 0 for now, as we don't support compressed 3D textures from texureData
@@ -923,7 +929,9 @@ static QSSGLoadedTexture *loadCubeMap(const QString &inPath, bool flipY)
     retval->components = prevImage.pixelFormat().channelCount();
     retval->image = prevImage;
     retval->data = (void *)retval->image.bits();
-    retval->dataSizeInBytes = prevImage.sizeInBytes();
+    const size_t dataSize = prevImage.sizeInBytes();
+    QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
+    retval->dataSizeInBytes = quint32(dataSize);
     retval->setFormatFromComponents();
     // #TODO: This is a very crude way detect color space
     retval->isSRGB = prevImage.colorSpace().transferFunction() != QColorSpace::TransferFunction::Linear;
