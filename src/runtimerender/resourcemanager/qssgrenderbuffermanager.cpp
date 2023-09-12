@@ -9,6 +9,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DUtils/private/qssgmeshbvhbuilder_p.h>
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <QtQuick/QSGTexture>
 
@@ -1016,6 +1017,14 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
             textureUploads << QRhiTextureUploadEntry{0, 0, subDesc};
     }
 
+    static const auto textureSizeWarning = [](QSize requestedSize, qsizetype maxSize) {
+        return QStringLiteral("Requested texture width and height (%1x%2) exceeds the maximum allowed size (%3)!")
+                .arg(requestedSize.width()).arg(requestedSize.height()).arg(maxSize);
+    };
+    static auto maxTextureSize = rhi->resourceLimit(QRhi::ResourceLimit::TextureSizeMax);
+    const auto validTexSize = size.width() <= maxTextureSize && size.height() <= maxTextureSize;
+    QSSG_ASSERT_X(validTexSize, qPrintable(textureSizeWarning(size, maxTextureSize)), return false);
+
     bool generateMipmaps = false;
     if (inMipMode == MipModeEnable && mipmapCount == 1) {
         textureFlags |= QRhiTexture::Flag::UsedWithGenerateMips;
@@ -1042,6 +1051,9 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
         tex = rhi->newTexture(rhiFormat, size.width(), size.height(), depth, textureSampleCount, textureFlags);
     else
         tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
+
+    QSSG_ASSERT(tex != nullptr, return false);
+
     tex->setName(debugObjectName.toLatin1());
     tex->create();
 
