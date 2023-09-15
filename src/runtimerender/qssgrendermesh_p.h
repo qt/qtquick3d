@@ -28,7 +28,7 @@ struct QSSGRenderSubset
     quint32 count;
     quint32 offset;
     QSSGBounds3 bounds; // Vertex buffer bounds
-    QSSGMeshBVHNode *bvhRoot = nullptr;
+    QSSGMeshBVHNode::Handle bvhRoot;
     struct {
         QSSGRhiBufferPtr vertexBuffer;
         QSSGRhiBufferPtr indexBuffer;
@@ -97,17 +97,12 @@ struct QSSGRenderMesh
     QVector<QSSGRenderSubset> subsets;
     QSSGRenderDrawMode drawMode;
     QSSGRenderWinding winding;
-    QSSGMeshBVH *bvh = nullptr;
+    std::unique_ptr<QSSGMeshBVH> bvh;
     QSize lightmapSizeHint;
 
     QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding)
         : drawMode(inDrawMode), winding(inWinding)
     {
-    }
-
-    ~QSSGRenderMesh()
-    {
-        delete bvh;
     }
 };
 QT_END_NAMESPACE

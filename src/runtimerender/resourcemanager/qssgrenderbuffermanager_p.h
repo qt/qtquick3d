@@ -150,8 +150,8 @@ public:
 
     void processResourceLoader(const QSSGRenderResourceLoader *loader);
 
-    static QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
-    static QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);
+    static std::unique_ptr<QSSGMeshBVH> loadMeshBVH(const QSSGRenderPath &inSourcePath);
+    static std::unique_ptr<QSSGMeshBVH> loadMeshBVH(QSSGRenderGeometry *geometry);
 
     static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
     QSSGMesh::Mesh loadMeshData(const QSSGRenderGeometry *geometry);

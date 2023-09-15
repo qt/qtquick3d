@@ -33,7 +33,7 @@ public:
                        const QByteArray &indexBuffer = QByteArray(),
                        QSSGRenderComponentType indexBufferType = QSSGRenderComponentType::Int32);
 
-    QSSGMeshBVH* buildTree();
+    std::unique_ptr<QSSGMeshBVH> buildTree();
 
 private:
     enum class Axis
@@ -48,17 +48,14 @@ private:
         float pos;
     };
 
-    QVector<QSSGMeshBVHTriangle*> calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const;
-    quint32 getIndexBufferValue(quint32 index) const;
-    QVector3D getVertexBufferValuePosition(quint32 index) const;
-    QVector2D getVertexBufferValueUV(quint32 index) const;
+    QVector<QSSGMeshBVHTriangle> calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const;
 
-    QSSGMeshBVHNode *splitNode(QSSGMeshBVHNode *node, quint32 offset, quint32 count, quint32 depth = 0);
-    QSSGBounds3 getBounds(quint32 offset, quint32 count) const;
-    Split getOptimalSplit(const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count) const;
+    static QSSGMeshBVHNode::Handle splitNode(QSSGMeshBVH &bvh, QSSGMeshBVHNode::Handle node, quint32 offset, quint32 count, quint32 depth = 0);
+    static QSSGBounds3 getBounds(QSSGMeshBVH &bvh, quint32 offset, quint32 count);
+    static Split getOptimalSplit(QSSGMeshBVH &bvh, const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count);
     static Axis getLongestDimension(const QSSGBounds3 &nodeBounds);
-    float getAverageValue(quint32 offset, quint32 count, Axis axis) const;
-    quint32 partition(quint32 offset, quint32 count, const Split &split);
+    static float getAverageValue(QSSGMeshBVH &bvh, quint32 offset, quint32 count, Axis axis);
+    static quint32 partition(QSSGMeshBVH &bvh, quint32 offset, quint32 count, const Split &split);
 
     QSSGMesh::Mesh m_mesh;
     QSSGRenderComponentType m_indexBufferComponentType;
@@ -70,12 +67,6 @@ private:
     bool m_hasUVData = false;
     quint32 m_vertexUVOffset;
     bool m_hasIndexBuffer = true;
-
-
-    QVector<QSSGMeshBVHTriangle *> m_triangleBounds;
-    QVector<QSSGMeshBVHNode *> m_roots;
-    quint32 m_maxTreeDepth = 40;
-    quint32 m_maxLeafTriangles = 10;
 };
 
 QT_END_NAMESPACE

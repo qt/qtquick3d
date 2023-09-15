@@ -121,7 +121,7 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
                                         int depth = 0);
 
     static QVector<IntersectionResult> intersectWithBVHTriangles(const RayData &data,
-                                                                 const QVector<QSSGMeshBVHTriangle *> &bvhTriangles,
+                                                                 const QVector<QSSGMeshBVHTriangle> &bvhTriangles,
                                                                  int triangleOffset,
                                                                  int triangleCount);
 

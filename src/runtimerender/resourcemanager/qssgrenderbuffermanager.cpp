@@ -1324,7 +1324,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         QSSGRenderSubset subset;
         const QSSGMesh::Mesh::Subset &source(meshSubsets[subsetIdx]);
         subset.bounds = QSSGBounds3(source.bounds.min, source.bounds.max);
-        subset.bvhRoot = nullptr;
         subset.count = source.count;
         subset.offset = source.offset;
         for (auto &lod : source.lods)
@@ -1708,7 +1707,7 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, 
     return meshIterator->mesh;
 }
 
-QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderPath &inSourcePath)
+std::unique_ptr<QSSGMeshBVH> QSSGBufferManager::loadMeshBVH(const QSSGRenderPath &inSourcePath)
 {
     const QSSGMesh::Mesh mesh = loadMeshData(inSourcePath);
     if (!mesh.isValid()) {
@@ -1719,7 +1718,7 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderPath &inSourcePath)
     return meshBVHBuilder.buildTree();
 }
 
-QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
+std::unique_ptr<QSSGMeshBVH> QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
 {
     if (!geometry)
         return nullptr;

@@ -7,8 +7,6 @@ QT_BEGIN_NAMESPACE
 
 QSSGMeshBVH::~QSSGMeshBVH()
 {
-    qDeleteAll(triangles);
-    qDeleteAll(roots);
 }
 
 QT_END_NAMESPACE

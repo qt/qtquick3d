@@ -510,11 +510,11 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(QSSGBufferManager &bufferMan
         int resultSubset = 0;
         for (const auto &subMesh : subMeshes) {
             QSSGRenderRay::IntersectionResult result;
-            if (subMesh.bvhRoot) {
+            if (!subMesh.bvhRoot.isNull()) {
                 hit = QSSGRenderRay::intersectWithAABBv2(rayData, subMesh.bvhRoot->boundingData);
                 if (hit.intersects()) {
                     results.clear();
-                    inRay.intersectWithBVH(rayData, subMesh.bvhRoot, mesh, results);
+                    inRay.intersectWithBVH(rayData, static_cast<const QSSGMeshBVHNode *>(subMesh.bvhRoot), mesh, results);
                     float subMeshMinRayLength = std::numeric_limits<float>::max();
                     for (const auto &subMeshResult : std::as_const(results)) {
                         if (subMeshResult.rayLengthSquared < subMeshMinRayLength) {

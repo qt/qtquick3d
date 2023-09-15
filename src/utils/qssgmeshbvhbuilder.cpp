@@ -2,8 +2,12 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qssgmeshbvhbuilder_p.h"
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 QT_BEGIN_NAMESPACE
+
+static constexpr quint32 QSSG_MAX_TREE_DEPTH = 40;
+static constexpr quint32 QSSG_MAX_LEAF_TRIANGLES = 10;
 
 QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QSSGMesh::Mesh &mesh)
     : m_mesh(mesh)
@@ -61,13 +65,17 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
         m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInt32;
 }
 
-QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
+std::unique_ptr<QSSGMeshBVH> QSSGMeshBVHBuilder::buildTree()
 {
-    m_roots.clear();
-
     // This only works with triangles
     if (m_mesh.isValid() && m_mesh.drawMode() != QSSGMesh::Mesh::DrawMode::Triangles)
         return nullptr;
+
+    auto meshBvh = std::make_unique<QSSGMeshBVH>();
+
+    auto &roots = meshBvh->roots;
+    auto &nodes = meshBvh->m_nodes;
+    auto &triangleBounds = meshBvh->triangles;
 
     // Calculate the bounds for each triangle in whole mesh once
     quint32 indexCount = 0;
@@ -75,122 +83,174 @@ QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
         indexCount = quint32(m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType));
     else
         indexCount = m_vertexBufferData.size() / m_vertexStride;
-    m_triangleBounds = calculateTriangleBounds(0, indexCount);
+    triangleBounds = calculateTriangleBounds(0, indexCount);
 
     // For each submesh, generate a root bvh node
     if (m_mesh.isValid()) {
         const QVector<QSSGMesh::Mesh::Subset> subsets = m_mesh.subsets();
+        roots.reserve(subsets.size());
         for (quint32 subsetIdx = 0, subsetEnd = subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
             const QSSGMesh::Mesh::Subset &source(subsets[subsetIdx]);
-            QSSGMeshBVHNode *root = new QSSGMeshBVHNode();
+            const auto idx = nodes.size();
+            nodes.emplace_back();
+            QSSGMeshBVHNode::Handle root{ idx, meshBvh.get() };
             // Offsets provided by subset are for the index buffer
             // Convert them to work with the triangle bounds list
             const quint32 triangleOffset = source.offset / 3;
             const quint32 triangleCount = source.count / 3;
-            root->boundingData = getBounds(triangleOffset, triangleCount);
+            root->boundingData = getBounds(*meshBvh, triangleOffset, triangleCount);
             // Recursively split the mesh into a tree of smaller bounding volumns
-            root = splitNode(root, triangleOffset, triangleCount);
-            m_roots.append(root);
+            root = splitNode(*meshBvh, root, triangleOffset, triangleCount);
+            roots.append(root);
         }
     } else {
         // Custom Geometry only has one subset
-        QSSGMeshBVHNode *root = new QSSGMeshBVHNode();
-        root->boundingData = getBounds(0, m_triangleBounds.size());
-        root = splitNode(root, 0, m_triangleBounds.size());
-        m_roots.append(root);
+        auto idx = nodes.size();
+        nodes.emplace_back();
+        QSSGMeshBVHNode::Handle root{ idx, meshBvh.get() };
+        root->boundingData = getBounds(*meshBvh, 0, triangleBounds.size());
+        root = splitNode(*meshBvh, root, 0, triangleBounds.size());
+        roots.append(root);
     }
-    return new QSSGMeshBVH(m_roots, m_triangleBounds);
+
+    return meshBvh;
 }
 
-QVector<QSSGMeshBVHTriangle *> QSSGMeshBVHBuilder::calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const
+
+template <QSSGRenderComponentType ComponentType>
+static inline quint32 getIndexBufferValue(quint32 index, const quint32 indexCount, const QByteArray &indexBufferData)
 {
-    QVector<QSSGMeshBVHTriangle *> triangleBounds;
-    const quint32 triangleCount = indexCount / 3;
-
-    for (quint32 i = 0; i < triangleCount; ++i) {
-        // Get the indices for the triangle
-        const quint32 triangleIndex = i * 3 + indexOffset;
-
-        quint32 index1 = triangleIndex + 0;
-        quint32 index2 = triangleIndex + 1;
-        quint32 index3 = triangleIndex + 2;
-
-        if (m_hasIndexBuffer) {
-            index1 = getIndexBufferValue(triangleIndex + 0);
-            index2 = getIndexBufferValue(triangleIndex + 1);
-            index3 = getIndexBufferValue(triangleIndex + 2);
-        }
-
-        QSSGMeshBVHTriangle *triangle = new QSSGMeshBVHTriangle();
-
-        triangle->vertex1 = getVertexBufferValuePosition(index1);
-        triangle->vertex2 = getVertexBufferValuePosition(index2);
-        triangle->vertex3 = getVertexBufferValuePosition(index3);
-        triangle->uvCoord1 = getVertexBufferValueUV(index1);
-        triangle->uvCoord2 = getVertexBufferValueUV(index2);
-        triangle->uvCoord3 = getVertexBufferValueUV(index3);
-
-        triangle->bounds.include(triangle->vertex1);
-        triangle->bounds.include(triangle->vertex2);
-        triangle->bounds.include(triangle->vertex3);
-        triangleBounds.append(triangle);
-    }
-    return triangleBounds;
-}
-
-quint32 QSSGMeshBVHBuilder::getIndexBufferValue(quint32 index) const
-{
-    quint32 result = 0;
-    const quint32 indexCount = quint32(m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType));
     Q_ASSERT(index < indexCount);
+    Q_STATIC_ASSERT(ComponentType == QSSGRenderComponentType::UnsignedInt16 || ComponentType == QSSGRenderComponentType::UnsignedInt32);
 
-    if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInt16) {
-        QSSGDataView<quint16> shortIndex(reinterpret_cast<const quint16 *>(m_indexBufferData.begin()), indexCount);
+    quint32 result = 0;
+    if constexpr (ComponentType == QSSGRenderComponentType::UnsignedInt16) {
+        QSSGDataView<quint16> shortIndex(reinterpret_cast<const quint16 *>(indexBufferData.begin()), indexCount);
         result = shortIndex[index];
-    } else if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInt32) {
-        QSSGDataView<quint32> longIndex(reinterpret_cast<const quint32 *>(m_indexBufferData.begin()), indexCount);
+    } else if (ComponentType == QSSGRenderComponentType::UnsignedInt32) {
+        QSSGDataView<quint32> longIndex(reinterpret_cast<const quint32 *>(indexBufferData.begin()), indexCount);
         result = longIndex[index];
-    } else {
-        // If you get here something terrible happend
-        Q_ASSERT(false);
     }
+
     return result;
 }
 
-QVector3D QSSGMeshBVHBuilder::getVertexBufferValuePosition(quint32 index) const
+static inline QVector3D getVertexBufferValuePosition(quint32 index, const quint32 vertexStride, const quint32 vertexPosOffset, const QByteArray &vertexBufferData)
 {
-    if (!m_hasPositionData)
-        return QVector3D();
-
-    const quint32 offset = index * m_vertexStride + m_vertexPosOffset;
-    const QVector3D *position = reinterpret_cast<const QVector3D *>(m_vertexBufferData.begin() + offset);
+    const quint32 offset = index * vertexStride + vertexPosOffset;
+    const QVector3D *position = reinterpret_cast<const QVector3D *>(vertexBufferData.begin() + offset);
 
     return *position;
 }
 
-QVector2D QSSGMeshBVHBuilder::getVertexBufferValueUV(quint32 index) const
+static inline QVector2D getVertexBufferValueUV(quint32 index, const quint32 vertexStride, const quint32 vertexUVOffset, const QByteArray &vertexBufferData)
 {
-    if (!m_hasUVData)
-        return QVector2D();
-
-    const quint32 offset = index * m_vertexStride + m_vertexUVOffset;
-    const QVector2D *uv = reinterpret_cast<const QVector2D *>(m_vertexBufferData.begin() + offset);
+    const quint32 offset = index * vertexStride + vertexUVOffset;
+    const QVector2D *uv = reinterpret_cast<const QVector2D *>(vertexBufferData.begin() + offset);
 
     return *uv;
 }
 
-QSSGMeshBVHNode *QSSGMeshBVHBuilder::splitNode(QSSGMeshBVHNode *node, quint32 offset, quint32 count, quint32 depth)
+template <QSSGRenderComponentType ComponentType, bool hasIndexBuffer, bool hasPositionData, bool hasUVData>
+static void calculateTriangleBoundsImpl(quint32 indexOffset,
+                                        quint32 indexCount,
+                                        const QByteArray &indexBufferData,
+                                        const QByteArray &vertexBufferData,
+                                        [[maybe_unused]] const quint32 vertexStride,
+                                        [[maybe_unused]] const quint32 vertexUVOffset,
+                                        [[maybe_unused]] const quint32 vertexPosOffset,
+                                        QVector<QSSGMeshBVHTriangle> &triangleBounds)
 {
+    const quint32 triangleCount = indexCount / 3;
+    triangleBounds.reserve(triangleCount);
+
+    for (quint32 i = 0; i < triangleCount; ++i) {
+        QSSGMeshBVHTriangle triangle{};
+        if constexpr (hasIndexBuffer || hasPositionData || hasUVData) {
+            // Get the indices for the triangle
+            const quint32 triangleIndex = i * 3 + indexOffset;
+
+            quint32 index1 = triangleIndex + 0;
+            quint32 index2 = triangleIndex + 1;
+            quint32 index3 = triangleIndex + 2;
+
+            if constexpr (hasIndexBuffer) {
+                index1 = getIndexBufferValue<ComponentType>(index1, indexCount, indexBufferData);
+                index2 = getIndexBufferValue<ComponentType>(index2, indexCount, indexBufferData);
+                index3 = getIndexBufferValue<ComponentType>(index3, indexCount, indexBufferData);
+            }
+
+            if constexpr (hasPositionData) {
+                triangle.vertex1 = getVertexBufferValuePosition(index1, vertexStride, vertexPosOffset, vertexBufferData);
+                triangle.vertex2 = getVertexBufferValuePosition(index2, vertexStride, vertexPosOffset, vertexBufferData);
+                triangle.vertex3 = getVertexBufferValuePosition(index3, vertexStride, vertexPosOffset, vertexBufferData);
+            }
+
+            if constexpr (hasUVData) {
+                triangle.uvCoord1 = getVertexBufferValueUV(index1, vertexStride, vertexUVOffset, vertexBufferData);
+                triangle.uvCoord2 = getVertexBufferValueUV(index2, vertexStride, vertexUVOffset, vertexBufferData);
+                triangle.uvCoord3 = getVertexBufferValueUV(index3, vertexStride, vertexUVOffset, vertexBufferData);
+            }
+        }
+
+        triangle.bounds.include(triangle.vertex1);
+        triangle.bounds.include(triangle.vertex2);
+        triangle.bounds.include(triangle.vertex3);
+        triangleBounds.append(triangle);
+    }
+}
+
+QVector<QSSGMeshBVHTriangle> QSSGMeshBVHBuilder::calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const
+{
+    QVector<QSSGMeshBVHTriangle> data;
+
+    using CalcTriangleBoundsFn = void (*)(quint32, quint32, const QByteArray &, const QByteArray &, const quint32, const quint32, const quint32, QVector<QSSGMeshBVHTriangle> &);
+    static const CalcTriangleBoundsFn calcTriangleBounds16Fns[] { &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, false, false, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, false, false, true>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, false, true, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, false, true, true>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, true, false, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, true, false, true>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, true, true, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, true, true, true> };
+
+    static const CalcTriangleBoundsFn calcTriangleBounds32Fns[] { &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, false, false, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, false, false, true>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, false, true, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, false, true, true>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, true, false, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, true, false, true>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, true, true, false>,
+                                                                  &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt32, true, true, true> };
+
+
+    const size_t idx = (size_t(m_hasIndexBuffer) << 2u) | (size_t(m_hasPositionData) << 1u) | (size_t(m_hasUVData));
+
+    if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInt16)
+        calcTriangleBounds16Fns[idx](indexOffset, indexCount, m_indexBufferData, m_vertexBufferData, m_vertexStride, m_vertexUVOffset, m_vertexPosOffset, data);
+    else if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInt32)
+        calcTriangleBounds32Fns[idx](indexOffset, indexCount, m_indexBufferData, m_vertexBufferData, m_vertexStride, m_vertexUVOffset, m_vertexPosOffset, data);
+    return data;
+}
+
+QSSGMeshBVHNode::Handle QSSGMeshBVHBuilder::splitNode(QSSGMeshBVH &bvh, QSSGMeshBVHNode::Handle node, quint32 offset, quint32 count, quint32 depth)
+{
+    // NOTE: The node handle argument is intentionally copied! We can risk the storage reallocating!
+    // Besides, it's a trivial type.
+    QSSG_ASSERT(!node.isNull(), return {});
+
+    auto &nodes = bvh.m_nodes;
+
     // Force a leaf node if the there are too few triangles or the tree depth
     // has exceeded the maximum depth
-    if (count < m_maxLeafTriangles || depth >= m_maxTreeDepth) {
+    if (count < QSSG_MAX_LEAF_TRIANGLES || depth >= QSSG_MAX_TREE_DEPTH) {
         node->offset = offset;
         node->count = count;
         return node;
     }
 
     // Determine where to split the current bounds
-    const QSSGMeshBVHBuilder::Split split = getOptimalSplit(node->boundingData, offset, count);
+    const QSSGMeshBVHBuilder::Split split = getOptimalSplit(bvh, node->boundingData, offset, count);
     // Really this shouldn't happen unless there is invalid bounding data, but if that
     // that does happen make this a leaf node.
     if (split.axis == QSSGMeshBVHBuilder::Axis::None) {
@@ -202,7 +262,7 @@ QSSGMeshBVHNode *QSSGMeshBVHBuilder::splitNode(QSSGMeshBVHNode *node, quint32 of
     // Create the split by sorting the values in m_triangleBounds between
     // offset - count based on the split axis and position. The returned offset
     // will determine which values go into the left and right nodes.
-    const quint32 splitOffset = partition(offset, count, split);
+    const quint32 splitOffset = partition(bvh, offset, count, split);
 
     // Create the leaf nodes
     if (splitOffset == offset || splitOffset == (offset + count)) {
@@ -212,42 +272,47 @@ QSSGMeshBVHNode *QSSGMeshBVHBuilder::splitNode(QSSGMeshBVHNode *node, quint32 of
         node->count = count;
     } else {
         // Create the Left Node
-        node->left = new QSSGMeshBVHNode();
+        const auto lidx = nodes.size();
+        nodes.emplace_back();
+        node->left = { lidx, &bvh };
         const quint32 leftOffset = offset;
         const quint32 leftCount = splitOffset - offset;
-        node->left->boundingData = getBounds(leftOffset, leftCount);
-        node->left = splitNode(node->left, leftOffset, leftCount, depth + 1);
+        node->left->boundingData = getBounds(bvh, leftOffset, leftCount);
+        node->left = splitNode(bvh, node->left, leftOffset, leftCount, depth + 1);
 
         // Create the Right Node
-        node->right = new QSSGMeshBVHNode();
+        const auto ridx = nodes.size();
+        nodes.emplace_back();
+        node->right = { ridx, &bvh };
         const quint32 rightOffset = splitOffset;
         const quint32 rightCount = count - leftCount;
-        node->right->boundingData = getBounds(rightOffset, rightCount);
-        node->right = splitNode(node->right, rightOffset, rightCount, depth + 1);
+        node->right->boundingData = getBounds(bvh, rightOffset, rightCount);
+        node->right = splitNode(bvh, node->right, rightOffset, rightCount, depth + 1);
     }
 
     return node;
 }
 
-QSSGBounds3 QSSGMeshBVHBuilder::getBounds(quint32 offset, quint32 count) const
+QSSGBounds3 QSSGMeshBVHBuilder::getBounds(QSSGMeshBVH &bvh, quint32 offset, quint32 count)
 {
     QSSGBounds3 totalBounds;
+    auto &triangleBounds = bvh.triangles;
 
     for (quint32 i = 0; i < count; ++i) {
-        QSSGBounds3 bounds = m_triangleBounds[i + offset]->bounds;
+        const QSSGBounds3 &bounds = triangleBounds[i + offset].bounds;
         totalBounds.include(bounds);
     }
     return totalBounds;
 }
 
-QSSGMeshBVHBuilder::Split QSSGMeshBVHBuilder::getOptimalSplit(const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count) const
+QSSGMeshBVHBuilder::Split QSSGMeshBVHBuilder::getOptimalSplit(QSSGMeshBVH &bvh, const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count)
 {
     QSSGMeshBVHBuilder::Split split;
     split.axis = getLongestDimension(nodeBounds);
     split.pos = 0.f;
 
     if (split.axis != Axis::None)
-        split.pos = getAverageValue(offset, count, split.axis);
+        split.pos = getAverageValue(bvh, offset, count, split.axis);
 
     return split;
 }
@@ -277,38 +342,38 @@ QSSGMeshBVHBuilder::Axis QSSGMeshBVHBuilder::getLongestDimension(const QSSGBound
 }
 
 // Get the average values of triangles for a given axis
-float QSSGMeshBVHBuilder::getAverageValue(quint32 offset, quint32 count, QSSGMeshBVHBuilder::Axis axis) const
+float QSSGMeshBVHBuilder::getAverageValue(QSSGMeshBVH &bvh, quint32 offset, quint32 count, QSSGMeshBVHBuilder::Axis axis)
 {
     float average = 0;
 
     Q_ASSERT(axis != Axis::None);
     Q_ASSERT(count != 0);
 
+    auto &triangleBounds = bvh.triangles;
     for (quint32 i = 0; i < count; ++i)
-        average += m_triangleBounds[i + offset]->bounds.center(int(axis));
+        average += triangleBounds[i + offset].bounds.center(int(axis));
 
     return average / count;
 }
 
-quint32 QSSGMeshBVHBuilder::partition(quint32 offset, quint32 count, const QSSGMeshBVHBuilder::Split &split)
+quint32 QSSGMeshBVHBuilder::partition(QSSGMeshBVH &bvh, quint32 offset, quint32 count, const QSSGMeshBVHBuilder::Split &split)
 {
     int left = offset;
     int right = offset + count - 1;
     const float pos = split.pos;
     const int axis = int(split.axis);
 
+    auto &triangleBounds = bvh.triangles;
     while (true) {
-        while (left <= right && m_triangleBounds[left]->bounds.center()[axis] < pos)
+        while (left <= right && triangleBounds.at(left).bounds.center(axis) < pos)
             left++;
 
-        while (left <= right && m_triangleBounds[right]->bounds.center()[axis] >= pos)
+        while (left <= right && triangleBounds.at(right).bounds.center(axis) >= pos)
             right--;
 
         if (left < right) {
             // Swap triangleBounds at left and right
-            auto temp = m_triangleBounds[left];
-            m_triangleBounds[left] = m_triangleBounds[right];
-            m_triangleBounds[right] = temp;
+            triangleBounds.swapItemsAt(left, right);
 
             left++;
             right--;

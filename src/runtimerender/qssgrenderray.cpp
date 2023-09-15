@@ -208,17 +208,17 @@ void QSSGRenderRay::intersectWithBVH(const RayData &data,
 
     auto hit = QSSGRenderRay::intersectWithAABBv2(data, bvh->left->boundingData);
     if (hit.intersects())
-        intersectWithBVH(data, bvh->left, mesh, intersections, depth + 1);
+        intersectWithBVH(data, static_cast<const QSSGMeshBVHNode *>(bvh->left), mesh, intersections, depth + 1);
 
     hit = QSSGRenderRay::intersectWithAABBv2(data, bvh->right->boundingData);
     if (hit.intersects())
-        intersectWithBVH(data, bvh->right, mesh, intersections, depth + 1);
+        intersectWithBVH(data, static_cast<const QSSGMeshBVHNode *>(bvh->right), mesh, intersections, depth + 1);
 }
 
 
 
 QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriangles(const RayData &data,
-                                                                                    const QVector<QSSGMeshBVHTriangle *> &bvhTriangles,
+                                                                                    const QVector<QSSGMeshBVHTriangle> &bvhTriangles,
                                                                                     int triangleOffset,
                                                                                     int triangleCount)
 {
@@ -236,21 +236,21 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
         float v = 0.f;
         QVector3D normal;
         const bool intersects = triangleIntersect(relativeRay,
-                                                  triangle->vertex1,
-                                                  triangle->vertex2,
-                                                  triangle->vertex3,
+                                                  triangle.vertex1,
+                                                  triangle.vertex2,
+                                                  triangle.vertex3,
                                                   u,
                                                   v,
                                                   normal);
         if (intersects) {
             const float w = 1.0f - u - v;
-            const QVector3D localIntersectionPoint = w * triangle->vertex1 +
-                                                     u * triangle->vertex2 +
-                                                     v * triangle->vertex3;
+            const QVector3D localIntersectionPoint = w * triangle.vertex1 +
+                                                     u * triangle.vertex2 +
+                                                     v * triangle.vertex3;
 
-            const QVector2D uvCoordinate = w * triangle->uvCoord1 +
-                                           u * triangle->uvCoord2 +
-                                           v * triangle->uvCoord3;
+            const QVector2D uvCoordinate = w * triangle.uvCoord1 +
+                                           u * triangle.uvCoord2 +
+                                           v * triangle.uvCoord3;
             // Get the intersection point in scene coordinates
             const QVector3D sceneIntersectionPos = QSSGUtils::mat44::transform(data.globalTransform,
                                                                     localIntersectionPoint);
