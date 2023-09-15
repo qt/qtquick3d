@@ -240,7 +240,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3"
     SILENT
     PRECOMPILE
     OPTIMIZED
-    GLSL "300es,120,150"
+    GLSL "300es,120,330"
     PREFIX
         "/"
     FILES
