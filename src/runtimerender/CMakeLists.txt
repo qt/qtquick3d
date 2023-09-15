@@ -218,8 +218,6 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
         res/rhishaders/texturedquad.frag
         res/rhishaders/environmentmap.vert
         res/rhishaders/environmentmap.frag
-        res/rhishaders/lightmapuvraster.vert
-        res/rhishaders/lightmapuvraster.frag
         res/rhishaders/debugobject.vert
         res/rhishaders/debugobject.frag
 )
@@ -566,6 +564,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_default"
     SILENT
     PRECOMPILE
     OPTIMIZED
+    GLSL "300es,120,330"
     PREFIX
         "/"
     FILES
@@ -579,6 +578,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_uv"
     SILENT
     PRECOMPILE
     OPTIMIZED
+    GLSL "300es,120,330"
     PREFIX
         "/"
     FILES
@@ -594,6 +594,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_uv_tangent"
     SILENT
     PRECOMPILE
     OPTIMIZED
+    GLSL "300es,120,330"
     PREFIX
         "/"
     FILES
