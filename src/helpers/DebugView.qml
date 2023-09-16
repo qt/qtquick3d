@@ -396,21 +396,49 @@ Pane {
                         }
 
                         Label {
-                            text: "Backing texture pixel size is " + root.source.effectiveTextureSize
+                            text: "View3D logical size is " + root.source.width + "x" + root.source.height
+                        }
+                        Label {
+                            text: "Backing texture pixel size is " + root.source.effectiveTextureSize.width + "x" + root.source.effectiveTextureSize.height
                             visible: root.source.renderMode === View3D.Offscreen
                         }
-                        CheckBox {
-                            id: explicitTextureSizeCheckBox
-                            visible: root.source.renderMode === View3D.Offscreen
-                            text: "Explicit backing texture size"
-                            onCheckedChanged: {
-                                if (checked) {
-                                    root.source.explicitTextureWidth = explicitWidthSlider.value;
-                                    root.source.explicitTextureHeight = explicitHeightSlider.value;
-                                } else {
-                                    root.source.explicitTextureWidth = 0;
-                                    root.source.explicitTextureHeight = 0;
+                        RowLayout {
+                            CheckBox {
+                                id: explicitTextureSizeCheckBox
+                                visible: root.source.renderMode === View3D.Offscreen
+                                text: "Explicit backing texture size"
+                                property real aspectRatio: root.source.width / root.source.height
+                                onCheckedChanged: updateSize()
+                                function updateSize() {
+                                    if (!explicitTextureSizeCheckBox.checked) {
+                                        root.source.explicitTextureWidth = 0;
+                                        root.source.explicitTextureHeight = 0;
+                                        return;
+                                    }
+                                    var newWidth = explicitWidthSlider.value;
+                                    var newHeight = explicitHeightSlider.value;
+                                    if (keepAspectRatioCheckBox.checked) {
+                                        var aspectRatio = explicitTextureSizeCheckBox.aspectRatio;
+                                        if (newHeight * aspectRatio <= newWidth)
+                                            newWidth = newHeight * aspectRatio;
+                                        else
+                                            newHeight = newWidth * (1.0 / aspectRatio);
+                                    }
+                                    root.source.explicitTextureWidth = newWidth;
+                                    root.source.explicitTextureHeight = newHeight;
                                 }
+                                Connections {
+                                    target: root.source
+                                    function onWidthChanged() { explicitTextureSizeCheckBox.updateSize() }
+                                    function onHeightChanged() { explicitTextureSizeCheckBox.updateSize() }
+                                }
+                            }
+                            CheckBox {
+                                id: keepAspectRatioCheckBox
+                                visible: root.source.renderMode === View3D.Offscreen && explicitTextureSizeCheckBox.checked
+                                text: "Keep aspect ratio (" + explicitTextureSizeCheckBox.aspectRatio.toFixed(2) + ")"
+                                checked: false
+                                onCheckedChanged: explicitTextureSizeCheckBox.updateSize()
                             }
                         }
                         RowLayout {
@@ -421,10 +449,10 @@ Pane {
                             Slider {
                                 id: explicitWidthSlider
                                 from: 16
-                                to: 2048
+                                to: 4096
                                 value: 1280
-                                onValueChanged: { root.source.explicitTextureWidth = value; root.source.explicitTextureHeight = explicitHeightSlider.value }
-                                Layout.maximumWidth: 100
+                                onValueChanged: explicitTextureSizeCheckBox.updateSize()
+                                Layout.maximumWidth: 120
                             }
                             Label {
                                 text: "Height: " + explicitHeightSlider.value.toFixed(0) + " px"
@@ -432,10 +460,10 @@ Pane {
                             Slider {
                                 id: explicitHeightSlider
                                 from: 16
-                                to: 2048
+                                to: 4096
                                 value: 720
-                                onValueChanged: { root.source.explicitTextureHeight = value; root.source.explicitTextureWidth = explicitWidthSlider.value }
-                                Layout.maximumWidth: 100
+                                onValueChanged: explicitTextureSizeCheckBox.updateSize()
+                                Layout.maximumWidth: 120
                             }
                         }
                     }
