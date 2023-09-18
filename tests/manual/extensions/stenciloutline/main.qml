@@ -95,6 +95,23 @@ Window {
         }
     }
 
+    WasdController {
+        id: wasdController
+        mouseEnabled: !colorPicker.popupVisible && !dbg.visible
+        anchors.fill: view3d
+        controlledObject: camera
+    }
+
+    MouseArea {
+        enabled: !colorPicker.popupVisible && !dbg.visible
+        anchors.fill: view3d
+        onClicked: (mouse)=> {
+            let hit = view3d.pick(mouse.x, mouse.y)
+//            console.log("Pick-result: " + hit)
+            outlineRenderer.target = hit.objectHit
+        }
+    }
+
     Item {
         width: debugViewToggleText.implicitWidth
         height: debugViewToggleText.implicitHeight
@@ -115,23 +132,6 @@ Window {
                 id: dbg
                 visible: false
             }
-        }
-    }
-
-    WasdController {
-        id: wasdController
-        mouseEnabled: !colorPicker.popupVisible && !dbg.visible
-        anchors.fill: view3d
-        controlledObject: camera
-    }
-
-    MouseArea {
-        enabled: !colorPicker.popupVisible && !dbg.visible
-        anchors.fill: view3d
-        onClicked: (mouse)=> {
-            let hit = view3d.pick(mouse.x, mouse.y)
-//            console.log("Pick-result: " + hit)
-            outlineRenderer.target = hit.objectHit
         }
     }
 }
