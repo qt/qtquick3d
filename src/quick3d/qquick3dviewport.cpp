@@ -271,6 +271,11 @@ QQuick3DViewport::~QQuick3DViewport()
     // might still be rendering.
     m_renderStats->deleteLater();
 
+    if (!window() && sceneManager && sceneManager->wattached) {
+        if (sceneManager->wattached->rci().use_count() <= 1)
+            delete sceneManager->wattached;
+    }
+
     // m_directRenderer must be destroyed on the render thread at the proper time, not here.
     // That's handled in releaseResources() + upon sceneGraphInvalidated
 }
