@@ -1459,4 +1459,13 @@ QQmlListProperty<QQuick3DObject> QQuick3DViewport::extensions()
                                               &QQuick3DExtensionListHelper::extensionRemoveLast};
 }
 
+/*!
+    \internal
+ */
+void QQuick3DViewport::rebuildExtensionList()
+{
+    m_extensionListDirty = true;
+    update();
+}
+
 QT_END_NAMESPACE

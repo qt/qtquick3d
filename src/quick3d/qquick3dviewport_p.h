@@ -107,6 +107,8 @@ public:
     [[nodiscard]] const QList<QQuick3DObject *> &extensionList() const { return m_extensions; }
     void clearExtensionListDirty() { m_extensionListDirty = false; }
 
+    Q_INVOKABLE void rebuildExtensionList();
+
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
