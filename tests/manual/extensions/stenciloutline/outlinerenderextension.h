@@ -41,9 +41,9 @@ protected:
 private:
     enum Dirty : quint8
     {
-        Target = 0x1,
-        OutlineMaterial = 0x2,
-        OutlineScale = 0x3,
+        Target = 1 << 0,
+        OutlineMaterial = 1 << 1,
+        OutlineScale = 1 << 2
     };
 
     using DirtyT = std::underlying_type_t<Dirty>;

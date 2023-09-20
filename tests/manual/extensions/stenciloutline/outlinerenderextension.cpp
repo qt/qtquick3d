@@ -228,6 +228,8 @@ QSSGRenderGraphObject *OutlineRenderExtension::updateSpatialNode(QSSGRenderGraph
     if (m_outlineMaterial)
         renderer->outlineMaterialId = QQuick3DExtensionHelpers::getResourceId(*m_outlineMaterial);
 
+    m_dirtyFlag = {};
+
     return node;
 }
 
