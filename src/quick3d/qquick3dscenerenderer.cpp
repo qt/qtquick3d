@@ -79,8 +79,6 @@ static inline quint64 statDrawCallCount(const QSSGRhiContextStats &stats)
 template <typename In, typename Out>
 static void bfs(In *inExtension, QList<Out *> &outList)
 {
-    outList.clear();
-
     QSSG_ASSERT(inExtension, return);
 
     QQueue<In *> queue { { inExtension } };
@@ -645,6 +643,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     // if the list is dirty we rebuild (assumption is that this won't happen frequently).
     if (view3D->extensionListDirty()) {
+        for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionMode::Count); ++i)
+            m_layer->renderExtensions[i].clear();
         // All items in the extension list are root items,
         const auto &extensions = view3D->extensionList();
         for (const auto &ext : extensions) {
