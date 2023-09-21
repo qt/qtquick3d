@@ -1627,8 +1627,7 @@ void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNode
 
 void QSSGLayerRenderData::prepareForRender()
 {
-    if (layerPrepResult.has_value())
-        return;
+    QSSG_ASSERT_X(layerPrepResult.isNull(), "Prep-result was not reset for render!", layerPrepResult = {});
 
     // Verify that the depth write list(s) were cleared between frames
     QSSG_ASSERT(renderedDepthWriteObjects.isEmpty(), renderedDepthWriteObjects.clear());
@@ -1651,11 +1650,11 @@ void QSSGLayerRenderData::prepareForRender()
     bool wasDataDirty = false;
     wasDirty = layer.isDirty();
 
-    QSSGLayerRenderPreparationResult thePrepResult(theViewport, layer);
+    layerPrepResult = { theViewport, layer };
 
     // SSAO
     const bool SSAOEnabled = layer.ssaoEnabled();
-    thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
+    layerPrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
     features.set(QSSGShaderFeatures::Feature::Ssao, SSAOEnabled);
 
     // Effects
@@ -1668,7 +1667,7 @@ void QSSGLayerRenderData::prepareForRender()
         if (theEffect->requiresDepthTexture)
             requiresDepthTexture = true;
     }
-    thePrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
+    layerPrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
 
     // Tonemapping. Except when there are effects, then it is up to the
     // last pass of the last effect to perform tonemapping.
@@ -1772,7 +1771,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (camera != nullptr) {
         // 1.
         wasDataDirty = wasDataDirty || camera->isDirty();
-        QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
+        QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*camera);
         wasDataDirty = wasDataDirty || theResult.m_wasDirty;
         if (!theResult.m_computeFrustumSucceeded)
             qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
@@ -1787,7 +1786,7 @@ void QSSGLayerRenderData::prepareForRender()
             QSSGRenderCamera *theCamera = *iter;
             wasDataDirty = wasDataDirty
                     || theCamera->isDirty();
-            QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
+            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*theCamera);
             wasDataDirty = wasDataDirty || theResult.m_wasDirty;
             if (!theResult.m_computeFrustumSucceeded)
                 qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
@@ -1854,7 +1853,7 @@ void QSSGLayerRenderData::prepareForRender()
                                                     mapSize,
                                                     mapMode,
                                                     shaderLight.light->debugObjectName);
-                thePrepResult.flags.setRequiresShadowMapPass(true);
+                layerPrepResult.flags.setRequiresShadowMapPass(true);
                 // Any light with castShadow=true triggers shadow mapping
                 // in the generated shaders. The fact that some (or even
                 // all) objects may opt out from receiving shadows plays no
@@ -1938,17 +1937,15 @@ void QSSGLayerRenderData::prepareForRender()
 
     const QSSGCameraData &cameraData = getCameraDirectionAndPosition();
 
-    wasDirty |= prepareModelForRender(renderableModels, viewProjection, thePrepResult.flags, cameraData, meshLodThreshold);
+    wasDirty |= prepareModelForRender(renderableModels, viewProjection, layerPrepResult.flags, cameraData, meshLodThreshold);
     wasDirty |= prepareParticlesForRender(renderableParticles, cameraData);
     wasDirty |= prepareItem2DsForRender(*renderer->contextInterface(), renderableItem2Ds, viewProjection);
 
     prepareReflectionProbesForRender();
 
     wasDirty = wasDirty || wasDataDirty;
-    thePrepResult.flags.setWasDirty(wasDirty);
-    thePrepResult.flags.setLayerDataDirty(wasDataDirty);
-
-    layerPrepResult = thePrepResult;
+    layerPrepResult.flags.setWasDirty(wasDirty);
+    layerPrepResult.flags.setLayerDataDirty(wasDataDirty);
 
     //
     const bool animating = wasDirty;
@@ -1995,22 +1992,22 @@ void QSSGLayerRenderData::prepareForRender()
     // If needed, generate a depth texture with the opaque objects. This
     // and the SSAO texture must come first since other passes may want to
     // expose these textures to their shaders.
-    if (thePrepResult.flags.requiresDepthTexture())
+    if (layerPrepResult.flags.requiresDepthTexture())
         activePasses.push_back(&depthMapPass);
 
     // Screen space ambient occlusion. Relies on the depth texture and generates an AO map.
-    if (thePrepResult.flags.requiresSsaoPass())
+    if (layerPrepResult.flags.requiresSsaoPass())
         activePasses.push_back(&ssaoMapPass);
 
     // Shadows. Generates a 2D or cube shadow map. (opaque + pre-pass transparent objects)
-    if (thePrepResult.flags.requiresShadowMapPass())
+    if (layerPrepResult.flags.requiresShadowMapPass())
         activePasses.push_back(&shadowMapPass);
 
     activePasses.push_back(&reflectionMapPass);
     activePasses.push_back(&zPrePassPass);
 
     // Screen texture with opaque objects.
-    if (thePrepResult.flags.requiresScreenTexture())
+    if (layerPrepResult.flags.requiresScreenTexture())
         activePasses.push_back(&screenMapPass);
 
     activePasses.push_back(&mainPass);
@@ -2025,7 +2022,7 @@ void QSSGLayerRenderData::resetForFrame()
     screenTextureObjects.clear();
     opaqueObjects.clear();
     bakedLightingModels.clear();
-    layerPrepResult.reset();
+    layerPrepResult = {};
     // The check for if the camera is or is not null is used
     // to figure out if this layer was rendered at all.
     camera = nullptr;
