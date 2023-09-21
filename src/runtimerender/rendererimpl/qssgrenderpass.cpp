@@ -286,7 +286,7 @@ void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     ps = data.getPipelineState();
     const auto &layerPrepResult = data.layerPrepResult;
-    const bool ready = rhiAoTexture && rhiPrepareAoTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), rhiAoTexture);
+    const bool ready = rhiAoTexture && rhiPrepareAoTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiAoTexture);
 
     if (Q_UNLIKELY(!ready))
         rhiAoTexture = nullptr;
@@ -351,7 +351,7 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     bool ready = false;
     ps = data.getPipelineState();
     rhiDepthTexture = data.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
-    if (Q_LIKELY(rhiDepthTexture && rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), rhiDepthTexture))) {
+    if (Q_LIKELY(rhiDepthTexture && rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiDepthTexture))) {
         sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
         sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
         ready = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiDepthTexture->rpDesc, data,
@@ -423,7 +423,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     rhiScreenTexture = data.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
     auto &layer = data.layer;
     const auto &layerPrepResult = data.layerPrepResult;
-    wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
+    wantsMips = layerPrepResult.flags.requiresMipmapsForScreenTexture();
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
     ps = data.getPipelineState();
 
@@ -444,7 +444,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     }
 
     bool ready = false;
-    if (Q_LIKELY(rhiScreenTexture && rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult->textureDimensions(), wantsMips, rhiScreenTexture))) {
+    if (Q_LIKELY(rhiScreenTexture && rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), wantsMips, rhiScreenTexture))) {
         ready = true;
         // NB: not compatible with disabling LayerEnableDepthTest
         // because there are effectively no "opaque" objects then.
@@ -836,15 +836,15 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
         if (layer.scissorRect.isValid()) {
-            QRect effScissor = layer.scissorRect & layerPrepResult->viewport.toRect();
-            QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult->viewport,
+            QRect effScissor = layer.scissorRect & layerPrepResult.viewport.toRect();
+            QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult.viewport,
                                                             effScissor,
                                                             rhiCtx->rhi()->isYUpInNDC());
             item2D->m_renderer->setProjectionMatrix(correctionMat * item2D->MVP);
             item2D->m_renderer->setViewportRect(effScissor);
         } else {
             item2D->m_renderer->setProjectionMatrix(item2D->MVP);
-            item2D->m_renderer->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
+            item2D->m_renderer->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.viewport, deviceRect));
         }
         item2D->m_renderer->setDeviceRect(deviceRect);
         QRhiRenderPassDescriptor *oldRp = nullptr;
