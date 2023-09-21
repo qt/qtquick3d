@@ -57,7 +57,7 @@ bool QSSGModelHelpers::createRenderables(QSSGRenderContextInterface &contextInte
                                          float lodThreshold)
 {
     auto layer = QSSGLayerRenderData::getCurrent(*contextInterface.renderer());
-    auto &flags = layer->layerPrepResult->flags; // TODO: Maybe not an optional? also, is there any point returing wasDirty here?
+    auto &flags = layer->layerPrepResult.flags; // TODO: Is there any point returing wasDirty here?
     const auto &cameraData = layer->getCameraRenderData(&camera);
     return layer->prepareModelsForRender(renderableModels, flags, cameraData, filter, lodThreshold);
 }
