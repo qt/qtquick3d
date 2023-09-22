@@ -43,9 +43,6 @@ public:
 
 Renderer::Renderer()
 {
-    // ### this should be needed, HasGraphicsResources should be the default for extensions
-    flags |= FlagT(Flags::HasGraphicsResources);
-
     qDebug() << "Renderer ctor; current thread:" << QThread::currentThread() << "main thread:" << qGuiApp->thread();
 }
 

@@ -56,7 +56,8 @@ static QSSGRenderGraphObject::FlagT flagForType(QSSGRenderGraphObject::Type type
                                        || (QSSGRenderGraphObject::isTexture(type))
                                        || (type == QSSGRenderGraphObject::Type::Geometry)
                                        || (type == QSSGRenderGraphObject::Type::TextureData)
-                                       || (type == QSSGRenderGraphObject::Type::ResourceLoader));
+                                       || (type == QSSGRenderGraphObject::Type::ResourceLoader)
+                                       || (type == QSSGRenderGraphObject::Type::RenderExtension));
     return hasGraphicsResources ? QSSGRenderGraphObject::FlagT(QSSGRenderGraphObject::Flags::HasGraphicsResources)
                                 : 0;
 }
