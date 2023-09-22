@@ -42,7 +42,7 @@
     This property defines whether the height map is shown with smooth shading
     or with hard angles between the squares of the map.
 
-    The default value is \c true, meaning smooth scaling is turned on.
+    The default value is \c true, meaning smooth shading is turned on.
 */
 
 
