@@ -932,16 +932,17 @@ void QQuick3DObjectPrivate::derefSceneManager()
     if (sceneManager)
         sceneManager->dirtyBoundingBoxList.removeAll(q);
 
-    if (spatialNode)
-        sceneManager->cleanup(spatialNode);
-    if (!parentItem)
-        sceneManager->parentlessItems.remove(q);
-
-    spatialNode = nullptr;
-
     for (int ii = 0; ii < childItems.size(); ++ii) {
         QQuick3DObject *child = childItems.at(ii);
         QQuick3DObjectPrivate::derefSceneManager(child);
+    }
+
+    if (!parentItem)
+        sceneManager->parentlessItems.remove(q);
+
+    if (spatialNode) {
+        sceneManager->cleanup(spatialNode);
+        spatialNode = nullptr;
     }
 
     sceneManager = nullptr;
