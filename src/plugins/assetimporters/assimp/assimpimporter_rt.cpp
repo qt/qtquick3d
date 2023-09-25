@@ -909,7 +909,7 @@ static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &s
     // Quick3D will ignore these value and just use
     // the initial differences between FBX and Quick3D.
     if (sceneInfo.opt.fbxMode) {
-        aiMatrix4x4::RotationY(M_PI / 2, correctionMatrix);
+        aiMatrix4x4::RotationY(ai_real(M_PI / 2), correctionMatrix);
         needsCorrection = true;
     } else {
         aiVector3D upQuick3D = aiVector3D(0, 1, 0);
