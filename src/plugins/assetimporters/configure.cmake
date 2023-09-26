@@ -48,7 +48,7 @@ qt_feature("quick3d-assimp" PUBLIC PRIVATE
     LABEL "Assimp"
 )
 qt_feature_definition("quick3d-assimp" "QT_NO_QUICK3D_ASSIMP" NEGATE VALUE "1")
-qt_feature("system-assimp" PRIVATE
+qt_feature("system-assimp" PRIVATE SYSTEM_LIBRARY
     LABEL "System Assimp"
     CONDITION QT_FEATURE_quick3d_assimp AND TEST_quick3d_assimp
     ENABLE INPUT_quick3d_assimp STREQUAL 'system'
