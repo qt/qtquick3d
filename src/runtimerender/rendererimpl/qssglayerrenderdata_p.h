@@ -295,7 +295,6 @@ public:
     QVector<QSSGBakedLightingModel> renderedBakedLightingModels;
     RenderableItem2DEntries renderedItem2Ds;
 
-    std::optional<QSSGClippingFrustum> clippingFrustum;
     QSSGLayerRenderPreparationResult layerPrepResult;
     std::optional<QSSGCameraRenderData> cameraData;
 

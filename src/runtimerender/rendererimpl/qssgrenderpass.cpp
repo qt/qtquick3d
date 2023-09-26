@@ -585,12 +585,13 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     auto camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    const auto &cameraData = data.cameraData;
+    QSSG_ASSERT(camera && cameraData.has_value() , return);
 
     ps = data.getPipelineState();
 
     { // Frustum culling
-        const auto &clippingFrustum = data.clippingFrustum;
+        const auto &clippingFrustum = data.cameraData->clippingFrustum;
         const auto &opaqueObjects = data.getSortedOpaqueRenderableObjects();
         if (clippingFrustum.has_value())
             QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), opaqueObjects, sortedOpaqueObjects);
@@ -652,7 +653,8 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     auto camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    const auto &cameraData = data.cameraData;
+    QSSG_ASSERT(camera && cameraData.has_value(), return);
 
     QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
     const int samples = rhiCtx->mainPassSampleCount();
@@ -666,7 +668,7 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
     shaderFeatures = data.getShaderFeatures();
 
     { // Frustum culling
-        const auto &clippingFrustum = data.clippingFrustum;
+        const auto &clippingFrustum = data.cameraData->clippingFrustum;
         const auto &transparentObject = data.getSortedTransparentRenderableObjects();
         if (clippingFrustum.has_value())
             QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), transparentObject, sortedTransparentObjects);
