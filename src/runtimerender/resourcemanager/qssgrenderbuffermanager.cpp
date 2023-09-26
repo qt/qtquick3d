@@ -125,6 +125,15 @@ void QSSGBufferManager::releaseCachedResources()
     clear();
 }
 
+void QSSGBufferManager::releaseResourcesForLayer(QSSGRenderLayer *layer)
+{
+    // frameResetIndex must be +1 since it's depending on being the
+    // next frame and this is the cleanup after the final frame as
+    // the layer is destroyed
+    resetUsageCounters(frameResetIndex + 1, layer);
+    cleanupUnreferencedBuffers(frameResetIndex + 1, layer);
+}
+
 QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
                                                           MipMode inMipMode,
                                                           LoadRenderImageFlags flags)
@@ -1364,7 +1373,7 @@ void QSSGBufferManager::releaseTextureData(const CustomImageCacheKey &key)
         auto rhiTexture = textureDataItr.value().renderImageTexture.m_texture;
         if (rhiTexture) {
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
-            qDebug() << "- releaseTextureData: " << textureData << currentLayer;
+            qDebug() << "- releaseTextureData: " << rhiTexture << currentLayer;
 #endif
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
             Q_TRACE_SCOPE(QSSG_textureUnload);
@@ -1504,7 +1513,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
             auto rhiTexture = textureDataIterator.value().renderImageTexture.m_texture;
             if (rhiTexture) {
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
-                qDebug() << "- releaseTextureData: " << textureDataIterator.key() << currentLayer;
+                qDebug() << "- releaseTextureData: " << rhiTexture << currentLayer;
 #endif
                 decreaseMemoryStat(rhiTexture);
                 m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
@@ -1529,6 +1538,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
 
 void QSSGBufferManager::resetUsageCounters(quint32 frameId, QSSGRenderLayer *layer)
 {
+    currentLayer = layer;
     if (frameResetIndex == frameId)
         return;
 
@@ -1552,7 +1562,6 @@ void QSSGBufferManager::resetUsageCounters(quint32 frameId, QSSGRenderLayer *lay
         meshData.usageCounts[layer] = 0;
 
     frameResetIndex = frameId;
-    currentLayer = layer;
 }
 
 void QSSGBufferManager::registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData)
