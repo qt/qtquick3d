@@ -198,6 +198,7 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
     QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
     rhiCtx->stats().cleanupLayerInfo(m_layer);
+    m_sgContext->bufferManager()->releaseResourcesForLayer(m_layer);
     delete m_layer;
 
     delete m_texture;
