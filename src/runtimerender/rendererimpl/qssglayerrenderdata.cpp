@@ -2101,7 +2101,6 @@ void QSSGLayerRenderData::resetForFrame()
     // to figure out if this layer was rendered at all.
     camera = nullptr;
     cameraData.reset();
-    clippingFrustum.reset();
     renderedOpaqueObjects.clear();
     renderedTransparentObjects.clear();
     renderedScreenTextureObjects.clear();

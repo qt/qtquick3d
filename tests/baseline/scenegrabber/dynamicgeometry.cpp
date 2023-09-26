@@ -43,6 +43,11 @@ void DynamicGeometry::changeGeometry()
     setBounds(QVector3D(-2.0f, -1.0f, 0.0f), QVector3D(2.0f, 1.0f, 0.0f));
 }
 
+void DynamicGeometry::changeBounds()
+{
+    setBounds(QVector3D(-1.0f, -1.0f, -2.0f), QVector3D(1.0f, 1.0f, -1.0f));
+}
+
 void DynamicGeometry::updateData()
 {
     QByteArray vertexData;

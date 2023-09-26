@@ -15,6 +15,7 @@ public:
 
 public Q_SLOTS:
     void changeGeometry();
+    void changeBounds();
 
 private:
     void updateData();
