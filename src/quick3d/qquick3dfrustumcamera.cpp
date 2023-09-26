@@ -71,7 +71,7 @@ QQuick3DFrustumCamera::QQuick3DFrustumCamera(QQuick3DNode *parent)
 /*!
     \qmlproperty real FrustumCamera::top
 
-    The \c top value specifies the top of the {PerspectiveCamera::clipNear}{near clip plane},
+    The \c top value specifies the top of the \l{PerspectiveCamera::clipNear}{near clip plane},
     relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::top() const
@@ -82,7 +82,7 @@ float QQuick3DFrustumCamera::top() const
 /*!
     \qmlproperty real FrustumCamera::bottom
 
-    The \c bottom value specifies the bottom of the {PerspectiveCamera::clipNear}{near clip plane},
+    The \c bottom value specifies the bottom of the \l{PerspectiveCamera::clipNear}{near clip plane},
     relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::bottom() const
@@ -93,7 +93,7 @@ float QQuick3DFrustumCamera::bottom() const
 /*!
     \qmlproperty real FrustumCamera::right
 
-    The \c right value specifies the right of the {PerspectiveCamera::clipNear}{near clip plane},
+    The \c right value specifies the right of the \l{PerspectiveCamera::clipNear}{near clip plane},
     relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::right() const
@@ -104,7 +104,7 @@ float QQuick3DFrustumCamera::right() const
 /*!
     \qmlproperty real FrustumCamera::left
 
-    The \c left value specifies the left of the {PerspectiveCamera::clipNear}{near clip plane},
+    The \c left value specifies the left of the \l{PerspectiveCamera::clipNear}{near clip plane},
     relative to the camera's position in local coordinates.
 */
 float QQuick3DFrustumCamera::left() const
