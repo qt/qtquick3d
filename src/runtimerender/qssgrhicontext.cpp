@@ -1081,10 +1081,11 @@ void QSSGRhiContext::registerMesh(QSSGRenderMesh *mesh)
 
 void QSSGRhiContext::releaseMesh(QSSGRenderMesh *mesh)
 {
-    QSSG_ASSERT(mesh, return);
-    for (const auto &subset : std::as_const(mesh->subsets)) {
-        if (subset.rhi.targetsTexture)
-            releaseTexture(subset.rhi.targetsTexture);
+    if (mesh) {
+        for (const auto &subset : std::as_const(mesh->subsets)) {
+            if (subset.rhi.targetsTexture)
+                releaseTexture(subset.rhi.targetsTexture);
+        }
     }
     m_meshes.remove(mesh);
     delete mesh;
