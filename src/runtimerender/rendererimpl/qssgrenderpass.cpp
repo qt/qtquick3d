@@ -754,6 +754,7 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
     QSSG_CHECK(shaderPipeline);
     ps.shaderPipeline = shaderPipeline.get();
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+    ps.samples = rhiCtx->mainPassSampleCount();
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_map"));
 }
