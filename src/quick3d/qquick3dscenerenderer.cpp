@@ -653,10 +653,12 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             if (QSSGRenderGraphObject::isExtension(type)) {
                 if (type == QSSGRenderGraphObject::Type::RenderExtension) {
                     if (auto *renderExt = qobject_cast<QQuick3DRenderExtension *>(ext)) {
-                        const auto mode = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)->mode();
-                        QSSG_ASSERT(size_t(mode) < std::size(m_layer->renderExtensions), continue);
-                        auto &list = m_layer->renderExtensions[size_t(mode)];
-                        bfs(qobject_cast<QQuick3DRenderExtension *>(ext), list);
+                        if (QQuick3DObjectPrivate::get(renderExt)->spatialNode) {
+                            const auto mode = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)->mode();
+                            QSSG_ASSERT(size_t(mode) < std::size(m_layer->renderExtensions), continue);
+                            auto &list = m_layer->renderExtensions[size_t(mode)];
+                            bfs(qobject_cast<QQuick3DRenderExtension *>(ext), list);
+                        }
                     }
                 }
             }
