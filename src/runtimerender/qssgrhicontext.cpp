@@ -1043,9 +1043,11 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     if (found != m_samplers.cend())
         return found->second;
 
-    QRhiSampler *newSampler = m_rhi->newSampler(samplerDescription.minFilter, samplerDescription.magFilter,
+    QRhiSampler *newSampler = m_rhi->newSampler(samplerDescription.magFilter,
+                                                samplerDescription.minFilter,
                                                 samplerDescription.mipmap,
-                                                samplerDescription.hTiling, samplerDescription.vTiling);
+                                                samplerDescription.hTiling,
+                                                samplerDescription.vTiling);
     if (!newSampler->create()) {
         qWarning("Failed to build image sampler");
         delete newSampler;

@@ -106,7 +106,7 @@ QQuickItem *QQuick3DItem2D::contentItem() const
 void QQuick3DItem2D::sourceItemDestroyed(QObject *item)
 {
     disconnect(item, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
-    auto quickItem = qmlobject_cast<QQuickItem*>(item);
+    auto quickItem = static_cast<QQuickItem*>(item);
     removeChildItem(quickItem);
 }
 
@@ -163,6 +163,21 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
                     // direct connection when rendering is on the main thread, queued with
                     // the threaded render loop
                     QMetaObject::invokeMethod(this, &QQuick3DObject::update);
+                },
+                Qt::DirectConnection);
+        // item2D rendernode has its own render pass descriptor and it should
+        // be removed before deleting rhi context.
+        // Otherwise, rhi will complain about the unreleased resource.
+        connect(
+                m_renderer,
+                &QObject::destroyed,
+                this,
+                [this]() {
+                    auto itemNode = static_cast<QSSGRenderItem2D *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+                    if (itemNode) {
+                        itemNode->m_rp->deleteLater();
+                        itemNode->m_rp = nullptr;
+                    }
                 },
                 Qt::DirectConnection);
     }
@@ -222,12 +237,35 @@ void QQuick3DItem2D::preSync()
     auto *window = manager->window();
     if (m_window != window) {
         if (m_window) {
+            disconnect(m_window, SIGNAL(destroyed(QObject*)), this, SLOT(derefWindow(QObject*)));
             sourcePrivate->derefWindow();
         }
         m_window = window;
         sourcePrivate->refWindow(window);
+        connect(window, SIGNAL(destroyed(QObject*)), this, SLOT(derefWindow(QObject*)));
         sourcePrivate->refFromEffectItem(true);
     }
+}
+
+static void detachWindow(QQuickItem *item, QObject *win)
+{
+    auto *itemPriv = QQuickItemPrivate::get(item);
+
+    if (win == itemPriv->window) {
+        itemPriv->window = nullptr;
+        itemPriv->windowRefCount = 0;
+
+        itemPriv->prevDirtyItem = nullptr;
+        itemPriv->nextDirtyItem = nullptr;
+    }
+
+    for (auto *child: itemPriv->childItems)
+        detachWindow(child, win);
+}
+
+void QQuick3DItem2D::derefWindow(QObject *win)
+{
+    detachWindow(m_contentItem, win);
 }
 
 QT_END_NAMESPACE
