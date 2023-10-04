@@ -70,6 +70,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     MappingModes m_mappingMode = MappingModes::Normal;
     QSSGRenderTextureCoordOp m_horizontalTilingMode = QSSGRenderTextureCoordOp::Repeat;
     QSSGRenderTextureCoordOp m_verticalTilingMode = QSSGRenderTextureCoordOp::Repeat;
+    QSSGRenderTextureCoordOp m_depthTilingMode = QSSGRenderTextureCoordOp::Repeat;
     QSSGRenderTextureFilterOp m_magFilterType = QSSGRenderTextureFilterOp::Linear;
     QSSGRenderTextureFilterOp m_minFilterType = QSSGRenderTextureFilterOp::Linear;
     QSSGRenderTextureFilterOp m_mipFilterType = QSSGRenderTextureFilterOp::Linear;

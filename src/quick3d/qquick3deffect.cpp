@@ -665,6 +665,9 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 texProp.verticalClampType = tex->verticalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
                                                                                              : (tex->verticalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
                                                                                                                                                       : QSSGRenderTextureCoordOp::MirroredRepeat);
+                texProp.zClampType = tex->depthTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                        : (tex->depthTiling() == QQuick3DTexture::ClampToEdge)     ? QSSGRenderTextureCoordOp::ClampToEdge
+                                                                           : QSSGRenderTextureCoordOp::MirroredRepeat;
             }
 
             if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube)

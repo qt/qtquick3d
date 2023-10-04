@@ -333,7 +333,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                         textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
                         toRhi(textureProperty.horizontalClampType),
                         toRhi(textureProperty.verticalClampType),
-                        QRhiSampler::Repeat
+                        toRhi(textureProperty.zClampType)
                     };
                     addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
                     texAdded = true;

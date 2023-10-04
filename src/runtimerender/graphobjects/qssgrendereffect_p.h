@@ -52,6 +52,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
         QSSGRenderTextureFilterOp mipFilterType = QSSGRenderTextureFilterOp::Linear;
         QSSGRenderTextureCoordOp horizontalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
         QSSGRenderTextureCoordOp verticalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
+        QSSGRenderTextureCoordOp zClampType = QSSGRenderTextureCoordOp::ClampToEdge;
         QSSGRenderTextureTypeValue usageType;
     };
 

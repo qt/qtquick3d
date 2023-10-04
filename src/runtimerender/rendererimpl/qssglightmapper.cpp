@@ -828,7 +828,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                                                          mipmapped ? toRhi(subMeshInfo.baseColorNode->m_mipFilterType) : QRhiSampler::None,
                                                          toRhi(subMeshInfo.baseColorNode->m_horizontalTilingMode),
                                                          toRhi(subMeshInfo.baseColorNode->m_verticalTilingMode),
-                                                         QRhiSampler::Repeat
+                                                         toRhi(subMeshInfo.baseColorNode->m_depthTilingMode)
                                                        });
                 bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.baseColorMap, sampler);
             } else {
@@ -841,7 +841,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                                                          mipmapped ? toRhi(subMeshInfo.emissiveNode->m_mipFilterType) : QRhiSampler::None,
                                                          toRhi(subMeshInfo.emissiveNode->m_horizontalTilingMode),
                                                          toRhi(subMeshInfo.emissiveNode->m_verticalTilingMode),
-                                                         QRhiSampler::Repeat
+                                                         toRhi(subMeshInfo.emissiveNode->m_depthTilingMode)
                                                        });
                 bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.emissiveMap, sampler);
             } else {
@@ -859,7 +859,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                                                          mipmapped ? toRhi(subMeshInfo.normalMapNode->m_mipFilterType) : QRhiSampler::None,
                                                          toRhi(subMeshInfo.normalMapNode->m_horizontalTilingMode),
                                                          toRhi(subMeshInfo.normalMapNode->m_verticalTilingMode),
-                                                         QRhiSampler::Repeat
+                                                         toRhi(subMeshInfo.emissiveNode->m_depthTilingMode)
                                                        });
                 bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.normalMap, sampler);
             } else {

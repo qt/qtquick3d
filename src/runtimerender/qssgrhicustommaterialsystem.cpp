@@ -445,7 +445,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                         mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
                         toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
                         toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
-                        QRhiSampler::Repeat
+                        toRhi(renderableImage->m_imageNode.m_depthTilingMode)
                     };
                     rhiCtx->checkAndAdjustForNPoT(texture, &samplerDesc);
                     QRhiSampler *sampler = rhiCtx->sampler(samplerDesc);
@@ -557,7 +557,7 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                       textureProperty->mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty->mipFilterType) : QRhiSampler::None,
                       toRhi(textureProperty->horizontalClampType),
                       toRhi(textureProperty->verticalClampType),
-                      QRhiSampler::Repeat
+                      toRhi(textureProperty->zClampType)
                     }
                 };
                 shaderPipeline.addExtraTexture(t);

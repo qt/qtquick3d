@@ -896,7 +896,7 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
                             mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
                             toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
                             toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
-                            QRhiSampler::Repeat
+                            toRhi(renderableImage->m_imageNode.m_depthTilingMode)
                     });
                     bindings.addTexture(samplerBinding, RENDERER_VISIBILITY_ALL, texture, sampler);
                 }
@@ -1391,7 +1391,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                             mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
                             toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
                             toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
-                            QRhiSampler::Repeat
+                            toRhi(renderableImage->m_imageNode.m_depthTilingMode)
                         };
                         rhiCtx->checkAndAdjustForNPoT(texture, &samplerDesc);
                         QRhiSampler *sampler = rhiCtx->sampler(samplerDesc);

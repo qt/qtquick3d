@@ -417,7 +417,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
                                                      mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
                                                      toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
                                                      toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
-                                                     QRhiSampler::Repeat
+                                                     toRhi(renderableImage->m_imageNode.m_depthTilingMode)
                                                    });
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
         } else {

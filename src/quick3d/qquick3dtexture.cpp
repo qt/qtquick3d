@@ -322,6 +322,23 @@ QQuick3DTexture::TilingMode QQuick3DTexture::verticalTiling() const
 }
 
 /*!
+    \qmlproperty enumeration QtQuick3D::Texture::tilingModeDepth
+
+    This property controls how the texture is mapped when the Z scaling value
+    is greater than 1.
+
+    By default, this property is set to \c{Texture.Repeat}.
+
+    \value Texture.ClampToEdge Texture is not tiled, but the value on the edge is used instead.
+    \value Texture.MirroredRepeat Texture is repeated and mirrored over the Z axis.
+    \value Texture.Repeat Texture is repeated over the Z axis.
+*/
+QQuick3DTexture::TilingMode QQuick3DTexture::depthTiling() const
+{
+    return m_tilingModeDepth;
+}
+
+/*!
     \qmlproperty float QtQuick3D::Texture::rotationUV
 
     This property rotates the texture around the pivot point. This is defined
@@ -775,6 +792,15 @@ void QQuick3DTexture::setVerticalTiling(QQuick3DTexture::TilingMode tilingModeVe
     update();
 }
 
+void QQuick3DTexture::setDepthTiling(QQuick3DTexture::TilingMode tilingModeDepth)
+{
+    if (m_tilingModeDepth == tilingModeDepth)
+        return;
+    m_tilingModeDepth = tilingModeDepth;
+    emit depthTilingChanged();
+    update();
+}
+
 void QQuick3DTexture::setRotationUV(float rotationUV)
 {
     if (qFuzzyCompare(m_rotationUV, rotationUV))
@@ -1061,6 +1087,8 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                                   QSSGRenderTextureCoordOp(m_tilingModeHorizontal));
     nodeChanged |= qUpdateIfNeeded(imageNode->m_verticalTilingMode,
                                   QSSGRenderTextureCoordOp(m_tilingModeVertical));
+    nodeChanged |= qUpdateIfNeeded(imageNode->m_depthTilingMode,
+                                  QSSGRenderTextureCoordOp(m_tilingModeDepth));
 
     if (m_dirtyFlags.testFlag(DirtyFlag::SamplerDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::SamplerDirty, false);

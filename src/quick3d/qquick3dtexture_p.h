@@ -39,6 +39,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(MappingMode mappingMode READ mappingMode WRITE setMappingMode NOTIFY mappingModeChanged)
     Q_PROPERTY(TilingMode tilingModeHorizontal READ horizontalTiling WRITE setHorizontalTiling NOTIFY horizontalTilingChanged)
     Q_PROPERTY(TilingMode tilingModeVertical READ verticalTiling WRITE setVerticalTiling NOTIFY verticalTilingChanged)
+    Q_PROPERTY(TilingMode tilingModeDepth READ depthTiling WRITE setDepthTiling NOTIFY depthTilingChanged REVISION(6, 7))
     Q_PROPERTY(float rotationUV READ rotationUV WRITE setRotationUV NOTIFY rotationUVChanged)
     Q_PROPERTY(float positionU READ positionU WRITE setPositionU NOTIFY positionUChanged)
     Q_PROPERTY(float positionV READ positionV WRITE setPositionV NOTIFY positionVChanged)
@@ -89,6 +90,7 @@ public:
     MappingMode mappingMode() const;
     TilingMode horizontalTiling() const;
     TilingMode verticalTiling() const;
+    TilingMode depthTiling() const;
     float rotationUV() const;
     float positionU() const;
     float positionV() const;
@@ -114,6 +116,7 @@ public Q_SLOTS:
     void setMappingMode(QQuick3DTexture::MappingMode mappingMode);
     void setHorizontalTiling(QQuick3DTexture::TilingMode tilingModeHorizontal);
     void setVerticalTiling(QQuick3DTexture::TilingMode tilingModeVertical);
+    void setDepthTiling(QQuick3DTexture::TilingMode tilingModeDepth);
     void setRotationUV(float rotationUV);
     void setPositionU(float positionU);
     void setPositionV(float positionV);
@@ -137,6 +140,7 @@ Q_SIGNALS:
     void mappingModeChanged();
     void horizontalTilingChanged();
     void verticalTilingChanged();
+    void depthTilingChanged();
     void rotationUVChanged();
     void positionUChanged();
     void positionVChanged();
@@ -189,6 +193,7 @@ private:
     MappingMode m_mappingMode = UV;
     TilingMode m_tilingModeHorizontal = Repeat;
     TilingMode m_tilingModeVertical = Repeat;
+    TilingMode m_tilingModeDepth = Repeat;
     float m_rotationUV = 0;
     float m_positionU = 0;
     float m_positionV = 0;

@@ -1699,6 +1699,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 prop.verticalClampType = tex->verticalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
                                                             : (tex->verticalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
                                                             : QSSGRenderTextureCoordOp::MirroredRepeat;
+                prop.zClampType = tex->depthTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                        : (tex->depthTiling() == QQuick3DTexture::ClampToEdge)  ? QSSGRenderTextureCoordOp::ClampToEdge
+                                                                            : QSSGRenderTextureCoordOp::MirroredRepeat;
             } else {
                 prop.texImage = nullptr;
             }
@@ -1710,12 +1713,14 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 disconnect(prop.mipFilterChangedConn);
                 disconnect(prop.horizontalTilingChangedConn);
                 disconnect(prop.verticalTilingChangedConn);
+                disconnect(prop.depthTilingChangedConn);
                 if (tex) {
                     prop.minFilterChangedConn = connect(tex, &QQuick3DTexture::minFilterChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
                     prop.magFilterChangedConn = connect(tex, &QQuick3DTexture::magFilterChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
                     prop.mipFilterChangedConn = connect(tex, &QQuick3DTexture::mipFilterChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
                     prop.horizontalTilingChangedConn = connect(tex, &QQuick3DTexture::horizontalTilingChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
                     prop.verticalTilingChangedConn = connect(tex, &QQuick3DTexture::verticalTilingChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                    prop.depthTilingChangedConn = connect(tex, &QQuick3DTexture::depthTilingChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
                 }
             }
         }
