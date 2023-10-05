@@ -26,7 +26,7 @@ class Q_QUICK3D_EXPORT QQuick3DFrustumCamera : public QQuick3DPerspectiveCamera
     Q_PROPERTY(float top READ top WRITE setTop NOTIFY topChanged)
     Q_PROPERTY(float bottom READ bottom WRITE setBottom NOTIFY bottomChanged)
     Q_PROPERTY(float right READ right WRITE setRight NOTIFY rightChanged)
-    Q_PROPERTY(float left READ right WRITE setLeft NOTIFY leftChanged)
+    Q_PROPERTY(float left READ left WRITE setLeft NOTIFY leftChanged)
 
     QML_NAMED_ELEMENT(FrustumCamera)
 
