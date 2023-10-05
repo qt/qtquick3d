@@ -96,14 +96,19 @@ QSSGRenderGraphObject *QSSGFrameData::getResource(QSSGResourceId id) const
     return data->getResource(id);
 }
 
+QSSGRenderGraphObject *QSSGFrameData::getCamera(QSSGCameraId id) const
+{
+    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
+    QSSG_ASSERT(data, return {});
+    return data->getCamera(id);
+}
+
 /*!
-    \fn QSSGFrameData::camera() const
+    \fn QSSGFrameData::activeCamera() const
 
-    \return The main camera for the scene, or null if non could be found.
-
-    \sa QSSGRenderCamera
+    \return The active camera for the scene, or null if non could be found.
 */
-QSSGRenderCamera *QSSGFrameData::camera() const
+QSSGRenderGraphObject *QSSGFrameData::activeCamera() const
 {
     auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
     QSSG_ASSERT(data, return {});

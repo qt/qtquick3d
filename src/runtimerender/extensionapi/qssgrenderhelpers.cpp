@@ -8,6 +8,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
+#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -53,14 +55,27 @@ void QSSGModelHelpers::ensureMeshes(const QSSGRenderContextInterface &contextInt
 
 bool QSSGModelHelpers::createRenderables(QSSGRenderContextInterface &contextInterface,
                                          const QSSGRenderableNodes &renderableModels,
-                                         const QSSGRenderCamera &camera,
+                                         const QSSGRenderGraphObject &camera,
                                          RenderableFilter filter,
                                          float lodThreshold)
 {
+    QSSG_ASSERT(QSSGRenderGraphObject::isCamera(camera.type), return {});
+    const auto &renderCamera = static_cast<const QSSGRenderCamera &>(camera);
+
     auto layer = QSSGLayerRenderData::getCurrent(*contextInterface.renderer());
     auto &flags = layer->layerPrepResult.flags; // TODO: Is there any point returing wasDirty here?
-    const auto &cameraData = layer->getCameraRenderData(&camera);
+    const auto &cameraData = layer->getCameraRenderData(&renderCamera);
     return layer->prepareModelsForRender(renderableModels, flags, cameraData, filter, lodThreshold);
+}
+
+QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGRenderGraphObject &camera)
+{
+    QSSG_ASSERT(QSSGRenderGraphObject::isCamera(camera.type), return {});
+
+    const auto &renderCamera = static_cast<const QSSGRenderCamera &>(camera);
+    QMatrix4x4 mat44{Qt::Uninitialized};
+    renderCamera.calculateViewProjectionMatrix(mat44);
+    return mat44;
 }
 
 QT_END_NAMESPACE

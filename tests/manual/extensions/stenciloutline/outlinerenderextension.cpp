@@ -25,8 +25,8 @@ public:
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return RenderMode::Overlay; };
 
-    QSSGNodeId targetId = 0;
-    QSSGResourceId outlineMaterialId = 0;
+    QSSGNodeId targetId {};
+    QSSGResourceId outlineMaterialId {};
     float outlineScale = 1.05f;
 
     QSSGRenderDefaultMaterial *outlineMaterial = nullptr;
@@ -42,7 +42,7 @@ bool OutlineRenderer::prepareData(QSSGFrameData &data)
     const auto &ctx = data.renderer()->contextInterface();
 
     // Make sure we have a tagetId.
-    if (!targetId)
+    if (targetId == QSSGNodeId::Invalid)
         return false;
 
     // We're just going to steal the node here as we're going to render it ourself.
@@ -56,7 +56,7 @@ bool OutlineRenderer::prepareData(QSSGFrameData &data)
     nodes = { node, node };
 
     // This is the active camera for the scene (the camera used to render the final scene)
-    auto *camera = data.camera();
+    auto *camera = data.activeCamera();
     if (!camera)
         return false;
 

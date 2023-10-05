@@ -7,8 +7,8 @@
 #include <QGuiApplication>
 #include <ssg/qssgrendercontextcore.h>
 #include <ssg/qssgrenderer.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <ssg/qssgrenderextensions.h>
+#include <ssg/qssgrenderhelpers.h>
 
 class Renderer : public QSSGRenderExtension
 {
@@ -56,14 +56,14 @@ Renderer::~Renderer()
 
 bool Renderer::prepareData(QSSGFrameData &data)
 {
-    QSSGRenderCamera *camera = data.camera();
+    QSSGRenderGraphObject *camera = data.activeCamera();
     if (!camera) {
         canRender = false;
         return false;
     }
 
     // ### would be nice to know that we do not have to query (recalculate) every time, if the camera has not changed
-    camera->calculateViewProjectionMatrix(viewProjection);
+    viewProjection = QSSGCameraHelpers::getViewProjectionMatrix(*camera);
 
     canRender = true;
 

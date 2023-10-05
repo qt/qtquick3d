@@ -320,6 +320,7 @@ public:
 
     [[nodiscard]] QSSGRenderGraphObject *getResource(QSSGResourceId id) const;
 
+    [[nodiscard]] QSSGRenderGraphObject *getCamera(QSSGCameraId id) const;
     [[nodiscard]] QSSGRenderCamera *activeCamera() const { return camera; }
 
     [[nodiscard]] QSSGCameraRenderData getCameraRenderData(const QSSGRenderCamera *camera);

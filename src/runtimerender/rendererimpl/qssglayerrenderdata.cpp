@@ -2406,6 +2406,15 @@ QSSGRenderGraphObject *QSSGLayerRenderData::getResource(QSSGResourceId id) const
     return ret;
 }
 
+QSSGRenderGraphObject *QSSGLayerRenderData::getCamera(QSSGCameraId id) const
+{
+    QSSGRenderGraphObject *ret = nullptr;
+    if (auto res = reinterpret_cast<QSSGRenderGraphObject *>(id))
+        ret = res;
+
+    return ret;
+}
+
 QSSGCameraRenderData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCamera *camera_)
 {
     QSSGCameraRenderData data;

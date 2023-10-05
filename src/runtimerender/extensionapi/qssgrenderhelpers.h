@@ -29,6 +29,7 @@ struct QSSGRhiGraphicsPipelineState;
 struct QSSGRenderCamera;
 struct QSSGRenderableNodeEntry;
 
+class QSSGRenderGraphObject;
 class QSSGRenderContextInterface;
 struct QSSGModelContext;
 
@@ -45,7 +46,7 @@ public:
 
     static bool createRenderables(QSSGRenderContextInterface &contextInterface,
                                   const QSSGRenderableNodes &renderableModels,
-                                  const QSSGRenderCamera &camera,
+                                  const QSSGRenderGraphObject &camera,
                                   RenderableFilter filter,
                                   float lodThreshold = 0.0f);
 
@@ -53,6 +54,15 @@ public:
 
 private:
     QSSGModelHelpers();
+};
+
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCameraHelpers
+{
+public:
+    static QMatrix4x4 getViewProjectionMatrix(const QSSGRenderGraphObject &camera);
+
+private:
+    QSSGCameraHelpers();
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderHelpers

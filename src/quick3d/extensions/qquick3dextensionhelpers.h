@@ -14,11 +14,9 @@
 //
 
 #include <QtQuick3D/qtquick3dglobal.h>
+#include <ssg/qssgrenderbasetypes.h>
 
 QT_BEGIN_NAMESPACE
-
-using QSSGNodeId = quintptr;
-using QSSGResourceId = quintptr;
 
 class QQuick3DObject;
 
@@ -29,6 +27,7 @@ public:
 
     [[nodiscard]] static QSSGNodeId getNodeId(const QQuick3DObject &node);
     [[nodiscard]] static QSSGResourceId getResourceId(const QQuick3DObject &resource);
+    [[nodiscard]] static QSSGCameraId getCameraId(const QQuick3DObject &camera);
 };
 
 QT_END_NAMESPACE

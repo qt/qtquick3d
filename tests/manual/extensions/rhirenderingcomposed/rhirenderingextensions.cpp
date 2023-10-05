@@ -7,8 +7,8 @@
 #include <QFile>
 #include <ssg/qssgrendercontextcore.h>
 #include <ssg/qssgrenderer.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <ssg/qssgrenderextensions.h>
+#include <ssg/qssgrenderhelpers.h>
 
 // The extension exposed to QML is the consumer, backed by an extension node
 // with Main mode that renders a textured cube within the main render pass. It
@@ -242,13 +242,13 @@ ConsumerRenderer::~ConsumerRenderer()
 
 bool ConsumerRenderer::prepareData(QSSGFrameData &data)
 {
-    QSSGRenderCamera *camera = data.camera();
+    QSSGRenderGraphObject *camera = data.activeCamera();
     if (!camera) {
         canRender = false;
         return false;
     }
 
-    camera->calculateViewProjectionMatrix(viewProjection);
+    viewProjection = QSSGCameraHelpers::getViewProjectionMatrix(*camera);
 
     canRender = true;
 

@@ -16,6 +16,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
+#include <ssg/qssgrenderbasetypes.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtCore/qobject.h>
 
@@ -23,10 +24,6 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderer;
 class QSSGLayerRenderData;
-
-// NOTE: We might want to move this to the base types header
-using QSSGNodeId = quintptr;
-using QSSGResourceId = quintptr;
 
 struct QSSGRhiRenderableTexture;
 
@@ -51,7 +48,8 @@ public:
 
     [[nodiscard]] QSSGRenderGraphObject *getResource(QSSGResourceId id) const;
 
-    [[nodiscard]] QSSGRenderCamera *camera() const;
+    [[nodiscard]] QSSGRenderGraphObject *getCamera(QSSGCameraId id) const;
+    [[nodiscard]] QSSGRenderGraphObject *activeCamera() const;
 
     [[nodiscard]] QSSGRenderer *renderer() const { return m_renderer; }
 
