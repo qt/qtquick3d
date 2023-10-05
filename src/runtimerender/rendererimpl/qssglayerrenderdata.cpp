@@ -1790,7 +1790,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (camera != nullptr) {
         // 1.
         wasDataDirty = wasDataDirty || camera->isDirty();
-        QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*camera);
+        QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*camera, renderer->contextInterface()->dpr());
         wasDataDirty = wasDataDirty || theResult.m_wasDirty;
         if (!theResult.m_computeFrustumSucceeded)
             qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
@@ -1805,7 +1805,7 @@ void QSSGLayerRenderData::prepareForRender()
             QSSGRenderCamera *theCamera = *iter;
             wasDataDirty = wasDataDirty
                     || theCamera->isDirty();
-            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*theCamera);
+            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*theCamera, renderer->contextInterface()->dpr());
             wasDataDirty = wasDataDirty || theResult.m_wasDirty;
             if (!theResult.m_computeFrustumSucceeded)
                 qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
@@ -1815,10 +1815,8 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     float meshLodThreshold = 1.0f;
-    if (camera) {
-        camera->dpr = renderer->contextInterface()->dpr();
+    if (camera)
         meshLodThreshold = camera->levelOfDetailPixelThreshold / theViewport.width();
-    }
 
     layer.renderedCamera = camera;
 
@@ -2133,7 +2131,7 @@ QSize QSSGLayerRenderPreparationResult::textureDimensions() const
     return QSize(QSSGRendererUtil::nextMultipleOf4(size.width()), QSSGRendererUtil::nextMultipleOf4(size.height()));
 }
 
-QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraForRender(QSSGRenderCamera &inCamera)
+QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraForRender(QSSGRenderCamera &inCamera, float dpr)
 {
     // When using ssaa we need to zoom with the ssaa multiplier since otherwise the
     // orthographic camera will be zoomed out due to the bigger viewport. We therefore
@@ -2142,6 +2140,7 @@ QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraF
     // cannot store the magnification permanently.
     const float horizontalMagnification = inCamera.horizontalMagnification;
     const float verticalMagnification = inCamera.verticalMagnification;
+    inCamera.dpr = dpr;
     inCamera.horizontalMagnification *= layer->ssaaEnabled ? layer->ssaaMultiplier : 1.0f;
     inCamera.verticalMagnification *= layer->ssaaEnabled ? layer->ssaaMultiplier : 1.0f;
     const auto result = inCamera.calculateGlobalVariables(viewport);
