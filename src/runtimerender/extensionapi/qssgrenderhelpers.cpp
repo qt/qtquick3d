@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include "qssgrendercontextcore_p.h"
-#include "qssgrenderhelpers_p.h"
+#include "qssgrenderhelpers.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>

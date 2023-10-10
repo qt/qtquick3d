@@ -6,6 +6,8 @@
 #include <QGuiApplication>
 #include <QFile>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+#include <ssg/qssgrenderextensions.h>
 
 // The extension exposed to QML is the consumer, backed by an extension node
 // with Main mode that renders a textured cube within the main render pass. It
@@ -73,6 +75,7 @@ static float triangle[] = {
 
 void ProducerRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
 {
+    Q_UNUSED(data);
     const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer.contextInterface()->rhiContext();
     if (!rhiCtx)
         return;

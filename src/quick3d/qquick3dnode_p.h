@@ -21,8 +21,6 @@
 #include <QtGui/QQuaternion>
 #include <QtGui/QMatrix4x4>
 
-#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-
 QT_BEGIN_NAMESPACE
 struct QSSGRenderNode;
 class QQuick3DNodePrivate;

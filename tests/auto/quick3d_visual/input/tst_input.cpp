@@ -10,6 +10,7 @@
 #include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuick3D/private/qquick3ditem2d_p.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQml/private/qqmlglobal_p.h>
 
 #include "../shared/util.h"
 

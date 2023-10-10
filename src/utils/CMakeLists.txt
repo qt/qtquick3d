@@ -20,6 +20,7 @@ qt_internal_add_module(Quick3DUtils
         qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
         qssgmesh.cpp qssgmesh_p.h
         qssgassert.cpp qssgassert_p.h
+        qssgaosettings_p.h
         qtquick3dutilsglobal_p.h
         qquick3dprofiler.cpp
         qquick3dprofiler_p.h

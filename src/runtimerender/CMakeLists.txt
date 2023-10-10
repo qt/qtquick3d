@@ -21,7 +21,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrenderdefaultmaterial.cpp graphobjects/qssgrenderdefaultmaterial_p.h
         graphobjects/qssgrendereffect.cpp graphobjects/qssgrendereffect_p.h
         graphobjects/qssgrendergeometry.cpp graphobjects/qssgrendergeometry_p.h
-        graphobjects/qssgrendergraphobject.cpp graphobjects/qssgrendergraphobject_p.h
+        graphobjects/qssgrendergraphobject.cpp graphobjects/qssgrendergraphobject_p.h graphobjects/qssgrendergraphobject.h
         graphobjects/qssgrenderimage.cpp graphobjects/qssgrenderimage_p.h
         graphobjects/qssgrenderinstancetable.cpp graphobjects/qssgrenderinstancetable_p.h
         graphobjects/qssgrenderitem2d.cpp graphobjects/qssgrenderitem2d_p.h
@@ -65,6 +65,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgshadermaterialadapter.cpp qssgshadermaterialadapter_p.h
         qssgshaderresourcemergecontext_p.h
         qtquick3druntimerenderglobal_p.h
+        qtquick3druntimerenderglobal.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
         rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h
         rendererimpl/qssglayerrenderdata_p.h
@@ -73,12 +74,13 @@ qt_internal_add_module(Quick3DRuntimeRender
         rendererimpl/qssgrendererimplshaders_rhi.cpp
         rendererimpl/qssgvertexpipelineimpl.cpp rendererimpl/qssgvertexpipelineimpl_p.h
         rendererimpl/qssgrenderpass_p.h rendererimpl/qssgrenderpass.cpp
+        rendererimpl/qssgrenderhelpers_p.h rendererimpl/qssgrenderhelpers.cpp
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
         resourcemanager/qssgrendershaderlibrarymanager.cpp resourcemanager/qssgrendershaderlibrarymanager_p.h
         rendererimpl/qssgcputonemapper_p.h
-        extensionapi/qssgrenderextensions_p.h extensionapi/qssgrenderextensions.cpp
-        extensionapi/qssgrenderhelpers_p.h extensionapi/qssgrenderhelpers.cpp
+        extensionapi/qssgrenderextensions.h extensionapi/qssgrenderextensions.cpp
+        extensionapi/qssgrenderhelpers.h extensionapi/qssgrenderhelpers.cpp
         qssgdebugdrawsystem_p.h qssgdebugdrawsystem.cpp
     NO_UNITY_BUILD_SOURCES
         rendererimpl/qssglightmapper.cpp              # avoiding possible clash with tinyexr' macros
@@ -99,6 +101,8 @@ qt_internal_add_module(Quick3DRuntimeRender
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
+    SSG_HEADER_FILTERS
+        "(^|/)qssg.*[^_][^p]\\.h$"
 )
 
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools

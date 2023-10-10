@@ -4,6 +4,8 @@
 #include <QtTest>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderpickresult_p.h>
 
 class picking : public QObject
 {

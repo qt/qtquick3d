@@ -1,8 +1,8 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QTQUICK3DRUNTIMERENDERGLOBAL_H
-#define QTQUICK3DRUNTIMERENDERGLOBAL_H
+#ifndef QTQUICK3DRUNTIMERENDERGLOBAL_P_H
+#define QTQUICK3DRUNTIMERENDERGLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -15,7 +15,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderexports_p.h>
 
-#endif // QTQUICK3DRUNTIMERENDERGLOBAL_H
+#endif // QTQUICK3DRUNTIMERENDERGLOBAL_P_H

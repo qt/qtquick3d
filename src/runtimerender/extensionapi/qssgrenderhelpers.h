@@ -1,22 +1,19 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#ifndef QSSGRENDERHELPERS_P_H
-#define QSSGRENDERHELPERS_P_H
+#ifndef QSSGRENDERHELPERS_H
+#define QSSGRENDERHELPERS_H
 
 //
 //  W A R N I N G
 //  -------------
 //
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
+// This file is part of the QtQuick3D API, with limited compatibility guarantees.
+// Usage of this API may make your code source and binary incompatible with
+// future versions of Qt.
 //
 
-#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DRuntimeRender/qtquick3druntimerenderglobal.h>
 
 #include <QtCore/qsize.h>
 
@@ -81,4 +78,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QSSGRENDERHELPERS_P_H
+#endif // QSSGRENDERHELPERS_H

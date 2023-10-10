@@ -4,7 +4,7 @@
 #ifndef RHIRENDERINGEXTENSIONS_H
 #define RHIRENDERINGEXTENSIONS_H
 
-#include <QtQuick3D/private/qquick3drenderextensions_p.h>
+#include <QtQuick3D/qquick3drenderextensions.h>
 #include <QtQmlIntegration>
 #include <rhi/qrhi.h>
 

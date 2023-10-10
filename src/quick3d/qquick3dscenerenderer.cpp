@@ -13,7 +13,7 @@
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
 #include "qquick3ddebugsettings_p.h"
-#include "extensions/qquick3drenderextensions_p.h"
+#include "extensions/qquick3drenderextensions.h"
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>

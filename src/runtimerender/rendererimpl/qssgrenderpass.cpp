@@ -6,7 +6,8 @@
 #include "qssglayerrenderdata_p.h"
 #include "qssgrendercontextcore_p.h"
 #include "qssgdebugdrawsystem_p.h"
-#include "extensionapi/qssgrenderextensions_p.h"
+#include "extensionapi/qssgrenderextensions.h"
+#include "qssgrenderhelpers_p.h"
 
 #include "../utils/qssgassert_p.h"
 
@@ -214,6 +215,9 @@ void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     // OUTPUT: Depth buffer attchment for current target
 
     // NOTE: Could we make the depth pass more complete and just do a blit here?
+    //
+    // 1. If we have a depth map, just do a blit and then update with the rest
+    // 2. If we don't have a depth map (and/or SSAO) consider using a lower lod level.
 
     // CONDITION: Input + globally enabled or ?
 
@@ -282,7 +286,7 @@ void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     QSSG_ASSERT_X((camera && rhiDepthTexture && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing camera or required texture(s)", return);
 
     ssaoShaderPipeline = data.renderer->getRhiSsaoShader();
-    ambientOcclusion = { data.layer.aoStrength, data.layer.aoDistance, data.layer.aoSoftness, data.layer.aoBias, data.layer.aoSamplerate, data.layer.aoDither };
+    aoSettings = { data.layer.aoStrength, data.layer.aoDistance, data.layer.aoSoftness, data.layer.aoBias, data.layer.aoSamplerate, data.layer.aoDither };
 
     ps = data.getPipelineState();
     const auto &layerPrepResult = data.layerPrepResult;
@@ -321,7 +325,7 @@ void SSAOMapPass::renderPass(QSSGRenderer &renderer)
                            renderer,
                            *ssaoShaderPipeline,
                            ps,
-                           ambientOcclusion,
+                           aoSettings,
                            *rhiAoTexture,
                            *rhiDepthTexture,
                            *camera);
@@ -337,7 +341,7 @@ void SSAOMapPass::release()
     rhiAoTexture = nullptr;
     camera = nullptr;
     ps = {};
-    ao = AmbientOcclusion();
+    aoSettings = {};
 }
 
 // DEPTH TEXTURE PASS
@@ -375,6 +379,11 @@ void DepthMapPass::renderPass(QSSGRenderer &renderer)
 
     // NOTE: Why are we prepping opaque + transparent object if we're not using them? And why are we staying compatible with 5.15?
     //       Only used for AO? Merge into the AO pass?
+
+    // NOTES:
+    //
+    // 1: If requested, use this and blit it in the z-pre pass.
+    // 2. Why are we handling the transparent objects in the render prep (only)?
 
     // CONDITION:
 

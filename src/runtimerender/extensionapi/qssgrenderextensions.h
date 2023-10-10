@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtCore/qobject.h>
 
@@ -29,9 +29,6 @@ using QSSGNodeId = quintptr;
 using QSSGResourceId = quintptr;
 
 struct QSSGRhiRenderableTexture;
-
-struct QSSGRenderNode;
-struct QSSGRenderMesh;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGFrameData
 {

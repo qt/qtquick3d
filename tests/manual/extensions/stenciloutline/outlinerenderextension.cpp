@@ -6,10 +6,10 @@
 #include <rhi/qrhi.h>
 
 #include <QtQuick3D/qquick3dobject.h>
-#include <QtQuick3D/private/qquick3dextensionhelpers_p.h>
+#include <ssg/qquick3dextensionhelpers.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderextensions_p.h>
+#include <ssg/qssgrenderhelpers.h>
+#include <ssg/qssgrenderextensions.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
 class OutlineRenderer : public QSSGRenderExtension

@@ -9,6 +9,8 @@
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
 #include <QtQuick3D/private/qquick3ditem2d_p.h>
 
+#include <QtQuick3DRuntimeRender/private/qssgrenderray_p.h>
+
 #include "../shared/util.h"
 
 class CustomGeometry : public QQuick3DGeometry

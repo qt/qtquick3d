@@ -17,7 +17,8 @@
 
 #include <QtCore/qglobal.h>
 
-#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
+#include <ssg/qssgrenderhelpers.h>
+#include <QtQuick3DUtils/private/qssgaosettings_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
@@ -103,16 +104,6 @@ public:
 class SSAOMapPass : public QSSGRenderPass
 {
 public:
-    struct AmbientOcclusion
-    {
-        float aoStrength = 0.0f;
-        float aoDistance = 5.0f;
-        float aoSoftness = 50.0f;
-        float aoBias = 0.0f;
-        qint32 aoSamplerate = 2;
-        bool aoDither = false;
-    } ambientOcclusion;
-
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::Standalone; }
@@ -120,7 +111,7 @@ public:
 
     const QSSGRhiRenderableTexture *rhiDepthTexture = nullptr;
     const QSSGRenderCamera *camera = nullptr;
-    AmbientOcclusion ao;
+    QSSGAmbientOcclusionSettings aoSettings;
     QSSGRhiGraphicsPipelineState ps;
     QSSGRhiRenderableTexture *rhiAoTexture = nullptr;
     QSSGRhiShaderPipelinePtr ssaoShaderPipeline;

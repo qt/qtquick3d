@@ -6,6 +6,8 @@
 #include <rhi/qrhi.h>
 #include <QGuiApplication>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+#include <ssg/qssgrenderextensions.h>
 
 class Renderer : public QSSGRenderExtension
 {

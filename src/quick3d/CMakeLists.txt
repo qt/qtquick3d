@@ -7,15 +7,7 @@
 ## Quick3D Module:
 #####################################################################
 
-qt_internal_add_qml_module(Quick3D
-    URI "QtQuick3D"
-    VERSION "${PROJECT_VERSION}"
-    DESIGNER_SUPPORTED
-    DEPENDENCIES QtQuick/auto
-    CLASS_NAME QQuick3DPlugin
-    PLUGIN_TARGET qquick3dplugin
-    NO_PLUGIN_OPTIONAL
-    NO_GENERATE_PLUGIN_SOURCE
+qt_internal_add_module(Quick3D
     SOURCES
         qquick3d.cpp qquick3d.h
         qquick3dabstractlight.cpp qquick3dabstractlight_p.h
@@ -69,10 +61,12 @@ qt_internal_add_qml_module(Quick3D
         qquick3dspecularglossymaterial.cpp qquick3dspecularglossymaterial_p.h
         qquick3dfog.cpp qquick3dfog_p.h
         qquick3dlightmapbaker.cpp qquick3dlightmapbaker_p.h
-        extensions/qquick3drenderextensions.cpp extensions/qquick3drenderextensions_p.h
-        extensions/qquick3dextensionhelpers.cpp extensions/qquick3dextensionhelpers_p.h
+        extensions/qquick3drenderextensions.cpp extensions/qquick3drenderextensions.h
+        extensions/qquick3dextensionhelpers.cpp extensions/qquick3dextensionhelpers.h
     NO_UNITY_BUILD_SOURCES
         qquick3dspecularglossymaterial.cpp # redefinition of 'ensureNormalized' (from qquick3dprincipledmaterial.cpp)
+    SSG_HEADER_FILTERS
+        "(^|/)qquick3dextensionhelpers\\.h$"
     DEFINES
         QT_BUILD_QUICK3D_LIB
     LIBRARIES
@@ -95,6 +89,17 @@ qt_internal_add_qml_module(Quick3D
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
+)
+
+qt_internal_add_qml_module(Quick3D
+    URI "QtQuick3D"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    DEPENDENCIES QtQuick/auto
+    CLASS_NAME QQuick3DPlugin
+    PLUGIN_TARGET qquick3dplugin
+    NO_PLUGIN_OPTIONAL
+    NO_GENERATE_PLUGIN_SOURCE
 )
 
 qt_internal_extend_target(qquick3dplugin

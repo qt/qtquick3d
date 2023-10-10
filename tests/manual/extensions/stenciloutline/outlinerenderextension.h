@@ -4,7 +4,7 @@
 #ifndef OUTLINERENDEREXTENSION_H
 #define OUTLINERENDEREXTENSION_H
 
-#include <QtQuick3D/private/qquick3drenderextensions_p.h>
+#include <QtQuick3D/qquick3drenderextensions.h>
 #include <QtQmlIntegration>
 
 class OutlineRenderExtension : public QQuick3DRenderExtension

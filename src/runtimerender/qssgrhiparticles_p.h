@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <QtQuick3DRuntimeRender/qtquick3druntimerenderglobal.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
 #include <QtGui/QMatrix4x4>
