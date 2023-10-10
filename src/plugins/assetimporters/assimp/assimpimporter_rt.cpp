@@ -510,8 +510,12 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                 else if (QByteArrayView(alphaMode.C_Str()) == "BLEND")
                     mode = QQuick3DPrincipledMaterial::AlphaMode::Blend;
 
-                if (mode != QQuick3DPrincipledMaterial::AlphaMode::Default)
+                if (mode != QQuick3DPrincipledMaterial::AlphaMode::Default) {
                     QSSGSceneDesc::setProperty(target, "alphaMode", &QQuick3DPrincipledMaterial::setAlphaMode, mode);
+                    // If the mode is mask, we also need to force OpaquePrePassDepthDraw mode
+                    if (mode == QQuick3DPrincipledMaterial::AlphaMode::Mask)
+                        QSSGSceneDesc::setProperty(target, "depthDrawMode", &QQuick3DPrincipledMaterial::setDepthDrawMode, QQuick3DMaterial::OpaquePrePassDepthDraw);
+                }
             }
         }
 
@@ -778,8 +782,12 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                 else if (QByteArrayView(alphaMode.C_Str()) == "BLEND")
                     mode = QQuick3DSpecularGlossyMaterial::AlphaMode::Blend;
 
-                if (mode != QQuick3DSpecularGlossyMaterial::AlphaMode::Default)
+                if (mode != QQuick3DSpecularGlossyMaterial::AlphaMode::Default) {
                     QSSGSceneDesc::setProperty(target, "alphaMode", &QQuick3DSpecularGlossyMaterial::setAlphaMode, mode);
+                    // If the mode is mask, we also need to force OpaquePrePassDepthDraw mode
+                    if (mode == QQuick3DSpecularGlossyMaterial::AlphaMode::Mask)
+                    QSSGSceneDesc::setProperty(target, "depthDrawMode", &QQuick3DSpecularGlossyMaterial::setDepthDrawMode, QQuick3DMaterial::OpaquePrePassDepthDraw);
+                }
             }
         }
 
