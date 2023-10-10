@@ -9,8 +9,10 @@
 #include <QtQuick/QQuickWindow>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -457,7 +459,7 @@ void QQuick3DWindowAttachment::cleanupResources()
     // Check if there's orphaned resources that needs to be
     // cleaned out first.
     if (resourceCleanupQueue.size() != 0)
-        m_rci->cleanupResources(resourceCleanupQueue);
+        m_rci->renderer()->cleanupResources(resourceCleanupQueue);
 }
 
 // Called on the render thread, if there is one

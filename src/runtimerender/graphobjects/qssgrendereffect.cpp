@@ -1,10 +1,11 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "../qssgrendercontextcore.h"
 
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>

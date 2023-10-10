@@ -5,11 +5,16 @@
 
 #include <QtCore/qvector.h>
 
+#include <ssg/qssgrendercontextcore.h>
+
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
 #include <QtQuick3D/private/qquick3dscenemanager_p.h>
 
 class tst_renderer : public QObject
@@ -48,8 +53,7 @@ void tst_renderer::initTestCase()
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
 
-    std::unique_ptr<QSSGRhiContext> rhiContext = std::make_unique<QSSGRhiContext>();
-    rhiContext->initialize(rhi);
+    std::unique_ptr<QSSGRhiContext> rhiContext = std::make_unique<QSSGRhiContext>(rhi);
     rhiContext->setCommandBuffer(cb);
 
     renderContext = std::make_shared<QSSGRenderContextInterface>(std::make_unique<QSSGBufferManager>(),
@@ -80,10 +84,10 @@ void tst_renderer::initTestCase()
 
     layer.explicitCamera = &camera;
 
+    const auto &renderer = renderContext->renderer();
     const auto viewport = QRect(QPoint(), QSize(800,600));
-    renderContext->setViewport(viewport);
-    renderContext->setScissorRect(viewport);
-    renderContext->setSceneColor(QColor(Qt::black));
+    renderer->setViewport(viewport);
+    renderer->setScissorRect(viewport);
 
     for (int x = 0; x != n; ++x) {
         for (int y = 0; y != n; ++y) {
@@ -111,10 +115,11 @@ void tst_renderer::initTestCase()
 void tst_renderer::bench_prep()
 {
     QVERIFY(!layer.children.isEmpty());
+    const auto &renderer = renderContext->renderer();
     QBENCHMARK {
-        renderContext->beginFrame(&layer);
-        renderContext->prepareLayerForRender(layer);
-        renderContext->endFrame(&layer);
+        renderer->beginFrame(&layer);
+        renderer->prepareLayerForRender(layer);
+        renderer->endFrame(&layer);
     }
 }
 

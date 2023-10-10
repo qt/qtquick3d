@@ -91,7 +91,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          const QSSGDataView<float> &inMorphWeights,
                                          QSSGRenderableImage *inFirstImage,
                                          float inOpacity,
-                                         const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                         const QSSGLayerRenderData &inRenderProperties,
                                          const QSSGShaderLightListView &inLights,
                                          const QSSGShaderReflectionProbe &reflectionProbe,
                                          bool receivesShadows,

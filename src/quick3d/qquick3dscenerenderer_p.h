@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
 
 #include <qsgtextureprovider.h>
 #include <qsgrendernode.h>

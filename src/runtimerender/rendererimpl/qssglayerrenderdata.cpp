@@ -16,12 +16,13 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderjoint_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermorphtarget_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "../qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
@@ -431,6 +432,11 @@ void QSSGLayerRenderData::updateSortedDepthObjectsListImp()
     }
 }
 
+const std::unique_ptr<QSSGPerFrameAllocator> &QSSGLayerRenderData::perFrameAllocator(QSSGRenderContextInterface &ctx)
+{
+    return ctx.perFrameAllocator();
+}
+
 const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedRenderedDepthWriteObjects()
 {
     updateSortedDepthObjectsListImp();
@@ -448,18 +454,18 @@ const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedrenderedOpaqueDept
  * so RENDER_FRAME_NEW() takes the RCI + T's arguments
  */
 template <typename T, typename... Args>
-Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, Args&&... args)
+[[nodiscard]] inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, Args&&... args)
 {
     static_assert(std::is_trivially_destructible_v<T>, "Objects allocated using the per-frame allocator needs to be trivially destructible!");
-    return new (ctx.perFrameAllocator().allocate(sizeof(T)))T(std::forward<Args>(args)...);
+    return new (QSSGLayerRenderData::perFrameAllocator(ctx)->allocate(sizeof(T)))T(std::forward<Args>(args)...);
 }
 
 template <typename T>
-Q_REQUIRED_RESULT inline QSSGDataRef<T> RENDER_FRAME_NEW_BUFFER(QSSGRenderContextInterface &ctx, size_t count)
+[[nodiscard]] inline QSSGDataRef<T> RENDER_FRAME_NEW_BUFFER(QSSGRenderContextInterface &ctx, size_t count)
 {
     static_assert(std::is_trivially_destructible_v<T>, "Objects allocated using the per-frame allocator needs to be trivially destructible!");
     const size_t asize = sizeof(T) * count;
-    return { reinterpret_cast<T *>(ctx.perFrameAllocator().allocate(asize)), qsizetype(count) };
+    return { reinterpret_cast<T *>(QSSGLayerRenderData::perFrameAllocator(ctx)->allocate(asize)), qsizetype(count) };
 }
 
 QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
@@ -1643,7 +1649,7 @@ void QSSGLayerRenderData::prepareForRender()
     QSSG_ASSERT(renderedDepthWriteObjects.isEmpty(), renderedDepthWriteObjects.clear());
     QSSG_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty(), renderedOpaqueDepthPrepassObjects.clear());
 
-    QRect theViewport(renderer->contextInterface()->viewport());
+    QRect theViewport(renderer->viewport());
 
     // NOTE: The renderer won't change in practice (after being set the first time), but just update
     // it anyways.
@@ -1701,7 +1707,7 @@ void QSSGLayerRenderData::prepareForRender()
     // 2.0, because there are still implementations in use that only
     // support the spec mandated minimum of 224 vec4s (so 3584 bytes).
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
-    if (rhiCtx->maxUniformBufferRange() < REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES) {
+    if (rhiCtx->rhi()->resourceLimit(QRhi::MaxUniformBufferRange) < REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES) {
         features.set(QSSGShaderFeatures::Feature::ReduceMaxNumLights, true);
         static bool notified = false;
         if (!notified) {
@@ -1714,6 +1720,7 @@ void QSSGLayerRenderData::prepareForRender()
     // IBL Lightprobe Image
     QSSGRenderImageTexture lightProbeTexture;
     if (layer.lightProbe) {
+        const auto &lightProbeSettings = layer.lightProbeSettings;
         if (layer.lightProbe->m_format == QSSGRenderTextureFormat::Unknown) {
             // Choose on a format that makes sense for a light probe
             // At this point it's just a suggestion
@@ -1731,7 +1738,7 @@ void QSSGLayerRenderData::prepareForRender()
         if (lightProbeTexture.m_texture) {
 
             features.set(QSSGShaderFeatures::Feature::LightProbe, true);
-            features.set(QSSGShaderFeatures::Feature::IblOrientation, !layer.probeOrientation.isIdentity());
+            features.set(QSSGShaderFeatures::Feature::IblOrientation, !lightProbeSettings.probeOrientation.isIdentity());
 
             // By this point we will know what the actual texture format of the light probe is
             // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
@@ -1792,7 +1799,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (camera != nullptr) {
         // 1.
         wasDataDirty = wasDataDirty || camera->isDirty();
-        QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*camera, renderer->contextInterface()->dpr());
+        QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*camera, renderer->dpr());
         wasDataDirty = wasDataDirty || theResult.m_wasDirty;
         if (!theResult.m_computeFrustumSucceeded)
             qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
@@ -1807,7 +1814,7 @@ void QSSGLayerRenderData::prepareForRender()
             QSSGRenderCamera *theCamera = *iter;
             wasDataDirty = wasDataDirty
                     || theCamera->isDirty();
-            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*theCamera, renderer->contextInterface()->dpr());
+            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*theCamera, renderer->dpr());
             wasDataDirty = wasDataDirty || theResult.m_wasDirty;
             if (!theResult.m_computeFrustumSucceeded)
                 qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
@@ -1817,8 +1824,10 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     float meshLodThreshold = 1.0f;
-    if (camera)
+    if (camera) {
+        camera->dpr = renderer->dpr();
         meshLodThreshold = camera->levelOfDetailPixelThreshold / theViewport.width();
+    }
 
     layer.renderedCamera = camera;
 
@@ -2229,7 +2238,7 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
         return instanceBuffer;
     auto *table = modelContext.model.instanceTable;
     bool usesLod = minThreshold >= 0 || maxThreshold >= 0;
-    QSSGRhiInstanceBufferData &instanceData(usesLod ? rhiCtx->instanceBufferData(&modelContext.model) : rhiCtx->instanceBufferData(table));
+    QSSGRhiInstanceBufferData &instanceData(usesLod ? QSSGRhiContextPrivate::get(*rhiCtx).instanceBufferData(&modelContext.model) : QSSGRhiContextPrivate::get(*rhiCtx).instanceBufferData(table));
     quint32 instanceBufferSize = table->dataSize();
     // Create or resize the instance buffer ### if (instanceData.owned)
     bool sortingChanged = table->isDepthSortingEnabled() != instanceData.sorting;
@@ -2422,6 +2431,19 @@ QSSGCameraRenderData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCa
 QSSGRenderContextInterface *QSSGLayerRenderData::contextInterface() const
 {
     return renderer ? renderer->contextInterface() : nullptr;
+}
+
+QSSGLayerRenderData::GlobalRenderProperties QSSGLayerRenderData::globalRenderProperties(const QSSGRenderContextInterface &ctx)
+{
+    GlobalRenderProperties props {};
+    if (const auto &rhiCtx = ctx.rhiContext(); rhiCtx->isValid()) {
+        QRhi *rhi = rhiCtx->rhi();
+        props.isYUpInFramebuffer = rhi->isYUpInFramebuffer();
+        props.isYUpInNDC = rhi->isYUpInNDC();
+        props.isClipDepthZeroToOne = rhi->isClipDepthZeroToOne();
+    }
+
+    return props;
 }
 
 const QSSGRenderShadowMapPtr &QSSGLayerRenderData::requestShadowMapManager()

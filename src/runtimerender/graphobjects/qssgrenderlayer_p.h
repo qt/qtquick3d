@@ -143,11 +143,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     constexpr bool ssaoEnabled() const { return aoEnabled && (aoStrength > 0.0f && aoDistance > 0.0f); }
 
     // IBL
-    QSSGRenderImage *lightProbe;
-    float probeExposure;
-    float probeHorizon;
-    QMatrix3x3 probeOrientation;
-    QVector3D probeOrientationAngles;
+    QSSGRenderImage *lightProbe { nullptr };
+    struct LightProbeSettings {
+        float probeExposure { 1.0f };
+        float probeHorizon { -1.0f };
+        QMatrix3x3 probeOrientation;
+        QVector3D probeOrientationAngles;
+    } lightProbeSettings;
 
     QSSGRenderImage *skyBoxCubeMap = nullptr;
 

@@ -5,7 +5,8 @@
 /* clang-format off */
 
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "qssgrendercontextcore.h"
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -728,7 +729,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     //
     // NOTE: This is not perfect, we do expend the custom material and effect shaders, so
     // there cane still be cases where the reported line numbers are slightly off.
-    if (!QSSGRhiContext::shaderDebuggingEnabled())
+    if (!QSSGRhiContextPrivate::shaderDebuggingEnabled())
         result.prepend("#line 1\n");
     const char *lastPos = shaderCode.constData();
 

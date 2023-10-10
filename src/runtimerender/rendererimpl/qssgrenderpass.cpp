@@ -4,7 +4,7 @@
 #include "qssgrenderpass_p.h"
 #include "qssgrhiquadrenderer_p.h"
 #include "qssglayerrenderdata_p.h"
-#include "qssgrendercontextcore_p.h"
+#include "qssgrendercontextcore.h"
 #include "qssgdebugdrawsystem_p.h"
 #include "extensionapi/qssgrenderextensions.h"
 #include "qssgrenderhelpers_p.h"
@@ -172,10 +172,8 @@ void ReflectionMapPass::renderPass(QSSGRenderer &renderer)
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-    // TODO: Workaroud as we using the layer data in rhiRenderReflectionMap() consider
-    // if we can extract the data we need for rendering in the prep step...
-    QSSG_ASSERT(renderer.getLayerGlobalRenderProperties().layer.renderData, return);
-    const auto &data = *renderer.getLayerGlobalRenderProperties().layer.renderData;
+    const auto *layerData = QSSGLayerRenderData::getCurrent(renderer);
+    QSSG_ASSERT(layerData, return);
 
     QSSG_CHECK(reflectionMapManager);
     if (!reflectionPassObjects.isEmpty() || !reflectionProbes.isEmpty()) {
@@ -184,7 +182,7 @@ void ReflectionMapPass::renderPass(QSSGRenderer &renderer)
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         rhiRenderReflectionMap(rhiCtx.get(),
                                this,
-                               data,
+                               *layerData,
                                &ps,
                                *reflectionMapManager,
                                reflectionProbes,
@@ -839,7 +837,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         // Set the projection matrix
         if (!item2D->m_renderer)
             continue;
-        if (item2D->m_renderer && item2D->m_renderer->currentRhi() != renderer.contextInterface()->rhi()) {
+        if (item2D->m_renderer && item2D->m_renderer->currentRhi() != renderer.contextInterface()->rhiContext()->rhi()) {
             static bool contextWarningShown = false;
             if (!contextWarningShown) {
                 qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
@@ -898,7 +896,7 @@ void Item2DPass::renderPass(QSSGRenderer &renderer)
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render 2D sub-scene"));
     for (const auto &item : std::as_const(item2Ds)) {
         QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
-        if (item2D->m_renderer && item2D->m_renderer->currentRhi() == renderer.contextInterface()->rhi())
+        if (item2D->m_renderer && item2D->m_renderer->currentRhi() == renderer.contextInterface()->rhiContext()->rhi())
             item2D->m_renderer->renderSceneInline();
     }
     cb->debugMarkEnd();
@@ -966,7 +964,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     if (debugDraw && debugDraw->hasContent()) {
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         debugDraw->prepareGeometry(rhiCtx.get(), rub);
-        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ this, nullptr, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiCtx).drawCallData({ this, nullptr, nullptr, 0 });
         if (!dcd.ubuf) {
             dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64);
             dcd.ubuf->create();
@@ -998,7 +996,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick 3D debug objects"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         ps.shaderPipeline = debugObjectShader.get();
-        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ this, nullptr, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiCtx).drawCallData({ this, nullptr, nullptr, 0 });
         QRhiShaderResourceBindings *srb = dcd.srb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         debugDraw->recordRenderDebugObjects(rhiCtx.get(), &ps, srb, rpDesc);

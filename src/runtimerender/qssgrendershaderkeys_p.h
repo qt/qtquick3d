@@ -17,7 +17,7 @@
 //
 
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <ssg/qssgrenderbasetypes.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 

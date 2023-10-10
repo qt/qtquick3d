@@ -10,7 +10,8 @@
 
 #include <ssg/qssgrenderhelpers.h>
 #include <ssg/qssgrenderextensions.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 class OutlineRenderer : public QSSGRenderExtension
 {

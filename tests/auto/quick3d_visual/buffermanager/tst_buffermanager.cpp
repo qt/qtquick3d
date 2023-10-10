@@ -5,7 +5,7 @@
 #include <QQuickView>
 
 #include <private/qquick3dviewport_p.h>
-#include <private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
 #include <private/qssgrenderbuffermanager_p.h>
 #include <private/qquick3dresourceloader_p.h>
 

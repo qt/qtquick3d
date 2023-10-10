@@ -4,7 +4,7 @@
 
 #include "graphobjects/qssgrendergraphobject_p.h"
 #include "qssgrendershadercache_p.h"
-#include "qssgrendercontextcore_p.h"
+#include "qssgrendercontextcore.h"
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
@@ -251,7 +251,7 @@ QSSGShaderCache::QSSGShaderCache(QSSGRhiContext &ctx,
       m_builtInShaders(*this)
 {
     if (isAutoDiskCacheEnabled()) {
-        const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
+        const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
         m_persistentShaderStorageFileName = persistentQsbcFileName();
         if (!m_persistentShaderStorageFileName.isEmpty()) {
             const bool skipCacheFile = qEnvironmentVariableIntValue("QT_QUICK3D_NO_SHADER_CACHE_LOAD");
@@ -387,9 +387,9 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     QShaderBaker baker;
     m_initBaker(&baker, m_rhiContext.rhi());
 
-    const bool editorMode = QSSGRhiContext::editorMode();
+    const bool editorMode = QSSGRhiContextPrivate::editorMode();
     // Shader debug is disabled in editor mode
-    const bool shaderDebug = !editorMode && QSSGRhiContext::shaderDebuggingEnabled();
+    const bool shaderDebug = !editorMode && QSSGRhiContextPrivate::shaderDebuggingEnabled();
 
    static auto dumpShader = [](QShader::Stage stage, const QByteArray &code) {
        switch (stage) {
@@ -506,7 +506,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::newPipelineFromPregenerated(const QByt
     // full-blown generator). That is important for some clients (effect
     // system) so returning an existing QSSGRhiShaderPipeline is _wrong_.
 
-    const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
+    const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
     if (shaderDebug)
         qDebug("Loading pregenerated rhi shader(s)");
 
@@ -563,7 +563,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryNewPipelineFromPersistentCache(cons
         return {};
 
     if (entryDesc.vertShader.isValid() && entryDesc.fragShader.isValid()) {
-        const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
+        const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
         if (shaderDebug)
             qDebug("Loading rhi shaders from disk cache for %s (%s)", qsbcKey.constData(), inKey.constData());
 
@@ -585,7 +585,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
     if (rhiShaders)
         return rhiShaders;
 
-    const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
+    const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
     if (shaderDebug)
         qDebug("Loading builtin rhi shader: %s", inKey.constData());
 

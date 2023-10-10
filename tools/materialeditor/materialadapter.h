@@ -11,7 +11,7 @@
 
 #include <QtQml/qqmlregistration.h>
 
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <ssg/qssgrenderbasetypes.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>

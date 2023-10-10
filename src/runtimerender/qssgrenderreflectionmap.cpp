@@ -4,8 +4,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderreflectionprobe_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include "qssgrendercontextcore.h"
+#include <ssg/qssgrenderbasetypes.h>
 
 QT_BEGIN_NAMESPACE
 

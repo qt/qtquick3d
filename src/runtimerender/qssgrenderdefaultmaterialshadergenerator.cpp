@@ -5,9 +5,10 @@
 /* clang-format off */
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
@@ -17,6 +18,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
 #include <QtCore/QByteArray>
@@ -1861,7 +1863,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QSSGDataView<float> &inMorphWeights,
                                                            QSSGRenderableImage *inFirstImage,
                                                            float inOpacity,
-                                                           const QSSGLayerGlobalRenderProperties &inRenderProperties,
+                                                           const QSSGLayerRenderData &inRenderProperties,
                                                            const QSSGShaderLightListView &inLights,
                                                            const QSSGShaderReflectionProbe &reflectionProbe,
                                                            bool receivesShadows,
@@ -1876,11 +1878,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
     const QVector3D camGlobalPos = inCamera.getGlobalPos();
     const QVector2D camProperties(inCamera.clipNear, inCamera.clipFar);
-    const QVector3D camDirection = inRenderProperties.cameraData.direction;
+    const auto &cameraData = inRenderProperties.cameraData;
+    const QVector3D camDirection = QSSG_GUARD(cameraData.has_value()) ? cameraData->direction : QVector3D{ 0.0f, 0.0f, -1.0f };
 
     shaders.setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
     shaders.setUniform(ubufData, "qt_cameraDirection", &camDirection, 3 * sizeof(float), &cui.cameraDirectionIdx);
     shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
+
+    const auto globalRenderData = QSSGLayerRenderData::globalRenderProperties(renderContext);
 
     // Only calculate and update Matrix uniforms if they are needed
     bool usesProjectionMatrix = false;
@@ -2004,7 +2009,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders.addShadowMap());
             ++shadowMapCount;
 
-            QSSGShadowMapEntry *pEntry = inRenderProperties.shadowMapManager->shadowMapEntry(lightIdx);
+            QSSGShadowMapEntry *pEntry = inRenderProperties.getShadowMapManager()->shadowMapEntry(lightIdx);
             Q_ASSERT(pEntry);
 
             const auto names = setupShadowMapVariableNames(lightIdx);
@@ -2037,7 +2042,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 const QVector4D shadowControl(theLight->m_shadowBias,
                                               theLight->m_shadowFactor,
                                               theLight->m_shadowMapFar,
-                                              inRenderProperties.isYUpInFramebuffer ? 0.0f : 1.0f);
+                                              globalRenderData.isYUpInFramebuffer ? 0.0f : 1.0f);
                 shaders.setUniform(ubufData, names.shadowControlStem, &shadowControl, 4 * sizeof(float));
             } else {
                 shaders.setUniform(ubufData, names.shadowControlStem, ZERO_MATRIX, 4 * sizeof(float));
@@ -2067,12 +2072,18 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         theLightAmbientTotal += theLight->m_ambientColor;
     }
 
-    shaders.setDepthTexture(inRenderProperties.rhiDepthTexture);
-    shaders.setSsaoTexture(inRenderProperties.rhiSsaoTexture);
-    shaders.setScreenTexture(inRenderProperties.rhiScreenTexture);
+    const QSSGRhiRenderableTexture *depthTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
+    const QSSGRhiRenderableTexture *ssaoTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
+    const QSSGRhiRenderableTexture *screenTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
+
+    shaders.setDepthTexture(depthTexture->texture);
+    shaders.setSsaoTexture(ssaoTexture->texture);
+    shaders.setScreenTexture(screenTexture->texture);
     shaders.setLightmapTexture(lightmapTexture);
 
-    QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
+    const QSSGRenderLayer &layer = QSSGLayerRenderData::getCurrent(*renderContext.renderer())->layer;
+    QSSGRenderImage *theLightProbe = layer.lightProbe;
+    const auto &lightProbeData = layer.lightProbeSettings;
 
     // If the material has its own IBL Override, we should use that image instead.
     QSSGRenderImage *materialIblProbe = materialAdapter->iblProbe();
@@ -2086,14 +2097,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
         const int maxMipLevel = lightProbeTexture.m_mipmapCount - 1;
 
-        if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity()) {
+        if (!materialIblProbe && !lightProbeData.probeOrientation.isIdentity()) {
             shaders.setUniform(ubufData, "qt_lightProbeOrientation",
-                                inRenderProperties.probeOrientation.constData(),
+                                lightProbeData.probeOrientation.constData(),
                                 12 * sizeof(float), &cui.lightProbeOrientationIdx,
                                 QSSGRhiShaderPipeline::UniformFlag::Mat3);
         }
 
-        const float props[4] = { 0.0f, float(maxMipLevel), inRenderProperties.probeHorizon, inRenderProperties.probeExposure };
+        const float props[4] = { 0.0f, float(maxMipLevel), lightProbeData.probeHorizon, lightProbeData.probeExposure };
         shaders.setUniform(ubufData, "qt_lightProbeProperties", props, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
 
         shaders.setLightProbeTexture(lightProbeTexture.m_texture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
@@ -2191,9 +2202,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     }
 
     const float rhiProperties[4] = {
-        inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,
-        inRenderProperties.isYUpInNDC ? 1.0f : -1.0f,
-        inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f,
+        globalRenderData.isYUpInFramebuffer ? 1.0f : -1.0f,
+        globalRenderData.isYUpInNDC ? 1.0f : -1.0f,
+        globalRenderData.isClipDepthZeroToOne ? 0.0f : -1.0f,
         0.0f // unused
     };
     shaders.setUniform(ubufData, "qt_rhi_properties", rhiProperties, 4 * sizeof(float), &cui.rhiPropertiesIdx);

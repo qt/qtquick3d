@@ -116,8 +116,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
 
-    const auto rhiContext = std::make_unique<QSSGRhiContext>();
-    rhiContext->initialize(rhi.get());
+    const auto rhiContext = std::make_unique<QSSGRhiContext>(rhi.get());
     rhiContext->setCommandBuffer(cb);
 
     QScopedPointer<QSSGLoadedTexture> inImage(QSSGLoadedTexture::loadHdrImage(QSSGInputUtil::getStreamForFile(inPath), FORMAT));

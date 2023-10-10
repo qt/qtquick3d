@@ -1,7 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#include "qssgrendercontextcore_p.h"
+#include "qssgrendercontextcore.h"
 #include "qssgrenderhelpers.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>

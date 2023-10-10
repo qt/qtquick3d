@@ -5,7 +5,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "qssgrendercontextcore.h"
+#include "qssgrendershadercodegenerator_p.h"
 #include <qtquick3d_tracepoints_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
@@ -93,7 +94,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
         m_textures.append(result);
     }
 
-    QRhi *rhi = m_sgContext->rhi();
+    QRhi *rhi = m_sgContext->rhiContext()->rhi();
     const bool formatChanged = result->texture && result->texture->format() != format;
     const bool needsRebuild = result->texture && (result->texture->pixelSize() != size || formatChanged);
 
@@ -301,8 +302,8 @@ void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSS
                                                                             : QSSGBufferManager::toRhiFormat(f);
 
     QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat, false, inEffect);
-    auto filter = toRhi(inCmd->m_filterOp);
-    auto tiling = toRhi(inCmd->m_texCoordOp);
+    auto filter = QSSGRhiHelpers::toRhi(inCmd->m_filterOp);
+    auto tiling = QSSGRhiHelpers::toRhi(inCmd->m_texCoordOp);
     buf->desc = { filter, filter, QRhiSampler::None, tiling, tiling, QRhiSampler::Repeat };
     buf->flags = inCmd->m_bufferFlags;
 }
@@ -328,12 +329,12 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                 const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image);
                 if (texture.m_texture) {
                     const QSSGRhiSamplerDescription desc{
-                        toRhi(textureProperty.minFilterType),
-                        toRhi(textureProperty.magFilterType),
-                        textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
-                        toRhi(textureProperty.horizontalClampType),
-                        toRhi(textureProperty.verticalClampType),
-                        toRhi(textureProperty.zClampType)
+                        QSSGRhiHelpers::toRhi(textureProperty.minFilterType),
+                        QSSGRhiHelpers::toRhi(textureProperty.magFilterType),
+                        textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? QSSGRhiHelpers::toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
+                        QSSGRhiHelpers::toRhi(textureProperty.horizontalClampType),
+                        QSSGRhiHelpers::toRhi(textureProperty.verticalClampType),
+                        QSSGRhiHelpers::toRhi(textureProperty.zClampType)
                     };
                     addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
                     texAdded = true;
@@ -417,7 +418,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     m_pendingClears.clear();
     m_currentShaderPipeline = nullptr;
 
-    QRhi *rhi = m_sgContext->rhi();
+    QRhi *rhi = m_sgContext->rhiContext()->rhi();
     const auto &shaderLib = m_sgContext->shaderLibraryManager();
     const auto &shaderCache = m_sgContext->shaderCache();
 
@@ -495,14 +496,14 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     if (m_currentShaderPipeline) {
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
         const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-        QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiContext).drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
         m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     } else {
         m_currentUBufData = nullptr;
     }
 
-    rhiContext->stats().registerEffectShaderGenerationTime(timer.elapsed());
+    QSSGRhiContextStats::get(*rhiContext).registerEffectShaderGenerationTime(timer.elapsed());
 }
 
 void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target)
@@ -545,7 +546,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     const void *cacheKey1 = reinterpret_cast<const void *>(this);
     const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-    QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
+    QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiContext).drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
     m_currentUBufData = nullptr;
 
@@ -597,7 +598,7 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
     size = QVector2D(outputSize.width(), outputSize.height());
     m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_outputSize", size, QSSGRenderShaderValue::Vec2);
 
-    float fc = float(m_sgContext->frameCount());
+    float fc = float(m_sgContext->renderer()->frameCount());
     m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_frame_num", fc, QSSGRenderShaderValue::Float);
 
     // Bames and values for uniforms that are also used by default and/or

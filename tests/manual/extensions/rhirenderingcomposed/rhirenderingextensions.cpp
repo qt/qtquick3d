@@ -5,7 +5,8 @@
 #include "cube.h"
 #include <QGuiApplication>
 #include <QFile>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <ssg/qssgrenderextensions.h>
 

@@ -20,7 +20,7 @@
 #include <QtQuick3D/private/qquick3dtexture_p.h>
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <ssg/qssgrenderbasetypes.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 

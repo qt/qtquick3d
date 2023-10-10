@@ -2,14 +2,19 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qssgrhicontext_p.h"
+
+#include <QtCore/qvariant.h>
+#include <QtGui/private/qrhi_p.h>
+
+#include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
-#include <QtCore/QVariant>
 #include <qtquick3d_tracepoints_p.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -827,24 +832,87 @@ int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
 }
 
 QSSGRhiContext::QSSGRhiContext(QRhi *rhi)
-    : m_rhi(rhi)
-    , m_stats(*this)
+    : d_ptr(new QSSGRhiContextPrivate(*this, rhi))
 {
+    Q_ASSERT(rhi);
     Q_STATIC_ASSERT(int(QSSGRhiSamplerBindingHints::LightProbe) > int(QSSGRenderableImage::Type::Occlusion));
 }
 
 
 QSSGRhiContext::~QSSGRhiContext()
 {
+    Q_D(QSSGRhiContext);
     releaseCachedResources();
 
-    qDeleteAll(m_textures);
-    qDeleteAll(m_meshes);
+    qDeleteAll(d->m_textures);
+    qDeleteAll(d->m_meshes);
+}
+
+QRhi *QSSGRhiContext::rhi() const
+{
+    Q_D(const QSSGRhiContext);
+    return d->m_rhi;
+}
+
+bool QSSGRhiContext::isValid() const
+{
+    Q_D(const QSSGRhiContext);
+    return d->m_rhi != nullptr;
+}
+
+void QSSGRhiContext::setMainRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc)
+{
+    Q_D(QSSGRhiContext);
+    d->m_mainRpDesc = rpDesc;
+}
+
+QRhiRenderPassDescriptor *QSSGRhiContext::mainRenderPassDescriptor() const
+{
+    Q_D(const QSSGRhiContext);
+    return d->m_mainRpDesc;
+}
+
+void QSSGRhiContext::setCommandBuffer(QRhiCommandBuffer *cb)
+{
+    Q_D(QSSGRhiContext);
+    d->m_cb = cb;
+}
+
+QRhiCommandBuffer *QSSGRhiContext::commandBuffer() const
+{
+    Q_D(const QSSGRhiContext);
+    return d->m_cb;
+}
+
+void QSSGRhiContext::setRenderTarget(QRhiRenderTarget *rt)
+{
+    Q_D(QSSGRhiContext);
+    d->m_rt = rt;
+}
+
+QRhiRenderTarget *QSSGRhiContext::renderTarget() const
+{
+    Q_D(const QSSGRhiContext);
+    return d->m_rt;
+}
+
+void QSSGRhiContext::setMainPassSampleCount(int samples)
+{
+    Q_D(QSSGRhiContext);
+    d->m_mainSamples = samples;
+}
+
+int QSSGRhiContext::mainPassSampleCount() const
+{
+    Q_D(const QSSGRhiContext);
+    return d->m_mainSamples;
 }
 
 void QSSGRhiContext::releaseCachedResources()
 {
-    for (QSSGRhiDrawCallData &dcd : m_drawCallData) {
+    Q_D(QSSGRhiContext);
+
+    for (QSSGRhiDrawCallData &dcd : d->m_drawCallData) {
         // We don't call releaseDrawCallData() here, since we're anyways
         // are going to delete the non-owned resources further down and
         // there's no point in removing each of those one-by-one, as is
@@ -854,59 +922,54 @@ void QSSGRhiContext::releaseCachedResources()
         dcd.reset();
     }
 
-    m_drawCallData.clear();
+    d->m_drawCallData.clear();
 
-    qDeleteAll(m_pipelines);
-    qDeleteAll(m_computePipelines);
-    qDeleteAll(m_srbCache);
-    qDeleteAll(m_dummyTextures);
+    qDeleteAll(d->m_pipelines);
+    qDeleteAll(d->m_computePipelines);
+    qDeleteAll(d->m_srbCache);
+    qDeleteAll(d->m_dummyTextures);
 
-    m_pipelines.clear();
-    m_computePipelines.clear();
-    m_srbCache.clear();
-    m_dummyTextures.clear();
+    d->m_pipelines.clear();
+    d->m_computePipelines.clear();
+    d->m_srbCache.clear();
+    d->m_dummyTextures.clear();
 
-    for (const auto &samplerInfo : std::as_const(m_samplers))
+    for (const auto &samplerInfo : std::as_const(d->m_samplers))
         delete samplerInfo.second;
 
-    m_samplers.clear();
+    d->m_samplers.clear();
 
-    for (const auto &particleData : std::as_const(m_particleData))
+    for (const auto &particleData : std::as_const(d->m_particleData))
         delete particleData.texture;
 
-    m_particleData.clear();
+    d->m_particleData.clear();
 
-    for (const auto &instanceData : std::as_const(m_instanceBuffers)) {
+    for (const auto &instanceData : std::as_const(d->m_instanceBuffers)) {
         if (instanceData.owned)
             delete instanceData.buffer;
     }
 
-    m_instanceBuffers.clear();
+    d->m_instanceBuffers.clear();
 
-    for (const auto &instanceData : std::as_const(m_instanceBuffersLod)) {
+    for (const auto &instanceData : std::as_const(d->m_instanceBuffersLod)) {
         if (instanceData.owned)
             delete instanceData.buffer;
     }
 
-    m_instanceBuffersLod.clear();
-}
-
-void QSSGRhiContext::initialize(QRhi *rhi)
-{
-    Q_ASSERT(rhi && !m_rhi);
-    m_rhi = rhi;
+    d->m_instanceBuffersLod.clear();
 }
 
 QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindingList &bindings)
 {
-    auto it = m_srbCache.constFind(bindings);
-    if (it != m_srbCache.constEnd())
+    Q_D(QSSGRhiContext);
+    auto it = d->m_srbCache.constFind(bindings);
+    if (it != d->m_srbCache.constEnd())
         return *it;
 
-    QRhiShaderResourceBindings *srb = m_rhi->newShaderResourceBindings();
+    QRhiShaderResourceBindings *srb = d->m_rhi->newShaderResourceBindings();
     srb->setBindings(bindings.v, bindings.v + bindings.p);
     if (srb->create()) {
-        m_srbCache.insert(bindings, srb);
+        d->m_srbCache.insert(bindings, srb);
     } else {
         qWarning("Failed to build srb");
         delete srb;
@@ -915,7 +978,7 @@ QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindi
     return srb;
 }
 
-void QSSGRhiContext::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
+void QSSGRhiContextPrivate::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
 {
     delete dcd.ubuf;
     dcd.ubuf = nullptr;
@@ -926,121 +989,61 @@ void QSSGRhiContext::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
     dcd.pipeline = nullptr;
 }
 
-QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKey &key,
+QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGRhiGraphicsPipelineState &ps,
                                                QRhiRenderPassDescriptor *rpDesc,
                                                QRhiShaderResourceBindings *srb)
 {
-    auto it = m_pipelines.constFind(key);
-    if (it != m_pipelines.constEnd())
-        return it.value();
-
-    // Build a new one. This is potentially expensive.
-    QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
-
-    ps->setShaderStages(key.state.shaderPipeline->cbeginStages(), key.state.shaderPipeline->cendStages());
-    ps->setVertexInputLayout(key.state.ia.inputLayout);
-    ps->setShaderResourceBindings(srb);
-    ps->setRenderPassDescriptor(rpDesc);
-
-    QRhiGraphicsPipeline::Flags flags;
-    if (key.state.scissorEnable)
-        flags |= QRhiGraphicsPipeline::UsesScissor;
-
-    static const bool shaderDebugInfo = qEnvironmentVariableIntValue("QT_QUICK3D_SHADER_DEBUG_INFO");
-    if (shaderDebugInfo)
-        flags |= QRhiGraphicsPipeline::CompileShadersWithDebugInfo;
-    ps->setFlags(flags);
-
-    ps->setTopology(key.state.ia.topology);
-    ps->setCullMode(key.state.cullMode);
-    if (key.state.ia.topology == QRhiGraphicsPipeline::Lines || key.state.ia.topology == QRhiGraphicsPipeline::LineStrip)
-        ps->setLineWidth(key.state.lineWidth);
-
-    QRhiGraphicsPipeline::TargetBlend blend = key.state.targetBlend;
-    blend.enable = key.state.blendEnable;
-    QVarLengthArray<QRhiGraphicsPipeline::TargetBlend, 8> targetBlends(key.state.colorAttachmentCount);
-    for (int i = 0; i < key.state.colorAttachmentCount; ++i)
-        targetBlends[i] = blend;
-    ps->setTargetBlends(targetBlends.cbegin(), targetBlends.cend());
-
-    ps->setSampleCount(key.state.samples);
-
-    ps->setDepthTest(key.state.depthTestEnable);
-    ps->setDepthWrite(key.state.depthWriteEnable);
-    ps->setDepthOp(key.state.depthFunc);
-
-    ps->setDepthBias(key.state.depthBias);
-    ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
-    ps->setPolygonMode(key.state.polygonMode);
-
-    if (key.state.usesStencilRef)
-        flags |= QRhiGraphicsPipeline::UsesStencilRef;
-    ps->setFlags(flags);
-    ps->setStencilFront(key.state.stencilOpFrontState);
-    ps->setStencilTest(key.state.usesStencilRef);
-    ps->setStencilWriteMask(key.state.stencilWriteMask);
-
-    if (!ps->create()) {
-        qWarning("Failed to build graphics pipeline state");
-        delete ps;
-        return nullptr;
-    }
-
-    m_pipelines.insert(key, ps);
-    return ps;
+    Q_D(QSSGRhiContext);
+    return d->pipeline(QSSGGraphicsPipelineStateKeyPrivate::create(ps, rpDesc, srb), rpDesc, srb);
 }
 
-QRhiComputePipeline *QSSGRhiContext::computePipeline(const QSSGComputePipelineStateKey &key,
+QRhiComputePipeline *QSSGRhiContext::computePipeline(const QShader &shader,
                                                      QRhiShaderResourceBindings *srb)
 {
-    auto it = m_computePipelines.constFind(key);
-    if (it != m_computePipelines.constEnd())
-        return it.value();
+    Q_D(QSSGRhiContext);
+    return d->computePipeline(QSSGComputePipelineStateKeyPrivate::create(shader, srb), srb);
+}
 
-    QRhiComputePipeline *computePipeline = m_rhi->newComputePipeline();
-    computePipeline->setShaderResourceBindings(srb);
-    computePipeline->setShaderStage({ QRhiShaderStage::Compute, key.shader });
-    if (!computePipeline->create()) {
-        qWarning("Failed to build compute pipeline");
-        delete computePipeline;
-        return nullptr;
-    }
-    m_computePipelines.insert(key, computePipeline);
-    return computePipeline;
+QSSGRhiDrawCallData &QSSGRhiContextPrivate::drawCallData(const QSSGRhiDrawCallDataKey &key)
+{
+    return m_drawCallData[key];
 }
 
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;
 
 QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDescription)
 {
+    Q_D(QSSGRhiContext);
     auto compareSampler = [samplerDescription](const SamplerInfo &info){ return info.first == samplerDescription; };
-    const auto found = std::find_if(m_samplers.cbegin(), m_samplers.cend(), compareSampler);
-    if (found != m_samplers.cend())
+    auto &samplers = d->m_samplers;
+    const auto found = std::find_if(samplers.cbegin(), samplers.cend(), compareSampler);
+    if (found != samplers.cend())
         return found->second;
 
-    QRhiSampler *newSampler = m_rhi->newSampler(samplerDescription.magFilter,
-                                                samplerDescription.minFilter,
-                                                samplerDescription.mipmap,
-                                                samplerDescription.hTiling,
-                                                samplerDescription.vTiling,
-                                                samplerDescription.zTiling);
+    QRhiSampler *newSampler = d->m_rhi->newSampler(samplerDescription.magFilter,
+                                                   samplerDescription.minFilter,
+                                                   samplerDescription.mipmap,
+                                                   samplerDescription.hTiling,
+                                                   samplerDescription.vTiling,
+                                                   samplerDescription.zTiling);
     if (!newSampler->create()) {
         qWarning("Failed to build image sampler");
         delete newSampler;
         return nullptr;
     }
-    m_samplers << SamplerInfo{samplerDescription, newSampler};
+    samplers << SamplerInfo{samplerDescription, newSampler};
     return newSampler;
 }
 
 void QSSGRhiContext::checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription)
 {
+    Q_D(const QSSGRhiContext);
     if (samplerDescription->mipmap != QRhiSampler::None
-            || samplerDescription->hTiling != QRhiSampler::ClampToEdge
-            || samplerDescription->vTiling != QRhiSampler::ClampToEdge
-            || samplerDescription->zTiling != QRhiSampler::ClampToEdge)
+        || samplerDescription->hTiling != QRhiSampler::ClampToEdge
+        || samplerDescription->vTiling != QRhiSampler::ClampToEdge
+        || samplerDescription->zTiling != QRhiSampler::ClampToEdge)
     {
-        if (m_rhi->isFeatureSupported(QRhi::NPOTTextureRepeat))
+        if (d->m_rhi->isFeatureSupported(QRhi::NPOTTextureRepeat))
             return;
 
         const QSize pixelSize = texture->pixelSize();
@@ -1065,33 +1068,37 @@ void QSSGRhiContext::checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerD
 
 void QSSGRhiContext::registerTexture(QRhiTexture *texture)
 {
-    m_textures.insert(texture);
+    Q_D(QSSGRhiContext);
+    d->m_textures.insert(texture);
 }
 
 void QSSGRhiContext::releaseTexture(QRhiTexture *texture)
 {
-    m_textures.remove(texture);
+    Q_D(QSSGRhiContext);
+    d->m_textures.remove(texture);
     delete texture;
 }
 
 void QSSGRhiContext::registerMesh(QSSGRenderMesh *mesh)
 {
-    m_meshes.insert(mesh);
+    Q_D(QSSGRhiContext);
+    d->m_meshes.insert(mesh);
 }
 
 void QSSGRhiContext::releaseMesh(QSSGRenderMesh *mesh)
 {
+    Q_D(QSSGRhiContext);
     if (mesh) {
         for (const auto &subset : std::as_const(mesh->subsets)) {
             if (subset.rhi.targetsTexture)
                 releaseTexture(subset.rhi.targetsTexture);
         }
     }
-    m_meshes.remove(mesh);
+    d->m_meshes.remove(mesh);
     delete mesh;
 }
 
-void QSSGRhiContext::cleanupDrawCallData(const QSSGRenderModel *model)
+void QSSGRhiContextPrivate::cleanupDrawCallData(const QSSGRenderModel *model)
 {
     // Find all QSSGRhiUniformBufferSet that reference model
     // and delete them
@@ -1110,11 +1117,12 @@ void QSSGRhiContext::cleanupDrawCallData(const QSSGRenderModel *model)
 QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
                                           const QSize &size, const QColor &fillColor)
 {
-    auto it = m_dummyTextures.constFind({flags, size, fillColor});
-    if (it != m_dummyTextures.constEnd())
+    Q_D(QSSGRhiContext);
+    auto it = d->m_dummyTextures.constFind({flags, size, fillColor});
+    if (it != d->m_dummyTextures.constEnd())
         return *it;
 
-    QRhiTexture *t = m_rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
+    QRhiTexture *t = d->m_rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
     if (t->create()) {
         QImage image(t->pixelSize(), QImage::Format_RGBA8888);
         image.fill(fillColor);
@@ -1123,20 +1131,23 @@ QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResource
         qWarning("Failed to build dummy texture");
     }
 
-    m_dummyTextures.insert({flags, size, fillColor}, t);
+    d->m_dummyTextures.insert({flags, size, fillColor}, t);
     return t;
 }
 
-bool QSSGRhiContext::shaderDebuggingEnabled()
+QSSGRhiInstanceBufferData &QSSGRhiContextPrivate::instanceBufferData(QSSGRenderInstanceTable *instanceTable)
 {
-    static const bool isSet = (qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG") != 0);
-    return isSet;
+    return m_instanceBuffers[instanceTable];
 }
 
-bool QSSGRhiContext::editorMode()
+QSSGRhiInstanceBufferData &QSSGRhiContextPrivate::instanceBufferData(const QSSGRenderModel *model)
 {
-    static const bool isSet = (qEnvironmentVariableIntValue("QT_QUICK3D_EDITORMODE") != 0);
-    return isSet;
+    return m_instanceBuffersLod[model];
+}
+
+QSSGRhiParticleData &QSSGRhiContextPrivate::particleData(const QSSGRenderGraphObject *particlesOrModel)
+{
+    return m_particleData[particlesOrModel];
 }
 
 void QSSGRhiContextStats::start(QSSGRenderLayer *layer)
@@ -1197,6 +1208,21 @@ void QSSGRhiContextStats::endRenderPass()
     info.currentRenderPassIndex = -1;
 }
 
+QSSGRhiContextStats &QSSGRhiContextStats::get(QSSGRhiContext &instance) { return instance.d_ptr->m_stats; }
+const QSSGRhiContextStats &QSSGRhiContextStats::get(const QSSGRhiContext &instance) { return instance.d_ptr->m_stats; }
+
+bool QSSGRhiContextStats::profilingEnabled()
+{
+    static bool enabled = Q_QUICK3D_PROFILING_ENABLED;
+    return enabled;
+}
+
+bool QSSGRhiContextStats::rendererDebugEnabled()
+{
+    static bool enabled = qgetenv("QSG_RENDERER_DEBUG").contains(QByteArrayLiteral("render"));
+    return enabled;
+}
+
 bool QSSGRhiContextStats::isEnabled() const
 {
     return !dynamicDataSources.isEmpty() || profilingEnabled() || rendererDebugEnabled()
@@ -1247,4 +1273,135 @@ void QSSGRhiContextStats::printRenderPass(const QSSGRhiContextStats::RenderPassI
     }
 }
 
+void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size)
+{
+#ifdef QT_DEBUG
+    if (p == MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
+    h ^= qintptr(buf);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::UniformBuffer;
+    d->u.ubuf.buf = buf;
+    d->u.ubuf.offset = offset;
+    d->u.ubuf.maybeSize = size; // 0 = all
+    d->u.ubuf.hasDynamicOffset = false;
+}
+
+void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, QRhiSampler *sampler)
+{
+#ifdef QT_DEBUG
+    if (p == QSSGRhiShaderResourceBindingList::MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
+    h ^= qintptr(tex) ^ qintptr(sampler);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::SampledTexture;
+    d->u.stex.count = 1;
+    d->u.stex.texSamplers[0].tex = tex;
+    d->u.stex.texSamplers[0].sampler = sampler;
+}
+
 QT_END_NAMESPACE
+
+bool QSSGRhiContextPrivate::shaderDebuggingEnabled()
+{
+    static const bool isSet = (qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG") != 0);
+    return isSet;
+}
+
+bool QSSGRhiContextPrivate::editorMode()
+{
+    static const bool isSet = (qEnvironmentVariableIntValue("QT_QUICK3D_EDITORMODE") != 0);
+    return isSet;
+}
+
+QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipelineStateKeyPrivate &key,
+                                                      QRhiRenderPassDescriptor *rpDesc,
+                                                      QRhiShaderResourceBindings *srb)
+{
+    auto it = m_pipelines.constFind(key);
+    if (it != m_pipelines.constEnd())
+        return it.value();
+
+           // Build a new one. This is potentially expensive.
+    QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
+
+    ps->setShaderStages(key.state.shaderPipeline->cbeginStages(), key.state.shaderPipeline->cendStages());
+    ps->setVertexInputLayout(key.state.ia.inputLayout);
+    ps->setShaderResourceBindings(srb);
+    ps->setRenderPassDescriptor(rpDesc);
+
+    QRhiGraphicsPipeline::Flags flags;
+    if (key.state.scissorEnable)
+        flags |= QRhiGraphicsPipeline::UsesScissor;
+
+    static const bool shaderDebugInfo = qEnvironmentVariableIntValue("QT_QUICK3D_SHADER_DEBUG_INFO");
+    if (shaderDebugInfo)
+        flags |= QRhiGraphicsPipeline::CompileShadersWithDebugInfo;
+    ps->setFlags(flags);
+
+    ps->setTopology(key.state.ia.topology);
+    ps->setCullMode(key.state.cullMode);
+    if (key.state.ia.topology == QRhiGraphicsPipeline::Lines || key.state.ia.topology == QRhiGraphicsPipeline::LineStrip)
+        ps->setLineWidth(key.state.lineWidth);
+
+    QRhiGraphicsPipeline::TargetBlend blend = key.state.targetBlend;
+    blend.enable = key.state.blendEnable;
+    QVarLengthArray<QRhiGraphicsPipeline::TargetBlend, 8> targetBlends(key.state.colorAttachmentCount);
+    for (int i = 0; i < key.state.colorAttachmentCount; ++i)
+        targetBlends[i] = blend;
+    ps->setTargetBlends(targetBlends.cbegin(), targetBlends.cend());
+
+    ps->setSampleCount(key.state.samples);
+
+    ps->setDepthTest(key.state.depthTestEnable);
+    ps->setDepthWrite(key.state.depthWriteEnable);
+    ps->setDepthOp(key.state.depthFunc);
+
+    ps->setDepthBias(key.state.depthBias);
+    ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
+    ps->setPolygonMode(key.state.polygonMode);
+
+    if (key.state.usesStencilRef)
+        flags |= QRhiGraphicsPipeline::UsesStencilRef;
+    ps->setFlags(flags);
+    ps->setStencilFront(key.state.stencilOpFrontState);
+    ps->setStencilTest(key.state.usesStencilRef);
+    ps->setStencilWriteMask(key.state.stencilWriteMask);
+
+    if (!ps->create()) {
+        qWarning("Failed to build graphics pipeline state");
+        delete ps;
+        return nullptr;
+    }
+
+    m_pipelines.insert(key, ps);
+    return ps;
+}
+
+QRhiComputePipeline *QSSGRhiContextPrivate::computePipeline(const QSSGComputePipelineStateKeyPrivate &key, QRhiShaderResourceBindings *srb)
+{
+    auto it = m_computePipelines.constFind(key);
+    if (it != m_computePipelines.constEnd())
+        return it.value();
+
+    QRhiComputePipeline *computePipeline = m_rhi->newComputePipeline();
+    computePipeline->setShaderResourceBindings(srb);
+    computePipeline->setShaderStage({ QRhiShaderStage::Compute, key.shader });
+    if (!computePipeline->create()) {
+        qWarning("Failed to build compute pipeline");
+        delete computePipeline;
+        return nullptr;
+    }
+    m_computePipelines.insert(key, computePipeline);
+    return computePipeline;
+}

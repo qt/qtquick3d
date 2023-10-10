@@ -4,12 +4,12 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "../qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "../qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
@@ -19,6 +19,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
+#include "../qssgshadermapkey_p.h"
 
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
@@ -57,6 +59,17 @@ QSSGRenderer::~QSSGRenderer()
 void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)
 {
     m_contextInterface = ctx;
+}
+
+void QSSGRenderer::cleanupUnreferencedBuffers(QSSGRenderLayer *inLayer)
+{
+    // Now check for unreferenced buffers and release them if necessary
+    m_contextInterface->bufferManager()->cleanupUnreferencedBuffers(m_frameCount, inLayer);
+}
+
+void QSSGRenderer::resetResourceCounters(QSSGRenderLayer *inLayer)
+{
+    m_contextInterface->bufferManager()->resetUsageCounters(m_frameCount, inLayer);
 }
 
 bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
@@ -130,7 +143,7 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
             bufferManager->releaseGeometry(geometry);
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
-            rhi->cleanupDrawCallData(model);
+            QSSGRhiContextPrivate::get(*rhi).cleanupDrawCallData(model);
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData) {
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
             bufferManager->releaseTextureData(textureData);
@@ -235,26 +248,40 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRende
     return generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, m_currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
 }
 
-void QSSGRenderer::beginFrame(QSSGRenderLayer *layer)
+void QSSGRenderer::beginFrame(QSSGRenderLayer *layer, bool allowRecursion)
 {
-    QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), start(layer));
+    const bool executeBeginFrame = !(allowRecursion && (m_activeFrameRef++ != 0));
+    if (executeBeginFrame) {
+        m_contextInterface->perFrameAllocator()->reset();
+        QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), start(layer));
+        resetResourceCounters(layer);
+    }
 }
 
-void QSSGRenderer::endFrame(QSSGRenderLayer *layer)
+bool QSSGRenderer::endFrame(QSSGRenderLayer *layer, bool allowRecursion)
 {
-    // We need to do this endFrame(), as the material nodes might not exist after this!
-    for (auto *matObj : std::as_const(m_materialClearDirty)) {
-        if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial) {
-            static_cast<QSSGRenderCustomMaterial *>(matObj)->clearDirty();
-        } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
-                   matObj->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
-                   matObj->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
-            static_cast<QSSGRenderDefaultMaterial *>(matObj)->clearDirty();
-        }
-    }
-    m_materialClearDirty.clear();
+    const bool executeEndFrame = !(allowRecursion && (--m_activeFrameRef != 0));
+    if (executeEndFrame) {
+        cleanupUnreferencedBuffers(layer);
 
-    QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), stop(layer));
+               // We need to do this endFrame(), as the material nodes might not exist after this!
+        for (auto *matObj : std::as_const(m_materialClearDirty)) {
+            if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial) {
+                static_cast<QSSGRenderCustomMaterial *>(matObj)->clearDirty();
+            } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
+                       matObj->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
+                       matObj->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
+                static_cast<QSSGRenderDefaultMaterial *>(matObj)->clearDirty();
+            }
+        }
+        m_materialClearDirty.clear();
+
+        QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), stop(layer));
+
+        ++m_frameCount;
+    }
+
+    return executeEndFrame;
 }
 
 QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer,
@@ -515,6 +542,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
     // generate/hash/compare. Even though there are other levels of caching in
     // the components that get invoked from here, those may not be suitable
     // performance wise. So bail out right here as soon as possible.
+    auto &shaderMap = m_currentLayer->shaderMap;
 
     QElapsedTimer timer;
     timer.start();
@@ -526,8 +554,8 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
     QSSGShaderMapKey skey = QSSGShaderMapKey(QByteArray(),
                                              inFeatureSet,
                                              inRenderable.shaderDescription);
-    auto it = m_shaderMap.find(skey);
-    if (it == m_shaderMap.end()) {
+    auto it = shaderMap.find(skey);
+    if (it == shaderMap.end()) {
         Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         shaderPipeline = generateRhiShaderPipeline(inRenderable, inFeatureSet);
@@ -535,7 +563,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
         // make skey useable as a key for the QHash (makes a copy of the materialKey, instead of just referencing)
         skey.detach();
         // insert it no matter what, no point in trying over and over again
-        m_shaderMap.insert(skey, shaderPipeline);
+        shaderMap.insert(skey, shaderPipeline);
     } else {
         shaderPipeline = it.value();
     }
@@ -547,46 +575,9 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
         }
     }
 
-    m_contextInterface->rhiContext()->stats().registerMaterialShaderGenerationTime(timer.elapsed());
+    QSSGRhiContextStats::get(*m_contextInterface->rhiContext()).registerMaterialShaderGenerationTime(timer.elapsed());
 
     return shaderPipeline;
-}
-
-QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
-{
-    QSSGLayerRenderData &theData = *m_currentLayer;
-    const QSSGRenderLayer &theLayer = theData.layer;
-    if (!theData.cameraData.has_value() && theData.camera) // NOTE: Ensure we have a valid value!
-        [[maybe_unused]] const auto cd = theData.getCachedCameraData();
-
-    bool isYUpInFramebuffer = true;
-    bool isYUpInNDC = true;
-    bool isClipDepthZeroToOne = true;
-    if (m_contextInterface->rhiContext()->isValid()) {
-        QRhi *rhi = m_contextInterface->rhiContext()->rhi();
-        isYUpInFramebuffer = rhi->isYUpInFramebuffer();
-        isYUpInNDC = rhi->isYUpInNDC();
-        isClipDepthZeroToOne = rhi->isClipDepthZeroToOne();
-    }
-
-    const QSSGRhiRenderableTexture *depthTexture = theData.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
-    const QSSGRhiRenderableTexture *ssaoTexture = theData.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
-    const QSSGRhiRenderableTexture *screenTexture = theData.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
-
-    return QSSGLayerGlobalRenderProperties{ theLayer,
-                                              *theData.camera,
-                                              theData.cameraData.value(), // ensured/checked further up in this function
-                                              theData.getShadowMapManager().get(),
-                                              depthTexture->texture,
-                                              ssaoTexture->texture,
-                                              screenTexture->texture,
-                                              theLayer.lightProbe,
-                                              theLayer.probeHorizon,
-                                              theLayer.probeExposure,
-                                              theLayer.probeOrientation,
-                                              isYUpInFramebuffer,
-                                              isYUpInNDC,
-                                              isClipDepthZeroToOne};
 }
 
 void QSSGRenderer::setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode)

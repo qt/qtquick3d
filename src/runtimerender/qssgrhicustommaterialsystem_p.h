@@ -18,7 +18,6 @@
 
 #include <QtQuick3DRuntimeRender/qtquick3druntimerenderglobal.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>

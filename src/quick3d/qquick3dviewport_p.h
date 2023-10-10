@@ -22,6 +22,8 @@
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 
+#include <QtQuick3DRuntimeRender/private/qssgrenderpickresult_p.h>
+
 #include "qquick3dsceneenvironment_p.h"
 #include "qquick3drenderstats_p.h"
 #include "qquick3dlightmapbaker_p.h"

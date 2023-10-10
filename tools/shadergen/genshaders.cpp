@@ -25,6 +25,8 @@
 #include <private/qssglayerrenderdata_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
 
 #include <rhi/qshaderbaker.h>
 
@@ -92,7 +94,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     const QString outputFolder = outDir.canonicalPath() + QDir::separator() + resourceFolderRelative;
 
     QSSGRenderLayer layer;
-    renderContext->setViewport(QRect(QPoint(), QSize(888,666)));
+    renderContext->renderer()->setViewport(QRect(QPoint(), QSize(888,666)));
     const auto &renderer = renderContext->renderer();
     QSSGLayerRenderData layerData(layer, *renderer);
 

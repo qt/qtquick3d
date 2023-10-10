@@ -28,9 +28,12 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderreflectionmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendermaterialshadergenerator_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
 #include <ssg/qssgrenderextensions.h>
 
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <ssg/qssgrenderbasetypes.h>
 
 #include <optional>
 
@@ -338,6 +341,15 @@ public:
         return defaultMaterialShaderKeyProperties;
     }
 
+    struct GlobalRenderProperties
+    {
+        bool isYUpInFramebuffer = true;
+        bool isYUpInNDC = true;
+        bool isClipDepthZeroToOne = true;
+    };
+
+    [[nodiscard]] static GlobalRenderProperties globalRenderProperties(const QSSGRenderContextInterface &ctx);
+
     // Temp. API. Ideally there shouldn't be a reason for anyone to hold onto these,
     // but we follow the existing pattern for now.
     const QSSGRenderShadowMapPtr &requestShadowMapManager();
@@ -354,6 +366,8 @@ public:
 
     [[nodiscard]] QSSGRhiRenderableTexture *getRenderResult(QSSGFrameData::RenderResult id) { return &renderResults[size_t(id)]; }
     [[nodiscard]] const QSSGRhiRenderableTexture *getRenderResult(QSSGFrameData::RenderResult id) const { return &renderResults[size_t(id)]; }
+    [[nodiscard]] static inline const std::unique_ptr<QSSGPerFrameAllocator> &perFrameAllocator(QSSGRenderContextInterface &ctx);
+    [[nodiscard]] static inline QSSGLayerRenderData *getCurrent(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
 
 private:
     friend class QSSGRenderer;
@@ -363,8 +377,6 @@ private:
 
     [[nodiscard]] QSSGCameraRenderData getCachedCameraData();
     void updateSortedDepthObjectsListImp();
-
-    [[nodiscard]] static QSSGLayerRenderData *getCurrent(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
 
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                          QSSGRenderableObjectFlags &inExistingFlags,
@@ -382,6 +394,9 @@ private:
     static void prepareModelMeshesForRenderInternal(const QSSGRenderContextInterface &contextInterface,
                                                     RenderableNodeEntries &renderableModels,
                                                     bool globalPickingEnabled);
+
+    // Persistent data
+    QHash<QSSGShaderMapKey, QSSGRhiShaderPipelinePtr> shaderMap;
 
     // Note: Re-used to avoid expensive initialization.
     // - Should be revisit, as we can do better.

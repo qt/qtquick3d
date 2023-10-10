@@ -17,7 +17,7 @@
 
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <QtCore/qobject.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 QT_BEGIN_NAMESPACE

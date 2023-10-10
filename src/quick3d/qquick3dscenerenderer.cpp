@@ -194,8 +194,8 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(const std::shared_ptr<QSSGRenderCon
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
-    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
-    rhiCtx->stats().cleanupLayerInfo(m_layer);
+    const auto &rhiCtx = m_sgContext->rhiContext();
+    QSSGRhiContextStats::get(*rhiCtx).cleanupLayerInfo(m_layer);
     m_sgContext->bufferManager()->releaseResourcesForLayer(m_layer);
     delete m_layer;
 
@@ -207,7 +207,7 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
 {
-    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
+    const auto &rhiCtx = m_sgContext->rhiContext();
     if (!rhiCtx->isValid())
         return;
 
@@ -305,7 +305,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         Q_TRACE(QSSG_prepareFrame_entry, ssaaAdjustedWidth, ssaaAdjustedHeight);
 
-        float dpr = m_sgContext->dpr();
+        float dpr = m_sgContext->renderer()->dpr();
         const QRect vp = QRect(0, 0, ssaaAdjustedWidth, ssaaAdjustedHeight);
         beginFrame();
         rhiPrepare(vp, dpr);
@@ -382,7 +382,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     const auto &shaderPipeline = m_sgContext->shaderCache()->getBuiltInRhiShaders().getRhiProgressiveAAShader();
                     QRhiResourceUpdateBatch *rub = nullptr;
 
-                    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ m_layer, nullptr, nullptr, 0 }));
+                    QSSGRhiDrawCallData &dcd(QSSGRhiContextPrivate::get(*rhiCtx).drawCallData({ m_layer, nullptr, nullptr, 0 }));
                     QRhiBuffer *&ubuf = dcd.ubuf;
                     const int ubufSize = 2 * sizeof(float);
                     if (!ubuf) {
@@ -484,7 +484,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         endFrame();
 
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
-                                           STAT_PAYLOAD(m_sgContext->rhiContext()->stats()),
+                                           STAT_PAYLOAD(QSSGRhiContextStats::get(*rhiCtx)),
                                            profilingId);
 
         Q_TRACE(QSSG_renderFrame_exit);
@@ -496,12 +496,12 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
 void QQuick3DSceneRenderer::beginFrame()
 {
-    m_sgContext->beginFrame(m_layer);
+    m_sgContext->renderer()->beginFrame(m_layer);
 }
 
 void QQuick3DSceneRenderer::endFrame()
 {
-    m_sgContext->endFrame(m_layer);
+    m_sgContext->renderer()->endFrame(m_layer);
 }
 
 void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixelRatio)
@@ -509,19 +509,19 @@ void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixel
     if (!m_layer)
         return;
 
-    m_sgContext->setDpr(displayPixelRatio);
+    const auto &renderer = m_sgContext->renderer();
 
-    m_sgContext->setViewport(viewport);
+    renderer->setDpr(displayPixelRatio);
 
-    m_sgContext->setSceneColor(QColor(Qt::black));
+    renderer->setViewport(viewport);
 
-    m_sgContext->prepareLayerForRender(*m_layer);
+    renderer->prepareLayerForRender(*m_layer);
     // If sync was called the assumption is that the scene is dirty regardless of what
     // the scene prep function says, we still should verify that we have a camera before
     // we call render prep and render.
     const bool renderReady = (m_layer->renderData->camera != nullptr);
     if (renderReady) {
-        m_sgContext->rhiPrepare(*m_layer);
+        renderer->rhiPrepare(*m_layer);
         m_prepared = true;
     }
 }
@@ -532,7 +532,7 @@ void QQuick3DSceneRenderer::rhiRender()
         // There is no clearFirst flag - the rendering here does not record a
         // beginPass() so it never clears on its own.
 
-        m_sgContext->rhiRender(*m_layer);
+        m_sgContext->renderer()->rhiRender(*m_layer);
     }
 
     m_prepared = false;
@@ -588,7 +588,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DSynchronizeFrame);
 
-    m_sgContext->setDpr(dpr);
+    m_sgContext->renderer()->setDpr(dpr);
     bool layerSizeIsDirty = m_surfaceSize != size;
     m_surfaceSize = size;
 
@@ -1143,9 +1143,9 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     else
         layerNode.skyBoxCubeMap = nullptr;
 
-    layerNode.probeExposure = environment->probeExposure();
+    layerNode.lightProbeSettings.probeExposure = environment->probeExposure();
     // Remap the probeHorizon to the expected Range
-    layerNode.probeHorizon = qMin(environment->probeHorizon() - 1.0f, -0.001f);
+    layerNode.lightProbeSettings.probeHorizon = qMin(environment->probeHorizon() - 1.0f, -0.001f);
     layerNode.setProbeOrientation(environment->probeOrientation());
 
     if (view3D.camera())
@@ -1368,7 +1368,9 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 {
     Q_UNUSED(state);
 
-    if (renderer->m_sgContext->rhiContext()->isValid()) {
+    const auto &rhiContext = renderer->m_sgContext->rhiContext();
+
+    if (rhiContext->isValid()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
         Q_TRACE_SCOPE(QSSG_renderFrame, 0, 0);
 
@@ -1377,7 +1379,7 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
         renderer->rhiRender();
         renderer->endFrame();
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
-                                        STAT_PAYLOAD(renderer->m_sgContext->rhiContext()->stats()), renderer->profilingId);
+                                        STAT_PAYLOAD(QSSGRhiContextStats::get(*rhiContext)), renderer->profilingId);
     }
 }
 
@@ -1477,7 +1479,9 @@ void QQuick3DSGDirectRenderer::render()
     if (!m_isVisible || !m_renderer)
         return;
 
-    if (m_renderer->m_sgContext->rhiContext()->isValid()) {
+    const auto &rhiContext = m_renderer->m_sgContext->rhiContext();
+
+    if (rhiContext->isValid()) {
         // the command buffer is recording the main renderpass at this point
 
         // No m_window->beginExternalCommands() must be done here. When the
@@ -1490,7 +1494,7 @@ void QQuick3DSGDirectRenderer::render()
         // have altered these on the context.
         if (m_renderer->m_postProcessingStack) {
             if (m_rhiTexture) {
-                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
+                queryMainRenderPassDescriptorAndCommandBuffer(m_window, rhiContext.get());
                 auto rhiCtx = m_renderer->m_sgContext->rhiContext().get();
                 const auto &renderer = m_renderer->m_sgContext->renderer();
 
@@ -1521,13 +1525,13 @@ void QQuick3DSGDirectRenderer::render()
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
             Q_TRACE_SCOPE(QSSG_renderFrame, 0, 0);
 
-            queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
+            queryMainRenderPassDescriptorAndCommandBuffer(m_window, rhiContext.get());
 
             m_renderer->rhiRender();
             m_renderer->endFrame();
 
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
-                                            STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()),
+                                            STAT_PAYLOAD(QSSGRhiContextStats::get(*rhiContext)),
                                             m_renderer->profilingId);
 
             if (m_renderer->renderStats())

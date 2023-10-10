@@ -231,7 +231,7 @@ void QQuick3DRenderStats::setRhiContext(QSSGRhiContext *ctx, QSSGRenderLayer *la
     // called from synchronize(), so on the render thread with gui blocked
 
     m_layer = layer;
-    m_contextStats = &ctx->stats();
+    m_contextStats = &QSSGRhiContextStats::get(*ctx);
 
     // setExtendedDataCollectionEnabled will likely get called at some point
     // before this (so too early), sync the flag here as well now that we know
@@ -423,11 +423,13 @@ void QQuick3DRenderStats::processRhiContextStats()
     // the render pass list is per renderer, i.e. per View3D
     const QSSGRhiContextStats::PerLayerInfo data = m_contextStats->perLayerInfo[m_layer];
 
+    const auto &rhiContext = m_contextStats->context;
+
     // textures and meshes include all assets registered to the per-QQuickWindow QSSGRhiContext
     const QSSGRhiContextStats::GlobalInfo globalData = m_contextStats->globalInfo;
-    const QSet<QRhiTexture *> textures = m_contextStats->context.registeredTextures();
-    const QSet<QSSGRenderMesh *> meshes = m_contextStats->context.registeredMeshes();
-    const QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> pipelines = m_contextStats->context.pipelines();
+    const auto textures = QSSGRhiContextPrivate::get(rhiContext).m_textures;
+    const auto meshes = QSSGRhiContextPrivate::get(rhiContext).m_meshes;
+    const auto pipelines = QSSGRhiContextPrivate::get(rhiContext).m_pipelines;
 
     m_results.drawCallCount = 0;
     m_results.drawVertexCount = 0;

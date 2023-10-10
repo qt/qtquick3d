@@ -16,7 +16,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <ssg/qssgrenderbasetypes.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 
 #include <QDebug>

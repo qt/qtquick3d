@@ -5,7 +5,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "../qssgrendercontextcore.h"
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER
@@ -824,12 +824,12 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                                                           QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
             if (subMeshInfo.baseColorMap) {
                 const bool mipmapped = subMeshInfo.baseColorMap->flags().testFlag(QRhiTexture::MipMapped);
-                QRhiSampler *sampler = rhiCtx->sampler({ toRhi(subMeshInfo.baseColorNode->m_minFilterType),
-                                                         toRhi(subMeshInfo.baseColorNode->m_magFilterType),
-                                                         mipmapped ? toRhi(subMeshInfo.baseColorNode->m_mipFilterType) : QRhiSampler::None,
-                                                         toRhi(subMeshInfo.baseColorNode->m_horizontalTilingMode),
-                                                         toRhi(subMeshInfo.baseColorNode->m_verticalTilingMode),
-                                                         toRhi(subMeshInfo.baseColorNode->m_depthTilingMode)
+                QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_minFilterType),
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_magFilterType),
+                                                         mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_mipFilterType) : QRhiSampler::None,
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_horizontalTilingMode),
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_verticalTilingMode),
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_depthTilingMode)
                                                        });
                 bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.baseColorMap, sampler);
             } else {
@@ -837,30 +837,12 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             }
             if (subMeshInfo.emissiveMap) {
                 const bool mipmapped = subMeshInfo.emissiveMap->flags().testFlag(QRhiTexture::MipMapped);
-                QRhiSampler *sampler = rhiCtx->sampler({ toRhi(subMeshInfo.emissiveNode->m_minFilterType),
-                                                         toRhi(subMeshInfo.emissiveNode->m_magFilterType),
-                                                         mipmapped ? toRhi(subMeshInfo.emissiveNode->m_mipFilterType) : QRhiSampler::None,
-                                                         toRhi(subMeshInfo.emissiveNode->m_horizontalTilingMode),
-                                                         toRhi(subMeshInfo.emissiveNode->m_verticalTilingMode),
-                                                         toRhi(subMeshInfo.emissiveNode->m_depthTilingMode)
-                                                       });
-                bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.emissiveMap, sampler);
-            } else {
-                bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
-            }
-            if (subMeshInfo.normalMap) {
-                if (!hasUV0 || !hasTangentAndBinormal) {
-                    sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("submesh %1 has a normal map, "
-                                                                                        "but the mesh does not provide all three of UV0, tangent, and binormal; "
-                                                                                        "expect incorrect results").arg(subMeshIdx));
-                }
-                const bool mipmapped = subMeshInfo.normalMap->flags().testFlag(QRhiTexture::MipMapped);
-                QRhiSampler *sampler = rhiCtx->sampler({ toRhi(subMeshInfo.normalMapNode->m_minFilterType),
-                                                         toRhi(subMeshInfo.normalMapNode->m_magFilterType),
-                                                         mipmapped ? toRhi(subMeshInfo.normalMapNode->m_mipFilterType) : QRhiSampler::None,
-                                                         toRhi(subMeshInfo.normalMapNode->m_horizontalTilingMode),
-                                                         toRhi(subMeshInfo.normalMapNode->m_verticalTilingMode),
-                                                         toRhi(subMeshInfo.emissiveNode->m_depthTilingMode)
+                QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_minFilterType),
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_magFilterType),
+                                                         mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_mipFilterType) : QRhiSampler::None,
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_horizontalTilingMode),
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_verticalTilingMode),
+                                                         QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_depthTilingMode)
                                                        });
                 bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.normalMap, sampler);
             } else {

@@ -3,7 +3,7 @@
 
 #include "qquick3dcustommaterial_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick/QQuickWindow>
 

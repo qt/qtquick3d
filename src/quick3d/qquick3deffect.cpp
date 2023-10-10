@@ -3,7 +3,7 @@
 
 #include "qquick3deffect_p.h"
 
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <ssg/qssgrendercontextcore.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>

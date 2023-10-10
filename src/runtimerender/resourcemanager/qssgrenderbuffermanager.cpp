@@ -18,12 +18,12 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <ssg/qssgrenderbasetypes.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "../qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
 #include <qtquick3d_tracepoints_p.h>
@@ -1974,20 +1974,20 @@ static inline quint64 bufferMemorySize(const QSSGRhiBufferPtr &buffer)
 void QSSGBufferManager::increaseMemoryStat(QRhiTexture *texture)
 {
     stats.imageDataSize += textureMemorySize(texture);
-    m_contextInterface->rhiContext()->stats().imageDataSizeChanges(stats.imageDataSize);
+    QSSGRhiContextStats::get(*m_contextInterface->rhiContext()).imageDataSizeChanges(stats.imageDataSize);
 }
 
 void QSSGBufferManager::decreaseMemoryStat(QRhiTexture *texture)
 {
     stats.imageDataSize = qMax(0u, stats.imageDataSize - textureMemorySize(texture));
-    m_contextInterface->rhiContext()->stats().imageDataSizeChanges(stats.imageDataSize);
+    QSSGRhiContextStats::get(*m_contextInterface->rhiContext()).imageDataSizeChanges(stats.imageDataSize);
 }
 
 void QSSGBufferManager::increaseMemoryStat(QSSGRenderMesh *mesh)
 {
     stats.meshDataSize += bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer)
             + bufferMemorySize(mesh->subsets.at(0).rhi.indexBuffer);
-    m_contextInterface->rhiContext()->stats().meshDataSizeChanges(stats.meshDataSize);
+    QSSGRhiContextStats::get(*m_contextInterface->rhiContext()).meshDataSizeChanges(stats.meshDataSize);
 }
 
 void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
@@ -1997,7 +1997,7 @@ void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
     s = bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer)
             + bufferMemorySize(mesh->subsets.at(0).rhi.indexBuffer);
     stats.meshDataSize = qMax(0u, stats.meshDataSize - s);
-    m_contextInterface->rhiContext()->stats().meshDataSizeChanges(stats.meshDataSize);
+    QSSGRhiContextStats::get(*m_contextInterface->rhiContext()).meshDataSizeChanges(stats.meshDataSize);
 }
 
 QT_END_NAMESPACE

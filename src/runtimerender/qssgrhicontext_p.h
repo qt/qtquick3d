@@ -1,4 +1,4 @@
-// Copyright (C) 2019 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef QSSGRHICONTEXT_P_H
@@ -15,53 +15,68 @@
 // We mean it.
 //
 
-#include "qtquick3druntimerenderglobal_p.h"
-#include <QtCore/qstack.h>
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
-#include <QtGui/private/qrhi_p.h>
-#include "private/qquick3dprofiler_p.h"
+#include <QtGui/rhi/qrhi.h>
+
+#include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
+#include <ssg/qssgrenderbasetypes.h>
+#include <ssg/qssgrhicontext.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRhiContext;
-class QSSGRhiBuffer;
-struct QSSGShaderLightProperties;
-struct QSSGRenderMesh;
-struct QSSGRenderModel;
-class QSSGRhiShaderPipeline;
-struct QSSGRenderInstanceTable;
 struct QSSGRenderLayer;
+struct QSSGRenderInstanceTable;
+struct QSSGRenderModel;
+class QSSGRenderGraphObject;
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
+namespace QSSGRhiHelpers
 {
-    enum InputSemantic {
-        PositionSemantic,           // attr_pos
-        NormalSemantic,             // attr_norm
-        TexCoord0Semantic,          // attr_uv0
-        TexCoord1Semantic,          // attr_uv1
-        TangentSemantic,            // attr_textan
-        BinormalSemantic,           // attr_binormal
-        ColorSemantic,              // attr_color
-        MaxTargetSemantic = ColorSemantic,
-        JointSemantic,              // attr_joints
-        WeightSemantic,             // attr_weights
-        TexCoordLightmapSemantic    // attr_lightmapuv
-    };
 
-    QRhiVertexInputLayout inputLayout;
-    QVarLengthArray<InputSemantic, 8> inputs;
-    QRhiGraphicsPipeline::Topology topology;
+inline QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op)
+{
+    switch (op) {
+    case QSSGRenderTextureFilterOp::Nearest:
+        return QRhiSampler::Nearest;
+    case QSSGRenderTextureFilterOp::Linear:
+        return QRhiSampler::Linear;
+    case QSSGRenderTextureFilterOp::None:
+        return QRhiSampler::Linear;
+    }
 
-    std::array<quint8, MaxTargetSemantic + 1> targetOffsets = { UINT8_MAX, UINT8_MAX, UINT8_MAX, UINT8_MAX,
-                                                                     UINT8_MAX, UINT8_MAX, UINT8_MAX };
-    quint8 targetCount = 0;
+    Q_UNREACHABLE_RETURN(QRhiSampler::Linear);
+}
 
-    static QRhiVertexInputAttribute::Format toVertexInputFormat(QSSGRenderComponentType compType, quint32 numComps);
-    static QRhiGraphicsPipeline::Topology toTopology(QSSGRenderDrawMode drawMode);
+inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
+{
+    switch (tiling) {
+    case QSSGRenderTextureCoordOp::Repeat:
+        return QRhiSampler::Repeat;
+    case QSSGRenderTextureCoordOp::MirroredRepeat:
+        return QRhiSampler::Mirror;
+    case QSSGRenderTextureCoordOp::ClampToEdge:
+        return QRhiSampler::ClampToEdge;
+    case QSSGRenderTextureCoordOp::Unknown:
+        return QRhiSampler::ClampToEdge;
+    }
 
-    // Fills out inputLayout.attributes[].location based on
-    // inputLayoutInputNames and the provided shader reflection info.
-    void bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders, int instanceBufferBinding = 0);
+    Q_UNREACHABLE_RETURN(QRhiSampler::ClampToEdge);
+}
+
+}
+
+// The lookup keys can be somewhat complicated due to having to handle cases
+// like "render a model in a shared scene between multiple View3Ds" (here both
+// the View3D ('layer/cid') and the model ('model') act as the lookup key since
+// while the model is the same, we still want different uniform buffers per
+// View3D), or the case of shadow maps where the shadow map (there can be as
+// many as lights) is taken into account too ('entry') together with an entry index
+// where more resolution is needed (e.g., cube maps).
+//
+struct QSSGRhiDrawCallDataKey
+{
+    const void *cid = nullptr; // Usually the sub-pass (see usage of QSSGPassKey)
+    const void *model = nullptr;
+    const void *entry = nullptr;
+    quintptr entryIdx = 0;
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiBuffer
@@ -119,19 +134,6 @@ private:
 
 using QSSGRhiBufferPtr = std::shared_ptr<QSSGRhiBuffer>;
 
-QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op);
-QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling);
-
-struct QSSGRhiSamplerDescription
-{
-    QRhiSampler::Filter minFilter;
-    QRhiSampler::Filter magFilter;
-    QRhiSampler::Filter mipmap;
-    QRhiSampler::AddressMode hTiling;
-    QRhiSampler::AddressMode vTiling;
-    QRhiSampler::AddressMode zTiling;
-};
-
 inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
 {
    return a.hTiling == b.hTiling && a.vTiling == b.vTiling && a.zTiling == b.zTiling
@@ -147,7 +149,7 @@ inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerD
 struct QSSGRhiTexture
 {
     QByteArray name;
-    QRhiTexture *texture;
+    QRhiTexture *texture = nullptr;
     QSSGRhiSamplerDescription samplerDesc;
 };
 
@@ -395,37 +397,6 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::UniformFlags)
 
 using QSSGRhiShaderPipelinePtr = std::shared_ptr<QSSGRhiShaderPipeline>;
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
-{
-    const QSSGRhiShaderPipeline *shaderPipeline;
-    int samples = 1;
-
-    bool depthTestEnable = false;
-    bool depthWriteEnable = false;
-    bool usesStencilRef = false;
-    QRhiGraphicsPipeline::CompareOp depthFunc = QRhiGraphicsPipeline::LessOrEqual;
-    QRhiGraphicsPipeline::CullMode cullMode = QRhiGraphicsPipeline::None;
-    QRhiGraphicsPipeline::StencilOpState stencilOpFrontState {};
-    quint32 stencilWriteMask = 0xFF;
-    quint32 stencilRef = 0;
-    int depthBias = 0;
-    float slopeScaledDepthBias = 0.0f;
-    bool blendEnable = false;
-    QRhiGraphicsPipeline::TargetBlend targetBlend;
-    int colorAttachmentCount = 1;
-
-    QRhiViewport viewport;
-    bool scissorEnable = false;
-    QRhiScissor scissor;
-
-    QSSGRhiInputAssemblerState ia;
-    float lineWidth = 1.0f;
-
-    QRhiGraphicsPipeline::PolygonMode polygonMode = QRhiGraphicsPipeline::Fill;
-
-    static QRhiGraphicsPipeline::CullMode toCullMode(QSSGCullFaceMode cullFaceMode);
-};
-
 inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
 {
     return a.shaderPipeline == b.shaderPipeline
@@ -484,109 +455,6 @@ inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_N
             ^ (s.stencilWriteMask << 7);
 }
 
-struct QSSGGraphicsPipelineStateKey
-{
-    QSSGRhiGraphicsPipelineState state;
-    QVector<quint32> renderTargetDescription;
-    QVector<quint32> srbLayoutDescription;
-    struct {
-        size_t renderTargetDescriptionHash;
-        size_t srbLayoutDescriptionHash;
-    } extra;
-    static QSSGGraphicsPipelineStateKey create(const QSSGRhiGraphicsPipelineState &state,
-                                               const QRhiRenderPassDescriptor *rpDesc,
-                                               const QRhiShaderResourceBindings *srb)
-    {
-        const QVector<quint32> rtDesc = rpDesc->serializedFormat();
-        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
-        return { state, rtDesc, srbDesc, { qHash(rtDesc), qHash(srbDesc) } };
-    }
-};
-
-inline bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
-{
-    return a.state == b.state
-        && a.renderTargetDescription == b.renderTargetDescription
-        && a.srbLayoutDescription == b.srbLayoutDescription;
-}
-
-inline bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
-{
-    return !(a == b);
-}
-
-inline size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
-{
-    return qHash(k.state, seed)
-        ^ k.extra.renderTargetDescriptionHash
-        ^ k.extra.srbLayoutDescriptionHash;
-}
-
-struct QSSGComputePipelineStateKey
-{
-    QShader shader;
-    QVector<quint32> srbLayoutDescription;
-    struct {
-        size_t srbLayoutDescriptionHash;
-    } extra;
-    static QSSGComputePipelineStateKey create(const QShader &shader,
-                                              const QRhiShaderResourceBindings *srb)
-    {
-        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
-        return { shader, srbDesc, { qHash(srbDesc) } };
-    }
-};
-
-inline bool operator==(const QSSGComputePipelineStateKey &a, const QSSGComputePipelineStateKey &b) Q_DECL_NOTHROW
-{
-    return a.shader == b.shader && a.srbLayoutDescription == b.srbLayoutDescription;
-}
-
-inline bool operator!=(const QSSGComputePipelineStateKey &a, const QSSGComputePipelineStateKey &b) Q_DECL_NOTHROW
-{
-    return !(a == b);
-}
-
-inline size_t qHash(const QSSGComputePipelineStateKey &k, size_t seed = 0) Q_DECL_NOTHROW
-{
-    return qHash(k.shader, seed) ^ k.extra.srbLayoutDescriptionHash;
-}
-
-struct QSSGRhiShaderResourceBindingList
-{
-    static const int MAX_SIZE = 32;
-
-    int p = 0;
-    size_t h = 0;
-    QRhiShaderResourceBinding v[MAX_SIZE];
-
-    void clear() { p = 0; h = 0; }
-
-    QSSGRhiShaderResourceBindingList() { }
-
-    QSSGRhiShaderResourceBindingList(const QSSGRhiShaderResourceBindingList &other)
-        : p(other.p),
-          h(other.h)
-    {
-        for (int i = 0; i < p; ++i)
-            v[i] = other.v[i];
-    }
-
-    QSSGRhiShaderResourceBindingList &operator=(const QSSGRhiShaderResourceBindingList &other) Q_DECL_NOTHROW
-    {
-        if (this != &other) {
-            p = other.p;
-            h = other.h;
-            for (int i = 0; i < p; ++i)
-                v[i] = other.v[i];
-        }
-        return *this;
-    }
-
-    void addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size);
-    void addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, QRhiSampler *sampler);
-};
-
 inline bool operator==(const QSSGRhiShaderResourceBindingList &a, const QSSGRhiShaderResourceBindingList &b) Q_DECL_NOTHROW
 {
     if (a.h != b.h)
@@ -608,79 +476,6 @@ inline bool operator!=(const QSSGRhiShaderResourceBindingList &a, const QSSGRhiS
 inline size_t qHash(const QSSGRhiShaderResourceBindingList &bl, size_t seed) Q_DECL_NOTHROW
 {
     return bl.h ^ seed;
-}
-
-inline void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage,
-                                                               QRhiBuffer *buf, int offset = 0, int size = 0)
-{
-#ifdef QT_DEBUG
-    if (p == MAX_SIZE) {
-        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
-        return;
-    }
-#endif
-    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
-    h ^= qintptr(buf);
-    d->binding = binding;
-    d->stage = stage;
-    d->type = QRhiShaderResourceBinding::UniformBuffer;
-    d->u.ubuf.buf = buf;
-    d->u.ubuf.offset = offset;
-    d->u.ubuf.maybeSize = size; // 0 = all
-    d->u.ubuf.hasDynamicOffset = false;
-}
-
-inline void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage,
-                                                         QRhiTexture *tex, QRhiSampler *sampler)
-{
-#ifdef QT_DEBUG
-    if (p == QSSGRhiShaderResourceBindingList::MAX_SIZE) {
-        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
-        return;
-    }
-#endif
-    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
-    h ^= qintptr(tex) ^ qintptr(sampler);
-    d->binding = binding;
-    d->stage = stage;
-    d->type = QRhiShaderResourceBinding::SampledTexture;
-    d->u.stex.count = 1;
-    d->u.stex.texSamplers[0].tex = tex;
-    d->u.stex.texSamplers[0].sampler = sampler;
-}
-
-// The lookup keys can be somewhat complicated due to having to handle cases
-// like "render a model in a shared scene between multiple View3Ds" (here both
-// the View3D ('layer/cid') and the model ('model') act as the lookup key since
-// while the model is the same, we still want different uniform buffers per
-// View3D), or the case of shadow maps where the shadow map (there can be as
-// many as lights) is taken into account too ('entry') together with an entry index
-// where more resolution is needed (e.g., cube maps).
-//
-struct QSSGRhiDrawCallDataKey
-{
-    const void *cid = nullptr; // Usually the sub-pass (see usage of QSSGPassKey)
-    const void *model = nullptr;
-    const void *entry = nullptr;
-    quintptr entryIdx = 0;
-};
-
-inline bool operator==(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) Q_DECL_NOTHROW
-{
-    return a.cid == b.cid && a.model == b.model && a.entry == b.entry && a.entryIdx == b.entryIdx;
-}
-
-inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) Q_DECL_NOTHROW
-{
-    return !(a == b);
-}
-
-inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) Q_DECL_NOTHROW
-{
-    return qHash(quintptr(k.cid)
-                 ^ quintptr(k.model)
-                 ^ quintptr(k.entry)
-                 ^ quintptr(k.entryIdx), seed);
 }
 
 struct QSSGRhiDrawCallData
@@ -753,6 +548,37 @@ struct QSSGRhiParticleData
     bool sorting = false;
 };
 
+class QSSGComputePipelineStateKeyPrivate
+{
+public:
+    QShader shader;
+    QVector<quint32> srbLayoutDescription;
+    struct {
+        size_t srbLayoutDescriptionHash;
+    } extra;
+    static QSSGComputePipelineStateKeyPrivate create(const QShader &shader,
+                                                     const QRhiShaderResourceBindings *srb)
+    {
+        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
+        return { shader, srbDesc, { qHash(srbDesc) } };
+    }
+};
+
+inline bool operator==(const QSSGComputePipelineStateKeyPrivate &a, const QSSGComputePipelineStateKeyPrivate &b) Q_DECL_NOTHROW
+{
+    return a.shader == b.shader && a.srbLayoutDescription == b.srbLayoutDescription;
+}
+
+inline bool operator!=(const QSSGComputePipelineStateKeyPrivate &a, const QSSGComputePipelineStateKeyPrivate &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+inline size_t qHash(const QSSGComputePipelineStateKeyPrivate &k, size_t seed = 0) Q_DECL_NOTHROW
+{
+    return qHash(k.shader, seed) ^ k.extra.srbLayoutDescriptionHash;
+}
+
 struct QSSGRhiDummyTextureKey
 {
     QRhiTexture::Flags flags;
@@ -777,11 +603,55 @@ inline bool operator!=(const QSSGRhiDummyTextureKey &a, const QSSGRhiDummyTextur
     return !(a == b);
 }
 
-#define QSSGRHICTX_STAT(ctx, f) for (bool qssgrhictxlog_enabled = ctx->stats().isEnabled(); qssgrhictxlog_enabled; qssgrhictxlog_enabled = false) ctx->stats().f
+class QSSGGraphicsPipelineStateKeyPrivate
+{
+public:
+    QSSGRhiGraphicsPipelineState state;
+    QVector<quint32> renderTargetDescription;
+    QVector<quint32> srbLayoutDescription;
+    struct {
+        size_t renderTargetDescriptionHash;
+        size_t srbLayoutDescriptionHash;
+    } extra;
+    static QSSGGraphicsPipelineStateKeyPrivate create(const QSSGRhiGraphicsPipelineState &state,
+                                                      const QRhiRenderPassDescriptor *rpDesc,
+                                                      const QRhiShaderResourceBindings *srb)
+    {
+        const QVector<quint32> rtDesc = rpDesc->serializedFormat();
+        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
+        return { state, rtDesc, srbDesc, { qHash(rtDesc), qHash(srbDesc) } };
+    }
+};
+
+inline bool operator==(const QSSGGraphicsPipelineStateKeyPrivate &a, const QSSGGraphicsPipelineStateKeyPrivate &b) Q_DECL_NOTHROW
+{
+    return a.state == b.state
+        && a.renderTargetDescription == b.renderTargetDescription
+        && a.srbLayoutDescription == b.srbLayoutDescription;
+}
+
+inline bool operator!=(const QSSGGraphicsPipelineStateKeyPrivate &a, const QSSGGraphicsPipelineStateKeyPrivate &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+inline size_t qHash(const QSSGGraphicsPipelineStateKeyPrivate &k, size_t seed) Q_DECL_NOTHROW
+{
+    return qHash(k.state, seed)
+        ^ k.extra.renderTargetDescriptionHash
+        ^ k.extra.srbLayoutDescriptionHash;
+}
+
+#define QSSGRHICTX_STAT(ctx, f) \
+    for (bool qssgrhictxlog_enabled = QSSGRhiContextStats::get(*ctx).isEnabled(); qssgrhictxlog_enabled; qssgrhictxlog_enabled = false) \
+        QSSGRhiContextStats::get(*ctx).f
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContextStats
 {
 public:
+    [[nodiscard]] static QSSGRhiContextStats &get(QSSGRhiContext &instance);
+    [[nodiscard]] static const QSSGRhiContextStats &get(const QSSGRhiContext &instance);
+
     struct DrawInfo {
         quint64 callCount = 0;
         quint64 vertexOrIndexCount = 0;
@@ -844,17 +714,8 @@ public:
     // enable/disable since we want to collect data when a DebugView item
     // becomes visible, but not otherwise.
 
-    static bool profilingEnabled()
-    {
-        static bool enabled = Q_QUICK3D_PROFILING_ENABLED;
-        return enabled;
-    }
-
-    static bool rendererDebugEnabled()
-    {
-        static bool enabled = qgetenv("QSG_RENDERER_DEBUG").contains(QByteArrayLiteral("render"));
-        return enabled;
-    }
+    static bool profilingEnabled();
+    static bool rendererDebugEnabled();
 
     bool isEnabled() const;
     void drawIndexed(quint32 indexCount, quint32 instanceCount);
@@ -908,106 +769,59 @@ public:
     QSet<QSSGRenderLayer *> dynamicDataSources;
 };
 
-class QSSGRenderGraphObject;
-
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContextPrivate
 {
-    Q_DISABLE_COPY(QSSGRhiContext)
+    Q_DECLARE_PUBLIC(QSSGRhiContext)
+
+    explicit QSSGRhiContextPrivate(QSSGRhiContext &rhiCtx, QRhi *rhi_)
+        : q_ptr(&rhiCtx)
+        , m_rhi(rhi_)
+        , m_stats(rhiCtx)
+    {}
+
 public:
-    explicit QSSGRhiContext(QRhi *rhi = nullptr);
-    ~QSSGRhiContext();
+    using Textures = QSet<QRhiTexture *>;
+    using Meshes = QSet<QSSGRenderMesh *>;
 
-    void initialize(QRhi *rhi);
-    QRhi *rhi() const { return m_rhi; }
-    bool isValid() const { return m_rhi != nullptr; }
+    [[nodiscard]] static QSSGRhiContextPrivate &get(QSSGRhiContext &q) { return *q.d_ptr; }
+    [[nodiscard]] static const QSSGRhiContextPrivate &get(const QSSGRhiContext &q) { return *q.d_ptr; }
 
-    void setMainRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_mainRpDesc = rpDesc; }
-    QRhiRenderPassDescriptor *mainRenderPassDescriptor() const { return m_mainRpDesc; }
+    [[nodiscard]] static bool shaderDebuggingEnabled();
+    [[nodiscard]] static bool editorMode();
 
-    void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
-    QRhiCommandBuffer *commandBuffer() const { return m_cb; }
-
-    void setRenderTarget(QRhiRenderTarget *rt) { m_rt = rt; }
-    QRhiRenderTarget *renderTarget() const { return m_rt; }
-
-    void setMainPassSampleCount(int samples) { m_mainSamples = samples; }
-    int mainPassSampleCount() const { return m_mainSamples; }
-
-    QRhiShaderResourceBindings *srb(const QSSGRhiShaderResourceBindingList &bindings);
-    void releaseDrawCallData(QSSGRhiDrawCallData &dcd);
-    QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key,
+    QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKeyPrivate &key,
                                    QRhiRenderPassDescriptor *rpDesc,
                                    QRhiShaderResourceBindings *srb);
-    QRhiComputePipeline *computePipeline(const QSSGComputePipelineStateKey &key,
+
+    QRhiComputePipeline *computePipeline(const QSSGComputePipelineStateKeyPrivate &key,
                                          QRhiShaderResourceBindings *srb);
 
-    QSSGRhiDrawCallData &drawCallData(const QSSGRhiDrawCallDataKey &key)
-    {
-        return m_drawCallData[key];
-    }
-
-    QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
-    void checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription);
-
-    void registerTexture(QRhiTexture *texture);
-    void releaseTexture(QRhiTexture *texture);
-    QSet<QRhiTexture *> registeredTextures() const { return m_textures; }
-
-    void registerMesh(QSSGRenderMesh *mesh);
-    void releaseMesh(QSSGRenderMesh *mesh);
-    QSet<QSSGRenderMesh *> registeredMeshes() const { return m_meshes; }
-
-    QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> pipelines() const { return m_pipelines; }
-
+    QSSGRhiDrawCallData &drawCallData(const QSSGRhiDrawCallDataKey &key);
+    void releaseDrawCallData(QSSGRhiDrawCallData &dcd);
     void cleanupDrawCallData(const QSSGRenderModel *model);
 
-    QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
-                              const QSize &size = QSize(64, 64), const QColor &fillColor = Qt::black);
+    QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable);
 
-    static inline QRhiCommandBuffer::BeginPassFlags commonPassFlags()
-    {
-        // We do not use GPU compute at all at the moment, this means we can
-        // get a small performance gain with OpenGL by declaring this.
-        return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
-    }
+    QSSGRhiInstanceBufferData &instanceBufferData(const QSSGRenderModel *model);
 
-    static bool shaderDebuggingEnabled();
-    static bool editorMode();
+    QSSGRhiParticleData &particleData(const QSSGRenderGraphObject *particlesOrModel);
 
-    QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable)
-    {
-        return m_instanceBuffers[instanceTable];
-    }
-
-    QSSGRhiInstanceBufferData &instanceBufferData(const QSSGRenderModel *model)
-    {
-        return m_instanceBuffersLod[model];
-    }
-
-    QSSGRhiParticleData &particleData(const QSSGRenderGraphObject *particlesOrModel)
-    {
-        return m_particleData[particlesOrModel];
-    }
-
-    QSSGRhiContextStats &stats() { return m_stats; }
-
-    int maxUniformBufferRange() const { return m_rhi->resourceLimit(QRhi::MaxUniformBufferRange); }
-
-    void releaseCachedResources();
-
-private:
+    QSSGRhiContext *q_ptr = nullptr;
     QRhi *m_rhi = nullptr;
+
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
     QRhiCommandBuffer *m_cb = nullptr;
     QRhiRenderTarget *m_rt = nullptr;
+    Textures m_textures;
+    Meshes m_meshes;
     int m_mainSamples = 1;
-    QHash<QSSGRhiShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
-    QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
-    QHash<QSSGComputePipelineStateKey, QRhiComputePipeline *> m_computePipelines;
-    QHash<QSSGRhiDrawCallDataKey, QSSGRhiDrawCallData> m_drawCallData;
+
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
-    QSet<QRhiTexture *> m_textures;
-    QSet<QSSGRenderMesh *> m_meshes;
+
+    QHash<QSSGRhiDrawCallDataKey, QSSGRhiDrawCallData> m_drawCallData;
+    QHash<QSSGRhiShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
+    QHash<QSSGGraphicsPipelineStateKeyPrivate, QRhiGraphicsPipeline *> m_pipelines;
+    QHash<QSSGComputePipelineStateKeyPrivate, QRhiComputePipeline *> m_computePipelines;
     QHash<QSSGRhiDummyTextureKey, QRhiTexture *> m_dummyTextures;
     QHash<QSSGRenderInstanceTable *, QSSGRhiInstanceBufferData> m_instanceBuffers;
     QHash<const QSSGRenderModel *, QSSGRhiInstanceBufferData> m_instanceBuffersLod;
@@ -1015,34 +829,24 @@ private:
     QSSGRhiContextStats m_stats;
 };
 
-inline QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op)
+inline bool operator==(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) noexcept
 {
-    switch (op) {
-    case QSSGRenderTextureFilterOp::Nearest:
-        return QRhiSampler::Nearest;
-    case QSSGRenderTextureFilterOp::Linear:
-        return QRhiSampler::Linear;
-    default:
-        break;
-    }
-    return QRhiSampler::Linear;
+    return a.cid == b.cid && a.model == b.model && a.entry == b.entry && a.entryIdx == b.entryIdx;
 }
 
-inline QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling)
+inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) noexcept
 {
-    switch (tiling) {
-    case QSSGRenderTextureCoordOp::Repeat:
-        return QRhiSampler::Repeat;
-    case QSSGRenderTextureCoordOp::MirroredRepeat:
-        return QRhiSampler::Mirror;
-    case QSSGRenderTextureCoordOp::ClampToEdge:
-        return QRhiSampler::ClampToEdge;
-    default:
-        break;
-    }
-    return QRhiSampler::ClampToEdge;
+    return !(a == b);
+}
+
+inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) noexcept
+{
+    return qHash(quintptr(k.cid)
+                 ^ quintptr(k.model)
+                 ^ quintptr(k.entry)
+                 ^ quintptr(k.entryIdx), seed);
 }
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QSSGRHICONTEXT_P_H

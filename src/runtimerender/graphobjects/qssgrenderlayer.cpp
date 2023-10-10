@@ -15,9 +15,6 @@ QSSGRenderLayer::QSSGRenderLayer()
     , antialiasingMode(QSSGRenderLayer::AAMode::NoAA)
     , antialiasingQuality(QSSGRenderLayer::AAQuality::High)
     , background(QSSGRenderLayer::Background::Transparent)
-    , lightProbe(nullptr)
-    , probeExposure(1.0f)
-    , probeHorizon(-1.0f)
     , temporalAAEnabled(false)
     , temporalAAStrength(0.3f)
     , ssaaEnabled(false)
@@ -39,9 +36,9 @@ QSSGRenderLayer::~QSSGRenderLayer()
 
 void QSSGRenderLayer::setProbeOrientation(const QVector3D &angles)
 {
-    if (angles != probeOrientationAngles) {
-        probeOrientationAngles = angles;
-        probeOrientation = QQuaternion::fromEulerAngles(probeOrientationAngles).toRotationMatrix();
+    if (angles != lightProbeSettings.probeOrientationAngles) {
+        lightProbeSettings.probeOrientationAngles = angles;
+        lightProbeSettings.probeOrientation = QQuaternion::fromEulerAngles(lightProbeSettings.probeOrientationAngles).toRotationMatrix();
     }
 }
 

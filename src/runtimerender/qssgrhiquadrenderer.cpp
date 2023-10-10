@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
+#include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -114,7 +115,7 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     }
 
-    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb);
+    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(*ps, rpDesc, srb);
     // Make sure that we were able to create the pipeline before trying to use it
     // When GraphicsPipeline creation fails it should return nullptr and print a warning
     if (!pipeline)
@@ -179,7 +180,7 @@ void QSSGRhiCubeRenderer::recordRenderCube(QSSGRhiContext *rhiCtx, QSSGRhiGraphi
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     }
 
-    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb);
+    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(*ps, rpDesc, srb);
     // Make sure that we were able to create the pipeline before trying to use it
     // When GraphicsPipeline creation fails it should return nullptr and print a warning
     if (!pipeline)

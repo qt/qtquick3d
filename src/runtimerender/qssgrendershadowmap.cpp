@@ -5,7 +5,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "qssgrendercontextcore.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -4,7 +4,7 @@
 
 #include "qssgrendershaderlibrarymanager_p.h"
 
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "../qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
 
 #include <QXmlStreamReader>

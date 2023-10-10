@@ -6,7 +6,7 @@
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include "qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
 

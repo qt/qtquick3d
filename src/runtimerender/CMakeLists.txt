@@ -41,7 +41,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
         graphobjects/qssgrenderparticles.cpp graphobjects/qssgrenderparticles_p.h
         qssgrendercommands.cpp qssgrendercommands_p.h
-        qssgrendercontextcore.cpp qssgrendercontextcore_p.h
+        qssgrendercontextcore.cpp qssgrendercontextcore.h
         qssgrenderdefaultmaterialshadergenerator.cpp qssgrenderdefaultmaterialshadergenerator_p.h
         qssgrendererutil_p.h
         qssgrenderimagetexture_p.h
@@ -56,7 +56,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrenderreflectionmap.cpp qssgrenderreflectionmap_p.h
         qssgrenderpickresult_p.h
         qssgrhiparticles.cpp qssgrhiparticles_p.h
-        qssgrhicontext.cpp qssgrhicontext_p.h
+        qssgrhicontext.cpp qssgrhicontext_p.h qssgrhicontext.h
         qssgrhicustommaterialsystem.cpp qssgrhicustommaterialsystem_p.h
         qssgrhieffectsystem.cpp qssgrhieffectsystem_p.h
         qssgrhiquadrenderer.cpp qssgrhiquadrenderer_p.h

@@ -21,7 +21,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <ssg/qssgrenderbasetypes.h>
 
 #include <QtGui/QVector2D>
 
