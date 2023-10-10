@@ -489,6 +489,24 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntryFr
     }
     \endqml
 
+    It is also possible to populate the instances property by just adding children to the
+    InstanceList. The following example is equivalent to the previous one:
+    \qml
+    InstanceList {
+        id: manualInstancing
+        InstanceListEntry {
+            position: Qt.vector3d(0, 0, -60)
+            eulerRotation: Qt.vector3d(-10, 0, 30)
+            color: "red"
+        }
+        InstanceListEntry {
+            position: Qt.vector3d(50, 10, 100)
+            eulerRotation: Qt.vector3d(0, 180, 0)
+            color: "green"
+        }
+    }
+    \endqml
+
     Each InstanceListEntry is an object that can have property bindings and animations. This gives
     great flexibility, but also causes memory overhead. Therefore, it is not recommended to use
     InstanceList for procedurally generated tables containing thousands (or millions) of
@@ -500,6 +518,7 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntryFr
 
 /*!
     \qmlproperty List<QtQuick3D::InstanceListEntry> InstanceList::instances
+    \qmldefault
 
     This property contains the list of instance definitions. Modifying this list, or any of its elements, will cause the instance table to be updated.
 */

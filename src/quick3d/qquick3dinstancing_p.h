@@ -122,6 +122,8 @@ class Q_QUICK3D_EXPORT QQuick3DInstanceList : public QQuick3DInstancing
     QML_NAMED_ELEMENT(InstanceList)
     QML_ADDED_IN_VERSION(6, 2)
 
+    Q_CLASSINFO("DefaultProperty", "instances")
+
 public:
     explicit QQuick3DInstanceList(QQuick3DObject *parent = nullptr);
     ~QQuick3DInstanceList() override;
