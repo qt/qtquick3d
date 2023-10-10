@@ -31,7 +31,7 @@ public:
     bool prepareData(QSSGFrameData &data) override;
     void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
     void render(const QSSGRenderer &renderer) override;
-    void release() override;
+    void resetForFrame() override;
     Type type() const override { return Type::Standalone; }
     RenderMode mode() const override { return RenderMode::Overlay; }
 
@@ -161,7 +161,7 @@ void ProducerRenderer::render(const QSSGRenderer &renderer)
     cb->endPass();
 }
 
-void ProducerRenderer::release()
+void ProducerRenderer::resetForFrame()
 {
 }
 
@@ -203,7 +203,7 @@ public:
     bool prepareData(QSSGFrameData &data) override;
     void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
     void render(const QSSGRenderer &renderer) override;
-    void release() override;
+    void resetForFrame() override;
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return RenderMode::Overlay; }
 
@@ -381,7 +381,7 @@ void ConsumerRenderer::render(const QSSGRenderer &renderer)
     cb->debugMarkEnd();
 }
 
-void ConsumerRenderer::release()
+void ConsumerRenderer::resetForFrame()
 {
 }
 

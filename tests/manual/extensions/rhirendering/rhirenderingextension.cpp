@@ -19,7 +19,7 @@ public:
     bool prepareData(QSSGFrameData &data) override;
     void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
     void render(const QSSGRenderer &renderer) override;
-    void release() override;
+    void resetForFrame() override;
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return renderMode; }
 
@@ -186,7 +186,7 @@ void Renderer::render(const QSSGRenderer &renderer)
     cb->debugMarkEnd();
 }
 
-void Renderer::release()
+void Renderer::resetForFrame()
 {
 }
 

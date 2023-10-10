@@ -2096,7 +2096,7 @@ void QSSGLayerRenderData::prepareForRender()
 void QSSGLayerRenderData::resetForFrame()
 {
     for (const auto &pass : activePasses)
-        pass->release();
+        pass->resetForFrame();
     activePasses.clear();
     transparentObjects.clear();
     screenTextureObjects.clear();
@@ -2171,7 +2171,7 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
 {
     delete m_lightmapper;
     for (auto &pass : activePasses)
-        pass->release();
+        pass->resetForFrame();
 
     for (auto &renderResult : renderResults)
         renderResult.reset();

@@ -21,7 +21,7 @@ public:
     bool prepareData(QSSGFrameData &data) override;
     void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
     void render(const QSSGRenderer &renderer) override;
-    void release() override;
+    void resetForFrame() override;
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return RenderMode::Overlay; };
 
@@ -174,7 +174,7 @@ void OutlineRenderer::render(const QSSGRenderer &renderer)
     }
 }
 
-void OutlineRenderer::release()
+void OutlineRenderer::resetForFrame()
 {
     nodes.clear();
     renderables.clear();

@@ -88,7 +88,7 @@ public:
     virtual void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) = 0;
     virtual void render(const QSSGRenderer &renderer) = 0;
 
-    virtual void release() = 0;
+    virtual void resetForFrame() = 0;
 
     virtual Type type() const = 0;
     virtual RenderMode mode() const = 0;

@@ -113,7 +113,7 @@ void ShadowMapPass::renderPass(QSSGRenderer &renderer)
     }
 }
 
-void ShadowMapPass::release()
+void ShadowMapPass::resetForFrame()
 {
     enabled = false;
     camera = nullptr;
@@ -194,7 +194,7 @@ void ReflectionMapPass::renderPass(QSSGRenderer &renderer)
     }
 }
 
-void ReflectionMapPass::release()
+void ReflectionMapPass::resetForFrame()
 {
     ps = {};
     reflectionProbes.clear();
@@ -258,7 +258,7 @@ void ZPrePassPass::renderPass(QSSGRenderer &renderer)
     }
 }
 
-void ZPrePassPass::release()
+void ZPrePassPass::resetForFrame()
 {
     renderedDepthWriteObjects.clear();
     renderedOpaqueDepthPrepassObjects.clear();
@@ -334,7 +334,7 @@ void SSAOMapPass::renderPass(QSSGRenderer &renderer)
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("ssao_map"));
 }
 
-void SSAOMapPass::release()
+void SSAOMapPass::resetForFrame()
 {
     rhiDepthTexture = nullptr;
     rhiAoTexture = nullptr;
@@ -412,7 +412,7 @@ void DepthMapPass::renderPass(QSSGRenderer &renderer)
     cb->debugMarkEnd();
 }
 
-void DepthMapPass::release()
+void DepthMapPass::resetForFrame()
 {
     rhiDepthTexture = nullptr;
     sortedOpaqueObjects.clear();
@@ -513,14 +513,14 @@ void ScreenMapPass::renderPass(QSSGRenderer &renderer)
     cb->debugMarkEnd();
 }
 
-void ScreenMapPass::release()
+void ScreenMapPass::resetForFrame()
 {
     rhiScreenTexture = nullptr;
     if (skyboxPass) {
         // NOTE: The screen map pass is prepped and rendered before we render the skybox to the main render target,
         // i.e., we are not interfering with the skybox pass' state. Just make sure sure to leave the skybox pass
         // in a good state now that we're done with it.
-        skyboxPass->release();
+        skyboxPass->resetForFrame();
         skyboxPass = nullptr;
     }
     ps = {};
@@ -581,7 +581,7 @@ void ScreenReflectionPass::renderPass(QSSGRenderer &renderer)
     }
 }
 
-void ScreenReflectionPass::release()
+void ScreenReflectionPass::resetForFrame()
 {
     sortedScreenTextureObjects.clear();
     rhiScreenTexture = nullptr;
@@ -649,7 +649,7 @@ void OpaquePass::renderPass(QSSGRenderer &renderer)
     Q_TRACE(QSSG_renderPass_exit);
 }
 
-void OpaquePass::release()
+void OpaquePass::resetForFrame()
 {
     sortedOpaqueObjects.clear();
     ps = {};
@@ -717,7 +717,7 @@ void TransparentPass::renderPass(QSSGRenderer &renderer)
     Q_TRACE(QSSG_renderPass_exit);
 }
 
-void TransparentPass::release()
+void TransparentPass::resetForFrame()
 {
     sortedTransparentObjects.clear();
     ps = {};
@@ -772,7 +772,7 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_map"));
 }
 
-void SkyboxPass::release()
+void SkyboxPass::resetForFrame()
 {
     ps = {};
     layer = nullptr;
@@ -815,7 +815,7 @@ void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_cube"));
 }
 
-void SkyboxCubeMapPass::release()
+void SkyboxCubeMapPass::resetForFrame()
 {
     ps = {};
     layer = nullptr;
@@ -903,7 +903,7 @@ void Item2DPass::renderPass(QSSGRenderer &renderer)
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("2D_sub_scene"));
 }
 
-void Item2DPass::release()
+void Item2DPass::resetForFrame()
 {
     item2Ds.clear();
     ps = {};
@@ -942,7 +942,7 @@ void InfiniteGridPass::renderPass(QSSGRenderer &renderer)
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("render_grid"));
 }
 
-void InfiniteGridPass::release()
+void InfiniteGridPass::resetForFrame()
 {
     ps = {};
     layer = nullptr;
@@ -1005,7 +1005,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
     }
 }
 
-void DebugDrawPass::release()
+void DebugDrawPass::resetForFrame()
 {
     ps = {};
 }
@@ -1028,10 +1028,10 @@ void UserPass::renderPass(QSSGRenderer &renderer)
     }
 }
 
-void UserPass::release()
+void UserPass::resetForFrame()
 {
     for (const auto &p : std::as_const(extensions))
-        p->release();
+        p->resetForFrame();
 
     // TODO: We should track if we need to update this list.
     extensions.clear();

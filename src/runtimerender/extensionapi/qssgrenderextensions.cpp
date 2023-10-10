@@ -220,12 +220,12 @@ void QSSGRenderExtension::render(const QSSGRenderer &renderer)
 }
 
 /*!
-    \fn QSSGRenderExtension::release()
+    \fn QSSGRenderExtension::resetForFrame()
 
     Called each time a new frame starts. Any data from the previous frame should be cleared at
     this point.
 */
-void QSSGRenderExtension::release()
+void QSSGRenderExtension::resetForFrame()
 {
 
 }
