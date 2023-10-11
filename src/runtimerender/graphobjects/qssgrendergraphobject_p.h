@@ -143,7 +143,7 @@ public:
 
     // Objects tagged with HasGraphicsResources get special handling and will be queued for release
     // on the render thread after the frame has been submitted. See cleanupNodes() in the scene manager.
-    [[nodiscard]] inline bool hasGraphicsResources() noexcept
+    [[nodiscard]] inline bool hasGraphicsResources() const noexcept
     {
         return ((flags & FlagT(Flags::HasGraphicsResources)) != 0);
     }
