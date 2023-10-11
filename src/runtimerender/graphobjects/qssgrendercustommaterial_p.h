@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRenderGraphObject
 {
     QSSGRenderCustomMaterial() : QSSGRenderGraphObject(Type::CustomMaterial) {}
+    ~QSSGRenderCustomMaterial() { qDeleteAll(commandsToDelete); }
 
     struct TextureProperty
     {
@@ -92,6 +93,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QMap<QByteArray, QByteArray> shaders;
 
     QVector<dynamic::QSSGCommand *> commands;
+    QSet<dynamic::QSSGCommand *> commandsToDelete;
 
     // IMPORTANT: These flags matches the key produced by a MDL export file
     enum class MaterialShaderKeyValues

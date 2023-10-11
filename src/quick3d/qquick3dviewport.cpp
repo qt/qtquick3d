@@ -96,7 +96,7 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     m_sceneRoot = new QQuick3DSceneRootNode(this);
     m_environment = new QQuick3DSceneEnvironment(m_sceneRoot);
     m_renderStats = new QQuick3DRenderStats(m_sceneRoot);
-    QSharedPointer<QQuick3DSceneManager> sceneManager(new QQuick3DSceneManager(m_sceneRoot));
+    QSharedPointer<QQuick3DSceneManager> sceneManager(new QQuick3DSceneManager());
     QQuick3DObjectPrivate::get(m_sceneRoot)->refSceneManager(sceneManager);
     connect(QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager.data(), &QQuick3DSceneManager::needsUpdate,
             this, &QQuickItem::update);

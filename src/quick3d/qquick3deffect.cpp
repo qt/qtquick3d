@@ -387,6 +387,22 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         }
     }
 
+    // We need to mark the commands that we allocated since they will need to be deallocted when the customMaterial is deleted.
+    // We achieve this by filtering on the command type.
+    qDeleteAll(effectNode->commandsToDelete);
+    effectNode->commandsToDelete.clear();
+    for (auto command : effectNode->commands) {
+        if (command->m_type != dynamic::CommandType::AllocateBuffer &&
+                command->m_type != dynamic::CommandType::ApplyBufferValue &&
+                command->m_type != dynamic::CommandType::ApplyBlitFramebuffer &&
+                command->m_type != dynamic::CommandType::ApplyBlending &&
+                command->m_type != dynamic::CommandType::ApplyRenderState &&
+                command->m_type != dynamic::CommandType::ApplyCullMode &&
+                command->m_type != dynamic::CommandType::ApplyDepthValue &&
+                command->m_type != dynamic::CommandType::ApplyValue)
+        effectNode->commandsToDelete.insert(command);
+    }
+
     if (m_dirtyAttributes & Dirty::PropertyDirty) {
         for (const auto &prop : qAsConst(effectNode->properties)) {
             auto p = metaObject()->property(prop.pid);

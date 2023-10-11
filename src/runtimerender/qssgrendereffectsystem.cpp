@@ -426,7 +426,7 @@ QSSGEffectRenderArgument::QSSGEffectRenderArgument(QSSGRenderEffect *inEffect,
 {
 }
 
-QSSGRenderEffect::~QSSGRenderEffect() {}
+QSSGRenderEffect::~QSSGRenderEffect() { qDeleteAll(commandsToDelete); }
 
 QSSGEffectSystem::QSSGEffectSystem(QSSGRenderContextInterface *inContext) : m_context(inContext)
 {
