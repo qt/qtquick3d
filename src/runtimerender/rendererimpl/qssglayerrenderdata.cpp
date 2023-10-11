@@ -1003,8 +1003,9 @@ void QSSGLayerRenderData::prepareModelMeshesForRenderInternal(const QSSGRenderCo
                         theMesh->bvh = bufferManager->loadMeshBVH(model.geometry);
 
                     if (theMesh->bvh) {
-                        for (int i = 0; i < theMesh->bvh->roots.size(); ++i)
-                            theMesh->subsets[i].bvhRoot = theMesh->bvh->roots.at(i);
+                        const auto &roots = theMesh->bvh->roots();
+                        for (qsizetype i = 0, end = qsizetype(roots.size()); i < end; ++i)
+                            theMesh->subsets[i].bvhRoot = roots[i];
                     }
                 }
             }

@@ -146,7 +146,8 @@ Renderer::~Renderer()
     // The ChildRenderer (the other extension backend node) may or may not be alive at this point.
 
     // with the threaded render loop it is important that the dtor is called on the same thread as the ctor
-    QCOMPARE(QThread::currentThread(), t);
+    // NOTE: We only want to check that the address is the same (the object might have been destroyed already)...
+    QVERIFY(QThread::currentThread() == t);
 
     extensionDtorCount += 1;
 }

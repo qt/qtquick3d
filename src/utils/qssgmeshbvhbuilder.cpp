@@ -72,10 +72,8 @@ std::unique_ptr<QSSGMeshBVH> QSSGMeshBVHBuilder::buildTree()
         return nullptr;
 
     auto meshBvh = std::make_unique<QSSGMeshBVH>();
-
-    auto &roots = meshBvh->roots;
-    auto &nodes = meshBvh->m_nodes;
-    auto &triangleBounds = meshBvh->triangles;
+    auto &roots = meshBvh->m_roots;
+    auto &triangleBounds = meshBvh->m_triangles;
 
     // Calculate the bounds for each triangle in whole mesh once
     quint32 indexCount = 0;
@@ -91,9 +89,7 @@ std::unique_ptr<QSSGMeshBVH> QSSGMeshBVHBuilder::buildTree()
         roots.reserve(subsets.size());
         for (quint32 subsetIdx = 0, subsetEnd = subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
             const QSSGMesh::Mesh::Subset &source(subsets[subsetIdx]);
-            const auto idx = nodes.size();
-            nodes.emplace_back();
-            QSSGMeshBVHNode::Handle root{ idx, meshBvh.get() };
+            QSSGMeshBVHNode::Handle root = meshBvh->newHandle();
             // Offsets provided by subset are for the index buffer
             // Convert them to work with the triangle bounds list
             const quint32 triangleOffset = source.offset / 3;
@@ -101,16 +97,14 @@ std::unique_ptr<QSSGMeshBVH> QSSGMeshBVHBuilder::buildTree()
             root->boundingData = getBounds(*meshBvh, triangleOffset, triangleCount);
             // Recursively split the mesh into a tree of smaller bounding volumns
             root = splitNode(*meshBvh, root, triangleOffset, triangleCount);
-            roots.append(root);
+            roots.push_back(root);
         }
     } else {
         // Custom Geometry only has one subset
-        auto idx = nodes.size();
-        nodes.emplace_back();
-        QSSGMeshBVHNode::Handle root{ idx, meshBvh.get() };
-        root->boundingData = getBounds(*meshBvh, 0, triangleBounds.size());
-        root = splitNode(*meshBvh, root, 0, triangleBounds.size());
-        roots.append(root);
+        QSSGMeshBVHNode::Handle root = meshBvh->newHandle();
+        root->boundingData = getBounds(*meshBvh, 0, quint32(triangleBounds.size()));
+        root = splitNode(*meshBvh, root, 0, quint32(triangleBounds.size()));
+        roots.push_back(root);
     }
 
     return meshBvh;
@@ -159,7 +153,7 @@ static void calculateTriangleBoundsImpl(quint32 indexOffset,
                                         [[maybe_unused]] const quint32 vertexStride,
                                         [[maybe_unused]] const quint32 vertexUVOffset,
                                         [[maybe_unused]] const quint32 vertexPosOffset,
-                                        QVector<QSSGMeshBVHTriangle> &triangleBounds)
+                                        QSSGMeshBVHTriangles &triangleBounds)
 {
     const quint32 triangleCount = indexCount / 3;
     triangleBounds.reserve(triangleCount);
@@ -196,15 +190,15 @@ static void calculateTriangleBoundsImpl(quint32 indexOffset,
         triangle.bounds.include(triangle.vertex1);
         triangle.bounds.include(triangle.vertex2);
         triangle.bounds.include(triangle.vertex3);
-        triangleBounds.append(triangle);
+        triangleBounds.push_back(triangle);
     }
 }
 
-QVector<QSSGMeshBVHTriangle> QSSGMeshBVHBuilder::calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const
+QSSGMeshBVHTriangles QSSGMeshBVHBuilder::calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const
 {
-    QVector<QSSGMeshBVHTriangle> data;
+    QSSGMeshBVHTriangles data;
 
-    using CalcTriangleBoundsFn = void (*)(quint32, quint32, const QByteArray &, const QByteArray &, const quint32, const quint32, const quint32, QVector<QSSGMeshBVHTriangle> &);
+    using CalcTriangleBoundsFn = void (*)(quint32, quint32, const QByteArray &, const QByteArray &, const quint32, const quint32, const quint32, QSSGMeshBVHTriangles &);
     static const CalcTriangleBoundsFn calcTriangleBounds16Fns[] { &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, false, false, false>,
                                                                   &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, false, false, true>,
                                                                   &calculateTriangleBoundsImpl<QSSGRenderComponentType::UnsignedInt16, false, true, false>,
@@ -237,9 +231,6 @@ QSSGMeshBVHNode::Handle QSSGMeshBVHBuilder::splitNode(QSSGMeshBVH &bvh, QSSGMesh
 {
     // NOTE: The node handle argument is intentionally copied! We can risk the storage reallocating!
     // Besides, it's a trivial type.
-    QSSG_ASSERT(!node.isNull(), return {});
-
-    auto &nodes = bvh.m_nodes;
 
     // Force a leaf node if the there are too few triangles or the tree depth
     // has exceeded the maximum depth
@@ -272,18 +263,14 @@ QSSGMeshBVHNode::Handle QSSGMeshBVHBuilder::splitNode(QSSGMeshBVH &bvh, QSSGMesh
         node->count = count;
     } else {
         // Create the Left Node
-        const auto lidx = nodes.size();
-        nodes.emplace_back();
-        node->left = { lidx, &bvh };
+        node->left = bvh.newHandle();
         const quint32 leftOffset = offset;
         const quint32 leftCount = splitOffset - offset;
         node->left->boundingData = getBounds(bvh, leftOffset, leftCount);
         node->left = splitNode(bvh, node->left, leftOffset, leftCount, depth + 1);
 
         // Create the Right Node
-        const auto ridx = nodes.size();
-        nodes.emplace_back();
-        node->right = { ridx, &bvh };
+        node->right = bvh.newHandle();
         const quint32 rightOffset = splitOffset;
         const quint32 rightCount = count - leftCount;
         node->right->boundingData = getBounds(bvh, rightOffset, rightCount);
@@ -293,10 +280,10 @@ QSSGMeshBVHNode::Handle QSSGMeshBVHBuilder::splitNode(QSSGMeshBVH &bvh, QSSGMesh
     return node;
 }
 
-QSSGBounds3 QSSGMeshBVHBuilder::getBounds(QSSGMeshBVH &bvh, quint32 offset, quint32 count)
+QSSGBounds3 QSSGMeshBVHBuilder::getBounds(const QSSGMeshBVH &bvh, quint32 offset, quint32 count)
 {
     QSSGBounds3 totalBounds;
-    auto &triangleBounds = bvh.triangles;
+    const auto &triangleBounds = bvh.triangles();
 
     for (quint32 i = 0; i < count; ++i) {
         const QSSGBounds3 &bounds = triangleBounds[i + offset].bounds;
@@ -305,7 +292,7 @@ QSSGBounds3 QSSGMeshBVHBuilder::getBounds(QSSGMeshBVH &bvh, quint32 offset, quin
     return totalBounds;
 }
 
-QSSGMeshBVHBuilder::Split QSSGMeshBVHBuilder::getOptimalSplit(QSSGMeshBVH &bvh, const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count)
+QSSGMeshBVHBuilder::Split QSSGMeshBVHBuilder::getOptimalSplit(const QSSGMeshBVH &bvh, const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count)
 {
     QSSGMeshBVHBuilder::Split split;
     split.axis = getLongestDimension(nodeBounds);
@@ -342,14 +329,14 @@ QSSGMeshBVHBuilder::Axis QSSGMeshBVHBuilder::getLongestDimension(const QSSGBound
 }
 
 // Get the average values of triangles for a given axis
-float QSSGMeshBVHBuilder::getAverageValue(QSSGMeshBVH &bvh, quint32 offset, quint32 count, QSSGMeshBVHBuilder::Axis axis)
+float QSSGMeshBVHBuilder::getAverageValue(const QSSGMeshBVH &bvh, quint32 offset, quint32 count, QSSGMeshBVHBuilder::Axis axis)
 {
     float average = 0;
 
     Q_ASSERT(axis != Axis::None);
     Q_ASSERT(count != 0);
 
-    auto &triangleBounds = bvh.triangles;
+    const auto &triangleBounds = bvh.triangles();
     for (quint32 i = 0; i < count; ++i)
         average += triangleBounds[i + offset].bounds.center(int(axis));
 
@@ -363,18 +350,17 @@ quint32 QSSGMeshBVHBuilder::partition(QSSGMeshBVH &bvh, quint32 offset, quint32 
     const float pos = split.pos;
     const int axis = int(split.axis);
 
-    auto &triangleBounds = bvh.triangles;
+    auto &triangleBounds = bvh.m_triangles;
     while (true) {
-        while (left <= right && triangleBounds.at(left).bounds.center(axis) < pos)
+        while (left <= right && triangleBounds[left].bounds.center(axis) < pos)
             left++;
 
-        while (left <= right && triangleBounds.at(right).bounds.center(axis) >= pos)
+        while (left <= right && triangleBounds[right].bounds.center(axis) >= pos)
             right--;
 
         if (left < right) {
             // Swap triangleBounds at left and right
-            triangleBounds.swapItemsAt(left, right);
-
+            std::swap(triangleBounds[left], triangleBounds[right]);
             left++;
             right--;
         } else {

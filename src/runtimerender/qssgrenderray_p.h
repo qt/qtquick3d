@@ -26,7 +26,7 @@
 #include <optional>
 
 QT_BEGIN_NAMESPACE
-struct QSSGMeshBVHNode;
+class QSSGMeshBVHNode;
 struct QSSGRenderMesh;
 struct QSSGMeshBVHTriangle;
 enum class QSSGRenderBasisPlanes
@@ -121,7 +121,7 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
                                         int depth = 0);
 
     static QVector<IntersectionResult> intersectWithBVHTriangles(const RayData &data,
-                                                                 const QVector<QSSGMeshBVHTriangle> &bvhTriangles,
+                                                                 const std::vector<QSSGMeshBVHTriangle> &bvhTriangles,
                                                                  int triangleOffset,
                                                                  int triangleCount);
 

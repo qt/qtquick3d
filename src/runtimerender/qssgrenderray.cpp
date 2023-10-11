@@ -200,7 +200,7 @@ void QSSGRenderRay::intersectWithBVH(const RayData &data,
     // If this is a leaf node, process it's triangles
     if (bvh->count != 0) {
         // If there is an intersection on a leaf node, then test against geometry
-        auto results = intersectWithBVHTriangles(data, mesh->bvh->triangles, bvh->offset, bvh->count);
+        auto results = intersectWithBVHTriangles(data, mesh->bvh->triangles(), bvh->offset, bvh->count);
         if (!results.isEmpty())
             intersections.append(results);
         return;
@@ -218,11 +218,11 @@ void QSSGRenderRay::intersectWithBVH(const RayData &data,
 
 
 QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriangles(const RayData &data,
-                                                                                    const QVector<QSSGMeshBVHTriangle> &bvhTriangles,
+                                                                                    const QSSGMeshBVHTriangles &bvhTriangles,
                                                                                     int triangleOffset,
                                                                                     int triangleCount)
 {
-    Q_ASSERT(bvhTriangles.size() >= triangleOffset + triangleCount);
+    Q_ASSERT(bvhTriangles.size() >= size_t(triangleOffset + triangleCount));
 
     QVector<QSSGRenderRay::IntersectionResult> results;
 

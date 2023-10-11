@@ -32,7 +32,7 @@ QT_BEGIN_NAMESPACE
 struct QSSGRenderMesh;
 struct QSSGLoadedTexture;
 class QSSGRhiContext;
-struct QSSGMeshBVH;
+class QSSGMeshBVH;
 class QSGTexture;
 class QSSGRenderGeometry;
 class QSSGRenderTextureData;

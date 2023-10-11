@@ -48,13 +48,13 @@ private:
         float pos;
     };
 
-    QVector<QSSGMeshBVHTriangle> calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const;
+    QSSGMeshBVHTriangles calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const;
 
     static QSSGMeshBVHNode::Handle splitNode(QSSGMeshBVH &bvh, QSSGMeshBVHNode::Handle node, quint32 offset, quint32 count, quint32 depth = 0);
-    static QSSGBounds3 getBounds(QSSGMeshBVH &bvh, quint32 offset, quint32 count);
-    static Split getOptimalSplit(QSSGMeshBVH &bvh, const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count);
+    static QSSGBounds3 getBounds(const QSSGMeshBVH &bvh, quint32 offset, quint32 count);
+    static Split getOptimalSplit(const QSSGMeshBVH &bvh, const QSSGBounds3 &nodeBounds, quint32 offset, quint32 count);
     static Axis getLongestDimension(const QSSGBounds3 &nodeBounds);
-    static float getAverageValue(QSSGMeshBVH &bvh, quint32 offset, quint32 count, Axis axis);
+    static float getAverageValue(const QSSGMeshBVH &bvh, quint32 offset, quint32 count, Axis axis);
     static quint32 partition(QSSGMeshBVH &bvh, quint32 offset, quint32 count, const Split &split);
 
     QSSGMesh::Mesh m_mesh;

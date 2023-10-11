@@ -24,19 +24,27 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGMeshBVH;
+class QSSGMeshBVH;
 
-struct Q_QUICK3DUTILS_EXPORT QSSGMeshBVHNode
+class Q_QUICK3DUTILS_EXPORT QSSGMeshBVHNode
 {
-    struct Handle
+public:
+    class Handle
     {
-        qsizetype idx = -1;
-        QSSGMeshBVH *owner = nullptr;
-
-        bool isNull() const { return !owner || idx < 0; }
+    public:
+        Handle() = default;
+        bool isNull() const { return !m_owner || m_idx < size_t(FallbackIndex::Count); }
 
         inline explicit operator const QSSGMeshBVHNode *() const;
         inline QSSGMeshBVHNode *operator->() const;
+    private:
+        friend class QSSGMeshBVH;
+        Handle(QSSGMeshBVH *owner, size_t idx)
+            : m_owner(owner)
+            , m_idx(idx)
+        {}
+        QSSGMeshBVH *m_owner = nullptr;
+        size_t m_idx = 0;
     };
 
     // Internal
@@ -48,6 +56,17 @@ struct Q_QUICK3DUTILS_EXPORT QSSGMeshBVHNode
     // Leaf
     int offset = 0;
     int count = 0;
+
+private:
+    friend class QSSGMeshBVH;
+    friend class QSSGMeshBVHBuilder;
+
+    enum class FallbackIndex : quint8
+    {
+        InvalidRead  = 0,
+        InvalidWrite = 1,
+        Count
+    };
 };
 
 struct Q_QUICK3DUTILS_EXPORT QSSGMeshBVHTriangle
@@ -61,42 +80,59 @@ struct Q_QUICK3DUTILS_EXPORT QSSGMeshBVHTriangle
     QVector2D uvCoord3;
 };
 
-struct Q_QUICK3DUTILS_EXPORT QSSGMeshBVH
+using QSSGMeshBVHTriangles = std::vector<QSSGMeshBVHTriangle>;
+using QSSGMeshBVHRoots = std::vector<QSSGMeshBVHNode::Handle>;
+using QSSGMeshBVHNodes = std::vector<QSSGMeshBVHNode>;
+
+class Q_QUICK3DUTILS_EXPORT QSSGMeshBVH
 {
+public:
     QSSGMeshBVH() = default;
-    QSSGMeshBVH(const QVector<QSSGMeshBVHNode::Handle> &bvhRoots,
-                const QVector<QSSGMeshBVHNode> nodes,
-                const QVector<QSSGMeshBVHTriangle> &bvhTriangles)
-        : roots(bvhRoots)
-        , m_nodes(nodes)
-        , triangles(bvhTriangles)
-    {}
     ~QSSGMeshBVH();
 
-    QSSGMeshBVHNode *value(qsizetype idx)
+    [[nodiscard]] QSSGMeshBVHNode::Handle newHandle()
     {
-        return (idx >= 0 && idx < m_nodes.size()) ? const_cast<QSSGMeshBVHNode *>(&m_nodes.at(idx)) : nullptr;
+        m_nodes.emplace_back();
+        return { this, m_nodes.size() - 1 };
     }
 
-    const QSSGMeshBVHNode *value(qsizetype idx) const
+    [[nodiscard]] const QSSGMeshBVHTriangles &triangles() const { return m_triangles; }
+    [[nodiscard]] const QSSGMeshBVHRoots &roots() const { return m_roots; }
+    [[nodiscard]] const QSSGMeshBVHNodes &nodes() const { return m_nodes; }
+
+private:
+    friend class QSSGMeshBVHNode::Handle;
+    friend class QSSGMeshBVHBuilder;
+    using FallbackIndex = QSSGMeshBVHNode::FallbackIndex;
+    size_t getNodeIndex(size_t idx, FallbackIndex op) const
     {
-        return (idx >= 0 && idx < m_nodes.size()) ? &m_nodes.at(idx) : nullptr;
+        const bool valid = (idx >= size_t(FallbackIndex::Count) && idx < m_nodes.size());
+        return  (valid * idx) + (!valid * size_t(op));
     }
 
-    QVector<QSSGMeshBVHNode::Handle> roots;
-    QVector<QSSGMeshBVHNode> m_nodes;
-    QVector<QSSGMeshBVHTriangle> triangles;
+    QSSGMeshBVHNode &mutableValue(qsizetype idx)
+    {
+        return m_nodes[getNodeIndex(idx, FallbackIndex::InvalidWrite)];
+    }
+
+    const QSSGMeshBVHNode &value(qsizetype idx) const
+    {
+        return m_nodes[getNodeIndex(idx, FallbackIndex::InvalidRead)];
+    }
+
+    QSSGMeshBVHRoots m_roots;
+    QSSGMeshBVHNodes m_nodes { { /* 0 - reserved for invalid reads */ }, { /* 1 - reserved for invalid writes */ } };
+    QSSGMeshBVHTriangles m_triangles;
 };
 
 QSSGMeshBVHNode::Handle::operator const QSSGMeshBVHNode *() const
 {
-    QSSG_ASSERT(owner, return nullptr);
-    return owner->value(idx);
+    return &m_owner->value(m_idx);
 }
 
 QSSGMeshBVHNode *QSSGMeshBVHNode::Handle::operator->() const
 {
-    return owner->value(idx);
+    return &m_owner->mutableValue(m_idx);
 }
 
 QT_END_NAMESPACE

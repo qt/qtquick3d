@@ -53,7 +53,7 @@ void Bvh::bench_bvh_small()
     }
 
     for (const auto &bvh : bvhStorage)
-         QVERIFY(bvh != nullptr && bvh->m_nodes.size() > 0);
+         QVERIFY(bvh != nullptr && bvh->nodes().size() > 0);
 }
 
 void Bvh::bench_bvh_medium()
@@ -70,7 +70,7 @@ void Bvh::bench_bvh_medium()
     }
 
     for (const auto &bvh : bvhStorage)
-         QVERIFY(bvh != nullptr && bvh->m_nodes.size() > 0);
+         QVERIFY(bvh != nullptr && bvh->nodes().size() > 0);
 }
 
 void Bvh::bench_bvh_large()
@@ -91,7 +91,7 @@ void Bvh::bench_bvh_large()
     }
 
     for (const auto &bvh : bvhStorage)
-         QVERIFY(bvh != nullptr && bvh->m_nodes.size() > 0);
+         QVERIFY(bvh != nullptr && bvh->nodes().size() > 0);
 }
 
 void Bvh::prepRenderGeometry(qsizetype width, qsizetype height, QSSGRenderGeometry &renderGeometry)
