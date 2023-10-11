@@ -150,12 +150,12 @@ public:
     QQuick3DObject *dirtyExtensions[size_t(ExtensionPriority::Count)] {};
 
     QList<QQuick3DObject *> dirtyBoundingBoxList;
-    QList<QSSGRenderGraphObject *> cleanupNodeList;
+    QSet<QSSGRenderGraphObject *> cleanupNodeList;
     QList<QSSGRenderGraphObject *> resourceCleanupQueue;
 
     QSet<QQuick3DObject *> parentlessItems;
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
-    QHash<const QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
+    QHash<QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
     QSet<QSSGRenderGraphObject *> resourceLoaders;
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;

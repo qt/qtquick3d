@@ -72,18 +72,17 @@ void QQuick3DSceneManager::requestUpdate()
 
 void QQuick3DSceneManager::cleanup(QSSGRenderGraphObject *item)
 {
-    Q_ASSERT(!cleanupNodeList.contains(item));
-    cleanupNodeList.append(item);
+    cleanupNodeList.insert(item);
 
     if (auto front = m_nodeMap[item]) {
         auto *po = QQuick3DObjectPrivate::get(front);
         sharedResourceRemoved |= po->sharedResource;
         po->spatialNode = nullptr;
-    }
 
-    // The front-end object is no longer reachable (destroyed) so make sure we don't return it
-    // when doing a node look-up.
-    m_nodeMap[item] = nullptr;
+        // The front-end object is no longer reachable (destroyed) so make sure we don't return it
+        // when doing a node look-up.
+        m_nodeMap[item] = nullptr;
+    }
 }
 
 void QQuick3DSceneManager::polishItems()
@@ -224,7 +223,7 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
 
 QQuick3DObject *QQuick3DSceneManager::lookUpNode(const QSSGRenderGraphObject *node) const
 {
-    return m_nodeMap[node];
+    return m_nodeMap[const_cast<QSSGRenderGraphObject *>(node)];
 }
 
 QQuick3DWindowAttachment *QQuick3DSceneManager::getOrSetWindowAttachment(QQuickWindow &window)
@@ -429,8 +428,8 @@ QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
     }
     // remaining sceneManagers should also be removed
     qDeleteAll(sceneManagers);
-    qDeleteAll(resourceCleanupQueue);
-    qDeleteAll(pendingResourceCleanupQueue);
+    QSSG_CHECK(QSSG_DEBUG_COND(resourceCleanupQueue.isEmpty()));
+    QSSG_CHECK(QSSG_DEBUG_COND(pendingResourceCleanupQueue.isEmpty()));
 
     QSSG_CHECK_X(!m_rci || m_rci.use_count() == 1, "RCI has unexpected reference count!");
 }
@@ -471,6 +470,30 @@ void QQuick3DWindowAttachment::onReleaseCachedResources()
 
 void QQuick3DWindowAttachment::onInvalidated()
 {
+    // Find all objects that have graphics resources and queue them
+    // for cleanup.
+    // 1. We'll need to manually go through the nodes of each scene manager and mark
+    // objects with graphics resources for deletion.
+    // The scene graph is invalidated so we need to release graphics resources now, on the render thread.
+    for (auto &sceneManager : std::as_const(sceneManagers)) {
+        const auto objects = sceneManager->m_nodeMap.keys();
+        for (QSSGRenderGraphObject *obj : objects) {
+            if (obj->hasGraphicsResources())
+                sceneManager->cleanup(obj);
+        }
+    }
+
+    // Start: follow the normal clean-up procedure
+    for (auto &sceneManager : std::as_const(sceneManagers))
+        sceneManager->cleanupNodes();
+
+    for (const auto &pr : std::as_const(pendingResourceCleanupQueue))
+        resourceCleanupQueue.insert(pr);
+    pendingResourceCleanupQueue.clear();
+
+    cleanupResources();
+    // end
+
     // If the SG RenderContex is invalidated and we're the only one holding onto the SSG
     // RenderContextInterface then just release it. If the application is not going down
     // a new RCI will be created/set during the next sync.
