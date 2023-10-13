@@ -20,6 +20,8 @@
 
 #include "qtquick3dassetutilsglobal_p.h"
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK3DASSETUTILS_EXPORT QQuick3DRuntimeLoader : public QQuick3DNode

@@ -9,6 +9,8 @@
 #include <QtGui/qsyntaxhighlighter.h>
 #include <QtQuick/qquicktextdocument.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class SyntaxHighlighter : public QSyntaxHighlighter

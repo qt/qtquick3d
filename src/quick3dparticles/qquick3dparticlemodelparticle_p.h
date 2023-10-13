@@ -25,6 +25,8 @@
 #include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlInstanceModel;

@@ -23,6 +23,8 @@
 #include "qquick3dobject_p.h"
 #include "qquick3dnode_p.h"
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QSGDynamicTexture;

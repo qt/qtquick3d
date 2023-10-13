@@ -26,6 +26,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
+#include <QtCore/qpointer.h>
+
 #include <optional>
 
 #include "qquick3dsceneenvironment_p.h"

@@ -33,6 +33,7 @@
 #include <QtGui/private/qeventpoint_p.h>
 
 #include <QtCore/private/qnumeric_p.h>
+#include <QtCore/qpointer.h>
 
 #include <optional>
 

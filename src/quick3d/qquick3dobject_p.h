@@ -30,6 +30,8 @@
 #include <private/qssgrendergraphobject_p.h>
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuick3DItem2D;
