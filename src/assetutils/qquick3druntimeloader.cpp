@@ -8,6 +8,7 @@
 #include <QtQuick3DAssetUtils/private/qssgrtutilities_p.h>
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
+#include <QtCore/qmimedatabase.h>
 
 /*!
     \qmltype RuntimeLoader
@@ -19,7 +20,8 @@
     The RuntimeLoader type provides a way to load a 3D asset directly from source at runtime,
     without converting it to QtQuick3D's internal format first.
 
-    Qt 6.2 supports the loading of glTF version 2.0 files in both in text (.gltf) and binary (.glb) formats.
+    RuntimeLoader supports .obj and glTF version 2.0 files in both in text (.gltf) and binary
+    (.glb) formats.
 */
 
 /*!
@@ -109,6 +111,46 @@ void QQuick3DRuntimeLoader::componentComplete()
 {
     QQuick3DNode::componentComplete();
     loadSource();
+}
+
+QStringList QQuick3DRuntimeLoader::supportedExtensions()
+{
+    static QStringList extensions;
+    if (!extensions.isEmpty())
+        return extensions;
+
+    static const QStringList supportedExtensions = { QLatin1StringView("obj"),
+                                                     QLatin1StringView("gltf"),
+                                                     QLatin1StringView("glb")};
+
+    QSSGAssetImportManager importManager;
+    const auto types = importManager.getImporterPluginInfos();
+
+    for (const auto &t : types) {
+        for (const QString &extension : t.inputExtensions) {
+            if (supportedExtensions.contains(extension))
+                extensions << extension;
+        }
+    }
+    return extensions;
+}
+
+QList<QMimeType> QQuick3DRuntimeLoader::supportedMimeTypes()
+{
+    static QList<QMimeType> mimeTypes;
+    if (!mimeTypes.isEmpty())
+        return mimeTypes;
+
+    const QStringList &extensions = supportedExtensions();
+
+    QMimeDatabase db;
+    for (const auto &ext : extensions) {
+        // TODO: Change to db.mimeTypesForExtension(ext), once it is implemented (QTBUG-118566)
+        const QString fileName = QLatin1StringView("test.") + ext;
+        mimeTypes << db.mimeTypesForFileName(fileName);
+    }
+
+    return mimeTypes;
 }
 
 static void boxBoundsRecursive(const QQuick3DNode *baseNode, const QQuick3DNode *node, QQuick3DBounds3 &accBounds)
