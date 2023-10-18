@@ -124,6 +124,8 @@ public:
     void setRenderContextInterface(QSSGRenderContextInterface *ctx);
 
     void releaseCachedResources();
+    // called on the destuction of a layer to release its referenced resources
+    void releaseResourcesForLayer(QSSGRenderLayer *layer);
 
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
                                            MipMode inMipMode = MipModeFollowRenderImage,

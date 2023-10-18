@@ -138,7 +138,7 @@ bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
     Q_ASSERT(theRenderData);
     theRenderData->resetForFrame();
     theRenderData->prepareForRender();
-    return theRenderData->layerPrepResult->flags.wasDirty();
+    return theRenderData->layerPrepResult.flags.wasDirty();
 }
 
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
@@ -148,7 +148,7 @@ void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
     QSSG_ASSERT(theRenderData && theRenderData->camera, return);
 
     const auto layerPrepResult = theRenderData->layerPrepResult;
-    if (layerPrepResult->isLayerVisible()) {
+    if (layerPrepResult.isLayerVisible()) {
         ///
         QSSGRhiContext *rhiCtx = contextInterface()->rhiContext().get();
         QSSG_ASSERT(rhiCtx->isValid() && rhiCtx->rhi()->isRecordingFrame(), return);
@@ -174,7 +174,7 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
     QSSG_ASSERT(theRenderData && theRenderData->camera, return);
-    if (theRenderData->layerPrepResult->isLayerVisible()) {
+    if (theRenderData->layerPrepResult.isLayerVisible()) {
         QSSG_ASSERT(theRenderData->camera, return);
         beginLayerRender(*theRenderData);
         const auto &activePasses = theRenderData->activePasses;

@@ -146,9 +146,10 @@ struct QSSGLayerRenderPreparationResult
     QSSGLayerRenderPreparationResult() = default;
     QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer);
 
+    bool isNull() const { return !layer; }
     bool isLayerVisible() const;
     QSize textureDimensions() const;
-    QSSGCameraGlobalCalculationResult setupCameraForRender(QSSGRenderCamera &inCamera);
+    QSSGCameraGlobalCalculationResult setupCameraForRender(QSSGRenderCamera &inCamera, float dpr = 1.0f);
 };
 
 struct QSSGRenderableNodeEntry
@@ -301,7 +302,7 @@ public:
     RenderableItem2DEntries renderedItem2Ds;
 
     std::optional<QSSGClippingFrustum> clippingFrustum;
-    std::optional<QSSGLayerRenderPreparationResult> layerPrepResult;
+    QSSGLayerRenderPreparationResult layerPrepResult;
     std::optional<QSSGCameraData> cameraData;
 
     TModelContextPtrList modelContexts;
