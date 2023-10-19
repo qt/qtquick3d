@@ -17,9 +17,9 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qlist.h>
+#include <ssg/qssglightmapper.h>
 
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;

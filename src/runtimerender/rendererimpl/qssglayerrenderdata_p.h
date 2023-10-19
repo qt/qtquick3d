@@ -31,6 +31,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <ssg/qssgrenderextensions.h>
 
 #include <ssg/qssgrenderbasetypes.h>
@@ -369,8 +370,21 @@ public:
     [[nodiscard]] static inline const std::unique_ptr<QSSGPerFrameAllocator> &perFrameAllocator(QSSGRenderContextInterface &ctx);
     [[nodiscard]] static inline QSSGLayerRenderData *getCurrent(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
 
+    static void setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode)
+    {
+        features.set(QSSGShaderFeatures::Feature::LinearTonemapping,
+                     tonemapMode == QSSGRenderLayer::TonemapMode::Linear);
+        features.set(QSSGShaderFeatures::Feature::AcesTonemapping,
+                     tonemapMode == QSSGRenderLayer::TonemapMode::Aces);
+        features.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping,
+                     tonemapMode == QSSGRenderLayer::TonemapMode::HejlDawson);
+        features.set(QSSGShaderFeatures::Feature::FilmicTonemapping,
+                     tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
+    }
+
 private:
     friend class QSSGRenderer;
+    friend class QSSGRendererPrivate;
     friend class QSSGFrameData;
     friend class QSSGModelHelpers;
     friend class QSSGRenderHelpers;

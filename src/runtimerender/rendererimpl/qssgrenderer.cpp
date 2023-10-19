@@ -21,6 +21,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
 #include "../qssgshadermapkey_p.h"
+#include "../qssgrenderpickresult_p.h"
 
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
@@ -35,6 +36,121 @@
 #include <algorithm>
 #include <limits>
 
+/*!
+    \class QSSGRenderer
+    \inmodule QtQuick3D
+    \since 6.7
+
+    \brief Class for controlling the rendering steps for rendering a scene.
+
+    Rendering is done is several steps, these are:
+
+    1. \l{QSSGRenderer::beginFrame(){beginFrame()} - set's up the renderer to start a new frame.
+
+    2. Now that the renderer is reset, values for the \l{QSSGRenderer::setViewport}{viewport}, \l{QSSGRenderer::setDpr}{dpr},
+    \l{QSSGRenderer::setScissorRect}{scissorRect} etc. should be updated.
+
+    3. \l{QSSGRenderer::prepareLayerForRender()} - At this stage the scene tree will be traversed
+    and state for the renderer needed to render gets collected. This includes, but is not limited to,
+    calculating global transforms, loading of meshes, preparing materials and setting up the rendering
+    steps needed for the frame (opaque and transparent pass etc.)
+    If the there are custom \l{QQuick3DRenderExtension}{render extensions} added to to \l{View3D::extensions}{View3D}
+    then they will get their first chance to modify or react to the collected data here.
+    If the users have implemented the virtual function \l{QSSGRenderExtension::prepareData()}{prepareData} it will be
+    called after all active nodes have been collected and had their global data updated, but before any mesh or material
+    has been loaded.
+
+    4. \l{QSSGRenderer::rhiPrepare()} - Starts rendering necessary sub-scenes and prepare resources.
+    Sub-scenes, or sub-passes that are to be done in full, will be done at this stage.
+
+    5. \l{QSSGRenderer::rhiRender()} - Renders the scene to the main target.
+
+    6. \l{QSSGRenderer::endFrame()} - Marks the frame as done and cleans-up dirty states and
+    uneeded resources.
+
+    \sa QSSGRenderHelpers, QSSGModelHelpers
+*/
+
+/*!
+    \fn void QSSGRenderer::beginFrame(QSSGRenderLayer *layer, bool allowRecursion = true)
+
+*/
+
+/*!
+    \fn void QSSGRenderer::endFrame(QSSGRenderLayer *layer, bool allowRecursion = true)
+
+*/
+
+/*!
+    \fn bool prepareLayerForRender(QSSGRenderLayer &layer)
+
+    \return true if anything in the scene was dirty and a new frame should be rendered.
+*/
+
+/*!
+    \fn void rhiPrepare(QSSGRenderLayer &layer)
+
+*/
+
+/*!
+    \fn void rhiRender(QSSGRenderLayer &layer)
+
+*/
+
+/*!
+    \fn quint32 QSSGRenderer::frameCount() const
+
+    \return The number of times \l{QSSGRenderer::endFrame()}{endFrame()} has been called.
+*/
+
+/*!
+    \fn void QSSGRenderer::setViewport(QRect viewportRect)
+
+*/
+
+/*!
+    \fn QRect QSSGRenderer::viewport() const
+
+    \return The viewport rect.
+*/
+
+/*!
+    \fn const std::unique_ptr<QSSGRhiQuadRenderer> &rhiQuadRenderer();
+
+    \return A handle to the built-in Quad-renderer.
+
+    \sa QSSGRhiCubeRenderer, QSSGRhiQuadRenderer
+*/
+
+/*!
+    \fn const std::unique_ptr<QSSGRhiCubeRenderer> &rhiCubeRenderer();
+
+    \return A handle to the build-in Cube-renderer.
+
+    \sa QSSGRhiCubeRenderer, QSSGRhiQuadRenderer
+*/
+
+/*!
+    \fn void setDpr(float dpr)
+
+*/
+
+/*!
+    \fn float dpr() const
+
+    \return The device pixel ratio set for this rendere.
+*/
+
+/*!
+   \fn void setScissorRect(QRect scissorRect)
+
+*/
+
+/*!
+    \fn QRect scissorRect() const
+
+*/
+
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableImage;
@@ -42,10 +158,8 @@ struct QSSGSubsetRenderable;
 
 void QSSGRenderer::releaseCachedResources()
 {
-    delete m_rhiQuadRenderer;
-    m_rhiQuadRenderer = nullptr;
-    delete m_rhiCubeRenderer;
-    m_rhiCubeRenderer = nullptr;
+    m_rhiQuadRenderer.reset();
+    m_rhiCubeRenderer.reset();
 }
 
 QSSGRenderer::QSSGRenderer() = default;
@@ -54,11 +168,6 @@ QSSGRenderer::~QSSGRenderer()
 {
     m_contextInterface = nullptr;
     releaseCachedResources();
-}
-
-void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)
-{
-    m_contextInterface = ctx;
 }
 
 void QSSGRenderer::cleanupUnreferencedBuffers(QSSGRenderLayer *inLayer)
@@ -183,13 +292,13 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
 
-QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable,
-                                                                     QSSGShaderLibraryManager &shaderLibraryManager,
-                                                                     QSSGShaderCache &shaderCache,
-                                                                     QSSGProgramGenerator &shaderProgramGenerator,
-                                                                     const QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
-                                                                     const QSSGShaderFeatures &featureSet,
-                                                                     QByteArray &shaderString)
+QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable,
+                                                                            QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                            QSSGShaderCache &shaderCache,
+                                                                            QSSGProgramGenerator &shaderProgramGenerator,
+                                                                            const QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                            const QSSGShaderFeatures &featureSet,
+                                                                            QByteArray &shaderString)
 {
     shaderString = logPrefix();
     QSSGShaderDefaultMaterialKey theKey(renderable.shaderDescription);
@@ -239,30 +348,34 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetR
                                                                   shaderCache);
 }
 
-QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
-                                                                 const QSSGShaderFeatures &inFeatureSet)
+QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipeline(QSSGRenderer &renderer,
+                                                                        QSSGSubsetRenderable &inRenderable,
+                                                                        const QSSGShaderFeatures &inFeatureSet)
 {
+    auto &m_currentLayer = renderer.m_currentLayer;
+    auto &m_generatedShaderString = renderer.m_generatedShaderString;
+    const auto &m_contextInterface = renderer.m_contextInterface;
     const auto &theCache = m_contextInterface->shaderCache();
-    const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
-    const auto &shaderLibraryManager = contextInterface()->shaderLibraryManager();
-    return generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, m_currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
+    const auto &shaderProgramGenerator = m_contextInterface->shaderProgramGenerator();
+    const auto &shaderLibraryManager = m_contextInterface->shaderLibraryManager();
+    return QSSGRendererPrivate::generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, m_currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
 }
 
-void QSSGRenderer::beginFrame(QSSGRenderLayer *layer, bool allowRecursion)
+void QSSGRenderer::beginFrame(QSSGRenderLayer &layer, bool allowRecursion)
 {
     const bool executeBeginFrame = !(allowRecursion && (m_activeFrameRef++ != 0));
     if (executeBeginFrame) {
         m_contextInterface->perFrameAllocator()->reset();
-        QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), start(layer));
-        resetResourceCounters(layer);
+        QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), start(&layer));
+        resetResourceCounters(&layer);
     }
 }
 
-bool QSSGRenderer::endFrame(QSSGRenderLayer *layer, bool allowRecursion)
+bool QSSGRenderer::endFrame(QSSGRenderLayer &layer, bool allowRecursion)
 {
     const bool executeEndFrame = !(allowRecursion && (--m_activeFrameRef != 0));
     if (executeEndFrame) {
-        cleanupUnreferencedBuffers(layer);
+        cleanupUnreferencedBuffers(&layer);
 
                // We need to do this endFrame(), as the material nodes might not exist after this!
         for (auto *matObj : std::as_const(m_materialClearDirty)) {
@@ -276,7 +389,7 @@ bool QSSGRenderer::endFrame(QSSGRenderLayer *layer, bool allowRecursion)
         }
         m_materialClearDirty.clear();
 
-        QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), stop(layer));
+        QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), stop(&layer));
 
         ++m_frameCount;
     }
@@ -284,13 +397,15 @@ bool QSSGRenderer::endFrame(QSSGRenderLayer *layer, bool allowRecursion)
     return executeEndFrame;
 }
 
-QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer,
-                                                       QSSGBufferManager &bufferManager,
-                                                       const QSSGRenderRay &ray)
+QSSGRendererPrivate::PickResultList QSSGRendererPrivate::syncPickAll(const QSSGRenderContextInterface &ctx,
+                                                                     const QSSGRenderLayer &layer,
+                                                                     const QSSGRenderRay &ray)
 {
+    const auto &bufferManager = ctx.bufferManager();
+    const bool isGlobalPickingEnabled = QSSGRendererPrivate::isGlobalPickingEnabled(*ctx.renderer());
     PickResultList pickResults;
     Q_ASSERT(layer.getGlobalState(QSSGRenderNode::GlobalState::Active));
-    getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
+    getLayerHitObjectList(layer, *bufferManager, ray, isGlobalPickingEnabled, pickResults);
     // Things are rendered in a particular order and we need to respect that ordering.
     std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
         return lhs.m_distanceSq < rhs.m_distanceSq;
@@ -298,10 +413,10 @@ QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &la
     return pickResults;
 }
 
-QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
-                                            QSSGBufferManager &bufferManager,
-                                            const QSSGRenderRay &ray,
-                                            QSSGRenderNode *target)
+QSSGRenderPickResult QSSGRendererPrivate::syncPick(const QSSGRenderContextInterface &ctx,
+                                                   const QSSGRenderLayer &layer,
+                                                   const QSSGRenderRay &ray,
+                                                   QSSGRenderNode *target)
 {
     static const auto processResults = [](PickResultList &pickResults) {
         if (pickResults.empty())
@@ -313,14 +428,17 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
         return QSSGPickResultProcessResult{ pickResults.at(0), true };
     };
 
+    const auto &bufferManager = ctx.bufferManager();
+    const bool isGlobalPickingEnabled = QSSGRendererPrivate::isGlobalPickingEnabled(*ctx.renderer());
+
     Q_ASSERT(layer.getGlobalState(QSSGRenderNode::GlobalState::Active));
     PickResultList pickResults;
     if (target) {
         // Pick against only one target
-        intersectRayWithSubsetRenderable(bufferManager, ray, *target, pickResults);
+        intersectRayWithSubsetRenderable(*bufferManager, ray, *target, pickResults);
         return processResults(pickResults);
     } else {
-        getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
+        getLayerHitObjectList(layer, *bufferManager, ray, isGlobalPickingEnabled, pickResults);
         QSSGPickResultProcessResult retval = processResults(pickResults);
         if (retval.m_wasPickConsumed)
             return retval;
@@ -329,34 +447,30 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
     return QSSGPickResultProcessResult();
 }
 
-bool QSSGRenderer::isGlobalPickingEnabled() const
+
+
+void QSSGRendererPrivate::setGlobalPickingEnabled(QSSGRenderer &renderer, bool isEnabled)
 {
-    return m_globalPickingEnabled;
+    renderer.m_globalPickingEnabled = isEnabled;
 }
 
-void QSSGRenderer::setGlobalPickingEnabled(bool isEnabled)
+void QSSGRendererPrivate::setRenderContextInterface(QSSGRenderer &renderer, QSSGRenderContextInterface *ctx)
 {
-    m_globalPickingEnabled = isEnabled;
+    renderer.m_contextInterface = ctx;
 }
 
-QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
+const std::unique_ptr<QSSGRhiQuadRenderer> &QSSGRenderer::rhiQuadRenderer()
 {
-    if (!m_contextInterface->rhiContext()->isValid())
-        return nullptr;
-
     if (!m_rhiQuadRenderer)
-        m_rhiQuadRenderer = new QSSGRhiQuadRenderer;
+        m_rhiQuadRenderer = std::make_unique<QSSGRhiQuadRenderer>();
 
     return m_rhiQuadRenderer;
 }
 
-QSSGRhiCubeRenderer *QSSGRenderer::rhiCubeRenderer()
+const std::unique_ptr<QSSGRhiCubeRenderer> &QSSGRenderer::rhiCubeRenderer()
 {
-    if (!m_contextInterface->rhiContext()->isValid())
-        return nullptr;
-
     if (!m_rhiCubeRenderer)
-        m_rhiCubeRenderer = new QSSGRhiCubeRenderer;
+        m_rhiCubeRenderer = std::make_unique<QSSGRhiCubeRenderer>();
 
     return m_rhiCubeRenderer;
 
@@ -381,11 +495,11 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
         dfs(child, renderables);
 }
 
-void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
-                                         QSSGBufferManager &bufferManager,
-                                         const QSSGRenderRay &ray,
-                                         bool inPickEverything,
-                                         PickResultList &outIntersectionResult)
+void QSSGRendererPrivate::getLayerHitObjectList(const QSSGRenderLayer &layer,
+                                                QSSGBufferManager &bufferManager,
+                                                const QSSGRenderRay &ray,
+                                                bool inPickEverything,
+                                                PickResultList &outIntersectionResult)
 {
     RenderableList renderables;
     for (const auto &childNode : layer.children)
@@ -398,10 +512,10 @@ void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
     }
 }
 
-void QSSGRenderer::intersectRayWithSubsetRenderable(QSSGBufferManager &bufferManager,
-                                                    const QSSGRenderRay &inRay,
-                                                    const QSSGRenderNode &node,
-                                                    QSSGRenderer::PickResultList &outIntersectionResultList)
+void QSSGRendererPrivate::intersectRayWithSubsetRenderable(QSSGBufferManager &bufferManager,
+                                                           const QSSGRenderRay &inRay,
+                                                           const QSSGRenderNode &node,
+                                                           PickResultList &outIntersectionResultList)
 {
     // Item2D's requires special handling
     if (node.type == QSSGRenderGraphObject::Type::Item2D) {
@@ -500,7 +614,7 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(QSSGBufferManager &bufferMan
     }
 }
 
-void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSGRenderItem2D &item2D, QSSGRenderer::PickResultList &outIntersectionResultList)
+void QSSGRendererPrivate::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSGRenderItem2D &item2D, PickResultList &outIntersectionResultList)
 {
     // Get the plane (and normal) that the item 2D is on
     const QVector3D p0 = item2D.getGlobalPos();
@@ -527,13 +641,12 @@ void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSG
     }
 }
 
-QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGSubsetRenderable &inRenderable,
-                                                                           const QSSGShaderFeatures &inFeatureSet)
+QSSGRhiShaderPipelinePtr QSSGRendererPrivate::getShaderPipelineForDefaultMaterial(QSSGRenderer &renderer,
+                                                                                  QSSGSubsetRenderable &inRenderable,
+                                                                                  const QSSGShaderFeatures &inFeatureSet)
 {
-    if (Q_UNLIKELY(m_currentLayer == nullptr)) {
-        Q_ASSERT(false);
-        return nullptr;
-    }
+    auto *m_currentLayer = renderer.m_currentLayer;
+    QSSG_ASSERT(m_currentLayer != nullptr, return {});
 
     // This function is the main entry point for retrieving the shaders for a
     // default material, and is called for every material for every model in
@@ -558,7 +671,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
     if (it == shaderMap.end()) {
         Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-        shaderPipeline = generateRhiShaderPipeline(inRenderable, inFeatureSet);
+        shaderPipeline = QSSGRendererPrivate::generateRhiShaderPipeline(renderer, inRenderable, inFeatureSet);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inRenderable.material.profilingId);
         // make skey useable as a key for the QHash (makes a copy of the materialKey, instead of just referencing)
         skey.detach();
@@ -575,21 +688,10 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
         }
     }
 
-    QSSGRhiContextStats::get(*m_contextInterface->rhiContext()).registerMaterialShaderGenerationTime(timer.elapsed());
+    const auto &rhiContext = renderer.m_contextInterface->rhiContext();
+    QSSGRhiContextStats::get(*rhiContext).registerMaterialShaderGenerationTime(timer.elapsed());
 
     return shaderPipeline;
-}
-
-void QSSGRenderer::setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode)
-{
-    features.set(QSSGShaderFeatures::Feature::LinearTonemapping,
-                 tonemapMode == QSSGRenderLayer::TonemapMode::Linear);
-    features.set(QSSGShaderFeatures::Feature::AcesTonemapping,
-                 tonemapMode == QSSGRenderLayer::TonemapMode::Aces);
-    features.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping,
-                 tonemapMode == QSSGRenderLayer::TonemapMode::HejlDawson);
-    features.set(QSSGShaderFeatures::Feature::FilmicTonemapping,
-                 tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
 }
 
 QT_END_NAMESPACE

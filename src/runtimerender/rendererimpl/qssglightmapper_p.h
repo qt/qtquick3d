@@ -16,6 +16,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <ssg/qssglightmapper.h>
 
 #include <QString>
 
@@ -26,18 +27,6 @@ struct QSSGBakedLightingModel;
 class QSSGRhiContext;
 class QSSGRenderer;
 struct QSSGRenderModel;
-
-struct QSSGLightmapperOptions
-{
-    float opacityThreshold = 0.5f;
-    float bias = 0.005f;
-    bool useAdaptiveBias = true;
-    bool indirectLightEnabled = true;
-    int indirectLightSamples = 256;
-    int indirectLightWorkgroupSize = 32;
-    int indirectLightBounces = 3;
-    float indirectLightFactor = 1.0f;
-};
 
 class QSSGLightmapper
 {

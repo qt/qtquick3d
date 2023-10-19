@@ -496,12 +496,12 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
 void QQuick3DSceneRenderer::beginFrame()
 {
-    m_sgContext->renderer()->beginFrame(m_layer);
+    m_sgContext->renderer()->beginFrame(*m_layer);
 }
 
 void QQuick3DSceneRenderer::endFrame()
 {
-    m_sgContext->renderer()->endFrame(m_layer);
+    m_sgContext->renderer()->endFrame(*m_layer);
 }
 
 void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixelRatio)
@@ -1045,9 +1045,9 @@ QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)
     if (!m_layer)
         return QSSGRenderPickResult();
 
-    return m_sgContext->renderer()->syncPick(*m_layer,
-                                             *m_sgContext->bufferManager(),
-                                             ray);
+    return QSSGRendererPrivate::syncPick(*m_sgContext,
+                                         *m_layer,
+                                         ray);
 }
 
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node)
@@ -1055,10 +1055,10 @@ QSSGRenderPickResult QQuick3DSceneRenderer::syncPickOne(const QSSGRenderRay &ray
     if (!m_layer)
         return QSSGRenderPickResult();
 
-    return m_sgContext->renderer()->syncPick(*m_layer,
-                                             *m_sgContext->bufferManager(),
-                                             ray,
-                                             node);
+    return QSSGRendererPrivate::syncPick(*m_sgContext,
+                                         *m_layer,
+                                         ray,
+                                         node);
 }
 
 QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const QSSGRenderRay &ray)
@@ -1066,14 +1066,14 @@ QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const Q
     if (!m_layer)
         return QQuick3DSceneRenderer::PickResultList();
 
-    return m_sgContext->renderer()->syncPickAll(*m_layer,
-                                                *m_sgContext->bufferManager(),
-                                                ray);
+    return QSSGRendererPrivate::syncPickAll(*m_sgContext,
+                                            *m_layer,
+                                            ray);
 }
 
 void QQuick3DSceneRenderer::setGlobalPickingEnabled(bool isEnabled)
 {
-    m_sgContext->renderer()->setGlobalPickingEnabled(isEnabled);
+    QSSGRendererPrivate::setGlobalPickingEnabled(*m_sgContext->renderer(), isEnabled);
 }
 
 QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()
@@ -1443,7 +1443,7 @@ void QQuick3DSGDirectRenderer::prepare()
                 renderPending = false;
                 m_rhiTexture = m_renderer->renderToRhiTexture(m_window);
                 queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
-                auto quadRenderer = m_renderer->m_sgContext->renderer()->rhiQuadRenderer();
+                const auto &quadRenderer = m_renderer->m_sgContext->renderer()->rhiQuadRenderer();
                 quadRenderer->prepareQuad(m_renderer->m_sgContext->rhiContext().get(), nullptr);
                 if (m_renderer->requestedFramesCount > 0) {
                     requestRender();

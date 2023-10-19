@@ -54,7 +54,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrendershadermetadata.cpp qssgrendershadermetadata_p.h
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
         qssgrenderreflectionmap.cpp qssgrenderreflectionmap_p.h
-        qssgrenderpickresult_p.h
+        qssgrenderpickresult_p.h qssgrenderpickresult.h
         qssgrhiparticles.cpp qssgrhiparticles_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h qssgrhicontext.h
         qssgrhicustommaterialsystem.cpp qssgrhicustommaterialsystem_p.h
@@ -67,10 +67,10 @@ qt_internal_add_module(Quick3DRuntimeRender
         qtquick3druntimerenderglobal_p.h
         qtquick3druntimerenderglobal.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
-        rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h
+        rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h rendererimpl/qssgrenderer.h
         rendererimpl/qssglayerrenderdata_p.h
         rendererimpl/qssglayerrenderdata.cpp
-        rendererimpl/qssglightmapper.cpp rendererimpl/qssglightmapper_p.h
+        rendererimpl/qssglightmapper.cpp rendererimpl/qssglightmapper_p.h rendererimpl/qssglightmapper.h
         rendererimpl/qssgrendererimplshaders_p.h rendererimpl/qssgrendererimplshaders_rhi.cpp
         rendererimpl/qssgvertexpipelineimpl.cpp rendererimpl/qssgvertexpipelineimpl_p.h
         rendererimpl/qssgrenderpass_p.h rendererimpl/qssgrenderpass.cpp

@@ -213,7 +213,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         auto generateShader = [&](const QSSGShaderFeatures &features) {
             if ((renderable->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset)) {
-                auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), *shaderLibraryManager, *shaderCache, *shaderProgramGenerator, propertyTable, features, shaderString);
+                auto shaderPipeline = QSSGRendererPrivate::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), *shaderLibraryManager, *shaderCache, *shaderProgramGenerator, propertyTable, features, shaderString);
                 if (shaderPipeline != nullptr) {
                     const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
                     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);

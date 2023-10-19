@@ -112,7 +112,7 @@ static bool loadPregenratedShaders()
 void QSSGRenderContextInterface::init()
 {
     if (m_renderer)
-        m_renderer->setRenderContextInterface(this);
+        QSSGRendererPrivate::setRenderContextInterface(*m_renderer, this);
 
     if (m_bufferManager)
         m_bufferManager->setRenderContextInterface(this);

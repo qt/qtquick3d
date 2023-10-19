@@ -3,6 +3,7 @@
 
 #include "qssgrenderhelpers_p.h"
 
+#include "qssgrenderer_p.h"
 #include "qssglayerrenderdata_p.h"
 #include "qssgrhiparticles_p.h"
 #include "qssgrhiquadrenderer_p.h"
@@ -26,8 +27,8 @@ static QSSGRhiShaderPipelinePtr shadersForDefaultMaterial(QSSGRhiGraphicsPipelin
                                                           QSSGSubsetRenderable &subsetRenderable,
                                                           const QSSGShaderFeatures &featureSet)
 {
-    const auto &renderer(subsetRenderable.renderer);
-    const auto &shaderPipeline = renderer->getShaderPipelineForDefaultMaterial(subsetRenderable, featureSet);
+    auto &renderer(subsetRenderable.renderer);
+    const auto &shaderPipeline = QSSGRendererPrivate::getShaderPipelineForDefaultMaterial(*renderer, subsetRenderable, featureSet);
     if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.get();
     return shaderPipeline;

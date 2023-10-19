@@ -12,6 +12,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderpickresult_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 
 class picking : public QObject
 {
@@ -74,7 +76,6 @@ void picking::benchImpl(int count, bool hit)
 {
     Q_ASSERT(count > 0 && count <= 1000);
     const auto &bufferManager = renderCtx->bufferManager();
-    const auto &renderer = renderCtx->renderer();
     QVector2D viewportDim(400.0f, 400.0f);
     QSSGRenderLayer dummyLayer;
     QMatrix4x4 globalTransform;
@@ -111,7 +112,7 @@ void picking::benchImpl(int count, bool hit)
     QSSGRenderPickResult res;
     QSSGRenderRay ray = hit ? QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 0.0f, 0.0f, 1.0f } } : QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 1.0f, 0.0f, 0.0f } };
     QBENCHMARK {
-        res = renderer->syncPick(dummyLayer, *bufferManager, ray);
+        res = QSSGRendererPrivate::syncPick(*renderCtx, dummyLayer, ray);
     }
     QVERIFY(res.m_hitObject != nullptr);
 }

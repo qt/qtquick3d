@@ -6,7 +6,7 @@
 #include <rhi/qrhi.h>
 #include <QGuiApplication>
 #include <ssg/qssgrendercontextcore.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
+#include <ssg/qssgrenderer.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <ssg/qssgrenderextensions.h>
 

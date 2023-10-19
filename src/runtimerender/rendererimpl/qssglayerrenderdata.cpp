@@ -1699,7 +1699,7 @@ void QSSGLayerRenderData::prepareForRender()
     // Tonemapping. Except when there are effects, then it is up to the
     // last pass of the last effect to perform tonemapping.
     if (!layer.firstEffect)
-        QSSGRenderer::setTonemapFeatures(features, layer.tonemapMode);
+        QSSGLayerRenderData::setTonemapFeatures(features, layer.tonemapMode);
 
     // We may not be able to have an array of 15 light struct elements in
     // the shaders. Switch on the reduced-max-number-of-lights feature
@@ -1962,7 +1962,7 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     // Ensure meshes for models
-    prepareModelMeshesForRenderInternal(*renderer->contextInterface(), renderableModels, renderer->isGlobalPickingEnabled());
+    prepareModelMeshesForRenderInternal(*renderer->contextInterface(), renderableModels, QSSGRendererPrivate::isGlobalPickingEnabled(*renderer));
 
     if (camera) { // NOTE: We shouldn't really get this far without a camera...
         const auto &cameraData = getCachedCameraData();

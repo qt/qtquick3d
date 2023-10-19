@@ -117,9 +117,9 @@ void tst_renderer::bench_prep()
     QVERIFY(!layer.children.isEmpty());
     const auto &renderer = renderContext->renderer();
     QBENCHMARK {
-        renderer->beginFrame(&layer);
+        renderer->beginFrame(layer);
         renderer->prepareLayerForRender(layer);
-        renderer->endFrame(&layer);
+        renderer->endFrame(layer);
     }
 }
 
