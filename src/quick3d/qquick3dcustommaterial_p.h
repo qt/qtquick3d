@@ -32,6 +32,8 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
     Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
+    Q_PROPERTY(BlendMode sourceAlphaBlend READ srcAlphaBlend WRITE setSrcAlphaBlend NOTIFY srcAlphaBlendChanged REVISION(6, 7))
+    Q_PROPERTY(BlendMode destinationAlphaBlend READ dstAlphaBlend WRITE setDstAlphaBlend NOTIFY dstAlphaBlendChanged REVISION(6, 7))
     Q_PROPERTY(bool alwaysDirty READ alwaysDirty WRITE setAlwaysDirty NOTIFY alwaysDirtyChanged)
     Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth NOTIFY lineWidthChanged)
 
@@ -74,6 +76,8 @@ public:
     QUrl fragmentShader() const;
     BlendMode srcBlend() const;
     BlendMode dstBlend() const;
+    Q_REVISION(6, 7) BlendMode srcAlphaBlend() const;
+    Q_REVISION(6, 7) BlendMode dstAlphaBlend() const;
     bool alwaysDirty() const;
     float lineWidth() const;
 
@@ -83,6 +87,8 @@ public Q_SLOTS:
     void setFragmentShader(const QUrl &url);
     void setSrcBlend(QQuick3DCustomMaterial::BlendMode mode);
     void setDstBlend(QQuick3DCustomMaterial::BlendMode mode);
+    Q_REVISION(6, 7) void setSrcAlphaBlend(QQuick3DCustomMaterial::BlendMode mode);
+    Q_REVISION(6, 7) void setDstAlphaBlend(QQuick3DCustomMaterial::BlendMode mode);
     void setAlwaysDirty(bool alwaysDirty);
     void setLineWidth(float width);
 
@@ -92,6 +98,8 @@ Q_SIGNALS:
     void fragmentShaderChanged();
     void srcBlendChanged();
     void dstBlendChanged();
+    Q_REVISION(6, 7) void srcAlphaBlendChanged();
+    Q_REVISION(6, 7) void dstAlphaBlendChanged();
     void alwaysDirtyChanged();
     void lineWidthChanged();
 
@@ -123,6 +131,8 @@ private:
     quint32 m_dirtyAttributes = Dirty::AllDirty;
     BlendMode m_srcBlend = BlendMode::NoBlend;
     BlendMode m_dstBlend = BlendMode::NoBlend;
+    BlendMode m_srcAlphaBlend = BlendMode::NoBlend;
+    BlendMode m_dstAlphaBlend = BlendMode::NoBlend;
     ShadingMode m_shadingMode = ShadingMode::Shaded;
     QUrl m_vertexShader;
     QUrl m_fragmentShader;

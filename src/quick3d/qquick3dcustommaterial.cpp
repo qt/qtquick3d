@@ -1215,6 +1215,11 @@ QT_BEGIN_NAMESPACE
     \value CustomMaterial.ConstantAlpha
     \value CustomMaterial.OneMinusConstantAlpha
     \value CustomMaterial.SrcAlphaSaturate
+
+    \note Both \l sourceBlend and \l destinationBlend needs to be set to a non-default
+    value before blending is enabled.
+
+    \sa destinationBlend
 */
 
 /*!
@@ -1239,6 +1244,11 @@ QT_BEGIN_NAMESPACE
     \value CustomMaterial.ConstantAlpha
     \value CustomMaterial.OneMinusConstantAlpha
     \value CustomMaterial.SrcAlphaSaturate
+
+    \note Both \l sourceBlend and \l destinationBlend needs to be set to a non-default
+    value before blending is enabled.
+
+    \sa sourceBlend
 */
 
 /*!
@@ -1259,6 +1269,70 @@ QT_BEGIN_NAMESPACE
     pipeline object, the point size for geometries with a topology of points is
     controlled by the vertex shader (when supported), and has therefore no
     corresponding QML property.
+*/
+
+/*!
+    \qmlproperty enumeration CustomMaterial::sourceAlphaBlend
+    \since 6.7
+
+    Specifies the source alpha blend factor. The default value is \c
+    CustomMaterial.NoBlend. This value is only actively used if \l sourceBlend and
+    \l destinationBlend is set to a non-default value.
+
+    \value CustomMaterial.NoBlend
+    \value CustomMaterial.Zero
+    \value CustomMaterial.One
+    \value CustomMaterial.SrcColor
+    \value CustomMaterial.OneMinusSrcColor
+    \value CustomMaterial.DstColor
+    \value CustomMaterial.OneMinusDstColor
+    \value CustomMaterial.SrcAlpha
+    \value CustomMaterial.OneMinusSrcAlpha
+    \value CustomMaterial.DstAlpha
+    \value CustomMaterial.OneMinusDstAlpha
+    \value CustomMaterial.ConstantColor
+    \value CustomMaterial.OneMinusConstantColor
+    \value CustomMaterial.ConstantAlpha
+    \value CustomMaterial.OneMinusConstantAlpha
+    \value CustomMaterial.SrcAlphaSaturate
+
+    \note For backwards compatibility purposes, when left to its default value,
+    will be assigned the same value as \l sourceBlend when \l sourceBlend and
+    \l destinationBlend is set to non-default values.
+
+    \sa sourceBlend
+*/
+
+/*!
+    \qmlproperty enumeration CustomMaterial::destinationAlphaBlend
+    \since 6.7
+
+    Specifies the destination alpha blend factor. The default value is \c
+    CustomMaterial.NoBlend. This value is only actively used if \l sourceBlend and
+    \l destinationBlend is set to a non-default value.
+
+    \value CustomMaterial.NoBlend
+    \value CustomMaterial.Zero
+    \value CustomMaterial.One
+    \value CustomMaterial.SrcColor
+    \value CustomMaterial.OneMinusSrcColor
+    \value CustomMaterial.DstColor
+    \value CustomMaterial.OneMinusDstColor
+    \value CustomMaterial.SrcAlpha
+    \value CustomMaterial.OneMinusSrcAlpha
+    \value CustomMaterial.DstAlpha
+    \value CustomMaterial.OneMinusDstAlpha
+    \value CustomMaterial.ConstantColor
+    \value CustomMaterial.OneMinusConstantColor
+    \value CustomMaterial.ConstantAlpha
+    \value CustomMaterial.OneMinusConstantAlpha
+    \value CustomMaterial.SrcAlphaSaturate
+
+    \note For backwards compatibility purposes, when left to its default value,
+    will be assigned the same value as \l destinationBlend when \l sourceBlend and
+    \l destinationBlend is set to non-default values.
+
+    \sa destinationBlend
 */
 
 static inline QRhiGraphicsPipeline::BlendFactor toRhiBlendFactor(QQuick3DCustomMaterial::BlendMode mode)
@@ -1334,6 +1408,36 @@ void QQuick3DCustomMaterial::setDstBlend(BlendMode mode)
     m_dstBlend = mode;
     update();
     emit dstBlendChanged();
+}
+
+QQuick3DCustomMaterial::BlendMode QQuick3DCustomMaterial::srcAlphaBlend() const
+{
+    return m_srcAlphaBlend;
+}
+
+void QQuick3DCustomMaterial::setSrcAlphaBlend(QQuick3DCustomMaterial::BlendMode mode)
+{
+    if (m_srcAlphaBlend == mode)
+        return;
+
+    m_srcAlphaBlend = mode;
+    update();
+    emit srcAlphaBlendChanged();
+}
+
+QQuick3DCustomMaterial::BlendMode QQuick3DCustomMaterial::dstAlphaBlend() const
+{
+    return m_dstAlphaBlend;
+}
+
+void QQuick3DCustomMaterial::setDstAlphaBlend(QQuick3DCustomMaterial::BlendMode mode)
+{
+    if (m_dstAlphaBlend == mode)
+        return;
+
+    m_dstAlphaBlend = mode;
+    update();
+    emit dstAlphaBlendChanged();
 }
 
 QQuick3DCustomMaterial::ShadingMode QQuick3DCustomMaterial::shadingMode() const
@@ -1663,6 +1767,14 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Blending, true);
         customMaterial->m_srcBlend = toRhiBlendFactor(m_srcBlend);
         customMaterial->m_dstBlend = toRhiBlendFactor(m_dstBlend);
+        // alpha blending is only active if rgb blending is
+        if (m_srcAlphaBlend != BlendMode::NoBlend && m_dstAlphaBlend != BlendMode::NoBlend) {
+            customMaterial->m_srcAlphaBlend = toRhiBlendFactor(m_srcAlphaBlend);
+            customMaterial->m_dstAlphaBlend = toRhiBlendFactor(m_dstAlphaBlend);
+        } else {
+            customMaterial->m_srcAlphaBlend = customMaterial->m_srcBlend;
+            customMaterial->m_dstAlphaBlend = customMaterial->m_dstBlend;
+        }
     } else {
         customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Blending, false);
     }

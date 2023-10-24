@@ -192,9 +192,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
     if (material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending)) {
         blend.enable = true;
         blend.srcColor = material.m_srcBlend;
-        blend.srcAlpha = material.m_srcBlend;
+        blend.srcAlpha = material.m_srcAlphaBlend;
         blend.dstColor = material.m_dstBlend;
-        blend.dstAlpha = material.m_dstBlend;
+        blend.dstAlpha = material.m_dstAlphaBlend;
     }
 
     const QSSGCullFaceMode cullMode = material.m_cullMode;

@@ -121,6 +121,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     RenderFlags m_renderFlags;
     QRhiGraphicsPipeline::BlendFactor m_srcBlend;
     QRhiGraphicsPipeline::BlendFactor m_dstBlend;
+    QRhiGraphicsPipeline::BlendFactor m_srcAlphaBlend;
+    QRhiGraphicsPipeline::BlendFactor m_dstAlphaBlend;
     float m_lineWidth = 1.0f;
 
     QSSGRenderGraphObject *m_nextSibling = nullptr;
