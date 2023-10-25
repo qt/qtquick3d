@@ -493,6 +493,12 @@ void QQuick3DWindowAttachment::onInvalidated()
         resourceCleanupQueue.insert(pr);
     pendingResourceCleanupQueue.clear();
 
+    // NOTE!: It's essential that we release the cached resources before we
+    // call cleanupResources(), to avoid the expensive bookkeeping code involved
+    // for models. This is achieved by dropping the data to avoid expensive look-ups; it's going away anyways.
+    // (In the future, if/when cleanupDrawCallData() is improved, then this step might not be necessary).
+    onReleaseCachedResources();
+
     cleanupResources();
     // end
 
@@ -500,7 +506,6 @@ void QQuick3DWindowAttachment::onInvalidated()
     // RenderContextInterface then just release it. If the application is not going down
     // a new RCI will be created/set during the next sync.
     if (m_rci.use_count() == 1) {
-        onReleaseCachedResources();
         m_rci.reset();
         emit renderContextInterfaceChanged();
     }
