@@ -4,15 +4,6 @@
 #ifndef QQUICK3DRENDEREXTENSIONS_H
 #define QQUICK3DRENDEREXTENSIONS_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is part of the QtQuick3D API, with limited compatibility guarantees.
-// Usage of this API may make your code source and binary incompatible with
-// future versions of Qt.
-//
-
 #include <QtCore/qobject.h>
 #include <QtQuick3D/qquick3dobject.h>
 
