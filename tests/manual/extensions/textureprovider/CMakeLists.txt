@@ -31,3 +31,13 @@ qt_add_shaders(manual_test_textureprovider "textureprovider_shaders"
         shaders/color.vert
         shaders/color.frag
 )
+
+qt_add_resources(manual_test_textureprovider "textureprovider_resources"
+    PREFIX
+        /QtQuick3DTest/Extensions/TextureProvider
+    FILES
+        materials/unshaded_custommaterial.vert
+        materials/unshaded_custommaterial.frag
+        materials/shaded_custommaterial.frag
+        effects/effect.frag
+)
