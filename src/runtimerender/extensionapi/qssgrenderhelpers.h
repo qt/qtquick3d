@@ -15,6 +15,8 @@
 
 #include <QtQuick3DRuntimeRender/qtquick3druntimerenderglobal.h>
 
+#include <ssg/qssgrenderbasetypes.h>
+
 #include <QtCore/qsize.h>
 
 #include <QtGui/qmatrix4x4.h>
@@ -25,6 +27,7 @@ class QSSGRhiContext;
 class QSSGFrameData;
 struct QSSGRenderableObject;
 class QRhiRenderPassDescriptor;
+class QRhiTexture;
 struct QSSGRhiGraphicsPipelineState;
 struct QSSGRenderCamera;
 struct QSSGRenderableNodeEntry;
@@ -84,6 +87,17 @@ public:
 
 private:
     QSSGRenderHelpers();
+};
+
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderExtensionHelpers
+{
+public:
+    static void registerRenderResult(const QSSGRenderContextInterface &contextInterface,
+                                     QSSGExtensionId extension,
+                                     QRhiTexture *texture);
+
+private:
+    QSSGRenderExtensionHelpers();
 };
 
 QT_END_NAMESPACE

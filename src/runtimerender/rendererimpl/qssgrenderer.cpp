@@ -256,6 +256,9 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData) {
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
             bufferManager->releaseTextureData(textureData);
+        } else if (resource->type == QSSGRenderGraphObject::Type::RenderExtension) {
+            auto *rext = static_cast<QSSGRenderExtension *>(resource);
+            bufferManager->releaseExtensionResult(*rext);
         }
 
         // ### There might be more types that need to be supported

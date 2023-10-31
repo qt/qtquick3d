@@ -50,6 +50,7 @@ struct QSSGRenderSkin;
 // having a dedicated BufferManager for each render thread (window).
 
 class QSSGRenderContextInterface;
+class QQuick3DRenderExtension;
 
 struct QSSGMeshProcessingOptions
 {
@@ -145,6 +146,7 @@ public:
     void releaseGeometry(QSSGRenderGeometry *geometry);
     void releaseTextureData(const QSSGRenderTextureData *data);
     void releaseTextureData(const CustomImageCacheKey &key);
+    void releaseExtensionResult(const QSSGRenderExtension &rext);
 
     void commitBufferResourceUpdates();
 
@@ -155,6 +157,8 @@ public:
 
     static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
     QSSGMesh::Mesh loadMeshData(const QSSGRenderGeometry *geometry);
+
+    void registerExtensionResult(const QSSGRenderExtension &extensions, QRhiTexture *texture);
 
     static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
 
@@ -210,6 +214,7 @@ private:
     QHash<ImageCacheKey, ImageData> imageMap;                   // Textures (specificed by path)
     QHash<CustomImageCacheKey, ImageData> customTextureMap;     // Textures (QQuick3DTextureData)
     QHash<QSGTexture *, ImageData> qsgImageMap;                 // Textures (from Qt Quick)
+    QHash<const QSSGRenderExtension *, ImageData> renderExtensionTexture; // Textures (from QQuick3DRenderExtension)
     QHash<QSSGRenderPath, MeshData> meshMap;                    // Meshes (specififed by path)
     QHash<QSSGRenderGeometry *, MeshData> customMeshMap;        // Meshes (QQuick3DGeometry)
 

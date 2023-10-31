@@ -16,6 +16,8 @@
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
+#include "qquick3drenderextensions.h"
+
 QT_BEGIN_NAMESPACE
 
 static constexpr char qtQQ3DWAPropName[] { "_qtquick3dWindowAttachment" };
@@ -145,6 +147,32 @@ void QQuick3DSceneManager::updateDiryExtensions()
         updateExtensions(it);
 }
 
+bool QQuick3DSceneManager::updateDirtyResourceSecondPass()
+{
+    const auto updateDirtyResourceNode = [this](QQuick3DObject *resource) {
+        QQuick3DObjectPrivate *po = QQuick3DObjectPrivate::get(resource);
+        po->dirtyAttributes = 0; // Not used, but we should still reset it.
+        QSSGRenderGraphObject *node = po->spatialNode;
+        po->spatialNode = resource->updateSpatialNode(node);
+        if (po->spatialNode)
+            m_nodeMap.insert(po->spatialNode, resource);
+        return po->sharedResource;
+    };
+
+    bool ret = false;
+    auto it = dirtySecondPassResources.constBegin();
+    const auto end = dirtySecondPassResources.constEnd();
+    for (; it != end; ++it)
+        ret |= updateDirtyResourceNode(*it);
+
+    // Expectation is that we won't get here often, for other updates the
+    // backend nodes should have been realized and we won't get here, so
+    // just release space used by the set.
+    dirtySecondPassResources = {};
+
+    return ret;
+}
+
 void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
 {
     QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(resourceObject);
@@ -161,6 +189,10 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
             ++inputHandlingEnabled;
         }
     }
+
+    if (QSSGRenderGraphObject::isTexture(itemPriv->type) && qobject_cast<QQuick3DTexture *>(resourceObject)->extensionDirty())
+        dirtySecondPassResources.insert(resourceObject);
+
     // resource nodes dont go in the tree, so we dont need to parent them
 }
 
@@ -535,6 +567,8 @@ bool QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resour
         sceneManager->updateDirtySpatialNodes();
     for (auto &sceneManager : std::as_const(sceneManagers))
         sceneManager->updateDiryExtensions();
+    for (auto &sceneManager : std::as_const(sceneManagers))
+        sharedUpdateNeeded |= sceneManager->updateDirtyResourceSecondPass();
     // Bounding Boxes
     for (auto &sceneManager : std::as_const(sceneManagers))
         sceneManager->updateBoundingBoxes(*m_rci->bufferManager());

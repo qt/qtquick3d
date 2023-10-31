@@ -78,4 +78,12 @@ QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGRenderGraphObjec
     return mat44;
 }
 
+void QSSGRenderExtensionHelpers::registerRenderResult(const QSSGRenderContextInterface &contextInterface,
+                                                      QSSGExtensionId extension,
+                                                      QRhiTexture *texture)
+{
+    if (auto *ext = QSSGRenderGraphObjectUtils::getExtension<QSSGRenderExtension>(extension))
+        contextInterface.bufferManager()->registerExtensionResult(*ext, texture);
+}
+
 QT_END_NAMESPACE

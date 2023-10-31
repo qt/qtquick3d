@@ -5,6 +5,9 @@
 #include "cube.h"
 #include <QGuiApplication>
 #include <QFile>
+
+#include <ssg/qquick3dextensionhelpers.h>
+
 #include <ssg/qssgrendercontextcore.h>
 #include <ssg/qssgrenderer.h>
 #include <ssg/qssgrenderextensions.h>

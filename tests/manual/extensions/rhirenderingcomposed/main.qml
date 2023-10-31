@@ -57,7 +57,9 @@ Window {
         Model {
             source: "#Sphere"
             materials: PrincipledMaterial {
-                baseColor: "red"
+                baseColorMap: Texture {
+                    textureProvider: renderer
+                }
             }
         }
     }

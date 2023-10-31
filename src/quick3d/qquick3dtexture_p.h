@@ -27,6 +27,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGLayer;
 struct QSSGRenderImage;
+class QQuick3DRenderExtension;
 
 class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickItemChangeListener
 {
@@ -34,6 +35,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QQuickItem *sourceItem READ sourceItem WRITE setSourceItem NOTIFY sourceItemChanged)
     Q_PROPERTY(QQuick3DTextureData *textureData READ textureData WRITE setTextureData NOTIFY textureDataChanged)
+    Q_PROPERTY(QQuick3DRenderExtension *textureProvider READ textureProvider WRITE setTextureProvider NOTIFY textureProviderChanged FINAL)
     Q_PROPERTY(float scaleU READ scaleU WRITE setScaleU NOTIFY scaleUChanged)
     Q_PROPERTY(float scaleV READ scaleV WRITE setScaleV NOTIFY scaleVChanged)
     Q_PROPERTY(MappingMode mappingMode READ mappingMode WRITE setMappingMode NOTIFY mappingModeChanged)
@@ -108,6 +110,11 @@ public:
 
     QSSGRenderImage *getRenderImage();
 
+    QQuick3DRenderExtension *textureProvider() const;
+    void setTextureProvider(QQuick3DRenderExtension *newRenderTexture);
+
+    bool extensionDirty() const { return m_dirtyFlags.testFlag(DirtyFlag::ExtensionDirty); }
+
 public Q_SLOTS:
     void setSource(const QUrl &source);
     void setSourceItem(QQuickItem *sourceItem);
@@ -155,6 +162,7 @@ Q_SIGNALS:
     void textureDataChanged();
     void generateMipmapsChanged();
     void autoOrientationChanged();
+    void textureProviderChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -176,7 +184,8 @@ private:
         TextureDataDirty = (1 << 3),
         SamplerDirty = (1 << 4),
         SourceItemDirty = (1 << 5),
-        FlipVDirty = (1 << 6)
+        FlipVDirty = (1 << 6),
+        ExtensionDirty = (1 << 7)
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
     void markDirty(DirtyFlag type);
@@ -221,6 +230,7 @@ private:
     bool m_generateMipmaps = false;
     bool m_autoOrientation = true;
     QMetaMethod m_updateSlot;
+    QQuick3DRenderExtension *m_renderExtension = nullptr;
 };
 
 QT_END_NAMESPACE

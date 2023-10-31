@@ -4,3 +4,4 @@
 add_subdirectory(stenciloutline)
 add_subdirectory(rhirendering)
 add_subdirectory(rhirenderingcomposed)
+add_subdirectory(textureprovider)

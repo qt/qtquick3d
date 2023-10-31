@@ -57,6 +57,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     // BufferManager will refuse to use this if the threads don't match.
     QSGTexture *m_qsgTexture = nullptr; // overrides m_imagePath and m_rawTextureData when non-null
     QSSGRenderTextureData *m_rawTextureData = nullptr; // overrides m_imagePath and m_qsgTexture when non-null
+    QSSGRenderExtension *m_extensionsSource = nullptr;
 
     Flags m_flags;
 

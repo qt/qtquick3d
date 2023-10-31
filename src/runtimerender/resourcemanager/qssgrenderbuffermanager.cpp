@@ -27,6 +27,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
 #include <qtquick3d_tracepoints_p.h>
+#include "../extensionapi/qssgrenderextensions.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -226,6 +227,14 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize, path.toUtf8());
         }
         foundIt.value().usageCounts[currentLayer]++;
+    } else if (image->m_extensionsSource) {
+        auto it = renderExtensionTexture.find(image->m_extensionsSource);
+        if (it == renderExtensionTexture.end())
+            it = renderExtensionTexture.insert(image->m_extensionsSource, ImageData());
+
+        it->usageCounts[currentLayer]++;
+        result = it->renderImageTexture;
+        increaseMemoryStat(result.m_texture);
     }
     return result;
 }
@@ -1394,6 +1403,11 @@ void QSSGBufferManager::releaseTextureData(const CustomImageCacheKey &key)
     }
 }
 
+void QSSGBufferManager::releaseExtensionResult(const QSSGRenderExtension &rext)
+{
+    renderExtensionTexture.remove(&rext);
+}
+
 void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
 {
     QMutexLocker meshMutexLocker(&meshBufferMutex);
@@ -1531,12 +1545,31 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
         }
     }
 
+    // Textures from render extensions
+    auto renderExtensionTextureKeyIterator = renderExtensionTexture.cbegin();
+    while (renderExtensionTextureKeyIterator != renderExtensionTexture.cend()) {
+        if (isUnused(renderExtensionTextureKeyIterator.value().usageCounts)) {
+            auto rhiTexture = renderExtensionTextureKeyIterator.value().renderImageTexture.m_texture;
+            if (rhiTexture) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "- releaseTexture: " << imageKeyIterator.key().path.path() << currentLayer;
+#endif
+                decreaseMemoryStat(rhiTexture);
+                // NOTE: We don't own the texture, it's own by the user, so don't release.
+            }
+            renderExtensionTextureKeyIterator = renderExtensionTexture.erase(renderExtensionTextureKeyIterator);
+        } else {
+            ++renderExtensionTextureKeyIterator;
+        }
+    }
+
     // Resource Tracking Debug Code
     frameCleanupIndex = frameId;
 #ifdef QSSG_RENDERBUFFER_DEBUGGING_USAGES
     qDebug() << "QSSGBufferManager::cleanupUnreferencedBuffers()" << this << "frame:" << frameCleanupIndex << currentLayer;
     qDebug() << "Textures(by path): " << imageMap.count();
     qDebug() << "Textures(custom):  " << customTextureMap.count();
+    qDebug() << "Textures(Extension)" << renderExtensionTexture.count();
     qDebug() << "Textures(qsg):     " << qsgImageMap.count();
     qDebug() << "Geometry(by path): " << meshMap.count();
     qDebug() << "Geometry(custom):  " << customMeshMap.count();
@@ -1567,6 +1600,10 @@ void QSSGBufferManager::resetUsageCounters(quint32 frameId, QSSGRenderLayer *lay
     // Meshes (custom)
     for (auto &meshData : customMeshMap)
         meshData.usageCounts[layer] = 0;
+
+    // Textures from render extensions
+    for (auto &retData : renderExtensionTexture)
+        retData.usageCounts[layer] = 0;
 
     frameResetIndex = frameId;
 }
@@ -1813,6 +1850,23 @@ QSSGMesh::Mesh QSSGBufferManager::loadMeshData(const QSSGRenderGeometry *geometr
         qWarning("loadMeshDataForCustomMeshUncached failed: %s", qPrintable(error));
 
     return mesh;
+}
+
+void QSSGBufferManager::registerExtensionResult(const QSSGRenderExtension &extensions,
+                                                QRhiTexture *texture)
+{
+    if (texture) {
+        texture->flags().testFlag(QRhiTexture::Flag::MipMapped);
+        const auto mipLevels = QRhi::mipLevelsForSize(texture->pixelSize());
+        QSSGRenderImageTextureFlags flags;
+        const bool isSRGB = texture->flags().testFlag(QRhiTexture::Flag::sRGB);
+        flags.setLinear(!isSRGB);
+        const bool isRGBA8 = (texture->format() == QRhiTexture::Format::RGBA8);
+        flags.setRgbe8(isRGBA8);
+        renderExtensionTexture.insert(&extensions, ImageData { QSSGRenderImageTexture{ texture, mipLevels, flags }, {} });
+    } else {
+        renderExtensionTexture.insert(&extensions, {});
+    }
 }
 
 void QSSGBufferManager::clear()
