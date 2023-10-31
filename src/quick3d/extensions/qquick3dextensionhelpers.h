@@ -28,6 +28,10 @@ public:
     [[nodiscard]] static QSSGNodeId getNodeId(const QQuick3DObject &node);
     [[nodiscard]] static QSSGResourceId getResourceId(const QQuick3DObject &resource);
     [[nodiscard]] static QSSGCameraId getCameraId(const QQuick3DObject &camera);
+    [[nodiscard]] static QSSGExtensionId getExtensionId(const QQuick3DObject &extension);
+
+    template<typename QSSGTypeId>
+    [[nodiscard]] static constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }
 };
 
 QT_END_NAMESPACE

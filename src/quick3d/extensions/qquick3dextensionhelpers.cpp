@@ -63,4 +63,12 @@ QSSGCameraId QQuick3DExtensionHelpers::getCameraId(const QQuick3DObject &camera)
     return static_cast<QSSGCameraId>(quintptr(po->spatialNode));
 }
 
+QSSGExtensionId QQuick3DExtensionHelpers::getExtensionId(const QQuick3DObject &extension)
+{
+    auto *po = QQuick3DObjectPrivate::get(&extension);
+    QSSG_ASSERT_X(QSSGRenderGraphObject::isExtension(po->type), "Type is not an extension", return QSSGExtensionId::Invalid);
+    // NOTE: Implementation detail (don't rely on this in user code).
+    return static_cast<QSSGExtensionId>(quintptr(po->spatialNode));
+}
+
 QT_END_NAMESPACE
