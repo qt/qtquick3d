@@ -681,7 +681,7 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     }
 
     if (p == nullptr) {
-        qWarning("A texture was defined out of Material or Effect");
+        qWarning("A TextureInput was defined without a CustomMaterial or Effect ancestor. This should be avoided.");
     }
 
     m_texture = texture;
