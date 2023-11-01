@@ -7,8 +7,8 @@
     "SecurityCritical": true,
 
     "Homepage": "http://www.assimp.org/",
-    "Version": "5.2.5",
-    "DownloadLocation": "https://github.com/assimp/assimp/releases/tag/v5.2.5",
+    "Version": "5.3.1",
+    "DownloadLocation": "https://github.com/assimp/assimp/releases/tag/v5.3.1",
 
     "License": "BSD 3-clause \"New\" or \"Revised\" Licensee",
     "LicenseId": "BSD-3-Clause",
