@@ -35,7 +35,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QQuickItem *sourceItem READ sourceItem WRITE setSourceItem NOTIFY sourceItemChanged)
     Q_PROPERTY(QQuick3DTextureData *textureData READ textureData WRITE setTextureData NOTIFY textureDataChanged)
-    Q_PROPERTY(QQuick3DRenderExtension *textureProvider READ textureProvider WRITE setTextureProvider NOTIFY textureProviderChanged FINAL)
+    Q_PROPERTY(QQuick3DRenderExtension *textureProvider READ textureProvider WRITE setTextureProvider NOTIFY textureProviderChanged FINAL REVISION(6, 7))
     Q_PROPERTY(float scaleU READ scaleU WRITE setScaleU NOTIFY scaleUChanged)
     Q_PROPERTY(float scaleV READ scaleV WRITE setScaleV NOTIFY scaleVChanged)
     Q_PROPERTY(MappingMode mappingMode READ mappingMode WRITE setMappingMode NOTIFY mappingModeChanged)
@@ -110,8 +110,8 @@ public:
 
     QSSGRenderImage *getRenderImage();
 
-    QQuick3DRenderExtension *textureProvider() const;
-    void setTextureProvider(QQuick3DRenderExtension *newRenderTexture);
+    Q_REVISION(6, 7) QQuick3DRenderExtension *textureProvider() const;
+    Q_REVISION(6, 7) void setTextureProvider(QQuick3DRenderExtension *newRenderTexture);
 
     bool extensionDirty() const { return m_dirtyFlags.testFlag(DirtyFlag::ExtensionDirty); }
 
