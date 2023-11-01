@@ -115,7 +115,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaLoader.cpp ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaLoader.h
         ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaParser.cpp ../../../3rdparty/assimp/src/code/AssetLib/Collada/ColladaParser.h
         ../../../3rdparty/assimp/src/code/Common/Assimp.cpp
-        ../../../3rdparty/assimp/src/code/Common/AssertHandler.cpp ../../../3rdparty/assimp/src/code/Common/AssertHandler.h
+        ../../../3rdparty/assimp/src/code/Common/AssertHandler.cpp
         ../../../3rdparty/assimp/src/code/Common/Base64.cpp
         ../../../3rdparty/assimp/src/code/Common/BaseImporter.cpp
         ../../../3rdparty/assimp/src/code/Common/BaseProcess.cpp ../../../3rdparty/assimp/src/code/Common/BaseProcess.h
@@ -170,6 +170,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXTokenizer.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXTokenizer.h
         ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXUtil.cpp ../../../3rdparty/assimp/src/code/AssetLib/FBX/FBXUtil.h
         ../../../3rdparty/assimp/src/code/Material/MaterialSystem.cpp ../../../3rdparty/assimp/src/code/Material/MaterialSystem.h
+        ../../../3rdparty/assimp/src/code/Geometry/GeometryUtils.cpp ../../../3rdparty/assimp/src/code/Geometry/GeometryUtils.h
         ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileData.h
         ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileImporter.cpp ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileImporter.h
         ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileMtlImporter.cpp ../../../3rdparty/assimp/src/code/AssetLib/Obj/ObjFileMtlImporter.h
@@ -222,9 +223,11 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/cdt.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/cdt.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/sweep.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/sweep.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/sweep_context.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/sweep_context.h
-        ../../../3rdparty/assimp/src/contrib/unzip/crypt.h
-        ../../../3rdparty/assimp/src/contrib/unzip/ioapi.c ../../../3rdparty/assimp/src/contrib/unzip/ioapi.h
+        ../../../3rdparty/assimp/src/contrib/unzip/unzip.h
+        ../../../3rdparty/assimp/src/contrib/unzip/ioapi.h
+        ../../../3rdparty/assimp/src/contrib/unzip/ioapi.c
         ../../../3rdparty/assimp/src/contrib/unzip/unzip.c
+        ../../../3rdparty/assimp/src/include/assimp/AssertHandler.h
         ../../../3rdparty/assimp/src/include/assimp/Base64.hpp
         ../../../3rdparty/assimp/src/include/assimp/BaseImporter.h
         ../../../3rdparty/assimp/src/include/assimp/Bitmap.h
@@ -297,7 +300,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/include/assimp/vector2.h ../../../3rdparty/assimp/src/include/assimp/vector2.inl
         ../../../3rdparty/assimp/src/include/assimp/vector3.h ../../../3rdparty/assimp/src/include/assimp/vector3.inl
         ../../../3rdparty/assimp/src/include/assimp/version.h
-        ../../../3rdparty/assimp/unzip/unzip.h
+
     DEFINES
         ASSIMP_BUILD_BOOST_WORKAROUND
         ASSIMP_BUILD_NO_3DS_IMPORTER
@@ -357,7 +360,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
     INCLUDE_DIRECTORIES
         ../../../3rdparty/assimp
         ../../../3rdparty/assimp/..
-        ../../../3rdparty/assimp/contrib/unzip
         ../../../3rdparty/assimp/src
         ../../../3rdparty/assimp/src/code
         ../../../3rdparty/assimp/src/code/CApi
@@ -376,9 +378,9 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/contrib/pugixml/contrib
         ../../../3rdparty/assimp/src/contrib/rapidjson/include
         ../../../3rdparty/assimp/src/contrib/utf8cpp/source
+        ../../../3rdparty/assimp/src/contrib/unzip/
         ../../../3rdparty/assimp/src/include
         ../../../3rdparty/assimp/src/include/assimp/Compiler
-        ../../../3rdparty/assimp/unzip
 )
 
 qt_internal_extend_target(AssimpImporterPlugin CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
