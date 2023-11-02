@@ -229,12 +229,11 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         foundIt.value().usageCounts[currentLayer]++;
     } else if (image->m_extensionsSource) {
         auto it = renderExtensionTexture.find(image->m_extensionsSource);
-        if (it == renderExtensionTexture.end())
-            it = renderExtensionTexture.insert(image->m_extensionsSource, ImageData());
-
-        it->usageCounts[currentLayer]++;
-        result = it->renderImageTexture;
-        increaseMemoryStat(result.m_texture);
+        if (it != renderExtensionTexture.end()) {
+            it->usageCounts[currentLayer]++;
+            result = it->renderImageTexture;
+            increaseMemoryStat(result.m_texture);
+        }
     }
     return result;
 }
@@ -1602,8 +1601,12 @@ void QSSGBufferManager::resetUsageCounters(quint32 frameId, QSSGRenderLayer *lay
         meshData.usageCounts[layer] = 0;
 
     // Textures from render extensions
-    for (auto &retData : renderExtensionTexture)
-        retData.usageCounts[layer] = 0;
+    // NOTE: We retain the usage count as 1 as long as there is a texture
+    // registered by a extension.
+    for (auto &retData : renderExtensionTexture) {
+        const bool hasTexture = (retData.renderImageTexture.m_texture != nullptr);
+        retData.usageCounts[layer] = uint32_t(hasTexture) * 1;
+    }
 
     frameResetIndex = frameId;
 }
@@ -1863,7 +1866,8 @@ void QSSGBufferManager::registerExtensionResult(const QSSGRenderExtension &exten
         flags.setLinear(!isSRGB);
         const bool isRGBA8 = (texture->format() == QRhiTexture::Format::RGBA8);
         flags.setRgbe8(isRGBA8);
-        renderExtensionTexture.insert(&extensions, ImageData { QSSGRenderImageTexture{ texture, mipLevels, flags }, {} });
+        const quint32 usageCount = 1 /* At least '1' as long as a texture is registered */;
+        renderExtensionTexture.insert(&extensions, ImageData { QSSGRenderImageTexture{ texture, mipLevels, flags }, {}, usageCount });
     } else {
         renderExtensionTexture.insert(&extensions, {});
     }
@@ -1910,14 +1914,14 @@ void QSSGBufferManager::clear()
     }
 
     // Textures (by path)
-    for (const auto &k : imageMap.keys())
-        releaseImage(k);
+    for (auto it = imageMap.constBegin(), end = imageMap.constEnd(); it != end; ++it)
+        releaseImage(it.key());
 
     imageMap.clear();
 
     // Textures (custom)
-    for (const auto &k : customTextureMap.keys())
-        releaseTextureData(k);
+    for (auto it = customTextureMap.cbegin(), end = customTextureMap.cend(); it != end; ++it)
+        releaseTextureData(it.key());
 
     customTextureMap.clear();
 
