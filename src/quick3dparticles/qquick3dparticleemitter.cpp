@@ -361,15 +361,15 @@ void QQuick3DParticleEmitter::setParticle(QQuick3DParticle *particle)
         return;
     }
 
-    QObject::connect(this, &QQuick3DParticleEmitter::depthBiasChanged, m_particle, [this](){
-        m_particle->setDepthBias(m_depthBias);
-    });
     if (m_particle && m_system && !m_system->isShared(m_particle))
         m_particle->setSystem(nullptr);
     m_particle = particle;
     if (particle) {
         particle->setDepthBias(m_depthBias);
         particle->setSystem(system());
+        QObject::connect(this, &QQuick3DParticleEmitter::depthBiasChanged, m_particle, [this]() {
+            m_particle->setDepthBias(m_depthBias);
+        });
     }
     Q_EMIT particleChanged();
 }
