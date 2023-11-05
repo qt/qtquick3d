@@ -398,7 +398,7 @@ bool MaterialAdapter::loadMaterial(const QUrl &materialFile)
 
 bool MaterialAdapter::exportQmlComponent(const QUrl &componentFile, const QString &vertName, const QString &fragName)
 {
-    QFileInfo fi(componentFile.path());
+    QFileInfo fi(componentFile.toLocalFile());
     auto filename = fi.fileName();
     if (filename.isEmpty())
         return false;
