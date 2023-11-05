@@ -272,12 +272,12 @@ bool QSSGLightmapperPrivate::commitGeometry()
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
         if (lm.renderables.isEmpty()) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No submeshes, model %1 cannot be lightmapped").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             return false;
         }
         if (lm.model->skin || lm.model->skeleton) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Skinned models not supported: %1").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             return false;
         }
 
@@ -333,7 +333,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
 
         if (!mesh.isValid()) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load geometry for model %1").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             return false;
         }
 
@@ -342,23 +342,23 @@ bool QSSGLightmapperPrivate::commitGeometry()
             unwrapTimer.start();
             if (!mesh.createLightmapUVChannel(lm.model->lightmapBaseResolution)) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to do lightmap UV unwrapping for model %1").
-                                                                     arg(lm.model->debugObjectName));
+                                                                     arg(lm.model->lightmapKey));
                 return false;
             }
             sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Lightmap UV unwrap done for model %1 in %2 ms").
-                                                                  arg(lm.model->debugObjectName).
+                                                                  arg(lm.model->lightmapKey).
                                                                   arg(unwrapTimer.elapsed()));
 
             if (lm.model->hasLightmap())
                 drawInfo.meshWithLightmapUV = mesh;
         } else {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Model %1 already has a lightmap UV channel").arg(lm.model->debugObjectName));
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Model %1 already has a lightmap UV channel").arg(lm.model->lightmapKey));
         }
 
         drawInfo.lightmapSize = mesh.subsets().first().lightmapSizeHint;
         if (drawInfo.lightmapSize.isEmpty()) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No lightmap size hint found for model %1, defaulting to 1024x1024").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             drawInfo.lightmapSize = QSize(1024, 1024);
         }
 
@@ -367,11 +367,11 @@ bool QSSGLightmapperPrivate::commitGeometry()
         drawInfo.indexData = mesh.indexBuffer().data;
 
         if (drawInfo.vertexData.isEmpty()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No vertex data for model %1").arg(lm.model->debugObjectName));
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No vertex data for model %1").arg(lm.model->lightmapKey));
             return false;
         }
         if (drawInfo.indexData.isEmpty()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No index data for model %1").arg(lm.model->debugObjectName));
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No index data for model %1").arg(lm.model->lightmapKey));
             return false;
         }
 
@@ -385,7 +385,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
         default:
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Unknown index component type %1 for model %2").
                                                                  arg(int(mesh.indexBuffer().componentType)).
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             break;
         }
 
@@ -413,7 +413,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
 
         if (!(drawInfo.positionOffset != UINT_MAX && drawInfo.normalOffset != UINT_MAX)) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Could not figure out position and normal attribute offsets for model %1").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             return false;
         }
 
@@ -422,19 +422,19 @@ bool QSSGLightmapperPrivate::commitGeometry()
               && drawInfo.normalFormat == QRhiVertexInputAttribute::Float3))
         {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Position or normal attribute format is not as expected (float3) for model %1").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             return false;
         }
 
         if (drawInfo.lightmapUVOffset == UINT_MAX) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Could not figure out lightmap UV attribute offset for model %1").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             return false;
         }
 
         if (drawInfo.lightmapUVFormat != QRhiVertexInputAttribute::Float2) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Lightmap UV attribute format is not as expected (float2) for model %1").
-                                                                 arg(lm.model->debugObjectName));
+                                                                 arg(lm.model->lightmapKey));
             return false;
         }
 
@@ -442,7 +442,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
         if (drawInfo.uvOffset != UINT_MAX) {
             if (drawInfo.uvFormat != QRhiVertexInputAttribute::Float2) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("UV0 attribute format is not as expected (float2) for model %1").
-                                                                     arg(lm.model->debugObjectName));
+                                                                     arg(lm.model->lightmapKey));
                 return false;
             }
         }
@@ -450,14 +450,14 @@ bool QSSGLightmapperPrivate::commitGeometry()
         if (drawInfo.tangentOffset != UINT_MAX) {
             if (drawInfo.tangentFormat != QRhiVertexInputAttribute::Float3) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Tangent attribute format is not as expected (float3) for model %1").
-                                                                     arg(lm.model->debugObjectName));
+                                                                     arg(lm.model->lightmapKey));
                 return false;
             }
         }
         if (drawInfo.binormalOffset != UINT_MAX) {
             if (drawInfo.binormalFormat != QRhiVertexInputAttribute::Float3) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Binormal attribute format is not as expected (float3) for model %1").
-                                                                     arg(lm.model->debugObjectName));
+                                                                     arg(lm.model->lightmapKey));
                 return false;
             }
         }
@@ -985,10 +985,10 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                 ++unusedEntries;
         }
 
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Successfully rasterized %1/%2 lightmap texels for model %3 with lightmap size %4 in %5 ms").
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Successfully rasterized %1/%2 lightmap texels for model %3, lightmap size %4 in %5 ms").
                                                               arg(lightmap.entries.size() - unusedEntries).
                                                               arg(lightmap.entries.size()).
-                                                              arg(lm.model->debugObjectName).
+                                                              arg(lm.model->lightmapKey).
                                                               arg(QStringLiteral("(%1, %2)").arg(outputSize.width()).arg(outputSize.height())).
                                                               arg(rasterizeTimer.elapsed()));
         lightmaps.append(lightmap);
@@ -1123,7 +1123,7 @@ void QSSGLightmapperPrivate::computeDirectLight()
             }
 
             sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Direct light computed for model %1 in %2 ms").
-                                                                  arg(lm.model->debugObjectName).
+                                                                  arg(lm.model->lightmapKey).
                                                                   arg(directLightTimer.elapsed()));
         });
     }
@@ -1171,7 +1171,7 @@ void QSSGLightmapperPrivate::computeIndirectLight()
         Lightmap &lightmap(lightmaps[lmIdx]);
         int texelsDone = 0;
         sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Total texels to compute for model %1: %2").
-                                                              arg(lm.model->debugObjectName).
+                                                              arg(lm.model->lightmapKey).
                                                               arg(lightmap.entries.size()));
         QElapsedTimer indirectLightTimer;
         indirectLightTimer.start();
@@ -1188,8 +1188,7 @@ void QSSGLightmapperPrivate::computeIndirectLight()
 
         QVector<QFuture<QVector3D>> wg(wgCount);
 
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Computing indirect lighting for model %1 with key %2").
-                                                              arg(lm.model->debugObjectName).
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Computing indirect lighting for model %1").
                                                               arg(lm.model->lightmapKey));
         sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Sample count: %1, Workgroup size: %2, Max bounces: %3, Multiplier: %4").
                                                               arg(options.indirectLightSamples).
@@ -1294,8 +1293,7 @@ void QSSGLightmapperPrivate::computeIndirectLight()
             if (bakingControl.cancelled)
                 return;
         }
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Indirect lighting computed for model %1 with key %2 in %3 ms").
-                                                              arg(lm.model->debugObjectName).
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Indirect lighting computed for model %1 in %2 ms").
                                                               arg(lm.model->lightmapKey).
                                                               arg(indirectLightTimer.elapsed()));
     }
@@ -1588,8 +1586,7 @@ bool QSSGLightmapperPrivate::postProcess()
             }
         }
 
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Post-processing for model %1 with key %2 done in %3").
-                                                              arg(lm.model->debugObjectName).
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Post-processing for model %1 done in %2").
                                                               arg(lm.model->lightmapKey).
                                                               arg(postProcessTimer.elapsed()));
     }
@@ -1633,7 +1630,7 @@ bool QSSGLightmapperPrivate::storeLightmaps()
         }
 
         sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Lightmap saved for model %1 to %2 in %3 ms").
-                                                              arg(lm.model->debugObjectName).
+                                                              arg(lm.model->lightmapKey).
                                                               arg(fn).
                                                               arg(writeTimer.elapsed()));
         const DrawInfo &bakeModelDrawInfo(drawInfos[lmIdx]);
@@ -1648,7 +1645,7 @@ bool QSSGLightmapperPrivate::storeLightmaps()
                 return false;
             }
             sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Lightmap-compatible mesh saved for model %1 to %2 in %3 ms").
-                                                                  arg(lm.model->debugObjectName).
+                                                                  arg(lm.model->lightmapKey).
                                                                   arg(f.fileName()).
                                                                   arg(writeTimer.elapsed()));
         } // else the mesh had a lightmap uv channel to begin with, no need to save another version of it
