@@ -8,10 +8,8 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     app.setApplicationName("SceneEffects");
-    app.setOrganizationName("TheQtCompany");
+    app.setOrganizationName("The Qt Company");
     app.setOrganizationDomain("qt.io");
-
-    qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));

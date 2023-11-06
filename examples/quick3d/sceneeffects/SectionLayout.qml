@@ -1,3 +1,4 @@
+
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
@@ -15,8 +16,7 @@ Rectangle {
     border.color: palette.alternateBase
 
     Layout.fillWidth: true
-    height: outsideLayout.implicitHeight
-    implicitHeight: height
+    implicitHeight: outsideLayout.implicitHeight
 
     ColumnLayout {
         id: outsideLayout
@@ -48,12 +48,15 @@ Rectangle {
             }
         }
 
-        ColumnLayout {
+        GridLayout {
             id: container
             Layout.margins: root.border.width * 2
             visible: root.isExpanded
             Layout.fillWidth: true
+            columns: 2
+            uniformCellWidths: true
         }
 
     }
+
 }
