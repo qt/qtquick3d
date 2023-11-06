@@ -56,14 +56,14 @@ Renderer::~Renderer()
 
 bool Renderer::prepareData(QSSGFrameData &data)
 {
-    QSSGRenderGraphObject *camera = data.activeCamera();
-    if (!camera) {
+    auto camera = data.activeCamera();
+    if (camera == QSSGNodeId::Invalid) {
         canRender = false;
         return false;
     }
 
     // ### would be nice to know that we do not have to query (recalculate) every time, if the camera has not changed
-    viewProjection = QSSGCameraHelpers::getViewProjectionMatrix(*camera);
+    viewProjection = QSSGCameraHelpers::getViewProjectionMatrix(camera);
 
     canRender = true;
 

@@ -142,6 +142,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // outMVP and outNormalMatrix are returned ready to upload to openGL, meaning they are
     // row-major.
     void calculateMVPAndNormalMatrix(const QMatrix4x4 &inViewProjection, QMatrix4x4 &outMVP, QMatrix3x3 &outNormalMatrix) const;
+    static void calculateMVPAndNormalMatrix(const QMatrix4x4 &globalTransfor,
+                                            const QMatrix4x4 &inViewProjection,
+                                            QMatrix4x4 &outMVP,
+                                            QMatrix3x3 &outNormalMatrix);
 
     // This should be in a utility file somewhere
     QMatrix3x3 calculateNormalMatrix() const;

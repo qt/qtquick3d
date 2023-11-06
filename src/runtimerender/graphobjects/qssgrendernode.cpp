@@ -266,6 +266,15 @@ void QSSGRenderNode::calculateMVPAndNormalMatrix(const QMatrix4x4 &inViewProject
     outNormalMatrix = calculateNormalMatrix();
 }
 
+void QSSGRenderNode::calculateMVPAndNormalMatrix(const QMatrix4x4 &globalTransform,
+                                                 const QMatrix4x4 &inViewProjection,
+                                                 QMatrix4x4 &outMVP,
+                                                 QMatrix3x3 &outNormalMatrix)
+{
+    outMVP = inViewProjection * globalTransform;
+    outNormalMatrix = globalTransform.normalMatrix();
+}
+
 QMatrix3x3 QSSGRenderNode::calculateNormalMatrix() const
 {
     // NB! QMatrix4x4:normalMatrix() uses double precision for determinant

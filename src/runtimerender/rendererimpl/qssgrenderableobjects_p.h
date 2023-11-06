@@ -177,19 +177,29 @@ struct QSSGShaderReflectionProbe
 typedef QVarLengthArray<QSSGShaderLight, 16> QSSGShaderLightList;
 using QSSGShaderLightListView = QSSGDataView<QSSGShaderLight>;
 
-using QSSGMaterialListView = QSSGDataView<QSSGRenderGraphObject *>;
-
 struct QSSGRenderableObject;
 
 struct QSSGRenderableNodeEntry
 {
+    enum Overridden : quint16
+    {
+        Original = 0,
+        GlobalTransform = 0x1,
+        Materials = 0x2,
+        GlobalOpacity = 0x4
+    };
+
     QSSGRenderNode *node = nullptr;
     // TODO: We should have an index here for look-up and store the data in a table,
     // er already have the index from when we collect the nodes. We might cull some items at a later
     // stage but that should be fine. The sort data can be just a float and the index to this...
+    mutable QMatrix4x4 globalTransform;
     mutable QSSGRenderMesh *mesh = nullptr;
-    mutable QSSGMaterialListView materials;
+    mutable QVector<QSSGRenderGraphObject *> materials;
     mutable QSSGShaderLightListView lights;
+    mutable float globalOpacity { 1.0f };
+    mutable quint16 overridden { Original };
+
     bool isNull() const { return (node == nullptr); }
     QSSGRenderableNodeEntry() = default;
     QSSGRenderableNodeEntry(QSSGRenderNode &inNode) : node(&inNode) {}
@@ -269,7 +279,7 @@ struct QSSGModelContext
     QMatrix4x4 modelViewProjection;
     QMatrix3x3 normalMatrix;
 
-    QSSGModelContext(const QSSGRenderModel &inModel, const QMatrix4x4 &inViewProjection) : model(inModel)
+    QSSGModelContext(const QSSGRenderModel &inModel, const QMatrix4x4 &globalTransform, const QMatrix4x4 &inViewProjection) : model(inModel)
     {
         // For skinning, node's global transformation will be ignored and
         // an identity matrix will be used for the normalMatrix
@@ -277,7 +287,7 @@ struct QSSGModelContext
             modelViewProjection = inViewProjection;
             normalMatrix = QMatrix3x3();
         } else {
-            model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
+            QSSGRenderNode::calculateMVPAndNormalMatrix(globalTransform, inViewProjection, modelViewProjection, normalMatrix);
         }
     }
 

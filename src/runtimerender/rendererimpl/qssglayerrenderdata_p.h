@@ -204,19 +204,20 @@ public:
     void setVertexInputPresence(const QSSGRenderableObjectFlags &renderableFlags,
                                 QSSGShaderDefaultMaterialKey &key);
 
-    // Load meshes as needed
-    static void prepareModelMeshes(const QSSGRenderContextInterface &contextInterface,
-                                   RenderableNodeEntries &renderableModels);
-
     static void prepareModelBoneTextures(const QSSGRenderContextInterface &contextInterface,
                                          const RenderableNodeEntries &renderableModels);
 
     // Helper functions used during PrepareForRender and PrepareAndRender
     // Updates lights with model receivesShadows. Do not pass globalLights.
-    bool prepareModelsForRender(const RenderableNodeEntries &renderableModels,
+    bool prepareModelsForRender(QSSGRenderContextInterface &ctx,
+                                const RenderableNodeEntries &renderableModels,
                                 QSSGLayerRenderPreparationResultFlags &ioFlags,
+                                const QSSGRenderCamera &camera,
                                 const QSSGCameraRenderData &cameraData,
-                                RenderableFilter filter,
+                                TModelContextPtrList &modelContexts,
+                                QSSGRenderableObjectList &opaqueObjects,
+                                QSSGRenderableObjectList &transparentObjects,
+                                QSSGRenderableObjectList &screenTextureObjects,
                                 float lodThreshold = 0.0f);
     bool prepareParticlesForRender(const RenderableNodeEntries &renderableParticles, const QSSGCameraRenderData &cameraData);
     bool prepareItem2DsForRender(const QSSGRenderContextInterface &ctxIfc,
@@ -315,11 +316,6 @@ public:
     bool interactiveLightmapBakingRequested = false;
     QSSGLightmapper::Callback lightmapBakingOutputCallback;
 
-    [[nodiscard]] QSSGRenderableNodeEntry getNode(QSSGNodeId id) const;
-    [[nodiscard]] QSSGRenderableNodeEntry takeNode(QSSGNodeId id);
-
-    [[nodiscard]] QSSGRenderGraphObject *getResource(QSSGResourceId id) const;
-
     [[nodiscard]] QSSGRenderGraphObject *getCamera(QSSGCameraId id) const;
     [[nodiscard]] QSSGRenderCamera *activeCamera() const { return camera; }
 
@@ -383,12 +379,54 @@ public:
                      tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
     }
 
+    QSSGPrepContextId getOrCreateExtensionContext(const QSSGRenderExtension &ext,
+                                                  QSSGRenderCamera *camera = nullptr,
+                                                  quint32 slot = 0);
+
+    // Model API
+    QSSGRenderablesId createRenderables(QSSGPrepContextId prepId, const QList<QSSGNodeId> &nodes, bool recurse = false);
+    void setGlobalTransform(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, const QMatrix4x4 &mvp);
+    QMatrix4x4 getGlobalTransform(QSSGPrepContextId prepId, const QSSGRenderModel &model);
+    void setGlobalOpacity(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, float opacity);
+    float getGlobalOpacity(QSSGPrepContextId prepId, const QSSGRenderModel &model);
+    [[nodiscard]] QMatrix4x4 getModelMvp(QSSGPrepContextId prepId, const QSSGRenderModel &model) const;
+    void setModelMaterials(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, const QList<QSSGResourceId> &materials);
+    void setModelMaterials(const QSSGRenderablesId renderablesId, const QList<QSSGResourceId> &materials);
+    [[nodiscard]] QSSGPrepResultId prepareModelsForRender(QSSGRenderContextInterface &contextInterface,
+                                                               QSSGPrepContextId prepId,
+                                                               QSSGRenderablesId renderablesId,
+                                                               float lodThreshold);
+
+
+    //
+    void prepareRenderables(QSSGRenderContextInterface &ctx,
+                            QRhiRenderPassDescriptor *renderPassDescriptor,
+                            QSSGRhiGraphicsPipelineState &ps,
+                            QSSGPrepResultId prepId);
+    void renderRenderables(QSSGRenderContextInterface &ctx,
+                           QSSGPrepResultId prepId);
+
 private:
     friend class QSSGRenderer;
     friend class QSSGRendererPrivate;
     friend class QSSGFrameData;
     friend class QSSGModelHelpers;
     friend class QSSGRenderHelpers;
+
+    struct ExtensionContext
+    {
+        const QSSGRenderExtension *owner = nullptr;
+        QSSGRenderCamera *camera = nullptr;
+        mutable QSSGRhiGraphicsPipelineState ps {};
+        size_t index = 0; // index into the model store
+        quint32 slot = 0;
+    };
+
+    std::vector<ExtensionContext> extContexts { { /* 0 - Always available */ } };
+    std::vector<RenderableNodeEntries> renderableModelStore { { /* 0 - Always available */ } };
+    std::vector<TModelContextPtrList> modelContextStore { { /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> renderableObjectStore { { /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> screenTextureObjectStore { { /* 0 - Always available */ }};
 
     [[nodiscard]] QSSGCameraRenderData getCachedCameraData();
     void updateSortedDepthObjectsListImp();
@@ -405,10 +443,17 @@ private:
                                                                         const QSSGShaderLightListView &lights,
                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
-
-    static void prepareModelMeshesForRenderInternal(const QSSGRenderContextInterface &contextInterface,
-                                                    RenderableNodeEntries &renderableModels,
-                                                    bool globalPickingEnabled);
+    static void prepareModelMaterials(RenderableNodeEntries &renderableModels, bool cullUnrenderables);
+    static void prepareModelMaterials(const RenderableNodeEntries::ConstIterator &begin,
+                                      const RenderableNodeEntries::ConstIterator &end);
+    // Load meshes as needed
+    static void prepareModelMeshes(const QSSGRenderContextInterface &contextInterface,
+                                   RenderableNodeEntries &renderableModels,
+                                   bool globalPickingEnabled);
+    static void prepareModelMeshes(const QSSGRenderContextInterface &contextInterface,
+                                   const RenderableNodeEntries::ConstIterator begin,
+                                   const RenderableNodeEntries::ConstIterator end,
+                                   bool globalPickingEnabled);
 
     // Persistent data
     QHash<QSSGShaderMapKey, QSSGRhiShaderPipelinePtr> shaderMap;

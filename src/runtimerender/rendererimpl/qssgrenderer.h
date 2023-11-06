@@ -47,7 +47,7 @@ public:
     bool endFrame(QSSGRenderLayer &layer, bool allowRecursion = true);
 
     // Get the number of times EndFrame has been called
-    quint32 frameCount() const { return m_frameCount; }
+    [[nodiscard]] constexpr quint32 frameCount() const { return m_frameCount; }
 
     void setViewport(QRect inViewport) { m_viewport = inViewport; }
     QRect viewport() const { return m_viewport; }

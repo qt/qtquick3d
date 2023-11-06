@@ -68,16 +68,15 @@ ChildRenderer::~ChildRenderer()
 
 bool ChildRenderer::prepareData(QSSGFrameData &data)
 {
-    auto *camera = data.activeCamera();
-    if (!camera)
+    auto camera = data.activeCamera();
+    if (camera == QSSGNodeId::Invalid)
         qWarning("No camera in prepareData");
-    if (camera) {
-        QMatrix4x4 vp = QSSGCameraHelpers::getViewProjectionMatrix(*data.activeCamera());
-        if (!vp.isIdentity())
-            childExtensionFunctional += 1;
-        else
-            qWarning("Camera's view-projection matrix does not look valid.");
-    }
+
+    QMatrix4x4 vp = QSSGCameraHelpers::getViewProjectionMatrix(camera);
+    if (!vp.isIdentity())
+        childExtensionFunctional += 1;
+    else
+        qWarning("Camera's view-projection matrix does not look valid.");
 
     return true;
 }
@@ -154,8 +153,8 @@ Renderer::~Renderer()
 
 bool Renderer::prepareData(QSSGFrameData &data)
 {
-    auto *camera = data.activeCamera();
-    if (!camera)
+    auto camera = data.activeCamera();
+    if (camera == QSSGNodeId::Invalid)
         qWarning("No camera in prepareData");
     else if (childExtensionFunctional == 0) // the order is undefined for siblings, and bottom-up for parent-child relationships
         qWarning("Child did not run before parent's prepareData");

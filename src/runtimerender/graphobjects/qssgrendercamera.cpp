@@ -98,6 +98,18 @@ bool QSSGRenderCamera::computeCustomFrustum(const QRectF &inViewport)
     return true;
 }
 
+void QSSGRenderCamera::calculateViewProjectionMatrix(const QMatrix4x4 &globalTransform,
+                                                     const QMatrix4x4 &projection,
+                                                     QMatrix4x4 &outMatrix)
+{
+    QMatrix4x4 nonScaledGlobal(Qt::Uninitialized);
+    nonScaledGlobal.setColumn(0, globalTransform.column(0).normalized());
+    nonScaledGlobal.setColumn(1, globalTransform.column(1).normalized());
+    nonScaledGlobal.setColumn(2, globalTransform.column(2).normalized());
+    nonScaledGlobal.setColumn(3, globalTransform.column(3));
+    outMatrix = projection * nonScaledGlobal.inverted();
+}
+
 //==============================================================================
 /**
  *	Compute the projection matrix for a orthographic camera

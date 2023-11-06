@@ -90,6 +90,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     bool computeFrustumPerspective(const QRectF &inViewport);
     bool computeCustomFrustum(const QRectF &inViewport);
 
+    static void calculateViewProjectionMatrix(const QMatrix4x4 &globalTransform,
+                                              const QMatrix4x4 &projection,
+                                              QMatrix4x4 &outMatrix);
+
     void calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const;
 
     void calculateViewProjectionWithoutTranslation(float near, float far, QMatrix4x4 &outMatrix) const;

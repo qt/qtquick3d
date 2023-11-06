@@ -70,8 +70,8 @@ void tst_BufferManager::staticScene_data()
     QTest::newRow("empty scene") << "empty.qml" << 0 << 0 << 0 << 0 << 0;
 
     // Path Meshes
-    QTest::newRow("unshared path meshes") << "pathedMeshesUnshared.qml" << 0 << 0 << 0 << 4 << 0;
-    QTest::newRow("shared path meshes") << "pathedMeshesShared.qml" << 0 << 0 << 0 << 4 << 0;
+    QTest::newRow("unshared path meshes") << "pathedMeshesUnshared.qml" << 0 << 0 << 0 << 2 << 0;
+    QTest::newRow("shared path meshes") << "pathedMeshesShared.qml" << 0 << 0 << 0 << 2 << 0;
 
     // Custom Meshes
     QTest::newRow("unused Custom Geometry") << "customGeometryUnused.qml" << 0 << 0 << 0 << 0 << 0;

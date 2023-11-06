@@ -41,13 +41,7 @@ public:
 
     [[nodiscard]] QSSGRhiGraphicsPipelineState getPipelineState() const;
 
-    [[nodiscard]] QSSGRenderableNodeEntry getNode(QSSGNodeId id) const;
-    [[nodiscard]] QSSGRenderableNodeEntry takeNode(QSSGNodeId id);
-
-    [[nodiscard]] QSSGRenderGraphObject *getResource(QSSGResourceId id) const;
-
-    [[nodiscard]] QSSGRenderGraphObject *getCamera(QSSGCameraId id) const;
-    [[nodiscard]] QSSGRenderGraphObject *activeCamera() const;
+    [[nodiscard]] QSSGNodeId activeCamera() const;
 
     [[nodiscard]] QSSGRenderer *renderer() const { return m_renderer; }
 

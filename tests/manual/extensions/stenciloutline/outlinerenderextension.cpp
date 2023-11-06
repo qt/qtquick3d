@@ -25,84 +25,77 @@ public:
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return RenderMode::Overlay; };
 
-    QSSGNodeId targetId {};
+    QSSGPrepContextId stencilPrepContext { QSSGPrepContextId::Uninitialized };
+    QSSGPrepContextId outlinePrepContext { QSSGPrepContextId::Uninitialized };
+    QSSGPrepResultId stencilPrepResult { QSSGPrepResultId::Uninitialized };
+    QSSGPrepResultId outlinePrepResult { QSSGPrepResultId::Uninitialized };
+    QSSGNodeId modelId { QSSGNodeId::Invalid }; // TODO: Request this each time
     QSSGResourceId outlineMaterialId {};
     float outlineScale = 1.05f;
 
-    QSSGRenderDefaultMaterial *outlineMaterial = nullptr;
-
-    QList<QSSGRenderableNodeEntry> nodes;
-    QList<QSSGRenderGraphObject *> outlineMaterials;
-    QList<QSSGModelContext *> renderables;
-    QSSGRhiGraphicsPipelineState pipelineStates[2] {};
+    QSSGRenderablesId stencilRenderables;
+    QSSGRenderablesId outlineRenderables;
 };
 
 bool OutlineRenderer::prepareData(QSSGFrameData &data)
 {
-    const auto &ctx = data.renderer()->contextInterface();
-
     // Make sure we have a tagetId.
-    if (targetId == QSSGNodeId::Invalid)
+    if (modelId == QSSGNodeId::Invalid)
         return false;
-
-    // We're just going to steal the node here as we're going to render it ourself.
-    auto node = data.takeNode(targetId);
-
-    if (node.isNull())
-        return false;
-
-    // We're only doing one object here, but by placing the object twice in the list we're going to
-    // create renderables for both.
-    nodes = { node, node };
 
     // This is the active camera for the scene (the camera used to render the final scene)
-    auto *camera = data.activeCamera();
-    if (!camera)
+    auto camera = data.activeCamera();
+    if (camera == QSSGNodeId::Invalid) // TODO: Make it easier
         return false;
 
-    float meshLodThreshold = 1.0f;
+    //
+    stencilPrepContext = QSSGRenderHelpers::prepareForRender(data, *this, camera, 0);
+    outlinePrepContext = QSSGRenderHelpers::prepareForRender(data, *this, camera, 1);
+    // Create data set for this render
+    stencilRenderables = QSSGRenderHelpers::createRenderables(data, stencilPrepContext, { modelId });
+    outlineRenderables = QSSGRenderHelpers::createRenderables(data, outlinePrepContext, { modelId });
 
-    // Ensure that meshes are loaded for our models.
-    QSSGModelHelpers::ensureMeshes(*ctx, nodes);
+    // Now we can start setting data for our models
+    QSSGModelHelpers::setModelMaterials(data, outlineRenderables, modelId, { outlineMaterialId });
+    auto globalTransform = QSSGModelHelpers::getGlobalTransform(data, modelId);
+    globalTransform.scale(outlineScale);
+    QSSGModelHelpers::setGlobalTransform(data, outlineRenderables, modelId, globalTransform);
 
-    // Assuming our node has a mesh and a material we should have _two_ entries ready.
-    // Before we prep the models we're going to change the material for the second model to
-    // our outline material.
-    if (nodes.size() < 2)
-        return false;
+    // We're not drawing to the color output so set the opacity to 0.0f
+    QSSGModelHelpers::setGlobalOpacity(data, stencilRenderables, modelId, 0.0f);
 
-    outlineMaterials.clear();
-    outlineMaterials.push_back(data.getResource(outlineMaterialId));
+    // Commit the changes
+    stencilPrepResult = QSSGRenderHelpers::commit(data, stencilPrepContext, stencilRenderables);
+    outlinePrepResult = QSSGRenderHelpers::commit(data, outlinePrepContext, outlineRenderables);
 
-    auto &outlineNode = nodes.at(1);
-    outlineNode.materials = QSSGMaterialListView(outlineMaterials);
-
-    Q_ASSERT(renderables.isEmpty());
-    const QSSGModelHelpers::RenderableFilter filter = [this](QSSGModelContext *r) { renderables.push_back(r); return true; };
-
-    bool ret = QSSGModelHelpers::createRenderables(*ctx, nodes, *camera, filter, meshLodThreshold);
-
-    return ret; // wasDirty
+    return true; // wasDirty
 }
 
 void OutlineRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
 {
-    if (nodes.size() < 1)
+    if (modelId == QSSGNodeId::Invalid)
         return;
 
-    if (const auto &rhiCtx = renderer.contextInterface()->rhiContext()) {
+    if (stencilPrepResult == QSSGPrepResultId::Uninitialized || outlinePrepResult == QSSGPrepResultId::Uninitialized)
+        return;
+
+    const auto &ctx = renderer.contextInterface();
+
+    if (const auto &rhiCtx = ctx->rhiContext()) {
         const auto basePs = data.getPipelineState();
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         const int samples = rhiCtx->mainPassSampleCount();
 
-        { // original
-            auto ps = basePs;
+        auto ps = basePs;
+
+        { // Original
             ps.blendEnable = true;
             ps.depthWriteEnable = true;
             ps.usesStencilRef = true;
             ps.depthTestEnable = true;
             ps.stencilWriteMask = 0xff;
             ps.stencilRef = 1;
+            ps.samples = samples;
             ps.cullMode = QRhiGraphicsPipeline::Back;
 
             ps.stencilOpFrontState = { QRhiGraphicsPipeline::Keep,
@@ -110,10 +103,7 @@ void OutlineRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData 
                                        QRhiGraphicsPipeline::Replace,
                                        QRhiGraphicsPipeline::Always };
 
-            const auto &model = renderables.at(0);
-            for (auto &renderable : model->subsets)
-                QSSGRenderHelpers::rhiPrepareRenderable(*rhiCtx, this, data, renderable, rpDesc, &ps, samples);
-            pipelineStates[0] = ps;
+            QSSGRenderHelpers::prepareRenderables(data, rpDesc, ps, stencilPrepResult);
         }
 
         { // Scaled and cut-out
@@ -131,53 +121,30 @@ void OutlineRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData 
                                        QRhiGraphicsPipeline::Replace,
                                        QRhiGraphicsPipeline::NotEqual };
 
-            const auto &model = renderables.at(1);
-            for (auto &renderable : model->subsets) {
-                // We're going to change the scale before calling rhiPrepareRenderable()
-                auto &o = static_cast<QSSGSubsetRenderable &>(renderable);
-                const auto mvp { o.modelContext.modelViewProjection };
-                const auto &modelCtx = o.modelContext;
-                auto &mutableModelCtx = const_cast<QSSGModelContext &>(modelCtx);
-                mutableModelCtx.modelViewProjection.scale(outlineScale);
-                QSSGRenderHelpers::rhiPrepareRenderable(*rhiCtx, this, data, renderable, rpDesc, &ps, samples);
-                // Restore.
-                mutableModelCtx.modelViewProjection = mvp;
-            }
-            pipelineStates[1] = ps;
+            QSSGRenderHelpers::prepareRenderables(data, rpDesc, ps, outlinePrepResult);
         }
     }
 }
 
 void OutlineRenderer::render(const QSSGRenderer &renderer)
 {
-    if (nodes.size() < 1)
+    if (stencilPrepResult == QSSGPrepResultId::Uninitialized)
         return;
 
-    if (const auto &rhiCtx = renderer.contextInterface()->rhiContext()) {
-
+    const auto &ctx = renderer.contextInterface();
+    if (const auto &rhiCtx = ctx->rhiContext()) {
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         cb->debugMarkBegin(QByteArrayLiteral("Stencil outline pass"));
-        bool needsSetViewport = false;
-        {
-            const auto &model = renderables.at(0);
-            for (auto &ro : model->subsets)
-                QSSGRenderHelpers::rhiRenderRenderable(*rhiCtx, pipelineStates[0], ro, &needsSetViewport);
-        }
-
-        {
-            const auto &model = renderables.at(1);
-            for (auto &ro : model->subsets)
-                QSSGRenderHelpers::rhiRenderRenderable(*rhiCtx, pipelineStates[1], ro, &needsSetViewport);
-        }
-
+        QSSGRenderHelpers::renderRenderables(*ctx, stencilPrepResult);
+        QSSGRenderHelpers::renderRenderables(*ctx, outlinePrepResult);
         cb->debugMarkEnd();
     }
 }
 
 void OutlineRenderer::resetForFrame()
 {
-    nodes.clear();
-    renderables.clear();
+    stencilPrepContext = { QSSGPrepContextId::Uninitialized };
+    stencilPrepResult = { QSSGPrepResultId::Uninitialized };
 }
 
 OutlineRenderExtension::~OutlineRenderExtension() {}
@@ -225,7 +192,7 @@ QSSGRenderGraphObject *OutlineRenderExtension::updateSpatialNode(QSSGRenderGraph
     OutlineRenderer *renderer = static_cast<OutlineRenderer *>(node);
     renderer->outlineScale = m_outlineScale;
     if (m_target)
-        renderer->targetId = QQuick3DExtensionHelpers::getNodeId(*m_target);
+        renderer->modelId = QQuick3DExtensionHelpers::getNodeId(*m_target);
     if (m_outlineMaterial)
         renderer->outlineMaterialId = QQuick3DExtensionHelpers::getResourceId(*m_outlineMaterial);
 

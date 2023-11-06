@@ -58,61 +58,20 @@ QSSGRhiGraphicsPipelineState QSSGFrameData::getPipelineState() const
     \sa QSSGFrameData::takeNode(), QQuick3DExtensionHelpers::getNodeId(), QSSGRenderableNodeEntry
 */
 
-QSSGRenderableNodeEntry QSSGFrameData::getNode(QSSGNodeId id) const
-{
-    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
-    QSSG_ASSERT(data, return {});
-    return data->getNode(id);
-}
-
-/*!
-    \fn QSSGFrameData::takeNode(QSSGNodeId id)
-    \a id a \c QSSGNodeId
-    \return The \l {QSSGRenderableNodeEntry}{renderable entry} that corresponds to the provided \c QSSGNodeId.
-
-    \note This function \b removes the renderable entry which means it won't be available for any other
-    extension or internal code executed after this extension.
-
-    \sa QSSGFrameData::takeNode(), QQuick3DExtensionHelpers::getNodeId(), QSSGRenderableNodeEntry
-*/
-QSSGRenderableNodeEntry QSSGFrameData::takeNode(QSSGNodeId id)
-{
-    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
-    QSSG_ASSERT(data, return {});
-    return data->takeNode(id);
-}
-
-/*!
-    \fn QSSGFrameData::getResource(QSSGResourceId id) const
-    \a id a \c QSSGNodeId
-    \return The \l {QSSGRenderGraphObject}{resource object} that corresponds to the provided \c QSSGResourceId.
-
-    \sa QQuick3DExtensionHelpers::getResourceId()
-*/
-QSSGRenderGraphObject *QSSGFrameData::getResource(QSSGResourceId id) const
-{
-    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
-    QSSG_ASSERT(data, return {});
-    return data->getResource(id);
-}
-
-QSSGRenderGraphObject *QSSGFrameData::getCamera(QSSGCameraId id) const
-{
-    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
-    QSSG_ASSERT(data, return {});
-    return data->getCamera(id);
-}
-
 /*!
     \fn QSSGFrameData::activeCamera() const
 
     \return The active camera for the scene, or null if non could be found.
 */
-QSSGRenderGraphObject *QSSGFrameData::activeCamera() const
+QSSGNodeId QSSGFrameData::activeCamera() const
 {
+    QSSGNodeId ret { QSSGNodeId::Invalid };
     auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
-    QSSG_ASSERT(data, return {});
-    return data->activeCamera();
+    QSSG_ASSERT(data, return ret);
+    if (auto *ac = data->activeCamera())
+        ret = QSSGRenderGraphObjectUtils::getNodeId(*ac);
+
+    return ret;
 }
 
 void QSSGFrameData::clear()

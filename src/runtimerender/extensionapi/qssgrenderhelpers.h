@@ -23,38 +23,54 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRhiContext;
 class QSSGFrameData;
-struct QSSGRenderableObject;
 class QRhiRenderPassDescriptor;
 class QRhiTexture;
 struct QSSGRhiGraphicsPipelineState;
-struct QSSGRenderCamera;
-struct QSSGRenderableNodeEntry;
-
-class QSSGRenderGraphObject;
 class QSSGRenderContextInterface;
-struct QSSGModelContext;
+class QSSGRenderExtension;
 
-
-using QSSGRenderableNodes = QVector<QSSGRenderableNodeEntry>;
+enum class QSSGPrepContextId : quint64 { Uninitialized };
+enum class QSSGPrepResultId : quint64 { Uninitialized };
+enum class QSSGRenderablesId : quint64 { Uninitialized };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGModelHelpers
 {
 public:
-    using RenderableFilter = std::function<bool(QSSGModelContext *)>;
+    using MaterialList = QList<QSSGResourceId>;
 
-    static void ensureMeshes(const QSSGRenderContextInterface &contextInterface,
-                             QSSGRenderableNodes &renderableModels);
+    static void setModelMaterials(const QSSGFrameData &frameData,
+                                  QSSGRenderablesId renderablesId,
+                                  QSSGNodeId model,
+                                  MaterialList materials);
 
-    static bool createRenderables(QSSGRenderContextInterface &contextInterface,
-                                  const QSSGRenderableNodes &renderableModels,
-                                  const QSSGRenderGraphObject &camera,
-                                  RenderableFilter filter,
-                                  float lodThreshold = 0.0f);
+    static void setModelMaterials(const QSSGFrameData &frameData,
+                                  QSSGRenderablesId renderablesId,
+                                  MaterialList materials);
 
+    [[nodiscard]] static QMatrix4x4 getGlobalTransform(const QSSGFrameData &frameData,
+                                                       QSSGNodeId model,
+                                                       QSSGPrepContextId prepId = {});
 
+    [[nodiscard]] static QMatrix4x4 getLocalTransform(const QSSGFrameData &frameData,
+                                                      QSSGNodeId model);
+    [[nodiscard]] static float getGlobalOpacity(const QSSGFrameData &frameData,
+                                                QSSGNodeId model);
+    [[nodiscard]] static float getGlobalOpacity(const QSSGFrameData &frameData,
+                                                QSSGNodeId model,
+                                                QSSGPrepContextId prepId);
+    [[nodiscard]] static float getLocalOpacity(const QSSGFrameData &frameData,
+                                               QSSGNodeId model);
 
+    static void setGlobalTransform(const QSSGFrameData &frameData,
+                                   QSSGRenderablesId prepId,
+                                   QSSGNodeId model,
+                                   const QMatrix4x4 &transform);
+
+    static void setGlobalOpacity(const QSSGFrameData &frameData,
+                                 QSSGRenderablesId renderablesId,
+                                 QSSGNodeId model,
+                                 float opacity);
 private:
     QSSGModelHelpers();
 };
@@ -62,7 +78,8 @@ private:
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCameraHelpers
 {
 public:
-    static QMatrix4x4 getViewProjectionMatrix(const QSSGRenderGraphObject &camera);
+    static QMatrix4x4 getViewProjectionMatrix(const QSSGNodeId cameraId,
+                                              const QMatrix4x4 *globalTransform = nullptr);
 
 private:
     QSSGCameraHelpers();
@@ -71,18 +88,38 @@ private:
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderHelpers
 {
 public:
-    static void rhiPrepareRenderable(QSSGRhiContext &rhiCtx,
-                                     QSSGPassKey passKey,
-                                     const QSSGFrameData &frameData,
-                                     QSSGRenderableObject &inObject,
-                                     QRhiRenderPassDescriptor *renderPassDescriptor,
-                                     QSSGRhiGraphicsPipelineState *ps,
-                                     int samples);
+    using NodeList = QList<QSSGNodeId>;
 
-    static void rhiRenderRenderable(QSSGRhiContext &rhiCtx,
-                                    const QSSGRhiGraphicsPipelineState &state,
-                                    QSSGRenderableObject &object,
-                                    bool *needsSetViewport);
+    enum class CreateFlag
+    {
+        None,
+        Recurse
+    };
+
+    Q_DECLARE_FLAGS(CreateFlags, CreateFlag)
+
+    [[nodiscard]] static QSSGRenderablesId createRenderables(const QSSGFrameData &frameData,
+                                                             QSSGPrepContextId prepId,
+                                                             const NodeList &nodes,
+                                                             CreateFlags flags = CreateFlag::None);
+
+    [[nodiscard]] static QSSGPrepContextId prepareForRender(const QSSGFrameData &frameData,
+                                                            const QSSGRenderExtension &ext,
+                                                            QSSGNodeId camera,
+                                                            quint32 slot = 0);
+
+    [[nodiscard]] static QSSGPrepResultId commit(const QSSGFrameData &contextInterface,
+                                                 QSSGPrepContextId prepId,
+                                                 QSSGRenderablesId renderablesId,
+                                                 float lodThreshold = 1.0f);
+
+    static void prepareRenderables(const QSSGFrameData &frameData,
+                                   QRhiRenderPassDescriptor *renderPassDescriptor,
+                                   QSSGRhiGraphicsPipelineState &ps,
+                                   QSSGPrepResultId prepId);
+
+    static void renderRenderables(QSSGRenderContextInterface &contextInterface,
+                                  QSSGPrepResultId prepId);
 
 
 private:

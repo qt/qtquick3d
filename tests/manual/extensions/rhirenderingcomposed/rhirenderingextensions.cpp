@@ -245,13 +245,13 @@ ConsumerRenderer::~ConsumerRenderer()
 
 bool ConsumerRenderer::prepareData(QSSGFrameData &data)
 {
-    QSSGRenderGraphObject *camera = data.activeCamera();
-    if (!camera) {
+    auto camera = data.activeCamera();
+    if (camera == QSSGNodeId::Invalid) {
         canRender = false;
         return false;
     }
 
-    viewProjection = QSSGCameraHelpers::getViewProjectionMatrix(*camera);
+    viewProjection = QSSGCameraHelpers::getViewProjectionMatrix(camera);
 
     canRender = true;
 

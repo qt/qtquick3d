@@ -61,7 +61,6 @@ Window {
         PrincipledMaterial {
             id: outlineMaterial
             baseColor: colorPicker.color
-            lighting: PrincipledMaterial.NoLighting
         }
 
         Model {
