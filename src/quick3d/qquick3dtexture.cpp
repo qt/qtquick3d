@@ -492,8 +492,8 @@ int QQuick3DTexture::indexUV() const
 /*!
     \qmlproperty enumeration QtQuick3D::Texture::magFilter
 
-    This property determines how the texture is sampled when a texel covers
-    more than one pixel.
+    This property determines how the texture is sampled when it is "magnified",
+    i.e. a texel covers \e more than one pixel in screen space.
 
     The default value is \c{Texture.Linear}.
 
@@ -512,8 +512,8 @@ QQuick3DTexture::Filter QQuick3DTexture::magFilter() const
 /*!
     \qmlproperty enumeration QtQuick3D::Texture::minFilter
 
-    This property determines how the texture is sampled when a texel covers
-    more than one pixel.
+    This property determines how the texture is sampled when it is "minimized",
+    i.e. a texel covers \e less than one pixel in screen space.
 
     The default value is \c{Texture.Linear}.
 
