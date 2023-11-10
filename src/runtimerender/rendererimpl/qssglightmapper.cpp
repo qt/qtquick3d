@@ -989,8 +989,11 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                                                               arg(rasterizeTimer.elapsed()));
         lightmaps.append(lightmap);
 
-        for (const SubMeshInfo &subMeshInfo : std::as_const(subMeshInfos[lmIdx]))
+        for (const SubMeshInfo &subMeshInfo : std::as_const(subMeshInfos[lmIdx])) {
+            if (!lm.model->castsShadows) // only matters if it's in the raytracer scene
+                continue;
             geomLightmapMap[subMeshInfo.geomId] = lightmaps.size() - 1;
+        }
     }
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Lightmap preparing done"));
