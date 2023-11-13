@@ -1,6 +1,6 @@
 // Copyright (C) 2008-2012 NVIDIA Corporation.
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #ifndef QSSG_LAYER_RENDER_DATA_H
 #define QSSG_LAYER_RENDER_DATA_H

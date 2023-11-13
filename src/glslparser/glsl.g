@@ -1,5 +1,5 @@
 -- Copyright (C) 2021 The Qt Company Ltd.
--- SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+-- SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 %decl glslparser.h
 %impl glslparser.cpp
@@ -187,7 +187,7 @@
 
 /:
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #include "$header"
 #include "glsllexer.h"
@@ -368,7 +368,7 @@ private:
 
 /.
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #include "glslparser.h"
 #include "glslengine.h"
