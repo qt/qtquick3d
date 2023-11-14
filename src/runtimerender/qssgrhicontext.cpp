@@ -989,6 +989,8 @@ void QSSGRhiContextPrivate::setMainRenderPassDescriptor(QRhiRenderPassDescriptor
 }
 
 /*!
+    \return The QRhiRenderPassDescriptor used by the main render pass of the Qt
+    Quick 3D renderer.
  */
 QRhiRenderPassDescriptor *QSSGRhiContext::mainRenderPassDescriptor() const
 {
@@ -1002,6 +1004,7 @@ void QSSGRhiContextPrivate::setCommandBuffer(QRhiCommandBuffer *cb)
 }
 
 /*!
+    \return The current frame's command buffer used by the Qt Quick 3D renderer.
  */
 QRhiCommandBuffer *QSSGRhiContext::commandBuffer() const
 {
@@ -1015,6 +1018,14 @@ void QSSGRhiContextPrivate::setRenderTarget(QRhiRenderTarget *rt)
 }
 
 /*!
+    \return The render target the Qt Quick 3D renderer uses for its main render
+    pass in the current frame.
+
+    This can effectively be a render target from a swapchain, if the \l View3D
+    uses a renderMode other than Offscreen. More commonly, the render target
+    refers to a texture (i.e., is a QRhiTextureRenderTarget), e.g. because the
+    renderMode is the default Offscreen, or because post-processing effects are
+    in use.
  */
 QRhiRenderTarget *QSSGRhiContext::renderTarget() const
 {
@@ -1028,6 +1039,7 @@ void QSSGRhiContextPrivate::setMainPassSampleCount(int samples)
 }
 
 /*!
+    Returns the sample count used in the main render pass.
  */
 int QSSGRhiContext::mainPassSampleCount() const
 {
@@ -1134,6 +1146,13 @@ QSSGRhiDrawCallData &QSSGRhiContextPrivate::drawCallData(const QSSGRhiDrawCallDa
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;
 
 /*!
+    \return a sampler with the filter and tiling modes specified in \a samplerDescription.
+
+    The generated QRhiSampler objects are cached and reused. Thus this is a
+    convenient way to gain access to a QRhiSampler with the given settings,
+    without having to create a new, dedicated object all the time.
+
+    The ownership of the returned QRhiSampler stays with Qt Quick 3D.
  */
 QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDescription)
 {
@@ -1160,6 +1179,17 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
 }
 
 /*!
+    Adjusts \a samplerDescription's tiling and filtering modes based on the
+    pixel size of \a texture.
+
+    In most cases, \a samplerDescription is not changed. With older, legacy 3D
+    APIs in use, there is however a chance that tiling modes such as
+    \l{QRhiSampler::Repeat} are not supported for textures with a
+    non-power-of-two width or height.
+
+    This convenience function helps creating robust applications that can still
+    function even when features such as \l{QRhi::NPOTTextureRepeat} are not
+    supported by an OpenGL ES 2.0 or WebGL 1 implementation at run time.
  */
 void QSSGRhiContext::checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription)
 {
@@ -1237,6 +1267,18 @@ void QSSGRhiContextPrivate::cleanupDrawCallData(const QSSGRenderModel *model)
 }
 
 /*!
+    \return a texture that has the specified \a flags and pixel \a size.
+
+    This is intended to efficiently gain access to a "dummy" texture filled
+    with a given \a fillColor, and reused in various places in the rendering
+    stack.
+
+    \a rub must be a valid QRhiResourceUpdateBatch since this function will
+    create a new texture and generate content for it, if a suitable cached
+    object is not found. The necessary upload operations are then enqueued on
+    this given update batch.
+
+    The ownership of the returned texture stays with Qt Quick 3D.
  */
 QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
                                           const QSize &size, const QColor &fillColor)
@@ -1538,6 +1580,7 @@ QRhiComputePipeline *QSSGRhiContextPrivate::computePipeline(const QSSGComputePip
 }
 
 /*!
+    \return The recommended flags when calling QRhiCommandBuffer::beginPass().
  */
 QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const
 {

@@ -31,7 +31,8 @@ qhp.QtQuick3D.subprojects.classes.sortPages  = true
 depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickcontrols qtshadertools qtquicktimeline qtcmake
 
 headerdirs  += .. \
-               ../../quick3dparticles/
+               ../../quick3dparticles \
+               ../../runtimerender/extensionapi
 
 headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/randominstancing_p.h \
@@ -40,11 +41,15 @@ headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/lookatnode_p.h \
            ../../helpers/heightfieldgeometry_p.h \
            ../../helpers/proceduralskytexturedata_p.h \
-           ../../assetutils/qquick3druntimeloader_p.h
+           ../../assetutils/qquick3druntimeloader_p.h \
+           ../../runtimerender/qssgrendercontextcore.h \
+           ../../runtimerender/qssgrhicontext.h \
+           ../../runtimerender/qssgrenderpickresult.h
 
 sourcedirs  += .. \
                src \
-               ../../quick3dparticles/
+               ../../quick3dparticles \
+               ../../runtimerender/extensionapi
 
 sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/randominstancing.cpp \
@@ -53,7 +58,10 @@ sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/lookatnode.cpp \
            ../../helpers/heightfieldgeometry.cpp \
            ../../helpers/proceduralskytexturedata.cpp \
-           ../../assetutils/qquick3druntimeloader.cpp
+           ../../assetutils/qquick3druntimeloader.cpp \
+           ../../runtimerender/qssgrendercontextcore.cpp \
+           ../../runtimerender/qssgrhicontext.cpp \
+           ../../runtimerender/qssgrenderpickresult.cpp
 
 exampledirs +=  ../../../examples/quick3d
 examples.fileextensions += "*.frag *.geom *.vert *.tesc *.tese *.comp"

@@ -18,6 +18,7 @@
 
 #include <QtCore/QPair>
 #include <QtCore/QSize>
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 

@@ -38,55 +38,6 @@ QT_BEGIN_NAMESPACE
     be made available with the same guarantee as the rest of the semi-public APIs.
 */
 
-/*!
-   \fn QSSGRenderContextInterface::QSSGRenderContextInterface(QRhi *rhi)
-   \internal
- */
-
-/*!
-    \fn const std::unique_ptr<QSSGRenderer> &QSSGRenderContextInterface::renderer() const
-    \return a handle to the renderer for this instance.
-
-    \sa QSSGRenderer
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() const
-    \internal
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGRhiContext> &QSSGRenderContextInterface::rhiContext() const
-    \return a handle to the rhi context.
-
-    \sa QSSGRhiContext
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const
-    \internal
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGShaderLibraryManager> &QSSGRenderContextInterface::shaderLibraryManager() const
-    \internal
- */
-
-/*!
-    \fn const std::unique_ptr<QSSGCustomMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const
-    \internal
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGenerator() const
-    \internal
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGDebugDrawSystem> &QSSGRenderContextInterface::debugDrawSystem() const
-    \internal
-*/
-
 static bool loadPregenratedShaders()
 {
     return qEnvironmentVariableIntValue("QT_QUICK3D_DISABLE_GENSHADERS") == 0;
@@ -125,6 +76,9 @@ const std::unique_ptr<QSSGPerFrameAllocator> &QSSGRenderContextInterface::perFra
     return m_perFrameAllocator;
 }
 
+/*!
+    \internal
+ */
 QSSGRenderContextInterface::QSSGRenderContextInterface(std::unique_ptr<QSSGBufferManager> bufferManager,
                                                        std::unique_ptr<QSSGRenderer> renderer,
                                                        std::shared_ptr<QSSGShaderLibraryManager> shaderLibraryManager,
@@ -154,6 +108,9 @@ static const std::shared_ptr<QSSGShaderLibraryManager> &q3ds_shaderLibraryManage
     return shaderLibraryManager;
 }
 
+/*!
+    \internal
+ */
 QSSGRenderContextInterface::QSSGRenderContextInterface(QRhi *rhi)
     : m_rhiContext(new QSSGRhiContext(rhi))
     , m_shaderCache(new QSSGShaderCache(*m_rhiContext))
@@ -168,46 +125,73 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QRhi *rhi)
     init();
 }
 
+/*!
+    \internal
+ */
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
     m_renderer->releaseCachedResources();
 }
 
+/*!
+    \internal
+ */
 const std::unique_ptr<QSSGRenderer> &QSSGRenderContextInterface::renderer() const
 {
     return m_renderer;
 }
 
+/*!
+    \internal
+ */
 const std::unique_ptr<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() const
 {
     return m_bufferManager;
 }
 
+/*!
+    \return the context object that wraps QRhi-related settings and helper functionality.
+ */
 const std::unique_ptr<QSSGRhiContext> &QSSGRenderContextInterface::rhiContext() const
 {
     return m_rhiContext;
 }
 
+/*!
+    \internal
+ */
 const std::unique_ptr<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const
 {
     return m_shaderCache;
 }
 
+/*!
+    \internal
+ */
 const std::shared_ptr<QSSGShaderLibraryManager> &QSSGRenderContextInterface::shaderLibraryManager() const
 {
     return m_shaderLibraryManager;
 }
 
+/*!
+    \internal
+ */
 const std::unique_ptr<QSSGCustomMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const
 {
     return m_customMaterialSystem;
 }
 
+/*!
+    \internal
+ */
 const std::unique_ptr<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGenerator() const
 {
     return m_shaderProgramGenerator;
 }
 
+/*!
+    \internal
+ */
 const std::unique_ptr<QSSGDebugDrawSystem> &QSSGRenderContextInterface::debugDrawSystem() const
 {
     return m_debugDrawSystem;

@@ -36,13 +36,7 @@
 #include <algorithm>
 #include <limits>
 
-/*!
-    \class QSSGRenderer
-    \inmodule QtQuick3D
-    \since 6.7
-
-    \brief Class for controlling the rendering steps for rendering a scene.
-
+/*
     Rendering is done is several steps, these are:
 
     1. \l{QSSGRenderer::beginFrame(){beginFrame()} - set's up the renderer to start a new frame.
@@ -67,88 +61,6 @@
 
     6. \l{QSSGRenderer::endFrame()} - Marks the frame as done and cleans-up dirty states and
     uneeded resources.
-
-    \sa QSSGRenderHelpers, QSSGModelHelpers
-*/
-
-/*!
-    \fn void QSSGRenderer::beginFrame(QSSGRenderLayer *layer, bool allowRecursion = true)
-
-*/
-
-/*!
-    \fn void QSSGRenderer::endFrame(QSSGRenderLayer *layer, bool allowRecursion = true)
-
-*/
-
-/*!
-    \fn bool prepareLayerForRender(QSSGRenderLayer &layer)
-
-    \return true if anything in the scene was dirty and a new frame should be rendered.
-*/
-
-/*!
-    \fn void rhiPrepare(QSSGRenderLayer &layer)
-
-*/
-
-/*!
-    \fn void rhiRender(QSSGRenderLayer &layer)
-
-*/
-
-/*!
-    \fn quint32 QSSGRenderer::frameCount() const
-
-    \return The number of times \l{QSSGRenderer::endFrame()}{endFrame()} has been called.
-*/
-
-/*!
-    \fn void QSSGRenderer::setViewport(QRect viewportRect)
-
-*/
-
-/*!
-    \fn QRect QSSGRenderer::viewport() const
-
-    \return The viewport rect.
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGRhiQuadRenderer> &rhiQuadRenderer();
-
-    \return A handle to the built-in Quad-renderer.
-
-    \sa QSSGRhiCubeRenderer, QSSGRhiQuadRenderer
-*/
-
-/*!
-    \fn const std::unique_ptr<QSSGRhiCubeRenderer> &rhiCubeRenderer();
-
-    \return A handle to the build-in Cube-renderer.
-
-    \sa QSSGRhiCubeRenderer, QSSGRhiQuadRenderer
-*/
-
-/*!
-    \fn void setDpr(float dpr)
-
-*/
-
-/*!
-    \fn float dpr() const
-
-    \return The device pixel ratio set for this rendere.
-*/
-
-/*!
-   \fn void setScissorRect(QRect scissorRect)
-
-*/
-
-/*!
-    \fn QRect scissorRect() const
-
 */
 
 QT_BEGIN_NAMESPACE

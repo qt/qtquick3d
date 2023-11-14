@@ -10,11 +10,11 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QQuick3DRenderExtension
     \inmodule QtQuick3D
-    \since 6.6
+    \since 6.7
 
     \brief Abstract class for implementing user side render extensions.
 
-    //! \sa QSSGRenderExtension
+    \sa QSSGRenderExtension
 */
 
 QQuick3DRenderExtension::QQuick3DRenderExtension(QQuick3DObject *parent)
