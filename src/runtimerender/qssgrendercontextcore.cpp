@@ -27,10 +27,10 @@ QT_BEGIN_NAMESPACE
 
     \brief Aggregate class for sub-parts of the QtQuick3D rendering engine.
 
-    The QSSGRenderContextInterface, and the objects owned by it (such as, the BufferManager)
-    are always per-QQuickWindow, and so per scenegraph render thread. Some resources
-    might be shared, like the shader library, but that's all take care of internally by the
-    QSSGRenderContextInterface.
+    The QSSGRenderContextInterface, and the objects owned by it are always
+    per-QQuickWindow, and so per scenegraph render thread. Some resources might
+    be shared, like the shader library, but that's all take care of internally
+    by the QSSGRenderContextInterface.
 
     \note Some sub-components might not be exposed as semi-public, or their use might require
     private headers to be used. In those cases it's likely their APIs have a high likelihood
@@ -40,11 +40,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
    \fn QSSGRenderContextInterface::QSSGRenderContextInterface(QRhi *rhi)
-
-   Creates a QSSGRenderContextInterface using \a rhi as the rendering hardware interface.
-
-   \note The \a rhi handle must point to a valid object.
-*/
+   \internal
+ */
 
 /*!
     \fn const std::unique_ptr<QSSGRenderer> &QSSGRenderContextInterface::renderer() const
@@ -55,11 +52,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn const std::unique_ptr<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() const
-    \return a handle to the buffer manager for this context.
-
-    The buffer manager is responsible for loading and managing resources, such as texture and meshes.
-
-    \sa QSSGBufferManager
+    \internal
 */
 
 /*!
@@ -71,37 +64,27 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn const std::unique_ptr<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const
-    \return a handle to the shader cache.
-
-    \sa QSSGShaderCache
+    \internal
 */
 
 /*!
     \fn const std::unique_ptr<QSSGShaderLibraryManager> &QSSGRenderContextInterface::shaderLibraryManager() const
-    \return a handle to the shader library manager.
-
-    \sa QSSGShaderLibraryManager
-*/
+    \internal
+ */
 
 /*!
     \fn const std::unique_ptr<QSSGCustomMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const
-    \return a handle to the custom material system.
-
-    \sa QSSGCustomMaterialSystem
+    \internal
 */
 
 /*!
     \fn const std::unique_ptr<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGenerator() const
-    \return a handle to the shader programe generator.
-
-    \sa QSSGProgramGenerator
+    \internal
 */
 
 /*!
     \fn const std::unique_ptr<QSSGDebugDrawSystem> &QSSGRenderContextInterface::debugDrawSystem() const
-    \return a handle to the debug draw system.
-
-    \sa QSSGDebugDrawSystem
+    \internal
 */
 
 static bool loadPregenratedShaders()
