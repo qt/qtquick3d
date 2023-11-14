@@ -4,10 +4,17 @@
 #ifndef QSSGRENDERPICKRESULT_H
 #define QSSGRENDERPICKRESULT_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is part of the QtQuick3D API, with limited compatibility guarantees.
+// Usage of this API may make your code source and binary incompatible with
+// future versions of Qt.
+//
+
 #include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
-
 #include <QtGui/qvectornd.h>
-
 #include <limits>
 
 QT_BEGIN_NAMESPACE
