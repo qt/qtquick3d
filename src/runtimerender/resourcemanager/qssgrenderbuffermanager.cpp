@@ -702,7 +702,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     cb->resourceUpdate(rub);
 
     for (const auto face : QSSGRenderTextureCubeFaces) {
-        cb->beginPass(renderTargets[quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        cb->beginPass(renderTargets[quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, context->commonPassFlags());
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         QSSGRHICTX_STAT(context, beginRenderPass(renderTargets[quint8(face)]));
 
@@ -864,7 +864,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     // Render
     for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
         for (const auto face : QSSGRenderTextureCubeFaces) {
-            cb->beginPass(renderTargetsMap[mipLevel][quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            cb->beginPass(renderTargetsMap[mipLevel][quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, context->commonPassFlags());
             QSSGRHICTX_STAT(context, beginRenderPass(renderTargetsMap[mipLevel][quint8(face)]));
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             cb->setGraphicsPipeline(prefilterPipeline);
@@ -909,6 +909,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     bool hasTransp = false;
 
     const auto &context = m_contextInterface->rhiContext();
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(context.get());
     auto *rhi = context->rhi();
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
@@ -948,13 +949,13 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
             rub->uploadTexture(environmentCubeMap, uploadDescription);
             context->commandBuffer()->resourceUpdate(rub);
             texture.m_mipmapCount = mipmapCount;
-            context->registerTexture(texture.m_texture);
+            rhiCtxD->registerTexture(texture.m_texture);
             return true;
         }
 
         // If we get this far then we need to create an environment map at runtime.
         if (createEnvironmentMap(inTexture, &texture, debugObjectName)) {
-            context->registerTexture(texture.m_texture);
+            rhiCtxD->registerTexture(texture.m_texture);
             return true;
         } else {
             qWarning() << "Failed to create environment map";
@@ -1077,7 +1078,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
 
     texture.m_mipmapCount = mipmapCount;
 
-    context->registerTexture(texture.m_texture); // owned by the QSSGRhiContext from here on
+    rhiCtxD->registerTexture(texture.m_texture); // owned by the QSSGRhiContext from here on
     return true;
 }
 
@@ -1203,6 +1204,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
 
     QRhiResourceUpdateBatch *rub = meshBufferUpdateBatch();
     const auto &context = m_contextInterface->rhiContext();
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(context.get());
     rhi.vertexBuffer = std::make_shared<QSSGRhiBuffer>(*context.get(),
                                                        QRhiBuffer::Static,
                                                        QRhiBuffer::VertexBuffer,
@@ -1229,7 +1231,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         if (!rhi.targetsTexture) {
             rhi.targetsTexture = context->rhi()->newTextureArray(QRhiTexture::RGBA32F, arraySize, texSize);
             rhi.targetsTexture->create();
-            context->registerTexture(rhi.targetsTexture);
+            rhiCtxD->registerTexture(rhi.targetsTexture);
         } else if (rhi.targetsTexture->pixelSize() != texSize
                 || rhi.targetsTexture->arraySize() != arraySize) {
             rhi.targetsTexture->setPixelSize(texSize);
@@ -1264,7 +1266,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         }
         rhi.ia.targetCount = targetBuffer.numTargets;
     } else if (rhi.targetsTexture) {
-        context->releaseTexture(rhi.targetsTexture);
+        rhiCtxD->releaseTexture(rhi.targetsTexture);
         rhi.targetsTexture = nullptr;
         rhi.ia.targetOffsets = { UINT8_MAX, UINT8_MAX, UINT8_MAX, UINT8_MAX,
                               UINT8_MAX, UINT8_MAX, UINT8_MAX };
@@ -1281,8 +1283,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         const QSSGRenderVertexBufferEntry &vbe(entryBuffer[entryIdx]);
         const int binding = 0;
         const int location = 0; // for now, will be resolved later, hence the separate inputLayoutInputNames list
-        const QRhiVertexInputAttribute::Format format = QSSGRhiInputAssemblerState::toVertexInputFormat(
-                    vbe.m_componentType, vbe.m_numComponents);
+        const QRhiVertexInputAttribute::Format format = QSSGRhiHelpers::toVertexInputFormat(vbe.m_componentType, vbe.m_numComponents);
         const int offset = int(vbe.m_firstItemOffset);
 
         bool ok = true;
@@ -1318,7 +1319,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
     }
     rhi.ia.inputLayout.setAttributes(inputAttrs.cbegin(), inputAttrs.cend());
     rhi.ia.inputLayout.setBindings({ vertexBuffer.stride });
-    rhi.ia.topology = QSSGRhiInputAssemblerState::toTopology(QSSGRenderDrawMode(mesh.drawMode()));
+    rhi.ia.topology = QSSGRhiHelpers::toTopology(QSSGRenderDrawMode(mesh.drawMode()));
 
     if (rhi.ia.topology == QRhiGraphicsPipeline::TriangleFan && !context->rhi()->isFeatureSupported(QRhi::TriangleFanTopology))
         qWarning("Mesh topology is TriangleFan but this is not supported with the active graphics API. Rendering will be incorrect.");
@@ -1363,7 +1364,8 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
         Q_TRACE_SCOPE(QSSG_customMeshUnload);
         decreaseMemoryStat(meshItr.value().mesh);
-        m_contextInterface->rhiContext()->releaseMesh(meshItr.value().mesh);
+        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
+        rhiCtxD->releaseMesh(meshItr.value().mesh);
         customMeshMap.erase(meshItr);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DCustomMeshLoad,
                                            stats.meshDataSize, geometry->profilingId);
@@ -1393,7 +1395,8 @@ void QSSGBufferManager::releaseTextureData(const CustomImageCacheKey &key)
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
             Q_TRACE_SCOPE(QSSG_textureUnload);
             decreaseMemoryStat(rhiTexture);
-            m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
+            rhiCtxD->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DTextureLoad,
                                                stats.imageDataSize, 0);
 
@@ -1418,7 +1421,8 @@ void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
         Q_TRACE_SCOPE(QSSG_meshUnload);
         decreaseMemoryStat(meshItr.value().mesh);
-        m_contextInterface->rhiContext()->releaseMesh(meshItr.value().mesh);
+        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
+        rhiCtxD->releaseMesh(meshItr.value().mesh);
         meshMap.erase(meshItr);
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DMeshLoad,
                                            stats.meshDataSize, inSourcePath.path().toUtf8());
@@ -1437,7 +1441,8 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
             Q_TRACE_SCOPE(QSSG_textureUnload);
             decreaseMemoryStat(rhiTexture);
-            m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
+            rhiCtxD->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DTextureLoad,
                                                stats.imageDataSize, key.path.path().toUtf8());
         }
@@ -1450,6 +1455,8 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
 #if !defined(QSSG_RENDERBUFFER_DEBUGGING) && !defined(QSSG_RENDERBUFFER_DEBUGGING_USAGES)
     Q_UNUSED(currentLayer);
 #endif
+
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
 
     // Don't cleanup if
     if (frameId == frameCleanupIndex)
@@ -1472,7 +1479,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
                 qDebug() << "- releaseGeometry: " << meshIterator.key().path() << currentLayer;
 #endif
                 decreaseMemoryStat(meshIterator.value().mesh);
-                m_contextInterface->rhiContext()->releaseMesh(meshIterator.value().mesh);
+                rhiCtxD->releaseMesh(meshIterator.value().mesh);
                 meshIterator = meshMap.erase(meshIterator);
             } else {
                 ++meshIterator;
@@ -1487,7 +1494,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
                 qDebug() << "- releaseGeometry: " << customMeshIterator.key() << currentLayer;
 #endif
                 decreaseMemoryStat(customMeshIterator.value().mesh);
-                m_contextInterface->rhiContext()->releaseMesh(customMeshIterator.value().mesh);
+                rhiCtxD->releaseMesh(customMeshIterator.value().mesh);
                 customMeshIterator = customMeshMap.erase(customMeshIterator);
             } else {
                 ++customMeshIterator;
@@ -1518,7 +1525,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
                 qDebug() << "- releaseTexture: " << imageKeyIterator.key().path.path() << currentLayer;
 #endif
                 decreaseMemoryStat(rhiTexture);
-                m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+                rhiCtxD->releaseTexture(rhiTexture);
             }
             imageKeyIterator = imageMap.erase(imageKeyIterator);
         } else {
@@ -1536,7 +1543,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
                 qDebug() << "- releaseTextureData: " << rhiTexture << currentLayer;
 #endif
                 decreaseMemoryStat(rhiTexture);
-                m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+                rhiCtxD->releaseTexture(rhiTexture);
             }
             textureDataIterator = customTextureMap.erase(textureDataIterator);
         } else {
@@ -1687,7 +1694,8 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
 
     auto ret = createRenderMesh(result, QFileInfo(resultSourcePath).fileName());
     meshMap.insert(inMeshPath, { ret, {{currentLayer, 1}}, 0, options });
-    m_contextInterface->rhiContext()->registerMesh(ret);
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
+    rhiCtxD->registerMesh(ret);
     increaseMemoryStat(ret);
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DMeshLoad,
                                        stats.meshDataSize, inMeshPath.path().toUtf8());
@@ -1696,6 +1704,8 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
 
 QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, QSSGMeshProcessingOptions options)
 {
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
+
     auto meshIterator = customMeshMap.find(geometry);
     if (meshIterator == customMeshMap.end()) {
         meshIterator = customMeshMap.insert(geometry, MeshData());
@@ -1730,7 +1740,7 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, 
             meshIterator->usageCounts[currentLayer] = 1;
             meshIterator->generationId = geometry->generationId();
             meshIterator->options = options;
-            m_contextInterface->rhiContext()->registerMesh(meshIterator->mesh);
+            rhiCtxD->registerMesh(meshIterator->mesh);
             increaseMemoryStat(meshIterator->mesh);
         } else {
             qWarning("Mesh building failed: %s", qPrintable(error));
@@ -1875,6 +1885,8 @@ void QSSGBufferManager::registerExtensionResult(const QSSGRenderExtension &exten
 
 void QSSGBufferManager::clear()
 {
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
+
     if (meshBufferUpdates) {
         meshBufferUpdates->release();
         meshBufferUpdates = nullptr;
@@ -1892,7 +1904,7 @@ void QSSGBufferManager::clear()
                 qDebug() << "- releaseGeometry: " << iter.key().path() << currentLayer;
 #endif
                 decreaseMemoryStat(theMesh);
-                m_contextInterface->rhiContext()->releaseMesh(theMesh);
+                rhiCtxD->releaseMesh(theMesh);
             }
         }
         meshMap.clear();
@@ -1907,7 +1919,7 @@ void QSSGBufferManager::clear()
                 qDebug() << "- releaseGeometry: " << iter.key() << currentLayer;
 #endif
                 decreaseMemoryStat(theMesh);
-                m_contextInterface->rhiContext()->releaseMesh(theMesh);
+                rhiCtxD->releaseMesh(theMesh);
             }
         }
         customMeshMap.clear();

@@ -117,7 +117,7 @@ void QSSGRenderContextInterface::releaseCachedResources()
     if (m_bufferManager)
         m_bufferManager->releaseCachedResources();
     if (m_rhiContext)
-        m_rhiContext->releaseCachedResources();
+        QSSGRhiContextPrivate::get(m_rhiContext.get())->releaseCachedResources();
 }
 
 const std::unique_ptr<QSSGPerFrameAllocator> &QSSGRenderContextInterface::perFrameAllocator() const

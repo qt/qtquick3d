@@ -2553,13 +2553,14 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
                                             float minThreshold,
                                             float maxThreshold)
 {
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     auto &modelContext = renderable->modelContext;
     auto &instanceBuffer = renderable->instanceBuffer; // intentional ref2ptr
     if (!modelContext.model.instancing() || instanceBuffer)
         return instanceBuffer;
     auto *table = modelContext.model.instanceTable;
     bool usesLod = minThreshold >= 0 || maxThreshold >= 0;
-    QSSGRhiInstanceBufferData &instanceData(usesLod ? QSSGRhiContextPrivate::get(*rhiCtx).instanceBufferData(&modelContext.model) : QSSGRhiContextPrivate::get(*rhiCtx).instanceBufferData(table));
+    QSSGRhiInstanceBufferData &instanceData(usesLod ? rhiCtxD->instanceBufferData(&modelContext.model) : rhiCtxD->instanceBufferData(table));
     quint32 instanceBufferSize = table->dataSize();
     // Create or resize the instance buffer ### if (instanceData.owned)
     bool sortingChanged = table->isDepthSortingEnabled() != instanceData.sorting;

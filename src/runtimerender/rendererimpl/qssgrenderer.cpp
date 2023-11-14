@@ -240,8 +240,8 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
 template<typename Container>
 static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Container &resources)
 {
-    const auto &rhi = rci.rhiContext();
-    if (!rhi->isValid())
+    const auto &rhiCtx = rci.rhiContext();
+    if (!rhiCtx->isValid())
         return;
 
     const auto &bufferManager = rci.bufferManager();
@@ -252,7 +252,7 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
             bufferManager->releaseGeometry(geometry);
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
-            QSSGRhiContextPrivate::get(*rhi).cleanupDrawCallData(model);
+            QSSGRhiContextPrivate::get(rhiCtx.get())->cleanupDrawCallData(model);
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData) {
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
             bufferManager->releaseTextureData(textureData);

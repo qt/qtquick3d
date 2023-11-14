@@ -59,7 +59,8 @@ GenShaders::GenShaders()
     rhi->beginOffscreenFrame(&cb);
 
     std::unique_ptr<QSSGRhiContext> rhiContext = std::make_unique<QSSGRhiContext>(rhi);
-    rhiContext->setCommandBuffer(cb);
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+    rhiCtxD->setCommandBuffer(cb);
 
     renderContext = std::make_shared<QSSGRenderContextInterface>(std::make_unique<QSSGBufferManager>(),
                                                                  std::make_unique<QSSGRenderer>(),

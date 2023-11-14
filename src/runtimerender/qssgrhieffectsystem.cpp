@@ -496,7 +496,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     if (m_currentShaderPipeline) {
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
         const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiContext).drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(rhiContext.get())->drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
         m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     } else {
@@ -532,7 +532,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
         // case of outputting into a texture because that will get a clear
         // anyway when rendering the quad.
         if (rt != target->renderTarget) {
-            cb->beginPass(rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            cb->beginPass(rt, Qt::transparent, { 1.0f, 0 }, nullptr, rhiContext->commonPassFlags());
             QSSGRHICTX_STAT(rhiContext, beginRenderPass(rt));
             cb->endPass();
             QSSGRHICTX_STAT(rhiContext, endRenderPass());
@@ -544,9 +544,11 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     const QSize outputSize = target->texture->pixelSize();
     addCommonEffectUniforms(inputSize, outputSize);
 
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+
     const void *cacheKey1 = reinterpret_cast<const void *>(this);
     const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-    QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiContext).drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
+    QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ cacheKey1, cacheKey2, nullptr, 0 });
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
     m_currentUBufData = nullptr;
 
@@ -570,7 +572,8 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
                             rhiContext->sampler(rhiTex.samplerDesc));
     }
     bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
-    QRhiShaderResourceBindings *srb = rhiContext->srb(bindings);
+
+    QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 
     QSSGRhiGraphicsPipelineState ps;
     ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));

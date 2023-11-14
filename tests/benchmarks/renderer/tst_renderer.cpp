@@ -54,7 +54,7 @@ void tst_renderer::initTestCase()
     rhi->beginOffscreenFrame(&cb);
 
     std::unique_ptr<QSSGRhiContext> rhiContext = std::make_unique<QSSGRhiContext>(rhi);
-    rhiContext->setCommandBuffer(cb);
+    QSSGRhiContextPrivate::get(rhiContext.get())->setCommandBuffer(cb);
 
     renderContext = std::make_shared<QSSGRenderContextInterface>(std::make_unique<QSSGBufferManager>(),
                                                                  std::make_unique<QSSGRenderer>(),

@@ -139,9 +139,10 @@ void QSSGDebugDrawSystem::recordRenderDebugObjects(QSSGRhiContext *rhiCtx,
     ps->depthTestEnable = true;
     ps->cullMode = QRhiGraphicsPipeline::None;
 
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     if (m_indexSize > 0) {
-        auto graphicsPipeline = rhiCtx->pipeline(*ps, rpDesc, srb);
+        auto graphicsPipeline = rhiCtxD->pipeline(*ps, rpDesc, srb);
         cb->setGraphicsPipeline(graphicsPipeline);
         cb->setShaderResources(srb);
         cb->setViewport(ps->viewport);
@@ -155,7 +156,7 @@ void QSSGDebugDrawSystem::recordRenderDebugObjects(QSSGRhiContext *rhiCtx,
     // Points
     if (m_pointsSize > 0) {
         ps->ia.topology = QRhiGraphicsPipeline::Points;
-        auto graphicsPipeline = rhiCtx->pipeline(*ps, rpDesc, srb);
+        auto graphicsPipeline = rhiCtxD->pipeline(*ps, rpDesc, srb);
         cb->setGraphicsPipeline(graphicsPipeline);
         cb->setShaderResources(srb);
         cb->setViewport(ps->viewport);

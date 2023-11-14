@@ -115,7 +115,8 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     }
 
-    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(*ps, rpDesc, srb);
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+    QRhiGraphicsPipeline *pipeline = rhiCtxD->pipeline(*ps, rpDesc, srb);
     // Make sure that we were able to create the pipeline before trying to use it
     // When GraphicsPipeline creation fails it should return nullptr and print a warning
     if (!pipeline)
@@ -141,7 +142,7 @@ void QSSGRhiQuadRenderer::recordRenderQuadPass(QSSGRhiContext *rhiCtx,
                                                QRhiTextureRenderTarget *rt, Flags flags)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->beginPass(rt, Qt::black, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+    cb->beginPass(rt, Qt::black, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
     QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
     recordRenderQuad(rhiCtx, ps, srb, rt->renderPassDescriptor(), flags);
     cb->endPass();
@@ -180,7 +181,8 @@ void QSSGRhiCubeRenderer::recordRenderCube(QSSGRhiContext *rhiCtx, QSSGRhiGraphi
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     }
 
-    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(*ps, rpDesc, srb);
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+    QRhiGraphicsPipeline *pipeline = rhiCtxD->pipeline(*ps, rpDesc, srb);
     // Make sure that we were able to create the pipeline before trying to use it
     // When GraphicsPipeline creation fails it should return nullptr and print a warning
     if (!pipeline)

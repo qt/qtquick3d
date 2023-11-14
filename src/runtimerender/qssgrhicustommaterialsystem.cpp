@@ -220,7 +220,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         const auto entryPartB = reinterpret_cast<quintptr>(entry);
         const void *entryKey = reinterpret_cast<const void *>(entryPartA ^ entryPartB);
 
-        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiCtx).drawCallData({ passKey, &modelNode, entryKey, entryIdx });
+        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(rhiCtx)->drawCallData({ passKey, &modelNode, entryKey, entryIdx });
 
         shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
@@ -242,7 +242,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         ps->samples = samples;
 
-        ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(cullMode);
+        ps->cullMode = QSSGRhiHelpers::toCullMode(cullMode);
 
         ps->targetBlend = blend;
 
@@ -262,7 +262,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
         }
 
-        ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
+        QSSGRhiHelpers::bakeVertexInputLocations(&ps->ia, *shaderPipeline, instanceBufferBinding);
 
         QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
@@ -491,11 +491,13 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             }
         }
 
+        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+
         // do the same srb lookup acceleration as default materials
         QRhiShaderResourceBindings *&srb = dcd.srb;
         bool srbChanged = false;
         if (!srb || bindings != dcd.bindings) {
-            srb = rhiCtx->srb(bindings);
+            srb = rhiCtxD->srb(bindings);
             dcd.bindings = bindings;
             srbChanged = true;
         }
@@ -505,7 +507,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         else
             renderable.rhiRenderData.reflectionPass.srb[cubeFaceIdx] = srb;
 
-        const auto pipelineKey = QSSGGraphicsPipelineStateKeyPrivate::create(*ps, renderPassDescriptor, srb);
+        const auto pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
         if (dcd.pipeline
                 && !srbChanged
                 && dcd.renderTargetDescriptionHash == pipelineKey.extra.renderTargetDescriptionHash
@@ -518,14 +520,14 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 renderable.rhiRenderData.reflectionPass.pipeline = dcd.pipeline;
         } else {
             if (cubeFace == QSSGRenderTextureCubeFaceNone) {
-                renderable.rhiRenderData.mainPass.pipeline = QSSGRhiContextPrivate::get(*rhiCtx).pipeline(pipelineKey,
-                                                                                                          renderPassDescriptor,
-                                                                                                          srb);
+                renderable.rhiRenderData.mainPass.pipeline = rhiCtxD->pipeline(pipelineKey,
+                                                                               renderPassDescriptor,
+                                                                               srb);
                 dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
             } else {
-                renderable.rhiRenderData.reflectionPass.pipeline = QSSGRhiContextPrivate::get(*rhiCtx).pipeline(pipelineKey,
-                                                                                                                renderPassDescriptor,
-                                                                                                                srb);
+                renderable.rhiRenderData.reflectionPass.pipeline = rhiCtxD->pipeline(pipelineKey,
+                                                                                     renderPassDescriptor,
+                                                                                     srb);
                 dcd.pipeline = renderable.rhiRenderData.reflectionPass.pipeline;
             }
 

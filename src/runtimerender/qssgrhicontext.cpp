@@ -15,13 +15,141 @@
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <qtquick3d_tracepoints_p.h>
 
-
 QT_BEGIN_NAMESPACE
 
 Q_TRACE_POINT(qtquick3d, QSSG_renderPass_entry, const QString &renderPass);
 Q_TRACE_POINT(qtquick3d, QSSG_renderPass_exit);
 Q_TRACE_POINT(qtquick3d, QSSG_drawIndexed, int indexCount, int instanceCount);
 Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
+
+/*!
+    \class QSSGRhiContext
+    \inmodule QtQuick3D
+    \since 6.7
+
+    \brief QSSGRhiContext.
+ */
+
+/*!
+    \struct QSSGRhiGraphicsPipelineState
+    \inmodule QtQuick3D
+    \since 6.7
+
+    \brief Graphics pipeline state.
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::samples
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::depthTestEnable
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::depthWriteEnable
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::usesStencilRef
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::depthFunc
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::cullMode
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::stencilOpFrontState
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::stencilWriteMask
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::stencilRef
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::depthBias
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::slopeScaledDepthBias
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::blendEnable
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::targetBlend
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::colorAttachmentCount
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::viewport
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::scissorEnable
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::scissor
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::lineWidth
+ */
+
+/*!
+    \variable QSSGRhiGraphicsPipelineState::polygonMode
+ */
+
+/*!
+    \struct QSSGRhiSamplerDescription
+    \inmodule QtQuick3D
+    \since 6.7
+
+    \brief QSSGRhiSamplerDescription.
+*/
+
+/*!
+    \variable QSSGRhiSamplerDescription::minFilter
+ */
+
+/*!
+    \variable QSSGRhiSamplerDescription::magFilter
+ */
+
+/*!
+    \variable QSSGRhiSamplerDescription::mipmap
+ */
+
+/*!
+    \variable QSSGRhiSamplerDescription::hTiling
+ */
+
+/*!
+    \variable QSSGRhiSamplerDescription::vTiling
+ */
+
+/*!
+    \variable QSSGRhiSamplerDescription::zTiling
+ */
+
+/*!
+    \struct QSSGRhiInputAssemblerState
+    \internal
+ */
 
 QSSGRhiBuffer::QSSGRhiBuffer(QSSGRhiContext &context,
                              QRhiBuffer::Type type,
@@ -44,7 +172,8 @@ QSSGRhiBuffer::~QSSGRhiBuffer()
     delete m_buffer;
 }
 
-QRhiVertexInputAttribute::Format QSSGRhiInputAssemblerState::toVertexInputFormat(QSSGRenderComponentType compType, quint32 numComps)
+namespace QSSGRhiHelpers {
+QRhiVertexInputAttribute::Format toVertexInputFormat(QSSGRenderComponentType compType, quint32 numComps)
 {
     if (compType == QSSGRenderComponentType::Float32) {
         switch (numComps) {
@@ -90,7 +219,7 @@ QRhiVertexInputAttribute::Format QSSGRhiInputAssemblerState::toVertexInputFormat
     return QRhiVertexInputAttribute::Float4;
 }
 
-QRhiGraphicsPipeline::Topology QSSGRhiInputAssemblerState::toTopology(QSSGRenderDrawMode drawMode)
+QRhiGraphicsPipeline::Topology toTopology(QSSGRenderDrawMode drawMode)
 {
     switch (drawMode) {
     case QSSGRenderDrawMode::Points:
@@ -112,7 +241,7 @@ QRhiGraphicsPipeline::Topology QSSGRhiInputAssemblerState::toTopology(QSSGRender
     Q_UNREACHABLE_RETURN(QRhiGraphicsPipeline::Triangles);
 }
 
-void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders, int instanceBufferBinding)
+void bakeVertexInputLocations(QSSGRhiInputAssemblerState *ia, const QSSGRhiShaderPipeline &shaders, int instanceBufferBinding)
 {
     if (!shaders.vertexStage())
         return;
@@ -121,8 +250,8 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPip
 
     QVarLengthArray<QRhiVertexInputAttribute, 8> attrs;
     int inputIndex = 0;
-    for (auto it = inputLayout.cbeginAttributes(), itEnd = inputLayout.cendAttributes(); it != itEnd; ++it) {
-        const QSSGRhiInputAssemblerState::InputSemantic sem = inputs.at(inputIndex); // avoid detaching - submeshes share the same name list
+    for (auto it = ia->inputLayout.cbeginAttributes(), itEnd = ia->inputLayout.cendAttributes(); it != itEnd; ++it) {
+        const QSSGRhiInputAssemblerState::InputSemantic sem = ia->inputs.at(inputIndex); // avoid detaching - submeshes share the same name list
         auto vertexInputVar = vertexInputs.constFind(sem);
         if (vertexInputVar != vertexInputs.constEnd()) {
             attrs.append(*it);
@@ -162,27 +291,10 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPip
                                              sizeof(float) * 4 * 4));
     }
 
-    inputLayout.setAttributes(attrs.cbegin(), attrs.cend());
+    ia->inputLayout.setAttributes(attrs.cbegin(), attrs.cend());
 }
 
-QRhiGraphicsPipeline::CullMode QSSGRhiGraphicsPipelineState::toCullMode(QSSGCullFaceMode cullFaceMode)
-{
-    switch (cullFaceMode) {
-    case QSSGCullFaceMode::Back:
-        return QRhiGraphicsPipeline::Back;
-    case QSSGCullFaceMode::Front:
-        return QRhiGraphicsPipeline::Front;
-    case QSSGCullFaceMode::Disabled:
-        return QRhiGraphicsPipeline::None;
-    case QSSGCullFaceMode::FrontAndBack:
-        qWarning("FrontAndBack cull mode not supported");
-        return QRhiGraphicsPipeline::None;
-    case QSSGCullFaceMode::Unknown:
-        return QRhiGraphicsPipeline::None;
-    }
-
-    Q_UNREACHABLE_RETURN(QRhiGraphicsPipeline::None);
-}
+} // namespace QSSGRhiHelpers
 
 void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags flags)
 {
@@ -831,6 +943,9 @@ int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
     return binding;
 }
 
+/*!
+    \internal
+ */
 QSSGRhiContext::QSSGRhiContext(QRhi *rhi)
     : d_ptr(new QSSGRhiContextPrivate(*this, rhi))
 {
@@ -838,81 +953,91 @@ QSSGRhiContext::QSSGRhiContext(QRhi *rhi)
     Q_STATIC_ASSERT(int(QSSGRhiSamplerBindingHints::LightProbe) > int(QSSGRenderableImage::Type::Occlusion));
 }
 
-
+/*!
+    \internal
+ */
 QSSGRhiContext::~QSSGRhiContext()
 {
     Q_D(QSSGRhiContext);
-    releaseCachedResources();
+    d->releaseCachedResources();
 
     qDeleteAll(d->m_textures);
     qDeleteAll(d->m_meshes);
 }
 
+/*!
+    \return The QRhi object used by the Qt Quick 3D renderer.
+ */
 QRhi *QSSGRhiContext::rhi() const
 {
     Q_D(const QSSGRhiContext);
     return d->m_rhi;
 }
 
+/*!
+    \return true if the renderer is initialized successfully.
+ */
 bool QSSGRhiContext::isValid() const
 {
     Q_D(const QSSGRhiContext);
     return d->m_rhi != nullptr;
 }
 
-void QSSGRhiContext::setMainRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc)
+void QSSGRhiContextPrivate::setMainRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc)
 {
-    Q_D(QSSGRhiContext);
-    d->m_mainRpDesc = rpDesc;
+    m_mainRpDesc = rpDesc;
 }
 
+/*!
+ */
 QRhiRenderPassDescriptor *QSSGRhiContext::mainRenderPassDescriptor() const
 {
     Q_D(const QSSGRhiContext);
     return d->m_mainRpDesc;
 }
 
-void QSSGRhiContext::setCommandBuffer(QRhiCommandBuffer *cb)
+void QSSGRhiContextPrivate::setCommandBuffer(QRhiCommandBuffer *cb)
 {
-    Q_D(QSSGRhiContext);
-    d->m_cb = cb;
+    m_cb = cb;
 }
 
+/*!
+ */
 QRhiCommandBuffer *QSSGRhiContext::commandBuffer() const
 {
     Q_D(const QSSGRhiContext);
     return d->m_cb;
 }
 
-void QSSGRhiContext::setRenderTarget(QRhiRenderTarget *rt)
+void QSSGRhiContextPrivate::setRenderTarget(QRhiRenderTarget *rt)
 {
-    Q_D(QSSGRhiContext);
-    d->m_rt = rt;
+    m_rt = rt;
 }
 
+/*!
+ */
 QRhiRenderTarget *QSSGRhiContext::renderTarget() const
 {
     Q_D(const QSSGRhiContext);
     return d->m_rt;
 }
 
-void QSSGRhiContext::setMainPassSampleCount(int samples)
+void QSSGRhiContextPrivate::setMainPassSampleCount(int samples)
 {
-    Q_D(QSSGRhiContext);
-    d->m_mainSamples = samples;
+    m_mainSamples = samples;
 }
 
+/*!
+ */
 int QSSGRhiContext::mainPassSampleCount() const
 {
     Q_D(const QSSGRhiContext);
     return d->m_mainSamples;
 }
 
-void QSSGRhiContext::releaseCachedResources()
+void QSSGRhiContextPrivate::releaseCachedResources()
 {
-    Q_D(QSSGRhiContext);
-
-    for (QSSGRhiDrawCallData &dcd : d->m_drawCallData) {
+    for (QSSGRhiDrawCallData &dcd : m_drawCallData) {
         // We don't call releaseDrawCallData() here, since we're anyways
         // are going to delete the non-owned resources further down and
         // there's no point in removing each of those one-by-one, as is
@@ -922,54 +1047,53 @@ void QSSGRhiContext::releaseCachedResources()
         dcd.reset();
     }
 
-    d->m_drawCallData.clear();
+    m_drawCallData.clear();
 
-    qDeleteAll(d->m_pipelines);
-    qDeleteAll(d->m_computePipelines);
-    qDeleteAll(d->m_srbCache);
-    qDeleteAll(d->m_dummyTextures);
+    qDeleteAll(m_pipelines);
+    qDeleteAll(m_computePipelines);
+    qDeleteAll(m_srbCache);
+    qDeleteAll(m_dummyTextures);
 
-    d->m_pipelines.clear();
-    d->m_computePipelines.clear();
-    d->m_srbCache.clear();
-    d->m_dummyTextures.clear();
+    m_pipelines.clear();
+    m_computePipelines.clear();
+    m_srbCache.clear();
+    m_dummyTextures.clear();
 
-    for (const auto &samplerInfo : std::as_const(d->m_samplers))
+    for (const auto &samplerInfo : std::as_const(m_samplers))
         delete samplerInfo.second;
 
-    d->m_samplers.clear();
+    m_samplers.clear();
 
-    for (const auto &particleData : std::as_const(d->m_particleData))
+    for (const auto &particleData : std::as_const(m_particleData))
         delete particleData.texture;
 
-    d->m_particleData.clear();
+    m_particleData.clear();
 
-    for (const auto &instanceData : std::as_const(d->m_instanceBuffers)) {
+    for (const auto &instanceData : std::as_const(m_instanceBuffers)) {
         if (instanceData.owned)
             delete instanceData.buffer;
     }
 
-    d->m_instanceBuffers.clear();
+    m_instanceBuffers.clear();
 
-    for (const auto &instanceData : std::as_const(d->m_instanceBuffersLod)) {
+    for (const auto &instanceData : std::as_const(m_instanceBuffersLod)) {
         if (instanceData.owned)
             delete instanceData.buffer;
     }
 
-    d->m_instanceBuffersLod.clear();
+    m_instanceBuffersLod.clear();
 }
 
-QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindingList &bindings)
+QRhiShaderResourceBindings *QSSGRhiContextPrivate::srb(const QSSGRhiShaderResourceBindingList &bindings)
 {
-    Q_D(QSSGRhiContext);
-    auto it = d->m_srbCache.constFind(bindings);
-    if (it != d->m_srbCache.constEnd())
+    auto it = m_srbCache.constFind(bindings);
+    if (it != m_srbCache.constEnd())
         return *it;
 
-    QRhiShaderResourceBindings *srb = d->m_rhi->newShaderResourceBindings();
+    QRhiShaderResourceBindings *srb = m_rhi->newShaderResourceBindings();
     srb->setBindings(bindings.v, bindings.v + bindings.p);
     if (srb->create()) {
-        d->m_srbCache.insert(bindings, srb);
+        m_srbCache.insert(bindings, srb);
     } else {
         qWarning("Failed to build srb");
         delete srb;
@@ -989,19 +1113,17 @@ void QSSGRhiContextPrivate::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
     dcd.pipeline = nullptr;
 }
 
-QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGRhiGraphicsPipelineState &ps,
-                                               QRhiRenderPassDescriptor *rpDesc,
-                                               QRhiShaderResourceBindings *srb)
+QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGRhiGraphicsPipelineState &ps,
+                                                      QRhiRenderPassDescriptor *rpDesc,
+                                                      QRhiShaderResourceBindings *srb)
 {
-    Q_D(QSSGRhiContext);
-    return d->pipeline(QSSGGraphicsPipelineStateKeyPrivate::create(ps, rpDesc, srb), rpDesc, srb);
+    return pipeline(QSSGGraphicsPipelineStateKey::create(ps, rpDesc, srb), rpDesc, srb);
 }
 
-QRhiComputePipeline *QSSGRhiContext::computePipeline(const QShader &shader,
-                                                     QRhiShaderResourceBindings *srb)
+QRhiComputePipeline *QSSGRhiContextPrivate::computePipeline(const QShader &shader,
+                                                            QRhiShaderResourceBindings *srb)
 {
-    Q_D(QSSGRhiContext);
-    return d->computePipeline(QSSGComputePipelineStateKeyPrivate::create(shader, srb), srb);
+    return computePipeline(QSSGComputePipelineStateKey::create(shader, srb), srb);
 }
 
 QSSGRhiDrawCallData &QSSGRhiContextPrivate::drawCallData(const QSSGRhiDrawCallDataKey &key)
@@ -1011,6 +1133,8 @@ QSSGRhiDrawCallData &QSSGRhiContextPrivate::drawCallData(const QSSGRhiDrawCallDa
 
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;
 
+/*!
+ */
 QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDescription)
 {
     Q_D(QSSGRhiContext);
@@ -1035,6 +1159,8 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     return newSampler;
 }
 
+/*!
+ */
 void QSSGRhiContext::checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription)
 {
     Q_D(const QSSGRhiContext);
@@ -1066,35 +1192,31 @@ void QSSGRhiContext::checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerD
     }
 }
 
-void QSSGRhiContext::registerTexture(QRhiTexture *texture)
+void QSSGRhiContextPrivate::registerTexture(QRhiTexture *texture)
 {
-    Q_D(QSSGRhiContext);
-    d->m_textures.insert(texture);
+    m_textures.insert(texture);
 }
 
-void QSSGRhiContext::releaseTexture(QRhiTexture *texture)
+void QSSGRhiContextPrivate::releaseTexture(QRhiTexture *texture)
 {
-    Q_D(QSSGRhiContext);
-    d->m_textures.remove(texture);
+    m_textures.remove(texture);
     delete texture;
 }
 
-void QSSGRhiContext::registerMesh(QSSGRenderMesh *mesh)
+void QSSGRhiContextPrivate::registerMesh(QSSGRenderMesh *mesh)
 {
-    Q_D(QSSGRhiContext);
-    d->m_meshes.insert(mesh);
+    m_meshes.insert(mesh);
 }
 
-void QSSGRhiContext::releaseMesh(QSSGRenderMesh *mesh)
+void QSSGRhiContextPrivate::releaseMesh(QSSGRenderMesh *mesh)
 {
-    Q_D(QSSGRhiContext);
     if (mesh) {
         for (const auto &subset : std::as_const(mesh->subsets)) {
             if (subset.rhi.targetsTexture)
                 releaseTexture(subset.rhi.targetsTexture);
         }
     }
-    d->m_meshes.remove(mesh);
+    m_meshes.remove(mesh);
     delete mesh;
 }
 
@@ -1114,6 +1236,8 @@ void QSSGRhiContextPrivate::cleanupDrawCallData(const QSSGRenderModel *model)
     }
 }
 
+/*!
+ */
 QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
                                           const QSize &size, const QColor &fillColor)
 {
@@ -1208,8 +1332,15 @@ void QSSGRhiContextStats::endRenderPass()
     info.currentRenderPassIndex = -1;
 }
 
-QSSGRhiContextStats &QSSGRhiContextStats::get(QSSGRhiContext &instance) { return instance.d_ptr->m_stats; }
-const QSSGRhiContextStats &QSSGRhiContextStats::get(const QSSGRhiContext &instance) { return instance.d_ptr->m_stats; }
+QSSGRhiContextStats &QSSGRhiContextStats::get(QSSGRhiContext &rhiCtx)
+{
+    return QSSGRhiContextPrivate::get(&rhiCtx)->m_stats;
+}
+
+const QSSGRhiContextStats &QSSGRhiContextStats::get(const QSSGRhiContext &rhiCtx)
+{
+    return QSSGRhiContextPrivate::get(&rhiCtx)->m_stats;
+}
 
 bool QSSGRhiContextStats::profilingEnabled()
 {
@@ -1324,7 +1455,7 @@ bool QSSGRhiContextPrivate::editorMode()
     return isSet;
 }
 
-QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipelineStateKeyPrivate &key,
+QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipelineStateKey &key,
                                                       QRhiRenderPassDescriptor *rpDesc,
                                                       QRhiShaderResourceBindings *srb)
 {
@@ -1388,7 +1519,7 @@ QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipeline
     return ps;
 }
 
-QRhiComputePipeline *QSSGRhiContextPrivate::computePipeline(const QSSGComputePipelineStateKeyPrivate &key, QRhiShaderResourceBindings *srb)
+QRhiComputePipeline *QSSGRhiContextPrivate::computePipeline(const QSSGComputePipelineStateKey &key, QRhiShaderResourceBindings *srb)
 {
     auto it = m_computePipelines.constFind(key);
     if (it != m_computePipelines.constEnd())
@@ -1404,4 +1535,13 @@ QRhiComputePipeline *QSSGRhiContextPrivate::computePipeline(const QSSGComputePip
     }
     m_computePipelines.insert(key, computePipeline);
     return computePipeline;
+}
+
+/*!
+ */
+QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const
+{
+    // We do not use GPU compute at all at the moment, this means we can
+    // get a small performance gain with OpenGL by declaring this.
+    return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
 }

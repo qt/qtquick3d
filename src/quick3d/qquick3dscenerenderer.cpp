@@ -271,21 +271,22 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
         QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
+        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
 
-        rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
-        rhiCtx->setRenderTarget(m_textureRenderTarget);
+        rhiCtxD->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
+        rhiCtxD->setRenderTarget(m_textureRenderTarget);
 
         QRhiCommandBuffer *cb = nullptr;
         QRhiSwapChain *swapchain = qw->swapChain();
         if (swapchain) {
             cb = swapchain->currentFrameCommandBuffer();
-            rhiCtx->setCommandBuffer(cb);
+            rhiCtxD->setCommandBuffer(cb);
         } else {
             QSGRendererInterface *rif = qw->rendererInterface();
             cb = static_cast<QRhiCommandBuffer *>(
                 rif->getResource(qw, QSGRendererInterface::RhiRedirectCommandBuffer));
             if (cb)
-                rhiCtx->setCommandBuffer(cb);
+                rhiCtxD->setCommandBuffer(cb);
             else {
                 qWarning("Neither swapchain nor redirected command buffer are available.");
                 return currentTexture;
@@ -294,7 +295,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         // Graphics pipeline objects depend on the MSAA sample count, so the
         // renderer needs to know the value.
-        rhiCtx->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
+        rhiCtxD->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
 
         int ssaaAdjustedWidth = m_surfaceSize.width();
         int ssaaAdjustedHeight = m_surfaceSize.height();
@@ -332,7 +333,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         // This is called from the node's preprocess() meaning Qt Quick has not
         // actually began recording a renderpass. Do our own.
-        cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_textureRenderTarget));
         rhiRender();
@@ -382,7 +383,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     const auto &shaderPipeline = m_sgContext->shaderCache()->getBuiltInRhiShaders().getRhiProgressiveAAShader();
                     QRhiResourceUpdateBatch *rub = nullptr;
 
-                    QSSGRhiDrawCallData &dcd(QSSGRhiContextPrivate::get(*rhiCtx).drawCallData({ m_layer, nullptr, nullptr, 0 }));
+                    QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ m_layer, nullptr, nullptr, 0 }));
                     QRhiBuffer *&ubuf = dcd.ubuf;
                     const int ubufSize = 2 * sizeof(float);
                     if (!ubuf) {
@@ -403,7 +404,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler);
                     bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, m_prevTempAATexture, sampler);
 
-                    QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+                    QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 
                     QSSGRhiGraphicsPipelineState ps;
                     const QSize textureSize = currentTexture->pixelSize();
@@ -469,7 +470,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
             QSSGRhiShaderResourceBindingList bindings;
             bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler);
-            QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 
             QSSGRhiGraphicsPipelineState ps;
             ps.viewport = QRhiViewport(0, 0, float(m_surfaceSize.width()), float(m_surfaceSize.height()));
@@ -1287,6 +1288,7 @@ inline QRect convertQtRectToGLViewport(const QRectF &rect, const QSize surfaceSi
 inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, QSSGRhiContext *rhiCtx)
 {
     if (rhiCtx->isValid()) {
+        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
         // Query from the rif because that is available in the sync
         // phase (updatePaintNode) already.  QSGDefaultRenderContext's
         // copies of the rp and cb are not there until the render
@@ -1294,9 +1296,9 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         int sampleCount = 1;
         QRhiSwapChain *swapchain = window->swapChain();
         if (swapchain) {
-            rhiCtx->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
-            rhiCtx->setCommandBuffer(swapchain->currentFrameCommandBuffer());
-            rhiCtx->setRenderTarget(swapchain->currentFrameRenderTarget());
+            rhiCtxD->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
+            rhiCtxD->setCommandBuffer(swapchain->currentFrameCommandBuffer());
+            rhiCtxD->setRenderTarget(swapchain->currentFrameRenderTarget());
             sampleCount = swapchain->sampleCount();
         } else {
             QSGRendererInterface *rif = window->rendererInterface();
@@ -1306,9 +1308,9 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
             QRhiTextureRenderTarget *rt = static_cast<QRhiTextureRenderTarget *>(
                 rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
             if (cb && rt) {
-                rhiCtx->setMainRenderPassDescriptor(rt->renderPassDescriptor());
-                rhiCtx->setCommandBuffer(cb);
-                rhiCtx->setRenderTarget(rt);
+                rhiCtxD->setMainRenderPassDescriptor(rt->renderPassDescriptor());
+                rhiCtxD->setCommandBuffer(cb);
+                rhiCtxD->setRenderTarget(rt);
                 const QRhiColorAttachment *color0 = rt->description().cbeginColorAttachments();
                 if (color0 && color0->texture())
                     sampleCount = color0->texture()->sampleCount();
@@ -1322,7 +1324,7 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         // QSurfaceFormat's samples(). The only thing we need to do here is to
         // pass the sample count to the renderer because it is needed when
         // creating graphics pipelines.
-        rhiCtx->setMainPassSampleCount(sampleCount);
+        rhiCtxD->setMainPassSampleCount(sampleCount);
     }
 }
 
@@ -1331,10 +1333,11 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
 inline void queryInlineRenderPassDescriptorAndCommandBuffer(QSGRenderNode *node, QSSGRhiContext *rhiCtx)
 {
     QSGRenderNodePrivate *d = QSGRenderNodePrivate::get(node);
-    rhiCtx->setMainRenderPassDescriptor(d->m_rt.rpDesc);
-    rhiCtx->setCommandBuffer(d->m_rt.cb);
-    rhiCtx->setRenderTarget(d->m_rt.rt);
-    rhiCtx->setMainPassSampleCount(d->m_rt.rt->sampleCount());
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+    rhiCtxD->setMainRenderPassDescriptor(d->m_rt.rpDesc);
+    rhiCtxD->setCommandBuffer(d->m_rt.cb);
+    rhiCtxD->setRenderTarget(d->m_rt.rt);
+    rhiCtxD->setMainPassSampleCount(d->m_rt.rt->sampleCount());
 }
 }
 
@@ -1514,7 +1517,8 @@ void QQuick3DSGDirectRenderer::render()
                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
                 QSSGRhiShaderResourceBindingList bindings;
                 bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, m_rhiTexture, sampler);
-                QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+                QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+                QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 
                 QSSGRhiGraphicsPipelineState ps;
                 ps.viewport = QRhiViewport(float(vp.x()), float(vp.y()), float(vp.width()), float(vp.height()));

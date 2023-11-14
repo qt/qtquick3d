@@ -117,7 +117,8 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     rhi->beginOffscreenFrame(&cb);
 
     const auto rhiContext = std::make_unique<QSSGRhiContext>(rhi.get());
-    rhiContext->setCommandBuffer(cb);
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+    rhiCtxD->setCommandBuffer(cb);
 
     QScopedPointer<QSSGLoadedTexture> inImage(QSSGLoadedTexture::loadHdrImage(QSSGInputUtil::getStreamForFile(inPath), FORMAT));
     if (!inImage)
@@ -301,7 +302,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     cb->resourceUpdate(rub);
 
     for (int face = 0; face < 6; ++face) {
-        cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, rhiContext->commonPassFlags());
 
         // Execute render pass
         cb->setGraphicsPipeline(envMapPipeline);
@@ -445,7 +446,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     // Render
     for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
         for (int face = 0; face < 6; ++face) {
-            cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, rhiContext->commonPassFlags());
             cb->setGraphicsPipeline(prefilterPipeline);
             cb->setVertexInput(0, 1, &vbufBinding);
             cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));

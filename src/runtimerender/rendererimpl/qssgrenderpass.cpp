@@ -399,7 +399,7 @@ void DepthMapPass::renderPass(QSSGRenderer &renderer)
 
     if (Q_LIKELY(rhiDepthTexture && rhiDepthTexture->isValid())) {
         bool needsSetViewport = true;
-        cb->beginPass(rhiDepthTexture->rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        cb->beginPass(rhiDepthTexture->rt, Qt::transparent, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiDepthTexture->rt));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         // NB! We do not pass sortedTransparentObjects in the 4th
@@ -495,7 +495,7 @@ void ScreenMapPass::renderPass(QSSGRenderer &renderer)
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
 
     if (Q_LIKELY(rhiScreenTexture && rhiScreenTexture->isValid())) {
-        cb->beginPass(rhiScreenTexture->rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        cb->beginPass(rhiScreenTexture->rt, clearColor, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiScreenTexture->rt));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
@@ -958,6 +958,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
     auto camera = data.camera;
     QSSG_ASSERT(camera, return);
 
@@ -970,7 +971,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     if (debugDraw && debugDraw->hasContent()) {
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         debugDraw->prepareGeometry(rhiCtx.get(), rub);
-        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiCtx).drawCallData({ this, nullptr, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 });
         if (!dcd.ubuf) {
             dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64);
             dcd.ubuf->create();
@@ -984,7 +985,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 
         QSSGRhiShaderResourceBindingList bindings;
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::VertexStage, dcd.ubuf);
-        dcd.srb = rhiCtx->srb(bindings);
+        dcd.srb = rhiCtxD->srb(bindings);
 
         rhiCtx->commandBuffer()->resourceUpdate(rub);
     }
@@ -995,6 +996,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(debugObjectShader && rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
 
     const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
     if (debugDraw && debugDraw->hasContent()) {
@@ -1002,7 +1004,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick 3D debug objects"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         ps.shaderPipeline = debugObjectShader.get();
-        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(*rhiCtx).drawCallData({ this, nullptr, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 });
         QRhiShaderResourceBindings *srb = dcd.srb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         debugDraw->recordRenderDebugObjects(rhiCtx.get(), &ps, srb, rpDesc);

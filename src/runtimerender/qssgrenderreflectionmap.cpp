@@ -445,10 +445,10 @@ void fillPrefilterValues(float roughness, float resolution,
     invTotalWeight = 1.0f / invTotalWeight;
 }
 
-void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
+void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *rhiCtx)
 {
-    auto *rhi = context->rhi();
-    auto *cb = context->commandBuffer();
+    auto *rhi = rhiCtx->rhi();
+    auto *cb = rhiCtx->commandBuffer();
 
     auto *rub = rhi->nextResourceUpdateBatch();
     rub->generateMips(m_rhiCube);
@@ -540,8 +540,8 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
             if (m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 face = m_timeSliceFace;
 
-            cb->beginPass(m_rhiPrefilterRenderTargetsMap[mipLevel][quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-            QSSGRHICTX_STAT(context, beginRenderPass(m_rhiPrefilterRenderTargetsMap[mipLevel][quint8(face)]));
+            cb->beginPass(m_rhiPrefilterRenderTargetsMap[mipLevel][quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
+            QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_rhiPrefilterRenderTargetsMap[mipLevel][quint8(face)]));
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             if (mipLevel < mipmapCount - 1) {
                 // Specular pre-filtered Cube Map levels
@@ -566,10 +566,10 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
             }
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
             cb->draw(36);
-            QSSGRHICTX_STAT(context, draw(36, 1));
+            QSSGRHICTX_STAT(rhiCtx, draw(36, 1));
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32), profilingId);
             cb->endPass();
-            QSSGRHICTX_STAT(context, endRenderPass());
+            QSSGRHICTX_STAT(rhiCtx, endRenderPass());
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("reflection_map", mipLevel, face));
 
             if (m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)

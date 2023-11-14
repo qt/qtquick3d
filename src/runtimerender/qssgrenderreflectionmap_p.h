@@ -44,7 +44,7 @@ struct QSSGReflectionMapEntry
                                                  QRhiTexture *prefiltered,
                                                  QRhiRenderBuffer *depthStencil);
 
-    void renderMips(QSSGRhiContext *context);
+    void renderMips(QSSGRhiContext *rhiCtx);
     void destroyRhiResources();
 
     quint32 m_probeIndex;
