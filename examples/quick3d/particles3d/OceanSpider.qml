@@ -20,6 +20,7 @@ Item {
     // Animate tentacle movement
     SequentialAnimation {
         loops: Animation.Infinite
+        running: true
         NumberAnimation {
             target: mainWindow
             property: "tentacleWideness"
@@ -161,6 +162,7 @@ Item {
                     fadeOutDuration: 800
                     billboard: true
                     SequentialAnimation {
+                        running: true
                         loops: Animation.Infinite
                         ColorAnimation {
                             target: tentacleParticle

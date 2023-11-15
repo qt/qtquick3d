@@ -139,6 +139,7 @@ Item {
             ambientColor: Qt.rgba(0.5, 0.3, 0.1, 1.0)
             SequentialAnimation {
                 loops: Animation.Infinite
+                running: true
                 NumberAnimation {
                     target: pointLight
                     property: "brightness"

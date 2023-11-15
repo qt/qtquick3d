@@ -38,6 +38,7 @@ Item {
             // Add some liveness to the light
             SequentialAnimation{
                 loops: Animation.Infinite
+                running: true
                 NumberAnimation {
                     target: pointLight
                     property: "animatedBrightness"
