@@ -29,10 +29,10 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class QSSGNodeId : quintptr { Invalid = 0 };
-enum class QSSGResourceId : quintptr { Invalid = 0 };
-enum class QSSGCameraId : quintptr { Invalid = 0 };
-enum class QSSGExtensionId : quintptr { Invalid = 0 };
+enum class QSSGNodeId : quint64 { Invalid = 0 };
+enum class QSSGResourceId : quint64 { Invalid = 0 };
+enum class QSSGCameraId : quint64 { Invalid = 0 };
+enum class QSSGExtensionId : quint64 { Invalid = 0 };
 
 enum class QSSGRenderComponentType // stored in mesh files, the values must not change, must match Mesh::ComponentType
 {
