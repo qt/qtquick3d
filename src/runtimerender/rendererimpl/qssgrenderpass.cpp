@@ -1018,19 +1018,23 @@ void DebugDrawPass::resetForFrame()
 
 void UserPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
+    Q_UNUSED(renderer);
     auto &frameData = data.getFrameData();
     for (const auto &p : std::as_const(extensions)) {
-        p->prepareRender(renderer, frameData);
+        p->prepareRender(frameData);
         if (p->type() == QSSGRenderExtension::Type::Standalone)
-            p->render(renderer);
+            p->render(frameData);
     }
 }
 
 void UserPass::renderPass(QSSGRenderer &renderer)
 {
+    auto *data = QSSGLayerRenderData::getCurrent(renderer);
+    QSSG_ASSERT(data, return);
+    auto &frameData = data->getFrameData();
     for (const auto &p : std::as_const(extensions)) {
         if (p->type() == QSSGRenderExtension::Type::Main)
-            p->render(renderer);
+            p->render(frameData);
     }
 }
 

@@ -32,8 +32,8 @@ public:
     ~ChildRenderer();
 
     bool prepareData(QSSGFrameData &data) override;
-    void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
-    void render(const QSSGRenderer &renderer) override;
+    void prepareRender(QSSGFrameData &data) override;
+    void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return RenderMode::Overlay; }
@@ -81,14 +81,14 @@ bool ChildRenderer::prepareData(QSSGFrameData &data)
     return true;
 }
 
-void ChildRenderer::prepareRender(const QSSGRenderer &, QSSGFrameData &)
+void ChildRenderer::prepareRender(QSSGFrameData &)
 {
     QVERIFY(hasGraphicsResources()); // should be set implicitly
 
     childExtensionFunctional += 1;
 }
 
-void ChildRenderer::render(const QSSGRenderer &)
+void ChildRenderer::render(QSSGFrameData &)
 {
     childExtensionFunctional += 1;
 }
@@ -104,8 +104,8 @@ public:
     ~Renderer();
 
     bool prepareData(QSSGFrameData &data) override;
-    void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
-    void render(const QSSGRenderer &renderer) override;
+    void prepareRender(QSSGFrameData &data) override;
+    void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     Type type() const override { return Type::Standalone; }
     RenderMode mode() const override { return RenderMode::Overlay; }
@@ -164,7 +164,7 @@ bool Renderer::prepareData(QSSGFrameData &data)
     return true;
 }
 
-void Renderer::prepareRender(const QSSGRenderer &, QSSGFrameData &)
+void Renderer::prepareRender(QSSGFrameData &)
 {
     QVERIFY(hasGraphicsResources());
 
@@ -174,7 +174,7 @@ void Renderer::prepareRender(const QSSGRenderer &, QSSGFrameData &)
         extensionFunctional += 1;
 }
 
-void Renderer::render(const QSSGRenderer &)
+void Renderer::render(QSSGFrameData &)
 {
     if (childExtensionFunctional == 0)
         qWarning("Child did not run before parent's render");

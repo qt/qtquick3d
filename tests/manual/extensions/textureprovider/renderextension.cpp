@@ -26,8 +26,8 @@ class TextureProvider : public QSSGRenderExtension
 public:
     explicit TextureProvider(RenderExtension *ext);
     bool prepareData(QSSGFrameData &data) override;
-    void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
-    void render(const QSSGRenderer &renderer) override;
+    void prepareRender(QSSGFrameData &data) override;
+    void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     Type type() const override { return QSSGRenderExtension::Type::Standalone; }
     RenderMode mode() const override { return QSSGRenderExtension::RenderMode::Underlay; }
@@ -65,10 +65,10 @@ bool TextureProvider::prepareData(QSSGFrameData &data)
     return ret;
 }
 
-void TextureProvider::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
+void TextureProvider::prepareRender(QSSGFrameData &data)
 {
-    Q_UNUSED(data);
-    const auto &ctxIfx = renderer.contextInterface();
+    auto *renderer = data.renderer();
+    const auto &ctxIfx = renderer->contextInterface();
     const auto &rhiCtx = ctxIfx->rhiContext();
     if (!rhiCtx)
         return;
@@ -126,9 +126,10 @@ void TextureProvider::prepareRender(const QSSGRenderer &renderer, QSSGFrameData 
     }
 }
 
-void TextureProvider::render(const QSSGRenderer &renderer)
+void TextureProvider::render(QSSGFrameData &data)
 {
-    const auto &ctxIfx = renderer.contextInterface();
+    auto *renderer = data.renderer();
+    const auto &ctxIfx = renderer->contextInterface();
     const auto &rhiCtx = ctxIfx->rhiContext();
     if (!rhiCtx)
         return;

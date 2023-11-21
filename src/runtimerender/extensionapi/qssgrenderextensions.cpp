@@ -147,7 +147,7 @@ bool QSSGRenderExtension::prepareData(QSSGFrameData &data)
 }
 
 /*!
-    \fn void QSSGRenderExtension::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
+    \fn void QSSGRenderExtension::prepareRender(QSSGFrameData &data)
 
     Prepare data for rendering. Build and collect data needed for rendering. Any render extension
     scheduled before this one has been processed. In addition; any render extension of
@@ -158,14 +158,13 @@ bool QSSGRenderExtension::prepareData(QSSGFrameData &data)
 
     \sa QSSGFrameData, QSSGRenderer
 */
-void QSSGRenderExtension::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
+void QSSGRenderExtension::prepareRender(QSSGFrameData &data)
 {
-    Q_UNUSED(renderer);
     Q_UNUSED(data);
 }
 
 /*!
-    \fn QSSGRenderExtension::render(const QSSGRenderer &renderer)
+    \fn QSSGRenderExtension::render(QSSGFrameData &data)
     \a renderer handle to the QtQuick3D's render object.
 
     Record the render pass. Depending on the extensions \l {Type}{type} this function will be called
@@ -173,9 +172,9 @@ void QSSGRenderExtension::prepareRender(const QSSGRenderer &renderer, QSSGFrameD
 
     \sa QSSGRenderExtension::Type, QSSGRenderer
 */
-void QSSGRenderExtension::render(const QSSGRenderer &renderer)
+void QSSGRenderExtension::render(QSSGFrameData &data)
 {
-    Q_UNUSED(renderer);
+    Q_UNUSED(data);
 }
 
 /*!

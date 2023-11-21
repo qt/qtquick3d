@@ -17,8 +17,8 @@ public:
     ~Renderer();
 
     bool prepareData(QSSGFrameData &data) override;
-    void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
-    void render(const QSSGRenderer &renderer) override;
+    void prepareRender(QSSGFrameData &data) override;
+    void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return renderMode; }
@@ -76,12 +76,13 @@ static QShader getShader(const QString &name)
     return f.open(QIODevice::ReadOnly) ? QShader::fromSerialized(f.readAll()) : QShader();
 }
 
-void Renderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
+void Renderer::prepareRender(QSSGFrameData &data)
 {
     if (!canRender)
         return;
 
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer.contextInterface()->rhiContext();
+    auto *renderer = data.renderer();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -159,12 +160,13 @@ void Renderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
     mainViewport = data.getPipelineState().viewport;
 }
 
-void Renderer::render(const QSSGRenderer &renderer)
+void Renderer::render(QSSGFrameData &data)
 {
     if (!canRender)
         return;
 
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer.contextInterface()->rhiContext();
+    auto *renderer = data.renderer();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 

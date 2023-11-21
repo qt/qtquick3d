@@ -32,8 +32,8 @@ public:
     ~ProducerRenderer();
 
     bool prepareData(QSSGFrameData &data) override;
-    void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
-    void render(const QSSGRenderer &renderer) override;
+    void prepareRender(QSSGFrameData &data) override;
+    void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     Type type() const override { return Type::Standalone; }
     RenderMode mode() const override { return RenderMode::Overlay; }
@@ -77,10 +77,10 @@ static float triangle[] = {
     0.5f,  -0.5f,   0.0f, 0.0f, 1.0f,
 };
 
-void ProducerRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
+void ProducerRenderer::prepareRender(QSSGFrameData &data)
 {
-    Q_UNUSED(data);
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer.contextInterface()->rhiContext();
+    auto *renderer = data.renderer();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -133,9 +133,10 @@ void ProducerRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData
     }
 }
 
-void ProducerRenderer::render(const QSSGRenderer &renderer)
+void ProducerRenderer::render(QSSGFrameData &data)
 {
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer.contextInterface()->rhiContext();
+    auto *renderer = data.renderer();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -204,8 +205,8 @@ public:
     ~ConsumerRenderer();
 
     bool prepareData(QSSGFrameData &data) override;
-    void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
-    void render(const QSSGRenderer &renderer) override;
+    void prepareRender(QSSGFrameData &data) override;
+    void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return RenderMode::Overlay; }
@@ -258,7 +259,7 @@ bool ConsumerRenderer::prepareData(QSSGFrameData &data)
     return true;
 }
 
-void ConsumerRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
+void ConsumerRenderer::prepareRender(QSSGFrameData &data)
 {
     if (!canRender)
         return;
@@ -271,7 +272,8 @@ void ConsumerRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData
     if (!texture)
         qFatal("No texture from producer");
 
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer.contextInterface()->rhiContext();
+    auto *renderer = data.renderer();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -358,12 +360,13 @@ void ConsumerRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData
     mainViewport = data.getPipelineState().viewport;
 }
 
-void ConsumerRenderer::render(const QSSGRenderer &renderer)
+void ConsumerRenderer::render(QSSGFrameData &data)
 {
     if (!canRender)
         return;
 
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer.contextInterface()->rhiContext();
+    auto *renderer = data.renderer();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 

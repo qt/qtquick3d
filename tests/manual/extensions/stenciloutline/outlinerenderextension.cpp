@@ -19,8 +19,8 @@ public:
     OutlineRenderer() = default;
 
     bool prepareData(QSSGFrameData &data) override;
-    void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) override;
-    void render(const QSSGRenderer &renderer) override;
+    void prepareRender(QSSGFrameData &data) override;
+    void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     Type type() const override { return Type::Main; }
     RenderMode mode() const override { return RenderMode::Overlay; };
@@ -71,7 +71,7 @@ bool OutlineRenderer::prepareData(QSSGFrameData &data)
     return true; // wasDirty
 }
 
-void OutlineRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data)
+void OutlineRenderer::prepareRender(QSSGFrameData &data)
 {
     if (modelId == QSSGNodeId::Invalid)
         return;
@@ -79,7 +79,8 @@ void OutlineRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData 
     if (stencilPrepResult == QSSGPrepResultId::Uninitialized || outlinePrepResult == QSSGPrepResultId::Uninitialized)
         return;
 
-    const auto &ctx = renderer.contextInterface();
+    auto *renderer = data.renderer();
+    const auto &ctx = renderer->contextInterface();
 
     if (const auto &rhiCtx = ctx->rhiContext()) {
         const auto basePs = data.getPipelineState();
@@ -126,12 +127,13 @@ void OutlineRenderer::prepareRender(const QSSGRenderer &renderer, QSSGFrameData 
     }
 }
 
-void OutlineRenderer::render(const QSSGRenderer &renderer)
+void OutlineRenderer::render(QSSGFrameData &data)
 {
     if (stencilPrepResult == QSSGPrepResultId::Uninitialized)
         return;
 
-    const auto &ctx = renderer.contextInterface();
+    auto *renderer = data.renderer();
+    const auto &ctx = renderer->contextInterface();
     if (const auto &rhiCtx = ctx->rhiContext()) {
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         cb->debugMarkBegin(QByteArrayLiteral("Stencil outline pass"));

@@ -77,8 +77,8 @@ public:
     virtual ~QSSGRenderExtension();
 
     virtual bool prepareData(QSSGFrameData &data) = 0;
-    virtual void prepareRender(const QSSGRenderer &renderer, QSSGFrameData &data) = 0;
-    virtual void render(const QSSGRenderer &renderer) = 0;
+    virtual void prepareRender(QSSGFrameData &data) = 0;
+    virtual void render(QSSGFrameData &data) = 0;
 
     virtual void resetForFrame() = 0;
 
