@@ -31,6 +31,12 @@ static inline QMatrix4x4 correctMVPForScissor(QRectF viewportRect, QRect scissor
                       0.0f, 0.0f, 1.0f, 0.0f,
                       0.0f, 0.0f, 0.0f, 1.0f);
 }
+
+QSSGRenderPass::~QSSGRenderPass()
+{
+
+}
+
 // SHADOW PASS
 
 void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)

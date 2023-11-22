@@ -43,6 +43,7 @@ public:
     };
     // Input:
 
+    virtual ~QSSGRenderPass();
     virtual void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) = 0;
     virtual void renderPass(QSSGRenderer &renderer) = 0;
     virtual Type passType() const = 0;
