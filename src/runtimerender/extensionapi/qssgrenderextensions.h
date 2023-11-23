@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QSSGRENDEREXTENSIIONS_P_H
-#define QSSGRENDEREXTENSIIONS_P_H
+#ifndef QSSGRENDEREXTENSIIONS_H
+#define QSSGRENDEREXTENSIIONS_H
 
 //
 //  W A R N I N G
@@ -15,7 +15,8 @@
 
 #include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
 #include <ssg/qssgrenderbasetypes.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
+#include <ssg/qssgrendergraphobject.h>
+#include <ssg/qssgrhicontext.h>
 #include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
@@ -88,4 +89,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QSSGRENDEREXTENSIIONS_P_H
+#endif // QSSGRENDEREXTENSIIONS_H

@@ -4,6 +4,7 @@
 #include "renderextension.h"
 
 #include <QtCore/qpointer.h>
+#include <QtCore/qfile.h>
 
 #include <rhi/qshader.h>
 #include <rhi/qrhi.h>
