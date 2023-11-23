@@ -15,6 +15,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DUtils/private/qtquick3dutilsexports_p.h>
+#include <QtQuick3DUtils/qtquick3dutilsexports.h>
 
 #endif // QTQUICK3DUTILSGLOBAL_P_H

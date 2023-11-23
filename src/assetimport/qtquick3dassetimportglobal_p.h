@@ -16,6 +16,6 @@
 //
 
 #include <QtGui/qtguiglobal.h>
-#include <QtQuick3DAssetImport/private/qtquick3dassetimportexports_p.h>
+#include <QtQuick3DAssetImport/qtquick3dassetimportexports.h>
 
 #endif // QTQUICK3DASSETIMPORTGLOBAL_H

@@ -33,7 +33,7 @@ class QQuickWindow;
 class QSSGBufferManager;
 class QSSGRenderContextInterface;
 
-class Q_QUICK3D_PRIVATE_EXPORT QQuick3DWindowAttachment : public QObject
+class Q_QUICK3D_EXPORT QQuick3DWindowAttachment : public QObject
 {
     Q_OBJECT
 public:
@@ -72,7 +72,7 @@ private:
     QSet<QSSGRenderGraphObject *> resourceCleanupQueue;
 };
 
-class Q_QUICK3D_PRIVATE_EXPORT QQuick3DSceneManager : public QObject
+class Q_QUICK3D_EXPORT QQuick3DSceneManager : public QObject
 {
     Q_OBJECT
 public:

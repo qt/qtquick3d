@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuick3DIblBaker/private/qtquick3diblbakerexports_p.h>
+#include <QtQuick3DIblBaker/qtquick3diblbakerexports.h>
 
 #endif // QTQUICK3DIBLBAKERGLOBAL_H

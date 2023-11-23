@@ -16,11 +16,11 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuick3DUtils/private/qtquick3dutilsexports_p.h>
+#include <QtQuick3DUtils/qtquick3dutilsexports.h>
 
 QT_BEGIN_NAMESPACE
 
-Q_QUICK3DUTILS_PRIVATE_EXPORT void qssgWriteAssertLocation(const char *msg);
+Q_QUICK3DUTILS_EXPORT void qssgWriteAssertLocation(const char *msg);
 
 QT_END_NAMESPACE
 

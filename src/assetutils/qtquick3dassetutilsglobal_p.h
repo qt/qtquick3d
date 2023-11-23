@@ -16,11 +16,11 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuick3DAssetUtils/private/qtquick3dassetutilsexports_p.h>
+#include <QtQuick3DAssetUtils/qtquick3dassetutilsexports.h>
 
 QT_BEGIN_NAMESPACE
 
-void Q_QUICK3DASSETUTILS_PRIVATE_EXPORT qml_register_types_QtQuick3D_AssetUtils();
+void Q_QUICK3DASSETUTILS_EXPORT qml_register_types_QtQuick3D_AssetUtils();
 
 QT_END_NAMESPACE
 

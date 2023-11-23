@@ -18,7 +18,7 @@
 
 #include <QtQuick3DUtils/private/qssgplane_p.h>
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderexports_p.h>
+#include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
 
 QT_BEGIN_NAMESPACE
 

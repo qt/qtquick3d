@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3D_PRIVATE_EXPORT QQuick3DGeometryPrivate : public QQuick3DObjectPrivate
+class Q_QUICK3D_EXPORT QQuick3DGeometryPrivate : public QQuick3DObjectPrivate
 {
 public:
     QQuick3DGeometryPrivate();

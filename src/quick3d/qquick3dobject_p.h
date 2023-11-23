@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DItem2D;
 
-class Q_QUICK3D_PRIVATE_EXPORT QQuick3DObjectPrivate : public QObjectPrivate
+class Q_QUICK3D_EXPORT QQuick3DObjectPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuick3DObject)
 public:

@@ -16,11 +16,11 @@
 //
 
 #include <QtGui/qtguiglobal.h>
-#include <QtQuick3DHelpers/private/qtquick3dhelpersexports_p.h>
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 
 QT_BEGIN_NAMESPACE
 
-void Q_QUICK3DHELPERS_PRIVATE_EXPORT qml_register_types_QtQuick3D_Helpers();
+void Q_QUICK3DHELPERS_EXPORT qml_register_types_QtQuick3D_Helpers();
 
 QT_END_NAMESPACE
 

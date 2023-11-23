@@ -15,6 +15,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderexports_p.h>
+#include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
 
 #endif // QTQUICK3DRUNTIMERENDERGLOBAL_P_H

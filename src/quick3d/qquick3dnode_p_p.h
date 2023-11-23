@@ -31,7 +31,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DNode;
 
-class Q_QUICK3D_PRIVATE_EXPORT QQuick3DNodePrivate : public QQuick3DObjectPrivate
+class Q_QUICK3D_EXPORT QQuick3DNodePrivate : public QQuick3DObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuick3DNode)
 
