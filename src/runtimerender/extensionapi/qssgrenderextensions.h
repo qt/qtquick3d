@@ -33,7 +33,6 @@ public:
         DepthTexture,
         ScreenTexture
     };
-    using RenderResultT = std::underlying_type_t<RenderResult>;
 
     struct Result
     {
