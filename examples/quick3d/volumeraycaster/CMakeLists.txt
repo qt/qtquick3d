@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.16)
-project(volumetric LANGUAGES CXX)
+project(volumeraycaster LANGUAGES CXX)
 find_package(OpenMP)
 
 set(CMAKE_AUTOMOC ON)
@@ -11,11 +11,11 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/volumetric")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/volumeraycaster")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
 
-qt_add_executable(volumetric
+qt_add_executable(volumeraycaster
     main.cpp
     volumetexturedata.cpp
     volumetexturedata.h
@@ -23,12 +23,12 @@ qt_add_executable(volumetric
     lineboxgeometry.h
 )
 
-set_target_properties(volumetric PROPERTIES
+set_target_properties(volumeraycaster PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
 
-target_link_libraries(volumetric PUBLIC
+target_link_libraries(volumeraycaster PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
@@ -36,12 +36,12 @@ target_link_libraries(volumetric PUBLIC
 )
 
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(volumetric PUBLIC
+    target_link_libraries(volumeraycaster PUBLIC
         OpenMP::OpenMP_CXX
     )
 endif()
 
-qt_add_qml_module(volumetric
+qt_add_qml_module(volumeraycaster
     URI VolumetricExample
     VERSION 1.0
     QML_FILES
@@ -63,7 +63,7 @@ qt_add_qml_module(volumetric
     NO_RESOURCE_TARGET_PATH
 )
 
-install(TARGETS volumetric
+install(TARGETS volumeraycaster
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -4,7 +4,7 @@ CONFIG += qmltypes
 QML_IMPORT_NAME = VolumetricExample
 QML_IMPORT_MAJOR_VERSION = 1
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quick3d/volumetric
+target.path = $$[QT_INSTALL_EXAMPLES]/quick3d/volumeraycaster
 INSTALLS += target
 
 SOURCES += \
