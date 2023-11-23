@@ -13,7 +13,7 @@ qt_internal_add_qml_module(Quick3DParticleEffects
     PLUGIN_TARGET qtquick3dparticleeffectsplugin
     DEPENDENCIES
         QtQuick3D/auto
-        QtQuick3DParticles3D/auto
+        QtQuick3D.Particles3D/auto
     NO_SYNC_QT
     DEFINES
         QT_BUILD_QUICK3DPARTICLEEFFECTS_LIB
