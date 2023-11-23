@@ -24,8 +24,6 @@ QT_BEGIN_NAMESPACE
 class QSSGRenderer;
 class QSSGLayerRenderData;
 
-struct QSSGRhiRenderableTexture;
-
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGFrameData
 {
 public:
@@ -35,10 +33,15 @@ public:
         DepthTexture,
         ScreenTexture
     };
-
     using RenderResultT = std::underlying_type_t<RenderResult>;
 
-    const QSSGRhiRenderableTexture *getRenderResult(RenderResult id) const;
+    struct Result
+    {
+        QRhiTexture *texture = nullptr;
+        QRhiRenderBuffer *buffer = nullptr;
+    };
+
+    Result getRenderResult(RenderResult id) const;
 
     [[nodiscard]] QSSGRhiGraphicsPipelineState getPipelineState() const;
 

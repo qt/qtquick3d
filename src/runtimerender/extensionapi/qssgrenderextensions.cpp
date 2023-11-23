@@ -24,14 +24,14 @@ QT_BEGIN_NAMESPACE
     \note The returned value is only valid within the current frame. On each new frame
     the renderable will be reset and should therefore be queried again.
 */
-const QSSGRhiRenderableTexture *QSSGFrameData::getRenderResult(RenderResult id) const
+QSSGFrameData::Result QSSGFrameData::getRenderResult(RenderResult id) const
 {
     const QSSGRhiRenderableTexture *res = nullptr;
     auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
     if (QSSG_GUARD(data && (std::size(data->renderResults) > RenderResultT(id))))
         res = data->getRenderResult(id);
 
-    return res;
+    return res ? Result{ res->texture, res->depthStencil } : Result{};
 }
 
 /*!
