@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 
     \qml
     DirectionalLight {
-        eulerRotation.x: 30
+        eulerRotation.x: 60
     }
     \endqml
 
