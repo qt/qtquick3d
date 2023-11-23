@@ -329,7 +329,7 @@ QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGNodeId cameraId,
     QMatrix4x4 mat44{Qt::Uninitialized};
     const auto &projection = renderCamera->projection;
     const auto &transform = (globalTransform != 0) ? *globalTransform : renderCamera->globalTransform;
-    QSSGRenderCamera::calculateViewProjectionMatrix(projection, transform, mat44);
+    QSSGRenderCamera::calculateViewProjectionMatrix(transform, projection, mat44);
     return mat44;
 }
 
