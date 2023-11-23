@@ -88,7 +88,6 @@ qt_internal_add_module(Quick3D
         Qt::Quick3DRuntimeRenderPrivate
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
 )
 
 qt_internal_add_qml_module(Quick3D

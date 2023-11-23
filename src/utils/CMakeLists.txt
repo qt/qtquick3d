@@ -77,7 +77,6 @@ qt_internal_add_module(Quick3DUtils
         Qt::GuiPrivate
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
     SSG_HEADER_FILTERS
         "(^|/)qssg.*[^_][^p]\\.h$"
 )

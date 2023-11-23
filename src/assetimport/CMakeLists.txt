@@ -29,7 +29,6 @@ qt_internal_add_module(Quick3DAssetImport
         Qt::CorePrivate
         Qt::Quick3DUtilsPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
 )
 
 #### Keys ignored in scope 1:.:.:assetimport.pro:<TRUE>:

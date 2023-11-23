@@ -100,7 +100,6 @@ qt_internal_add_module(Quick3DRuntimeRender
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
     SSG_HEADER_FILTERS
         "(^|/)qssg.*[^_][^p]\\.h$"
 )
