@@ -37,6 +37,7 @@
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <optional>
+#include <unordered_map>
 
 #include "qssgrenderpass_p.h"
 
@@ -234,14 +235,14 @@ public:
 
 
     // Per-frame cache of renderable objects post-sort (for the MAIN rendering camera, i.e., don't use these lists for rendering from a different camera).
-    const QSSGRenderableObjectList &getSortedOpaqueRenderableObjects();
+    const QSSGRenderableObjectList &getSortedOpaqueRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0);
     // If layer depth test is false, this may also contain opaque objects.
-    const QSSGRenderableObjectList &getSortedTransparentRenderableObjects();
-    const QSSGRenderableObjectList &getSortedScreenTextureRenderableObjects();
+    const QSSGRenderableObjectList &getSortedTransparentRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0);
+    const QSSGRenderableObjectList &getSortedScreenTextureRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0);
     const QVector<QSSGBakedLightingModel> &getSortedBakedLightingModels();
     const RenderableItem2DEntries &getRenderableItem2Ds();
-    const QSSGRenderableObjectList &getSortedRenderedDepthWriteObjects();
-    const QSSGRenderableObjectList &getSortedrenderedOpaqueDepthPrepassObjects();
+    const QSSGRenderableObjectList &getSortedRenderedDepthWriteObjects(const QSSGRenderCamera &camera, size_t index = 0);
+    const QSSGRenderableObjectList &getSortedrenderedOpaqueDepthPrepassObjects(const QSSGRenderCamera &camera, size_t index = 0);
 
     void resetForFrame();
 
@@ -285,17 +286,10 @@ public:
     // Results of prepare for render.
     QSSGRenderCamera *camera = nullptr;
     QSSGShaderLightList globalLights; // All non-scoped lights
-    QSSGRenderableObjectList opaqueObjects;
-    QSSGRenderableObjectList transparentObjects;
-    QSSGRenderableObjectList screenTextureObjects;
+
     QVector<QSSGBakedLightingModel> bakedLightingModels;
     // Sorted lists of the rendered objects.  There may be other transforms applied so
     // it is simplest to duplicate the lists.
-    QSSGRenderableObjectList renderedOpaqueObjects;
-    QSSGRenderableObjectList renderedTransparentObjects;
-    QSSGRenderableObjectList renderedScreenTextureObjects;
-    QSSGRenderableObjectList renderedOpaqueDepthPrepassObjects;
-    QSSGRenderableObjectList renderedDepthWriteObjects;
     QVector<QSSGBakedLightingModel> renderedBakedLightingModels;
     RenderableItem2DEntries renderedItem2Ds;
 
@@ -426,10 +420,20 @@ private:
     std::vector<RenderableNodeEntries> renderableModelStore { { /* 0 - Always available */ } };
     std::vector<TModelContextPtrList> modelContextStore { { /* 0 - Always available */ }};
     std::vector<QSSGRenderableObjectList> renderableObjectStore { { /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> opaqueObjectStore { { /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> transparentObjectStore { { /* 0 - Always available */ }};
     std::vector<QSSGRenderableObjectList> screenTextureObjectStore { { /* 0 - Always available */ }};
 
+    // Soreted cache (per camera and extension)
+    using PerCameraCache = std::unordered_map<const QSSGRenderCamera *, QSSGRenderableObjectList>;
+    std::vector<PerCameraCache> sortedOpaqueObjectCache { { /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedTransparentObjectCache { { /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedScreenTextureObjectCache { { /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedOpaqueDepthPrepassCache { { /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedDepthWriteCache { { /* 0 - Always available */ } };
+
     [[nodiscard]] QSSGCameraRenderData getCachedCameraData();
-    void updateSortedDepthObjectsListImp();
+    void updateSortedDepthObjectsListImp(const QSSGRenderCamera &camera, size_t index);
 
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                          QSSGRenderableObjectFlags &inExistingFlags,

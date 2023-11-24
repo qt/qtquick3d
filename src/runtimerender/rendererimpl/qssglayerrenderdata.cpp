@@ -293,41 +293,63 @@ QSSGCameraRenderData QSSGLayerRenderData::getCachedCameraData()
 }
 
 // Per-frame cache of renderable objects post-sort.
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueRenderableObjects(const QSSGRenderCamera &camera, size_t index)
 {
-    if (!renderedOpaqueObjects.empty() || camera == nullptr)
-        return renderedOpaqueObjects;
+    index = index * size_t(index < opaqueObjectStore.size());
+    auto &sortedOpaqueObjects = sortedOpaqueObjectCache[index][&camera];
+    if (!sortedOpaqueObjects.empty())
+        return sortedOpaqueObjects;
 
-    if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest) && !opaqueObjects.empty()) {
-        renderedOpaqueObjects = opaqueObjects;
-        // Render nearest to furthest objects
-        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), nearestToFurthestCompare);
+    if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest))
+        sortedOpaqueObjects = std::as_const(opaqueObjectStore)[index];
+
+    const auto &clippingFrustum = getCameraRenderData(&camera).clippingFrustum;
+    if (clippingFrustum.has_value()) { // Frustum culling
+        const auto visibleObjects = QSSGLayerRenderData::frustumCullingInline(clippingFrustum.value(), sortedOpaqueObjects);
+        sortedOpaqueObjects.resize(visibleObjects);
     }
-    return renderedOpaqueObjects;
+
+    // Render nearest to furthest objects
+    std::sort(sortedOpaqueObjects.begin(), sortedOpaqueObjects.end(), nearestToFurthestCompare);
+
+    return sortedOpaqueObjects;
 }
 
 // If layer depth test is false, this may also contain opaque objects.
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTransparentRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTransparentRenderableObjects(const QSSGRenderCamera &camera, size_t index)
 {
-    if (!renderedTransparentObjects.empty() || camera == nullptr)
-        return renderedTransparentObjects;
+    index = index * size_t(index < transparentObjectStore.size());
+    auto &sortedTransparentObjects = sortedTransparentObjectCache[index][&camera];
 
-    renderedTransparentObjects = transparentObjects;
+    if (!sortedTransparentObjects.empty())
+        return sortedTransparentObjects;
 
-    if (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest))
-        renderedTransparentObjects.append(opaqueObjects);
+    sortedTransparentObjects = std::as_const(transparentObjectStore)[index];
 
-    if (!renderedTransparentObjects.empty()) {
-        // render furthest to nearest.
-        std::sort(renderedTransparentObjects.begin(), renderedTransparentObjects.end(), furthestToNearestCompare);
+    if (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
+        const auto &opaqueObjects = std::as_const(opaqueObjectStore)[index];
+        sortedTransparentObjects.append(opaqueObjects);
     }
 
-    return renderedTransparentObjects;
+    const auto &clippingFrustum = getCameraRenderData(&camera).clippingFrustum;
+    if (clippingFrustum.has_value()) { // Frustum culling
+        const auto visibleObjects = QSSGLayerRenderData::frustumCullingInline(clippingFrustum.value(), sortedTransparentObjects);
+        sortedTransparentObjects.resize(visibleObjects);
+    }
+
+    // render furthest to nearest.
+    std::sort(sortedTransparentObjects.begin(), sortedTransparentObjects.end(), furthestToNearestCompare);
+
+    return sortedTransparentObjects;
 }
 
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedScreenTextureRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedScreenTextureRenderableObjects(const QSSGRenderCamera &camera, size_t index)
 {
-    if (!renderedScreenTextureObjects.empty() || camera == nullptr)
+    index = index * size_t(index < screenTextureObjectStore.size());
+    const auto &screenTextureObjects = std::as_const(screenTextureObjectStore)[index];
+    auto &renderedScreenTextureObjects = sortedScreenTextureObjectCache[index][&camera];
+
+    if (!renderedScreenTextureObjects.empty())
         return renderedScreenTextureObjects;
     renderedScreenTextureObjects = screenTextureObjects;
     if (!renderedScreenTextureObjects.empty()) {
@@ -394,40 +416,43 @@ const QSSGLayerRenderData::RenderableItem2DEntries &QSSGLayerRenderData::getRend
 }
 
 // Depth Write List
-void QSSGLayerRenderData::updateSortedDepthObjectsListImp()
+void QSSGLayerRenderData::updateSortedDepthObjectsListImp(const QSSGRenderCamera &camera, size_t index)
 {
-    if (!renderedDepthWriteObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty())
+    auto &depthWriteObjects = sortedDepthWriteCache[index][&camera];
+    auto &depthPrepassObjects = sortedOpaqueDepthPrepassCache[index][&camera];
+
+    if (!depthWriteObjects.isEmpty() || !depthPrepassObjects.isEmpty())
         return;
 
     if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
         if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::Opaque)) != 0) {
-            const auto &sortedOpaqueObjects = getSortedOpaqueRenderableObjects(); // front to back
+            const auto &sortedOpaqueObjects = getSortedOpaqueRenderableObjects(camera, index); // front to back
             for (const auto &opaqueObject : sortedOpaqueObjects) {
                 const auto depthMode = opaqueObject.obj->depthWriteMode;
                 if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
-                    renderedDepthWriteObjects.append(opaqueObject);
+                    depthWriteObjects.append(opaqueObject);
                 else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                    renderedOpaqueDepthPrepassObjects.append(opaqueObject);
+                    depthPrepassObjects.append(opaqueObject);
             }
         }
         if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::Transparent)) != 0) {
-            const auto &sortedTransparentObjects = getSortedTransparentRenderableObjects(); // back to front
+            const auto &sortedTransparentObjects = getSortedTransparentRenderableObjects(camera, index); // back to front
             for (const auto &transparentObject : sortedTransparentObjects) {
                 const auto depthMode = transparentObject.obj->depthWriteMode;
                 if (depthMode == QSSGDepthDrawMode::Always)
-                    renderedDepthWriteObjects.append(transparentObject);
+                    depthWriteObjects.append(transparentObject);
                 else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                    renderedOpaqueDepthPrepassObjects.append(transparentObject);
+                    depthPrepassObjects.append(transparentObject);
             }
         }
         if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::ScreenTexture)) != 0) {
-            const auto &sortedScreenTextureObjects = getSortedScreenTextureRenderableObjects(); // back to front
+            const auto &sortedScreenTextureObjects = getSortedScreenTextureRenderableObjects(camera, index); // back to front
             for (const auto &screenTextureObject : sortedScreenTextureObjects) {
                 const auto depthMode = screenTextureObject.obj->depthWriteMode;
                 if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
-                    renderedDepthWriteObjects.append(screenTextureObject);
+                    depthWriteObjects.append(screenTextureObject);
                 else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                    renderedOpaqueDepthPrepassObjects.append(screenTextureObject);
+                    depthPrepassObjects.append(screenTextureObject);
             }
         }
     }
@@ -457,10 +482,24 @@ QSSGPrepContextId QSSGLayerRenderData::getOrCreateExtensionContext(const QSSGRen
         modelContextStore.emplace_back();
         renderableObjectStore.emplace_back();
         screenTextureObjectStore.emplace_back();
+        opaqueObjectStore.emplace_back();
+        transparentObjectStore.emplace_back();
+        sortedOpaqueObjectCache.emplace_back();
+        sortedTransparentObjectCache.emplace_back();
+        sortedScreenTextureObjectCache.emplace_back();
+        sortedOpaqueDepthPrepassCache.emplace_back();
+        sortedDepthWriteCache.emplace_back();
         QSSG_ASSERT(renderableModelStore.size() == extContexts.size(), renderableModelStore.resize(extContexts.size()));
         QSSG_ASSERT(modelContextStore.size() == extContexts.size(), modelContextStore.resize(extContexts.size()));
         QSSG_ASSERT(renderableObjectStore.size() == extContexts.size(), renderableObjectStore.resize(extContexts.size()));
         QSSG_ASSERT(screenTextureObjectStore.size() == extContexts.size(), screenTextureObjectStore.resize(extContexts.size()));
+        QSSG_ASSERT(opaqueObjectStore.size() == extContexts.size(), opaqueObjectStore.resize(extContexts.size()));
+        QSSG_ASSERT(transparentObjectStore.size() == extContexts.size(), transparentObjectStore.resize(extContexts.size()));
+        QSSG_ASSERT(sortedOpaqueObjectCache.size() == extContexts.size(), sortedOpaqueObjectCache.resize(extContexts.size()));
+        QSSG_ASSERT(sortedTransparentObjectCache.size() == extContexts.size(), sortedTransparentObjectCache.resize(extContexts.size()));
+        QSSG_ASSERT(sortedScreenTextureObjectCache.size() == extContexts.size(), sortedScreenTextureObjectCache.resize(extContexts.size()));
+        QSSG_ASSERT(sortedOpaqueDepthPrepassCache.size() == extContexts.size(), sortedOpaqueDepthPrepassCache.resize(extContexts.size()));
+        QSSG_ASSERT(sortedDepthWriteCache.size() == extContexts.size(), sortedDepthWriteCache.resize(extContexts.size()));
     }
 
     return createPrepId(it->index, frame);
@@ -646,8 +685,11 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
     auto &renderableObjects = renderableObjectStore[index];
     QSSG_ASSERT(renderableObjects.isEmpty(), renderableObjects.clear());
 
-    auto &opaqueObjects = renderableObjects;
-    auto &transparentObjects = renderableObjects;
+    auto &opaqueObjects = opaqueObjectStore[index];
+    QSSG_ASSERT(opaqueObjects.isEmpty(), opaqueObjects.clear());
+
+    auto &transparentObjects = transparentObjectStore[index];
+    QSSG_ASSERT(transparentObjects.isEmpty(), transparentObjects.clear());
 
     auto &screenTextureObjects = screenTextureObjectStore[index];
     QSSG_ASSERT(screenTextureObjects.isEmpty(), screenTextureObjects.clear());
@@ -680,13 +722,19 @@ void QSSGLayerRenderData::prepareRenderables(QSSGRenderContextInterface &ctx,
     const auto &extCtx = extContexts.at(index);
     const auto &rhiCtx = ctx.rhiContext();
 
+    QSSG_ASSERT(extCtx.camera, return);
+
     QSSGShaderFeatures featureSet = getShaderFeatures();
 
-    const auto &renderables = renderableObjectStore.at(index);
-    for (const auto &renderable : renderables) {
-        QSSGPassKey passKey { reinterpret_cast<void *>(quintptr(extCtx.owner) ^ extCtx.slot) }; // TODO: Pass this along
+    QSSGPassKey passKey { reinterpret_cast<void *>(quintptr(extCtx.owner) ^ extCtx.slot) }; // TODO: Pass this along
+
+    const auto &sortedOpaqueRenderables = getSortedOpaqueRenderableObjects(*extCtx.camera, index);
+    for (const auto &renderable : sortedOpaqueRenderables)
         RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, *this, *renderable.obj, renderPassDescriptor, &ps, featureSet, ps.samples);
-    }
+
+    const auto &sortedTransparentRenderables = getSortedTransparentRenderableObjects(*extCtx.camera, index);
+    for (const auto &renderable : sortedTransparentRenderables)
+        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, *this, *renderable.obj, renderPassDescriptor, &ps, featureSet, ps.samples);
 
     extCtx.ps = ps;
 }
@@ -701,21 +749,26 @@ void QSSGLayerRenderData::renderRenderables(QSSGRenderContextInterface &ctx, QSS
     const auto &rhiCtx = ctx.rhiContext();
 
     bool needsSetViewport = true;
-    const auto &renderables = std::as_const(renderableObjectStore)[index];
-    for (const auto &renderable : renderables)
+
+    const auto &sortedOpaqueRenderables = getSortedOpaqueRenderableObjects(*extCtx.camera, index);
+    for (const auto &renderable : sortedOpaqueRenderables)
+        RenderHelpers::rhiRenderRenderable(rhiCtx.get(), extCtx.ps, *renderable.obj, &needsSetViewport);
+
+    const auto &sortedTransparentRenderables = getSortedTransparentRenderableObjects(*extCtx.camera, index);
+    for (const auto &renderable : sortedTransparentRenderables)
         RenderHelpers::rhiRenderRenderable(rhiCtx.get(), extCtx.ps, *renderable.obj, &needsSetViewport);
 }
 
-const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedRenderedDepthWriteObjects()
+const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedRenderedDepthWriteObjects(const QSSGRenderCamera &camera, size_t index)
 {
-    updateSortedDepthObjectsListImp();
-    return renderedDepthWriteObjects;
+    updateSortedDepthObjectsListImp(camera, index);
+    return sortedDepthWriteCache[index][&camera];
 }
 
-const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedrenderedOpaqueDepthPrepassObjects()
+const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedrenderedOpaqueDepthPrepassObjects(const QSSGRenderCamera &camera, size_t index)
 {
-    updateSortedDepthObjectsListImp();
-    return renderedOpaqueDepthPrepassObjects;
+    updateSortedDepthObjectsListImp(camera, index);
+    return sortedOpaqueDepthPrepassCache[index][&camera];;
 }
 
 /**
@@ -1724,6 +1777,11 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
 
     bool dirty = false;
 
+    //
+    auto &opaqueObjects = opaqueObjectStore[0];
+    auto &transparentObjects = transparentObjectStore[0];
+    auto &screenTextureObjects = screenTextureObjectStore[0];
+
     for (const auto &renderable : renderableParticles) {
         const QSSGRenderParticles &particles = *static_cast<QSSGRenderParticles *>(renderable.node);
         const auto &lights = renderable.lights;
@@ -1861,6 +1919,9 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
             }
         };
 
+        const auto &transparentObjects = std::as_const(transparentObjectStore[0]);
+        const auto &opaqueObjects = std::as_const(opaqueObjectStore[0]);
+
         for (const auto &handle : std::as_const(transparentObjects))
             injectProbe(handle);
 
@@ -1948,10 +2009,6 @@ void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNode
 void QSSGLayerRenderData::prepareForRender()
 {
     QSSG_ASSERT_X(layerPrepResult.isNull(), "Prep-result was not reset for render!", layerPrepResult = {});
-
-    // Verify that the depth write list(s) were cleared between frames
-    QSSG_ASSERT(renderedDepthWriteObjects.isEmpty(), renderedDepthWriteObjects.clear());
-    QSSG_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty(), renderedOpaqueDepthPrepassObjects.clear());
 
     QRect theViewport(renderer->viewport());
 
@@ -2273,6 +2330,10 @@ void QSSGLayerRenderData::prepareForRender()
     // Ensure meshes for models
     prepareModelMeshes(*renderer->contextInterface(), renderableModels, QSSGRendererPrivate::isGlobalPickingEnabled(*renderer));
 
+    auto &opaqueObjects = opaqueObjectStore[0];
+    auto &transparentObjects = transparentObjectStore[0];
+    auto &screenTextureObjects = screenTextureObjectStore[0];
+
     if (camera) { // NOTE: We shouldn't really get this far without a camera...
         const auto &cameraData = getCachedCameraData();
         wasDirty |= prepareModelsForRender(*renderer->contextInterface(), renderableModels, layerPrepResult.flags, *camera, cameraData, modelContexts, opaqueObjects, transparentObjects, screenTextureObjects, meshLodThreshold);
@@ -2414,21 +2475,13 @@ void QSSGLayerRenderData::resetForFrame()
     for (const auto &pass : activePasses)
         pass->resetForFrame();
     activePasses.clear();
-    transparentObjects.clear();
-    screenTextureObjects.clear();
-    opaqueObjects.clear();
     bakedLightingModels.clear();
     layerPrepResult = {};
     // The check for if the camera is or is not null is used
     // to figure out if this layer was rendered at all.
     camera = nullptr;
     cameraData.reset();
-    renderedOpaqueObjects.clear();
-    renderedTransparentObjects.clear();
-    renderedScreenTextureObjects.clear();
     renderedItem2Ds.clear();
-    renderedOpaqueDepthPrepassObjects.clear();
-    renderedDepthWriteObjects.clear();
     renderedBakedLightingModels.clear();
     renderableItem2Ds.clear();
     lightmapTextures.clear();
@@ -2443,7 +2496,14 @@ void QSSGLayerRenderData::resetForFrame()
     clearTable(renderableModelStore);
     clearTable(modelContextStore);
     clearTable(renderableObjectStore);
+    clearTable(opaqueObjectStore);
+    clearTable(transparentObjectStore);
     clearTable(screenTextureObjectStore);
+    clearTable(sortedOpaqueObjectCache);
+    clearTable(sortedTransparentObjectCache);
+    clearTable(sortedScreenTextureObjectCache);
+    clearTable(sortedOpaqueDepthPrepassCache);
+    clearTable(sortedDepthWriteCache);
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer)

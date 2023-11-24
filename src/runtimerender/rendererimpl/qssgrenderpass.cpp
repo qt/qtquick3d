@@ -47,8 +47,8 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     camera = data.camera;
     QSSG_ASSERT(camera, return);
 
-    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
-    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
+    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects(*camera);
+    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects(*camera);
 
     QSSG_ASSERT(shadowPassObjects.isEmpty(), shadowPassObjects.clear());
 
@@ -73,8 +73,8 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         ps.depthBias = 2;
         ps.slopeScaledDepthBias = 1.5f;
 
-        const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
-        const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+        const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
+        const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
         const auto [casting, receiving] = calculateSortedObjectBounds(sortedOpaqueObjects,
                                                                       sortedTransparentObjects);
         castingObjectsBox = casting;
@@ -137,6 +137,9 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     Q_UNUSED(renderer);
     Q_UNUSED(data);
 
+    auto *camera = data.camera;
+    QSSG_ASSERT(camera, return);
+
     ps = data.getPipelineState();
     ps.depthTestEnable = true;
     ps.depthWriteEnable = true;
@@ -145,8 +148,8 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     reflectionProbes = data.reflectionProbes;
     reflectionMapManager = data.requestReflectionMapManager();
 
-    const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
-    const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+    const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
+    const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
 
     QSSG_ASSERT(reflectionPassObjects.isEmpty(), reflectionPassObjects.clear());
 
@@ -225,13 +228,16 @@ void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     // CONDITION: Input + globally enabled or ?
 
+    auto *camera = data.camera;
+    QSSG_ASSERT(camera, return);
+
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     ps = data.getPipelineState();
 
-    renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
-    renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
+    renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects(*camera);
+    renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects(*camera);
 
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D prepare Z prepass"));
@@ -354,6 +360,9 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
+    auto *camera = data.camera;
+    QSSG_ASSERT(camera, return);
+
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     const auto &layerPrepResult = data.layerPrepResult;
@@ -361,8 +370,8 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     ps = data.getPipelineState();
     rhiDepthTexture = data.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
     if (Q_LIKELY(rhiDepthTexture && rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiDepthTexture))) {
-        sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
-        sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+        sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
+        sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
         ready = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiDepthTexture->rpDesc, data,
                                     sortedOpaqueObjects, sortedTransparentObjects,
                                     1);
@@ -432,13 +441,16 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 {
     using namespace RenderHelpers;
 
+    auto *camera = data.camera;
+    QSSG_ASSERT(camera, return);
+
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     rhiScreenTexture = data.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
     auto &layer = data.layer;
     const auto &layerPrepResult = data.layerPrepResult;
     wantsMips = layerPrepResult.flags.requiresMipmapsForScreenTexture();
-    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
     ps = data.getPipelineState();
 
     if (layer.background == QSSGRenderLayer::Background::Color)
@@ -465,7 +477,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         // Disable Tonemapping for all materials in the screen pass texture
         shaderFeatures = data.getShaderFeatures();
         shaderFeatures.disableTonemapping();
-        const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+        const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
         for (const auto &handle : sortedOpaqueObjects)
             rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1);
     }
@@ -538,6 +550,9 @@ void ScreenMapPass::resetForFrame()
 
 void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
+    auto *camera = data.camera;
+    QSSG_ASSERT(camera, return);
+
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     rhiScreenTexture = data.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
@@ -554,7 +569,7 @@ void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderDat
     ps = data.getPipelineState();
     ps.depthTestEnable = data.screenMapPass.ps.depthTestEnable;
     ps.depthWriteEnable = data.screenMapPass.ps.depthWriteEnable;
-    sortedScreenTextureObjects = data.getSortedScreenTextureRenderableObjects();
+    sortedScreenTextureObjects = data.getSortedScreenTextureRenderableObjects(*camera);
     for (const auto &handle : std::as_const(sortedScreenTextureObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
@@ -604,14 +619,7 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     ps = data.getPipelineState();
 
-    { // Frustum culling
-        const auto &clippingFrustum = data.cameraData->clippingFrustum;
-        const auto &opaqueObjects = data.getSortedOpaqueRenderableObjects();
-        if (clippingFrustum.has_value())
-            QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), opaqueObjects, sortedOpaqueObjects);
-        else
-            sortedOpaqueObjects = opaqueObjects;
-    }
+    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
 
     shaderFeatures = data.getShaderFeatures();
 
@@ -681,14 +689,7 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
 
     shaderFeatures = data.getShaderFeatures();
 
-    { // Frustum culling
-        const auto &clippingFrustum = data.cameraData->clippingFrustum;
-        const auto &transparentObject = data.getSortedTransparentRenderableObjects();
-        if (clippingFrustum.has_value())
-            QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), transparentObject, sortedTransparentObjects);
-        else
-            sortedTransparentObjects = transparentObject;
-    }
+    sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
 
     const bool zPrePassActive = data.isZPrePassActive();
     for (const auto &handle : std::as_const(sortedTransparentObjects)) {

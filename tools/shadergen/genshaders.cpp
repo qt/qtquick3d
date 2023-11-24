@@ -206,11 +206,14 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         const auto &propertyTable = layerData.getDefaultMaterialPropertyTable();
 
+        const auto &opaqueObjects = layerData.getSortedOpaqueRenderableObjects(*layerData.camera);
+        const auto &transparentObjects = layerData.getSortedTransparentRenderableObjects(*layerData.camera);
+
         QSSGRenderableObject *renderable = nullptr;
-        if (!layerData.opaqueObjects.isEmpty())
-            renderable = layerData.opaqueObjects.at(0).obj;
-        else if (!layerData.transparentObjects.isEmpty())
-            renderable = layerData.transparentObjects.at(0).obj;
+        if (!opaqueObjects.isEmpty())
+            renderable = opaqueObjects[0].obj;
+        else if (!transparentObjects.isEmpty())
+            renderable = transparentObjects[0].obj;
 
         auto generateShader = [&](const QSSGShaderFeatures &features) {
             if ((renderable->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset)) {
