@@ -6,7 +6,6 @@
 #include <rhi/qrhi.h>
 #include <QGuiApplication>
 #include <ssg/qssgrendercontextcore.h>
-#include <ssg/qssgrenderer.h>
 #include <ssg/qssgrenderextensions.h>
 #include <ssg/qssgrenderhelpers.h>
 
@@ -81,8 +80,7 @@ void Renderer::prepareRender(QSSGFrameData &data)
     if (!canRender)
         return;
 
-    auto *renderer = data.renderer();
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = data.contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -165,8 +163,7 @@ void Renderer::render(QSSGFrameData &data)
     if (!canRender)
         return;
 
-    auto *renderer = data.renderer();
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = data.contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 

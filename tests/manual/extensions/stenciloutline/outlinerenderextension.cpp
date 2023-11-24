@@ -11,7 +11,6 @@
 #include <ssg/qssgrenderhelpers.h>
 #include <ssg/qssgrenderextensions.h>
 #include <ssg/qssgrendercontextcore.h>
-#include <ssg/qssgrenderer.h>
 
 class OutlineRenderer : public QSSGRenderExtension
 {
@@ -79,8 +78,7 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
     if (stencilPrepResult == QSSGPrepResultId::Uninitialized || outlinePrepResult == QSSGPrepResultId::Uninitialized)
         return;
 
-    auto *renderer = data.renderer();
-    const auto &ctx = renderer->contextInterface();
+    const auto &ctx = data.contextInterface();
 
     if (const auto &rhiCtx = ctx->rhiContext()) {
         const auto basePs = data.getPipelineState();
@@ -132,8 +130,7 @@ void OutlineRenderer::render(QSSGFrameData &data)
     if (stencilPrepResult == QSSGPrepResultId::Uninitialized)
         return;
 
-    auto *renderer = data.renderer();
-    const auto &ctx = renderer->contextInterface();
+    const auto &ctx = data.contextInterface();
     if (const auto &rhiCtx = ctx->rhiContext()) {
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         cb->debugMarkBegin(QByteArrayLiteral("Stencil outline pass"));

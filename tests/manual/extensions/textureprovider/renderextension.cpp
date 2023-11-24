@@ -12,7 +12,6 @@
 #include <ssg/qssgrenderextensions.h>
 #include <ssg/qssgrenderhelpers.h>
 #include <ssg/qssgrendercontextcore.h>
-#include <ssg/qssgrenderer.h>
 #include <ssg/qssgrhicontext.h>
 #include <ssg/qquick3dextensionhelpers.h>
 
@@ -68,8 +67,7 @@ bool TextureProvider::prepareData(QSSGFrameData &data)
 
 void TextureProvider::prepareRender(QSSGFrameData &data)
 {
-    auto *renderer = data.renderer();
-    const auto &ctxIfx = renderer->contextInterface();
+    const auto &ctxIfx = data.contextInterface();
     const auto &rhiCtx = ctxIfx->rhiContext();
     if (!rhiCtx)
         return;
@@ -129,8 +127,7 @@ void TextureProvider::prepareRender(QSSGFrameData &data)
 
 void TextureProvider::render(QSSGFrameData &data)
 {
-    auto *renderer = data.renderer();
-    const auto &ctxIfx = renderer->contextInterface();
+    const auto &ctxIfx = data.contextInterface();
     const auto &rhiCtx = ctxIfx->rhiContext();
     if (!rhiCtx)
         return;

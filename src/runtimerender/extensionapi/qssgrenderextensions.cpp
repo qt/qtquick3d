@@ -4,6 +4,7 @@
 #include "qssgrenderextensions.h"
 #include "private/qssgassert_p.h"
 #include "private/qssglayerrenderdata_p.h"
+#include "qssgrendercontextcore.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -28,7 +29,7 @@ QSSGFrameData::Result QSSGFrameData::getRenderResult(RenderResult id) const
 {
     using RenderResultT = std::underlying_type_t<RenderResult>;
     const QSSGRhiRenderableTexture *res = nullptr;
-    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
+    auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
     if (QSSG_GUARD(data && (std::size(data->renderResults) > RenderResultT(id))))
         res = data->getRenderResult(id);
 
@@ -40,7 +41,7 @@ QSSGFrameData::Result QSSGFrameData::getRenderResult(RenderResult id) const
  */
 QSSGRhiGraphicsPipelineState QSSGFrameData::getPipelineState() const
 {
-    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
+    auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
     QSSG_ASSERT(data, return {});
     return data->getPipelineState();
 }
@@ -51,12 +52,17 @@ QSSGRhiGraphicsPipelineState QSSGFrameData::getPipelineState() const
 QSSGNodeId QSSGFrameData::activeCamera() const
 {
     QSSGNodeId ret { QSSGNodeId::Invalid };
-    auto *data = QSSGLayerRenderData::getCurrent(*m_renderer);
+    auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
     QSSG_ASSERT(data, return ret);
     if (auto *ac = data->activeCamera())
         ret = QSSGRenderGraphObjectUtils::getNodeId(*ac);
 
     return ret;
+}
+
+QSSGRenderContextInterface *QSSGFrameData::contextInterface() const
+{
+    return m_ctx;
 }
 
 void QSSGFrameData::clear()
@@ -66,11 +72,11 @@ void QSSGFrameData::clear()
 
 QSSGLayerRenderData *QSSGFrameData::getCurrent() const
 {
-    return QSSGLayerRenderData::getCurrent(*m_renderer);
+    return QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
 }
 
-QSSGFrameData::QSSGFrameData(QSSGRenderer *renderer)
-    : m_renderer(renderer)
+QSSGFrameData::QSSGFrameData(QSSGRenderContextInterface *ctx)
+    : m_ctx(ctx)
 {
 
 }

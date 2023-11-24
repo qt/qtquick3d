@@ -18,7 +18,7 @@
 
 #include <private/qssgrenderpickresult_p.h>
 #include <private/qssgrhicontext_p.h>
-#include <ssg/qssgrenderer.h>
+#include <private/qssgrhiquadrenderer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -26,12 +26,94 @@ class QSSGShaderCache;
 class QSSGProgramGenerator;
 class QSSGShaderLibraryManager;
 class QSSGBufferManager;
+class QSSGLayerRenderData;
+class QSSGRenderContextInterface;
 struct QSSGRenderNode;
 struct QSSGRenderItem2D;
 struct QSSGRenderRay;
 struct QSSGSubsetRenderable;
 struct QSSGShaderDefaultMaterialKeyProperties;
 struct QSSGShaderFeatures;
+
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
+{
+    Q_DISABLE_COPY(QSSGRenderer)
+public:
+    QSSGRenderer();
+    ~QSSGRenderer();
+
+    // Returns true if this layer or a sibling was dirty.
+    bool prepareLayerForRender(QSSGRenderLayer &inLayer);
+
+    void rhiPrepare(QSSGRenderLayer &inLayer);
+    void rhiRender(QSSGRenderLayer &inLayer);
+
+    // Clients need to call this every frame in order for various subsystems to release
+    // temporary per-frame allocated objects.
+    void beginFrame(QSSGRenderLayer &layer, bool allowRecursion = true);
+
+    // When allowRecursion is true, the cleanup is only done when all
+    // beginFrames got their corresponding endFrame. This is indicated by the
+    // return value (false if nothing's been done due to pending "frames")
+    bool endFrame(QSSGRenderLayer &layer, bool allowRecursion = true);
+
+    // Get the number of times EndFrame has been called
+    [[nodiscard]] constexpr quint32 frameCount() const { return m_frameCount; }
+
+    void setViewport(QRect inViewport) { m_viewport = inViewport; }
+    QRect viewport() const { return m_viewport; }
+
+    void setDpr(float dpr) { m_dpr = dpr; }
+    float dpr() const { return m_dpr; }
+
+    void setScissorRect(QRect inScissorRect) { m_scissorRect = inScissorRect; }
+    QRect scissorRect() const { return m_scissorRect; }
+
+    const std::unique_ptr<QSSGRhiQuadRenderer> &rhiQuadRenderer() const;
+    const std::unique_ptr<QSSGRhiCubeRenderer> &rhiCubeRenderer() const;
+
+    QSSGRenderContextInterface *contextInterface() const { return m_contextInterface; }
+
+protected:
+    void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
+    void cleanupResources(QSet<QSSGRenderGraphObject*> &resources);
+
+private:
+    friend class QSSGRendererPrivate;
+    friend class QSSGLayerRenderData;
+    friend class QSSGRenderContextInterface;
+    friend class QQuick3DSceneRenderer;
+    friend class QQuick3DWindowAttachment;
+
+    QSSGLayerRenderData *getOrCreateLayerRenderData(QSSGRenderLayer &layer);
+    void beginLayerRender(QSSGLayerRenderData &inLayer);
+    void endLayerRender();
+    void addMaterialDirtyClear(QSSGRenderGraphObject *material);
+    void cleanupUnreferencedBuffers(QSSGRenderLayer *inLayer);
+    void resetResourceCounters(QSSGRenderLayer *inLayer);
+    void releaseCachedResources();
+
+    QSSGRenderContextInterface *m_contextInterface = nullptr; //  We're own by the context interface
+
+    bool m_globalPickingEnabled = false;
+
+    // Temporary information stored only when rendering a particular layer.
+    QSSGLayerRenderData *m_currentLayer = nullptr;
+    QByteArray m_generatedShaderString;
+
+    QSet<QSSGRenderGraphObject *> m_materialClearDirty;
+
+    mutable std::unique_ptr<QSSGRhiQuadRenderer> m_rhiQuadRenderer;
+    mutable std::unique_ptr<QSSGRhiCubeRenderer> m_rhiCubeRenderer;
+
+    quint32 m_activeFrameRef = 0;
+    quint32 m_frameCount = 0;
+
+    // Viewport that this render context should use
+    QRect m_viewport;
+    float m_dpr = 1.0;
+    QRect m_scissorRect;
+};
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRendererPrivate
 {

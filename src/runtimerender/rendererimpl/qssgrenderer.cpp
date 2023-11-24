@@ -2,8 +2,9 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "qssgrenderer_p.h"
+
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include "../qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
@@ -374,7 +375,7 @@ void QSSGRendererPrivate::setRenderContextInterface(QSSGRenderer &renderer, QSSG
     renderer.m_contextInterface = ctx;
 }
 
-const std::unique_ptr<QSSGRhiQuadRenderer> &QSSGRenderer::rhiQuadRenderer()
+const std::unique_ptr<QSSGRhiQuadRenderer> &QSSGRenderer::rhiQuadRenderer() const
 {
     if (!m_rhiQuadRenderer)
         m_rhiQuadRenderer = std::make_unique<QSSGRhiQuadRenderer>();
@@ -382,7 +383,7 @@ const std::unique_ptr<QSSGRhiQuadRenderer> &QSSGRenderer::rhiQuadRenderer()
     return m_rhiQuadRenderer;
 }
 
-const std::unique_ptr<QSSGRhiCubeRenderer> &QSSGRenderer::rhiCubeRenderer()
+const std::unique_ptr<QSSGRhiCubeRenderer> &QSSGRenderer::rhiCubeRenderer() const
 {
     if (!m_rhiCubeRenderer)
         m_rhiCubeRenderer = std::make_unique<QSSGRhiCubeRenderer>();

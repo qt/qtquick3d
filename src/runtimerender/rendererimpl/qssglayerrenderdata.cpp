@@ -1957,7 +1957,7 @@ void QSSGLayerRenderData::prepareForRender()
 
     // NOTE: The renderer won't change in practice (after being set the first time), but just update
     // it anyways.
-    frameData.m_renderer = renderer;
+    frameData.m_ctx = renderer->contextInterface();
     frameData.clear();
 
     // Create base pipeline state

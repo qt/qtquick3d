@@ -67,7 +67,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qtquick3druntimerenderglobal_p.h
         qtquick3druntimerenderglobal.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
-        rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h rendererimpl/qssgrenderer.h
+        rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h
         rendererimpl/qssglayerrenderdata_p.h
         rendererimpl/qssglayerrenderdata.cpp
         rendererimpl/qssglightmapper.cpp rendererimpl/qssglightmapper_p.h rendererimpl/qssglightmapper.h

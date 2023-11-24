@@ -21,8 +21,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRenderer;
+class QSSGRenderContextInterface;
 class QSSGLayerRenderData;
+class QRhiTexture;
+class QRhiRenderBuffer;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGFrameData
 {
@@ -46,7 +48,7 @@ public:
 
     [[nodiscard]] QSSGNodeId activeCamera() const;
 
-    [[nodiscard]] QSSGRenderer *renderer() const { return m_renderer; }
+    [[nodiscard]] QSSGRenderContextInterface *contextInterface() const;
 
 private:
     friend class QSSGLayerRenderData;
@@ -57,8 +59,8 @@ private:
     [[nodiscard]] QSSGLayerRenderData *getCurrent() const;
 
     QSSGFrameData() = default;
-    explicit QSSGFrameData(QSSGRenderer *renderer);
-    QSSGRenderer *m_renderer = nullptr;
+    explicit QSSGFrameData(QSSGRenderContextInterface *ctx);
+    QSSGRenderContextInterface *m_ctx = nullptr;
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderExtension : public QSSGRenderGraphObject

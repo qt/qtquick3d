@@ -9,7 +9,6 @@
 #include <ssg/qquick3dextensionhelpers.h>
 
 #include <ssg/qssgrendercontextcore.h>
-#include <ssg/qssgrenderer.h>
 #include <ssg/qssgrenderextensions.h>
 #include <ssg/qssgrenderhelpers.h>
 
@@ -79,8 +78,7 @@ static float triangle[] = {
 
 void ProducerRenderer::prepareRender(QSSGFrameData &data)
 {
-    auto *renderer = data.renderer();
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = data.contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -135,8 +133,7 @@ void ProducerRenderer::prepareRender(QSSGFrameData &data)
 
 void ProducerRenderer::render(QSSGFrameData &data)
 {
-    auto *renderer = data.renderer();
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = data.contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -272,8 +269,7 @@ void ConsumerRenderer::prepareRender(QSSGFrameData &data)
     if (!texture)
         qFatal("No texture from producer");
 
-    auto *renderer = data.renderer();
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = data.contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
@@ -365,8 +361,7 @@ void ConsumerRenderer::render(QSSGFrameData &data)
     if (!canRender)
         return;
 
-    auto *renderer = data.renderer();
-    const std::unique_ptr<QSSGRhiContext> &rhiCtx = renderer->contextInterface()->rhiContext();
+    const std::unique_ptr<QSSGRhiContext> &rhiCtx = data.contextInterface()->rhiContext();
     if (!rhiCtx)
         return;
 
