@@ -34,7 +34,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <ssg/qssgrenderextensions.h>
 
-#include <ssg/qssgrenderbasetypes.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <optional>
 

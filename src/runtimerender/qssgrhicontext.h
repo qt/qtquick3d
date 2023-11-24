@@ -17,7 +17,6 @@
 #include <rhi/qrhi.h>
 
 #include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
-#include <ssg/qssgrenderbasetypes.h>
 
 QT_BEGIN_NAMESPACE
 

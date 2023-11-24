@@ -21,7 +21,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderray_p.h>
 
-#include <ssg/qssgrenderbasetypes.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 QT_BEGIN_NAMESPACE
 

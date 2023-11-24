@@ -18,7 +18,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagetexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
-#include <ssg/qssgrenderbasetypes.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtCore/qsize.h>
 #include <QtCore/qbytearray.h>
 

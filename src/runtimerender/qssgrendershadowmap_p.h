@@ -19,7 +19,7 @@
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QVector3D>
-#include <ssg/qssgrenderbasetypes.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 QT_BEGIN_NAMESPACE
 

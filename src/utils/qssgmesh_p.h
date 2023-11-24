@@ -19,7 +19,7 @@
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
-#include <ssg/qssgrenderbasetypes.h>
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qbytearray.h>

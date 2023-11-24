@@ -18,7 +18,7 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
-#include <ssg/qssgrenderbasetypes.h>
+#include "../utils/qssgrenderbasetypes_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
