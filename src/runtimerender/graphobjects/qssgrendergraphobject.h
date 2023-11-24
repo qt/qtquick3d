@@ -104,49 +104,49 @@ public:
     };
     using FlagT = std::underlying_type_t<Flags>;
 
-    [[nodiscard]] static inline constexpr bool isNodeType(Type type) noexcept
+    [[nodiscard]] static constexpr bool isNodeType(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Node);
     }
 
-    [[nodiscard]] static inline constexpr bool isLight(Type type) noexcept
+    [[nodiscard]] static constexpr bool isLight(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Light);
     }
 
-    [[nodiscard]] static inline constexpr bool isCamera(Type type) noexcept
+    [[nodiscard]] static constexpr bool isCamera(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Camera);
     }
 
-    [[nodiscard]] static inline constexpr bool isMaterial(Type type) noexcept
+    [[nodiscard]] static constexpr bool isMaterial(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Material);
     }
 
-    [[nodiscard]] static inline constexpr bool isTexture(Type type) noexcept
+    [[nodiscard]] static constexpr bool isTexture(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Texture);
     }
 
-    [[nodiscard]] static inline constexpr bool isRenderable(Type type) noexcept
+    [[nodiscard]] static constexpr bool isRenderable(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Renderable);
     }
 
-    [[nodiscard]] static inline constexpr bool isResource(Type type) noexcept
+    [[nodiscard]] static constexpr bool isResource(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Resource);
     }
 
-    [[nodiscard]] static inline constexpr bool isExtension(Type type) noexcept
+    [[nodiscard]] static constexpr bool isExtension(Type type) noexcept
     {
         return (TypeT(type) & BaseType::Extension);
     }
 
     // Note: This could have been a non-static member, as we never create or use
     // user types we do the built-in types; In any case just follow the existing pattern.
-    [[nodiscard]] static inline constexpr bool isUserType(Type type) noexcept
+    [[nodiscard]] static constexpr bool isUserType(Type type) noexcept
     {
         return (TypeT(type) & BaseType::User);
     }
