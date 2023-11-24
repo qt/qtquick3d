@@ -162,13 +162,15 @@ public:
     FlagT flags { 0 };
     Q_QUICK3D_PROFILE_ID_
 
-    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType);
-    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType, FlagT inFlags) : type(inType), flags(inFlags) {}
     virtual ~QSSGRenderGraphObject();
 
 #ifndef QT_NO_DEBUG_STREAM
     friend Q_QUICK3DRUNTIMERENDER_EXPORT QDebug operator<<(QDebug stream, QSSGRenderGraphObject::Type type);
 #endif
+
+protected:
+    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType);
+    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType, FlagT inFlags) : type(inType), flags(inFlags) {}
 };
 
 #ifndef QT_NO_DEBUG_STREAM
