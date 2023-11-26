@@ -102,7 +102,7 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
                                        QRhiGraphicsPipeline::Replace,
                                        QRhiGraphicsPipeline::Always };
 
-            QSSGRenderHelpers::prepareRenderables(data, rpDesc, ps, stencilPrepResult);
+            QSSGRenderHelpers::prepareRenderables(data, stencilPrepResult, rpDesc, ps);
         }
 
         { // Scaled and cut-out
@@ -120,7 +120,7 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
                                        QRhiGraphicsPipeline::Replace,
                                        QRhiGraphicsPipeline::NotEqual };
 
-            QSSGRenderHelpers::prepareRenderables(data, rpDesc, ps, outlinePrepResult);
+            QSSGRenderHelpers::prepareRenderables(data, outlinePrepResult, rpDesc, ps);
         }
     }
 }

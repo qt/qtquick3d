@@ -476,7 +476,7 @@ QSSGPrepContextId QSSGLayerRenderData::getOrCreateExtensionContext(const QSSGRen
     QSSG_ASSERT_X(index < PREP_CTX_INDEX_MASK - 1, "Reached maximum entries!", return QSSGPrepContextId::Uninitialized);
     auto it = std::find_if(extContexts.cbegin(), extContexts.cend(), [&ext, slot](const ExtensionContext &e){ return (e.owner == &ext) && (e.slot == slot); });
     if (it == extContexts.cend()) {
-        extContexts.push_back({ &ext, camera, {/* PS */}, index, slot });
+        extContexts.push_back({ &ext, camera, {/* PS */}, {/* FILTER */}, index, slot });
         it = extContexts.cbegin() + index;
         renderableModelStore.emplace_back();
         modelContextStore.emplace_back();
@@ -505,21 +505,25 @@ QSSGPrepContextId QSSGLayerRenderData::getOrCreateExtensionContext(const QSSGRen
     return createPrepId(it->index, frame);
 }
 
-static void createRenderablesHelper(QSSGLayerRenderData &layer, const QSSGRenderNode::ChildList &children, QSSGLayerRenderData::RenderableNodeEntries &renderables)
+static void createRenderablesHelper(QSSGLayerRenderData &layer, const QSSGRenderNode::ChildList &children, QSSGLayerRenderData::RenderableNodeEntries &renderables, QSSGRenderHelpers::CreateFlags createFlags)
 {
+    const bool steal = ((createFlags & QSSGRenderHelpers::CreateFlag::Steal) != 0);
     for (auto &chld : children) {
         if (chld.type == QSSGRenderGraphObject::Type::Model) {
             const auto &renderModel = static_cast<const QSSGRenderModel &>(chld);
-            const auto &renderableModels = layer.renderableModels;
-            if (auto it = std::find_if(renderableModels.cbegin(), renderableModels.cend(), [&renderModel](const QSSGRenderableNodeEntry &e) { return (e.node == &renderModel); }); it != renderableModels.cend())
-                renderables.push_back(*it);
+            auto &renderableModels = layer.renderableModels;
+            if (auto it = std::find_if(renderableModels.cbegin(), renderableModels.cend(), [&renderModel](const QSSGRenderableNodeEntry &e) { return (e.node == &renderModel); }); it != renderableModels.cend()) {
+                renderables.emplace_back(*it);
+                if (steal)
+                    renderableModels.erase(it);
+            }
         }
 
-        createRenderablesHelper(layer, chld.children, renderables);
+        createRenderablesHelper(layer, chld.children, renderables, createFlags);
     }
 }
 
-QSSGRenderablesId QSSGLayerRenderData::createRenderables(QSSGPrepContextId prepId, const QList<QSSGNodeId> &nodes, bool recurse)
+QSSGRenderablesId QSSGLayerRenderData::createRenderables(QSSGPrepContextId prepId, const QList<QSSGNodeId> &nodes, QSSGRenderHelpers::CreateFlags createFlags)
 {
     QSSG_ASSERT_X(verifyPrepContext(prepId, *renderer), "Expired or invalid prep id", return {});
 
@@ -536,20 +540,24 @@ QSSGRenderablesId QSSGLayerRenderData::createRenderables(QSSGPrepContextId prepI
 
     // We now create the renderable node entries for all the models.
     // NOTE: The nodes are not complete at this point...
+    const bool steal = ((createFlags & QSSGRenderHelpers::CreateFlag::Steal) != 0);
     for (const auto &nodeId : nodes) {
         auto *node = QSSGRenderGraphObjectUtils::getNode<QSSGRenderNode>(nodeId);
         if (node && node->type == QSSGRenderGraphObject::Type::Model) {
             auto *renderModel = static_cast<QSSGRenderModel *>(node);
             // NOTE: Not ideal.
-            if (auto it = std::find_if(renderableModels.cbegin(), renderableModels.cend(), [renderModel](const QSSGRenderableNodeEntry &e) { return (e.node == renderModel); }); it != renderableModels.cend())
+            if (auto it = std::find_if(renderableModels.cbegin(), renderableModels.cend(), [renderModel](const QSSGRenderableNodeEntry &e) { return (e.node == renderModel); }); it != renderableModels.cend()) {
                 renderables.emplace_back(*it);
-            else
+                if (steal)
+                    renderableModels.erase(it);
+            } else {
                 renderables.emplace_back(*renderModel);
+            }
         }
 
-        if (node && recurse) {
+        if (node && ((createFlags & QSSGRenderHelpers::CreateFlag::Recurse) != 0)) {
             const auto &children = node->children;
-            createRenderablesHelper(*this, children, renderables);
+            createRenderablesHelper(*this, children, renderables, createFlags);
         }
     }
 
@@ -667,9 +675,8 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
 
     QSSG_ASSERT_X(extContext.camera != nullptr, "No camera set!", return {});
 
-    const auto &ps = extContext.ps;
-    const auto vp = ps.viewport.viewport();
-    extContext.camera->calculateGlobalVariables(QRectF{ vp[0], vp[1], vp[2], vp[3] });
+    const auto vp = contextInterface.renderer()->viewport();
+    extContext.camera->calculateGlobalVariables(vp);
 
     auto &renderables = renderableModelStore[index];
 
@@ -710,33 +717,62 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
     return static_cast<QSSGPrepResultId>(prepId);
 }
 
+static constexpr size_t pipelineStateIndex(QSSGRenderablesFilter filter)
+{
+    switch (filter) {
+    case QSSGRenderablesFilter::All:
+        return 0;
+    case QSSGRenderablesFilter::Opaque:
+        return 1;
+    case QSSGRenderablesFilter::Transparent:
+        return 2;
+    }
+
+    Q_UNREACHABLE_RETURN(0);
+}
+
 void QSSGLayerRenderData::prepareRenderables(QSSGRenderContextInterface &ctx,
+                                             QSSGPrepResultId prepId,
                                              QRhiRenderPassDescriptor *renderPassDescriptor,
-                                             QSSGRhiGraphicsPipelineState &ps,
-                                             QSSGPrepResultId prepId)
+                                             const QSSGRhiGraphicsPipelineState &ps,
+                                             QSSGRenderablesFilters filter)
 {
     QSSG_ASSERT_X(verifyPrepContext(static_cast<QSSGPrepContextId>(prepId), *renderer), "Expired or invalid result id", return);
     const size_t index = getPrepContextIndex(static_cast<QSSGPrepContextId>(prepId));
     QSSG_ASSERT(index < renderableObjectStore.size() && index < extContexts.size(), return);
 
-    const auto &extCtx = extContexts.at(index);
-    const auto &rhiCtx = ctx.rhiContext();
-
+    auto &extCtx = extContexts[index];
     QSSG_ASSERT(extCtx.camera, return);
+    extCtx.filter |= filter;
 
     QSSGShaderFeatures featureSet = getShaderFeatures();
 
     QSSGPassKey passKey { reinterpret_cast<void *>(quintptr(extCtx.owner) ^ extCtx.slot) }; // TODO: Pass this along
 
-    const auto &sortedOpaqueRenderables = getSortedOpaqueRenderableObjects(*extCtx.camera, index);
-    for (const auto &renderable : sortedOpaqueRenderables)
-        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, *this, *renderable.obj, renderPassDescriptor, &ps, featureSet, ps.samples);
+    if ((filter & QSSGRenderablesFilter::Opaque) != 0) {
+        auto psCpy = ps;
+        if (filter == QSSGRenderablesFilter::All) { // If 'All' we set our defaults
+            psCpy.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
+            psCpy.blendEnable = false;
+        }
+        const auto &sortedRenderables = getSortedOpaqueRenderableObjects(*extCtx.camera, index);
+        OpaquePass::prep(ctx, *this, passKey, psCpy, featureSet, renderPassDescriptor, sortedRenderables);
+        const size_t psIndex = pipelineStateIndex(QSSGRenderablesFilter::Opaque);
+        extCtx.ps[psIndex] = psCpy;
+    }
 
-    const auto &sortedTransparentRenderables = getSortedTransparentRenderableObjects(*extCtx.camera, index);
-    for (const auto &renderable : sortedTransparentRenderables)
-        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, *this, *renderable.obj, renderPassDescriptor, &ps, featureSet, ps.samples);
-
-    extCtx.ps = ps;
+    if ((filter & QSSGRenderablesFilter::Transparent) != 0) {
+        auto psCpy = ps;
+        if (filter == QSSGRenderablesFilter::All) { // If 'All' we set our defaults
+            // transparent objects (or, without LayerEnableDepthTest, all objects)
+            psCpy.blendEnable = true;
+            psCpy.depthWriteEnable = false;
+        }
+        const auto &sortedRenderables = getSortedTransparentRenderableObjects(*extCtx.camera, index);
+        TransparentPass::prep(ctx, *this, passKey, psCpy, featureSet, renderPassDescriptor, sortedRenderables);
+        const size_t psIndex = pipelineStateIndex(QSSGRenderablesFilter::Transparent);
+        extCtx.ps[psIndex] = psCpy;
+    }
 }
 
 void QSSGLayerRenderData::renderRenderables(QSSGRenderContextInterface &ctx, QSSGPrepResultId prepId)
@@ -746,17 +782,21 @@ void QSSGLayerRenderData::renderRenderables(QSSGRenderContextInterface &ctx, QSS
     QSSG_ASSERT(index < renderableObjectStore.size() && index < extContexts.size(), return);
 
     const auto &extCtx = extContexts.at(index);
-    const auto &rhiCtx = ctx.rhiContext();
+    const auto filter = extCtx.filter;
 
-    bool needsSetViewport = true;
+    if ((filter & QSSGRenderablesFilter::Opaque) != 0) {
+        const size_t psIndex = pipelineStateIndex(QSSGRenderablesFilter::Opaque);
+        const auto &ps = extCtx.ps[psIndex];
+        const auto &sortedRenderables = getSortedOpaqueRenderableObjects(*extCtx.camera, index);
+        OpaquePass::render(ctx, ps, sortedRenderables);
+    }
 
-    const auto &sortedOpaqueRenderables = getSortedOpaqueRenderableObjects(*extCtx.camera, index);
-    for (const auto &renderable : sortedOpaqueRenderables)
-        RenderHelpers::rhiRenderRenderable(rhiCtx.get(), extCtx.ps, *renderable.obj, &needsSetViewport);
-
-    const auto &sortedTransparentRenderables = getSortedTransparentRenderableObjects(*extCtx.camera, index);
-    for (const auto &renderable : sortedTransparentRenderables)
-        RenderHelpers::rhiRenderRenderable(rhiCtx.get(), extCtx.ps, *renderable.obj, &needsSetViewport);
+    if ((filter & QSSGRenderablesFilter::Transparent) != 0) {
+        const size_t psIndex = pipelineStateIndex(QSSGRenderablesFilter::Transparent);
+        const auto &ps = extCtx.ps[psIndex];
+        const auto &sortedRenderables = getSortedTransparentRenderableObjects(*extCtx.camera, index);
+        TransparentPass::render(ctx, ps, sortedRenderables);
+    }
 }
 
 const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedRenderedDepthWriteObjects(const QSSGRenderCamera &camera, size_t index)

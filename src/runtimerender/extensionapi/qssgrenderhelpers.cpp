@@ -47,7 +47,7 @@ QSSGRenderablesId QSSGRenderHelpers::createRenderables(const QSSGFrameData &fram
         auto *ctx = frameData.contextInterface();
         auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
         QSSG_ASSERT_X(layer, "No active layer for renderer!", return rid);
-        return layer->createRenderables(prepId, nodes, flags.testFlag(CreateFlag::Recurse));
+        return layer->createRenderables(prepId, nodes, flags);
     }
 
     return rid;
@@ -112,14 +112,15 @@ QSSGPrepResultId QSSGRenderHelpers::commit(const QSSGFrameData &frameData,
     \sa renderRenderables
  */
 void QSSGRenderHelpers::prepareRenderables(const QSSGFrameData &frameData,
+                                           QSSGPrepResultId prepId,
                                            QRhiRenderPassDescriptor *renderPassDescriptor,
                                            QSSGRhiGraphicsPipelineState &ps,
-                                           QSSGPrepResultId prepId)
+                                           QSSGRenderablesFilters filter)
 {
     auto *ctx = frameData.contextInterface();
     auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
     QSSG_ASSERT_X(layer, "No active layer for renderer!", return);
-    layer->prepareRenderables(*ctx, renderPassDescriptor, ps, prepId);
+    layer->prepareRenderables(*ctx, prepId, renderPassDescriptor, ps, filter);
 }
 
 /*!

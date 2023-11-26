@@ -34,6 +34,15 @@ enum class QSSGPrepContextId : quint64 { Uninitialized };
 enum class QSSGPrepResultId : quint64 { Uninitialized };
 enum class QSSGRenderablesId : quint64 { Uninitialized };
 
+enum class QSSGRenderablesFilter : quint32
+{
+    Opaque = 0x1,
+    Transparent = 0x2,
+    All = Opaque | Transparent
+};
+
+Q_DECLARE_FLAGS(QSSGRenderablesFilters, QSSGRenderablesFilter)
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGModelHelpers
 {
 public:
@@ -90,10 +99,11 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderHelpers
 public:
     using NodeList = QList<QSSGNodeId>;
 
-    enum class CreateFlag
+    enum class CreateFlag : quint32
     {
         None,
-        Recurse
+        Recurse = 0x1,
+        Steal  = 0x2
     };
 
     Q_DECLARE_FLAGS(CreateFlags, CreateFlag)
@@ -114,9 +124,10 @@ public:
                                                  float lodThreshold = 1.0f);
 
     static void prepareRenderables(const QSSGFrameData &frameData,
+                                   QSSGPrepResultId prepId,
                                    QRhiRenderPassDescriptor *renderPassDescriptor,
                                    QSSGRhiGraphicsPipelineState &ps,
-                                   QSSGPrepResultId prepId);
+                                   QSSGRenderablesFilters filter = QSSGRenderablesFilter::All);
 
     static void renderRenderables(QSSGRenderContextInterface &contextInterface,
                                   QSSGPrepResultId prepId);

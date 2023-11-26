@@ -609,55 +609,76 @@ void ScreenReflectionPass::resetForFrame()
     ps = {};
 }
 
-void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+void OpaquePass::prep(const QSSGRenderContextInterface &ctx,
+                      QSSGLayerRenderData &data,
+                      QSSGPassKey passKey,
+                      QSSGRhiGraphicsPipelineState &ps,
+                      QSSGShaderFeatures shaderFeatures,
+                      QRhiRenderPassDescriptor *rpDesc,
+                      const QSSGRenderableObjectList &sortedOpaqueObjects)
 {
-    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
-    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    auto camera = data.camera;
-    const auto &cameraData = data.cameraData;
-    QSSG_ASSERT(camera && cameraData.has_value() , return);
-
-    ps = data.getPipelineState();
-
-    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
-
-    shaderFeatures = data.getShaderFeatures();
+    const auto &rhiCtx = ctx.rhiContext();
+    QSSG_ASSERT(rpDesc && rhiCtx->rhi()->isRecordingFrame(), return);
 
     const auto &layer = data.layer;
     const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
 
-    ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
-    ps.blendEnable = false;
-
-    QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
-    const int samples = rhiCtx->mainPassSampleCount();
-
-    // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
     for (const auto &handle : std::as_const(sortedOpaqueObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
         ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never ||
                                 depthWriteMode == QSSGDepthDrawMode::OpaquePrePass ||
                                 data.isZPrePassActive() || !layerEnableDepthTest);
-        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
+        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples);
     }
 }
 
-void OpaquePass::renderPass(QSSGRenderer &renderer)
+void OpaquePass::render(const QSSGRenderContextInterface &ctx,
+                        const QSSGRhiGraphicsPipelineState &ps,
+                        const QSSGRenderableObjectList &sortedOpaqueObjects)
 {
-    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    const auto &rhiCtx = ctx.rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-
     bool needsSetViewport = true;
-
-    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));
-    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Quick3D render opaque"));
     for (const auto &handle : std::as_const(sortedOpaqueObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         RenderHelpers::rhiRenderRenderable(rhiCtx.get(), ps, *theObject, &needsSetViewport);
     }
+}
+
+void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    auto *ctx = renderer.contextInterface();
+    const auto &rhiCtx = ctx->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    auto camera = data.camera;
+    const auto &cameraData = data.cameraData;
+    QSSG_ASSERT(camera && cameraData.has_value() , return);
+
+    ps = data.getPipelineState();
+    ps.samples = rhiCtx->mainPassSampleCount();
+    ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
+    ps.blendEnable = false;
+
+    // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
+    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
+    shaderFeatures = data.getShaderFeatures();
+
+    QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
+    prep(*ctx, data, this, ps, shaderFeatures, mainRpDesc, sortedOpaqueObjects);
+}
+
+void OpaquePass::renderPass(QSSGRenderer &renderer)
+{
+    auto *ctx = renderer.contextInterface();
+    const auto &rhiCtx = ctx->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Quick3D render opaque"));
+    render(*ctx, ps, sortedOpaqueObjects);
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("opaque_pass"));
     Q_TRACE(QSSG_renderPass_exit);
@@ -670,26 +691,16 @@ void OpaquePass::resetForFrame()
     shaderFeatures = {};
 }
 
-void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+void TransparentPass::prep(const QSSGRenderContextInterface &ctx,
+                           QSSGLayerRenderData &data,
+                           QSSGPassKey passKey,
+                           QSSGRhiGraphicsPipelineState &ps,
+                           QSSGShaderFeatures shaderFeatures,
+                           QRhiRenderPassDescriptor *rpDesc,
+                           const QSSGRenderableObjectList &sortedTransparentObjects)
 {
-    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
-    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    auto camera = data.camera;
-    const auto &cameraData = data.cameraData;
-    QSSG_ASSERT(camera && cameraData.has_value(), return);
-
-    QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
-    const int samples = rhiCtx->mainPassSampleCount();
-
-    ps = data.getPipelineState();
-
-    // transparent objects (or, without LayerEnableDepthTest, all objects)
-    ps.blendEnable = true;
-    ps.depthWriteEnable = false;
-
-    shaderFeatures = data.getShaderFeatures();
-
-    sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
+    const auto &rhiCtx = ctx.rhiContext();
+    QSSG_ASSERT(rpDesc && rhiCtx->rhi()->isRecordingFrame(), return);
 
     const bool zPrePassActive = data.isZPrePassActive();
     for (const auto &handle : std::as_const(sortedTransparentObjects)) {
@@ -697,19 +708,16 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
         const auto depthWriteMode = theObject->depthWriteMode;
         ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && !zPrePassActive);
         if (!(theObject->renderableFlags.isCompletelyTransparent()))
-            RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
+            RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples);
     }
 }
 
-void TransparentPass::renderPass(QSSGRenderer &renderer)
+void TransparentPass::render(const QSSGRenderContextInterface &ctx,
+                             const QSSGRhiGraphicsPipelineState &ps,
+                             const QSSGRenderableObjectList &sortedTransparentObjects)
 {
-    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    const auto &rhiCtx = ctx.rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-
-    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
-    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Quick3D render alpha"));
     // If scissorRect is set, Item2Ds will be drawn by a workaround of modifying
     // viewport, not using actual 3D scissor test.
     // It means non-opaque objects may be affected by this viewport setting.
@@ -719,6 +727,42 @@ void TransparentPass::renderPass(QSSGRenderer &renderer)
         if (!theObject->renderableFlags.isCompletelyTransparent())
             RenderHelpers::rhiRenderRenderable(rhiCtx.get(), ps, *theObject, &needsSetViewport);
     }
+}
+
+void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    auto *ctx = renderer.contextInterface();
+    const auto &rhiCtx = ctx->rhiContext();
+    auto camera = data.camera;
+    const auto &cameraData = data.cameraData;
+    QSSG_ASSERT(camera && cameraData.has_value(), return);
+
+    QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
+
+    ps = data.getPipelineState();
+    ps.samples = rhiCtx->mainPassSampleCount();
+
+    // transparent objects (or, without LayerEnableDepthTest, all objects)
+    ps.blendEnable = true;
+    ps.depthWriteEnable = false;
+
+    shaderFeatures = data.getShaderFeatures();
+    sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
+
+    prep(*ctx, data, this, ps, shaderFeatures, mainRpDesc, sortedTransparentObjects);
+}
+
+void TransparentPass::renderPass(QSSGRenderer &renderer)
+{
+    auto *ctx = renderer.contextInterface();
+    const auto &rhiCtx = ctx->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Quick3D render alpha"));
+    render(*ctx, ps, sortedTransparentObjects);
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("transparent_pass"));
     Q_TRACE(QSSG_renderPass_exit);

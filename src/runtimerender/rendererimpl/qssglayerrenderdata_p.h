@@ -378,7 +378,7 @@ public:
                                                   quint32 slot = 0);
 
     // Model API
-    QSSGRenderablesId createRenderables(QSSGPrepContextId prepId, const QList<QSSGNodeId> &nodes, bool recurse = false);
+    QSSGRenderablesId createRenderables(QSSGPrepContextId prepId, const QList<QSSGNodeId> &nodes, QSSGRenderHelpers::CreateFlags createFlags);
     void setGlobalTransform(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, const QMatrix4x4 &mvp);
     QMatrix4x4 getGlobalTransform(QSSGPrepContextId prepId, const QSSGRenderModel &model);
     void setGlobalOpacity(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, float opacity);
@@ -394,9 +394,10 @@ public:
 
     //
     void prepareRenderables(QSSGRenderContextInterface &ctx,
+                            QSSGPrepResultId prepId,
                             QRhiRenderPassDescriptor *renderPassDescriptor,
-                            QSSGRhiGraphicsPipelineState &ps,
-                            QSSGPrepResultId prepId);
+                            const QSSGRhiGraphicsPipelineState &ps,
+                            QSSGRenderablesFilters filter);
     void renderRenderables(QSSGRenderContextInterface &ctx,
                            QSSGPrepResultId prepId);
 
@@ -411,7 +412,8 @@ private:
     {
         const QSSGRenderExtension *owner = nullptr;
         QSSGRenderCamera *camera = nullptr;
-        mutable QSSGRhiGraphicsPipelineState ps {};
+        QSSGRhiGraphicsPipelineState ps[3] {};
+        QSSGRenderablesFilters filter { 0 };
         size_t index = 0; // index into the model store
         quint32 slot = 0;
     };

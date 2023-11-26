@@ -165,6 +165,18 @@ public:
 class OpaquePass : public QSSGRenderPass
 {
 public:
+    static void prep(const QSSGRenderContextInterface &ctx,
+                     QSSGLayerRenderData &data,
+                     QSSGPassKey passKey,
+                     QSSGRhiGraphicsPipelineState &ps,
+                     QSSGShaderFeatures shaderFeatures,
+                     QRhiRenderPassDescriptor *rpDesc,
+                     const QSSGRenderableObjectList &sortedOpaqueObjects);
+
+    static void render(const QSSGRenderContextInterface &ctx,
+                       const QSSGRhiGraphicsPipelineState &ps,
+                       const QSSGRenderableObjectList &sortedOpaqueObjects);
+
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::Main; }
@@ -175,9 +187,24 @@ public:
     QSSGShaderFeatures shaderFeatures;
 };
 
+struct QSSGCameraRenderData;
+
 class TransparentPass : public QSSGRenderPass
 {
 public:
+    static void prep(const QSSGRenderContextInterface &ctx,
+                     QSSGLayerRenderData &data,
+                     QSSGPassKey passKey,
+                     QSSGRhiGraphicsPipelineState &ps,
+                     QSSGShaderFeatures shaderFeatures,
+                     QRhiRenderPassDescriptor *rpDesc,
+                     const QSSGRenderableObjectList &sortedTransparentObjects);
+
+    static void render(const QSSGRenderContextInterface &ctx,
+                       const QSSGRhiGraphicsPipelineState &ps,
+                       const QSSGRenderableObjectList &sortedTransparentObjects);
+
+
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::Main; }
