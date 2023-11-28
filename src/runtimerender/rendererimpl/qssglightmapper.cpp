@@ -1494,7 +1494,7 @@ bool QSSGLightmapperPrivate::postProcess()
         }
         QSSGRhiGraphicsPipelineState dilatePs;
         dilatePs.viewport = viewport;
-        dilatePs.shaderPipeline = lmDilatePipeline.get();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(dilatePs, lmDilatePipeline.get());
         renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &dilatePs, rhiCtxD->srb(bindings), rtDilate.get(), QSSGRhiQuadRenderer::UvCoords);
         resUpd = rhi->nextResourceUpdateBatch();
         QRhiReadbackResult dilateReadResult;

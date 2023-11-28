@@ -389,9 +389,10 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
     rub->uploadTexture(particleData.texture, uploadDesc);
     rhiCtx->commandBuffer()->resourceUpdate(rub);
 
-    ps->ia.topology = QRhiGraphicsPipeline::TriangleStrip;
-    ps->ia.inputLayout = QRhiVertexInputLayout();
-    ps->ia.inputs.clear();
+    auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
+    ia.topology = QRhiGraphicsPipeline::TriangleStrip;
+    ia.inputLayout = QRhiVertexInputLayout();
+    ia.inputs.clear();
 
     ps->samples = samples;
     ps->cullMode = QRhiGraphicsPipeline::None;

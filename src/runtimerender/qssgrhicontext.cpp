@@ -31,7 +31,7 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
  */
 
 /*!
-    \struct QSSGRhiGraphicsPipelineState
+    \class QSSGRhiGraphicsPipelineState
     \inmodule QtQuick3D
     \since 6.7
 
@@ -1507,14 +1507,16 @@ QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipeline
 
            // Build a new one. This is potentially expensive.
     QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
+    const auto &ia = QSSGRhiInputAssemblerStatePrivate::get(key.state);
 
-    ps->setShaderStages(key.state.shaderPipeline->cbeginStages(), key.state.shaderPipeline->cendStages());
-    ps->setVertexInputLayout(key.state.ia.inputLayout);
+    const auto *shaderPipeline = QSSGRhiGraphicsPipelineStatePrivate::getShaderPipeline(key.state);
+    ps->setShaderStages(shaderPipeline->cbeginStages(), shaderPipeline->cendStages());
+    ps->setVertexInputLayout(ia.inputLayout);
     ps->setShaderResourceBindings(srb);
     ps->setRenderPassDescriptor(rpDesc);
 
     QRhiGraphicsPipeline::Flags flags;
-    if (key.state.scissorEnable)
+    if (key.state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::UsesScissor))
         flags |= QRhiGraphicsPipeline::UsesScissor;
 
     static const bool shaderDebugInfo = qEnvironmentVariableIntValue("QT_QUICK3D_SHADER_DEBUG_INFO");
@@ -1522,13 +1524,13 @@ QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipeline
         flags |= QRhiGraphicsPipeline::CompileShadersWithDebugInfo;
     ps->setFlags(flags);
 
-    ps->setTopology(key.state.ia.topology);
+    ps->setTopology(ia.topology);
     ps->setCullMode(key.state.cullMode);
-    if (key.state.ia.topology == QRhiGraphicsPipeline::Lines || key.state.ia.topology == QRhiGraphicsPipeline::LineStrip)
+    if (ia.topology == QRhiGraphicsPipeline::Lines || ia.topology == QRhiGraphicsPipeline::LineStrip)
         ps->setLineWidth(key.state.lineWidth);
 
     QRhiGraphicsPipeline::TargetBlend blend = key.state.targetBlend;
-    blend.enable = key.state.blendEnable;
+    blend.enable = (key.state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled));
     QVarLengthArray<QRhiGraphicsPipeline::TargetBlend, 8> targetBlends(key.state.colorAttachmentCount);
     for (int i = 0; i < key.state.colorAttachmentCount; ++i)
         targetBlends[i] = blend;
@@ -1536,19 +1538,20 @@ QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipeline
 
     ps->setSampleCount(key.state.samples);
 
-    ps->setDepthTest(key.state.depthTestEnable);
-    ps->setDepthWrite(key.state.depthWriteEnable);
+    ps->setDepthTest(key.state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled));
+    ps->setDepthWrite(key.state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled));
     ps->setDepthOp(key.state.depthFunc);
 
     ps->setDepthBias(key.state.depthBias);
     ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
     ps->setPolygonMode(key.state.polygonMode);
 
-    if (key.state.usesStencilRef)
+    const bool usesStencilRef = (key.state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef));
+    if (usesStencilRef)
         flags |= QRhiGraphicsPipeline::UsesStencilRef;
     ps->setFlags(flags);
     ps->setStencilFront(key.state.stencilOpFrontState);
-    ps->setStencilTest(key.state.usesStencilRef);
+    ps->setStencilTest(usesStencilRef);
     ps->setStencilWriteMask(key.state.stencilWriteMask);
 
     if (!ps->create()) {

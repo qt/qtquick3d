@@ -67,8 +67,7 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         shadowMapManager = data.requestShadowMapManager();
 
         ps = data.getPipelineState();
-        ps.depthTestEnable = true;
-        ps.depthWriteEnable = true;
+        ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled };
         // Try reducing self-shadowing and artifacts.
         ps.depthBias = 2;
         ps.slopeScaledDepthBias = 1.5f;
@@ -141,9 +140,9 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     QSSG_ASSERT(camera, return);
 
     ps = data.getPipelineState();
-    ps.depthTestEnable = true;
-    ps.depthWriteEnable = true;
-    ps.blendEnable = true;
+    ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled,
+                  QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled,
+                  QSSGRhiGraphicsPipelineState::Flag::BlendEnabled };
 
     reflectionProbes = data.reflectionProbes;
     reflectionMapManager = data.requestReflectionMapManager();
@@ -567,15 +566,18 @@ void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderDat
 
     // NOTE: We're piggybacking on the screen map pass for now, but we could do better.
     ps = data.getPipelineState();
-    ps.depthTestEnable = data.screenMapPass.ps.depthTestEnable;
-    ps.depthWriteEnable = data.screenMapPass.ps.depthWriteEnable;
+    const bool depthTestEnabled = (data.screenMapPass.ps.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled));
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, depthTestEnabled);
+    const bool depthWriteEnabled = (data.screenMapPass.ps.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled));
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, depthWriteEnabled);
     sortedScreenTextureObjects = data.getSortedScreenTextureRenderableObjects(*camera);
     for (const auto &handle : std::as_const(sortedScreenTextureObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
-        ps.blendEnable = theObject->renderableFlags.hasTransparency();
-        ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never || depthWriteMode == QSSGDepthDrawMode::OpaquePrePass
-                                 || data.isZPrePassActive() || !layerEnableDepthTest);
+        ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, theObject->renderableFlags.hasTransparency());
+        const bool curDepthWriteEnabled = !(depthWriteMode == QSSGDepthDrawMode::Never || depthWriteMode == QSSGDepthDrawMode::OpaquePrePass
+                                     || data.isZPrePassActive() || !layerEnableDepthTest);
+        ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, curDepthWriteEnabled);
         RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
     }
 }
@@ -626,9 +628,10 @@ void OpaquePass::prep(const QSSGRenderContextInterface &ctx,
     for (const auto &handle : std::as_const(sortedOpaqueObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
-        ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never ||
-                                depthWriteMode == QSSGDepthDrawMode::OpaquePrePass ||
-                                data.isZPrePassActive() || !layerEnableDepthTest);
+        const bool curDepthWriteEnabled = !(depthWriteMode == QSSGDepthDrawMode::Never ||
+                                            depthWriteMode == QSSGDepthDrawMode::OpaquePrePass ||
+                                            data.isZPrePassActive() || !layerEnableDepthTest);
+        ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, curDepthWriteEnabled);
         RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples);
     }
 }
@@ -658,7 +661,7 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
     ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
-    ps.blendEnable = false;
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
 
     // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
@@ -706,7 +709,8 @@ void TransparentPass::prep(const QSSGRenderContextInterface &ctx,
     for (const auto &handle : std::as_const(sortedTransparentObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
-        ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && !zPrePassActive);
+        const bool curDepthWriteEnabled = (depthWriteMode == QSSGDepthDrawMode::Always && !zPrePassActive);
+        ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, curDepthWriteEnabled);
         if (!(theObject->renderableFlags.isCompletelyTransparent()))
             RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples);
     }
@@ -743,8 +747,8 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
     ps.samples = rhiCtx->mainPassSampleCount();
 
     // transparent objects (or, without LayerEnableDepthTest, all objects)
-    ps.blendEnable = true;
-    ps.depthWriteEnable = false;
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, false);
 
     shaderFeatures = data.getShaderFeatures();
     sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
@@ -816,7 +820,7 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
     auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8);
     QSSG_CHECK(shaderPipeline);
-    ps.shaderPipeline = shaderPipeline.get();
+    QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, shaderPipeline.get());
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
     ps.samples = rhiCtx->mainPassSampleCount();
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
@@ -860,7 +864,7 @@ void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render skybox"));
 
-    ps.shaderPipeline = skyBoxCubeShader.get();
+    QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, skyBoxCubeShader.get());
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
     renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_cube"));
@@ -881,7 +885,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     ps = data.getPipelineState();
 
     // objects rendered by Qt Quick 2D
-    ps.blendEnable = false;
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
 
     item2Ds = data.getRenderableItem2Ds();
     for (const auto &item2D: std::as_const(item2Ds)) {
@@ -973,7 +977,7 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     gridShader = shaderCache->getBuiltInRhiShaders().getRhiGridShader();
 
     ps = data.getPipelineState();
-    ps.blendEnable = true;
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
     RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, *camera, renderer);
 }
 
@@ -986,7 +990,7 @@ void InfiniteGridPass::renderPass(QSSGRenderer &renderer)
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render grid"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render grid"));
-    ps.shaderPipeline = gridShader.get();
+    QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, gridShader.get());
     QRhiShaderResourceBindings *srb = layer->gridSrb;
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
@@ -1048,7 +1052,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
         cb->debugMarkBegin(QByteArrayLiteral("Quick 3D debug objects"));
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick 3D debug objects"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        ps.shaderPipeline = debugObjectShader.get();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, debugObjectShader.get());
         QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 });
         QRhiShaderResourceBindings *srb = dcd.srb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();

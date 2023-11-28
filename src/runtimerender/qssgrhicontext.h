@@ -23,55 +23,64 @@ QT_BEGIN_NAMESPACE
 class QSSGRhiContextPrivate;
 class QSSGRhiShaderPipeline;
 
-struct QSSGRhiInputAssemblerState
+class QSSGRhiGraphicsPipelineState
 {
-    enum InputSemantic {
-        PositionSemantic,           // attr_pos
-        NormalSemantic,             // attr_norm
-        TexCoord0Semantic,          // attr_uv0
-        TexCoord1Semantic,          // attr_uv1
-        TangentSemantic,            // attr_textan
-        BinormalSemantic,           // attr_binormal
-        ColorSemantic,              // attr_color
-        MaxTargetSemantic = ColorSemantic,
-        JointSemantic,              // attr_joints
-        WeightSemantic,             // attr_weights
-        TexCoordLightmapSemantic    // attr_lightmapuv
+public:
+    enum class Flag : quint32
+    {
+        DepthTestEnabled  = 0x1,
+        DepthWriteEnabled = 0x2,
+        BlendEnabled = 0x4,
+        UsesStencilRef = 0x8,
+        UsesScissor = 0x10
     };
+    Q_DECLARE_FLAGS(Flags, Flag)
 
-    QRhiVertexInputLayout inputLayout;
-    QVarLengthArray<InputSemantic, 8> inputs;
-    QRhiGraphicsPipeline::Topology topology;
-    std::array<quint8, MaxTargetSemantic + 1> targetOffsets = { UINT8_MAX, UINT8_MAX, UINT8_MAX, UINT8_MAX,
-                                                                UINT8_MAX, UINT8_MAX, UINT8_MAX };
-    quint8 targetCount = 0;
-};
-
-struct QSSGRhiGraphicsPipelineState
-{
-    int samples = 1;
-    bool depthTestEnable = false;
-    bool depthWriteEnable = false;
-    bool usesStencilRef = false;
     QRhiGraphicsPipeline::CompareOp depthFunc = QRhiGraphicsPipeline::LessOrEqual;
     QRhiGraphicsPipeline::CullMode cullMode = QRhiGraphicsPipeline::None;
+    QRhiGraphicsPipeline::TargetBlend targetBlend;
+    QRhiGraphicsPipeline::PolygonMode polygonMode = QRhiGraphicsPipeline::Fill;
     QRhiGraphicsPipeline::StencilOpState stencilOpFrontState {};
     quint32 stencilWriteMask = 0xFF;
     quint32 stencilRef = 0;
     int depthBias = 0;
-    float slopeScaledDepthBias = 0.0f;
-    bool blendEnable = false;
-    QRhiGraphicsPipeline::TargetBlend targetBlend;
+    int samples = 1;
     int colorAttachmentCount = 1;
-    QRhiViewport viewport;
-    bool scissorEnable = false;
-    QRhiScissor scissor;
+    float slopeScaledDepthBias = 0.0f;
     float lineWidth = 1.0f;
-    QRhiGraphicsPipeline::PolygonMode polygonMode = QRhiGraphicsPipeline::Fill;
+    Flags flags;
+    QRhiViewport viewport;
+    QRhiScissor scissor;
+
+private:
+    friend struct QSSGRhiGraphicsPipelineStatePrivate;
+    friend struct QSSGRhiInputAssemblerStatePrivate;
+    struct InputAssemblerState
+    {
+        enum InputSemantic {
+            PositionSemantic,           // attr_pos
+            NormalSemantic,             // attr_norm
+            TexCoord0Semantic,          // attr_uv0
+            TexCoord1Semantic,          // attr_uv1
+            TangentSemantic,            // attr_textan
+            BinormalSemantic,           // attr_binormal
+            ColorSemantic,              // attr_color
+            MaxTargetSemantic = ColorSemantic,
+            JointSemantic,              // attr_joints
+            WeightSemantic,             // attr_weights
+            TexCoordLightmapSemantic    // attr_lightmapuv
+        };
+
+        QRhiVertexInputLayout inputLayout;
+        QVarLengthArray<InputSemantic, 8> inputs;
+        QRhiGraphicsPipeline::Topology topology;
+        std::array<quint8, MaxTargetSemantic + 1> targetOffsets = { UINT8_MAX, UINT8_MAX, UINT8_MAX, UINT8_MAX,
+                                                                    UINT8_MAX, UINT8_MAX, UINT8_MAX };
+        quint8 targetCount = 0;
+    } ia;
 
     // for internal use
     const QSSGRhiShaderPipeline *shaderPipeline = nullptr;
-    QSSGRhiInputAssemblerState ia;
 };
 
 struct QSSGRhiSamplerDescription

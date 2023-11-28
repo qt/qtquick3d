@@ -577,7 +577,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     QSSGRhiGraphicsPipelineState ps;
     ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));
-    ps.shaderPipeline = m_currentShaderPipeline;
+    QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, m_currentShaderPipeline);
 
     renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiContext.get(), &ps, srb, target->renderTarget, QSSGRhiQuadRenderer::UvCoords);
     m_currentUbufIndex++;

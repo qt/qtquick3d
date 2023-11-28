@@ -753,7 +753,7 @@ void QSSGLayerRenderData::prepareRenderables(QSSGRenderContextInterface &ctx,
         auto psCpy = ps;
         if (filter == QSSGRenderablesFilter::All) { // If 'All' we set our defaults
             psCpy.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
-            psCpy.blendEnable = false;
+            psCpy.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
         }
         const auto &sortedRenderables = getSortedOpaqueRenderableObjects(*extCtx.camera, index);
         OpaquePass::prep(ctx, *this, passKey, psCpy, featureSet, renderPassDescriptor, sortedRenderables);
@@ -765,8 +765,8 @@ void QSSGLayerRenderData::prepareRenderables(QSSGRenderContextInterface &ctx,
         auto psCpy = ps;
         if (filter == QSSGRenderablesFilter::All) { // If 'All' we set our defaults
             // transparent objects (or, without LayerEnableDepthTest, all objects)
-            psCpy.blendEnable = true;
-            psCpy.depthWriteEnable = false;
+            psCpy.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
+            psCpy.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, false);
         }
         const auto &sortedRenderables = getSortedTransparentRenderableObjects(*extCtx.camera, index);
         TransparentPass::prep(ctx, *this, passKey, psCpy, featureSet, renderPassDescriptor, sortedRenderables);
@@ -2061,7 +2061,7 @@ void QSSGLayerRenderData::prepareForRender()
     ps = {}; // Reset
     ps.viewport = { float(theViewport.x()), float(theViewport.y()), float(theViewport.width()), float(theViewport.height()), 0.0f, 1.0f };
     if (layer.scissorRect.isValid()) {
-        ps.scissorEnable = true;
+        ps.flags |= QSSGRhiGraphicsPipelineState::Flag::UsesScissor;
         ps.scissor = { layer.scissorRect.x(),
                        theViewport.height() - (layer.scissorRect.y() + layer.scissorRect.height()),
                        layer.scissorRect.width(),
@@ -2069,7 +2069,7 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
-    ps.blendEnable = false;
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
 
     // Enable Wireframe mode
     ps.polygonMode = layer.wireframeMode ? QRhiGraphicsPipeline::Line : QRhiGraphicsPipeline::Fill;
@@ -2436,8 +2436,8 @@ void QSSGLayerRenderData::prepareForRender()
     zPrePassActive = zPrePassForced || (layerEnabledDepthPrePass && layerEnableDepthTest && (hasDepthWriteObjects || hasItem2Ds));
     const bool depthWriteEnableDefault = depthTestEnableDefault && (!layerEnabledDepthPrePass || !zPrePassActive);
 
-    ps.depthTestEnable = depthTestEnableDefault;
-    ps.depthWriteEnable = depthWriteEnableDefault;
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, depthTestEnableDefault);
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, depthWriteEnableDefault);
 
     // Prepare passes
     QSSG_ASSERT(activePasses.isEmpty(), activePasses.clear());

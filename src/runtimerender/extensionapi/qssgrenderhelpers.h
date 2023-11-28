@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QSSGFrameData;
 class QRhiRenderPassDescriptor;
 class QRhiTexture;
-struct QSSGRhiGraphicsPipelineState;
+class QSSGRhiGraphicsPipelineState;
 class QSSGRenderContextInterface;
 class QSSGRenderExtension;
 

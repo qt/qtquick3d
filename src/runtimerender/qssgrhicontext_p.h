@@ -29,6 +29,28 @@ struct QSSGRenderModel;
 struct QSSGRenderMesh;
 class QSSGRenderGraphObject;
 
+struct QSSGRhiInputAssemblerStatePrivate
+{
+    using InputAssemblerState = QSSGRhiGraphicsPipelineState::InputAssemblerState;
+    static const InputAssemblerState &get(const QSSGRhiGraphicsPipelineState &ps) { return ps.ia; }
+    static InputAssemblerState &get(QSSGRhiGraphicsPipelineState &ps) { return ps.ia; }
+};
+
+using QSSGRhiInputAssemblerState = QSSGRhiInputAssemblerStatePrivate::InputAssemblerState;
+
+struct QSSGRhiGraphicsPipelineStatePrivate
+{
+    static void setShaderPipeline(QSSGRhiGraphicsPipelineState &ps, const QSSGRhiShaderPipeline *pipeline)
+    {
+        ps.shaderPipeline = pipeline;
+    }
+
+    static constexpr const QSSGRhiShaderPipeline *getShaderPipeline(const QSSGRhiGraphicsPipelineState &ps)
+    {
+        return ps.shaderPipeline;
+    }
+};
+
 namespace QSSGRhiHelpers
 {
 
@@ -91,11 +113,11 @@ void bakeVertexInputLocations(QSSGRhiInputAssemblerState *ia, const QSSGRhiShade
 
 inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
 {
-    return a.shaderPipeline == b.shaderPipeline
+    const auto &ia_a = QSSGRhiInputAssemblerStatePrivate::get(a);
+    const auto &ia_b = QSSGRhiInputAssemblerStatePrivate::get(b);
+    return QSSGRhiGraphicsPipelineStatePrivate::getShaderPipeline(a) == QSSGRhiGraphicsPipelineStatePrivate::getShaderPipeline(b)
             && a.samples == b.samples
-            && a.depthTestEnable == b.depthTestEnable
-            && a.depthWriteEnable == b.depthWriteEnable
-            && a.usesStencilRef == b.usesStencilRef
+            && a.flags == b.flags
             && a.stencilRef == b.stencilRef
             && (std::memcmp(&a.stencilOpFrontState, &b.stencilOpFrontState, sizeof(QRhiGraphicsPipeline::StencilOpState)) == 0)
             && a.stencilWriteMask == b.stencilWriteMask
@@ -103,12 +125,10 @@ inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
             && a.cullMode == b.cullMode
             && a.depthBias == b.depthBias
             && a.slopeScaledDepthBias == b.slopeScaledDepthBias
-            && a.blendEnable == b.blendEnable
-            && a.scissorEnable == b.scissorEnable
             && a.viewport == b.viewport
             && a.scissor == b.scissor
-            && a.ia.topology == b.ia.topology
-            && a.ia.inputLayout == b.ia.inputLayout
+            && ia_a.topology == ia_b.topology
+            && ia_a.inputLayout == ia_b.inputLayout
             && a.targetBlend.colorWrite == b.targetBlend.colorWrite
             && a.targetBlend.srcColor == b.targetBlend.srcColor
             && a.targetBlend.dstColor == b.targetBlend.dstColor
@@ -129,7 +149,7 @@ inline bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
 inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_NOTHROW
 {
     // do not bother with all fields
-    return qHash(s.shaderPipeline, seed)
+    return qHash(QSSGRhiGraphicsPipelineStatePrivate::getShaderPipeline(s), seed)
             ^ qHash(s.samples)
             ^ qHash(s.targetBlend.dstColor)
             ^ qHash(s.depthFunc)
@@ -138,11 +158,7 @@ inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_N
             ^ qHash(s.lineWidth)
             ^ qHash(s.polygonMode)
             ^ qHashBits(&s.stencilOpFrontState, sizeof(QRhiGraphicsPipeline::StencilOpState))
-            ^ (s.depthTestEnable << 1)
-            ^ (s.depthWriteEnable << 2)
-            ^ (s.blendEnable << 3)
-            ^ (s.scissorEnable << 4)
-            ^ (s.usesStencilRef << 5)
+            ^ (s.flags)
             ^ (s.stencilRef << 6)
             ^ (s.stencilWriteMask << 7);
 }

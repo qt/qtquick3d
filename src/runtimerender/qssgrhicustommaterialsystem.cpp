@@ -110,7 +110,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
     }
 
     if (shaderPipeline) {
-        ps->shaderPipeline = shaderPipeline.get();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
         shaderPipeline->resetExtraTextures();
     }
 
@@ -246,7 +246,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         ps->targetBlend = blend;
 
-        ps->ia = renderable.subset.rhi.ia;
+        auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
+
+        ia = renderable.subset.rhi.ia;
 
         //### Copied code from default materials
         int instanceBufferBinding = 0;
@@ -254,15 +256,15 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             // Need to setup new bindings for instanced buffers
             const quint32 stride = renderable.modelContext.model.instanceTable->stride();
             QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
-            std::copy(ps->ia.inputLayout.cbeginBindings(),
-                      ps->ia.inputLayout.cendBindings(),
+            std::copy(ia.inputLayout.cbeginBindings(),
+                      ia.inputLayout.cendBindings(),
                       std::back_inserter(bindings));
             bindings.append({ stride, QRhiVertexInputBinding::PerInstance });
             instanceBufferBinding = bindings.size() - 1;
-            ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
+            ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
         }
 
-        QSSGRhiHelpers::bakeVertexInputLocations(&ps->ia, *shaderPipeline, instanceBufferBinding);
+        QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
 
         QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);

@@ -30,7 +30,7 @@ static QSSGRhiShaderPipelinePtr shadersForDefaultMaterial(QSSGRhiGraphicsPipelin
     auto &renderer(subsetRenderable.renderer);
     const auto &shaderPipeline = QSSGRendererPrivate::getShaderPipelineForDefaultMaterial(*renderer, subsetRenderable, featureSet);
     if (shaderPipeline)
-        ps->shaderPipeline = shaderPipeline.get();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
     return shaderPipeline;
 }
 
@@ -42,7 +42,7 @@ static QSSGRhiShaderPipelinePtr shadersForParticleMaterial(QSSGRhiGraphicsPipeli
     auto featureLevel = particleRenderable.particles.m_featureLevel;
     const auto &shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiParticleShader(featureLevel);
     if (shaderPipeline)
-        ps->shaderPipeline = shaderPipeline.get();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
     return shaderPipeline;
 }
 
@@ -443,13 +443,14 @@ static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipe
     const bool instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, renderable, cameraDirection, cameraPosition, renderable->instancingLodMin, renderable->instancingLodMax);
     int instanceBufferBinding = 0;
     if (instancing) {
+        auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
         // set up new bindings for instanced buffers
         const quint32 stride = renderable->modelContext.model.instanceTable->stride();
         QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
-        std::copy(ps->ia.inputLayout.cbeginBindings(), ps->ia.inputLayout.cendBindings(), std::back_inserter(bindings));
+        std::copy(ia.inputLayout.cbeginBindings(), ia.inputLayout.cendBindings(), std::back_inserter(bindings));
         bindings.append({ stride, QRhiVertexInputBinding::PerInstance });
         instanceBufferBinding = bindings.size() - 1;
-        ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
+        ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
     }
     return instanceBufferBinding;
 }
@@ -594,10 +595,11 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
         if (theObject->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || theObject->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
 
-            ps->shaderPipeline = shaderPipeline.get();
-            ps->ia = subsetRenderable.subset.rhi.ia;
+            QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
+            auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
+            ia = subsetRenderable.subset.rhi.ia;
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraData->direction, inData.cameraData->position);
-            QSSGRhiHelpers::bakeVertexInputLocations(&ps->ia, *shaderPipeline, instanceBufferBinding);
+            QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
 
 
             bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
@@ -776,7 +778,9 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             ps->cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
             fillTargetBlend(&ps->targetBlend, material.blendMode);
 
-            ps->ia = subsetRenderable.subset.rhi.ia;
+            auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
+
+            ia = subsetRenderable.subset.rhi.ia;
             QVector3D cameraDirection = inData.cameraData->direction;
             if (inCamera)
                 cameraDirection = inCamera->getScalingCorrectDirection();
@@ -784,7 +788,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             if (inCamera)
                 cameraPosition = inCamera->getGlobalPos();
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDirection, cameraPosition);
-            QSSGRhiHelpers::bakeVertexInputLocations(&ps->ia, *shaderPipeline, instanceBufferBinding);
+            QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
 
             bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
 
@@ -1016,7 +1020,7 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
 
         if (*needsSetViewport) {
             cb->setViewport(state.viewport);
-            if (state.scissorEnable)
+            if (state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::UsesScissor))
                 cb->setScissor(state.scissor);
             *needsSetViewport = false;
         }
@@ -1037,7 +1041,7 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
             vertexBufferCount = 2;
         }
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
-        if (state.usesStencilRef)
+        if (state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef))
             cb->setStencilRef(state.stencilRef);
         if (indexBuffer) {
             cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.indexBuffer->indexFormat());
@@ -1166,7 +1170,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                                   : shaderCache->getBuiltInRhiShaders().getRhiCubemapShadowBlurXShader();
         if (!blurXPipeline)
             return;
-        ps.shaderPipeline = blurXPipeline.get();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, blurXPipeline.get());
 
         ps.colorAttachmentCount = orthographic ? 1 : 6;
 
@@ -1217,7 +1221,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                                  : shaderCache->getBuiltInRhiShaders().getRhiCubemapShadowBlurYShader();
         if (!blurYPipeline)
             return;
-        ps.shaderPipeline = blurYPipeline.get();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, blurYPipeline.get());
 
         bindings.clear();
         bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
@@ -1426,7 +1430,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                 const auto &shaderPipeline = isSkyBox ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8)
                                                       : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader();
                 Q_ASSERT(shaderPipeline);
-                ps->shaderPipeline = shaderPipeline.get();
+                QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
                 if (!renderPassDesc)
                     renderPassDesc = rt->newCompatibleRenderPassDescriptor();
@@ -1520,7 +1524,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
         return;
     }
 
-    ps.shaderPipeline = &shaderPipeline;
+    QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, &shaderPipeline);
 
     const float R2 = ao.aoDistance * ao.aoDistance * 0.16f;
     const QSize textureSize = rhiAoTexture.texture->pixelSize();
@@ -1859,10 +1863,11 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
         // the rest is common, only relying on QSSGSubsetRenderableBase, not the subclasses
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
-            ps->ia = subsetRenderable.subset.rhi.ia;
+            auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
+            ia = subsetRenderable.subset.rhi.ia;
 
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraData->direction, inData.cameraData->position);
-            QSSGRhiHelpers::bakeVertexInputLocations(&ps->ia, *shaderPipeline, instanceBufferBinding);
+            QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;
             bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
@@ -1900,8 +1905,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     // whatever we need.
 
     ps.samples = samples;
-    ps.depthTestEnable = true;
-    ps.depthWriteEnable = true;
+    ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled };
     ps.targetBlend.colorWrite = {};
 
     for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects) {

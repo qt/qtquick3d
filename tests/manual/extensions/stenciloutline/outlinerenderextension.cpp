@@ -88,10 +88,10 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
         auto ps = basePs;
 
         { // Original
-            ps.blendEnable = true;
-            ps.depthWriteEnable = true;
-            ps.usesStencilRef = true;
-            ps.depthTestEnable = true;
+            ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::BlendEnabled,
+                          QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled,
+                          QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef,
+                          QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled };
             ps.stencilWriteMask = 0xff;
             ps.stencilRef = 1;
             ps.samples = samples;
@@ -107,10 +107,10 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
 
         { // Scaled and cut-out
             auto ps = basePs;
-            ps.blendEnable = true;
-            ps.depthWriteEnable = false;
-            ps.depthTestEnable = true;
-            ps.usesStencilRef = true;
+            ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::BlendEnabled,
+                          QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef,
+                          QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled };
+            ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, false);
             ps.stencilWriteMask = 0;
             ps.stencilRef = 1;
             ps.cullMode = QRhiGraphicsPipeline::Back;
