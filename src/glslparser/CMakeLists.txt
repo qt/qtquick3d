@@ -25,5 +25,4 @@ qt_internal_add_module(Quick3DGlslParserPrivate
         QT_NO_CAST_FROM_ASCII
     PUBLIC_LIBRARIES
         Qt::Core
-    GENERATE_CPP_EXPORTS
 )

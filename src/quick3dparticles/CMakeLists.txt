@@ -71,7 +71,6 @@ qt_internal_add_qml_module(Quick3DParticles
         Qt::Quick3DAssetImportPrivate
         Qt::QuickPrivate
         Qt::Quick3DPrivate
-    GENERATE_CPP_EXPORTS
 )
 
 qt_internal_generate_tracepoints(Quick3DParticles quick3d
