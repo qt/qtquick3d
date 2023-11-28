@@ -22,6 +22,7 @@ qt_internal_add_qml_module(Quick3DHelpersImpl
         Qt::Qml
         Qt::Quick
         Qt::Quick3DPrivate
+    NO_GENERATE_CPP_EXPORTS
 )
 
 qt_internal_add_resource(Quick3DHelpersImpl "helpersimpl_resources"
