@@ -60,7 +60,9 @@ qt_add_qml_module(volumeraycaster
         alpha_blending.frag
         alpha_blending.vert
         SpacingMap.mjs
-    NO_RESOURCE_TARGET_PATH
+    RESOURCE_PREFIX "/qt/qml"
+    IMPORTS
+        QtQuick3D
 )
 
 install(TARGETS volumeraycaster
