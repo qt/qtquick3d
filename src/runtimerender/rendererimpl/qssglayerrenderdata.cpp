@@ -2357,8 +2357,8 @@ void QSSGLayerRenderData::prepareForRender()
     {
         // Give user provided passes a chance to modify the renderable data before starting
         // Note: All non-active extensions should be filtered out by now
-        Q_STATIC_ASSERT(USERPASSES == size_t(QSSGRenderLayer::RenderExtensionMode::Count));
-        for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionMode::Count); ++i) {
+        Q_STATIC_ASSERT(USERPASSES == size_t(QSSGRenderLayer::RenderExtensionStage::Count));
+        for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionStage::Count); ++i) {
             const auto &renderExtensions = layer.renderExtensions[i];
             auto &userPass = userPasses[i];
             for (auto rit = renderExtensions.crbegin(), rend = renderExtensions.crend(); rit != rend; ++rit) {
@@ -2469,7 +2469,7 @@ void QSSGLayerRenderData::prepareForRender()
     // Reflection pass
     activePasses.push_back(&reflectionMapPass);
 
-    auto &underlayPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionMode::Underlay)];
+    auto &underlayPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionStage::Underlay)];
     if (underlayPass.hasData())
         activePasses.push_back(&underlayPass);
 
@@ -2497,7 +2497,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (transparentObjects.size() > 0 || (!layerEnableDepthTest && hasOpaqueObjects))
         activePasses.push_back(&transparentPass);
 
-    auto &overlayPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionMode::Overlay)];
+    auto &overlayPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionStage::Overlay)];
     if (overlayPass.hasData())
         activePasses.push_back(&overlayPass);
 

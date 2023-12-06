@@ -1079,7 +1079,7 @@ void UserPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     auto &frameData = data.getFrameData();
     for (const auto &p : std::as_const(extensions)) {
         p->prepareRender(frameData);
-        if (p->type() == QSSGRenderExtension::Type::Standalone)
+        if (p->mode() == QSSGRenderExtension::RenderMode::Standalone)
             p->render(frameData);
     }
 }
@@ -1090,7 +1090,7 @@ void UserPass::renderPass(QSSGRenderer &renderer)
     QSSG_ASSERT(data, return);
     auto &frameData = data->getFrameData();
     for (const auto &p : std::as_const(extensions)) {
-        if (p->type() == QSSGRenderExtension::Type::Main)
+        if (p->mode() == QSSGRenderExtension::RenderMode::Main)
             p->render(frameData);
     }
 }

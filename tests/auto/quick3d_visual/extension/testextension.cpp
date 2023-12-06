@@ -35,8 +35,8 @@ public:
     void prepareRender(QSSGFrameData &data) override;
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
-    Type type() const override { return Type::Main; }
-    RenderMode mode() const override { return RenderMode::Overlay; }
+    RenderMode mode() const override { return RenderMode::Main; }
+    RenderStage stage() const override { return RenderStage::Overlay; }
 
     QThread *t;
 };
@@ -107,8 +107,8 @@ public:
     void prepareRender(QSSGFrameData &data) override;
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
-    Type type() const override { return Type::Standalone; }
-    RenderMode mode() const override { return RenderMode::Overlay; }
+    RenderMode mode() const override { return RenderMode::Standalone; }
+    RenderStage stage() const override { return RenderStage::Overlay; }
 
     QThread *t;
 };

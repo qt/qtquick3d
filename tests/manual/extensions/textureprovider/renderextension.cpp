@@ -29,8 +29,8 @@ public:
     void prepareRender(QSSGFrameData &data) override;
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
-    Type type() const override { return QSSGRenderExtension::Type::Standalone; }
-    RenderMode mode() const override { return QSSGRenderExtension::RenderMode::Underlay; }
+    RenderMode mode() const override { return QSSGRenderExtension::RenderMode::Standalone; }
+    RenderStage stage() const override { return QSSGRenderExtension::RenderStage::Underlay; }
 
 private:
     static QShader getShader(const QString &name)

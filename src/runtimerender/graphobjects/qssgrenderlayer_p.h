@@ -122,8 +122,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // First effect in a list of effects.
     QSSGRenderEffect *firstEffect;
     QSSGLayerRenderData *renderData = nullptr;
-    enum class RenderExtensionMode { Underlay, Overlay, Count };
-    QList<QSSGRenderExtension *> renderExtensions[size_t(RenderExtensionMode::Count)];
+    enum class RenderExtensionStage { Underlay, Overlay, Count };
+    QList<QSSGRenderExtension *> renderExtensions[size_t(RenderExtensionStage::Count)];
 
     QSSGRenderLayer::AAMode antialiasingMode;
     QSSGRenderLayer::AAQuality antialiasingQuality;

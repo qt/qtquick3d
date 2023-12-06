@@ -66,13 +66,13 @@ private:
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderExtension : public QSSGRenderGraphObject
 {
 public:
-    enum class Type
+    enum class RenderMode
     {
         Standalone,
         Main
     };
 
-    enum class RenderMode
+    enum class RenderStage
     {
         Underlay,
         Overlay
@@ -87,8 +87,8 @@ public:
 
     virtual void resetForFrame() = 0;
 
-    virtual Type type() const = 0;
     virtual RenderMode mode() const = 0;
+    virtual RenderStage stage() const = 0;
 };
 
 QT_END_NAMESPACE

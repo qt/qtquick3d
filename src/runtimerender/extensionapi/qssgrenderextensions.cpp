@@ -103,13 +103,13 @@ QSSGRenderExtension::~QSSGRenderExtension()
 }
 
 /*!
-    \enum QSSGRenderExtension::Type
+    \enum QSSGRenderExtension::RenderMode
 
-    Specifies the render extension type.
+    Specifies the render extension mode.
 
     \value Standalone The rendering code is recorded in full during the render prepare phase.
     This will usually imply that there are some output crated for a preceding render extension(s).
-    When this type is used the \l prepareRender() and \l render() functions are both called during
+    When this mode is used the \l prepareRender() and \l render() functions are both called during
     the frame's prepare phase.
 
     \value Main The rendering code is recorded within the main render pass. In this mode the
@@ -118,7 +118,7 @@ QSSGRenderExtension::~QSSGRenderExtension()
 */
 
 /*!
-    \enum QSSGRenderExtension::Mode
+    \enum QSSGRenderExtension::RenderStage
 
     Specifies the order the extension will be called.
 
@@ -148,7 +148,7 @@ bool QSSGRenderExtension::prepareData(QSSGFrameData &data)
 /*!
     Prepare data for rendering. Build and collect \a data needed for rendering. Any render extension
     scheduled before this one has been processed. In addition; any render extension of
-    type \l Type::Standalon will, if successful, have been completed in full.
+    mode \l RenderMode::Standalone will, if successful, have been completed in full.
 
     \note Much of the data created/collected from the engine during the prepare and render phases
     is per-frame and should be released or assumed released at the start of the next frame
@@ -161,12 +161,12 @@ void QSSGRenderExtension::prepareRender(QSSGFrameData &data)
 }
 
 /*!
-    Record the render pass. Depending on the extensions \l {Type}{type} this function will be called
+    Record the render pass. Depending on the extensions \l {RenderMode}{mode} this function will be called
     during the frame's prepare or render phase.
 
     Use \a data to gain access to the render context from which the active QRhi object can be queried.
 
-    \sa QSSGRenderExtension::Type
+    \sa QSSGRenderExtension::RenderMode
 */
 void QSSGRenderExtension::render(QSSGFrameData &data)
 {
@@ -183,19 +183,19 @@ void QSSGRenderExtension::resetForFrame()
 }
 
 /*!
-    \return The render extension type.
+    \return The render mode used for this extension.
  */
-QSSGRenderExtension::Type QSSGRenderExtension::type() const
+QSSGRenderExtension::RenderMode QSSGRenderExtension::mode() const
 {
-    return Type::Main;
+    return RenderMode::Main;
 }
 
 /*!
-    \return The mode that should used for this render extension.
+    \return The stage in which this render extension will be used.
 */
-QSSGRenderExtension::RenderMode QSSGRenderExtension::mode() const
+QSSGRenderExtension::RenderStage QSSGRenderExtension::stage() const
 {
-    return RenderMode::Overlay;
+    return RenderStage::Overlay;
 }
 
 QT_END_NAMESPACE

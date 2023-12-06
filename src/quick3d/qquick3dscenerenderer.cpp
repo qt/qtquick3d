@@ -645,7 +645,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     // if the list is dirty we rebuild (assumption is that this won't happen frequently).
     if (view3D->extensionListDirty()) {
-        for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionMode::Count); ++i)
+        for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionStage::Count); ++i)
             m_layer->renderExtensions[i].clear();
         // All items in the extension list are root items,
         const auto &extensions = view3D->extensionList();
@@ -655,9 +655,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 if (type == QSSGRenderGraphObject::Type::RenderExtension) {
                     if (auto *renderExt = qobject_cast<QQuick3DRenderExtension *>(ext)) {
                         if (QQuick3DObjectPrivate::get(renderExt)->spatialNode) {
-                            const auto mode = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)->mode();
-                            QSSG_ASSERT(size_t(mode) < std::size(m_layer->renderExtensions), continue);
-                            auto &list = m_layer->renderExtensions[size_t(mode)];
+                            const auto stage = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)->stage();
+                            QSSG_ASSERT(size_t(stage) < std::size(m_layer->renderExtensions), continue);
+                            auto &list = m_layer->renderExtensions[size_t(stage)];
                             bfs(qobject_cast<QQuick3DRenderExtension *>(ext), list);
                         }
                     }

@@ -19,8 +19,8 @@ public:
     void prepareRender(QSSGFrameData &data) override;
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
-    Type type() const override { return Type::Main; }
-    RenderMode mode() const override { return renderMode; }
+    RenderMode mode() const override { return RenderMode::Main; }
+    RenderStage stage() const override { return renderStage; }
 
     bool canRender = false;
     QMatrix4x4 viewProjection;
@@ -40,7 +40,7 @@ public:
         modelMatrix.scale(10, 10, 10);
     }
 
-    RenderMode renderMode = RenderMode::Overlay;
+    RenderStage renderStage = RenderStage::Overlay;
 };
 
 Renderer::Renderer()
@@ -203,10 +203,10 @@ QSSGRenderGraphObject *RhiRenderingExtension::updateSpatialNode(QSSGRenderGraphO
         // the difference is obvious when the sphere is semi-transparent and the cube overlaps with it
         switch (m_mode) {
         case Overlay:
-            renderer->renderMode = QSSGRenderExtension::RenderMode::Overlay;
+            renderer->renderStage = QSSGRenderExtension::RenderStage::Overlay;
             break;
         case Underlay:
-            renderer->renderMode = QSSGRenderExtension::RenderMode::Underlay;
+            renderer->renderStage = QSSGRenderExtension::RenderStage::Underlay;
             break;
         }
     }
