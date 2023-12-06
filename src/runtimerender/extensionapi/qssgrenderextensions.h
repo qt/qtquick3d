@@ -74,8 +74,8 @@ public:
 
     enum class RenderStage
     {
-        Underlay,
-        Overlay
+        PreColor,
+        PostColor
     };
 
     QSSGRenderExtension();

@@ -35,7 +35,7 @@ public:
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     RenderMode mode() const override { return RenderMode::Standalone; }
-    RenderStage stage() const override { return RenderStage::Overlay; }
+    RenderStage stage() const override { return RenderStage::PostColor; }
 
     std::unique_ptr<QRhiTexture> texture;
     std::unique_ptr<QRhiTextureRenderTarget> rt;
@@ -206,7 +206,7 @@ public:
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     RenderMode mode() const override { return RenderMode::Main; }
-    RenderStage stage() const override { return RenderStage::Overlay; }
+    RenderStage stage() const override { return RenderStage::PostColor; }
 
     ProducerExtension *producer;
 

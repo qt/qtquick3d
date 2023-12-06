@@ -122,8 +122,8 @@ QSSGRenderExtension::~QSSGRenderExtension()
 
     Specifies the order the extension will be called.
 
-    \value Underlay The rendering code is recorded and executed before the main (color) pass.
-    \value Overlay The rendering code is recorded and executed after the main (color) pass.
+    \value PreColor The rendering code is recorded and executed before the main (color) pass.
+    \value PostColor The rendering code is recorded and executed after the main (color) pass.
 */
 
 
@@ -195,7 +195,7 @@ QSSGRenderExtension::RenderMode QSSGRenderExtension::mode() const
 */
 QSSGRenderExtension::RenderStage QSSGRenderExtension::stage() const
 {
-    return RenderStage::Overlay;
+    return RenderStage::PostColor;
 }
 
 QT_END_NAMESPACE

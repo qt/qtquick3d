@@ -40,7 +40,7 @@ public:
         modelMatrix.scale(10, 10, 10);
     }
 
-    RenderStage renderStage = RenderStage::Overlay;
+    RenderStage renderStage = RenderStage::PostColor;
 };
 
 Renderer::Renderer()
@@ -203,10 +203,10 @@ QSSGRenderGraphObject *RhiRenderingExtension::updateSpatialNode(QSSGRenderGraphO
         // the difference is obvious when the sphere is semi-transparent and the cube overlaps with it
         switch (m_mode) {
         case Overlay:
-            renderer->renderStage = QSSGRenderExtension::RenderStage::Overlay;
+            renderer->renderStage = QSSGRenderExtension::RenderStage::PostColor;
             break;
         case Underlay:
-            renderer->renderStage = QSSGRenderExtension::RenderStage::Underlay;
+            renderer->renderStage = QSSGRenderExtension::RenderStage::PreColor;
             break;
         }
     }

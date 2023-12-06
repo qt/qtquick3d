@@ -22,7 +22,7 @@ public:
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     RenderMode mode() const override { return RenderMode::Main; }
-    RenderStage stage() const override { return RenderStage::Overlay; };
+    RenderStage stage() const override { return RenderStage::PostColor; };
 
     QSSGPrepContextId stencilPrepContext { QSSGPrepContextId::Uninitialized };
     QSSGPrepContextId outlinePrepContext { QSSGPrepContextId::Uninitialized };

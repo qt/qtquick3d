@@ -30,7 +30,7 @@ public:
     void render(QSSGFrameData &data) override;
     void resetForFrame() override;
     RenderMode mode() const override { return QSSGRenderExtension::RenderMode::Standalone; }
-    RenderStage stage() const override { return QSSGRenderExtension::RenderStage::Underlay; }
+    RenderStage stage() const override { return QSSGRenderExtension::RenderStage::PreColor; }
 
 private:
     static QShader getShader(const QString &name)
