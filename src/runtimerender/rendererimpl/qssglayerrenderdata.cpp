@@ -1961,11 +1961,15 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
 
         const auto &transparentObjects = std::as_const(transparentObjectStore[0]);
         const auto &opaqueObjects = std::as_const(opaqueObjectStore[0]);
+        const auto &screenTextureObjects = std::as_const(screenTextureObjectStore[0]);
 
         for (const auto &handle : std::as_const(transparentObjects))
             injectProbe(handle);
 
         for (const auto &handle : std::as_const(opaqueObjects))
+            injectProbe(handle);
+
+        for (const auto &handle : std::as_const(screenTextureObjects))
             injectProbe(handle);
 
         if (probe->texture)
@@ -2455,14 +2459,15 @@ void QSSGLayerRenderData::prepareForRender()
     if (layerPrepResult.flags.requiresShadowMapPass())
         activePasses.push_back(&shadowMapPass);
 
-    activePasses.push_back(&reflectionMapPass);
-
     if (zPrePassActive)
         activePasses.push_back(&zPrePassPass);
 
     // Screen texture with opaque objects.
     if (layerPrepResult.flags.requiresScreenTexture())
         activePasses.push_back(&screenMapPass);
+
+    // Reflection pass
+    activePasses.push_back(&reflectionMapPass);
 
     auto &underlayPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionMode::Underlay)];
     if (underlayPass.hasData())

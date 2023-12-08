@@ -149,12 +149,13 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
 
     const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
     const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
+    const auto &sortedScreenTextureObjects = data.getSortedScreenTextureRenderableObjects(*camera);
 
     QSSG_ASSERT(reflectionPassObjects.isEmpty(), reflectionPassObjects.clear());
 
     // NOTE: We should consider keeping track of the reflection casting objects to avoid
     // filtering this list on each prep.
-    for (const auto &handles : { &sortedOpaqueObjects, &sortedTransparentObjects }) {
+    for (const auto &handles : { &sortedOpaqueObjects, &sortedTransparentObjects, &sortedScreenTextureObjects }) {
         for (const auto &handle : *handles) {
             if (handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::CastsReflections))
                 reflectionPassObjects.push_back(handle);
@@ -477,8 +478,13 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         shaderFeatures = data.getShaderFeatures();
         shaderFeatures.disableTonemapping();
         const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
-        for (const auto &handle : sortedOpaqueObjects)
+        for (const auto &handle : sortedOpaqueObjects) {
+            // Reflection cube maps are not available at this point, make sure they are turned off.
+            bool recRef = handle.obj->renderableFlags.receivesReflections();
+            handle.obj->renderableFlags.setReceivesReflections(false);
             rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1);
+            handle.obj->renderableFlags.setReceivesReflections(recRef);
+        }
     }
 
     if (Q_UNLIKELY(!ready))
