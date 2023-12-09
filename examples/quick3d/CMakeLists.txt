@@ -33,3 +33,5 @@ qt_internal_add_example(lodhelper)
 qt_internal_add_example(simplefog)
 qt_internal_add_example(sceneeffects)
 qt_internal_add_example(volumeraycaster)
+qt_internal_add_example(virtualassistant)
+
