@@ -1,0 +1,11 @@
+{
+"Id": "virtualassistantexample-skyboxes",
+"Name": "HDRI Images",
+"QDocModule": "qtdoc",
+"QtUsage": "Used in the Virtual Assistant example.",
+"QtParts": [ "examples" ],
+
+"LicenseId": "CC0-1.0",
+"License": "Creative Commons Zero v1.0 Universal",
+"DownloadLocation": "https://polyhaven.com"
+}
