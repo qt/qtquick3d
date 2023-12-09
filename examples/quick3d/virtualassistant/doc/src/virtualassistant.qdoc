@@ -1,0 +1,51 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+/*!
+    \title Qt Quick 3D - Virtual Assistant Example
+    \ingroup quick3d-examples
+    \example virtualassistant
+    \examplecategory {3D}
+    \brief Qt Quick application that presents a 3D model of a virtual assistant with dynamic animations created using QML and timelines.
+    \meta {tag} {quick,quick3D}
+
+    \image VirtualAssistantHome.png
+
+    \e{Virtual Assistant Example} demonstrates how to bring a 3D model of a virtual assistant to life through timeline animations, increasing user engagement and interaction. The example can be run and edited in both QtDesignStudio and QtCreator.
+
+    \section1 Importing 3D Model
+    To load the model in QtDesingStudio it is enough to import the .gltf file to the project. QtDesignStudio automatically create a qml file that represents the object and it wil also generate necessary assets. Without QtDesignStudio you need to use \l balsam tool, and run it manually. In this example the generated qml file was modified to introduce the states, animations and some additional invicible models that allows to pick specific parts of the Virtual Assistant.
+
+    \section1 Preparing \l {SceneEnvironment} Scene Environment
+    Scene use HDR images to create a skybox and to provide natural lighthing.
+
+\quotefromfile virtualassistant/content/Screen01.ui.qml
+    \skipto environment
+    \printuntil vignetteRadius
+    \printuntil }
+
+    \section1 Camera Options
+    Camera properties can be changed from the \c SettingsPanel. You can manipulate the camera FOV, skybox rotation using sliders. The checkbox enable the \l OrbitCameraController that allows to change camera position, rotation etc. using mouse and keyboards buttons.
+
+    \section1 Animations
+    The animations are created using multiple \l {Timeline} timelines and \l {Keyframe} keyframes. Each \l {Timeline} Timeline is connected with different state of the \c VirtualAssistant. The animations starts playing immadiately when the state change. At the end of each animation the object returns to the default state and restore the default values like position and rotation of the model \l {Node} {nodes}. The animations change the properties values of the nodes in our skeleton and also modify the weight of different \l {MorphTarget} {morph targets} to animate the face elements (eyes, mouth).
+
+To run the animation you can use the button on ControlPanel on the left side of the scene or you can also click on specific model elements like hands, lower body and face to activate animation related to that part of the model.
+
+    \section2 \l Skeleton animations
+    \list
+        \li Entry animation
+        \li Exit animation
+        \li Explore scene animation
+        \li Backflip animation
+        \li Bouncing animation
+        \li Right and Left hand waving animation
+    \endlist
+    \section2 Morph Target animations
+    \list
+        \li Face animations (Happy and Sad)
+    \endlist
+
+    Sample implementation of waving animation on the model's left hand:
+    \snippet virtualassistant/asset_imports/Quick3DAssets/VirtualAssistant/VirtualAssistant.qml wavingAnim
+*/
