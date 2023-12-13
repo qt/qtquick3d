@@ -43,15 +43,12 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
  */
 
 /*!
-    \variable QSSGRhiGraphicsPipelineState::depthTestEnable
- */
-
-/*!
-    \variable QSSGRhiGraphicsPipelineState::depthWriteEnable
- */
-
-/*!
-    \variable QSSGRhiGraphicsPipelineState::usesStencilRef
+    \enum QSSGRhiGraphicsPipelineState::Flag
+    \value DepthTestEnabled
+    \value DepthWriteEnabled
+    \value BlendEnabled
+    \value UsesStencilRef
+    \value UsesScissor
  */
 
 /*!
@@ -83,10 +80,6 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
  */
 
 /*!
-    \variable QSSGRhiGraphicsPipelineState::blendEnable
- */
-
-/*!
     \variable QSSGRhiGraphicsPipelineState::targetBlend
  */
 
@@ -96,10 +89,6 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::viewport
- */
-
-/*!
-    \variable QSSGRhiGraphicsPipelineState::scissorEnable
  */
 
 /*!

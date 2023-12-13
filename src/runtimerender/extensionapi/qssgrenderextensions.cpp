@@ -17,9 +17,9 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \return The renderable texture result from \a id. Null if no matching \a id was found.
+    \return The renderable texture result from \a id. \nullptr if no matching \a id was found.
 
-    \note Even if the function returns a non-null resultß, the returned \l QSSGRhiRenderableTexture
+    \note Even if the function returns a non-null result, the returned QSSGRhiRenderableTexture
     might not be ready unless the pass rendering to the texture has been executed.
 
     \note The returned value is only valid within the current frame. On each new frame
