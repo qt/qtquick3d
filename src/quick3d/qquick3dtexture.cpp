@@ -653,7 +653,7 @@ bool QQuick3DTexture::autoOrientation() const
 /*!
     \qmlproperty RenderExtension QtQuick3D::Texture::textureProvider
 
-    This property holds the \l RenderExtension that will provide the \l QRhiTexture
+    This property holds the RenderExtension that will provide the \l QRhiTexture
     that will be used by this item.
 
     \note The texture created by RenderExtension needs to be made available by

@@ -24,18 +24,26 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \enum QSSGRenderHelpers::CreateFlag
+
+    \value None
+    \value Recurse
+    \value Steal
+*/
+
+/*!
     Takes a list of node ids and create renderables that can be further processed by the renderer.
     If there are no nodes, or no renderable nodes in the list, the returned id will be invalid.
 
     By default the function does not recurse down and included children of the \a nodes in the list.
-    Enabling recursion can be achieved by passing in the \l{Recurse}{CreateFlags::Recurse} flag in
+    Enabling recursion can be achieved by passing in the \l{CreateFlag::}{Recurse} flag in
     the \a flags argument.
 
     \return an id to the created renderables.
 
     \a frameData, \a prepId
 
-    \sa CreateFlags, prepareForRender
+    \sa CreateFlags, prepareForRender()
  */
 QSSGRenderablesId QSSGRenderHelpers::createRenderables(const QSSGFrameData &frameData,
                                                        QSSGPrepContextId prepId,
@@ -65,7 +73,7 @@ QSSGRenderablesId QSSGRenderHelpers::createRenderables(const QSSGFrameData &fram
 
     \a frameData, \a ext, \a camera
 
-    \sa commit
+    \sa commit()
  */
 
 QSSGPrepContextId QSSGRenderHelpers::prepareForRender(const QSSGFrameData &frameData,
@@ -89,7 +97,7 @@ QSSGPrepContextId QSSGRenderHelpers::prepareForRender(const QSSGFrameData &frame
 
     \a frameData, \a prepId, \a renderablesId, \a lodThreshold
 
-    \sa prepareRenderables, renderRenderables
+    \sa prepareRenderables(), renderRenderables()
  */
 QSSGPrepResultId QSSGRenderHelpers::commit(const QSSGFrameData &frameData,
                                            QSSGPrepContextId prepId,
@@ -107,9 +115,9 @@ QSSGPrepResultId QSSGRenderHelpers::commit(const QSSGFrameData &frameData,
 
     \return an id to the preparation result.
 
-    \a frameData, \a renderPassDescriptor, \a ps, \a prepId
+    \a frameData, \a renderPassDescriptor, \a ps, \a prepId, \a filter
 
-    \sa renderRenderables
+    \sa renderRenderables()
  */
 void QSSGRenderHelpers::prepareRenderables(const QSSGFrameData &frameData,
                                            QSSGPrepResultId prepId,
@@ -128,7 +136,7 @@ void QSSGRenderHelpers::prepareRenderables(const QSSGFrameData &frameData,
 
     \a contextInterface, \a prepId
 
-    \sa prepareRenderables
+    \sa prepareRenderables()
  */
 void QSSGRenderHelpers::renderRenderables(QSSGRenderContextInterface &contextInterface,
                                           QSSGPrepResultId prepId)
@@ -157,13 +165,13 @@ QSSGRenderHelpers::QSSGRenderHelpers()
     \note As with the \l {QtQuick3D::Model::materials}{materials} on the \l {QtQuick3D::Model}{model} item,
     materials are applied in the same manner.
 
-    \i "The sub-mesh uses a material from the \l{materials} list,
-        corresponding to its index. If the number of materials is less than the
-        sub-meshes, the last material in the list is used for subsequent sub-meshes."
+    The sub-mesh uses a material from the \l{materials} list, corresponding to its index. If the number
+    of materials is less than the sub-meshes, the last material in the list is used for subsequent
+    sub-meshes.
 
     \a frameData \a renderablesId
 
-    \sa createRenderables
+    \sa QSSGRenderHelpers::createRenderables()
  */
 void QSSGModelHelpers::setModelMaterials(const QSSGFrameData &frameData,
                                          QSSGRenderablesId renderablesId,
@@ -183,7 +191,7 @@ void QSSGModelHelpers::setModelMaterials(const QSSGFrameData &frameData,
 
     \a frameData, \a renderablesId
 
-    \sa createRenderables
+    \sa QSSGRenderHelpers::createRenderables()
  */
 void QSSGModelHelpers::setModelMaterials(const QSSGFrameData &frameData,
                                          QSSGRenderablesId renderablesId,
@@ -197,11 +205,11 @@ void QSSGModelHelpers::setModelMaterials(const QSSGFrameData &frameData,
 
 /*!
     \return Returns the global transform for the \a model in context of the \a prepId. By default the prep context argument is
-    \l {QSSGPrepContextId::Uninitialized}{Uninitialized} which returns the model's original global transform.
+    QSSGPrepContextId::Uninitialized which returns the model's original global transform.
 
     \a frameData
 
-    \sa createRenderables
+    \sa QSSGRenderHelpers::createRenderables()
 */
 QMatrix4x4 QSSGModelHelpers::getGlobalTransform(const QSSGFrameData &frameData,
                                                 QSSGNodeId model,
@@ -244,11 +252,11 @@ float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNod
 
 /*!
     \return Returns the global opacity for the \a model in context of the \a prepId. By default the prep context argument is
-    \l {QSSGPrepContextId::Uninitialized}{Uninitialized} which returns the model's original global opacity.
+    QSSGPrepContextId::Uninitialized which returns the model's original global opacity.
 
     \a frameData
 
-    \sa createRenderables
+    \sa QSSGRenderHelpers::createRenderables()
 */
 float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNodeId model, QSSGPrepContextId prepId = QSSGPrepContextId::Uninitialized)
 {
@@ -279,7 +287,7 @@ float QSSGModelHelpers::getLocalOpacity(const QSSGFrameData &frameData, QSSGNode
 
     \a frameData, \a transform
 
-    \sa createRenderables
+    \sa QSSGRenderHelpers::createRenderables()
  */
 void QSSGModelHelpers::setGlobalTransform(const QSSGFrameData &frameData,
                                           QSSGRenderablesId renderablesId,
@@ -300,7 +308,7 @@ void QSSGModelHelpers::setGlobalTransform(const QSSGFrameData &frameData,
 
     \a frameData, \a opacity
 
-    \sa createRenderables
+    \sa QSSGRenderHelpers::createRenderables()
  */
 void QSSGModelHelpers::setGlobalOpacity(const QSSGFrameData &frameData, QSSGRenderablesId renderablesId, QSSGNodeId model, float opacity)
 {
@@ -329,7 +337,7 @@ void QSSGModelHelpers::setGlobalOpacity(const QSSGFrameData &frameData, QSSGRend
 
     \a globalTransform
 
-    \sa createRenderables
+    \sa QSSGRenderHelpers::createRenderables()
  */
 QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGNodeId cameraId,
                                                       const QMatrix4x4 *globalTransform)
