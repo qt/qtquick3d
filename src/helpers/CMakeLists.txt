@@ -12,6 +12,7 @@ qt_internal_add_qml_module(Quick3DHelpers
     CLASS_NAME QtQuick3DHelpersPlugin
     PLUGIN_TARGET qtquick3dhelpersplugin
     DEPENDENCIES
+        QtQuick3D.Helpers.impl/auto
         QtQuick3D/auto
     PAST_MAJOR_VERSIONS 1
     SOURCES

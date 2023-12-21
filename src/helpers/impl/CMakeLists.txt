@@ -9,7 +9,6 @@ qt_internal_add_qml_module(Quick3DHelpersImpl
     NO_PLUGIN_OPTIONAL
     DEPENDENCIES
         QtQuick3D/auto
-        QtQuick3D.Helpers/auto
     SOURCES
         sceneeffects.cpp sceneeffects_p.h
         qquick3drenderstatsmeshesmodel_p.h qquick3drenderstatsmeshesmodel.cpp
