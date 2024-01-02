@@ -189,7 +189,8 @@ struct QSSGMaterialVertexPipeline
             doGenerateWorldNormal(inKey);
         } else {
             generateWorldPosition(inKey);
-            fragment().append("    vec3 qt_varNormal = cross(dFdx(qt_varWorldPos), dFdy(qt_varWorldPos));");
+            // qt_rhi_properties.x is used to correct for Y inversion for non OpenGL backends
+            fragment().append("    vec3 qt_varNormal = cross(dFdx(qt_varWorldPos), qt_rhi_properties.x * dFdy(qt_varWorldPos));");
         }
         fragment().append("    vec3 qt_world_normal = normalize(qt_varNormal);");
     }
