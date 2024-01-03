@@ -432,6 +432,9 @@ QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
     qDeleteAll(resourceCleanupQueue);
     qDeleteAll(pendingResourceCleanupQueue);
 
+    if (m_window)
+        m_window->setProperty(qtQQ3DWAPropName, QVariant());
+
     QSSG_CHECK_X(!m_rci || m_rci.use_count() == 1, "RCI has unexpected reference count!");
 }
 
