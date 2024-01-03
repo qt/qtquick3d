@@ -14,7 +14,7 @@ add_subdirectory(imports)
 add_subdirectory(asset_imports)
 
 target_link_libraries(QtVirtualAssistant PRIVATE
-    contentplugin
+    robotassistantplugin
     Constantsplugin
     VirtualAssistantplugin
     RobotHeartplugin
