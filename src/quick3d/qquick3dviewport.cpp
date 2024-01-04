@@ -257,6 +257,18 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
 
 QQuick3DViewport::~QQuick3DViewport()
 {
+    // With the threaded render loop m_directRenderer must be destroyed on the
+    // render thread at the proper time, not here. That's handled in
+    // releaseResources() + upon sceneGraphInvalidated. However with a
+    // QQuickRenderControl-based window on the main thread there is a good
+    // chance that this viewport (and so our sceneGraphInvalidated signal
+    // connection) is destroyed before the window and the rendercontrol. So act
+    // here then.
+    if (m_directRenderer && m_directRenderer->thread() == thread()) {
+        delete m_directRenderer;
+        m_directRenderer = nullptr;
+    }
+
     // If the quick window still exists, make sure to disconnect any of the direct
     // connections to this View3D
     if (auto qw = window())
@@ -280,9 +292,6 @@ QQuick3DViewport::~QQuick3DViewport()
         if (sceneManager->wattached->rci().use_count() <= 1)
             delete sceneManager->wattached;
     }
-
-    // m_directRenderer must be destroyed on the render thread at the proper time, not here.
-    // That's handled in releaseResources() + upon sceneGraphInvalidated
 }
 
 static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)
