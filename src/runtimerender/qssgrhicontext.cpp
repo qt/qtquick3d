@@ -35,11 +35,21 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
     \inmodule QtQuick3D
     \since 6.7
 
-    \brief Graphics pipeline state.
+    \brief Graphics pipeline state for the spatial scene graph.
+
+    This class is a convenience class used by QtQuick3D to wrap relevant pipeline state from the QRhi classes,
+    like \l QRhiGraphicsPipeline. Most of the types and value used in QSSGRhiGraphicsPipelineState will
+    therefore map directly to an equivalent QRhi type or class.
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::samples
+
+    The sample count.
+
+    \note A sample count of 1 means no multisample antialiasing.
+
+    \sa QRhiSwapChain::sampleCount()
  */
 
 /*!
@@ -53,54 +63,110 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::depthFunc
+
+    The depth comparison function.
+
+    \sa QRhiGraphicsPipeline::CompareOp
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::cullMode
+
+    Specifies the culling mode.
+
+    \sa QRhiGraphicsPipeline::CullMode
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::stencilOpFrontState
+
+    Describes the stencil operation state.
+
+    \sa QRhiGraphicsPipeline::StencilOpState
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::stencilWriteMask
+
+    The stencil write mask value. The default value is \c 0xFF.
+
+    \sa QRhiGraphicsPipeline::stencilWriteMask()
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::stencilRef
+
+    The active stencil reference value.
+
+    \note Only used when \l{QSSGRhiGraphicsPipeline::Flags::UsesStencilRef}{UsesStencilRef} is set.
+
+    \sa QRhiCommandBuffer::stencilRef()
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::depthBias
+
+    The depth bias. The default value is 0.
+
+    \sa QRhiGraphicsPipeline::depthBias()
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::slopeScaledDepthBias
+
+    The slope scaled depth bias. The default value is 0.
+
+    \sa QRhiGraphicsPipeline::slopeScaledDepthBias()
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::targetBlend
+
+    The blend state for one color attachment.
+
+    \sa QRhiGraphicsPipeline::TargetBlend
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::colorAttachmentCount
+
+    The number of color attachments. The default is 1.
+
+    \sa QRhiTextureRenderTargetDescription::setColorAttachments(),
+        QRhiTextureRenderTargetDescription::colorAttachmentCount()
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::viewport
+
+    The viewport dimensions used for rendering.
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::scissor
+
+    The scissor rect.
+
+    \note Only used if \l{QSSGRhiGraphicsPipelineState::Flags::UsesScissor}{UsesScissor} is set.
+
+    \sa QRhiCommandBuffer::setScissor()
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::lineWidth
+
+    The line width used. The default is 1.0
+
+    \note For values other than 1.0 it's required that feature \l QRhi::WideLines is reported
+    as supported at runtime.
  */
 
 /*!
     \variable QSSGRhiGraphicsPipelineState::polygonMode
+
+     The polygon mode value. The default is \l{QRhiGraphicsPipeline::Fill}{Fill}.
+
+     \sa QRhiGraphicsPipeline::polygonMode()
  */
 
 /*!
@@ -109,35 +175,60 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
     \since 6.7
 
     \brief QSSGRhiSamplerDescription.
+
+    Convenience class used to request a \l QRhiSampler from QtQuick3D internal cache.
+
+    \note Samplers are owned by QtQuick3D.
+
+    \sa QSSGRhiContext::sampler()
 */
 
 /*!
     \variable QSSGRhiSamplerDescription::minFilter
+
+    The minification filter mode.
+
+    \sa QRhiSampler::Filter, QRhiSampler::minFilter()
  */
 
 /*!
     \variable QSSGRhiSamplerDescription::magFilter
+
+    The magnification filter mode.
+
+    \sa QRhiSampler::Filter, QRhiSampler::magFilter()
  */
 
 /*!
     \variable QSSGRhiSamplerDescription::mipmap
+
+    The mipmap filtering mode.
+
+    \sa QRhiSampler::Filter, QRhiSampler::mipmapMode()
  */
 
 /*!
     \variable QSSGRhiSamplerDescription::hTiling
+
+    The horizontal wrap mode.
+
+    \sa QRhiSampler::AddressMode
  */
 
 /*!
     \variable QSSGRhiSamplerDescription::vTiling
+
+    The vertical wrap mode.
+
+    \sa QRhiSampler::AddressMode
  */
 
 /*!
     \variable QSSGRhiSamplerDescription::zTiling
- */
 
-/*!
-    \struct QSSGRhiInputAssemblerState
-    \internal
+    The depth wrap mode.
+
+    \sa QRhiSampler::AddressMode
  */
 
 QSSGRhiBuffer::QSSGRhiBuffer(QSSGRhiContext &context,
