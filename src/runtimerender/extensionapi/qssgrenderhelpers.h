@@ -30,9 +30,9 @@ class QSSGRhiGraphicsPipelineState;
 class QSSGRenderContextInterface;
 class QSSGRenderExtension;
 
-enum class QSSGPrepContextId : quint64 { Uninitialized };
-enum class QSSGPrepResultId : quint64 { Uninitialized };
-enum class QSSGRenderablesId : quint64 { Uninitialized };
+enum class QSSGPrepContextId : quint64 { Invalid };
+enum class QSSGPrepResultId : quint64 { Invalid };
+enum class QSSGRenderablesId : quint64 { Invalid };
 
 enum class QSSGRenderablesFilter : quint32
 {

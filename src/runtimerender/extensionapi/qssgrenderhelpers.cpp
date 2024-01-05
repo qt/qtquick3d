@@ -50,7 +50,7 @@ QSSGRenderablesId QSSGRenderHelpers::createRenderables(const QSSGFrameData &fram
                                                        const NodeList &nodes,
                                                        CreateFlags flags)
 {
-    QSSGRenderablesId rid { QSSGRenderablesId::Uninitialized };
+    QSSGRenderablesId rid { QSSGRenderablesId::Invalid };
     if (nodes.size() > 0) {
         auto *ctx = frameData.contextInterface();
         auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
@@ -82,10 +82,10 @@ QSSGPrepContextId QSSGRenderHelpers::prepareForRender(const QSSGFrameData &frame
                                                       quint32 slot)
 {
     auto *cn = QSSGRenderGraphObjectUtils::getNode<QSSGRenderCamera>(camera);
-    QSSG_ASSERT_X(cn && QSSGRenderGraphObject::isCamera(cn->type), "NodeId is not a camera!", return QSSGPrepContextId::Uninitialized);
+    QSSG_ASSERT_X(cn && QSSGRenderGraphObject::isCamera(cn->type), "NodeId is not a camera!", return QSSGPrepContextId::Invalid);
     auto *ctx = frameData.contextInterface();
     auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
-    QSSG_ASSERT_X(layer, "No active layer for renderer!", return QSSGPrepContextId::Uninitialized);
+    QSSG_ASSERT_X(layer, "No active layer for renderer!", return QSSGPrepContextId::Invalid);
     return layer->getOrCreateExtensionContext(ext, cn, slot);
 }
 
@@ -106,7 +106,7 @@ QSSGPrepResultId QSSGRenderHelpers::commit(const QSSGFrameData &frameData,
 {
     auto *ctx = frameData.contextInterface();
     auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
-    QSSG_ASSERT_X(layer, "No active layer for renderer!", return QSSGPrepResultId::Uninitialized);
+    QSSG_ASSERT_X(layer, "No active layer for renderer!", return QSSGPrepResultId::Invalid);
     return layer->prepareModelsForRender(*ctx, prepId, renderablesId, lodThreshold);
 }
 
@@ -220,8 +220,8 @@ QMatrix4x4 QSSGModelHelpers::getGlobalTransform(const QSSGFrameData &frameData,
     QSSG_ASSERT_X(layer, "No active layer for renderer!", return {});
     auto *renderModel = QSSGRenderGraphObjectUtils::getNode<QSSGRenderModel>(model);
     QSSG_ASSERT_X(renderModel && renderModel->type == QSSGRenderGraphObject::Type::Model, "Invalid model-id!", return {});
-    return (prepId != QSSGPrepContextId::Uninitialized) ? layer->getGlobalTransform(prepId, *renderModel)
-                                                        : renderModel->globalTransform;
+    return (prepId != QSSGPrepContextId::Invalid) ? layer->getGlobalTransform(prepId, *renderModel)
+                                                  : renderModel->globalTransform;
 }
 
 /*!
@@ -258,15 +258,15 @@ float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNod
 
     \sa QSSGRenderHelpers::createRenderables()
 */
-float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNodeId model, QSSGPrepContextId prepId = QSSGPrepContextId::Uninitialized)
+float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNodeId model, QSSGPrepContextId prepId = QSSGPrepContextId::Invalid)
 {
     auto *ctx = frameData.contextInterface();
     auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
     QSSG_ASSERT_X(layer, "No active layer for renderer!", return {});
     auto *renderModel = QSSGRenderGraphObjectUtils::getNode<QSSGRenderModel>(model);
     QSSG_ASSERT_X(renderModel && renderModel->type == QSSGRenderGraphObject::Type::Model, "Invalid model-id!", return {});
-    return (prepId != QSSGPrepContextId::Uninitialized) ? layer->getGlobalOpacity(prepId, *renderModel)
-                                                        : renderModel->globalOpacity;
+    return (prepId != QSSGPrepContextId::Invalid) ? layer->getGlobalOpacity(prepId, *renderModel)
+                                                  : renderModel->globalOpacity;
 }
 
 /*!
