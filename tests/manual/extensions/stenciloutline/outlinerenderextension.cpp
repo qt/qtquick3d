@@ -24,10 +24,10 @@ public:
     RenderMode mode() const override { return RenderMode::Main; }
     RenderStage stage() const override { return RenderStage::PostColor; };
 
-    QSSGPrepContextId stencilPrepContext { QSSGPrepContextId::Uninitialized };
-    QSSGPrepContextId outlinePrepContext { QSSGPrepContextId::Uninitialized };
-    QSSGPrepResultId stencilPrepResult { QSSGPrepResultId::Uninitialized };
-    QSSGPrepResultId outlinePrepResult { QSSGPrepResultId::Uninitialized };
+    QSSGPrepContextId stencilPrepContext { QSSGPrepContextId::Invalid };
+    QSSGPrepContextId outlinePrepContext { QSSGPrepContextId::Invalid };
+    QSSGPrepResultId stencilPrepResult { QSSGPrepResultId::Invalid };
+    QSSGPrepResultId outlinePrepResult { QSSGPrepResultId::Invalid };
     QSSGNodeId modelId { QSSGNodeId::Invalid }; // TODO: Request this each time
     QSSGResourceId outlineMaterialId {};
     float outlineScale = 1.05f;
@@ -75,7 +75,7 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
     if (modelId == QSSGNodeId::Invalid)
         return;
 
-    if (stencilPrepResult == QSSGPrepResultId::Uninitialized || outlinePrepResult == QSSGPrepResultId::Uninitialized)
+    if (stencilPrepResult == QSSGPrepResultId::Invalid || outlinePrepResult == QSSGPrepResultId::Invalid)
         return;
 
     const auto &ctx = data.contextInterface();
@@ -127,7 +127,7 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
 
 void OutlineRenderer::render(QSSGFrameData &data)
 {
-    if (stencilPrepResult == QSSGPrepResultId::Uninitialized)
+    if (stencilPrepResult == QSSGPrepResultId::Invalid)
         return;
 
     const auto &ctx = data.contextInterface();
@@ -142,8 +142,8 @@ void OutlineRenderer::render(QSSGFrameData &data)
 
 void OutlineRenderer::resetForFrame()
 {
-    stencilPrepContext = { QSSGPrepContextId::Uninitialized };
-    stencilPrepResult = { QSSGPrepResultId::Uninitialized };
+    stencilPrepContext = { QSSGPrepContextId::Invalid };
+    stencilPrepResult = { QSSGPrepResultId::Invalid };
 }
 
 OutlineRenderExtension::~OutlineRenderExtension() {}

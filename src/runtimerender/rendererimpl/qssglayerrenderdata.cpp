@@ -473,7 +473,7 @@ QSSGPrepContextId QSSGLayerRenderData::getOrCreateExtensionContext(const QSSGRen
     const auto frame = renderer->frameCount();
     const auto index = extContexts.size();
     // Sanity check... Shouldn't get anywhere close to the max in real world usage (unless somethings broken).
-    QSSG_ASSERT_X(index < PREP_CTX_INDEX_MASK - 1, "Reached maximum entries!", return QSSGPrepContextId::Uninitialized);
+    QSSG_ASSERT_X(index < PREP_CTX_INDEX_MASK - 1, "Reached maximum entries!", return QSSGPrepContextId::Invalid);
     auto it = std::find_if(extContexts.cbegin(), extContexts.cend(), [&ext, slot](const ExtensionContext &e){ return (e.owner == &ext) && (e.slot == slot); });
     if (it == extContexts.cend()) {
         extContexts.push_back({ &ext, camera, {/* PS */}, {/* FILTER */}, index, slot });
@@ -561,7 +561,7 @@ QSSGRenderablesId QSSGLayerRenderData::createRenderables(QSSGPrepContextId prepI
         }
     }
 
-    return (renderables.size() != 0) ? static_cast<QSSGRenderablesId>(prepId) : QSSGRenderablesId{ QSSGRenderablesId::Uninitialized };
+    return (renderables.size() != 0) ? static_cast<QSSGRenderablesId>(prepId) : QSSGRenderablesId{ QSSGRenderablesId::Invalid };
 }
 
 void QSSGLayerRenderData::setGlobalTransform(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, const QMatrix4x4 &globalTransform)
@@ -666,8 +666,8 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
                                                                   QSSGRenderablesId renderablesId,
                                                                   float lodThreshold)
 {
-    QSSG_ASSERT_X(renderablesId != QSSGRenderablesId::Uninitialized && verifyPrepContext(prepId, *renderer),
-                  "Expired or invalid prep or renderables id", return QSSGPrepResultId::Uninitialized);
+    QSSG_ASSERT_X(renderablesId != QSSGRenderablesId::Invalid && verifyPrepContext(prepId, *renderer),
+                  "Expired or invalid prep or renderables id", return QSSGPrepResultId::Invalid);
     const size_t index = getPrepContextIndex(prepId);
     QSSG_ASSERT(index < renderableModelStore.size(), return {});
 
