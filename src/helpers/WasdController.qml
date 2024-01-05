@@ -85,8 +85,8 @@ Item {
         onTapped: root.forceActiveFocus()
     }
 
-    Keys.onPressed: (event)=> { if (keysEnabled) handleKeyPress(event) }
-    Keys.onReleased: (event)=> { if (keysEnabled) handleKeyRelease(event) }
+    Keys.onPressed: (event)=> { if (keysEnabled && !event.isAutoRepeat) handleKeyPress(event) }
+    Keys.onReleased: (event)=> { if (keysEnabled && !event.isAutoRepeat) handleKeyRelease(event) }
 
     function mousePressed(newPos) {
         root.forceActiveFocus()
