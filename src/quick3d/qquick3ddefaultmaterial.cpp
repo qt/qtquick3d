@@ -16,6 +16,12 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Lets you define a material for 3D items using the specular/glossiness workflow.
 
+    \deprecated [6.4] Prefer using the \l PrincipledMaterial or \l SpecularGlossyMaterial instead.
+
+    \warning This material is only provided for compatibility reasons, and should not be used in new code.
+    Prefer using the \l SpecularGlossyMaterial for creating materials using the specular/glossiness
+    workflow or the \l PrincipledMaterial for creating materials using the metal/roughness workflow.
+
     Before a Model can be rendered in a scene, it must have at least one material attached
     to it that describes how the mesh should be shaded. The DefaultMaterial is an easy to
     use material that lets you describe your material using a specular/glossiness type workflow.
