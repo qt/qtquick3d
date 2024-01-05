@@ -60,8 +60,8 @@ Item {
         onTapped: root.forceActiveFocus() // qmllint disable signal-handler-parameters
     }
 
-    Keys.onPressed: (event)=> { if (keysEnabled) handleKeyPress(event) }
-    Keys.onReleased: (event)=> { if (keysEnabled) handleKeyRelease(event) }
+    Keys.onPressed: (event)=> { if (keysEnabled && !event.isAutoRepeat) handleKeyPress(event) }
+    Keys.onReleased: (event)=> { if (keysEnabled && !event.isAutoRepeat) handleKeyRelease(event) }
 
     function mousePressed(newPos) {
         root.forceActiveFocus()
