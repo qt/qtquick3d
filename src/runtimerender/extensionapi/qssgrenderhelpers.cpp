@@ -166,16 +166,17 @@ void QSSGRenderHelpers::prepareRenderables(const QSSGFrameData &frameData,
 /*!
     Render the renderables.
 
-    \a contextInterface, \a prepId
+    \a frameData, \a prepId
 
     \sa prepareRenderables()
  */
-void QSSGRenderHelpers::renderRenderables(QSSGRenderContextInterface &contextInterface,
+void QSSGRenderHelpers::renderRenderables(const QSSGFrameData &frameData,
                                           QSSGPrepResultId prepId)
 {
-    auto *layer = QSSGLayerRenderData::getCurrent(*contextInterface.renderer());
+    QSSGRenderContextInterface *ctx = frameData.contextInterface();
+    auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
     QSSG_ASSERT_X(layer, "No active layer for renderer!", return);
-    layer->renderRenderables(contextInterface, prepId);
+    layer->renderRenderables(*ctx, prepId);
 }
 
 QSSGRenderHelpers::QSSGRenderHelpers()
@@ -402,16 +403,18 @@ QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGNodeId cameraId,
     \note Calling this function with a new texture will any previously registered texture.
     \note A texture can be unregistered by registering a nullptr for this extension.
 
-    \a contextInterface
+    \a frameData
 
     \sa {QtQuick3D::Texture::textureProvider}{textureProvider}
  */
-void QSSGRenderExtensionHelpers::registerRenderResult(const QSSGRenderContextInterface &contextInterface,
+void QSSGRenderExtensionHelpers::registerRenderResult(const QSSGFrameData &frameData,
                                                       QSSGExtensionId extension,
                                                       QRhiTexture *texture)
 {
-    if (auto *ext = QSSGRenderGraphObjectUtils::getExtension<QSSGRenderExtension>(extension))
-        contextInterface.bufferManager()->registerExtensionResult(*ext, texture);
+    if (auto *ext = QSSGRenderGraphObjectUtils::getExtension<QSSGRenderExtension>(extension)) {
+        const QSSGRenderContextInterface *ctx = frameData.contextInterface();
+        ctx->bufferManager()->registerExtensionResult(*ext, texture);
+    }
 }
 
 QT_END_NAMESPACE

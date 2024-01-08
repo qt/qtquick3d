@@ -84,7 +84,7 @@ void TextureProvider::prepareRender(QSSGFrameData &data)
 
         QSSGExtensionId extensionId = QQuick3DExtensionHelpers::getExtensionId(*m_ext);
         Q_ASSERT(!QQuick3DExtensionHelpers::isNull(extensionId));
-        QSSGRenderExtensionHelpers::registerRenderResult(*ctxIfx, extensionId, texture.get());
+        QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, texture.get());
     }
 
     if (!ps) {
