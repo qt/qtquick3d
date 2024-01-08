@@ -329,6 +329,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
                                                 const QSSGLayerRenderData &inData,
                                                 QRhiRenderPassDescriptor *renderPassDescriptor,
                                                 int samples,
+                                                int viewCount,
                                                 QSSGRenderCamera *camera,
                                                 QSSGRenderTextureCubeFace cubeFace,
                                                 QSSGReflectionMapEntry *entry)
@@ -395,6 +396,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
     ia.inputs.clear();
 
     ps->samples = samples;
+    ps->viewCount = viewCount;
     ps->cullMode = QRhiGraphicsPipeline::None;
     if (renderable.renderableFlags.hasTransparency())
         fillTargetBlend(ps->targetBlend, renderable.particles.m_blendMode);

@@ -42,7 +42,7 @@ const XrBaseInStructure *QOpenXRGraphicsOpenGLES::handle() const
 }
 
 
-bool QOpenXRGraphicsOpenGLES::setupGraphics(const XrInstance &instance, XrSystemId &systemId)
+bool QOpenXRGraphicsOpenGLES::setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &)
 {
     // Extension function must be loaded by name
     PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = nullptr;
@@ -106,13 +106,21 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsOpenGLES::allocateSwapchainI
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsOpenGLES::renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat) const
+QQuickRenderTarget QOpenXRGraphicsOpenGLES::renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
 {
-    Q_UNUSED(swapchainFormat)
     const uint32_t colorTexture = reinterpret_cast<const XrSwapchainImageOpenGLESKHR*>(swapchainImage)->image;
-    return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
-                                                 QSize(layerView.subImage.imageRect.extent.width,
-                                                       layerView.subImage.imageRect.extent.height));
+    if (arraySize <= 1) {
+        return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
+                                                     QSize(layerView.subImage.imageRect.extent.width,
+                                                           layerView.subImage.imageRect.extent.height));
+    } else {
+        return QQuickRenderTarget::fromOpenGLTextureMultiView(colorTexture,
+                                                              swapchainFormat,
+                                                              QSize(layerView.subImage.imageRect.extent.width,
+                                                                    layerView.subImage.imageRect.extent.height),
+                                                              1,
+                                                              arraySize);
+    }
 }
 
 QT_END_NAMESPACE

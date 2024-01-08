@@ -1632,6 +1632,7 @@ QRhiGraphicsPipeline *QSSGRhiContextPrivate::pipeline(const QSSGGraphicsPipeline
     ps->setTargetBlends(targetBlends.cbegin(), targetBlends.cend());
 
     ps->setSampleCount(key.state.samples);
+    ps->setMultiViewCount(key.state.viewCount);
 
     ps->setDepthTest(key.state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled));
     ps->setDepthWrite(key.state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled));

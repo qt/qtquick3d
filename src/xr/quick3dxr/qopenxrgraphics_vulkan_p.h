@@ -31,11 +31,11 @@ public:
     const char *extensionName() const override;
     bool isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const override;
     const XrBaseInStructure *handle() const override;
-    bool setupGraphics(const XrInstance &instance, XrSystemId &systemId) override;
+    bool setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig) override;
     bool finializeGraphics(QRhi *rhi) override;
     int64_t colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
     QVector<XrSwapchainImageBaseHeader*> allocateSwapchainImages(int count, XrSwapchain swapchain) override;
-    QQuickRenderTarget renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat) const override;
+    QQuickRenderTarget renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const override;
     void setupWindow(QQuickWindow *quickWindow) override;
 
 private:

@@ -41,7 +41,7 @@ const XrBaseInStructure *QOpenXRGraphicsD3D12::handle() const
 }
 
 
-bool QOpenXRGraphicsD3D12::setupGraphics(const XrInstance &instance, XrSystemId &systemId)
+bool QOpenXRGraphicsD3D12::setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &)
 {
     PFN_xrGetD3D12GraphicsRequirementsKHR pfnGetD3D12GraphicsRequirementsKHR = nullptr;
     OpenXRHelpers::checkXrResult(xrGetInstanceProcAddr(instance, "xrGetD3D12GraphicsRequirementsKHR",
@@ -93,7 +93,7 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsD3D12::allocateSwapchainImag
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat) const
+QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
 {
     ID3D12Resource* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D12KHR*>(swapchainImage)->texture;
 
@@ -108,11 +108,21 @@ QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrCompositionLayerPr
         break;
     }
 
-    return QQuickRenderTarget::fromD3D12Texture(colorTexture,
-                                                0,
-                                                swapchainFormat,
-                                                QSize(layerView.subImage.imageRect.extent.width,
-                                                      layerView.subImage.imageRect.extent.height));
+    if (arraySize <= 1) {
+        return QQuickRenderTarget::fromD3D12Texture(colorTexture,
+                                                    0,
+                                                    swapchainFormat,
+                                                    QSize(layerView.subImage.imageRect.extent.width,
+                                                        layerView.subImage.imageRect.extent.height));
+    } else {
+        return QQuickRenderTarget::fromD3D12TextureMultiView(colorTexture,
+                                                             0,
+                                                             swapchainFormat,
+                                                             QSize(layerView.subImage.imageRect.extent.width,
+                                                                   layerView.subImage.imageRect.extent.height),
+                                                             1,
+                                                             arraySize);
+    }
 }
 
 

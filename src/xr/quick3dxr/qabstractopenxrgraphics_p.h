@@ -26,6 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QRhi;
 class QQuickWindow;
+class QQuickGraphicsConfiguration;
 
 class QAbstractOpenXRGraphics
 {
@@ -37,7 +38,8 @@ public:
     virtual const char *extensionName() const = 0;
     virtual const XrBaseInStructure* handle() const = 0;
     virtual bool setupGraphics(const XrInstance &instance,
-                               XrSystemId &systemId) = 0;
+                               XrSystemId &systemId,
+                               const QQuickGraphicsConfiguration &quickConfig) = 0;
     virtual void setupWindow(QQuickWindow *);
     virtual bool finializeGraphics(QRhi *rhi) = 0;
     virtual int64_t colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const = 0;
@@ -46,7 +48,8 @@ public:
 
     virtual QQuickRenderTarget renderTarget(const XrCompositionLayerProjectionView &layerView,
                                             const XrSwapchainImageBaseHeader *swapchainImage,
-                                            quint64 swapchainFormat) const = 0;
+                                            quint64 swapchainFormat,
+                                            int arraySize) const = 0;
 };
 
 QT_END_NAMESPACE

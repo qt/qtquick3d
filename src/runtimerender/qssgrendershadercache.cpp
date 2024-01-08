@@ -97,8 +97,10 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
     QVector<QShaderBaker::GeneratedShader> outputs;
     switch (rhi->backend()) {
     case QRhi::D3D11:
-    case QRhi::D3D12:
         outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
+        break;
+    case QRhi::D3D12:
+        outputs.append({ QShader::HlslShader, QShaderVersion(61) }); // Shader Model 6.1 (includes multiview support)
         break;
     case QRhi::Metal:
         outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
@@ -161,6 +163,7 @@ static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
     outputs.reserve(8);
     outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
     outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
+    outputs.append({ QShader::HlslShader, QShaderVersion(61) }); // Shader Model 6.1 (for multiview on d3d12)
     outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
     outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
     outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
@@ -434,6 +437,10 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
             dumpShaderToFile(QShader::Stage::VertexStage, vertexCode);
     }
 
+    // ### the view count needs to be plumbed everywhere, in the shader key, and so on.
+    // for now, enable this to test multiview mode
+    // baker.setMultiViewCount(2);
+
     baker.setSourceString(fragmentCode, QShader::FragmentStage);
     QShader fragmentShader = baker.bake();
     const bool fragShaderValid = fragmentShader.isValid();
@@ -601,6 +608,8 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
     const QString prefix = QString::fromUtf8(resourceFolder() + inKey);
     const QString vertexFileName = prefix + QLatin1String(".vert.qsb");
     const QString fragmentFileName = prefix + QLatin1String(".frag.qsb");
+
+    // ### for multiview, we need to know the view count, and if 2, append .mv2qsb to the name
 
     QShader vertexShader;
     QShader fragmentShader;

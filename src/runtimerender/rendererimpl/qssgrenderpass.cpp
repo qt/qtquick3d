@@ -482,7 +482,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             // Reflection cube maps are not available at this point, make sure they are turned off.
             bool recRef = handle.obj->renderableFlags.receivesReflections();
             handle.obj->renderableFlags.setReceivesReflections(false);
-            rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1);
+            rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1, rhiCtx->mainPassViewCount());
             handle.obj->renderableFlags.setReceivesReflections(recRef);
         }
     }
@@ -569,6 +569,7 @@ void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderDat
 
     QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
     const int samples = rhiCtx->mainPassSampleCount();
+    const int viewCount = rhiCtx->mainPassViewCount();
 
     // NOTE: We're piggybacking on the screen map pass for now, but we could do better.
     ps = data.getPipelineState();
@@ -584,7 +585,7 @@ void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderDat
         const bool curDepthWriteEnabled = !(depthWriteMode == QSSGDepthDrawMode::Never || depthWriteMode == QSSGDepthDrawMode::OpaquePrePass
                                      || data.isZPrePassActive() || !layerEnableDepthTest);
         ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, curDepthWriteEnabled);
-        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
+        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples, viewCount);
     }
 }
 
@@ -638,7 +639,7 @@ void OpaquePass::prep(const QSSGRenderContextInterface &ctx,
                                             depthWriteMode == QSSGDepthDrawMode::OpaquePrePass ||
                                             data.isZPrePassActive() || !layerEnableDepthTest);
         ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, curDepthWriteEnabled);
-        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples);
+        RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples, ps.viewCount);
     }
 }
 
@@ -666,6 +667,7 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
+    ps.viewCount = rhiCtx->mainPassViewCount();
     ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
 
@@ -718,7 +720,7 @@ void TransparentPass::prep(const QSSGRenderContextInterface &ctx,
         const bool curDepthWriteEnabled = (depthWriteMode == QSSGDepthDrawMode::Always && !zPrePassActive);
         ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, curDepthWriteEnabled);
         if (!(theObject->renderableFlags.isCompletelyTransparent()))
-            RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples);
+            RenderHelpers::rhiPrepareRenderable(rhiCtx.get(), passKey, data, *theObject, rpDesc, &ps, shaderFeatures, ps.samples, ps.viewCount);
     }
 }
 
@@ -751,6 +753,7 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
 
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
+    ps.viewCount = rhiCtx->mainPassViewCount();
 
     // transparent objects (or, without LayerEnableDepthTest, all objects)
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
@@ -829,6 +832,7 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, shaderPipeline.get());
     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
     ps.samples = rhiCtx->mainPassSampleCount();
+    ps.viewCount = rhiCtx->mainPassViewCount();
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_map"));
 }
@@ -912,15 +916,23 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         const auto &renderTarget = rhiCtx->renderTarget();
         item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
+        const int viewCount = rhiCtx->mainPassViewCount();
         if (layer.scissorRect.isValid()) {
             QRect effScissor = layer.scissorRect & layerPrepResult.viewport.toRect();
             QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult.viewport,
                                                             effScissor,
                                                             rhiCtx->rhi()->isYUpInNDC());
-            item2D->m_renderer->setProjectionMatrix(correctionMat * item2D->MVP);
+            // ### for now, set the same matrix for all views, if there is more than one
+            const QMatrix4x4 projectionMatrix = correctionMat * item2D->MVP;
+            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+                item2D->m_renderer->setProjectionMatrix(projectionMatrix, viewIndex);
             item2D->m_renderer->setViewportRect(effScissor);
         } else {
-            item2D->m_renderer->setProjectionMatrix(item2D->MVP);
+            // ### for now, set the same matrix for all views, if there is more than one
+            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
+                QMatrix4x4 m = item2D->MVP;
+                item2D->m_renderer->setProjectionMatrix(m, viewIndex);
+            }
             item2D->m_renderer->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.viewport, deviceRect));
         }
         item2D->m_renderer->setDeviceRect(deviceRect);

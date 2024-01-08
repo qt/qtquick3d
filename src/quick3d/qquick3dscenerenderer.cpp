@@ -1351,6 +1351,12 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         // creating graphics pipelines.
         rhiCtxD->setMainPassSampleCount(sampleCount);
 
+        // The "direct renderer", i.e. the Underlay and Overlay modes are the
+        // only ones that support multiview rendering. This becomes active when
+        // the QQuickWindow is redirected into a texture array, typically with
+        // an array size of 2 (2 views, for the left and right eye). Otherwise,
+        // when targeting a window or redirected to a 2D texture, this is not
+        // applicable and the view count is 1.
         rhiCtxD->setMainPassViewCount(viewCount);
     }
 }

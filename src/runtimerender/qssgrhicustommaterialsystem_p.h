@@ -94,6 +94,7 @@ public:
                               const QSSGLayerRenderData &layerData,
                               QRhiRenderPassDescriptor *renderPassDescriptor,
                               int samples,
+                              int viewCount,
                               QSSGRenderCamera *camera = nullptr,
                               QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
                               QMatrix4x4 *modelViewProjection = nullptr,

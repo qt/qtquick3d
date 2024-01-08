@@ -50,6 +50,7 @@ public:
                                      const QSSGLayerRenderData &inData,
                                      QRhiRenderPassDescriptor *renderPassDescriptor,
                                      int samples,
+                                     int viewCount,
                                      QSSGRenderCamera *camera = nullptr,
                                      QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
                                      QSSGReflectionMapEntry *entry = nullptr);

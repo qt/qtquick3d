@@ -138,7 +138,8 @@ inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
             && a.targetBlend.opAlpha == b.targetBlend.opAlpha
             && a.colorAttachmentCount == b.colorAttachmentCount
             && a.lineWidth == b.lineWidth
-            && a.polygonMode == b.polygonMode;
+            && a.polygonMode == b.polygonMode
+            && a.viewCount == b.viewCount;
 }
 
 inline bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
@@ -151,6 +152,7 @@ inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_N
     // do not bother with all fields
     return qHash(QSSGRhiGraphicsPipelineStatePrivate::getShaderPipeline(s), seed)
             ^ qHash(s.samples)
+            ^ qHash(s.viewCount)
             ^ qHash(s.targetBlend.dstColor)
             ^ qHash(s.depthFunc)
             ^ qHash(s.cullMode)
@@ -579,6 +581,7 @@ struct QSSGRhiRenderableTexture
 {
     QRhiTexture *texture = nullptr;
     QRhiRenderBuffer *depthStencil = nullptr;
+    QRhiTexture *depthTexture = nullptr; // either depthStencil or depthTexture are valid, never both
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiTextureRenderTarget *rt = nullptr;
     bool isValid() const { return texture && rpDesc && rt; }
@@ -592,6 +595,7 @@ struct QSSGRhiRenderableTexture
         resetRenderTarget();
         delete texture;
         delete depthStencil;
+        delete depthTexture;
         *this = QSSGRhiRenderableTexture();
     }
 };

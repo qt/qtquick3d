@@ -46,6 +46,7 @@ public:
     int depthBias = 0;
     int samples = 1;
     int colorAttachmentCount = 1;
+    int viewCount = 1;
     float slopeScaledDepthBias = 0.0f;
     float lineWidth = 1.0f;
     Flags flags;

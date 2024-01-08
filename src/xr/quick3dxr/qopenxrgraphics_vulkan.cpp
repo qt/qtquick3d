@@ -6,6 +6,7 @@
 #include "qopenxrhelpers_p.h"
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/QQuickGraphicsDevice>
+#include <QtQuick/QQuickGraphicsConfiguration>
 
 #include <rhi/qrhi.h>
 
@@ -42,9 +43,22 @@ const XrBaseInStructure *QOpenXRGraphicsVulkan::handle() const
 }
 
 
-bool QOpenXRGraphicsVulkan::setupGraphics(const XrInstance &instance, XrSystemId &systemId)
+bool QOpenXRGraphicsVulkan::setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig)
 {
-    // Setup Vulkan Instance
+    // Setup Vulkan Instance.
+
+    // In hybrid applications that also show Qt Quick windows on the desktop, it
+    // is not ideal to create multiple VkInstances (as the on-screen
+    // QQuickWindow(s) will have another one), but there is nothing we can do
+    // due to the forced upfront nature of Vulkan API design. And we need to do
+    // OpenXR API calls to get the things we need to create the instance. This
+    // is hard to reconcile with Quick, that knows nothing about XrView and
+    // such, and cannot predict the future either (i.e., "guess" if the user is
+    // ever going to instantiate an XRView, and so on).
+    //
+    // This has no relevance for XR-only apps, and even the hybrid case this
+    // works in practice, so we might just live with this for now.
+
     PFN_xrGetVulkanGraphicsRequirementsKHR pfnGetVulkanGraphicsRequirementsKHR = nullptr;
     OpenXRHelpers::checkXrResult(xrGetInstanceProcAddr(instance,
                                                        "xrGetVulkanGraphicsRequirementsKHR",
@@ -92,15 +106,31 @@ bool QOpenXRGraphicsVulkan::setupGraphics(const XrInstance &instance, XrSystemId
         return QByteArray(begin, end - begin);
     };
 
-    auto extensions = extensionNames.split(' ');
-    for (auto &ext : extensions) {
+    QByteArrayList extensions = extensionNames.split(' ');
+    for (auto &ext : extensions)
         ext = stripNullChars(ext);
+
+    for (auto &rhiExt : QRhiVulkanInitParams::preferredInstanceExtensions()) {
+        if (!extensions.contains(rhiExt))
+            extensions.append(rhiExt);
     }
 
     m_vulkanInstance.setExtensions(extensions);
-    m_vulkanInstance.setLayers({ "VK_LAYER_LUNARG_standard_validation" });
+
+    // Multiview is a Vulkan 1.1 feature and won't work without setting up the instance accordingly.
+    const QVersionNumber supportedVersion = m_vulkanInstance.supportedApiVersion();
+    if (supportedVersion >= QVersionNumber(1, 3))
+        m_vulkanInstance.setApiVersion(QVersionNumber(1, 3));
+    else if (supportedVersion >= QVersionNumber(1, 2))
+        m_vulkanInstance.setApiVersion(QVersionNumber(1, 2));
+    else if (supportedVersion >= QVersionNumber(1, 1))
+        m_vulkanInstance.setApiVersion(QVersionNumber(1, 1));
+
+    if (quickConfig.isDebugLayerEnabled())
+        m_vulkanInstance.setLayers({ "VK_LAYER_LUNARG_standard_validation" });
+
     if (!m_vulkanInstance.create()) {
-        qDebug() << "failed to create VKInstance";
+        qWarning("Quick 3D XR: Failed to create Vulkan instance");
         return false;
     }
 
@@ -194,7 +224,8 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsVulkan::allocateSwapchainIma
 
 QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrCompositionLayerProjectionView &layerView,
                                                        const XrSwapchainImageBaseHeader *swapchainImage,
-                                                       quint64 swapchainFormat) const
+                                                       quint64 swapchainFormat,
+                                                       int arraySize) const
 {
     VkImage colorTexture = reinterpret_cast<const XrSwapchainImageVulkanKHR*>(swapchainImage)->image;
 
@@ -209,11 +240,21 @@ QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrCompositionLayerP
         break;
     }
 
-    return QQuickRenderTarget::fromVulkanImage(colorTexture,
-                                               VK_IMAGE_LAYOUT_UNDEFINED,
-                                               VkFormat(swapchainFormat),
-                                               QSize(layerView.subImage.imageRect.extent.width,
-                                                     layerView.subImage.imageRect.extent.height));
+    if (arraySize <= 1) {
+        return QQuickRenderTarget::fromVulkanImage(colorTexture,
+                                                   VK_IMAGE_LAYOUT_UNDEFINED,
+                                                   VkFormat(swapchainFormat),
+                                                   QSize(layerView.subImage.imageRect.extent.width,
+                                                         layerView.subImage.imageRect.extent.height));
+    } else {
+        return QQuickRenderTarget::fromVulkanImageMultiView(colorTexture,
+                                                            VK_IMAGE_LAYOUT_UNDEFINED,
+                                                            VkFormat(swapchainFormat),
+                                                            QSize(layerView.subImage.imageRect.extent.width,
+                                                                  layerView.subImage.imageRect.extent.height),
+                                                            1,
+                                                            arraySize);
+    }
 }
 
 void QOpenXRGraphicsVulkan::setupWindow(QQuickWindow *quickWindow)

@@ -97,12 +97,11 @@ private:
     void renderFrame();
     bool renderLayer(XrTime predictedDisplayTime,
                      XrDuration predictedDisplayPeriod,
-                     QVector<XrCompositionLayerProjectionView> &projectionLayerViews,
                      XrCompositionLayerProjection &layer);
     void doRender(const XrCompositionLayerProjectionView& layerView,
-                  const XrSwapchainImageBaseHeader* swapchainImage,
-                  quint64 swapchainFormat);
+                  const XrSwapchainImageBaseHeader* swapchainImage);
 
+    void preSetupQuickScene();
     void setupQuickScene();
     void updateQuickSceneEye(int eye, const XrCompositionLayerProjectionView &layerView);
     void checkActor();
@@ -160,9 +159,12 @@ private:
         XrSwapchain handle;
         quint32 width;
         quint32 height;
+        quint32 arraySize;
     };
 
+    bool m_multiviewRendering = false;
     QVector<XrViewConfigurationView> m_configViews;
+    QVector<XrCompositionLayerProjectionView> m_projectionLayerViews;
     QVector<Swapchain> m_swapchains;
     QMap<XrSwapchain, QVector<XrSwapchainImageBaseHeader*>> m_swapchainImages;
     QVector<XrView> m_views;

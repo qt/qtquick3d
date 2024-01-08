@@ -485,7 +485,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
                                               : pEntry->m_viewProjection * renderable.globalTransform;
         }
 
-        rhiPrepareRenderable(rhiCtx, passKey, inData, inObject, pEntry->m_rhiRenderPassDesc, ps, features, 1,
+        rhiPrepareRenderable(rhiCtx, passKey, inData, inObject, pEntry->m_rhiRenderPassDesc, ps, features, 1, 1,
                              &inCamera, &modelViewProjection, cubeFace, pEntry);
     }
 }
@@ -674,6 +674,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                          QSSGRhiGraphicsPipelineState *ps,
                                          QSSGShaderFeatures featureSet,
                                          int samples,
+                                         int viewCount,
                                          QSSGRenderCamera *inCamera,
                                          QMatrix4x4 *alteredModelViewProjection,
                                          QSSGRenderTextureCubeFace cubeFace,
@@ -773,6 +774,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             }
 
             ps->samples = samples;
+            ps->viewCount = viewCount;
 
             const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
             ps->cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
@@ -970,7 +972,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             featureSet.set(QSSGShaderFeatures::Feature::Lightmap, true);
 
         customMaterialSystem.rhiPrepareRenderable(ps, passKey, subsetRenderable, featureSet,
-                                                  material, inData, renderPassDescriptor, samples,
+                                                  material, inData, renderPassDescriptor, samples, viewCount,
                                                   inCamera, cubeFace, alteredModelViewProjection, entry);
         break;
     }
@@ -979,7 +981,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         QSSGParticlesRenderable &particleRenderable(static_cast<QSSGParticlesRenderable &>(inObject));
         const auto &shaderPipeline = shadersForParticleMaterial(ps, particleRenderable);
         if (shaderPipeline) {
-            QSSGParticleRenderer::rhiPrepareRenderable(*shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples,
+            QSSGParticleRenderer::rhiPrepareRenderable(*shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples, viewCount,
                                                        inCamera, cubeFace, entry);
         }
         break;
@@ -1583,19 +1585,30 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
 
     if (!renderableTex->texture) {
         // always non-msaa, even if multisampling is used in the main pass
-        renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
+        if (rhiCtx->mainPassViewCount() <= 1)
+            renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
+        else
+            renderableTex->texture = rhi->newTextureArray(QRhiTexture::RGBA8, rhiCtx->mainPassViewCount(), size, 1, flags);
         needsBuild = true;
     } else if (renderableTex->texture->pixelSize() != size) {
         renderableTex->texture->setPixelSize(size);
         needsBuild = true;
     }
 
-    if (!renderableTex->depthStencil) {
-        renderableTex->depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size);
+    if (!renderableTex->depthStencil && !renderableTex->depthTexture) {
+        if (rhiCtx->mainPassViewCount() <= 1)
+            renderableTex->depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size);
+        else
+            renderableTex->depthTexture = rhi->newTextureArray(QRhiTexture::D24S8, rhiCtx->mainPassViewCount(), size, 1, QRhiTexture::RenderTarget);
         needsBuild = true;
-    } else if (renderableTex->depthStencil->pixelSize() != size) {
-        renderableTex->depthStencil->setPixelSize(size);
-        needsBuild = true;
+    } else {
+        if (renderableTex->depthStencil && renderableTex->depthStencil->pixelSize() != size) {
+            renderableTex->depthStencil->setPixelSize(size);
+            needsBuild = true;
+        } else if (renderableTex->depthTexture && renderableTex->depthTexture->pixelSize() != size) {
+            renderableTex->depthTexture->setPixelSize(size);
+            needsBuild = true;
+        }
     }
 
     if (needsBuild) {
@@ -1604,8 +1617,13 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
             renderableTex->reset();
             return false;
         }
-        if (!renderableTex->depthStencil->create()) {
+        if (renderableTex->depthStencil && !renderableTex->depthStencil->create()) {
             qWarning("Failed to build depth-stencil buffer for screen texture (size %dx%d)",
+                     size.width(), size.height());
+            renderableTex->reset();
+            return false;
+        } else if (renderableTex->depthTexture && !renderableTex->depthTexture->create()) {
+            qWarning("Failed to build depth-stencil texture array (multiview) for screen texture (size %dx%d)",
                      size.width(), size.height());
             renderableTex->reset();
             return false;
@@ -1613,7 +1631,10 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
         renderableTex->resetRenderTarget();
         QRhiTextureRenderTargetDescription desc;
         desc.setColorAttachments({ QRhiColorAttachment(renderableTex->texture) });
-        desc.setDepthStencilBuffer(renderableTex->depthStencil);
+        if (renderableTex->depthStencil)
+            desc.setDepthStencilBuffer(renderableTex->depthStencil);
+        else if (renderableTex->depthTexture)
+            desc.setDepthTexture(renderableTex->depthTexture);
         renderableTex->rt = rhi->newTextureRenderTarget(desc);
         renderableTex->rt->setName(QByteArrayLiteral("Screen texture"));
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
@@ -2003,7 +2024,10 @@ bool RenderHelpers::rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &
         if (!rhi->isTextureFormatSupported(format))
             qWarning("Depth texture not supported");
         // the depth texture is always non-msaa, even if multisampling is used in the main pass
-        renderableTex->texture = rhiCtx->rhi()->newTexture(format, size, 1, QRhiTexture::RenderTarget);
+        if (rhiCtx->mainPassViewCount() <= 1)
+            renderableTex->texture = rhiCtx->rhi()->newTexture(format, size, 1, QRhiTexture::RenderTarget);
+        else
+            renderableTex->texture = rhiCtx->rhi()->newTextureArray(format, rhiCtx->mainPassViewCount(), size, 1, QRhiTexture::RenderTarget);
         needsBuild = true;
     } else if (renderableTex->texture->pixelSize() != size) {
         renderableTex->texture->setPixelSize(size);

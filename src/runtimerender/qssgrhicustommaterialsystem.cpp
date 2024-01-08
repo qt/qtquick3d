@@ -181,6 +181,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                     const QSSGLayerRenderData &layerData,
                                                     QRhiRenderPassDescriptor *renderPassDescriptor,
                                                     int samples,
+                                                    int viewCount,
                                                     QSSGRenderCamera *camera,
                                                     QSSGRenderTextureCubeFace cubeFace,
                                                     QMatrix4x4 *modelViewProjection,
@@ -241,6 +242,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, camera->getScalingCorrectDirection(), camera->getGlobalPos(), renderable.instancingLodMin, renderable.instancingLodMax);
 
         ps->samples = samples;
+        ps->viewCount = viewCount;
 
         ps->cullMode = QSSGRhiHelpers::toCullMode(cullMode);
 

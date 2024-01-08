@@ -147,6 +147,10 @@ bool QOpenXRManager::initialize()
     }
 #endif
 
+    // Decide if we do multiview rendering.
+    m_multiviewRendering = qEnvironmentVariableIntValue("QT_QUICK3D_XR_MULTIVIEW");
+    qDebug("Quick3D XR: multiview rendering requested = %s", m_multiviewRendering ? "yes" : "no");
+
     // Init the Graphics Backend
     auto graphicsAPI = QQuickWindow::graphicsApi();
 
@@ -268,9 +272,8 @@ void QOpenXRManager::teardown()
     if (m_passthroughFeature)
         destroyMetaQuestPassthrough();
 
-    for (Swapchain swapchain : m_swapchains) {
+    for (Swapchain swapchain : m_swapchains)
         xrDestroySwapchain(swapchain.handle);
-    }
 
     if (m_appSpace != XR_NULL_HANDLE) {
         xrDestroySpace(m_appSpace);
@@ -615,7 +618,9 @@ void QOpenXRManager::checkEnvironmentBlendMode(XrViewConfigurationType type)
 
 bool QOpenXRManager::setupGraphics()
 {
-    if (!m_graphics->setupGraphics(m_instance, m_systemId))
+    preSetupQuickScene();
+
+    if (!m_graphics->setupGraphics(m_instance, m_systemId, m_quickWindow->graphicsConfiguration()))
         return false;
 
     setupQuickScene();
@@ -663,8 +668,8 @@ void QOpenXRManager::setupVisualizedSpace()
 void QOpenXRManager::createSwapchains()
 {
     Q_ASSERT(m_session != XR_NULL_HANDLE);
-    Q_ASSERT(m_swapchains.isEmpty());
     Q_ASSERT(m_configViews.isEmpty());
+    Q_ASSERT(m_swapchains.isEmpty());
 
     XrSystemProperties systemProperties{};
     systemProperties.type = XR_TYPE_SYSTEM_PROPERTIES;
@@ -694,6 +699,7 @@ void QOpenXRManager::createSwapchains()
                                                     &viewCount,
                                                     m_configViews.data()));
     m_views.resize(viewCount, {XR_TYPE_VIEW, nullptr, {}, {}});
+    m_projectionLayerViews.resize(viewCount, {});
 
     // Create the swapchain and get the images.
     if (viewCount > 0) {
@@ -725,44 +731,93 @@ void QOpenXRManager::createSwapchains()
             qDebug("Swapchain Formats: %s", qPrintable(swapchainFormatsString));
         }
 
-        // Create a swapchain for each view.
-        for (uint32_t i = 0; i < viewCount; i++) {
-            const XrViewConfigurationView& vp = m_configViews[i];
-            qDebug("Creating swapchain for view %d with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
-                   i,
-                   vp.recommendedImageRectWidth,
-                   vp.recommendedImageRectHeight,
-                   vp.recommendedSwapchainSampleCount,
-                   m_colorSwapchainFormat);
+        const XrViewConfigurationView &vp = m_configViews[0]; // use the first view for all views, the sizes should be the same
 
-            // Create the swapchain.
+        if (m_multiviewRendering) {
+            // Create a single swapchain with array size > 1
             XrSwapchainCreateInfo swapchainCreateInfo{};
             swapchainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
-            swapchainCreateInfo.arraySize = 1;
+            swapchainCreateInfo.arraySize = viewCount;
             swapchainCreateInfo.format = m_colorSwapchainFormat;
             swapchainCreateInfo.width = vp.recommendedImageRectWidth;
             swapchainCreateInfo.height = vp.recommendedImageRectHeight;
             swapchainCreateInfo.mipCount = 1;
             swapchainCreateInfo.faceCount = 1;
             swapchainCreateInfo.sampleCount = vp.recommendedSwapchainSampleCount;
-            swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+            swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT;
+
+            qDebug("Creating multiview swapchain for %d view(s) with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
+                viewCount,
+                vp.recommendedImageRectWidth,
+                vp.recommendedImageRectHeight,
+                vp.recommendedSwapchainSampleCount,
+                m_colorSwapchainFormat);
+
             Swapchain swapchain;
             swapchain.width = swapchainCreateInfo.width;
             swapchain.height = swapchainCreateInfo.height;
-            if (!checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
-                qDebug() << "xrCreateSwapchain failed";
-            }
+            swapchain.arraySize = swapchainCreateInfo.arraySize;
+            if (!checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle)))
+                qWarning("xrCreateSwapchain failed");
 
-            m_swapchains.push_back(swapchain);
+            m_swapchains.append(swapchain);
 
             uint32_t imageCount;
             checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
-
 
             auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
             checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
 
             m_swapchainImages.insert(swapchain.handle, swapchainImages);
+        } else {
+            // Create a swapchain for each view.
+            for (uint32_t i = 0; i < viewCount; i++) {
+                qDebug("Creating swapchain for view %d with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
+                    i,
+                    vp.recommendedImageRectWidth,
+                    vp.recommendedImageRectHeight,
+                    vp.recommendedSwapchainSampleCount,
+                    m_colorSwapchainFormat);
+
+                // Create the swapchain.
+                XrSwapchainCreateInfo swapchainCreateInfo{};
+                swapchainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
+                swapchainCreateInfo.arraySize = 1;
+                swapchainCreateInfo.format = m_colorSwapchainFormat;
+                swapchainCreateInfo.width = vp.recommendedImageRectWidth;
+                swapchainCreateInfo.height = vp.recommendedImageRectHeight;
+                swapchainCreateInfo.mipCount = 1;
+                swapchainCreateInfo.faceCount = 1;
+                swapchainCreateInfo.sampleCount = vp.recommendedSwapchainSampleCount;
+                swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+                Swapchain swapchain;
+                swapchain.width = swapchainCreateInfo.width;
+                swapchain.height = swapchainCreateInfo.height;
+                if (!checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle)))
+                    qWarning("xrCreateSwapchain failed");
+
+                m_swapchains.append(swapchain);
+
+                uint32_t imageCount;
+                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+
+                auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
+                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+
+                m_swapchainImages.insert(swapchain.handle, swapchainImages);
+            }
+        }
+
+        // Setup the projection layer views.
+        for (uint32_t i = 0; i < viewCount; ++i) {
+            m_projectionLayerViews[i].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
+            m_projectionLayerViews[i].next = nullptr;
+            m_projectionLayerViews[i].subImage.swapchain = m_swapchains[0].handle; // for non-multiview this gets overwritten later
+            m_projectionLayerViews[i].subImage.imageArrayIndex = i; // this too
+            m_projectionLayerViews[i].subImage.imageRect.offset.x = 0;
+            m_projectionLayerViews[i].subImage.imageRect.offset.y = 0;
+            m_projectionLayerViews[i].subImage.imageRect.extent.width = vp.recommendedImageRectWidth;
+            m_projectionLayerViews[i].subImage.imageRect.extent.height = vp.recommendedImageRectHeight;
         }
     }
 }
@@ -921,9 +976,9 @@ void QOpenXRManager::renderFrame()
     layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
     layer.layerFlags |= XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
-    QVector<XrCompositionLayerProjectionView> projectionLayerViews;
+
     if (frameState.shouldRender == XR_TRUE) {
-        if (renderLayer(frameState.predictedDisplayTime, frameState.predictedDisplayPeriod, projectionLayerViews, layer)) {
+        if (renderLayer(frameState.predictedDisplayTime, frameState.predictedDisplayPeriod, layer)) {
             layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&layer));
         }
     }
@@ -942,7 +997,6 @@ void QOpenXRManager::renderFrame()
 
 bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
                                 XrDuration predictedDisplayPeriod,
-                                QVector<XrCompositionLayerProjectionView> &projectionLayerViews,
                                 XrCompositionLayerProjection &layer)
 {
     XrResult res;
@@ -963,9 +1017,8 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
     if (XR_UNQUALIFIED_SUCCESS(res)) {
         Q_ASSERT(viewCountOutput == viewCapacityInput);
         Q_ASSERT(viewCountOutput == m_configViews.size());
-        Q_ASSERT(viewCountOutput == m_swapchains.size());
-
-        projectionLayerViews.resize(viewCountOutput);
+        Q_ASSERT(viewCountOutput == m_projectionLayerViews.size());
+        Q_ASSERT(m_multiviewRendering ? viewCountOutput == m_swapchains.size() : viewCountOutput == m_swapchains[0].arraySize);
 
         // Check for actor
         checkActor();
@@ -994,51 +1047,99 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
         }
         m_previousTime = predictedDisplayTime;
 
-        // Render view to the appropriate part of the swapchain image.
-        for (uint32_t i = 0; i < viewCountOutput; i++) {
-            // Each view has a separate swapchain which is acquired, rendered to, and released.
-            const Swapchain viewSwapchain = m_swapchains[i];
+        if (m_multiviewRendering) {
+            const Swapchain swapchain = m_swapchains[0];
 
+            // Acquire the swapchain image array
             XrSwapchainImageAcquireInfo acquireInfo{};
             acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
 
             uint32_t swapchainImageIndex;
-            checkXrResult(xrAcquireSwapchainImage(viewSwapchain.handle, &acquireInfo, &swapchainImageIndex));
+            checkXrResult(xrAcquireSwapchainImage(swapchain.handle, &acquireInfo, &swapchainImageIndex));
 
             XrSwapchainImageWaitInfo waitInfo{};
             waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
             waitInfo.timeout = XR_INFINITE_DURATION;
-            checkXrResult(xrWaitSwapchainImage(viewSwapchain.handle, &waitInfo));
-
-            projectionLayerViews[i] = {};
-            projectionLayerViews[i].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
-            projectionLayerViews[i].pose = m_views[i].pose;
-            projectionLayerViews[i].fov = m_views[i].fov;
-            projectionLayerViews[i].subImage.swapchain = viewSwapchain.handle;
-            projectionLayerViews[i].subImage.imageRect.offset = {0, 0};
-            projectionLayerViews[i].subImage.imageRect.extent.width = viewSwapchain.width;
-            projectionLayerViews[i].subImage.imageRect.extent.height = viewSwapchain.height;
+            checkXrResult(xrWaitSwapchainImage(swapchain.handle, &waitInfo));
 
             const XrSwapchainImageBaseHeader* const swapchainImage =
-                    m_swapchainImages[viewSwapchain.handle][swapchainImageIndex];
-            // ### This will work, but not a great solution
-            updateQuickSceneEye(i, projectionLayerViews[i]);
-#ifdef DEBUG_RENDER_DOC
-            startRenderDocCapture();
-#endif
-            doRender(projectionLayerViews[i], swapchainImage, m_colorSwapchainFormat);
-#ifdef DEBUG_RENDER_DOC
-            endRenderDocCapture();
+                m_swapchainImages[swapchain.handle][swapchainImageIndex];
+
+#if 0
+            // ### to be adapted, see doRender notes below
+            // First update both cameras with the latest view information (this also will set the active camera as well, but ignore this)
+            for (uint32_t i = 0; i < viewCountOutput; i++) {
+                // subImage.swapchain and imageArrayIndex are already set and correct
+                m_projectionLayerViews[i].pose = m_views[i].pose;
+                m_projectionLayerViews[i].fov = m_views[i].fov;
+                updateQuickSceneEye(i, m_projectionLayerViews[i]);
+            }
+#else
+            // ### for now, for testing, only use the left eye camera effectively
+            for (uint32_t i = 0; i < viewCountOutput; i++) {
+                // subImage.swapchain and imageArrayIndex are already set and correct
+                m_projectionLayerViews[i].pose = m_views[0].pose;
+                m_projectionLayerViews[i].fov = m_views[0].fov;
+                updateQuickSceneEye(i, m_projectionLayerViews[i]);
+            }
 #endif
 
+            // Perform the render
+            // ### Ok so here is where things get... wrong
+            // First the doRender function needs to be aware of what we are doing. We pass the
+            // ProjectionLayerView for an eye, but mostly just to know the dimensions of the render
+            // target so we can setup the size of the viewport we are rendering.  The issue though is that
+            // we need a way for there to be N number of cameras, but only a single render target, where as right now
+            // we just set 1 of the cameras as the active camera, and render the viewport...
+            doRender(m_projectionLayerViews[0], swapchainImage);
+
+            // release the swapchain image array
             XrSwapchainImageReleaseInfo releaseInfo{};
             releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
-            checkXrResult(xrReleaseSwapchainImage(viewSwapchain.handle, &releaseInfo));
+            checkXrResult(xrReleaseSwapchainImage(swapchain.handle, &releaseInfo));
+        } else {
+            for (uint32_t i = 0; i < viewCountOutput; i++) {
+                // Each view has a separate swapchain which is acquired, rendered to, and released.
+                const Swapchain viewSwapchain = m_swapchains[i];
+
+                // Render view to the appropriate part of the swapchain image.
+                XrSwapchainImageAcquireInfo acquireInfo{};
+                acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
+
+                uint32_t swapchainImageIndex;
+                checkXrResult(xrAcquireSwapchainImage(viewSwapchain.handle, &acquireInfo, &swapchainImageIndex));
+
+                XrSwapchainImageWaitInfo waitInfo{};
+                waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
+                waitInfo.timeout = XR_INFINITE_DURATION;
+                checkXrResult(xrWaitSwapchainImage(viewSwapchain.handle, &waitInfo));
+
+                const XrSwapchainImageBaseHeader* const swapchainImage =
+                        m_swapchainImages[viewSwapchain.handle][swapchainImageIndex];
+
+                m_projectionLayerViews[i].subImage.swapchain = viewSwapchain.handle;
+                m_projectionLayerViews[i].subImage.imageArrayIndex = 0;
+                m_projectionLayerViews[i].pose = m_views[i].pose;
+                m_projectionLayerViews[i].fov = m_views[i].fov;
+
+                updateQuickSceneEye(i, m_projectionLayerViews[i]);
+    #ifdef DEBUG_RENDER_DOC
+                startRenderDocCapture();
+    #endif
+                doRender(m_projectionLayerViews[i], swapchainImage);
+    #ifdef DEBUG_RENDER_DOC
+                endRenderDocCapture();
+    #endif
+
+                XrSwapchainImageReleaseInfo releaseInfo{};
+                releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
+                checkXrResult(xrReleaseSwapchainImage(viewSwapchain.handle, &releaseInfo));
+            }
         }
 
         layer.space = m_appSpace;
-        layer.viewCount = (uint32_t)projectionLayerViews.size();
-        layer.views = projectionLayerViews.data();
+        layer.viewCount = (uint32_t)m_projectionLayerViews.size();
+        layer.views = m_projectionLayerViews.data();
         return true;
     }
 
@@ -1046,13 +1147,10 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
     return false;
 }
 
-void QOpenXRManager::doRender(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat)
+void QOpenXRManager::doRender(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage)
 {
-
-    // Texture Arrays are unsupported
-    Q_ASSERT(layerView.subImage.imageArrayIndex == 0);
-
-    m_quickWindow->setRenderTarget(m_graphics->renderTarget(layerView, swapchainImage, swapchainFormat));
+    const int arraySize = m_multiviewRendering ? m_swapchains[0].arraySize : 1;
+    m_quickWindow->setRenderTarget(m_graphics->renderTarget(layerView, swapchainImage, m_colorSwapchainFormat, arraySize));
 
     m_quickWindow->setGeometry(0,
                                0,
@@ -1069,18 +1167,39 @@ void QOpenXRManager::doRender(const XrCompositionLayerProjectionView &layerView,
 
 }
 
-void QOpenXRManager::setupQuickScene()
+void QOpenXRManager::preSetupQuickScene()
 {
     m_renderControl = new QQuickRenderControl;
     m_quickWindow = new QQuickWindow(m_renderControl);
+}
+
+void QOpenXRManager::setupQuickScene()
+{
     m_graphics->setupWindow(m_quickWindow);
     m_animationDriver = new QOpenXRAnimationDriver;
     m_animationDriver->install();
 
     const bool initSuccess = m_renderControl->initialize();
     if (!initSuccess) {
-        qDebug("failed to create renderControl");
+        qWarning("Quick 3D XR: Failed to create renderControl (failed to initialize RHI?)");
+        return;
     }
+
+    QRhi *rhi = m_renderControl->rhi();
+    if (!rhi) {
+        qWarning("Quick3D XR: No QRhi from renderControl. This should not happen.");
+        return;
+    }
+
+    qDebug("Quick 3D XR: QRhi initialized with backend %s", rhi->backendName());
+
+    if (m_multiviewRendering && !rhi->isFeatureSupported(QRhi::MultiView)) {
+        qWarning("Quick 3D XR: Multiview rendering was enabled, but is reported as unsupported from the current QRhi backend (%s)",
+                 rhi->backendName());
+        m_multiviewRendering = false;
+    }
+
+    qDebug("Quick3D XR: multiview rendering %s", m_multiviewRendering ? "enabled" : "disabled");
 }
 
 void QOpenXRManager::updateQuickSceneEye(int eye, const XrCompositionLayerProjectionView &layerView)
