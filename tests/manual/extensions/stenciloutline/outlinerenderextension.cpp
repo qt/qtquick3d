@@ -134,8 +134,8 @@ void OutlineRenderer::render(QSSGFrameData &data)
     if (const auto &rhiCtx = ctx->rhiContext()) {
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         cb->debugMarkBegin(QByteArrayLiteral("Stencil outline pass"));
-        QSSGRenderHelpers::renderRenderables(*ctx, stencilPrepResult);
-        QSSGRenderHelpers::renderRenderables(*ctx, outlinePrepResult);
+        QSSGRenderHelpers::renderRenderables(data, stencilPrepResult);
+        QSSGRenderHelpers::renderRenderables(data, outlinePrepResult);
         cb->debugMarkEnd();
     }
 }

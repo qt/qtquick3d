@@ -135,7 +135,7 @@ public:
                                    QSSGRhiGraphicsPipelineState &ps,
                                    QSSGRenderablesFilters filter = QSSGRenderablesFilter::All);
 
-    static void renderRenderables(QSSGRenderContextInterface &contextInterface,
+    static void renderRenderables(const QSSGFrameData &frameData,
                                   QSSGPrepResultId prepId);
 
 
@@ -146,7 +146,7 @@ private:
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderExtensionHelpers
 {
 public:
-    static void registerRenderResult(const QSSGRenderContextInterface &contextInterface,
+    static void registerRenderResult(const QSSGFrameData &frameData,
                                      QSSGExtensionId extension,
                                      QRhiTexture *texture);
 
