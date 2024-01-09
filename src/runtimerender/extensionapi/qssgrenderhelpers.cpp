@@ -58,9 +58,12 @@ QT_BEGIN_NAMESPACE
 /*!
     \enum QSSGRenderHelpers::CreateFlag
 
-    \value None
-    \value Recurse
-    \value Steal
+    \value None The default value. Renderables are created only for the nodes specified.
+    \value Recurse Renderables are created for each node and their children.
+    \value Steal Renderables are taken from the engine and won't be rendered by QtQuick3D.
+
+    \note Calling \l QSSGRenderHelpers::createRenderables() without the {QSSGRenderHelpers::CreateFlag::Steal}{Steal}
+    flag set means nodes are duplicated and QtQuick3D will render its copy of the nodes as normal.
 */
 
 /*!
