@@ -118,7 +118,7 @@ public:
                                                             QSSGNodeId camera,
                                                             quint32 slot = 0);
 
-    [[nodiscard]] static QSSGPrepResultId commit(const QSSGFrameData &contextInterface,
+    [[nodiscard]] static QSSGPrepResultId commit(const QSSGFrameData &frameData,
                                                  QSSGPrepContextId prepId,
                                                  QSSGRenderablesId renderablesId,
                                                  float lodThreshold = 1.0f);
