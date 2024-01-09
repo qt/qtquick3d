@@ -1,0 +1,46 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example extensions/stenciloutline
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Stencil Outline Extension Example
+    \examplecategory {Data Visualization & 3D}
+    \brief Demonstrates how the QtQuick3D Render Extension can be used to implement stencil outlining.
+    \image stencil_outline.jpg
+
+    This example shows how the QtQuick3D Render Extensions can be used to add support for stencil outlining.
+
+    The first step is to implement the front-end item by creating a new \l {QQuick3DRenderExtension}{Render Extension} item which exposes
+    the properties needed to QML.
+    In this example we expose 3 properties, the \c {target model} we want to the outline to be applied to, the \c material we want to use
+    for the outline, and the scale we want to apply for the outline.
+
+    \snippet extensions/stenciloutline/outlinerenderextension.h extension front
+
+    The second step is to implement the back-end \l {QSSGRenderExtension}{Render Extension} class, this is the class that contains
+    the code that will be run by QtQuick3D.
+
+    For this extension we'll be rendering \c after the built-in color-pass, and we'll want to render as part of the main render pass,
+    so we'll return \l {QSSGRenderExtension::RenderStage::PostColor}{PostColor} and \l {QSSGRenderExtension::RenderMode::Main}{Main} in
+    in our \l QSSGRenderExtension::stage() and QSSGRenderExtension::mode() functions respectively.
+
+    \snippet extensions/stenciloutline/outlinerenderextension.cpp extension back
+
+    The next function that needs to be implement is QSSGRenderExtension::prepareData(), this function should collect and set-up the data
+    this extension will be using for rendering. If there's nothing to render this function should return \c false.
+
+    \snippet extensions/stenciloutline/outlinerenderextension.cpp extension back_prepareData
+
+    If QSSGRenderExtension::prepareData() returned \c true the next function to be called is QSSGRenderExtension::prepareRender().
+    In this function we'll set-up the \l {QSSGRhiGraphicsPipelineState}{pipeline state} for our two renderables and tell QtQuick3D to
+    prepare the primitives etc. for the renderables by calling QSSGRenderHelpers::prepareRenderables().
+
+    \snippet extensions/stenciloutline/outlinerenderextension.cpp extension back_prepareRender
+
+    When the engine is ready to record the rendering calls for our models then QSSGRenderExtension::render() will be called.
+    In this case, we can simply just just call QSSGRenderHelpers::renderRenderables() for the two models, they will then
+    be rendered just the same way as QtQuick3D would have done internally, only now with our changes.
+
+    \snippet extensions/stenciloutline/outlinerenderextension.cpp extension back_render
+ */

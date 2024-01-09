@@ -34,6 +34,7 @@ qt_internal_add_example(simplefog)
 qt_internal_add_example(sceneeffects)
 qt_internal_add_example(volumeraycaster)
 qt_internal_add_example(virtualassistant)
+qt_internal_add_example(extensions/stenciloutline)
 
 if(QT_FEATURE_quick3dxr_openxr)
     qt_internal_add_example(xr_simple)
