@@ -1699,7 +1699,11 @@ void QQuick3DViewport::onReleaseCachedResources()
 }
 
 /*!
-    \internal
+    \qmlproperty List<QtQuick3D::Object3D> View3D::extensions
+
+    This property contains a list of user extensions that should be used with this \l View3D.
+
+    \sa RenderExtension
 */
 QQmlListProperty<QQuick3DObject> QQuick3DViewport::extensions()
 {

@@ -17,6 +17,18 @@ QT_BEGIN_NAMESPACE
     \sa QSSGRenderExtension
 */
 
+/*!
+    \qmltype RenderExtension
+    \instantiates QQuick3DRenderExtension
+    \inqmlmodule QtQuick3D
+    \inherits Object3D
+    \since 6.7
+    \brief An uncreatable abstract base type for render extensions.
+
+    \sa QQuick3DRenderExtension, QSSGRenderExtension, QQuick3DViewport::extensions()
+*/
+
+
 QQuick3DRenderExtension::QQuick3DRenderExtension(QQuick3DObject *parent)
     : QQuick3DObject(*new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::RenderExtension), parent)
 {
