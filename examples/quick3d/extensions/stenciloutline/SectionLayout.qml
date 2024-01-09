@@ -1,4 +1,5 @@
-// Copyright (C) 2023 The Qt Company Ltd.
+
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -15,8 +16,7 @@ Rectangle {
     border.color: palette.alternateBase
 
     Layout.fillWidth: true
-    height: outsideLayout.implicitHeight
-    implicitHeight: height
+    implicitHeight: outsideLayout.implicitHeight
 
     ColumnLayout {
         id: outsideLayout
@@ -24,7 +24,7 @@ Rectangle {
         Rectangle {
             id: sectionHeader
             Layout.fillWidth: true
-            height: 24
+            implicitHeight: 24
             color: palette.alternateBase
 
             RowLayout {
@@ -32,7 +32,7 @@ Rectangle {
                 Image {
                     fillMode: Image.PreserveAspectFit
                     sourceSize: Qt.size(titleText.implicitHeight, titleText.implicitHeight)
-                    source: root.isExpanded ? "qrc:/images/TreeExpanded.png" : "qrc:/images/TreeUnexpanded.png"
+                    source: root.isExpanded ? "images/TreeExpanded.png" : "images/TreeUnexpanded.png"
                 }
 
                 Text {
@@ -48,12 +48,15 @@ Rectangle {
             }
         }
 
-        ColumnLayout {
+        GridLayout {
             id: container
             Layout.margins: root.border.width * 2
             visible: root.isExpanded
             Layout.fillWidth: true
+            columns: 2
+            uniformCellWidths: true
         }
 
     }
+
 }

@@ -12,6 +12,7 @@
 #include <ssg/qssgrenderextensions.h>
 #include <ssg/qssgrendercontextcore.h>
 
+//! [extension back]
 class OutlineRenderer : public QSSGRenderExtension
 {
 public:
@@ -28,66 +29,79 @@ public:
     QSSGPrepContextId outlinePrepContext { QSSGPrepContextId::Invalid };
     QSSGPrepResultId stencilPrepResult { QSSGPrepResultId::Invalid };
     QSSGPrepResultId outlinePrepResult { QSSGPrepResultId::Invalid };
-    QSSGNodeId modelId { QSSGNodeId::Invalid }; // TODO: Request this each time
+    QPointer<QQuick3DObject> model;
+    QSSGNodeId modelId { QSSGNodeId::Invalid };
+    QPointer<QQuick3DObject> material;
     QSSGResourceId outlineMaterialId {};
     float outlineScale = 1.05f;
 
     QSSGRenderablesId stencilRenderables;
     QSSGRenderablesId outlineRenderables;
 };
+//! [extension back]
 
+//! [extension back_prepareData]
 bool OutlineRenderer::prepareData(QSSGFrameData &data)
 {
-    // Make sure we have a tagetId.
+    // Make sure we have a model and a material.
+    if (!model || !material)
+        return false;
+
+    modelId = QQuick3DExtensionHelpers::getNodeId(*model);
     if (modelId == QSSGNodeId::Invalid)
         return false;
 
-    // This is the active camera for the scene (the camera used to render the final scene)
-    auto camera = data.activeCamera();
-    if (camera == QSSGNodeId::Invalid) // TODO: Make it easier
+    outlineMaterialId = QQuick3DExtensionHelpers::getResourceId(*material);
+    if (outlineMaterialId == QSSGResourceId::Invalid)
         return false;
 
-    //
+    // This is the active camera for the scene (the camera used to render the QtQuick3D scene)
+    QSSGNodeId camera = data.activeCamera();
+    if (camera == QSSGNodeId::Invalid)
+        return false;
+
+    // We are going to render the same renderable(s) twice so we need to create two contexts.
     stencilPrepContext = QSSGRenderHelpers::prepareForRender(data, *this, camera, 0);
     outlinePrepContext = QSSGRenderHelpers::prepareForRender(data, *this, camera, 1);
-    // Create data set for this render
-    stencilRenderables = QSSGRenderHelpers::createRenderables(data, stencilPrepContext, { modelId });
+    // Create the renderables for the target model. One for the original with stencil write, and one for the outline model.
+    // Note that we 'Steal' the model here, that tells QtQuick3D that we'll take over the rendering of the model.
+    stencilRenderables = QSSGRenderHelpers::createRenderables(data, stencilPrepContext, { modelId }, QSSGRenderHelpers::CreateFlag::Steal);
     outlineRenderables = QSSGRenderHelpers::createRenderables(data, outlinePrepContext, { modelId });
 
-    // Now we can start setting data for our models
+    // Now we can start setting the data for our models.
+    // Here we set a material and a scale for the outline
     QSSGModelHelpers::setModelMaterials(data, outlineRenderables, modelId, { outlineMaterialId });
-    auto globalTransform = QSSGModelHelpers::getGlobalTransform(data, modelId);
+    QMatrix4x4 globalTransform = QSSGModelHelpers::getGlobalTransform(data, modelId);
     globalTransform.scale(outlineScale);
     QSSGModelHelpers::setGlobalTransform(data, outlineRenderables, modelId, globalTransform);
 
-    // We're not drawing to the color output so set the opacity to 0.0f
-    QSSGModelHelpers::setGlobalOpacity(data, stencilRenderables, modelId, 0.0f);
-
-    // Commit the changes
+    // When all changes are done, we need to commit the changes.
     stencilPrepResult = QSSGRenderHelpers::commit(data, stencilPrepContext, stencilRenderables);
     outlinePrepResult = QSSGRenderHelpers::commit(data, outlinePrepContext, outlineRenderables);
 
-    return true; // wasDirty
-}
+    // If there's someting to be rendered we return true.
+    const bool dataReady = (stencilPrepResult != QSSGPrepResultId::Invalid && outlinePrepResult != QSSGPrepResultId::Invalid);
 
+    return dataReady;
+}
+//! [extension back_prepareData]
+
+//! [extension back_prepareRender]
 void OutlineRenderer::prepareRender(QSSGFrameData &data)
 {
-    if (modelId == QSSGNodeId::Invalid)
-        return;
-
-    if (stencilPrepResult == QSSGPrepResultId::Invalid || outlinePrepResult == QSSGPrepResultId::Invalid)
-        return;
+    Q_ASSERT(modelId != QSSGNodeId::Invalid);
+    Q_ASSERT(stencilPrepResult != QSSGPrepResultId::Invalid && outlinePrepResult != QSSGPrepResultId::Invalid);
 
     const auto &ctx = data.contextInterface();
 
     if (const auto &rhiCtx = ctx->rhiContext()) {
-        const auto basePs = data.getPipelineState();
+        const QSSGRhiGraphicsPipelineState basePs = data.getPipelineState();
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         const int samples = rhiCtx->mainPassSampleCount();
 
-        auto ps = basePs;
 
-        { // Original
+        { // Original model - Write to the stencil buffer.
+            QSSGRhiGraphicsPipelineState ps = basePs;
             ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::BlendEnabled,
                           QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled,
                           QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef,
@@ -105,8 +119,8 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
             QSSGRenderHelpers::prepareRenderables(data, stencilPrepResult, rpDesc, ps);
         }
 
-        { // Scaled and cut-out
-            auto ps = basePs;
+        { // Scaled version - Only draw outside the original.
+            QSSGRhiGraphicsPipelineState ps = basePs;
             ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::BlendEnabled,
                           QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef,
                           QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled };
@@ -124,11 +138,12 @@ void OutlineRenderer::prepareRender(QSSGFrameData &data)
         }
     }
 }
+//! [extension back_prepareRender]
 
+//! [extension back_render]
 void OutlineRenderer::render(QSSGFrameData &data)
 {
-    if (stencilPrepResult == QSSGPrepResultId::Invalid)
-        return;
+    Q_ASSERT(stencilPrepResult != QSSGPrepResultId::Invalid);
 
     const auto &ctx = data.contextInterface();
     if (const auto &rhiCtx = ctx->rhiContext()) {
@@ -139,6 +154,7 @@ void OutlineRenderer::render(QSSGFrameData &data)
         cb->debugMarkEnd();
     }
 }
+//! [extension back_render]
 
 void OutlineRenderer::resetForFrame()
 {
@@ -155,10 +171,9 @@ float OutlineRenderExtension::outlineScale() const
 
 void OutlineRenderExtension::setOutlineScale(float newOutlineScale)
 {
-    auto &outlineScale = m_outlineScale;
-    if (qFuzzyCompare(outlineScale, newOutlineScale))
+    if (qFuzzyCompare(m_outlineScale, newOutlineScale))
         return;
-    outlineScale = newOutlineScale;
+    m_outlineScale = newOutlineScale;
 
     markDirty(Dirty::OutlineScale);
 
@@ -172,17 +187,15 @@ QQuick3DObject *OutlineRenderExtension::target() const
 
 void OutlineRenderExtension::setTarget(QQuick3DObject *newTarget)
 {
-    auto &target = m_target;
-    if (target == newTarget)
+    if (m_target == newTarget)
         return;
-    target = newTarget;
+    m_target = newTarget;
 
     markDirty(Dirty::Target);
 
     emit targetChanged();
 }
 
-// This is our sync point
 QSSGRenderGraphObject *OutlineRenderExtension::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node)
@@ -190,10 +203,8 @@ QSSGRenderGraphObject *OutlineRenderExtension::updateSpatialNode(QSSGRenderGraph
 
     OutlineRenderer *renderer = static_cast<OutlineRenderer *>(node);
     renderer->outlineScale = m_outlineScale;
-    if (m_target)
-        renderer->modelId = QQuick3DExtensionHelpers::getNodeId(*m_target);
-    if (m_outlineMaterial)
-        renderer->outlineMaterialId = QQuick3DExtensionHelpers::getResourceId(*m_outlineMaterial);
+    renderer->model = m_target;
+    renderer->material = m_outlineMaterial;
 
     m_dirtyFlag = {};
 

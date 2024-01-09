@@ -7,6 +7,7 @@
 #include <QtQuick3D/qquick3drenderextensions.h>
 #include <QtQmlIntegration>
 
+//! [extension front]
 class OutlineRenderExtension : public QQuick3DRenderExtension
 {
     Q_OBJECT
@@ -32,7 +33,6 @@ signals:
     void outlineColorChanged();
     void outlineScaleChanged();
     void targetChanged();
-
     void outlineMaterialChanged();
 
 protected:
@@ -50,10 +50,11 @@ private:
 
     void markDirty(Dirty v);
 
-    QQuick3DObject *m_target = nullptr;
-    QQuick3DObject *m_outlineMaterial = nullptr;
+    QPointer<QQuick3DObject> m_target;
+    QPointer<QQuick3DObject> m_outlineMaterial;
     float m_outlineScale = 1.05f;
     DirtyT m_dirtyFlag {};
 };
+//! [extension front]
 
 #endif // OUTLINERENDEREXTENSION_H
