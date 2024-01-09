@@ -20,6 +20,13 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DObject;
 
+#ifdef Q_QDOC
+typedef quint64 QSSGNodeId;
+typedef quint64 QSSGResourceId;
+typedef quint64 QSSGCameraId;
+typedef quint64 QSSGExtensionId;
+#endif
+
 class Q_QUICK3D_EXPORT QQuick3DExtensionHelpers
 {
 public:
