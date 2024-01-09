@@ -24,6 +24,38 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \typedef QSSGPrepContextId
+    \relates QtQuick3D
+
+    Handle to a preparation context. Setting up a preparation context is the first
+    step needed before renderables can be created and rendered.
+
+    \sa QSSGRenderHelpers::prepareForRender()
+*/
+
+/*!
+    \typedef QSSGRenderablesId
+    \brief Handle to a set of renderables.
+    \relates QtQuick3D
+
+    Handle to a set of renderables created for one or more node(s). This \c id can be used
+    to for example modify the renderables created for a specific model.
+*/
+
+/*!
+    \typedef QSSGPrepResultId
+    \relates QtQuick3D
+
+    Handle to a preparation result.
+
+    Once the \l {QSSGRenderHelpers::createRenderables}{renderables} for a frame are updated and ready
+    to be translated into rendering code by the engine, the \l {QSSGRenderHelpers::createRenderables}{renderables}
+    and the \l {QSSGRenderHelpers::prepareForRender()}{preparation context} can be \l {QSSGRenderHelpers::commit()}{committed}.
+    If the commit succeeds, the returned preparation result can be used to \l {QSSGRenderHelpers::prepareRenderables()}{prepare}
+    and \l {QSSGRenderHelpers::renderRenderables}{record} the rendering for the frame.
+*/
+
+/*!
     \enum QSSGRenderHelpers::CreateFlag
 
     \value None

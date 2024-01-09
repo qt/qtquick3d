@@ -9,6 +9,41 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \typedef QSSGNodeId
+    \relates QtQuick3D
+
+    The QSSGNodeId is a handle to a QtQuick3D node object. \l Node objects are all
+    objects that inherits from \l Node, like the \l Model item.
+*/
+
+/*!
+    \typedef QSSGResourceId
+    \relates QtQuick3D
+
+    The QSSGResourceId is a handle to a QtQuick3D object. Resources are usually all
+    \l {Node}{none-node} types.
+*/
+
+/*!
+    \typedef QSSGCameraId
+    \relates QtQuick3D
+
+    The QSSGCameraId is a handle to a QtQuick3D \l Camera object, like the \l PerspectiveCamera item.
+
+    \note Cameras are also nodes.
+*/
+
+/*!
+    \typedef QSSGExtensionId
+    \relates QtQuick3D
+
+    The QSSGExtensionId is a handle to a QtQuick3D extension type, like items that inherits from the
+    \l RenderExtension type.
+
+    \sa QQuick3DRenderExtension, QSSGRenderExtension
+*/
+
+/*!
     \class QQuick3DExtensionHelpers
     \inmodule QtQuick3D
     \since 6.6
