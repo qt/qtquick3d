@@ -7,7 +7,7 @@ add_subdirectory(quick3d_visual)
 if(QT_BUILD_MINIMAL_STATIC_TESTS)
     return()
 endif()
-#add_subdirectory(cmake) # special case
+add_subdirectory(cmake)
 if(NOT INTEGRITY)
     add_subdirectory(quick3d)
 endif()
