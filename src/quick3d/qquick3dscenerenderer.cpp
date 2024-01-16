@@ -297,6 +297,8 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         // renderer needs to know the value.
         rhiCtxD->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
 
+        rhiCtxD->setMainPassViewCount(1);
+
         int ssaaAdjustedWidth = m_surfaceSize.width();
         int ssaaAdjustedHeight = m_surfaceSize.height();
         if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA) {
@@ -1306,6 +1308,7 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         // copies of the rp and cb are not there until the render
         // phase of the scenegraph.
         int sampleCount = 1;
+        int viewCount = 1;
         QRhiSwapChain *swapchain = window->swapChain();
         if (swapchain) {
             rhiCtxD->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
@@ -1324,8 +1327,18 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
                 rhiCtxD->setCommandBuffer(cb);
                 rhiCtxD->setRenderTarget(rt);
                 const QRhiColorAttachment *color0 = rt->description().cbeginColorAttachments();
-                if (color0 && color0->texture())
+                if (color0 && color0->texture()) {
                     sampleCount = color0->texture()->sampleCount();
+                    if (rt->resourceType() == QRhiResource::TextureRenderTarget) {
+                        const QRhiTextureRenderTargetDescription desc = static_cast<QRhiTextureRenderTarget *>(rt)->description();
+                        for (auto it = desc.cbeginColorAttachments(), end = desc.cendColorAttachments(); it != end; ++it) {
+                            if (it->multiViewCount() >= 2) {
+                                viewCount = it->multiViewCount();
+                                break;
+                            }
+                        }
+                    }
+                }
             } else {
                 qWarning("Neither swapchain nor redirected command buffer and render target are available.");
             }
@@ -1337,6 +1350,8 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         // pass the sample count to the renderer because it is needed when
         // creating graphics pipelines.
         rhiCtxD->setMainPassSampleCount(sampleCount);
+
+        rhiCtxD->setMainPassViewCount(viewCount);
     }
 }
 
@@ -1350,8 +1365,10 @@ inline void queryInlineRenderPassDescriptorAndCommandBuffer(QSGRenderNode *node,
     rhiCtxD->setCommandBuffer(d->m_rt.cb);
     rhiCtxD->setRenderTarget(d->m_rt.rt);
     rhiCtxD->setMainPassSampleCount(d->m_rt.rt->sampleCount());
+    rhiCtxD->setMainPassViewCount(1);
 }
-}
+
+} // namespace
 
 QQuick3DSGRenderNode::~QQuick3DSGRenderNode()
 {

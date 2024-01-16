@@ -938,7 +938,9 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
             item2D->m_rp = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
             QSSG_CHECK(item2D->m_rp);
         }
-        item2D->m_renderer->setRenderTarget({ renderTarget, item2D->m_rp, rhiCtx->commandBuffer() });
+        QSGRenderTarget sgRt(renderTarget, item2D->m_rp, rhiCtx->commandBuffer());
+        sgRt.multiViewCount = rhiCtx->mainPassViewCount();
+        item2D->m_renderer->setRenderTarget(sgRt);
         delete oldRp;
         item2D->m_renderer->prepareSceneInline();
     }

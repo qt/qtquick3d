@@ -871,6 +871,7 @@ public:
     void setCommandBuffer(QRhiCommandBuffer *cb);
     void setRenderTarget(QRhiRenderTarget *rt);
     void setMainPassSampleCount(int samples);
+    void setMainPassViewCount(int viewCount);
 
     void releaseCachedResources();
 
@@ -915,6 +916,7 @@ public:
     Textures m_textures;
     Meshes m_meshes;
     int m_mainSamples = 1;
+    int m_mainViewCount = 1;
 
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
 

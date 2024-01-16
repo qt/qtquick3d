@@ -1127,6 +1127,21 @@ int QSSGRhiContext::mainPassSampleCount() const
     return d->m_mainSamples;
 }
 
+void QSSGRhiContextPrivate::setMainPassViewCount(int viewCount)
+{
+    m_mainViewCount = viewCount;
+}
+
+/*!
+    Returns the multiview count used in the main render pass. This is either 2,
+    when multiview rendering is in use, or 1 (no multiview).
+ */
+int QSSGRhiContext::mainPassViewCount() const
+{
+    Q_D(const QSSGRhiContext);
+    return d->m_mainViewCount;
+}
+
 void QSSGRhiContextPrivate::releaseCachedResources()
 {
     for (QSSGRhiDrawCallData &dcd : m_drawCallData) {

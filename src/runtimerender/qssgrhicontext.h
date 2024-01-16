@@ -107,6 +107,7 @@ public:
     QRhiCommandBuffer *commandBuffer() const;
     QRhiRenderTarget *renderTarget() const;
     int mainPassSampleCount() const;
+    int mainPassViewCount() const;
 
     QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
     void checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription);
