@@ -83,7 +83,7 @@ qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_xcb
 
 # OpenGL
 
-qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_opengl AND NOT QT_FEATURE_opengles2
+qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_opengl AND NOT QT_FEATURE_opengles2 AND NOT MACOS
     SOURCES
         qopenxrgraphics_opengl.cpp qopenxrgraphics_opengl_p.h
     DEFINES

@@ -109,11 +109,11 @@ void QOpenXRSpaceExtension::handleEvent(const XrEventDataBaseHeader *event)
         if (captureResult->result == XR_SUCCESS) {
             Q_EMIT sceneCaptureCompleted();
             qDebug(
-                "QOpenXRSpaceExtension::handleEvent: Scene capture (ID = %lu) succeeded",
+                "QOpenXRSpaceExtension::handleEvent: Scene capture (ID = %llu) succeeded",
                 captureResult->requestId);
         } else {
             qDebug(
-                "QOpenXRSpaceExtension::handleEvent: Scene capture (ID = %lu) failed with an error %d",
+                "QOpenXRSpaceExtension::handleEvent: Scene capture (ID = %llu) failed with an error %d",
                 captureResult->requestId,
                 captureResult->result);
         }

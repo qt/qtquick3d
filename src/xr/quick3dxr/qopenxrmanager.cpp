@@ -357,7 +357,7 @@ void QOpenXRManager::checkXrLayers()
 
     qDebug("Available Layers: (%d)", layerCount);
     for (const XrApiLayerProperties& layer : layers) {
-        qDebug("  Name=%s SpecVersion=%lu LayerVersion=%d.%d.%d Description=%s",
+        qDebug("  Name=%s SpecVersion=%llu LayerVersion=%d.%d.%d Description=%s",
                layer.layerName,
                layer.specVersion,
                XR_VERSION_MAJOR(layer.layerVersion),
@@ -728,7 +728,7 @@ void QOpenXRManager::createSwapchains()
         // Create a swapchain for each view.
         for (uint32_t i = 0; i < viewCount; i++) {
             const XrViewConfigurationView& vp = m_configViews[i];
-            qDebug("Creating swapchain for view %d with dimensions Width=%d Height=%d SampleCount=%d Format=%ldx",
+            qDebug("Creating swapchain for view %d with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
                    i,
                    vp.recommendedImageRectWidth,
                    vp.recommendedImageRectHeight,
@@ -811,7 +811,7 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
         const XrSessionState oldState = m_sessionState;
         m_sessionState = stateChangedEvent.state;
 
-        qDebug("XrEventDataSessionStateChanged: state %s->%s session=%p time=%ld",
+        qDebug("XrEventDataSessionStateChanged: state %s->%s session=%p time=%lld",
                to_string(oldState),
                to_string(m_sessionState),
                stateChangedEvent.session,
@@ -860,7 +860,7 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
         switch (event->type) {
         case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
             const auto& instanceLossPending = *reinterpret_cast<const XrEventDataInstanceLossPending*>(event);
-            qDebug("XrEventDataInstanceLossPending by %ld", instanceLossPending.lossTime);
+            qDebug("XrEventDataInstanceLossPending by %lld", instanceLossPending.lossTime);
             *exitRenderLoop = true;
             *requestRestart = true;
             return;
