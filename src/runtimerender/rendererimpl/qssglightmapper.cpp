@@ -1387,10 +1387,15 @@ static void blendLine(const QVector2D &from, const QVector2D &to,
         nextT.setX(1.0f - nextT.x());
     if (pixelStep.y() == 1.0f)
         nextT.setY(1.0f - nextT.y());
-    nextT /= QVector2D(std::abs(dir.x()), std::abs(dir.y()));
-    if (std::isnan(nextT.x()))
+
+    if (!qFuzzyIsNull(dir.x()))
+        nextT.setX(nextT.x() / std::abs(dir.x()));
+    else
         nextT.setX(std::numeric_limits<float>::max());
-    if (std::isnan(nextT.y()))
+
+    if (!qFuzzyIsNull(dir.y()))
+        nextT.setY(nextT.y() / std::abs(dir.y()));
+    else
         nextT.setY(std::numeric_limits<float>::max());
 
     float *fpW = reinterpret_cast<float *>(writeBuf.data());
