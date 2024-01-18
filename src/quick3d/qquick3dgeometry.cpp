@@ -951,6 +951,7 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
                 geometry->addSubset(s.offset, s.count, s.boundsMin, s.boundsMax, s.name);
         }
         d->m_geometryChanged = false;
+        emit geometryChanged();
     }
     if (d->m_geometryBoundsChanged) {
         geometry->setBounds(d->m_min, d->m_max);
