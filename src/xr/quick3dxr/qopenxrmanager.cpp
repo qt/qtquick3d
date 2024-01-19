@@ -371,7 +371,7 @@ void QOpenXRManager::checkXrLayers()
     for (const XrApiLayerProperties& layer : layers) {
         qDebug("  Name=%s SpecVersion=%llu LayerVersion=%d.%d.%d Description=%s",
                layer.layerName,
-               layer.specVersion,
+               static_cast<long long unsigned int>(layer.specVersion),
                XR_VERSION_MAJOR(layer.layerVersion),
                XR_VERSION_MINOR(layer.layerVersion),
                XR_VERSION_PATCH(layer.layerVersion),
@@ -777,7 +777,7 @@ void QOpenXRManager::createSwapchains()
                 vp.recommendedImageRectWidth,
                 vp.recommendedImageRectHeight,
                 vp.recommendedSwapchainSampleCount,
-                m_colorSwapchainFormat);
+                static_cast<long long unsigned int>(m_colorSwapchainFormat));
 
             Swapchain swapchain;
             swapchain.width = swapchainCreateInfo.width;
@@ -803,7 +803,7 @@ void QOpenXRManager::createSwapchains()
                     vp.recommendedImageRectWidth,
                     vp.recommendedImageRectHeight,
                     vp.recommendedSwapchainSampleCount,
-                    m_colorSwapchainFormat);
+                    static_cast<long long unsigned int>(m_colorSwapchainFormat));
 
                 // Create the swapchain.
                 XrSwapchainCreateInfo swapchainCreateInfo{};
@@ -896,7 +896,7 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
                to_string(oldState),
                to_string(m_sessionState),
                stateChangedEvent.session,
-               stateChangedEvent.time);
+               static_cast<long long int>(stateChangedEvent.time));
 
         if ((stateChangedEvent.session != XR_NULL_HANDLE) && (stateChangedEvent.session != m_session)) {
             qDebug("XrEventDataSessionStateChanged for unknown session");
@@ -941,7 +941,7 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
         switch (event->type) {
         case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
             const auto& instanceLossPending = *reinterpret_cast<const XrEventDataInstanceLossPending*>(event);
-            qDebug("XrEventDataInstanceLossPending by %lld", instanceLossPending.lossTime);
+            qDebug("XrEventDataInstanceLossPending by %lld", static_cast<long long int>(instanceLossPending.lossTime));
             *exitRenderLoop = true;
             *requestRestart = true;
             return;
