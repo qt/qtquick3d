@@ -120,9 +120,18 @@ bool QOpenXRManager::initialize()
 {
     m_errorString.clear();
 
-#ifdef DEBUG_RENDER_DOC
-    initRenderDocAPI();
+    // This, meaning constructing the QGraphicsFrameCapture if we'll want it,
+    // must be done as early as possible, before initalizing graphics. In fact
+    // in hybrid apps it might be too late at this point if Qt Quick (so someone
+    // outside our control) has initialized graphics which then makes
+    // RenderDoc's hooking mechanisms disfunctional.
+    if (qEnvironmentVariableIntValue("QT_QUICK3D_XR_FRAME_CAPTURE")) {
+#if QT_CONFIG(graphicsframecapture)
+        m_frameCapture.reset(new QGraphicsFrameCapture);
+#else
+        qWarning("Quick 3D XR: Frame capture was requested, but Qt is built without QGraphicsFrameCapture");
 #endif
+    }
 
 #ifdef XR_USE_PLATFORM_ANDROID
     // Initialize the Loader
@@ -623,9 +632,26 @@ bool QOpenXRManager::setupGraphics()
     if (!m_graphics->setupGraphics(m_instance, m_systemId, m_quickWindow->graphicsConfiguration()))
         return false;
 
-    setupQuickScene();
+    if (!setupQuickScene())
+        return false;
 
-    return m_graphics->finializeGraphics(m_quickWindow->rhi());
+    QRhi *rhi = m_quickWindow->rhi();
+
+#if QT_CONFIG(graphicsframecapture)
+    if (m_frameCapture) {
+        m_frameCapture->setCapturePath(QLatin1String("."));
+        m_frameCapture->setCapturePrefix(QLatin1String("quick3dxr"));
+        m_frameCapture->setRhi(rhi);
+        if (!m_frameCapture->isLoaded()) {
+            qWarning("Quick 3D XR: Frame capture was requested but QGraphicsFrameCapture is not initialized"
+                     " (or has no backends enabled in the Qt build)");
+        } else {
+            qDebug("Quick 3D XR: Frame capture initialized");
+        }
+    }
+#endif
+
+    return m_graphics->finializeGraphics(rhi);
 }
 
 void QOpenXRManager::checkReferenceSpaces()
@@ -1047,6 +1073,11 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
         }
         m_previousTime = predictedDisplayTime;
 
+#if QT_CONFIG(graphicsframecapture)
+        if (m_frameCapture)
+            m_frameCapture->startCaptureFrame();
+#endif
+
         if (m_multiviewRendering) {
             const Swapchain swapchain = m_swapchains[0];
 
@@ -1123,19 +1154,19 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
                 m_projectionLayerViews[i].fov = m_views[i].fov;
 
                 updateQuickSceneEye(i, m_projectionLayerViews[i]);
-    #ifdef DEBUG_RENDER_DOC
-                startRenderDocCapture();
-    #endif
+
                 doRender(m_projectionLayerViews[i], swapchainImage);
-    #ifdef DEBUG_RENDER_DOC
-                endRenderDocCapture();
-    #endif
 
                 XrSwapchainImageReleaseInfo releaseInfo{};
                 releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
                 checkXrResult(xrReleaseSwapchainImage(viewSwapchain.handle, &releaseInfo));
             }
         }
+
+#if QT_CONFIG(graphicsframecapture)
+        if (m_frameCapture)
+            m_frameCapture->endCaptureFrame();
+#endif
 
         layer.space = m_appSpace;
         layer.viewCount = (uint32_t)m_projectionLayerViews.size();
@@ -1173,7 +1204,7 @@ void QOpenXRManager::preSetupQuickScene()
     m_quickWindow = new QQuickWindow(m_renderControl);
 }
 
-void QOpenXRManager::setupQuickScene()
+bool QOpenXRManager::setupQuickScene()
 {
     m_graphics->setupWindow(m_quickWindow);
     m_animationDriver = new QOpenXRAnimationDriver;
@@ -1182,13 +1213,13 @@ void QOpenXRManager::setupQuickScene()
     const bool initSuccess = m_renderControl->initialize();
     if (!initSuccess) {
         qWarning("Quick 3D XR: Failed to create renderControl (failed to initialize RHI?)");
-        return;
+        return false;
     }
 
     QRhi *rhi = m_renderControl->rhi();
     if (!rhi) {
         qWarning("Quick3D XR: No QRhi from renderControl. This should not happen.");
-        return;
+        return false;
     }
 
     qDebug("Quick 3D XR: QRhi initialized with backend %s", rhi->backendName());
@@ -1200,6 +1231,8 @@ void QOpenXRManager::setupQuickScene()
     }
 
     qDebug("Quick3D XR: multiview rendering %s", m_multiviewRendering ? "enabled" : "disabled");
+
+    return true;
 }
 
 void QOpenXRManager::updateQuickSceneEye(int eye, const XrCompositionLayerProjectionView &layerView)
@@ -1297,31 +1330,6 @@ bool QOpenXRManager::supportsPassthrough() const
 
     return supported;
 }
-
-#ifdef DEBUG_RENDER_DOC
-void QOpenXRManager::initRenderDocAPI()
-{
-    if (HMODULE mod = GetModuleHandleA("renderdoc.dll")) {
-        pRENDERDOC_GetAPI RENDERDOC_GetAPI =
-                (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
-        int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
-        Q_ASSERT(ret == 1);
-    }
-}
-
-void QOpenXRManager::startRenderDocCapture()
-{
-    if (rdoc_api && m_renderDocCaptureEnabled)
-        rdoc_api->StartFrameCapture(NULL, NULL);
-}
-
-void QOpenXRManager::endRenderDocCapture()
-{
-    if (rdoc_api && m_renderDocCaptureEnabled)
-        rdoc_api->EndFrameCapture(NULL, NULL);
-}
-
-#endif
 
 void QOpenXRManager::setupMetaQuestColorSpaces()
 {

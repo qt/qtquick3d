@@ -76,10 +76,6 @@ qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_xcb
         XR_USE_PLATFORM_XCB
 )
 
-# TODO: RenderDoc support
-# ... DEFINES DEBUG_RENDER_DOC ...
-
-
 # OpenGL
 
 qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_opengl AND NOT QT_FEATURE_opengles2 AND NOT MACOS

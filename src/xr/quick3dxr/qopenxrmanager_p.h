@@ -23,8 +23,9 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 
-#ifdef DEBUG_RENDER_DOC
-#include "renderdoc_app.h"
+#include <QtGui/private/qtgui-config_p.h>
+#if QT_CONFIG(graphicsframecapture)
+#include <QtGui/private/qgraphicsframecapture_p.h>
 #endif
 
 #ifdef XR_USE_PLATFORM_ANDROID
@@ -102,7 +103,7 @@ private:
                   const XrSwapchainImageBaseHeader* swapchainImage);
 
     void preSetupQuickScene();
-    void setupQuickScene();
+    bool setupQuickScene();
     void updateQuickSceneEye(int eye, const XrCompositionLayerProjectionView &layerView);
     void checkActor();
 
@@ -124,15 +125,6 @@ private:
     void destroyMetaQuestPassthroughLayer();
     void pauseMetaQuestPassthroughLayer();
     void resumeMetaQuestPassthroughLayer();
-
-#ifdef DEBUG_RENDER_DOC
-    // RenderDoc API
-    void initRenderDocAPI();
-    void startRenderDocCapture();
-    void endRenderDocCapture();
-    RENDERDOC_API_1_1_2 *rdoc_api = NULL;
-    bool m_renderDocCaptureEnabled = false;
-#endif
 
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
@@ -192,6 +184,10 @@ private:
     QString m_runtimeName;
     QVersionNumber m_runtimeVersion;
     QStringList m_enabledExtensions;
+
+#if QT_CONFIG(graphicsframecapture)
+    std::unique_ptr<QGraphicsFrameCapture> m_frameCapture;
+#endif
 
     friend class QOpenXRView;
     friend class QOpenXRRuntimeInfo;
