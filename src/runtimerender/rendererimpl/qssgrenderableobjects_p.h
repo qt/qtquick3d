@@ -184,9 +184,10 @@ struct QSSGRenderableNodeEntry
     enum Overridden : quint16
     {
         Original = 0,
-        GlobalTransform = 0x1,
-        Materials = 0x2,
-        GlobalOpacity = 0x4
+        Disabled = 0x1,
+        GlobalTransform = 0x2,
+        Materials = 0x4,
+        GlobalOpacity = 0x5
     };
 
     QSSGRenderNode *node = nullptr;

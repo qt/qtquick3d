@@ -547,9 +547,10 @@ QSSGRenderablesId QSSGLayerRenderData::createRenderables(QSSGPrepContextId prepI
             auto *renderModel = static_cast<QSSGRenderModel *>(node);
             // NOTE: Not ideal.
             if (auto it = std::find_if(renderableModels.cbegin(), renderableModels.cend(), [renderModel](const QSSGRenderableNodeEntry &e) { return (e.node == renderModel); }); it != renderableModels.cend()) {
-                renderables.emplace_back(*it);
+                auto &inserted = renderables.emplace_back(*it);
+                inserted.overridden = {};
                 if (steal)
-                    renderableModels.erase(it);
+                    it->overridden |= QSSGRenderableNodeEntry::Overridden::Disabled;
             } else {
                 renderables.emplace_back(*renderModel);
             }
@@ -1336,7 +1337,8 @@ static void prepareModelMaterialsImpl(QSSGLayerRenderData::RenderableNodeEntries
             renderable.materials = model.materials;
 
         if constexpr (cull == CullUnrenderables::On) {
-            if (renderable.materials.isEmpty()) {
+            const bool isDisabled = ((renderable.overridden & QSSGRenderableNodeEntry::Overridden::Disabled) != 0);
+            if (isDisabled || renderable.materials.isEmpty()) {
                 // Swap current (idx) and last item (--end).
                 // Note, post-decrement idx to ensure we recheck the new current item on next iteration
                 // and pre-decrement the end move the end of the list to not include the culled renderable.
@@ -1478,6 +1480,9 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
     bool wasDirty = false;
 
     for (const QSSGRenderableNodeEntry &renderable : renderableModels) {
+        if ((renderable.overridden & QSSGRenderableNodeEntry::Overridden::Disabled) != 0)
+            continue;
+
         const QSSGRenderModel &model = *static_cast<QSSGRenderModel *>(renderable.node);
         const auto &lights = renderable.lights;
         QSSGRenderMesh *theMesh = renderable.mesh;
