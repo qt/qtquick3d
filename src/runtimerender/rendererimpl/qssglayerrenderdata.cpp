@@ -2363,8 +2363,10 @@ void QSSGLayerRenderData::prepareForRender()
             auto &userPass = userPasses[i];
             for (auto rit = renderExtensions.crbegin(), rend = renderExtensions.crend(); rit != rend; ++rit) {
                 hasUserExtensions = true;
-                wasDirty |= (*rit)->prepareData(frameData);
-                userPass.extensions.push_back(*rit);
+                if ((*rit)->prepareData(frameData)) {
+                    wasDirty |= true;
+                    userPass.extensions.push_back(*rit);
+                }
             }
         }
     }
