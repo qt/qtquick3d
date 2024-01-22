@@ -18,13 +18,14 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getBuiltinRhiShader(const QByteArray &name,
-                                                                        QSSGRhiShaderPipelinePtr &storage)
+                                                                        QSSGRhiShaderPipelinePtr &storage,
+                                                                        int viewCount)
 {
     QSSGRhiShaderPipelinePtr &result = storage;
     if (!result) {
         // loadBuiltin must always return a valid QSSGRhiShaderPipeline.
         // There will just be no stages if loading fails.
-        result = m_shaderCache.loadBuiltinForRhi(name);
+        result = m_shaderCache.loadBuiltinForRhi(name, viewCount);
     }
     return result;
 }

@@ -168,7 +168,8 @@ public:
                                                        const QSSGShaderFeatures &inFeatureSet,
                                                        QSSGShaderLibraryManager &shaderLibraryManager,
                                                        QSSGShaderCache &theCache,
-                                                       QSSGRhiShaderPipeline::StageFlags stageFlags);
+                                                       QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                                       int viewCount);
 };
 
 QT_END_NAMESPACE

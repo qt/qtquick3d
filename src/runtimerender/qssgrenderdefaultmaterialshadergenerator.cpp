@@ -1829,6 +1829,8 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                                 QSSGShaderLibraryManager &shaderLibraryManager,
                                                                                 QSSGShaderCache &theCache)
 {
+    const int viewCount = inProperties.m_viewCount.getValue(key);
+
     QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
     // inShaderKeyPrefix can be a static string for default materials, but must
     // be unique for different sets of shaders in custom materials.
@@ -1841,7 +1843,12 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
     vertexPipeline.endVertexGeneration();
     vertexPipeline.endFragmentGeneration();
 
-    return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString, inFeatureSet, shaderLibraryManager, theCache, {});
+    return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString,
+                                                                        inFeatureSet,
+                                                                        shaderLibraryManager,
+                                                                        theCache,
+                                                                        {},
+                                                                        viewCount);
 }
 
 static float ZERO_MATRIX[16] = {};

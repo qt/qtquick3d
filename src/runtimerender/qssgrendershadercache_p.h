@@ -181,7 +181,7 @@ private:
     QString m_persistentShaderStorageFileName;
     QSSGBuiltInRhiShaderCache m_builtInShaders;
 
-    QSSGRhiShaderPipelinePtr loadBuiltinForRhi(const QByteArray &inKey);
+    QSSGRhiShaderPipelinePtr loadBuiltinForRhi(const QByteArray &inKey, int viewCount);
 
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
@@ -215,7 +215,8 @@ public:
                                            const QByteArray &inVert,
                                            const QByteArray &inFrag,
                                            const QSSGShaderFeatures &inFeatures,
-                                           QSSGRhiShaderPipeline::StageFlags stageFlags);
+                                           QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                           int viewCount);
 
     QSSGBuiltInRhiShaderCache &getBuiltInRhiShaders() { return m_builtInShaders; }
 

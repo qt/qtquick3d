@@ -362,7 +362,8 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
 }
 
 QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
-                                                        const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
+                                                        const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                                        int viewCount)
 {
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
     const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(inKey, inFeatures);
@@ -437,9 +438,9 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
             dumpShaderToFile(QShader::Stage::VertexStage, vertexCode);
     }
 
-    // ### the view count needs to be plumbed everywhere, in the shader key, and so on.
-    // for now, enable this to test multiview mode
-    // baker.setMultiViewCount(2);
+    // This is in the shader key, but cannot query that here anymore now that it's serialized.
+    // So we get it as a dedicated argument.
+    baker.setMultiViewCount(viewCount);
 
     baker.setSourceString(fragmentCode, QShader::FragmentStage);
     QShader fragmentShader = baker.bake();
@@ -586,7 +587,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryNewPipelineFromPersistentCache(cons
     return {};
 }
 
-QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey, int viewCount)
 {
     const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(inKey, QSSGShaderFeatures());
     if (rhiShaders)
@@ -594,7 +595,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
 
     const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
     if (shaderDebug)
-        qDebug("Loading builtin rhi shader: %s", inKey.constData());
+        qDebug("Loading builtin rhi shader: %s (view count: %d)", inKey.constData(), viewCount);
 
     Q_TRACE_SCOPE(QSSG_loadShader);
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
@@ -606,10 +607,13 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
     // look for abc.vert.qsb and abc.frag.qsb.
 
     const QString prefix = QString::fromUtf8(resourceFolder() + inKey);
-    const QString vertexFileName = prefix + QLatin1String(".vert.qsb");
-    const QString fragmentFileName = prefix + QLatin1String(".frag.qsb");
+    QString vertexFileName = prefix + QLatin1String(".vert.qsb");
+    QString fragmentFileName = prefix + QLatin1String(".frag.qsb");
 
-    // ### for multiview, we need to know the view count, and if 2, append .mv2qsb to the name
+    if (viewCount == 2) {
+        vertexFileName += QLatin1String(".mv2qsb");
+        fragmentFileName += QLatin1String(".mv2qsb");
+    }
 
     QShader vertexShader;
     QShader fragmentShader;

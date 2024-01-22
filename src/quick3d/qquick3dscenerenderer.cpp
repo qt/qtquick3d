@@ -297,7 +297,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         // renderer needs to know the value.
         rhiCtxD->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
 
-        rhiCtxD->setMainPassViewCount(1);
+        rhiCtxD->setMainPassViewCount(1); // ### multiview for postproc effects?
 
         int ssaaAdjustedWidth = m_surfaceSize.width();
         int ssaaAdjustedHeight = m_surfaceSize.height();

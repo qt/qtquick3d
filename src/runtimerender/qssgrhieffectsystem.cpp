@@ -406,7 +406,8 @@ QSSGRhiShaderPipelinePtr QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBin
                                                shaderLib.getShaderMetaData(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment).features,
                                                 shaderLib,
                                                 shaderCache,
-                                                QSSGRhiShaderPipeline::UsedWithoutIa);
+                                                QSSGRhiShaderPipeline::UsedWithoutIa,
+                                                1); // ### multiview for postproc effects?
 }
 
 void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect)

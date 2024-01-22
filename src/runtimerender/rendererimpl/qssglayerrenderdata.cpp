@@ -1091,6 +1091,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     // fog
     defaultMaterialShaderKeyProperties.m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
 
+    // multiview
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, rhiCtx->mainPassViewCount());
+
     if (!defaultMaterialShaderKeyProperties.m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
         features.set(QSSGShaderFeatures::Feature::LightProbe, true);
         defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, true);
@@ -1286,6 +1290,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
 
     // fog
     defaultMaterialShaderKeyProperties.m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
+
+    // multiview
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, rhiCtx->mainPassViewCount());
 
     // Knowing whether VAR_COLOR is used becomes relevant when there is no
     // custom vertex shader, but VAR_COLOR is present in the custom fragment
