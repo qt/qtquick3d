@@ -180,8 +180,7 @@ QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoo
                                               const QRectF &inViewport) const
 {
     QSSGRenderRay theRay;
-    QVector2D globalCoords = toAbsoluteCoords(inViewport, inViewportRelativeCoords);
-    QVector2D normalizedCoords = absoluteToNormalizedCoordinates(inViewport, globalCoords);
+    QVector2D normalizedCoords = relativeToNormalizedCoordinates(inViewport, inViewportRelativeCoords);
     QVector3D &outOrigin(theRay.origin);
     QVector3D &outDir(theRay.direction);
     QVector2D inverseFrustumScale(1.0f / frustumScale.x(), 1.0f / frustumScale.y());

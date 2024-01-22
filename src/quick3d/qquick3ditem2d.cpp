@@ -83,7 +83,7 @@ void QQuick3DItem2D::addChildItem(QQuickItem *item)
 {
     item->setParent(m_contentItem);
     item->setParentItem(m_contentItem);
-    connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+    QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::ChangeType::Destroyed);
     connect(item, &QQuickItem::enabledChanged, this, &QQuick3DItem2D::updatePicking);
     connect(item, &QQuickItem::visibleChanged, this, &QQuick3DItem2D::updatePicking);
     m_sourceItems.append(item);
@@ -92,6 +92,8 @@ void QQuick3DItem2D::addChildItem(QQuickItem *item)
 void QQuick3DItem2D::removeChildItem(QQuickItem *item)
 {
     m_sourceItems.removeOne(item);
+    if (item)
+        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::ChangeType::Destroyed);
     if (m_sourceItems.isEmpty())
         emit allChildrenRemoved();
     else
@@ -103,11 +105,9 @@ QQuickItem *QQuick3DItem2D::contentItem() const
     return m_contentItem;
 }
 
-void QQuick3DItem2D::sourceItemDestroyed(QObject *item)
+void QQuick3DItem2D::itemDestroyed(QQuickItem *item)
 {
-    disconnect(item, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
-    auto quickItem = static_cast<QQuickItem*>(item);
-    removeChildItem(quickItem);
+    removeChildItem(item);
 }
 
 void QQuick3DItem2D::invalidated()
@@ -174,7 +174,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
                 this,
                 [this]() {
                     auto itemNode = static_cast<QSSGRenderItem2D *>(QQuick3DObjectPrivate::get(this)->spatialNode);
-                    if (itemNode) {
+                    if (itemNode && itemNode->m_rp) {
                         itemNode->m_rp->deleteLater();
                         itemNode->m_rp = nullptr;
                     }

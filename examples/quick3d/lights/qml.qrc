@@ -7,5 +7,6 @@
         <file>CustomCheckBox.qml</file>
         <file>white.png</file>
         <file>custom.vert</file>
+        <file>icon_settings.png</file>
     </qresource>
 </RCC>
