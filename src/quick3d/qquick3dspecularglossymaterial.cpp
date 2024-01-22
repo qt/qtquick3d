@@ -66,18 +66,15 @@ QT_BEGIN_NAMESPACE
 
     The default value is \c SpecularGlossyMaterial.FragmentLighting
 
-    When using \c SpecularGlossyMaterial.FragmentLighting, diffuse and specular lighting is
+    \value SpecularGlossyMaterial.FragmentLighting Diffuse and specular lighting is
     calculated for each rendered pixel. Certain effects (such as a Fresnel or normal map) require
     \c SpecularGlossyMaterial.FragmentLighting to work.
 
-    When using \c SpecularGlossyMaterial.NoLighting no lighting is calculated. This
+    \value SpecularGlossyMaterial.NoLighting No lighting is calculated. This
     mode is (predictably) very fast, and is quite effective when image maps are
     used that you do not need to be shaded by lighting. All other shading
     properties except albedo values, alpha values, and vertex colors will be
     ignored.
-
-    \value SpecularGlossyMaterial.NoLighting
-    \value SpecularGlossyMaterial.FragmentLighting
 */
 
 /*!
