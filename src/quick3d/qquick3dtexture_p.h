@@ -92,7 +92,7 @@ public:
     MappingMode mappingMode() const;
     TilingMode horizontalTiling() const;
     TilingMode verticalTiling() const;
-    TilingMode depthTiling() const;
+    Q_REVISION(6, 7) TilingMode depthTiling() const;
     float rotationUV() const;
     float positionU() const;
     float positionV() const;
@@ -123,7 +123,7 @@ public Q_SLOTS:
     void setMappingMode(QQuick3DTexture::MappingMode mappingMode);
     void setHorizontalTiling(QQuick3DTexture::TilingMode tilingModeHorizontal);
     void setVerticalTiling(QQuick3DTexture::TilingMode tilingModeVertical);
-    void setDepthTiling(QQuick3DTexture::TilingMode tilingModeDepth);
+    Q_REVISION(6, 7) void setDepthTiling(QQuick3DTexture::TilingMode tilingModeDepth);
     void setRotationUV(float rotationUV);
     void setPositionU(float positionU);
     void setPositionV(float positionV);
@@ -147,7 +147,7 @@ Q_SIGNALS:
     void mappingModeChanged();
     void horizontalTilingChanged();
     void verticalTilingChanged();
-    void depthTilingChanged();
+    Q_REVISION(6, 7) void depthTilingChanged();
     void rotationUVChanged();
     void positionUChanged();
     void positionVChanged();
@@ -162,7 +162,7 @@ Q_SIGNALS:
     void textureDataChanged();
     void generateMipmapsChanged();
     void autoOrientationChanged();
-    void textureProviderChanged();
+    Q_REVISION(6, 7) void textureProviderChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
