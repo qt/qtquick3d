@@ -79,7 +79,7 @@ bool OutlineRenderer::prepareData(QSSGFrameData &data)
     stencilPrepResult = QSSGRenderHelpers::commit(data, stencilPrepContext, stencilRenderables);
     outlinePrepResult = QSSGRenderHelpers::commit(data, outlinePrepContext, outlineRenderables);
 
-    // If there's someting to be rendered we return true.
+    // If there's something to be rendered we return true.
     const bool dataReady = (stencilPrepResult != QSSGPrepResultId::Invalid && outlinePrepResult != QSSGPrepResultId::Invalid);
 
     return dataReady;

@@ -13,8 +13,8 @@
 
     The first step is to implement the front-end item by creating a new \l {QQuick3DRenderExtension}{Render Extension} item which exposes
     the properties needed to QML.
-    In this example we expose 3 properties, the \c {target model} we want to the outline to be applied to, the \c material we want to use
-    for the outline, and the scale we want to apply for the outline.
+    In this example we expose 3 properties, a \c target which takes the \l {QtQuick3D::Model}{model} we want to outline,
+    the \l {QtQuick3D::Material}{material} we want to use for the outline, and a \c scale value for adjusting the size of the outline.
 
     \snippet extensions/stenciloutline/outlinerenderextension.h extension front
 
@@ -38,9 +38,19 @@
 
     \snippet extensions/stenciloutline/outlinerenderextension.cpp extension back_prepareRender
 
-    When the engine is ready to record the rendering calls for our models then QSSGRenderExtension::render() will be called.
-    In this case, we can simply just just call QSSGRenderHelpers::renderRenderables() for the two models, they will then
-    be rendered just the same way as QtQuick3D would have done internally, only now with our changes.
+    When the engine is ready to record the rendering calls for our extension it wll call the virtual QSSGRenderExtension::render() function.
+    In this example we can simply call QSSGRenderHelpers::renderRenderables() for the two models, they will then
+    be rendered just the same way as QtQuick3D would have done internally, only this time with our settings.
 
     \snippet extensions/stenciloutline/outlinerenderextension.cpp extension back_render
+
+    The \c OutlineRenderExtension is made active by adding it to the \l {QtQuick3D::View3D}{View3D's}
+    \l {QtQuick3D::View3D::extensions}{extensions} property.
+
+    \snippet extensions/stenciloutline/Main.qml 1
+
+    Now when a \c model is picked we just need to set the picked \c model as the \c target for the \c OutlineRenderExtension
+    to have it rendered with an outline.
+
+    \snippet extensions/stenciloutline/Main.qml 2
  */

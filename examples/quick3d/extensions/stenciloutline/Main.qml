@@ -52,17 +52,17 @@ ApplicationWindow {
         }
     }
 
+    //! [1]
     View3D {
         id: view3d
         anchors.topMargin: 100
         anchors.fill: parent
-        //! [extension property]
         extensions: [ OutlineRenderExtension {
                 id: outlineRenderer
                 outlineMaterial: outlineMaterial
             }
         ]
-        //! [extension property]
+    //! [1]
 
         PerspectiveCamera {
             id: camera
@@ -111,6 +111,7 @@ ApplicationWindow {
         }
     }
 
+//! [2]
     MouseArea {
         anchors.fill: view3d
         onClicked: (mouse)=> {
@@ -118,4 +119,5 @@ ApplicationWindow {
               outlineRenderer.target = hit.objectHit
         }
     }
+//! [2]
 }
