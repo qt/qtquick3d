@@ -218,8 +218,6 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
         res/rhishaders/orthoshadowblurx.frag
         res/rhishaders/orthoshadowblury.vert
         res/rhishaders/orthoshadowblury.frag
-        res/rhishaders/texturedquad.vert
-        res/rhishaders/texturedquad.frag
         res/rhishaders/environmentmap.vert
         res/rhishaders/environmentmap.frag
         res/rhishaders/debugobject.vert

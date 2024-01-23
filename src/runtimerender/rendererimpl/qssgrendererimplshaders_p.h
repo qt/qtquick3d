@@ -97,7 +97,6 @@ public:
     QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
     QSSGRhiShaderPipelinePtr getRhiSupersampleResolveShader();
     QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();
-    QSSGRhiShaderPipelinePtr getRhiTexturedQuadShader();
     QSSGRhiShaderPipelinePtr getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel);
     QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader();
     QSSGRhiShaderPipelinePtr getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);

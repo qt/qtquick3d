@@ -112,11 +112,6 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiProgressiveAAShader()
     return getBuiltinRhiShader(QByteArrayLiteral("progressiveaa"), m_progressiveAARhiShader);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiTexturedQuadShader()
-{
-    return getBuiltinRhiShader(QByteArrayLiteral("texturedquad"), m_texturedQuadRhiShader);
-}
-
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel)
 {
     switch (featureLevel) {
