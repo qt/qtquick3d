@@ -23,6 +23,7 @@
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
+#include <QtQuick3D/private/qquick3dpickresult_p.h>
 
 #include <QtQuick3DXr/private/qopenxrmanager_p.h>
 #include <QtQuick3DXr/private/qopenxractor_p.h>
@@ -42,7 +43,6 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
     Q_PROPERTY(QOpenXRHandInput* leftHandInput READ leftHandInput CONSTANT)
     Q_PROPERTY(QOpenXRHandInput* rightHandInput READ rightHandInput CONSTANT)
     Q_PROPERTY(QOpenXRGamepadInput* gamepadInput READ gamepadInput CONSTANT)
-    Q_PROPERTY(QQuick3DViewport* view3d READ view3d CONSTANT)
     Q_PROPERTY(bool passthroughSupported READ isPassthroughSupported CONSTANT)
     Q_PROPERTY(bool enablePassthrough READ enablePassthrough WRITE setEnablePassthrough NOTIFY enablePassthroughChanged FINAL)
     Q_PROPERTY(QOpenXRRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
@@ -53,20 +53,22 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
 public:
     explicit QOpenXRView();
     ~QOpenXRView();
+
     QOpenXRActor* xrActor() const;
     QQuick3DSceneEnvironment *environment() const;
     QOpenXRHandInput *leftHandInput() const;
     QOpenXRHandInput *rightHandInput() const;
     QOpenXRGamepadInput *gamepadInput() const;
-    QQuick3DViewport *view3d() const;
+
     bool isPassthroughSupported() const;
     bool enablePassthrough() const;
+
     QOpenXRRuntimeInfo *runtimeInfo() const;
+
     bool isQuitOnSessionEndEnabled() const;
 
-    // Internal
-    QOpenXRInputManager *inputManager() const;
-    bool isBeingDestroyed() const { return m_inDestructor; }
+    Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction) const;
+    Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;
 
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
@@ -87,10 +89,15 @@ Q_SIGNALS:
     void quitOnSessionEndChanged();
 
 private:
+    // The XrView does not expose the View3D in its public interface. This is intentional.
+    QQuick3DViewport *view3d() const;
+
     QOpenXRManager m_openXRManager;
     mutable QOpenXRRuntimeInfo m_openXRRuntimeInfo;
     bool m_quitOnSessionEnd = true;
     bool m_inDestructor = false;
+
+    friend class QOpenXRVirtualMouse;
 };
 
 QT_END_NAMESPACE

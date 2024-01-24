@@ -87,11 +87,6 @@ QOpenXRRuntimeInfo *QOpenXRView::runtimeInfo() const
     return &m_openXRRuntimeInfo;
 }
 
-QOpenXRInputManager *QOpenXRView::inputManager() const
-{
-    return m_openXRManager.m_inputManager;
-}
-
 void QOpenXRView::setEnvironment(QQuick3DSceneEnvironment *environment)
 {
     if (!m_openXRManager.m_vrViewport)
@@ -184,6 +179,41 @@ void QOpenXRView::handleClearColorChanged()
         else if (env->backgroundMode() == QQuick3DSceneEnvironment::Transparent)
             m_openXRManager.m_quickWindow->setColor(Qt::transparent);
     }
+}
+
+/*!
+    \qmlmethod PickResult XrView::rayPick(vector3d origin, vector3d direction)
+
+    This method will "shoot" a ray into the scene starting at \a origin and in
+    \a direction and return information about the nearest intersection with an
+    object in the scene.
+
+    This can, for instance, be called with the position and forward vector of
+    any object in a scene to see what object is in front of an item. This
+    makes it possible to do picking from any point in the scene.
+ */
+QQuick3DPickResult QOpenXRView::rayPick(const QVector3D &origin, const QVector3D &direction) const
+{
+    return m_openXRManager.m_vrViewport->rayPick(origin, direction);
+}
+
+/*!
+    \qmlmethod List<PickResult> XrView::rayPickAll(vector3d origin, vector3d direction)
+
+    This method will "shoot" a ray into the scene starting at \a origin and in
+    \a direction and return a list of information about the nearest intersections with
+    objects in the scene.
+    The list is presorted by distance from the origin along the direction
+    vector with the nearest intersections appearing first and the furthest
+    appearing last.
+
+    This can, for instance, be called with the position and forward vector of
+    any object in a scene to see what objects are in front of an item. This
+    makes it possible to do picking from any point in the scene.
+ */
+QList<QQuick3DPickResult> QOpenXRView::rayPickAll(const QVector3D &origin, const QVector3D &direction) const
+{
+    return m_openXRManager.m_vrViewport->rayPickAll(origin, direction);
 }
 
 QT_END_NAMESPACE

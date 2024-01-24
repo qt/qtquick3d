@@ -132,7 +132,7 @@ void QOpenXRVirtualMouse::moveEvent()
 
 void QOpenXRVirtualMouse::generateEvent(QEvent::Type type, Qt::MouseButton button)
 {
-    if (!m_view || !m_source || m_view->isBeingDestroyed())
+    if (!m_view || !m_source || m_view->m_inDestructor)
         return;
 
     // Get Ray
