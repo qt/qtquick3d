@@ -46,7 +46,7 @@ public:
     virtual QVector<XrSwapchainImageBaseHeader*> allocateSwapchainImages(int count,
                                                                          XrSwapchain swapchain) = 0;
 
-    virtual QQuickRenderTarget renderTarget(const XrCompositionLayerProjectionView &layerView,
+    virtual QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage,
                                             const XrSwapchainImageBaseHeader *swapchainImage,
                                             quint64 swapchainFormat,
                                             int arraySize) const = 0;

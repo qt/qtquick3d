@@ -30,13 +30,12 @@ class Q_QUICK3DXR_EXPORT QOpenXRActor : public QQuick3DNode
     Q_OBJECT
     Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
-    Q_PROPERTY(QQuick3DNode *cameraNode READ rightCamera NOTIFY rightCameraChanged)
     QML_NAMED_ELEMENT(XrActor)
 
 public:
     QOpenXRActor();
-    QOpenXRCamera *leftCamera() const;
-    QOpenXRCamera *rightCamera() const;
+
+    QOpenXRCamera *camera(int index) const;
 
     float clipNear() const;
     void setClipNear(float newClipNear);
@@ -46,13 +45,10 @@ public:
 
 signals:
     void clipNearChanged();
-
     void clipFarChanged();
-    void rightCameraChanged();
 
 private:
-    QOpenXRCamera *m_leftEyeCamera = nullptr;
-    QOpenXRCamera *m_rightEyeCamera = nullptr;
+    QVarLengthArray<QOpenXRCamera *, 2> m_cameras;
     float m_clipNear = 1.0f;
     float m_clipFar = 10000.0f;
 };

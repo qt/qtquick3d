@@ -159,7 +159,10 @@ Q_SIGNALS:
     Q_REVISION(6, 7) void effectiveTextureSizeChanged();
 
 private:
+    void setCameras(QQuick3DCamera **firstCamera, int count);
+
     friend class QQuick3DExtensionListHelper;
+    friend class QOpenXRManager;
 
     Q_DISABLE_COPY(QQuick3DViewport)
     struct SubsceneInfo {

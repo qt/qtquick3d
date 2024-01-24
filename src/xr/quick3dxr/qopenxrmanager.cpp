@@ -69,11 +69,6 @@ MAKE_TO_STRING_FUNC(XrSessionState);
 MAKE_TO_STRING_FUNC(XrResult);
 //MAKE_TO_STRING_FUNC(XrFormFactor);
 
-namespace Side {
-const int LEFT = 0;
-const int RIGHT = 1;
-}
-
 QOpenXRManager::QOpenXRManager(QObject *parent)
     : QObject(parent)
 {
@@ -1096,33 +1091,31 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
             const XrSwapchainImageBaseHeader* const swapchainImage =
                 m_swapchainImages[swapchain.handle][swapchainImageIndex];
 
+            // First update both cameras with the latest view information and
+            // then set them on the viewport (since this is going to be
+            // multiview rendering).
 #if 0
-            // ### to be adapted, see doRender notes below
-            // First update both cameras with the latest view information (this also will set the active camera as well, but ignore this)
             for (uint32_t i = 0; i < viewCountOutput; i++) {
                 // subImage.swapchain and imageArrayIndex are already set and correct
                 m_projectionLayerViews[i].pose = m_views[i].pose;
                 m_projectionLayerViews[i].fov = m_views[i].fov;
-                updateQuickSceneEye(i, m_projectionLayerViews[i]);
             }
+            updateCameraMultiview(0, viewCountOutput);
 #else
-            // ### for now, for testing, only use the left eye camera effectively
+            // ### multiview - remove this; for now, for testing, only uses one camera effectively
             for (uint32_t i = 0; i < viewCountOutput; i++) {
                 // subImage.swapchain and imageArrayIndex are already set and correct
                 m_projectionLayerViews[i].pose = m_views[0].pose;
                 m_projectionLayerViews[i].fov = m_views[0].fov;
-                updateQuickSceneEye(i, m_projectionLayerViews[i]);
+                updateCameraNonMultiview(i, m_projectionLayerViews[i]);
             }
 #endif
 
-            // Perform the render
-            // ### Ok so here is where things get... wrong
-            // First the doRender function needs to be aware of what we are doing. We pass the
-            // ProjectionLayerView for an eye, but mostly just to know the dimensions of the render
-            // target so we can setup the size of the viewport we are rendering.  The issue though is that
-            // we need a way for there to be N number of cameras, but only a single render target, where as right now
-            // we just set 1 of the cameras as the active camera, and render the viewport...
-            doRender(m_projectionLayerViews[0], swapchainImage);
+            // Perform the rendering. In multiview mode it is done just once,
+            // targeting all the views (outputting simultaneously to all texture
+            // array layers). The subImage dimensions are the same, that's why
+            // passing in the first layerView's subImage works.
+            doRender(m_projectionLayerViews[0].subImage, swapchainImage);
 
             // release the swapchain image array
             XrSwapchainImageReleaseInfo releaseInfo{};
@@ -1153,9 +1146,9 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
                 m_projectionLayerViews[i].pose = m_views[i].pose;
                 m_projectionLayerViews[i].fov = m_views[i].fov;
 
-                updateQuickSceneEye(i, m_projectionLayerViews[i]);
+                updateCameraNonMultiview(i, m_projectionLayerViews[i]);
 
-                doRender(m_projectionLayerViews[i], swapchainImage);
+                doRender(m_projectionLayerViews[i].subImage, swapchainImage);
 
                 XrSwapchainImageReleaseInfo releaseInfo{};
                 releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
@@ -1178,24 +1171,23 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
     return false;
 }
 
-void QOpenXRManager::doRender(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage)
+void QOpenXRManager::doRender(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage)
 {
     const int arraySize = m_multiviewRendering ? m_swapchains[0].arraySize : 1;
-    m_quickWindow->setRenderTarget(m_graphics->renderTarget(layerView, swapchainImage, m_colorSwapchainFormat, arraySize));
+    m_quickWindow->setRenderTarget(m_graphics->renderTarget(subImage, swapchainImage, m_colorSwapchainFormat, arraySize));
 
     m_quickWindow->setGeometry(0,
                                0,
-                               layerView.subImage.imageRect.extent.width,
-                               layerView.subImage.imageRect.extent.height);
-    m_quickWindow->contentItem()->setSize(QSizeF(layerView.subImage.imageRect.extent.width,
-                                                 layerView.subImage.imageRect.extent.height));
+                               subImage.imageRect.extent.width,
+                               subImage.imageRect.extent.height);
+    m_quickWindow->contentItem()->setSize(QSizeF(subImage.imageRect.extent.width,
+                                                 subImage.imageRect.extent.height));
 
     m_renderControl->polishItems();
     m_renderControl->beginFrame();
     m_renderControl->sync();
     m_renderControl->render();
     m_renderControl->endFrame();
-
 }
 
 void QOpenXRManager::preSetupQuickScene()
@@ -1235,37 +1227,46 @@ bool QOpenXRManager::setupQuickScene()
     return true;
 }
 
-void QOpenXRManager::updateQuickSceneEye(int eye, const XrCompositionLayerProjectionView &layerView)
+void QOpenXRManager::updateCameraHelper(QOpenXRCamera *camera, const XrCompositionLayerProjectionView &layerView)
 {
-    // Set the active camera for the view to the camera for the eye value
-    // This is set right before updateing/rendering for that eye's view
-    //const auto eyeCamera = m_eyeCameras[eye];
-    QOpenXRCamera *eyeCamera = nullptr;
-    if (m_xrActor) {
-        if (eye == Side::LEFT)
-            eyeCamera = m_xrActor->leftCamera();
-        else if (eye == Side::RIGHT)
-            eyeCamera = m_xrActor->rightCamera();
-    }
+    camera->setAngleLeft(layerView.fov.angleLeft);
+    camera->setAngleRight(layerView.fov.angleRight);
+    camera->setAngleUp(layerView.fov.angleUp);
+    camera->setAngleDown(layerView.fov.angleDown);
 
-    if (eyeCamera) {
+    camera->setPosition(QVector3D(layerView.pose.position.x,
+                                  layerView.pose.position.y,
+                                  layerView.pose.position.z) * 100.0f); // convert m to cm
 
-        eyeCamera->setAngleLeft(layerView.fov.angleLeft);
-        eyeCamera->setAngleRight(layerView.fov.angleRight);
-        eyeCamera->setAngleUp(layerView.fov.angleUp);
-        eyeCamera->setAngleDown(layerView.fov.angleDown);
+    camera->setRotation(QQuaternion(layerView.pose.orientation.w,
+                                    layerView.pose.orientation.x,
+                                    layerView.pose.orientation.y,
+                                    layerView.pose.orientation.z));
+}
 
-        eyeCamera->setPosition(QVector3D(layerView.pose.position.x,
-                                         layerView.pose.position.y,
-                                         layerView.pose.position.z) * 100.0f); // convert m to cm
+// Set the active camera for the view to the camera for the eye value
+// This is set right before updateing/rendering for that eye's view
+void QOpenXRManager::updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView)
+{
+    QOpenXRCamera *eyeCamera = m_xrActor ? m_xrActor->camera(eye) : nullptr;
 
-        eyeCamera->setRotation(QQuaternion(layerView.pose.orientation.w,
-                                           layerView.pose.orientation.x,
-                                           layerView.pose.orientation.y,
-                                           layerView.pose.orientation.z));
-    }
+    if (eyeCamera)
+        updateCameraHelper(eyeCamera, layerView);
 
     m_vrViewport->setCamera(eyeCamera);
+}
+
+// The multiview version sets multiple cameras.
+void QOpenXRManager::updateCameraMultiview(int projectionLayerViewStartIndex, int count)
+{
+    QVarLengthArray<QQuick3DCamera *, 4> cameras;
+    for (int i = projectionLayerViewStartIndex; i < projectionLayerViewStartIndex + count; ++i) {
+        QOpenXRCamera *eyeCamera = m_xrActor ? m_xrActor->camera(i) : nullptr;
+        if (eyeCamera)
+            updateCameraHelper(eyeCamera, m_projectionLayerViews[i]);
+        cameras.append(eyeCamera);
+    }
+    m_vrViewport->setCameras(cameras.data(), cameras.count());
 }
 
 void QOpenXRManager::checkActor()

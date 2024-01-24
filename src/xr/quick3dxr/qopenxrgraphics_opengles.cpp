@@ -106,18 +106,18 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsOpenGLES::allocateSwapchainI
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsOpenGLES::renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
+QQuickRenderTarget QOpenXRGraphicsOpenGLES::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
 {
     const uint32_t colorTexture = reinterpret_cast<const XrSwapchainImageOpenGLESKHR*>(swapchainImage)->image;
     if (arraySize <= 1) {
         return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
-                                                     QSize(layerView.subImage.imageRect.extent.width,
-                                                           layerView.subImage.imageRect.extent.height));
+                                                     QSize(subImage.imageRect.extent.width,
+                                                           subImage.imageRect.extent.height));
     } else {
         return QQuickRenderTarget::fromOpenGLTextureMultiView(colorTexture,
                                                               swapchainFormat,
-                                                              QSize(layerView.subImage.imageRect.extent.width,
-                                                                    layerView.subImage.imageRect.extent.height),
+                                                              QSize(subImage.imageRect.extent.width,
+                                                                    subImage.imageRect.extent.height),
                                                               1,
                                                               arraySize);
     }

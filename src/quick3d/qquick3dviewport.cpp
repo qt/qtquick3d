@@ -690,6 +690,13 @@ void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
     update();
 }
 
+void QQuick3DViewport::setCameras(QQuick3DCamera **firstCamera, int count)
+{
+    // ### multiview
+    Q_UNUSED(firstCamera);
+    Q_UNUSED(count);
+}
+
 void QQuick3DViewport::setEnvironment(QQuick3DSceneEnvironment *environment)
 {
     if (m_environment == environment)

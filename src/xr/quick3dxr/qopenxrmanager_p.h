@@ -99,12 +99,14 @@ private:
     bool renderLayer(XrTime predictedDisplayTime,
                      XrDuration predictedDisplayPeriod,
                      XrCompositionLayerProjection &layer);
-    void doRender(const XrCompositionLayerProjectionView& layerView,
-                  const XrSwapchainImageBaseHeader* swapchainImage);
+    void doRender(const XrSwapchainSubImage &subImage,
+                  const XrSwapchainImageBaseHeader *swapchainImage);
 
     void preSetupQuickScene();
     bool setupQuickScene();
-    void updateQuickSceneEye(int eye, const XrCompositionLayerProjectionView &layerView);
+    void updateCameraHelper(QOpenXRCamera *camera, const XrCompositionLayerProjectionView &layerView);
+    void updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView);
+    void updateCameraMultiview(int projectionLayerViewStartIndex, int count);
     void checkActor();
 
     bool supportsPassthrough() const;

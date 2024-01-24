@@ -7,24 +7,20 @@ QT_BEGIN_NAMESPACE
 
 QOpenXRActor::QOpenXRActor()
 {
-    m_leftEyeCamera = new QOpenXRCamera();
-    m_leftEyeCamera->setParentItem(this);
-    m_leftEyeCamera->setParent(this);
+    QOpenXRCamera *leftEyeCamera = new QOpenXRCamera;
+    leftEyeCamera->setParentItem(this);
+    leftEyeCamera->setParent(this);
+    m_cameras.append(leftEyeCamera);
 
-    m_rightEyeCamera = new QOpenXRCamera();
-    m_rightEyeCamera->setParentItem(this);
-    m_rightEyeCamera->setParent(this);
-    emit rightCameraChanged();
+    QOpenXRCamera *rightEyeCamera = new QOpenXRCamera;
+    rightEyeCamera->setParentItem(this);
+    rightEyeCamera->setParent(this);
+    m_cameras.append(rightEyeCamera);
 }
 
-QOpenXRCamera *QOpenXRActor::leftCamera() const
+QOpenXRCamera *QOpenXRActor::camera(int index) const
 {
-    return m_leftEyeCamera;
-}
-
-QOpenXRCamera *QOpenXRActor::rightCamera() const
-{
-    return m_rightEyeCamera;
+    return m_cameras[index];
 }
 
 float QOpenXRActor::clipNear() const
@@ -37,8 +33,8 @@ void QOpenXRActor::setClipNear(float newClipNear)
     if (qFuzzyCompare(m_clipNear, newClipNear))
         return;
     m_clipNear = newClipNear;
-    m_leftEyeCamera->setClipNear(newClipNear);
-    m_rightEyeCamera->setClipNear(newClipNear);
+    for (QOpenXRCamera *camera : std::as_const(m_cameras))
+        camera->setClipNear(newClipNear);
     emit clipNearChanged();
 }
 
@@ -52,8 +48,8 @@ void QOpenXRActor::setClipFar(float newClipFar)
     if (qFuzzyCompare(m_clipFar, newClipFar))
         return;
     m_clipFar = newClipFar;
-    m_leftEyeCamera->setClipFar(newClipFar);
-    m_rightEyeCamera->setClipFar(newClipFar);
+    for (QOpenXRCamera *camera : std::as_const(m_cameras))
+        camera->setClipFar(newClipFar);
     emit clipFarChanged();
 }
 

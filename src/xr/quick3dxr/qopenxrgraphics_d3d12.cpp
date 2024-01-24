@@ -93,7 +93,7 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsD3D12::allocateSwapchainImag
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
+QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
 {
     ID3D12Resource* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D12KHR*>(swapchainImage)->texture;
 
@@ -112,14 +112,14 @@ QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrCompositionLayerPr
         return QQuickRenderTarget::fromD3D12Texture(colorTexture,
                                                     0,
                                                     swapchainFormat,
-                                                    QSize(layerView.subImage.imageRect.extent.width,
-                                                        layerView.subImage.imageRect.extent.height));
+                                                    QSize(subImage.imageRect.extent.width,
+                                                          subImage.imageRect.extent.height));
     } else {
         return QQuickRenderTarget::fromD3D12TextureMultiView(colorTexture,
                                                              0,
                                                              swapchainFormat,
-                                                             QSize(layerView.subImage.imageRect.extent.width,
-                                                                   layerView.subImage.imageRect.extent.height),
+                                                             QSize(subImage.imageRect.extent.width,
+                                                                   subImage.imageRect.extent.height),
                                                              1,
                                                              arraySize);
     }

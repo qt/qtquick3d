@@ -93,7 +93,7 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsD3D11::allocateSwapchainImag
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrCompositionLayerProjectionView &layerView, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
+QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
 {
     Q_UNUSED(swapchainFormat)
     ID3D11Texture2D* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D11KHR*>(swapchainImage)->texture;
@@ -102,8 +102,8 @@ QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrCompositionLayerPr
         qWarning("Qt Quick 3D XR: The D3D11 integration has no support for multiview");
 
     return QQuickRenderTarget::fromD3D11Texture(colorTexture,
-                                                QSize(layerView.subImage.imageRect.extent.width,
-                                                      layerView.subImage.imageRect.extent.height));
+                                                QSize(subImage.imageRect.extent.width,
+                                                      subImage.imageRect.extent.height));
 
 }
 
