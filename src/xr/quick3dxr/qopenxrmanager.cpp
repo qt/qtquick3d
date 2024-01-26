@@ -389,8 +389,14 @@ void QOpenXRManager::checkXrExtensions(const char *layerName, int indent)
 
     const QByteArray indentStr(indent, ' ');
     qDebug("%sAvailable Extensions: (%d)", indentStr.data(), instanceExtensionCount);
-    for (const XrExtensionProperties& extension : extensions)
-        qDebug("%s  Name=%s SpecVersion=%d", indentStr.data(), extension.extensionName, extension.extensionVersion);
+    for (const XrExtensionProperties& extension : extensions) {
+        qDebug("%s  Name=%s Version=%d.%d.%d",
+               indentStr.data(),
+               extension.extensionName,
+               XR_VERSION_MAJOR(extension.extensionVersion),
+               XR_VERSION_MINOR(extension.extensionVersion),
+               XR_VERSION_PATCH(extension.extensionVersion));
+    }
 }
 
 void QOpenXRManager::checkXrLayers()
@@ -408,9 +414,11 @@ void QOpenXRManager::checkXrLayers()
 
     qDebug("Available Layers: (%d)", layerCount);
     for (const XrApiLayerProperties& layer : layers) {
-        qDebug("  Name=%s SpecVersion=%llu LayerVersion=%d.%d.%d Description=%s",
+        qDebug("  Name=%s SpecVersion=%d.%d.%d LayerVersion=%d.%d.%d Description=%s",
                layer.layerName,
-               static_cast<long long unsigned int>(layer.specVersion),
+               XR_VERSION_MAJOR(layer.specVersion),
+               XR_VERSION_MINOR(layer.specVersion),
+               XR_VERSION_PATCH(layer.specVersion),
                XR_VERSION_MAJOR(layer.layerVersion),
                XR_VERSION_MINOR(layer.layerVersion),
                XR_VERSION_PATCH(layer.layerVersion),
