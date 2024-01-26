@@ -78,6 +78,8 @@ private:
     XrResult createXrInstance();
     void checkXrInstance();
 
+    void setupDebugMessenger();
+
     XrResult initializeSystem();
 
     void checkViewConfiguration();
@@ -135,6 +137,11 @@ private:
     XrViewConfigurationType m_viewConfigType{XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO};
     XrEnvironmentBlendMode m_environmentBlendMode{XR_ENVIRONMENT_BLEND_MODE_OPAQUE};
     XrSystemId m_systemId{XR_NULL_SYSTEM_ID};
+
+#ifdef XR_EXT_debug_utils
+    XrDebugUtilsMessengerEXT m_debugMessenger = XR_NULL_HANDLE;
+    PFN_xrDestroyDebugUtilsMessengerEXT m_xrDestroyDebugUtilsMessengerEXT = nullptr;
+#endif
 
     QAbstractOpenXRGraphics *m_graphics = nullptr;
 

@@ -98,7 +98,26 @@ bool isExtensionSupported(const char *extensionName, const QVector<XrExtensionPr
     }
     return false;
 }
+
+// OpenXR's debug messenger stuff is a carbon copy of the Vulkan one, hence we
+// replicate the same behavior on Qt side as well, i.e. route by default
+// everything to qDebug. Filtering or further control (that is supported with
+// the C++ APIS in the QVulkan* stuff) is not provided here for now.
+#ifdef XR_EXT_debug_utils
+XRAPI_ATTR XrBool32 XRAPI_CALL defaultDebugCallbackFunc(XrDebugUtilsMessageSeverityFlagsEXT messageSeverity,
+                                                        XrDebugUtilsMessageTypeFlagsEXT messageType,
+                                                        const XrDebugUtilsMessengerCallbackDataEXT *callbackData,
+                                                        void *userData)
+{
+    Q_UNUSED(messageSeverity);
+    Q_UNUSED(messageType);
+    QOpenXRManager *self = static_cast<QOpenXRManager *>(userData);
+    qDebug("xrDebug [QOpenXRManager %p] %s", self, callbackData->message);
+    return XR_FALSE;
 }
+#endif
+
+} // namespace
 
 void QOpenXRManager::setErrorString(XrResult result, const char *callName)
 {
@@ -202,6 +221,9 @@ bool QOpenXRManager::initialize()
         checkXrInstance();
     }
 
+    // Catch OpenXR runtime messages via XR_EXT_debug_utils and route them to qDebug
+    setupDebugMessenger();
+
     // Load System
     result = initializeSystem();
     if (result != XR_SUCCESS) {
@@ -284,6 +306,14 @@ void QOpenXRManager::teardown()
     }
 
     xrDestroySession(m_session);
+
+#ifdef XR_EXT_debug_utils
+    if (m_debugMessenger) {
+        m_xrDestroyDebugUtilsMessengerEXT(m_debugMessenger);
+        m_debugMessenger = XR_NULL_HANDLE;
+    }
+#endif
+
     xrDestroyInstance(m_instance);
 }
 
@@ -401,6 +431,9 @@ XrResult QOpenXRManager::createXrInstance()
     if (m_graphics->isExtensionSupported(extensionProperties))
         enabledExtensions.append(m_graphics->extensionName());
 
+    if (isExtensionSupported("XR_EXT_debug_utils", extensionProperties))
+        enabledExtensions.append("XR_EXT_debug_utils");
+
     if (isExtensionSupported(XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME, extensionProperties))
         enabledExtensions.append(XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME);
 
@@ -500,6 +533,42 @@ void QOpenXRManager::checkXrInstance()
            m_runtimeVersion.majorVersion(),
            m_runtimeVersion.minorVersion(),
            m_runtimeVersion.microVersion());
+}
+
+void QOpenXRManager::setupDebugMessenger()
+{
+    if (!m_enabledExtensions.contains("XR_EXT_debug_utils")) {
+        qDebug("Quick 3D XR: No debug utils extension, message redirection not set up");
+        return;
+    }
+
+#ifdef XR_EXT_debug_utils
+    PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT = nullptr;
+    checkXrResult(xrGetInstanceProcAddr(m_instance,
+                                        "xrCreateDebugUtilsMessengerEXT",
+                                        reinterpret_cast<PFN_xrVoidFunction *>(&xrCreateDebugUtilsMessengerEXT)));
+    if (!xrCreateDebugUtilsMessengerEXT)
+        return;
+
+    checkXrResult(xrGetInstanceProcAddr(m_instance,
+                                        "xrDestroyDebugUtilsMessengerEXT",
+                                        reinterpret_cast<PFN_xrVoidFunction *>(&m_xrDestroyDebugUtilsMessengerEXT)));
+
+    XrDebugUtilsMessengerCreateInfoEXT messengerInfo = {};
+    messengerInfo.type = XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    messengerInfo.messageSeverities = XR_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+            | XR_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    messengerInfo.messageTypes = XR_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+            | XR_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+            | XR_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
+            | XR_DEBUG_UTILS_MESSAGE_TYPE_CONFORMANCE_BIT_EXT;
+    messengerInfo.userCallback = defaultDebugCallbackFunc;
+    messengerInfo.userData = this;
+
+    XrResult err = xrCreateDebugUtilsMessengerEXT(m_instance, &messengerInfo, &m_debugMessenger);
+    if (!checkXrResult(err))
+        qWarning("Quick 3D XR: Failed to create debug report callback, OpenXR messages will not get redirected (%d)", err);
+#endif
 }
 
 XrResult QOpenXRManager::initializeSystem()
