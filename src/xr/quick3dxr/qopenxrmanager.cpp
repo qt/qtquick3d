@@ -270,8 +270,6 @@ bool QOpenXRManager::initialize()
         setupMetaQuestColorSpaces();
     if (m_displayRefreshRateExtensionSupported)
         setupMetaQuestRefreshRates();
-    if (m_passthroughSupported)
-        createMetaQuestPassthrough();
     if (m_spaceExtensionSupported)
         m_spaceExtension->initialize(m_instance, m_session);
 
@@ -1603,6 +1601,11 @@ void QOpenXRManager::setupMetaQuestFoveation()
 
 void QOpenXRManager::createMetaQuestPassthrough()
 {
+    // According to the validation layer 'flags' cannot be 0, thus we make sure
+    // this function is only ever called when we know passthrough is actually
+    // enabled by the app.
+    Q_ASSERT(m_passthroughSupported && m_enablePassthrough);
+
     qDebug() << Q_FUNC_INFO;
     PFN_xrCreatePassthroughFB pfnXrCreatePassthroughFBX = nullptr;
     checkXrResult(xrGetInstanceProcAddr(m_instance,
@@ -1611,8 +1614,7 @@ void QOpenXRManager::createMetaQuestPassthrough()
 
     XrPassthroughCreateInfoFB passthroughCreateInfo{};
     passthroughCreateInfo.type = XR_TYPE_PASSTHROUGH_CREATE_INFO_FB;
-    if (m_enablePassthrough)
-        passthroughCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
+    passthroughCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
 
     checkXrResult(pfnXrCreatePassthroughFBX(m_session, &passthroughCreateInfo, &m_passthroughFeature));
 }
