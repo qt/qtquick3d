@@ -192,6 +192,7 @@ private:
     QString m_errorString;
     QString m_runtimeName;
     QVersionNumber m_runtimeVersion;
+    QStringList m_enabledApiLayers;
     QStringList m_enabledExtensions;
 
 #if QT_CONFIG(graphicsframecapture)

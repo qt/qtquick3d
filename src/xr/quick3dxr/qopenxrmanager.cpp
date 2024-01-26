@@ -88,13 +88,23 @@ QOpenXRManager::~QOpenXRManager()
 }
 
 namespace  {
-bool isExtensionSupported(const char *extensionName, const QVector<XrExtensionProperties> &instanceExtensionProperties, uint32_t *extensionVersion = nullptr) {
+bool isExtensionSupported(const char *extensionName, const QVector<XrExtensionProperties> &instanceExtensionProperties, uint32_t *extensionVersion = nullptr)
+{
     for (const auto &extensionProperty : instanceExtensionProperties) {
         if (!strcmp(extensionName, extensionProperty.extensionName)) {
             if (extensionVersion)
                 *extensionVersion = extensionProperty.extensionVersion;
             return true;
         }
+    }
+    return false;
+}
+
+bool isApiLayerSupported(const char *layerName, const QVector<XrApiLayerProperties> &apiLayerProperties)
+{
+    for (const auto &prop : apiLayerProperties) {
+        if (!strcmp(layerName, prop.layerName))
+            return true;
     }
     return false;
 }
@@ -367,8 +377,10 @@ void QOpenXRManager::checkXrExtensions(const char *layerName, int indent)
     checkXrResult(xrEnumerateInstanceExtensionProperties(layerName, 0, &instanceExtensionCount, nullptr));
 
     QVector<XrExtensionProperties> extensions(instanceExtensionCount);
-    for (XrExtensionProperties& extension : extensions)
+    for (XrExtensionProperties& extension : extensions) {
         extension.type = XR_TYPE_EXTENSION_PROPERTIES;
+        extension.next = nullptr;
+    }
 
     checkXrResult(xrEnumerateInstanceExtensionProperties(layerName,
                                                          quint32(extensions.size()),
@@ -387,8 +399,10 @@ void QOpenXRManager::checkXrLayers()
     checkXrResult(xrEnumerateApiLayerProperties(0, &layerCount, nullptr));
 
     QVector<XrApiLayerProperties> layers(layerCount);
-    for (XrApiLayerProperties& layer : layers)
+    for (XrApiLayerProperties& layer : layers) {
         layer.type = XR_TYPE_API_LAYER_PROPERTIES;
+        layer.next = nullptr;
+    }
 
     checkXrResult(xrEnumerateApiLayerProperties(quint32(layers.size()), &layerCount, layers.data()));
 
@@ -415,11 +429,41 @@ XrResult QOpenXRManager::createXrInstance()
     appInfo.engineVersion = 6;
     appInfo.apiVersion = XR_CURRENT_API_VERSION;
 
+    // Query available API layers
+    uint32_t apiLayerCount = 0;
+    xrEnumerateApiLayerProperties(0, &apiLayerCount, nullptr);
+    QVector<XrApiLayerProperties> apiLayerProperties(apiLayerCount);
+    for (uint32_t i = 0; i < apiLayerCount; i++) {
+        apiLayerProperties[i].type = XR_TYPE_API_LAYER_PROPERTIES;
+        apiLayerProperties[i].next = nullptr;
+    }
+    xrEnumerateApiLayerProperties(apiLayerCount, &apiLayerCount, apiLayerProperties.data());
+
+    // Decide which API layers to enable
+    QVector<const char*> enabledApiLayers;
+
+    // Now it would be nice if we could use
+    // QQuickGraphicsConfiguration::isDebugLayerEnabled() but the quickWindow is
+    // nowhere yet, so just replicate the env.var. for now.
+    const bool wantsValidationLayer = qEnvironmentVariableIntValue("QSG_RHI_DEBUG_LAYER");
+    if (wantsValidationLayer) {
+        if (isApiLayerSupported("XR_APILAYER_LUNARG_core_validation", apiLayerProperties))
+            enabledApiLayers.append("XR_APILAYER_LUNARG_core_validation");
+        else
+            qDebug("OpenXR validation layer requested, but not available");
+    }
+
+    qDebug() << "Requesting to enable XR API layers:" << enabledApiLayers;
+
+    m_enabledApiLayers.clear();
+    for (const char *layer : enabledApiLayers)
+        m_enabledApiLayers.append(QString::fromLatin1(layer));
+
     // Load extensions
     uint32_t extensionCount = 0;
     xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr);
     QVector<XrExtensionProperties> extensionProperties(extensionCount);
-    for (uint16_t i = 0; i < extensionCount; i++) {
+    for (uint32_t i = 0; i < extensionCount; i++) {
         // we usually have to fill in the type (for validation) and set
         // next to NULL (or a pointer to an extension specific struct)
         extensionProperties[i].type = XR_TYPE_EXTENSION_PROPERTIES;
@@ -509,7 +553,8 @@ XrResult QOpenXRManager::createXrInstance()
     xrInstanceInfo.next = nullptr;
     xrInstanceInfo.createFlags = 0;
     xrInstanceInfo.applicationInfo = appInfo;
-    xrInstanceInfo.enabledApiLayerCount = 0;
+    xrInstanceInfo.enabledApiLayerCount = enabledApiLayers.count();
+    xrInstanceInfo.enabledApiLayerNames = enabledApiLayers.constData();
     xrInstanceInfo.enabledExtensionCount = enabledExtensions.count();
     xrInstanceInfo.enabledExtensionNames = enabledExtensions.constData();
 
