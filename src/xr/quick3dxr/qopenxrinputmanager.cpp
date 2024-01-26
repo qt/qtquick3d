@@ -415,6 +415,9 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
 
 void QOpenXRInputManager::teardown()
 {
+    if (!m_initialized)
+        return;
+
     m_initialized = false;
 
     if (m_actionSet != XR_NULL_HANDLE) {
