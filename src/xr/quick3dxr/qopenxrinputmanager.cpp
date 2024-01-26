@@ -420,13 +420,12 @@ void QOpenXRInputManager::teardown()
 
     m_initialized = false;
 
-    if (m_actionSet != XR_NULL_HANDLE) {
-        xrDestroySpace(m_handGripSpace[0]);
-        xrDestroySpace(m_handGripSpace[1]);
-        xrDestroySpace(m_handAimSpace[0]);
-        xrDestroySpace(m_handAimSpace[1]);
-        xrDestroyActionSet(m_actionSet);
-    }
+    xrDestroySpace(m_handGripSpace[0]);
+    xrDestroySpace(m_handGripSpace[1]);
+    xrDestroySpace(m_handAimSpace[0]);
+    xrDestroySpace(m_handAimSpace[1]);
+
+    destroyActions();
 
     m_instance = {XR_NULL_HANDLE};
     m_session = {XR_NULL_HANDLE};
@@ -891,6 +890,66 @@ void QOpenXRInputManager::setupActions()
                      &m_gamepadSubactionPath,
                      m_gamepadActions.hapticRightTriggerAction);
     }
+}
+
+void QOpenXRInputManager::destroyActions()
+{
+    xrDestroyAction(m_handActions.button1PressedAction);
+    xrDestroyAction(m_handActions.button1TouchedAction);
+    xrDestroyAction(m_handActions.button2PressedAction);
+    xrDestroyAction(m_handActions.button2TouchedAction);
+    xrDestroyAction(m_handActions.buttonMenuPressedAction);
+    xrDestroyAction(m_handActions.buttonMenuTouchedAction);
+    xrDestroyAction(m_handActions.buttonSystemPressedAction);
+    xrDestroyAction(m_handActions.buttonSystemTouchedAction);
+    xrDestroyAction(m_handActions.squeezeValueAction);
+    xrDestroyAction(m_handActions.squeezeForceAction);
+    xrDestroyAction(m_handActions.squeezePressedAction);
+    xrDestroyAction(m_handActions.triggerValueAction);
+    xrDestroyAction(m_handActions.triggerPressedAction);
+    xrDestroyAction(m_handActions.triggerTouchedAction);
+    xrDestroyAction(m_handActions.thumbstickXAction);
+    xrDestroyAction(m_handActions.thumbstickYAction);
+    xrDestroyAction(m_handActions.thumbstickPressedAction);
+    xrDestroyAction(m_handActions.thumbstickTouchedAction);
+    xrDestroyAction(m_handActions.thumbrestTouchedAction);
+    xrDestroyAction(m_handActions.trackpadXAction);
+    xrDestroyAction(m_handActions.trackpadYAction);
+    xrDestroyAction(m_handActions.trackpadForceAction);
+    xrDestroyAction(m_handActions.trackpadTouchedAction);
+    xrDestroyAction(m_handActions.trackpadPressedAction);
+    xrDestroyAction(m_handActions.gripPoseAction);
+    xrDestroyAction(m_handActions.aimPoseAction);
+    xrDestroyAction(m_handActions.hapticAction);
+
+    if (!m_disableGamepad) {
+        xrDestroyAction(m_gamepadActions.buttonMenuPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonViewPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonAPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonBPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonXPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonYPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonDownPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonRightPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonUpPressedAction);
+        xrDestroyAction(m_gamepadActions.buttonLeftPressedAction);
+        xrDestroyAction(m_gamepadActions.shoulderLeftPressedAction);
+        xrDestroyAction(m_gamepadActions.shoulderRightPressedAction);
+        xrDestroyAction(m_gamepadActions.thumbstickLeftPressedAction);
+        xrDestroyAction(m_gamepadActions.thumbstickRightPressedAction);
+        xrDestroyAction(m_gamepadActions.triggerLeftAction);
+        xrDestroyAction(m_gamepadActions.triggerRightAction);
+        xrDestroyAction(m_gamepadActions.thumbstickLeftXAction);
+        xrDestroyAction(m_gamepadActions.thumbstickLeftYAction);
+        xrDestroyAction(m_gamepadActions.thumbstickRightXAction);
+        xrDestroyAction(m_gamepadActions.thumbstickRightYAction);
+        xrDestroyAction(m_gamepadActions.hapticLeftAction);
+        xrDestroyAction(m_gamepadActions.hapticRightAction);
+        xrDestroyAction(m_gamepadActions.hapticLeftTriggerAction);
+        xrDestroyAction(m_gamepadActions.hapticRightTriggerAction);
+    }
+
+    xrDestroyActionSet(m_actionSet);
 }
 
 bool QOpenXRInputManager::checkXrResult(const XrResult &result)

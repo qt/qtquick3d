@@ -57,6 +57,7 @@ private:
     ~QOpenXRInputManager();
 
     void setupActions();
+    void destroyActions();
     bool checkXrResult(const XrResult &result);
     void setPath(XrPath &path, const char *pathString);
 
