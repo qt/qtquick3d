@@ -346,7 +346,7 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     }
 
     // XBox Controller
-    {
+    if (!m_disableGamepad) {
         XrPath xboxControllerProfile;
         setPath(xboxControllerProfile, "/interaction_profiles/microsoft/xbox_controller");
         std::vector<XrActionSuggestedBinding> bindings {{
@@ -374,7 +374,7 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
                 {m_gamepadActions.hapticRightAction, gamepadHapticRight},
                 {m_gamepadActions.hapticLeftTriggerAction, gamepadHapticLeftTrigger},
                 {m_gamepadActions.hapticRightTriggerAction, gamepadHapticRightTrigger},
-                                                        }};
+        }};
         XrInteractionProfileSuggestedBinding suggestedBindings{};
         suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
         suggestedBindings.interactionProfile = xboxControllerProfile;
