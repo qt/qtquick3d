@@ -12,6 +12,7 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 
 InputTab::InputTab(SettingsTab *settings, QWidget *parent) : QWidget(parent), settingsTab(settings)
 {
@@ -119,6 +120,15 @@ void InputTab::browseInput()
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setDirectory(lastInputPath);
+
+    const auto allDescs = QSSGAssetImportManager().getImporterPluginInfos();
+
+    QStringList nameFilters;
+    for (const auto &plugin : allDescs) {
+        nameFilters.append(tr("%1 files (*.%2)").arg(plugin.typeDescription, plugin.inputExtensions.join(QStringLiteral(" *."))));
+    }
+    nameFilters.append(tr("Any files (*)"));
+    dialog.setNameFilters(nameFilters);
 
     if (!dialog.exec())
         return;
