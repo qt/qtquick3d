@@ -52,8 +52,9 @@ set(mesh_resource_files
 qt_add_qml_module(stenciloutline
     VERSION 1.0
     URI ${stenciloutline_uri}
-    RESOURCES
+    QML_FILES
         ${qml_resource_files}
+    RESOURCES
         ${image_resource_files}
         ${mesh_resource_files}
     SOURCES
