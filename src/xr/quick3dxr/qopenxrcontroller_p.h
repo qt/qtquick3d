@@ -29,7 +29,6 @@ class Q_QUICK3DXR_EXPORT QOpenXRController : public QQuick3DNode
     Q_OBJECT
     Q_PROPERTY(Controller controller READ controller WRITE setController NOTIFY controllerChanged)
     Q_PROPERTY(QOpenXRHandInput* handInput READ handInput NOTIFY handInputChanged)
-    Q_PROPERTY(QOpenXRHandInput::HandPoseSpace poseSpace READ poseSpace WRITE setPoseSpace NOTIFY poseSpaceChanged)
     QML_NAMED_ELEMENT(XrController)
 public:
     enum Controller {
@@ -48,13 +47,9 @@ public:
     QOpenXRHandInput *handInput() const;
     Q_INVOKABLE QOpenXRGamepadInput *gamepadInput() const;
 
-    QOpenXRHandInput::HandPoseSpace poseSpace() const;
-    void setPoseSpace(const QOpenXRHandInput::HandPoseSpace &newPoseSpace);
-
 Q_SIGNALS:
     void controllerChanged();
     void handInputChanged();
-    void poseSpaceChanged();
 
 private:
     QOpenXRInputManager *m_inputManager = nullptr;

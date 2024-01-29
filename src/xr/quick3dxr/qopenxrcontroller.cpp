@@ -76,24 +76,4 @@ QOpenXRGamepadInput *QOpenXRController::gamepadInput() const
     return m_inputManager->gamepadInput();
 }
 
-QOpenXRHandInput::HandPoseSpace QOpenXRController::poseSpace() const
-{
-    const auto input = handInput();
-    if (input)
-        return input->poseSpace();
-    else
-        return QOpenXRHandInput::HandPoseSpace::GripPose;
-}
-
-void QOpenXRController::setPoseSpace(const QOpenXRHandInput::HandPoseSpace &newPoseSpace)
-{
-    if (poseSpace() == newPoseSpace)
-        return;
-    auto input = handInput();
-    if (input) {
-        input->setPoseSpace(newPoseSpace);
-        emit poseSpaceChanged();
-    }
-}
-
 QT_END_NAMESPACE
