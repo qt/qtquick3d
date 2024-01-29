@@ -4,27 +4,29 @@
 cmake_minimum_required(VERSION 3.16)
 project(xr_simple LANGUAGES CXX)
 
+set(CMAKE_AUTOMOC ON)
+
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/xr_simple")
+
 find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
 
-qt_standard_project_setup()
-
 qt6_policy(SET QTP0002 NEW)
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/xr_simple")
 
 qt_add_executable(xr_simple
     MANUAL_FINALIZATION
     main.cpp
     android/AndroidManifest.xml
 )
+
 set_target_properties(xr_simple PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(xr_simple PUBLIC
     Qt::Core
     Qt::Gui
@@ -33,13 +35,14 @@ target_link_libraries(xr_simple PUBLIC
     Qt::Quick3DXr
 )
 
-qt6_add_resources(xr_simple "qml"
-    PREFIX
-        "/"
-    FILES
-        "LeftHand.qml"
-        "RightHand.qml"
-        "main.qml"
+qt_add_qml_module(xr_simple
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        LeftHand.qml
+        RightHand.qml
+        main.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 if(ANDROID)

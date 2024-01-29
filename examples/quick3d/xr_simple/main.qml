@@ -30,7 +30,6 @@ XrView {
     }
 
     DirectionalLight {
-
     }
 
     Model {
@@ -71,5 +70,3 @@ XrView {
     }
 
 }
-
-

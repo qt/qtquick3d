@@ -6,8 +6,8 @@ import QtQuick3D
 import QtQuick3D.Xr
 
 XrController {
-    handInput.poseSpace: XrHandInput.AimPose
     controller: XrController.ControllerLeft
+    Component.onCompleted: handInput.poseSpace = XrHandInput.AimPose
     Model {
         source: "#Cube"
         scale: Qt.vector3d(0.1, 0.1, 0.1)
