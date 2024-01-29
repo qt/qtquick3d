@@ -1159,7 +1159,7 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
         Q_ASSERT(viewCountOutput == viewCapacityInput);
         Q_ASSERT(viewCountOutput == m_configViews.size());
         Q_ASSERT(viewCountOutput == m_projectionLayerViews.size());
-        Q_ASSERT(m_multiviewRendering ? viewCountOutput == m_swapchains.size() : viewCountOutput == m_swapchains[0].arraySize);
+        Q_ASSERT(m_multiviewRendering ? viewCountOutput == m_swapchains[0].arraySize : viewCountOutput == m_swapchains.size());
 
         // Check for actor
         checkActor();
