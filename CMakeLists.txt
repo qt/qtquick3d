@@ -59,4 +59,11 @@ find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS ShaderTools)
 # This is optional. When not present, runtime assets' timeline animation will not work.
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS QuickTimeline)
 
+if(TARGET Qt6::PlatformModuleInternal)
+    get_target_property(is_imported Qt6::PlatformModuleInternal IMPORTED)
+    if(is_imported)
+        qt_find_package(Qt6 PROVIDED_TARGETS Qt6::PlatformModuleInternal Qt::PlatformModuleInternal)
+    endif()
+endif()
+
 qt_build_repo()

@@ -588,7 +588,7 @@ void QOpenXRManager::checkXrInstance()
 
 void QOpenXRManager::setupDebugMessenger()
 {
-    if (!m_enabledExtensions.contains("XR_EXT_debug_utils")) {
+    if (!m_enabledExtensions.contains(QString::fromUtf8("XR_EXT_debug_utils"))) {
         qDebug("Quick 3D XR: No debug utils extension, message redirection not set up");
         return;
     }
