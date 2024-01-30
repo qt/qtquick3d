@@ -82,7 +82,7 @@ public:
                                          QSSGRhiGraphicsPipelineState *ps,
                                          const QSSGRenderCustomMaterial &material,
                                          QSSGSubsetRenderable &renderable,
-                                         const QSSGRenderCamera &camera,
+                                         const QSSGRenderCameraList &cameras,
                                          const QVector2D *depthAdjust,
                                          const QMatrix4x4 *alteredModelViewProjection);
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
+import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.Helpers
 import QtQuick3D.Xr
@@ -56,16 +57,24 @@ XrView {
     Node {
         x: 10
         y: 20
-        Text {
-            text: "Qt 6 in VR"
-            font.pointSize: 12
-            color: "white"
-        }
-        Text {
-            text: "On " + xrView.runtimeInfo.runtimeName + " " + xrView.runtimeInfo.runtimeVersion + " with " + xrView.runtimeInfo.graphicsApiName
-            font.pointSize: 4
-            color: "white"
-            y: 20
+        ColumnLayout {
+            spacing: 0
+            Text {
+                text: "Qt 6 in VR"
+                font.pointSize: 12
+                color: "white"
+            }
+            Text {
+                text: "On " + xrView.runtimeInfo.runtimeName + " " + xrView.runtimeInfo.runtimeVersion + " with " + xrView.runtimeInfo.graphicsApiName
+                font.pointSize: 4
+                color: "white"
+            }
+            Text {
+                visible: xrView.runtimeInfo.multiViewRendering
+                text: "Multiview rendering enabled"
+                font.pointSize: 4
+                color: "green"
+            }
         }
     }
 

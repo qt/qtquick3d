@@ -109,7 +109,7 @@ bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
 void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
-    QSSG_ASSERT(theRenderData && theRenderData->camera, return);
+    QSSG_ASSERT(theRenderData && !theRenderData->renderedCameras.isEmpty(), return);
 
     const auto layerPrepResult = theRenderData->layerPrepResult;
     if (layerPrepResult.isLayerVisible()) {
@@ -137,9 +137,8 @@ void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
 void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
-    QSSG_ASSERT(theRenderData && theRenderData->camera, return);
+    QSSG_ASSERT(theRenderData && !theRenderData->renderedCameras.isEmpty(), return);
     if (theRenderData->layerPrepResult.isLayerVisible()) {
-        QSSG_ASSERT(theRenderData->camera, return);
         beginLayerRender(*theRenderData);
         const auto &activePasses = theRenderData->activePasses;
         for (const auto &pass : activePasses) {
@@ -613,10 +612,8 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::getShaderPipelineForDefaultMateria
     }
 
     if (shaderPipeline != nullptr) {
-        if (m_currentLayer && m_currentLayer->camera) {
-            if (!m_currentLayer->cameraData.has_value())
-                [[maybe_unused]] const auto cd = m_currentLayer->getCachedCameraData();
-        }
+        if (m_currentLayer && !m_currentLayer->renderedCameras.isEmpty())
+            m_currentLayer->ensureCachedCameraDatas();
     }
 
     const auto &rhiContext = renderer.m_contextInterface->rhiContext();

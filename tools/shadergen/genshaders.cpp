@@ -206,8 +206,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         const auto &propertyTable = layerData.getDefaultMaterialPropertyTable();
 
-        const auto &opaqueObjects = layerData.getSortedOpaqueRenderableObjects(*layerData.camera);
-        const auto &transparentObjects = layerData.getSortedTransparentRenderableObjects(*layerData.camera);
+        const auto &opaqueObjects = layerData.getSortedOpaqueRenderableObjects(*layerData.renderedCameras[0]);
+        const auto &transparentObjects = layerData.getSortedTransparentRenderableObjects(*layerData.renderedCameras[0]);
 
         QSSGRenderableObject *renderable = nullptr;
         if (!opaqueObjects.isEmpty())
@@ -231,7 +231,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                     }
                 }
             } else if ((renderable->type == QSSGSubsetRenderable::Type::CustomMaterialMeshSubset)) {
-                Q_ASSERT(layerData.camera);
+                Q_ASSERT(!layerData.renderedCameras.isEmpty());
                 QSSGSubsetRenderable &cmr(static_cast<QSSGSubsetRenderable &>(*renderable));
                 auto pipelineState = layerData.getPipelineState();
                 const auto &cms = renderContext->customMaterialSystem();

@@ -128,9 +128,11 @@ private:
     friend struct ViewportTransformHelper;
 };
 
-namespace QQuick3DRenderLayerHelpers {
-Q_QUICK3D_EXPORT void updateLayerNodeHelper(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode, bool &aaIsDirty, bool &temporalIsDirty, float &ssaaMultiplier);
-}
+class Q_QUICK3D_EXPORT QQuick3DRenderLayerHelpers
+{
+public:
+    static void updateLayerNodeHelper(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode, bool &aaIsDirty, bool &temporalIsDirty, float &ssaaMultiplier);
+};
 
 class SGFramebufferObjectNode final : public QSGTextureProvider, public QSGSimpleTextureNode
 {

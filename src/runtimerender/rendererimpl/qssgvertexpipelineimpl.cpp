@@ -133,6 +133,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     m_hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(inKey) > 0;
     const auto morphSize = defaultMaterialShaderKeyProperties.m_targetCount.getValue(inKey);
     m_hasMorphing = morphSize > 0;
+    const int viewCount = defaultMaterialShaderKeyProperties.m_viewCount.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
     if (usesInstancing) {
@@ -225,7 +226,10 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.append("    vec4 qt_vertColor = vec4(1.0);"); // must be 1,1,1,1 to not alter when multiplying with it
 
     if (!usesInstancing) {
-        vertexShader.addUniform("qt_modelViewProjection", "mat4");
+        if (viewCount < 2)
+            vertexShader.addUniform("qt_modelViewProjection", "mat4");
+        else
+            vertexShader.addUniformArray("qt_modelViewProjection", "mat4", viewCount);
     } else {
         // Must manualy calculate a MVP
         vertexShader.addUniform("qt_modelMatrix", "mat4");
@@ -333,10 +337,14 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         }
 
         if (!hasCustomShadedMain || !overridesPosition) {
-            if (!usesInstancing)
-                vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
-            else
+            if (!usesInstancing) {
+                if (viewCount < 2)
+                    vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
+                else
+                    vertexShader.append("    gl_Position = qt_modelViewProjection[gl_ViewIndex] * qt_vertPosition;");
+            } else {
                 vertexShader.append("    gl_Position = qt_instancedMVPMatrix * qt_vertPosition;");
+            }
         }
     }
 

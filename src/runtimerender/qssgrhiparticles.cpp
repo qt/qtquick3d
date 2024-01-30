@@ -38,16 +38,17 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &sha
                                                       QSSGRhiContext *rhiCtx,
                                                       char *ubufData,
                                                       QSSGParticlesRenderable &renderable,
-                                                      QSSGRenderCamera &inCamera)
+                                                      const QSSGRenderCameraList &cameras)
 {
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
 
     QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders.commonUniformIndices;
 
-    const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
+    // ### multiview
+    const QMatrix4x4 projection = clipSpaceCorrMatrix * cameras[0]->projection;
     shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
 
-    const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
+    const QMatrix4x4 viewMatrix = cameras[0]->globalTransform.inverted();
     shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
 
     const QMatrix4x4 &modelMatrix = renderable.globalTransform;
@@ -330,7 +331,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
                                                 QRhiRenderPassDescriptor *renderPassDescriptor,
                                                 int samples,
                                                 int viewCount,
-                                                QSSGRenderCamera *camera,
+                                                QSSGRenderCamera *alteredCamera,
                                                 QSSGRenderTextureCubeFace cubeFace,
                                                 QSSGReflectionMapEntry *entry)
 {
@@ -342,10 +343,12 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
     shaderPipeline.ensureUniformBuffer(&dcd.ubuf);
 
     char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-    if (!camera)
-        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, *inData.camera);
-    else
-        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, *camera);
+    if (!alteredCamera) {
+        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, inData.renderedCameras);
+    } else {
+        QSSGRenderCameraList cameras({ alteredCamera });
+        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, cameras);
+    }
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
     QSSGRhiParticleData &particleData = QSSGRhiContextPrivate::get(rhiCtx)->particleData(&renderable.particles);
@@ -374,10 +377,10 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
 
     if (renderable.particles.m_depthSorting) {
         bool animatedParticles = renderable.particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::Animated;
-        if (!camera)
-            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, inData.cameraData->direction, animatedParticles);
+        if (!alteredCamera)
+            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, inData.renderedCameraData.value()[0].direction, animatedParticles);
         else
-            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, camera->getScalingCorrectDirection(), animatedParticles);
+            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, alteredCamera->getScalingCorrectDirection(), animatedParticles);
         uploadData = convertParticleData(particleData.convertData, particleData.sortedData, needsConversion);
     } else {
         uploadData = convertParticleData(particleData.convertData, particleBuffer.data(), needsConversion);

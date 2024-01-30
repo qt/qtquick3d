@@ -26,6 +26,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderreflectionprobe_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
@@ -269,6 +270,18 @@ struct QSSGRenderableObject
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderableObject>::value);
 
+struct QSSGRenderCameraData
+{
+    QMatrix4x4 viewProjection;
+    std::optional<QSSGClippingFrustum> clippingFrustum;
+    QVector3D direction { 0.0f, 0.0f, -1.0f };
+    QVector3D position;
+};
+
+using QSSGRenderCameraList = QVarLengthArray<QSSGRenderCamera *, 2>;
+using QSSGRenderCameraDataList = QVarLengthArray<QSSGRenderCameraData, 2>;
+using QSSGRenderMvpArray = std::array<QMatrix4x4, 2>; // cannot be dynamic due to QSSGModelContext, must stick with 2 for now
+
 struct QSSGSubsetRenderable;
 
 // Different subsets from the same model will get the same
@@ -277,18 +290,26 @@ struct QSSGSubsetRenderable;
 struct QSSGModelContext
 {
     const QSSGRenderModel &model;
-    QMatrix4x4 modelViewProjection;
+    QSSGRenderMvpArray modelViewProjections;
     QMatrix3x3 normalMatrix;
 
-    QSSGModelContext(const QSSGRenderModel &inModel, const QMatrix4x4 &globalTransform, const QMatrix4x4 &inViewProjection) : model(inModel)
+    QSSGModelContext(const QSSGRenderModel &inModel,
+                     const QMatrix4x4 &globalTransform,
+                     const QSSGRenderCameraDataList &allCameraData)
+        : model(inModel)
     {
+        Q_ASSERT_X(allCameraData.size() <= qsizetype(modelViewProjections.size()), __FUNCTION__, "QSSGModelContext has no space for all MVPs");
+        int mvpCount = 0;
         // For skinning, node's global transformation will be ignored and
         // an identity matrix will be used for the normalMatrix
         if (model.usesBoneTexture()) {
-            modelViewProjection = inViewProjection;
-            normalMatrix = QMatrix3x3();
+            for (const QSSGRenderCameraData &cameraData : allCameraData) {
+                modelViewProjections[mvpCount++] = cameraData.viewProjection;
+                normalMatrix = QMatrix3x3();
+            }
         } else {
-            QSSGRenderNode::calculateMVPAndNormalMatrix(globalTransform, inViewProjection, modelViewProjection, normalMatrix);
+            for (const QSSGRenderCameraData &cameraData : allCameraData)
+                QSSGRenderNode::calculateMVPAndNormalMatrix(globalTransform, cameraData.viewProjection, modelViewProjections[mvpCount++], normalMatrix);
         }
     }
 

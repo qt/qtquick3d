@@ -42,4 +42,9 @@ QString QOpenXRRuntimeInfo::graphicsApiName() const
     return QLatin1String("Unknown");
 }
 
+bool QOpenXRRuntimeInfo::multiViewRendering() const
+{
+    return m_openXRManager->m_multiviewRendering;
+}
+
 QT_END_NAMESPACE

@@ -1213,22 +1213,12 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
             // First update both cameras with the latest view information and
             // then set them on the viewport (since this is going to be
             // multiview rendering).
-#if 0
             for (uint32_t i = 0; i < viewCountOutput; i++) {
                 // subImage.swapchain and imageArrayIndex are already set and correct
                 m_projectionLayerViews[i].pose = m_views[i].pose;
                 m_projectionLayerViews[i].fov = m_views[i].fov;
             }
             updateCameraMultiview(0, viewCountOutput);
-#else
-            // ### multiview - remove this; for now, for testing, only uses one camera effectively
-            for (uint32_t i = 0; i < viewCountOutput; i++) {
-                // subImage.swapchain and imageArrayIndex are already set and correct
-                m_projectionLayerViews[i].pose = m_views[0].pose;
-                m_projectionLayerViews[i].fov = m_views[0].fov;
-                updateCameraNonMultiview(i, m_projectionLayerViews[i]);
-            }
-#endif
 
             // Perform the rendering. In multiview mode it is done just once,
             // targeting all the views (outputting simultaneously to all texture
@@ -1385,7 +1375,7 @@ void QOpenXRManager::updateCameraMultiview(int projectionLayerViewStartIndex, in
             updateCameraHelper(eyeCamera, m_projectionLayerViews[i]);
         cameras.append(eyeCamera);
     }
-    m_vrViewport->setCameras(cameras.data(), cameras.count());
+    m_vrViewport->setMultiViewCameras(cameras.data(), cameras.count());
 }
 
 void QOpenXRManager::checkActor()

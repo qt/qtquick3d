@@ -690,11 +690,33 @@ void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
     update();
 }
 
-void QQuick3DViewport::setCameras(QQuick3DCamera **firstCamera, int count)
+void QQuick3DViewport::setMultiViewCameras(QQuick3DCamera **firstCamera, int count)
 {
-    // ### multiview
-    Q_UNUSED(firstCamera);
-    Q_UNUSED(count);
+    m_multiViewCameras.clear();
+    bool sendChangeSignal = false;
+    for (int i = 0; i < count; ++i) {
+        QQuick3DCamera *camera = *(firstCamera + i);
+        if (camera) {
+            if (!camera->parentItem())
+                camera->setParentItem(m_sceneRoot);
+            camera->updateGlobalVariables(QRect(0, 0, width(), height()));
+        }
+        if (i == 0) {
+            if (m_camera != camera) {
+                m_camera = camera;
+                sendChangeSignal = true;
+            }
+        }
+
+        m_multiViewCameras.append(camera);
+
+        // ### do we need attachWatcher stuff? the Xr-provided cameras cannot disappear, although the XrActor (the owner) might
+    }
+
+    if (sendChangeSignal)
+        emit cameraChanged();
+
+    update();
 }
 
 void QQuick3DViewport::setEnvironment(QQuick3DSceneEnvironment *environment)

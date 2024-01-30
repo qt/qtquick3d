@@ -44,8 +44,8 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     Q_UNUSED(renderer)
     using namespace RenderHelpers;
 
-    camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    camera = data.renderedCameras[0];
 
     const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects(*camera);
     const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects(*camera);
@@ -136,8 +136,8 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     Q_UNUSED(renderer);
     Q_UNUSED(data);
 
-    auto *camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     ps = data.getPipelineState();
     ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled,
@@ -228,8 +228,8 @@ void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     // CONDITION: Input + globally enabled or ?
 
-    auto *camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
@@ -292,8 +292,9 @@ void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     rhiAoTexture = data.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
     rhiDepthTexture = data.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
-    camera = data.camera;
-    QSSG_ASSERT_X((camera && rhiDepthTexture && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing camera or required texture(s)", return);
+    QSSG_ASSERT_X(!data.renderedCameras.isEmpty(), "Preparing AO pass failed, missing camera", return);
+    camera = data.renderedCameras[0];
+    QSSG_ASSERT_X((rhiDepthTexture && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing equired texture(s)", return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
     ssaoShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSsaoShader();
@@ -360,8 +361,8 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
-    auto *camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
@@ -441,8 +442,8 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 {
     using namespace RenderHelpers;
 
-    auto *camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
@@ -555,8 +556,8 @@ void ScreenMapPass::resetForFrame()
 
 void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
-    auto *camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
@@ -661,9 +662,8 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     auto *ctx = renderer.contextInterface();
     const auto &rhiCtx = ctx->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    auto camera = data.camera;
-    const auto &cameraData = data.cameraData;
-    QSSG_ASSERT(camera && cameraData.has_value() , return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty() && data.renderedCameraData.has_value() , return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
@@ -745,9 +745,9 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
 {
     auto *ctx = renderer.contextInterface();
     const auto &rhiCtx = ctx->rhiContext();
-    auto camera = data.camera;
-    const auto &cameraData = data.cameraData;
-    QSSG_ASSERT(camera && cameraData.has_value(), return);
+
+    QSSG_ASSERT(!data.renderedCameras.isEmpty() && data.renderedCameraData.has_value() , return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
 
@@ -793,8 +793,8 @@ void SkyboxPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     if (!skipPrep) {
         const auto &rhiCtx = renderer.contextInterface()->rhiContext();
         QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-        auto camera = data.camera;
-        QSSG_ASSERT(camera, return);
+        QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+        QSSGRenderCamera *camera = data.renderedCameras[0];
         layer = &data.layer;
         QSSG_ASSERT(layer, return);
 
@@ -848,8 +848,8 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    auto camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
@@ -917,22 +917,20 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
         const int viewCount = rhiCtx->mainPassViewCount();
+        QSSG_ASSERT(item2D->mvps.count() == viewCount, return);
         if (layer.scissorRect.isValid()) {
             QRect effScissor = layer.scissorRect & layerPrepResult.viewport.toRect();
             QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult.viewport,
                                                             effScissor,
                                                             rhiCtx->rhi()->isYUpInNDC());
-            // ### for now, set the same matrix for all views, if there is more than one
-            const QMatrix4x4 projectionMatrix = correctionMat * item2D->MVP;
-            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
+                const QMatrix4x4 projectionMatrix = correctionMat * item2D->mvps[viewIndex];
                 item2D->m_renderer->setProjectionMatrix(projectionMatrix, viewIndex);
+            }
             item2D->m_renderer->setViewportRect(effScissor);
         } else {
-            // ### for now, set the same matrix for all views, if there is more than one
-            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
-                QMatrix4x4 m = item2D->MVP;
-                item2D->m_renderer->setProjectionMatrix(m, viewIndex);
-            }
+            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+                item2D->m_renderer->setProjectionMatrix(item2D->mvps[viewIndex], viewIndex);
             item2D->m_renderer->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.viewport, deviceRect));
         }
         item2D->m_renderer->setDeviceRect(deviceRect);
@@ -988,8 +986,8 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
 {
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    auto camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
@@ -1028,8 +1026,8 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
-    auto camera = data.camera;
-    QSSG_ASSERT(camera, return);
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
     debugObjectShader = shaderCache->getBuiltInRhiShaders().getRhiDebugObjectShader();

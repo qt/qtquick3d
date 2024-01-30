@@ -250,9 +250,9 @@ QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGS
 {
 }
 
-static QSSGCameraRenderData getCameraDataImpl(const QSSGRenderCamera *camera)
+static QSSGRenderCameraData getCameraDataImpl(const QSSGRenderCamera *camera)
 {
-    QSSGCameraRenderData ret;
+    QSSGRenderCameraData ret;
     if (camera) {
         // Calculate viewProjection and clippingFrustum for Render Camera
         QMatrix4x4 viewProjection(Qt::Uninitialized);
@@ -276,17 +276,26 @@ static QSSGCameraRenderData getCameraDataImpl(const QSSGRenderCamera *camera)
     return ret;
 }
 
-// Returns the cached data for the active render camera (if any)
-QSSGCameraRenderData QSSGLayerRenderData::getCachedCameraData()
+// Returns the cached data for the active render camera(s) (if any)
+const QSSGRenderCameraDataList &QSSGLayerRenderData::getCachedCameraDatas()
 {
-    if (!cameraData.has_value())
-        cameraData = getCameraDataImpl(camera);
+    ensureCachedCameraDatas();
+    return *renderedCameraData;
+}
 
-    return *cameraData;
+void QSSGLayerRenderData::ensureCachedCameraDatas()
+{
+    if (renderedCameraData.has_value())
+        return;
+
+    QSSGRenderCameraDataList cameraData;
+    for (QSSGRenderCamera *cam : std::as_const(renderedCameras))
+        cameraData.append(getCameraDataImpl(cam));
+    renderedCameraData = std::move(cameraData);
 }
 
 [[nodiscard]] static inline float getCameraDistanceSq(const QSSGRenderableObject &obj,
-                                                      const QSSGCameraRenderData &camera) noexcept
+                                                      const QSSGRenderCameraData &camera) noexcept
 {
     const QVector3D difference = obj.worldCenterPoint - camera.position;
     return QVector3D::dotProduct(difference, camera.direction) + obj.depthBiasSq;
@@ -361,7 +370,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedScreenT
 
 const QVector<QSSGBakedLightingModel> &QSSGLayerRenderData::getSortedBakedLightingModels()
 {
-    if (!renderedBakedLightingModels.empty() || camera == nullptr)
+    if (!renderedBakedLightingModels.empty() || renderedCameras.isEmpty())
         return renderedBakedLightingModels;
     if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest) && !bakedLightingModels.empty()) {
         renderedBakedLightingModels = bakedLightingModels;
@@ -375,13 +384,15 @@ const QVector<QSSGBakedLightingModel> &QSSGLayerRenderData::getSortedBakedLighti
 
 const QSSGLayerRenderData::RenderableItem2DEntries &QSSGLayerRenderData::getRenderableItem2Ds()
 {
-    if (!renderedItem2Ds.isEmpty() || camera == nullptr)
+    if (!renderedItem2Ds.isEmpty() || renderedCameras.isEmpty())
         return renderedItem2Ds;
 
     renderedItem2Ds = renderableItem2Ds;
 
     if (!renderedItem2Ds.isEmpty()) {
-        const auto cameraDirectionAndPosition = getCachedCameraData();
+        const QSSGRenderCameraDataList &cameraDatas(getCachedCameraDatas());
+        // with multiview this means using the left eye camera
+        const QSSGRenderCameraData &cameraDirectionAndPosition(cameraDatas[0]);
         const QVector3D &cameraDirection = cameraDirectionAndPosition.direction;
         const QVector3D &cameraPosition = cameraDirectionAndPosition.position;
 
@@ -685,7 +696,9 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
 
     prepareModelMeshes(contextInterface, renderables, false /* globalPickingEnabled */);
 
-    QSSGCameraRenderData cameraData = getCameraRenderData(extContext.camera);
+    // ### multiview
+    QSSGRenderCameraList camera({ extContext.camera });
+    QSSGRenderCameraDataList cameraData({ getCameraRenderData(extContext.camera) });
 
     auto &modelContexts = modelContextStore[index];
     QSSG_ASSERT(modelContexts.isEmpty(), modelContexts.clear());
@@ -705,7 +718,7 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
     bool wasDirty = prepareModelsForRender(contextInterface,
                                            renderables,
                                            layerPrepResult.flags,
-                                           *extContext.camera,
+                                           camera,
                                            cameraData,
                                            modelContexts,
                                            opaqueObjects,
@@ -1471,8 +1484,8 @@ QRhiTexture *QSSGLayerRenderData::getBonemapTexture(const QSSGModelContext &mode
 bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &contextInterface,
                                                  const RenderableNodeEntries &renderableModels,
                                                  QSSGLayerRenderPreparationResultFlags &ioFlags,
-                                                 const QSSGRenderCamera &camera,
-                                                 const QSSGCameraRenderData &cameraData,
+                                                 const QSSGRenderCameraList &allCameras,
+                                                 const QSSGRenderCameraDataList &allCameraData,
                                                  TModelContextPtrList &modelContexts,
                                                  QSSGRenderableObjectList &opaqueObjects,
                                                  QSSGRenderableObjectList &transparentObjects,
@@ -1499,7 +1512,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
 
         const bool altGlobalTransform = ((renderable.overridden & QSSGRenderableNodeEntry::Overridden::GlobalTransform) != 0);
         const auto &globalTransform = altGlobalTransform ? renderable.globalTransform : model.globalTransform;
-        QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(contextInterface, model, globalTransform, cameraData.viewProjection);
+        QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(contextInterface, model, globalTransform, allCameraData);
         modelContexts.push_back(&theModelContext);
         // We might over-allocate here, as the material list technically can contain an invalid (nullptr) material.
         // We'll fix that by adjusting the size at the end for now...
@@ -1610,17 +1623,17 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
             quint32 subsetLevelOfDetail = 0;
             if (!theSubset.lods.isEmpty() && lodThreshold > 0.0f) {
                 // Accounts for FOV
-                float lodDistanceMultiplier = camera.getLevelOfDetailMultiplier();
+                float lodDistanceMultiplier = cameras[0]->getLevelOfDetailMultiplier();
                 float distanceThreshold = 0.0f;
                 const auto scale = QSSGUtils::mat44::getScale(model.globalTransform);
                 float modelScale = qMax(scale.x(), qMax(scale.y(), scale.z()));
                 QSSGBounds3 transformedBounds = theSubset.bounds;
-                if (camera.type != QSSGRenderGraphObject::Type::OrthographicCamera) {
+                if (cameras[0]->type != QSSGRenderGraphObject::Type::OrthographicCamera) {
                     transformedBounds.transform(model.globalTransform);
                     if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLod))
                         debugDrawSystem->drawBounds(transformedBounds, QColor(Qt::red));
-                    const QVector3D cameraNormal = camera.getScalingCorrectDirection();
-                    const QVector3D cameraPosition = camera.getGlobalPos();
+                    const QVector3D cameraNormal = cameras[0]->getScalingCorrectDirection();
+                    const QVector3D cameraPosition = cameras[0]->getGlobalPos();
                     const QSSGPlane cameraPlane = QSSGPlane(cameraPosition, cameraNormal);
                     const QVector3D lodSupportMin = transformedBounds.getSupport(-cameraNormal);
                     const QVector3D lodSupportMax = transformedBounds.getSupport(cameraNormal);
@@ -1665,7 +1678,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
             QVector3D theModelCenter(theSubset.bounds.center());
             theModelCenter = QSSGUtils::mat44::transform(model.globalTransform, theModelCenter);
             if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLodNormal))
-                debugDrawSystem->debugNormals(*bufferManager, theModelContext, theSubset, subsetLevelOfDetail, (theModelCenter - camera.getGlobalPos()).length() * 0.01);
+                debugDrawSystem->debugNormals(*bufferManager, theModelContext, theSubset, subsetLevelOfDetail, (theModelCenter - allCameras[0]->getGlobalPos()).length() * 0.01);
 
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
@@ -1785,7 +1798,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                                                                lights);
             }
             if (theRenderableObject) // NOTE: Should just go in with the ctor args
-                theRenderableObject->camdistSq = getCameraDistanceSq(*theRenderableObject, cameraData);
+                theRenderableObject->camdistSq = getCameraDistanceSq(*theRenderableObject, allCameraData[0]);
         }
 
         // If the indices don't match then something's off and we need to adjust the subset renderable list size.
@@ -1822,7 +1835,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
     return wasDirty;
 }
 
-bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries &renderableParticles, const QSSGCameraRenderData &cameraData)
+bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries &renderableParticles, const QSSGRenderCameraData &cameraData)
 {
     QSSG_ASSERT(particlesEnabled, return false);
 
@@ -1908,14 +1921,18 @@ bool QSSGLayerRenderData::prepareItem2DsForRender(const QSSGRenderContextInterfa
     const bool hasItems = (renderableItem2Ds.size() != 0);
     if (hasItems) {
         const auto &clipSpaceCorrMatrix = ctxIfc.rhiContext()->rhi()->clipSpaceCorrMatrix();
-        auto cameraData = getCachedCameraData();
+        const QSSGRenderCameraDataList &cameraDatas(getCachedCameraDatas());
         for (const auto &theItem2D : renderableItem2Ds) {
-            theItem2D->MVP = cameraData.viewProjection * theItem2D->globalTransform;
-            static const QMatrix4x4 flipMatrix(1.0f, 0.0f, 0.0f, 0.0f,
-                                               0.0f, -1.0f, 0.0f, 0.0f,
-                                               0.0f, 0.0f, 1.0f, 0.0f,
-                                               0.0f, 0.0f, 0.0f, 1.0f);
-            theItem2D->MVP = clipSpaceCorrMatrix * theItem2D->MVP * flipMatrix;
+            theItem2D->mvps.clear();
+            for (const QSSGRenderCameraData &camData : cameraDatas) {
+                QMatrix4x4 mvp = camData.viewProjection * theItem2D->globalTransform;
+                static const QMatrix4x4 flipMatrix(1.0f, 0.0f, 0.0f, 0.0f,
+                                                0.0f, -1.0f, 0.0f, 0.0f,
+                                                0.0f, 0.0f, 1.0f, 0.0f,
+                                                0.0f, 0.0f, 0.0f, 1.0f);
+                mvp = clipSpaceCorrMatrix * mvp * flipMatrix;
+                theItem2D->mvps.append(mvp);
+            }
         }
     }
 
@@ -2213,41 +2230,42 @@ void QSSGLayerRenderData::prepareForRender()
     // 1. If there's an explicit camera set and it's active (visible) we'll use that.
     // 2. ... if the explicitly set camera is not visible, no further attempts will be done.
     // 3. If no explicit camera is set, we'll search and pick the first active camera.
-    camera = layer.explicitCamera;
-    if (camera != nullptr) {
-        // 1.
-        wasDataDirty = wasDataDirty || camera->isDirty();
-        QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*camera, renderer->dpr());
-        wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-        if (!theResult.m_computeFrustumSucceeded)
-            qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+    renderedCameras.clear();
+    if (!layer.explicitCameras.isEmpty()) {
+        for (QSSGRenderCamera *cam : std::as_const(layer.explicitCameras)) {
+            // 1.
+            wasDataDirty = wasDataDirty || cam->isDirty();
+            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*cam, renderer->dpr());
+            wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+            if (!theResult.m_computeFrustumSucceeded)
+                qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
 
-        // 2.
-        if (!camera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
-            camera = nullptr;
-    } else {
+            // 2.
+            if (cam->getGlobalState(QSSGRenderCamera::GlobalState::Active))
+                renderedCameras.append(cam);
+        }
+    } else { // this path can never be hit with multiview
         // 3.
-        for (auto iter = cameras.cbegin();
-             (camera == nullptr) && (iter != cameras.cend()); iter++) {
+        for (auto iter = cameras.cbegin(); renderedCameras.isEmpty() && iter != cameras.cend(); iter++) {
             QSSGRenderCamera *theCamera = *iter;
-            wasDataDirty = wasDataDirty
-                    || theCamera->isDirty();
+            wasDataDirty = wasDataDirty || theCamera->isDirty();
             QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*theCamera, renderer->dpr());
             wasDataDirty = wasDataDirty || theResult.m_wasDirty;
             if (!theResult.m_computeFrustumSucceeded)
                 qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
             if (theCamera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
-                camera = theCamera;
+                renderedCameras.append(theCamera);
         }
     }
 
-    float meshLodThreshold = 1.0f;
-    if (camera) {
-        camera->dpr = renderer->dpr();
-        meshLodThreshold = camera->levelOfDetailPixelThreshold / theViewport.width();
-    }
+    for (QSSGRenderCamera *cam : renderedCameras)
+        cam->dpr = renderer->dpr();
 
-    layer.renderedCamera = camera;
+    float meshLodThreshold = 1.0f;
+    if (!renderedCameras.isEmpty())
+        meshLodThreshold = renderedCameras[0]->levelOfDetailPixelThreshold / theViewport.width();
+
+    layer.renderedCameras = renderedCameras;
 
     // ResourceLoaders
     prepareResourceLoaders();
@@ -2393,11 +2411,13 @@ void QSSGLayerRenderData::prepareForRender()
     auto &transparentObjects = transparentObjectStore[0];
     auto &screenTextureObjects = screenTextureObjectStore[0];
 
-    if (camera) { // NOTE: We shouldn't really get this far without a camera...
-        const auto &cameraData = getCachedCameraData();
-        wasDirty |= prepareModelsForRender(*renderer->contextInterface(), renderableModels, layerPrepResult.flags, *camera, cameraData, modelContexts, opaqueObjects, transparentObjects, screenTextureObjects, meshLodThreshold);
-        if (particlesEnabled)
-            wasDirty |= prepareParticlesForRender(renderableParticles, cameraData);
+    if (!renderedCameras.isEmpty()) { // NOTE: We shouldn't really get this far without a camera...
+        wasDirty |= prepareModelsForRender(*renderer->contextInterface(), renderableModels, layerPrepResult.flags, renderedCameras, getCachedCameraDatas(), modelContexts, opaqueObjects, transparentObjects, screenTextureObjects, meshLodThreshold);
+        if (particlesEnabled) {
+            // ### multiview
+            const auto &cameraDatas = getCachedCameraDatas();
+            wasDirty |= prepareParticlesForRender(renderableParticles, cameraDatas[0]);
+        }
         wasDirty |= prepareItem2DsForRender(*renderer->contextInterface(), renderableItem2Ds);
     }
 
@@ -2431,19 +2451,21 @@ void QSSGLayerRenderData::prepareForRender()
         vertexOffsetsAA = { f / float(theViewport.width()/2.0), f / float(theViewport.height()/2.0) };
     }
 
-    if (camera) {
+    if (!renderedCameras.isEmpty()) {
         if (temporalAA || progressiveAA /*&& !vertexOffsetsAA.isNull()*/) {
-            QMatrix4x4 offsetProjection = camera->projection;
-            QMatrix4x4 invProjection = camera->projection.inverted();
-            if (camera->type == QSSGRenderCamera::Type::OrthographicCamera) {
+            QMatrix4x4 offsetProjection = renderedCameras[0]->projection;
+            QMatrix4x4 invProjection = renderedCameras[0]->projection.inverted();
+            if (renderedCameras[0]->type == QSSGRenderCamera::Type::OrthographicCamera) {
                 offsetProjection(0, 3) -= vertexOffsetsAA.x();
                 offsetProjection(1, 3) -= vertexOffsetsAA.y();
-            } else if (camera->type == QSSGRenderCamera::Type::PerspectiveCamera) {
+            } else if (renderedCameras[0]->type == QSSGRenderCamera::Type::PerspectiveCamera) {
                 offsetProjection(0, 2) += vertexOffsetsAA.x();
                 offsetProjection(1, 2) += vertexOffsetsAA.y();
             }
-            for (auto &modelContext : std::as_const(modelContexts))
-                modelContext->modelViewProjection = offsetProjection * invProjection * modelContext->modelViewProjection;
+            for (auto &modelContext : std::as_const(modelContexts)) {
+                for (int mvpIdx = 0; mvpIdx < renderedCameras.count(); ++mvpIdx)
+                    modelContext->modelViewProjections[mvpIdx] = offsetProjection * invProjection * modelContext->modelViewProjections[mvpIdx];
+            }
         }
     }
 
@@ -2537,10 +2559,8 @@ void QSSGLayerRenderData::resetForFrame()
     activePasses.clear();
     bakedLightingModels.clear();
     layerPrepResult = {};
-    // The check for if the camera is or is not null is used
-    // to figure out if this layer was rendered at all.
-    camera = nullptr;
-    cameraData.reset();
+    renderedCameras.clear();
+    renderedCameraData.reset();
     renderedItem2Ds.clear();
     renderedBakedLightingModels.clear();
     renderableItem2Ds.clear();
@@ -2812,26 +2832,22 @@ QSSGRenderGraphObject *QSSGLayerRenderData::getCamera(QSSGCameraId id) const
     return ret;
 }
 
-QSSGCameraRenderData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCamera *camera_)
+QSSGRenderCameraData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCamera *camera_)
 {
-    QSSGCameraRenderData data;
-    if (!camera_ || camera_ == camera)
-        data = getCachedCameraData();
-    else if (camera_)
-        data = getCameraDataImpl(camera_);
-
-    return data;
+    if ((!camera_ || camera_ == renderedCameras[0]) && renderedCameraData.has_value())
+        return renderedCameraData.value()[0];
+    if (camera_)
+        return getCameraDataImpl(camera_);
+    return {};
 }
 
-QSSGCameraRenderData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCamera *camera_)  const
+QSSGRenderCameraData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCamera *camera_) const
 {
-    QSSGCameraRenderData data;
-    if ((!camera_ || camera_ == camera) && cameraData.has_value())
-        data = cameraData.value();
-    else if (camera_)
-        data = getCameraDataImpl(camera_);
-
-    return data;
+    if ((!camera_ || camera_ == renderedCameras[0]) && renderedCameraData.has_value())
+        return renderedCameraData.value()[0];
+    if (camera_)
+        return getCameraDataImpl(camera_);
+    return {};
 }
 
 QSSGRenderContextInterface *QSSGLayerRenderData::contextInterface() const

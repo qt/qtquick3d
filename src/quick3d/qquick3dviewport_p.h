@@ -159,10 +159,11 @@ Q_SIGNALS:
     Q_REVISION(6, 7) void effectiveTextureSizeChanged();
 
 private:
-    void setCameras(QQuick3DCamera **firstCamera, int count);
+    void setMultiViewCameras(QQuick3DCamera **firstCamera, int count);
 
     friend class QQuick3DExtensionListHelper;
     friend class QOpenXRManager;
+    friend class QQuick3DRenderLayerHelpers;
 
     Q_DISABLE_COPY(QQuick3DViewport)
     struct SubsceneInfo {
@@ -193,6 +194,7 @@ private:
     QQuick3DObject *findFrontendNode(const QSSGRenderGraphObject *backendObject) const;
     QQuick3DSceneManager *findChildSceneManager(QQuick3DObject *inObject, QQuick3DSceneManager *manager = nullptr);
     QQuick3DCamera *m_camera = nullptr;
+    QVarLengthArray<QQuick3DCamera *, 2> m_multiViewCameras;
     QQuick3DSceneEnvironment *m_environment = nullptr;
     QQuick3DSceneRootNode *m_sceneRoot = nullptr;
     QQuick3DNode *m_importScene = nullptr;

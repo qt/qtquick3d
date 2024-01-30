@@ -114,7 +114,7 @@ Q_QUICK3DRUNTIMERENDER_EXPORT void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                         QSSGShaderFeatures featureSet,
                                                         int samples,
                                                         int viewCount,
-                                                        QSSGRenderCamera *inCamera = nullptr,
+                                                        QSSGRenderCamera *alteredCamera = nullptr,
                                                         QMatrix4x4 *alteredModelViewProjection = nullptr,
                                                         QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
                                                         QSSGReflectionMapEntry *entry = nullptr);

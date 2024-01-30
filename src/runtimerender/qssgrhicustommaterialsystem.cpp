@@ -126,12 +126,13 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
                                                                QSSGRhiGraphicsPipelineState *ps,
                                                                const QSSGRenderCustomMaterial &material,
                                                                QSSGSubsetRenderable &renderable,
-                                                               const QSSGRenderCamera &camera,
+                                                               const QSSGRenderCameraList &cameras,
                                                                const QVector2D *depthAdjust,
                                                                const QMatrix4x4 *alteredModelViewProjection)
 {
-    const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
-                                                     : renderable.modelContext.modelViewProjection);
+    QSSGRenderMvpArray alteredMvpList;
+    if (alteredModelViewProjection)
+        alteredMvpList[0] = *alteredModelViewProjection;
 
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
     QRhiTexture *lightmapTexture = inData.getLightmapTexture(renderable.modelContext);
@@ -151,8 +152,8 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
                                                           material,
                                                           renderable.shaderDescription,
                                                           defaultMaterialShaderKeyProperties,
-                                                          camera,
-                                                          mvp,
+                                                          cameras,
+                                                          alteredModelViewProjection ? alteredMvpList : renderable.modelContext.modelViewProjections,
                                                           renderable.modelContext.normalMatrix,
                                                           modelMatrix,
                                                           clipSpaceCorrMatrix,
@@ -182,9 +183,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                     QRhiRenderPassDescriptor *renderPassDescriptor,
                                                     int samples,
                                                     int viewCount,
-                                                    QSSGRenderCamera *camera,
+                                                    QSSGRenderCamera *alteredCamera,
                                                     QSSGRenderTextureCubeFace cubeFace,
-                                                    QMatrix4x4 *modelViewProjection,
+                                                    QMatrix4x4 *alteredModelViewProjection,
                                                     QSSGReflectionMapEntry *entry)
 {
     QSSGRhiContext *rhiCtx = context->rhiContext().get();
@@ -225,10 +226,12 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-        if (!camera)
-            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, layerData, ubufData, ps, material, renderable, *layerData.camera, nullptr, nullptr);
-        else
-            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, layerData, ubufData, ps, material, renderable, *camera, nullptr, modelViewProjection);
+        if (!alteredCamera) {
+            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, layerData, ubufData, ps, material, renderable, layerData.renderedCameras, nullptr, nullptr);
+        } else {
+            QSSGRenderCameraList cameras({ alteredCamera });
+            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, layerData, ubufData, ps, material, renderable, cameras, nullptr, alteredModelViewProjection);
+        }
         if (blendParticles)
             QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &renderable.modelContext.model, renderable.subset.offset);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -236,10 +239,12 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         if (blendParticles)
             QSSGParticleRenderer::prepareParticlesForModel(*shaderPipeline, rhiCtx, bindings, &renderable.modelContext.model);
         bool instancing = false;
-        if (!camera)
-            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, layerData.cameraData->direction, layerData.cameraData->position, renderable.instancingLodMin, renderable.instancingLodMax);
-        else
-            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, camera->getScalingCorrectDirection(), camera->getGlobalPos(), renderable.instancingLodMin, renderable.instancingLodMax);
+        if (!alteredCamera) {
+            const QSSGRenderCameraDataList &cameraDatas(*layerData.renderedCameraData);
+            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, cameraDatas[0].direction, cameraDatas[0].position, renderable.instancingLodMin, renderable.instancingLodMax);
+        } else {
+            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, alteredCamera->getScalingCorrectDirection(), alteredCamera->getGlobalPos(), renderable.instancingLodMin, renderable.instancingLodMax);
+        }
 
         ps->samples = samples;
         ps->viewCount = viewCount;

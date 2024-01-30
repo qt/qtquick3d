@@ -86,7 +86,7 @@ void picking::benchImpl(int count, bool hit)
     dummyCamera.calculateGlobalVariables(QRectF(QPointF(), QSizeF(viewportDim.x(), viewportDim.y())));
     dummyCamera.calculateViewProjectionMatrix(globalTransform);
 
-    dummyLayer.renderedCamera = &dummyCamera;
+    dummyLayer.renderedCameras = { &dummyCamera };
 
     static const auto setModelPosition = [](QSSGRenderModel &model, const QVector3D &pos) {
         model.localTransform.translate(pos);

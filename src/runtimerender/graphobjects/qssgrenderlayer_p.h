@@ -165,10 +165,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     uint tempAAPassIndex;
     uint progAAPassIndex;
 
-    // The camera explicitly set on the view by the user.
-    QSSGRenderCamera *explicitCamera;
-    // The camera used for rendering (explicitCamera, nullptr or first usable camera).
-    QSSGRenderCamera *renderedCamera;
+    // The camera explicitly set on the view by the user. (backend node can be null)
+    QVarLengthArray<QSSGRenderCamera *, 2> explicitCameras;
+    // The camera used for rendering, multiple ones with multiview.
+    QVarLengthArray<QSSGRenderCamera *, 2> renderedCameras;
 
     // Tonemapping
     TonemapMode tonemapMode;

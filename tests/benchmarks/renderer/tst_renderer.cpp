@@ -82,7 +82,8 @@ void tst_renderer::initTestCase()
     const float spacing = 20.0f;
     const float offset = -spacing * float(n) * 0.5f;
 
-    layer.explicitCamera = &camera;
+    layer.explicitCameras.resize(1);
+    layer.explicitCameras[0] = &camera;
 
     const auto &renderer = renderContext->renderer();
     const auto viewport = QRect(QPoint(), QSize(800,600));

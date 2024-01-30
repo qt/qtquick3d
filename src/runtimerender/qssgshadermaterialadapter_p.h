@@ -16,7 +16,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendermaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>

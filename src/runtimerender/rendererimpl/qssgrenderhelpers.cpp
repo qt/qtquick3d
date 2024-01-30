@@ -52,14 +52,15 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                              char *ubufData,
                                              QSSGRhiGraphicsPipelineState *ps,
                                              QSSGSubsetRenderable &subsetRenderable,
-                                             const QSSGRenderCamera &camera,
+                                             const QSSGRenderCameraList &cameras,
                                              const QVector2D *depthAdjust,
                                              const QMatrix4x4 *alteredModelViewProjection)
 {
     const auto &renderer(subsetRenderable.renderer);
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
-    const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
-                                                     : subsetRenderable.modelContext.modelViewProjection);
+    QSSGRenderMvpArray alteredMvpList;
+    if (alteredModelViewProjection)
+        alteredMvpList[0] = *alteredModelViewProjection;
 
     const auto &modelNode = subsetRenderable.modelContext.model;
     QRhiTexture *lightmapTexture = inData.getLightmapTexture(subsetRenderable.modelContext);
@@ -75,8 +76,8 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                                           subsetRenderable.material,
                                                           subsetRenderable.shaderDescription,
                                                           inData.getDefaultMaterialPropertyTable(),
-                                                          camera,
-                                                          mvp,
+                                                          cameras,
+                                                          alteredModelViewProjection ? alteredMvpList : subsetRenderable.modelContext.modelViewProjections,
                                                           subsetRenderable.modelContext.normalMatrix,
                                                           modelMatrix,
                                                           clipSpaceCorrMatrix,
@@ -485,6 +486,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
                                               : pEntry->m_viewProjection * renderable.globalTransform;
         }
 
+        // here we pass on our own alteredCamera and alteredModelViewProjection
         rhiPrepareRenderable(rhiCtx, passKey, inData, inObject, pEntry->m_rhiRenderPassDesc, ps, features, 1, 1,
                              &inCamera, &modelViewProjection, cubeFace, pEntry);
     }
@@ -571,7 +573,9 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
+            // calls updateUni with an alteredCamera and alteredModelViewProjection
+            QSSGRenderCameraList cameras({ &inCamera });
+            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, cameras, depthAdjust, &modelViewProjection);
             if (blendParticles)
                 QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -587,9 +591,10 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            // inCamera is the shadow camera, not the same as inData.camera
+            // inCamera is the shadow camera, not the same as inData.renderedCameras
+            QSSGRenderCameraList cameras({ &inCamera });
             customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, material, subsetRenderable,
-                                                                 inCamera, depthAdjust, &modelViewProjection);
+                                                                 cameras, depthAdjust, &modelViewProjection);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
         }
 
@@ -598,7 +603,8 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
             auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
             ia = subsetRenderable.subset.rhi.ia;
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraData->direction, inData.cameraData->position);
+            const QSSGRenderCameraDataList &cameraDatas(*inData.renderedCameraData);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDatas[0].direction, cameraDatas[0].position);
             QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
 
 
@@ -675,15 +681,11 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                          QSSGShaderFeatures featureSet,
                                          int samples,
                                          int viewCount,
-                                         QSSGRenderCamera *inCamera,
+                                         QSSGRenderCamera *alteredCamera,
                                          QMatrix4x4 *alteredModelViewProjection,
                                          QSSGRenderTextureCubeFace cubeFace,
                                          QSSGReflectionMapEntry *entry)
 {
-    QSSGRenderCamera *camera = inData.camera;
-    if (inCamera)
-        camera = inCamera;
-
     const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
     switch (inObject.type) {
@@ -732,7 +734,15 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, *camera, nullptr, alteredModelViewProjection);
+            if (alteredCamera) {
+                Q_ASSERT(alteredModelViewProjection);
+                QSSGRenderCameraList cameras({ alteredCamera });
+                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, cameras, nullptr, alteredModelViewProjection);
+            } else {
+                Q_ASSERT(!alteredModelViewProjection);
+                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, inData.renderedCameras, nullptr, nullptr);
+            }
+
             if (blendParticles)
                 QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -783,12 +793,14 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
 
             ia = subsetRenderable.subset.rhi.ia;
-            QVector3D cameraDirection = inData.cameraData->direction;
-            if (inCamera)
-                cameraDirection = inCamera->getScalingCorrectDirection();
-            QVector3D cameraPosition = inData.cameraData->position;
-            if (inCamera)
-                cameraPosition = inCamera->getGlobalPos();
+            // ### multiview
+            const QSSGRenderCameraDataList &cameraDatas(*inData.renderedCameraData);
+            QVector3D cameraDirection = cameraDatas[0].direction;
+            if (alteredCamera)
+                cameraDirection = alteredCamera->getScalingCorrectDirection();
+            QVector3D cameraPosition = cameraDatas[0].position;
+            if (alteredCamera)
+                cameraPosition = alteredCamera->getGlobalPos();
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDirection, cameraPosition);
             QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
 
@@ -973,7 +985,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         customMaterialSystem.rhiPrepareRenderable(ps, passKey, subsetRenderable, featureSet,
                                                   material, inData, renderPassDescriptor, samples, viewCount,
-                                                  inCamera, cubeFace, alteredModelViewProjection, entry);
+                                                  alteredCamera, cubeFace, alteredModelViewProjection, entry);
         break;
     }
     case QSSGRenderableObject::Type::Particles:
@@ -982,7 +994,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         const auto &shaderPipeline = shadersForParticleMaterial(ps, particleRenderable);
         if (shaderPipeline) {
             QSSGParticleRenderer::rhiPrepareRenderable(*shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples, viewCount,
-                                                       inCamera, cubeFace, entry);
+                                                       alteredCamera, cubeFace, entry);
         }
         break;
     }
@@ -1855,7 +1867,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             if (shaderPipeline) {
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
+                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, inData.renderedCameras, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             } else {
                 return false;
@@ -1874,7 +1886,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
                 customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, customMaterial, subsetRenderable,
-                                                                     *inData.camera, nullptr, nullptr);
+                                                                     inData.renderedCameras, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             } else {
                 return false;
@@ -1887,7 +1899,9 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
             ia = subsetRenderable.subset.rhi.ia;
 
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraData->direction, inData.cameraData->position);
+            // ### multiview
+            const QSSGRenderCameraDataList &cameraDatas(*inData.renderedCameraData);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDatas[0].direction, cameraDatas[0].position);
             QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;

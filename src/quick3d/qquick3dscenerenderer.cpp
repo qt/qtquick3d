@@ -351,12 +351,12 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         currentTexture = superSamplingAA ? m_ssaaTexture : m_texture;
 
         // Do effects before antialiasing
-        if (m_effectSystem && m_layer->firstEffect && m_layer->renderedCamera) {
+        if (m_effectSystem && m_layer->firstEffect && !m_layer->renderedCameras.isEmpty()) {
             const auto &renderer = m_sgContext->renderer();
             QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
             Q_ASSERT(theRenderData);
             QRhiTexture *theDepthTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::DepthTexture)->texture;
-            QVector2D cameraClipRange(m_layer->renderedCamera->clipNear, m_layer->renderedCamera->clipFar);
+            QVector2D cameraClipRange(m_layer->renderedCameras[0]->clipNear, m_layer->renderedCameras[0]->clipFar);
 
             currentTexture = m_effectSystem->process(*m_layer->firstEffect,
                                                      currentTexture,
@@ -522,7 +522,7 @@ void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixel
     // If sync was called the assumption is that the scene is dirty regardless of what
     // the scene prep function says, we still should verify that we have a camera before
     // we call render prep and render.
-    const bool renderReady = (m_layer->renderData->camera != nullptr);
+    const bool renderReady = !m_layer->renderData->renderedCameras.isEmpty();
     if (renderReady) {
         renderer->rhiPrepare(*m_layer);
         m_prepared = true;
@@ -1027,7 +1027,7 @@ void QQuick3DSceneRenderer::releaseCachedResources()
 
 std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
 {
-    if (!m_layer || !m_layer->renderedCamera)
+    if (!m_layer || m_layer->renderedCameras.isEmpty())
         return std::nullopt;
 
     const QVector2D viewportSize(m_surfaceSize.width(), m_surfaceSize.height());
@@ -1042,7 +1042,7 @@ std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const 
          || theLocalMouse.y() >= viewportSize.y()))
         return std::nullopt;
 
-    return m_layer->renderedCamera->unproject(theLocalMouse, viewportRect);
+    return m_layer->renderedCameras[0]->unproject(theLocalMouse, viewportRect);
 }
 
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)
@@ -1165,10 +1165,13 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     layerNode.lightProbeSettings.probeHorizon = qMin(environment->probeHorizon() - 1.0f, -0.001f);
     layerNode.setProbeOrientation(environment->probeOrientation());
 
-    if (view3D.camera())
-        layerNode.explicitCamera = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode);
-    else
-        layerNode.explicitCamera = nullptr;
+    layerNode.explicitCameras.clear();
+    if (!view3D.m_multiViewCameras.isEmpty()) {
+        for (QQuick3DCamera *camera : std::as_const(view3D.m_multiViewCameras))
+            layerNode.explicitCameras.append(static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(camera)->spatialNode));
+    } else if (view3D.camera()) {
+        layerNode.explicitCameras.append(static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode));
+    }
 
     layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest, environment->depthTestEnabled());
     layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass, environment->depthPrePassEnabled());

@@ -391,6 +391,10 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     QShaderBaker baker;
     m_initBaker(&baker, m_rhiContext.rhi());
 
+    // This is in the shader key, but cannot query that here anymore now that it's serialized.
+    // So we get it as a dedicated argument.
+    baker.setMultiViewCount(viewCount);
+
     const bool editorMode = QSSGRhiContextPrivate::editorMode();
     // Shader debug is disabled in editor mode
     const bool shaderDebug = !editorMode && QSSGRhiContextPrivate::shaderDebuggingEnabled();
@@ -426,9 +430,9 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     if (!vertShaderValid) {
         vertErr = baker.errorMessage();
         if (!editorMode) {
-            qWarning("Failed to compile vertex shader:\n");
+            qWarning("Failed to compile vertex shader: %s\n", qPrintable(vertErr));
             if (!shaderDebug)
-                qWarning() << inKey << '\n' << vertErr;
+                qWarning() << inKey << '\n';
         }
     }
 
@@ -438,19 +442,15 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
             dumpShaderToFile(QShader::Stage::VertexStage, vertexCode);
     }
 
-    // This is in the shader key, but cannot query that here anymore now that it's serialized.
-    // So we get it as a dedicated argument.
-    baker.setMultiViewCount(viewCount);
-
     baker.setSourceString(fragmentCode, QShader::FragmentStage);
     QShader fragmentShader = baker.bake();
     const bool fragShaderValid = fragmentShader.isValid();
     if (!fragShaderValid) {
         fragErr = baker.errorMessage();
         if (!editorMode) {
-            qWarning("Failed to compile fragment shader \n");
+            qWarning("Failed to compile fragment shader: %s\n", qPrintable(fragErr));
             if (!shaderDebug)
-                qWarning() << inKey << '\n' << fragErr;
+                qWarning() << inKey << '\n';
         }
     }
 
