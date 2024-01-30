@@ -56,8 +56,8 @@ bool OutlineRenderer::prepareData(QSSGFrameData &data)
         return false;
 
     // This is the active camera for the scene (the camera used to render the QtQuick3D scene)
-    QSSGNodeId camera = data.activeCamera();
-    if (camera == QSSGNodeId::Invalid)
+    QSSGCameraId camera = data.activeCamera();
+    if (camera == QSSGCameraId::Invalid)
         return false;
 
     // We are going to render the same renderable(s) twice so we need to create two contexts.

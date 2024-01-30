@@ -93,7 +93,7 @@ private:
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCameraHelpers
 {
 public:
-    static QMatrix4x4 getViewProjectionMatrix(const QSSGNodeId cameraId,
+    static QMatrix4x4 getViewProjectionMatrix(const QSSGCameraId cameraId,
                                               const QMatrix4x4 *globalTransform = nullptr);
 
 private:
@@ -121,7 +121,7 @@ public:
 
     [[nodiscard]] static QSSGPrepContextId prepareForRender(const QSSGFrameData &frameData,
                                                             const QSSGRenderExtension &ext,
-                                                            QSSGNodeId camera,
+                                                            QSSGCameraId cameraId,
                                                             quint32 slot = 0);
 
     [[nodiscard]] static QSSGPrepResultId commit(const QSSGFrameData &frameData,

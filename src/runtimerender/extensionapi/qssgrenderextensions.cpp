@@ -49,13 +49,13 @@ QSSGRhiGraphicsPipelineState QSSGFrameData::getPipelineState() const
 /*!
     \return The active camera for the scene, or null if non could be found.
 */
-QSSGNodeId QSSGFrameData::activeCamera() const
+QSSGCameraId QSSGFrameData::activeCamera() const
 {
-    QSSGNodeId ret { QSSGNodeId::Invalid };
+    QSSGCameraId ret { QSSGCameraId::Invalid };
     auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
     QSSG_ASSERT(data, return ret);
     if (auto *ac = data->activeCamera())
-        ret = QSSGRenderGraphObjectUtils::getNodeId(*ac);
+        ret = QSSGRenderGraphObjectUtils::getCameraId(*ac);
 
     return ret;
 }

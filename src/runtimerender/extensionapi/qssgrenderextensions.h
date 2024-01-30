@@ -46,7 +46,7 @@ public:
 
     [[nodiscard]] QSSGRhiGraphicsPipelineState getPipelineState() const;
 
-    [[nodiscard]] QSSGNodeId activeCamera() const;
+    [[nodiscard]] QSSGCameraId activeCamera() const;
 
     [[nodiscard]] QSSGRenderContextInterface *contextInterface() const;
 
