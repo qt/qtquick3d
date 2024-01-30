@@ -106,18 +106,18 @@ QSSGRenderablesId QSSGRenderHelpers::createRenderables(const QSSGFrameData &fram
 
     \return an id to the prep context.
 
-    \a frameData, \a ext, \a camera
+    \a frameData, \a ext, \a cameraId
 
     \sa commit()
  */
 
 QSSGPrepContextId QSSGRenderHelpers::prepareForRender(const QSSGFrameData &frameData,
                                                       const QSSGRenderExtension &ext,
-                                                      QSSGNodeId camera,
+                                                      QSSGCameraId cameraId,
                                                       quint32 slot)
 {
-    auto *cn = QSSGRenderGraphObjectUtils::getNode<QSSGRenderCamera>(camera);
-    QSSG_ASSERT_X(cn && QSSGRenderGraphObject::isCamera(cn->type), "NodeId is not a camera!", return QSSGPrepContextId::Invalid);
+    auto *cn = QSSGRenderGraphObjectUtils::getCamera<QSSGRenderCamera>(cameraId);
+    QSSG_ASSERT_X(cn && QSSGRenderGraphObject::isCamera(cn->type), "CameraId is not a camera!", return QSSGPrepContextId::Invalid);
     auto *ctx = frameData.contextInterface();
     auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
     QSSG_ASSERT_X(layer, "No active layer for renderer!", return QSSGPrepContextId::Invalid);
@@ -375,10 +375,10 @@ void QSSGModelHelpers::setGlobalOpacity(const QSSGFrameData &frameData, QSSGRend
 
     \sa QSSGRenderHelpers::createRenderables()
  */
-QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGNodeId cameraId,
+QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGCameraId cameraId,
                                                       const QMatrix4x4 *globalTransform)
 {
-    auto *renderCamera = QSSGRenderGraphObjectUtils::getNode<QSSGRenderCamera>(cameraId);
+    auto *renderCamera = QSSGRenderGraphObjectUtils::getCamera<QSSGRenderCamera>(cameraId);
     QSSG_ASSERT(renderCamera && QSSGRenderGraphObject::isCamera(renderCamera->type), return {});
 
     QMatrix4x4 mat44{Qt::Uninitialized};

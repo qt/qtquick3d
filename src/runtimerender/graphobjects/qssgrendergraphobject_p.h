@@ -47,6 +47,18 @@ T *getNode(QSSGNodeId nodeId)
     return static_cast<T *>(reinterpret_cast<QSSGRenderGraphObject *>(nodeId));
 }
 
+constexpr QSSGCameraId getCameraId(const QSSGRenderGraphObject &o)
+{
+    QSSG_ASSERT(QSSGRenderGraphObject::isCamera(o.type), return QSSGCameraId::Invalid);
+    return QSSGCameraId{ quintptr(&o) };
+}
+
+template <typename T = QSSGRenderGraphObject>
+T *getCamera(QSSGCameraId cameraId)
+{
+    return static_cast<T *>(reinterpret_cast<QSSGRenderGraphObject *>(cameraId));
+}
+
 constexpr QSSGExtensionId getExtensionId(const QSSGRenderGraphObject &o)
 {
     QSSG_ASSERT(QSSGRenderGraphObject::isExtension(o.type), return QSSGExtensionId::Invalid);

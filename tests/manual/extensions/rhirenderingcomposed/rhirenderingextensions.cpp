@@ -244,7 +244,7 @@ ConsumerRenderer::~ConsumerRenderer()
 bool ConsumerRenderer::prepareData(QSSGFrameData &data)
 {
     auto camera = data.activeCamera();
-    if (camera == QSSGNodeId::Invalid) {
+    if (camera == QSSGCameraId::Invalid) {
         canRender = false;
         return false;
     }
