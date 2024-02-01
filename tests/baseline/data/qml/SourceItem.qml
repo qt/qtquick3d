@@ -37,6 +37,14 @@ Rectangle {
         id: redRectangle
     }
 
+    Rectangle {
+        width: 100
+        height: 100
+        color: "green"
+        id: hiddenGreenRectangle
+        visible: false
+    }
+
     // A) Both source and sourceItem
     Texture {
         id: textureA
@@ -59,6 +67,12 @@ Rectangle {
     // D) Empty
     Texture {
         id: textureD
+    }
+
+    // E) With hidden sourceItem
+    Texture {
+        id: textureE
+        sourceItem: hiddenGreenRectangle
     }
 
     View3D {
@@ -114,6 +128,15 @@ Rectangle {
             source: "#Cube"
             materials: DefaultMaterial {
                 diffuseMap: textureD
+            }
+        }
+
+        Model {
+            scale: Qt.vector3d(0.5, 0.5, 0.5)
+            eulerRotation: Qt.vector3d(20, 40, 0)
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseMap: textureE
             }
         }
     }
