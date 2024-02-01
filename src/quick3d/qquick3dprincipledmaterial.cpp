@@ -712,8 +712,6 @@ QT_BEGIN_NAMESPACE
     material. The default value is true.
 */
 
-inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
-
 QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
     : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::PrincipledMaterial)), parent)
 {}

@@ -385,6 +385,8 @@ private:
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);
+
+    static constexpr float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 };
 
 QT_END_NAMESPACE
