@@ -200,7 +200,6 @@ private Q_SLOTS:
 private:
     QQuick3DSceneRenderer *m_renderer = nullptr;
     QQuickWindow *m_window = nullptr;
-    QQuick3DSGDirectRendererMode m_mode;
     QRectF m_viewport;
     bool m_isVisible = true;
     QRhiTexture *m_rhiTexture = nullptr;
