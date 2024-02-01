@@ -11,8 +11,6 @@
 #include "qquick3dviewport_p.h"
 #include "qquick3dscenemanager_p.h"
 
-Q_DECLARE_OPAQUE_POINTER(QQuick3DShaderUtilsTextureInput)
-
 QT_BEGIN_NAMESPACE
 
 /*!

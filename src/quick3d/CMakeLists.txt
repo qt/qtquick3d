@@ -63,8 +63,6 @@ qt_internal_add_module(Quick3D
         qquick3dlightmapbaker.cpp qquick3dlightmapbaker_p.h
         extensions/qquick3drenderextensions.cpp extensions/qquick3drenderextensions.h
         extensions/qquick3dextensionhelpers.cpp extensions/qquick3dextensionhelpers.h
-    NO_UNITY_BUILD_SOURCES
-        qquick3dspecularglossymaterial.cpp # redefinition of 'ensureNormalized' (from qquick3dprincipledmaterial.cpp)
     SSG_HEADER_FILTERS
         "(^|/)qquick3dextensionhelpers\\.h$"
     DEFINES
