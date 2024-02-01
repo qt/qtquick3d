@@ -1394,7 +1394,6 @@ QSGRenderNode::RenderingFlags QQuick3DSGRenderNode::flags() const
 QQuick3DSGDirectRenderer::QQuick3DSGDirectRenderer(QQuick3DSceneRenderer *renderer, QQuickWindow *window, QQuick3DSGDirectRenderer::QQuick3DSGDirectRendererMode mode)
     : m_renderer(renderer)
     , m_window(window)
-    , m_mode(mode)
 {
     if (QSGRendererInterface::isApiRhiBased(window->rendererInterface()->graphicsApi())) {
         connect(window, &QQuickWindow::beforeRendering, this, &QQuick3DSGDirectRenderer::prepare, Qt::DirectConnection);

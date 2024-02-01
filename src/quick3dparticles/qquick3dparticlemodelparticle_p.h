@@ -84,8 +84,6 @@ private:
     QQuick3DParticleInstanceTable *m_instanceTable = nullptr;
 
     QVector3D m_initialScale;
-    float m_initialOpacity = 1.0f;
-    bool m_explicitColor;
 };
 
 QT_END_NAMESPACE
