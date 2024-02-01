@@ -612,17 +612,18 @@ static QString getIdForNode(const QSSGSceneDesc::Node &node)
 
     quint64 id = node.id;
     int attempts = 1000;
+    QString candidate = sanitizedName;
     do {
-        if (const auto it = g_idMap->constFind(sanitizedName); it == g_idMap->constEnd()) {
-            g_idMap->insert(sanitizedName, &node);
-            g_nodeNameMap->insert(&node, sanitizedName);
-            return sanitizedName;
+        if (const auto it = g_idMap->constFind(candidate); it == g_idMap->constEnd()) {
+            g_idMap->insert(candidate, &node);
+            g_nodeNameMap->insert(&node, candidate);
+            return candidate;
         }
 
-        sanitizedName = QStringLiteral("%1%2").arg(sanitizedName).arg(id++);
+        candidate = QStringLiteral("%1%2").arg(sanitizedName).arg(id++);
     } while (--attempts);
 
-    return sanitizedName;
+    return candidate;
 }
 
 static QString getIdForAnimation(const QByteArray &inName)
@@ -632,18 +633,19 @@ static QString getIdForAnimation(const QByteArray &inName)
 
     int attempts = 1000;
     quint16 id = 0;
+    QString candidate = sanitizedName;
     do {
-        if (const auto it = g_idMap->constFind(sanitizedName); it == g_idMap->constEnd()) {
-            if (const auto oIt = g_idOthers->constFind(sanitizedName); oIt == g_idOthers->constEnd()) {
-                g_idOthers->insert(sanitizedName);
-                return sanitizedName;
+        if (const auto it = g_idMap->constFind(candidate); it == g_idMap->constEnd()) {
+            if (const auto oIt = g_idOthers->constFind(candidate); oIt == g_idOthers->constEnd()) {
+                g_idOthers->insert(candidate);
+                return candidate;
             }
         }
 
-        sanitizedName = QStringLiteral("%1%2").arg(sanitizedName).arg(++id);
+        candidate = QStringLiteral("%1%2").arg(sanitizedName).arg(++id);
     } while (--attempts);
 
-    return sanitizedName;
+    return candidate;
 }
 
 QString stripParentDirectory(const QString &filePath) {
