@@ -142,7 +142,6 @@ private:
     QVector<int> m_randomParticles;
     PerEmitterData n_noPerEmitterData;
     int m_nextEmitterIndex = 0;
-    bool m_bufferUpdated = false;
     QQmlComponent *m_delegate = nullptr;
     QQuick3DModel *m_model = nullptr;
     QQuick3DGeometry *m_modelGeometry = nullptr;
