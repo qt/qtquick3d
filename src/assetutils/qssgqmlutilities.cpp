@@ -1636,6 +1636,13 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
             indent(output) << "\"" << mapValues.first << "\": " << mapValues.second << ",\n";
         }
         indent(output) << blockEnd(output);
+        stream << indent() << "// A simple list of Timelines (--manualAnimations)\n";
+        stream << indent() << "property var timelineList: [\n";
+        for (const auto &mapValues : animationMap) {
+            QSSGQmlScopedIndent scopedIndent(output);
+            indent(output) << mapValues.second << ",\n";
+        }
+        indent(output) << "]\n";
     }
 
 
