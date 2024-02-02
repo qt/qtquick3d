@@ -59,6 +59,6 @@ private:
     QMetaObject::Connection m_isActiveConnection;
 };
 
-QT_BEGIN_NAMESPACE
+QT_END_NAMESPACE
 
 #endif // QOPENXRCONTROLLER_H
