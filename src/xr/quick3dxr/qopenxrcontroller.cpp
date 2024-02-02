@@ -35,26 +35,26 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
         setRotation(m_inputManager->leftHandInput()->poseRotation());
         setVisible(m_inputManager->leftHandInput()->isActive());
 
-        m_posePositionConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::posePositionChanged, this, [=]{
+        m_posePositionConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::posePositionChanged, this, [this]{
             setPosition(m_inputManager->leftHandInput()->posePosition());
         });
-        m_poseRotationConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::poseRotationChanged, this, [=]{
+        m_poseRotationConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::poseRotationChanged, this, [this]{
             setRotation(m_inputManager->leftHandInput()->poseRotation());
         });
-        m_isActiveConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::isActiveChanged, this, [=]{
+        m_isActiveConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::isActiveChanged, this, [this]{
            setVisible(m_inputManager->leftHandInput()->isActive());
         });
     } else if (m_controller == ControllerRight) {
         setPosition(m_inputManager->rightHandInput()->posePosition());
         setRotation(m_inputManager->rightHandInput()->poseRotation());
         setVisible(m_inputManager->rightHandInput()->isActive());
-        m_posePositionConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::posePositionChanged, this, [=]{
+        m_posePositionConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::posePositionChanged, this, [this]{
             setPosition(m_inputManager->rightHandInput()->posePosition());
         });
-        m_poseRotationConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::poseRotationChanged, this, [=]{
+        m_poseRotationConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::poseRotationChanged, this, [this]{
             setRotation(m_inputManager->rightHandInput()->poseRotation());
         });
-        m_isActiveConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::isActiveChanged, this, [=]{
+        m_isActiveConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::isActiveChanged, this, [this]{
            setVisible(m_inputManager->rightHandInput()->isActive());
         });
     } else {

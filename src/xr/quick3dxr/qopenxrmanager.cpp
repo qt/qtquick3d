@@ -983,7 +983,7 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
     *exitRenderLoop = false;
     *requestRestart = false;
 
-    auto readNextEvent = [=]() {
+    auto readNextEvent = [this]() {
         // It is sufficient to clear the just the XrEventDataBuffer header to
         // XR_TYPE_EVENT_DATA_BUFFER
         XrEventDataBaseHeader* baseHeader = reinterpret_cast<XrEventDataBaseHeader*>(&m_eventDataBuffer);
@@ -1001,7 +1001,7 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
         return static_cast<XrEventDataBaseHeader*>(nullptr);
     };
 
-    auto handleSessionStateChangedEvent = [=](const XrEventDataSessionStateChanged& stateChangedEvent,
+    auto handleSessionStateChangedEvent = [this](const XrEventDataSessionStateChanged& stateChangedEvent,
             bool* exitRenderLoop,
             bool* requestRestart) {
         const XrSessionState oldState = m_sessionState;
@@ -1411,7 +1411,7 @@ void QOpenXRManager::checkActor()
         if (actor) {
             m_xrActor = actor;
             emit actorChanged();
-            connect(m_xrActor, &QObject::destroyed, this, [=](){
+            connect(m_xrActor, &QObject::destroyed, this, [this](){
                m_xrActor = nullptr;
                emit actorChanged();
             });
