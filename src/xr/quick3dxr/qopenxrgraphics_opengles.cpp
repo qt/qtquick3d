@@ -109,8 +109,21 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsOpenGLES::allocateSwapchainI
 QQuickRenderTarget QOpenXRGraphicsOpenGLES::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
 {
     const uint32_t colorTexture = reinterpret_cast<const XrSwapchainImageOpenGLESKHR*>(swapchainImage)->image;
+
+    // For consistency with Vulkan and D3D12, demote to non-sRGB. (not doing so
+    // would not cause any visual difference with OpenGL, as QRhi anyway does
+    // not enable OpenGL's automatic sRGB conversions in shader writes).
+    switch (swapchainFormat) {
+    case GL_SRGB8_ALPHA8_EXT:
+        swapchainFormat = GL_RGBA8_OES;
+        break;
+    default:
+        break;
+    }
+
     if (arraySize <= 1) {
         return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
+                                                     swapchainFormat,
                                                      QSize(subImage.imageRect.extent.width,
                                                            subImage.imageRect.extent.height));
     } else {
