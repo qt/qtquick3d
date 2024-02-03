@@ -250,11 +250,17 @@ public:
 private:
     friend class ::tst_RotationDataClass;
 
-    [[nodiscard]] constexpr static inline bool fuzzyQuaternionCompare(const QQuaternion &a, const QQuaternion &b)
+    static constexpr double dotProduct(const QQuaternion &q1, const QQuaternion &q2) noexcept
     {
-        // This 'e' will give better precision than qtbase's qFuzzyCompare for QQuaternion
-        constexpr float e = std::numeric_limits<float>::epsilon();
-        return (qAbs(1.0f - qAbs(QQuaternion::dotProduct(a, b))) <= e);
+        return double(q1.scalar()) * double(q2.scalar())
+                + double(q1.x()) * double(q2.x())
+                + double(q1.y()) * double(q2.y())
+                + double(q1.z()) * double(q2.z());
+    }
+
+    [[nodiscard]] static constexpr bool fuzzyQuaternionCompare(const QQuaternion &a, const QQuaternion &b)
+    {
+        return qFuzzyCompare(qAbs(dotProduct(a, b)), 1.0);
     }
 
     enum class Dirty

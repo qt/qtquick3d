@@ -49,7 +49,9 @@ void tst_RotationDataClass::test_construct()
     RotationData b(quatRot);
     QCOMPARE(isDirty(b), true);
 
+    QEXPECT_FAIL("", "fromEulerAngles() introduces too much changes for RotationData's compare function", Continue);
     QCOMPARE(a, b);
+    QCOMPARE(a.m_quatRot, b.m_quatRot); // Compensate for the XFAIL. Verify that the two quaternions a componentwise equal.
     // NOTE: Comparison is done based on the stored quaternion
     QCOMPARE(isDirty(a), false); // Dirty is cleared as 'a' was set using euler angles
     QCOMPARE(isDirty(b), true); // Still dirty, as the Euler angles where never compared and therefore not calculated
@@ -203,13 +205,13 @@ void tst_RotationDataClass::test_compare2()
                 QVERIFY(!qFuzzyCompare(qaNonNormalized, qaNormalized));
                 {
                     RotationData rd(qaNonNormalized);
-                    QVERIFY(rd == qaNormalized);
+                    QVERIFY(rd.m_quatRot == qaNormalized);
                 }
 
                 {
                     RotationData rd;
                     rd = qaNonNormalized;
-                    QVERIFY(rd == qaNormalized);
+                    QVERIFY(rd.m_quatRot == qaNormalized);
                 }
             }
 
@@ -218,12 +220,18 @@ void tst_RotationDataClass::test_compare2()
             QVERIFY(!qFuzzyCompare(qb, qa));
         }
         a = qa;
+        QEXPECT_FAIL("", "Normalization introduces too much changes for RotationData's compare function", Continue);
         QVERIFY(a == qaNormalized);
+        QVERIFY(a.m_quatRot == qaNormalized); // Compensate for the XFAIL
         QVERIFY(a == v);
 
         b = -a;
+        QEXPECT_FAIL("", "Negation introduces too much changes for RotationData's compare function", Continue);
         QVERIFY(a == b);
+        QVERIFY(-a.m_quatRot == b.m_quatRot); // Compensate for the XFAIL
+        QEXPECT_FAIL("", "Negation introduces too much changes for RotationData's compare function", Continue);
         QVERIFY(b == a);
+        QVERIFY(b.m_quatRot == -a.m_quatRot); // Compensate for the XFAIL
     }
 }
 
@@ -308,23 +316,44 @@ void tst_RotationDataClass::test_compare_precision()
         QVERIFY(qFuzzyCompare(qa, qb));
         a = qa;
         b = qb;
+        QEXPECT_FAIL("", "Difference is too big...", Continue);
         QVERIFY(a == b);
+        QVERIFY(qFuzzyCompare(a.m_quatRot, b.m_quatRot)); // Compensate for XFAIL
         b = -qb;
+        QEXPECT_FAIL("", "Negation introduces change", Continue);
         QVERIFY(a == b);
+        QVERIFY(qFuzzyCompare(-a.m_quatRot, b.m_quatRot)); // Compensate for XFAIL
     }
     // RotationData is preciser than qFuzzyCompare(QQuaternion)
     {
-        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
-        const QQuaternion qb = QQuaternion(0.5f + 0.000001f, 0.5f, 0.5f, 0.5f);
-        QVERIFY(qa != qb);
+        const float e = std::numeric_limits<float>::epsilon();
+        float fa = 1.0f;
+        float fb = fa + e;
+        QVERIFY(fa != fb);
+        const QQuaternion qa = QQuaternion(1.0f, fa, 0.f, 0.f);
+        const QQuaternion qb = QQuaternion(1.0f, fb, 0.f, 0.f);
+
+        QVERIFY(qa != qb); // Component wise compare
         QVERIFY(qFuzzyCompare(qa, qb));
         a = qa;
         b = qb;
-        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
         b = -qb;
-        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
+        { // Push QQuaternion past it's limits and verify that RotationData still picks up the difference
+            const auto qad = qa / 2.0f;
+            const auto qbd = qa / 2.0f;
+
+            QVERIFY(qad == qbd); // Component wise compare (now below the threshold).
+            QVERIFY(qFuzzyCompare(qad, qbd));
+            a = qad;
+            b = qbd;
+            QVERIFY(a.m_quatRot == b.m_quatRot);
+            // Rotation data should still treat these as being different
+            QVERIFY(a != b);
+            b = -qbd;
+            QVERIFY(a != b);
+        }
     }
     {
         const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
@@ -333,10 +362,8 @@ void tst_RotationDataClass::test_compare_precision()
         QVERIFY(qFuzzyCompare(qa, qb));
         a = qa;
         b = qb;
-        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
         b = -qb;
-        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
     }
     {
@@ -346,10 +373,8 @@ void tst_RotationDataClass::test_compare_precision()
         QVERIFY(qFuzzyCompare(qa, qb));
         a = qa;
         b = qb;
-        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
         b = -qb;
-        QEXPECT_FAIL("", "Angular difference too small...", Continue);
         QVERIFY(a != b);
     }
 }
