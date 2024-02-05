@@ -5,8 +5,13 @@
 
 layout(std140, binding = 0) uniform buf {
     mat4 qt_modelMatrix;
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 qt_viewMatrix[QSHADER_VIEW_COUNT];
+    mat4 qt_projectionMatrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_viewMatrix;
     mat4 qt_projectionMatrix;
+#endif
 #ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
     // ParticleLightData struct
     vec4 qt_pointLightPosition[4];
@@ -187,7 +192,11 @@ void main()
     vec4 viewPos = worldPos;
     vec3 offset = (p.size * vec3(corner - vec2(0.5), 0.0));
     viewPos.xyz += offset * rotMat * (1.0 - ubuf.qt_billboard);
+#if QSHADER_VIEW_COUNT >= 2
+    viewPos = ubuf.qt_viewMatrix[gl_ViewIndex] * viewPos;
+#else
     viewPos = ubuf.qt_viewMatrix * viewPos;
+#endif
     viewPos.xyz += rotMat * offset * ubuf.qt_billboard;
     texcoord = corner;
     color = p.color;
@@ -197,7 +206,12 @@ void main()
     color.rgb *= qt_calcLightColor(worldPos.xyz);
 #endif
 
+#if QSHADER_VIEW_COUNT >= 2
+    gl_Position = ubuf.qt_projectionMatrix[gl_ViewIndex] * viewPos;
+#else
     gl_Position = ubuf.qt_projectionMatrix * viewPos;
+#endif
+
 #ifdef QSSG_PARTICLES_ENABLE_MAPPED
     spriteData.x = qt_ageToSpriteFactor(p.age);
 #endif

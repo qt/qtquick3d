@@ -2414,7 +2414,6 @@ void QSSGLayerRenderData::prepareForRender()
     if (!renderedCameras.isEmpty()) { // NOTE: We shouldn't really get this far without a camera...
         wasDirty |= prepareModelsForRender(*renderer->contextInterface(), renderableModels, layerPrepResult.flags, renderedCameras, getCachedCameraDatas(), modelContexts, opaqueObjects, transparentObjects, screenTextureObjects, meshLodThreshold);
         if (particlesEnabled) {
-            // ### multiview
             const auto &cameraDatas = getCachedCameraDatas();
             wasDirty |= prepareParticlesForRender(renderableParticles, cameraDatas[0]);
         }

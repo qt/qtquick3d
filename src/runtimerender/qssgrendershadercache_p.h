@@ -175,7 +175,8 @@ private:
     typedef QHash<QSSGShaderCacheKey, QSSGRhiShaderPipelinePtr> TRhiShaderMap;
     QSSGRhiContext &m_rhiContext; // Not own, the RCI owns us and the QSSGRhiContext.
     TRhiShaderMap m_rhiShaders;
-    QByteArray m_insertStr; // member to potentially reuse the allocation after clear
+    QByteArray m_insertStr;   // member to potentially reuse the allocation after clear
+    QByteArray m_cacheKeyStr; // same here
     InitBakerFunc m_initBaker;
     QQsbInMemoryCollection m_persistentShaderBakingCache;
     QString m_persistentShaderStorageFileName;

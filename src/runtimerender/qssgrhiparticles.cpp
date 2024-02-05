@@ -44,12 +44,23 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &sha
 
     QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders.commonUniformIndices;
 
-    // ### multiview
-    const QMatrix4x4 projection = clipSpaceCorrMatrix * cameras[0]->projection;
-    shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
-
-    const QMatrix4x4 viewMatrix = cameras[0]->globalTransform.inverted();
-    shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
+    quint32 offset = 0;
+    const int viewCount = cameras.count();
+    if (viewCount < 2) {
+        const QMatrix4x4 projection = clipSpaceCorrMatrix * cameras[0]->projection;
+        shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
+        const QMatrix4x4 viewMatrix = cameras[0]->globalTransform.inverted();
+        shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
+    } else {
+        QVarLengthArray<QMatrix4x4, 2> projectionMatrices(viewCount);
+        QVarLengthArray<QMatrix4x4, 2> viewMatrices(viewCount);
+        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
+            projectionMatrices[viewIndex] = clipSpaceCorrMatrix * cameras[viewIndex]->projection;
+            viewMatrices[viewIndex] = cameras[viewIndex]->globalTransform.inverted();
+        }
+        shaders.setUniformArray(ubufData, "qt_projectionMatrix", projectionMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.projectionMatrixIdx);
+        shaders.setUniformArray(ubufData, "qt_viewMatrix", viewMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewMatrixIdx);
+    }
 
     const QMatrix4x4 &modelMatrix = renderable.globalTransform;
     shaders.setUniform(ubufData, "qt_modelMatrix", modelMatrix.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);

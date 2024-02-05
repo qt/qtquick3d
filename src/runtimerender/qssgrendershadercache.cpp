@@ -589,7 +589,15 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryNewPipelineFromPersistentCache(cons
 
 QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey, int viewCount)
 {
-    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(inKey, QSSGShaderFeatures());
+    // Material shaders and built-in ones use the same cache. In compileForRhi()
+    // the serialized material key contains the view count Here inKey is merely
+    // the shader identifier, that maps directly to a .qsb file, so we need to
+    // amend it to contain the view count.
+    m_cacheKeyStr.clear();
+    m_cacheKeyStr.append(inKey);
+    m_cacheKeyStr.append(";viewCount=");
+    m_cacheKeyStr.append(QByteArray::number(viewCount));
+    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(m_cacheKeyStr, QSSGShaderFeatures());
     if (rhiShaders)
         return rhiShaders;
 
@@ -610,6 +618,8 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
     QString vertexFileName = prefix + QLatin1String(".vert.qsb");
     QString fragmentFileName = prefix + QLatin1String(".frag.qsb");
 
+    // This must match QSGMaterial(Shader) in Qt Quick, in particular the
+    // QSGMaterialShader::setShaderFileName() overload taking a viewCount.
     if (viewCount == 2) {
         vertexFileName += QLatin1String(".mv2qsb");
         fragmentFileName += QLatin1String(".mv2qsb");
@@ -645,7 +655,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
 
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DLoadShader, 0, inKey);
 
-    QSSGShaderCacheKey cacheKey(inKey);
+    QSSGShaderCacheKey cacheKey(m_cacheKeyStr);
     cacheKey.m_features = QSSGShaderFeatures();
     cacheKey.updateHashCode();
 

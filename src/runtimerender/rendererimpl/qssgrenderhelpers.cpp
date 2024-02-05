@@ -40,7 +40,7 @@ static QSSGRhiShaderPipelinePtr shadersForParticleMaterial(QSSGRhiGraphicsPipeli
     const auto &renderer(particleRenderable.renderer);
     const auto &shaderCache = renderer->contextInterface()->shaderCache();
     auto featureLevel = particleRenderable.particles.m_featureLevel;
-    const auto &shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiParticleShader(featureLevel);
+    const auto &shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiParticleShader(featureLevel, ps->viewCount);
     if (shaderPipeline)
         QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
     return shaderPipeline;
@@ -793,7 +793,6 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
 
             ia = subsetRenderable.subset.rhi.ia;
-            // ### multiview
             const QSSGRenderCameraDataList &cameraDatas(*inData.renderedCameraData);
             QVector3D cameraDirection = cameraDatas[0].direction;
             if (alteredCamera)
@@ -1899,7 +1898,6 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
             ia = subsetRenderable.subset.rhi.ia;
 
-            // ### multiview
             const QSSGRenderCameraDataList &cameraDatas(*inData.renderedCameraData);
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDatas[0].direction, cameraDatas[0].position);
             QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);

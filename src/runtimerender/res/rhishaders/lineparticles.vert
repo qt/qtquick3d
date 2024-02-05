@@ -5,8 +5,13 @@
 
 layout(std140, binding = 0) uniform buf {
     mat4 qt_modelMatrix;
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 qt_viewMatrix[QSHADER_VIEW_COUNT];
+    mat4 qt_projectionMatrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_viewMatrix;
     mat4 qt_projectionMatrix;
+#endif
 #ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
     // ParticleLightData struct
     vec4 qt_pointLightPosition[4];
@@ -178,11 +183,13 @@ float qt_calcSizeFactor(in uint segmentIndex)
 layout(location = 0) out vec4 color;
 layout(location = 1) out vec2 spriteData;
 layout(location = 2) out vec2 texcoord;
+layout(location = 3) flat out uint instanceIndex;
 
 void main()
 {
     uint segmentIndex = gl_VertexIndex / 2;
     uint particleIndex = segmentIndex + gl_InstanceIndex * ubuf.qt_lineSegmentCount;
+    instanceIndex = particleIndex;
 
     Particle p = qt_loadParticle(particleIndex);
 
@@ -190,8 +197,13 @@ void main()
     float size = p.size * qt_calcSizeFactor(segmentIndex);
     vec3 o = p.binormal * side * size;
     vec4 worldPos = ubuf.qt_modelMatrix * vec4(p.position + (1.0 - ubuf.qt_billboard) * o, 1.0);
+#if QSHADER_VIEW_COUNT >= 2
+    vec4 viewPos = ubuf.qt_viewMatrix[gl_ViewIndex] * worldPos;
+    vec3 viewBN = (transpose(inverse(ubuf.qt_viewMatrix[gl_ViewIndex] * ubuf.qt_modelMatrix)) * vec4(p.binormal, 0.0)).xyz;
+#else
     vec4 viewPos = ubuf.qt_viewMatrix * worldPos;
     vec3 viewBN = (transpose(inverse(ubuf.qt_viewMatrix * ubuf.qt_modelMatrix)) * vec4(p.binormal, 0.0)).xyz;
+#endif
     viewBN.z = 0;
     viewBN = normalize(viewBN) * side * size;
     viewPos = viewPos + vec4(viewBN, 0.0) * ubuf.qt_billboard;
@@ -202,7 +214,11 @@ void main()
     color.rgb *= qt_calcLightColor(worldPos.xyz);
 #endif
     color.a *= ubuf.qt_opacity * qt_calcAlphaFade(segmentIndex);
+#if QSHADER_VIEW_COUNT >= 2
+    gl_Position = ubuf.qt_projectionMatrix[gl_ViewIndex] * viewPos;
+#else
     gl_Position = ubuf.qt_projectionMatrix * viewPos;
+#endif
 #ifdef QSSG_PARTICLES_ENABLE_MAPPED
     spriteData.x = qt_ageToSpriteFactor(p.age);
 #endif

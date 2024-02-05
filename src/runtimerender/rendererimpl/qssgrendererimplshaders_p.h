@@ -70,8 +70,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBuiltInRhiShaderCache
     QSSGRhiShaderPipelinePtr getBuiltinRhiShader(const QByteArray &name,
                                                  QSSGRhiShaderPipelinePtr &storage,
                                                  int viewCount = 1);
-                                                 // ### multiview: the viewCount should not default to 1,
-                                                 // leave it until the static shader story gets figured out for multiview
 
     QSSGShaderCache &m_shaderCache; // We're owned by the shadercache
     explicit QSSGBuiltInRhiShaderCache(QSSGShaderCache &shaderCache)
@@ -97,7 +95,7 @@ public:
     QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
     QSSGRhiShaderPipelinePtr getRhiSupersampleResolveShader();
     QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();
-    QSSGRhiShaderPipelinePtr getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel);
+    QSSGRhiShaderPipelinePtr getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel, int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader();
     QSSGRhiShaderPipelinePtr getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
     QSSGRhiShaderPipelinePtr getRhiLightmapDilateShader();
