@@ -64,6 +64,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual float maxHeightSamples() = 0;
     virtual float clearcoatAmount() = 0;
     virtual float clearcoatRoughnessAmount() = 0;
+    virtual float clearcoatNormalStrength() = 0;
     virtual float transmissionFactor() = 0;
     virtual float thicknessFactor() = 0;
     virtual float attenuationDistance() = 0;
@@ -120,6 +121,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     float maxHeightSamples() override;
     float clearcoatAmount() override;
     float clearcoatRoughnessAmount() override;
+    float clearcoatNormalStrength() override;
     float transmissionFactor() override;
     float thicknessFactor() override;
     float attenuationDistance() override;
@@ -167,6 +169,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     float maxHeightSamples() override;
     float clearcoatAmount() override;
     float clearcoatRoughnessAmount() override;
+    float clearcoatNormalStrength() override;
     float transmissionFactor() override;
     float thicknessFactor() override;
     float attenuationDistance() override;

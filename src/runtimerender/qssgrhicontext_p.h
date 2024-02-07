@@ -373,6 +373,7 @@ public:
         int material_properties5Idx = -1;
         int material_attenuationIdx = -1;
         int thicknessFactorIdx = -1;
+        int clearcoatNormalStrengthIdx = -1;
         int rhiPropertiesIdx = -1;
         int displaceAmountIdx = -1;
         int boneTransformsIdx = -1;

@@ -103,6 +103,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     int maxHeightSamples = 32;
     float clearcoatAmount = 0.0f; // 0 - 1
     float clearcoatRoughnessAmount = 0.0f; // 0 - 1
+    float clearcoatNormalStrength = 1.0f; // 0 - 1
     float transmissionFactor = 0.0f; // 0 - 1
     float thicknessFactor = 0.0f; // 0 - 1
     float attenuationDistance = std::numeric_limits<float>::infinity();

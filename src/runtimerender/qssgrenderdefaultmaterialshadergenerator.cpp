@@ -1047,6 +1047,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addUniform("qt_material_attenuation", "vec4");
         fragmentShader.addUniform("qt_material_thickness", "float");
     }
+    fragmentShader.addUniform("qt_clearcoat_normal_strength", "float");
 
     if (vertexColorsEnabled)
         vertexShader.generateVertexColor(inKey);
@@ -1196,8 +1197,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatNormalImage, enableParallaxMapping, clearcoatNormalImage->m_imageNode.m_indexUV);
                 const auto &names = imageStringTable[int(QSSGRenderableImage::Type::ClearcoatNormal)];
                 fragmentShader.addFunction("sampleNormalTexture");
-                // no special normal scaling, assume 1.0
-                fragmentShader << "    qt_clearcoatNormal = qt_sampleNormalTexture3(" << names.imageSampler << ", 1.0, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
+                fragmentShader << "    qt_clearcoatNormal = qt_sampleNormalTexture3(" << names.imageSampler << ", qt_clearcoat_normal_strength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
 
             } else {
                 // same as qt_world_normal then
@@ -2191,6 +2191,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->transmissionFactor()
     };
     shaders.setUniform(ubufData, "qt_material_properties4", materialProperties4, 4 * sizeof(float), &cui.material_properties4Idx);
+
+    const float clearcoat_normal_strength = materialAdapter->clearcoatNormalStrength();
+    shaders.setUniform(ubufData, "qt_clearcoat_normal_strength", &clearcoat_normal_strength, sizeof(float), &cui.clearcoatNormalStrengthIdx);
 
     // We only ever use attenuation and thickness uniforms when using transmission
     if (materialAdapter->isTransmissionEnabled()) {

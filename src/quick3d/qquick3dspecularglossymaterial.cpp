@@ -1163,6 +1163,7 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
             material->clearcoatNormalMap = nullptr;
         else
             material->clearcoatNormalMap = m_clearcoatNormalMap->getRenderImage();
+        material->clearcoatNormalStrength = m_clearcoatNormalStrength;
     }
 
     if (m_dirtyAttributes & TransmissionDirty) {
@@ -1346,6 +1347,21 @@ void QQuick3DSpecularGlossyMaterial::setClearcoatNormalMap(QQuick3DTexture *newC
 
     m_clearcoatNormalMap = newClearcoatNormalMap;
     emit clearcoatNormalMapChanged();
+    markDirty(ClearcoatDirty);
+}
+
+float QQuick3DSpecularGlossyMaterial::clearcoatNormalStrength() const
+{
+    return m_clearcoatNormalStrength;
+}
+
+
+void QQuick3DSpecularGlossyMaterial::setClearcoatNormalStrength(float newClearcoatNormalStrength)
+{
+    if (qFuzzyCompare(m_clearcoatNormalStrength, newClearcoatNormalStrength))
+        return;
+    m_clearcoatNormalStrength = newClearcoatNormalStrength;
+    emit clearcoatNormalStrengthChanged();
     markDirty(ClearcoatDirty);
 }
 
