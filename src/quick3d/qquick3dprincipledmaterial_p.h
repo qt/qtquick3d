@@ -84,6 +84,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
                        clearcoatRoughnessMapChanged REVISION(6, 3))
     Q_PROPERTY(QQuick3DTexture *clearcoatNormalMap READ clearcoatNormalMap WRITE setClearcoatNormalMap NOTIFY
                        clearcoatNormalMapChanged REVISION(6, 3))
+    Q_PROPERTY(float clearcoatNormalStrength READ clearcoatNormalStrength WRITE setClearcoatNormalStrength NOTIFY clearcoatNormalStrengthChanged REVISION(6, 8))
 
     Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
@@ -99,6 +100,8 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(float indexOfRefraction READ indexOfRefraction WRITE setIndexOfRefraction NOTIFY indexOfRefractionChanged REVISION(6, 3))
 
     Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged REVISION(6, 5))
+
+    Q_PROPERTY(float fresnelPower READ fresnelPower WRITE setFresnelPower NOTIFY fresnelPowerChanged REVISION(6, 8))
 
     QML_NAMED_ELEMENT(PrincipledMaterial)
 
@@ -168,6 +171,7 @@ public:
     Q_REVISION(6, 3) TextureChannelMapping clearcoatRoughnessChannel() const;
     Q_REVISION(6, 3) QQuick3DTexture *clearcoatRoughnessMap() const;
     Q_REVISION(6, 3) QQuick3DTexture *clearcoatNormalMap() const;
+    Q_REVISION(6, 8) float clearcoatNormalStrength() const;
 
     Q_REVISION(6, 3) float transmissionFactor() const;
     Q_REVISION(6, 3) QQuick3DTexture *transmissionMap() const;
@@ -180,6 +184,7 @@ public:
     Q_REVISION(6, 3) const QColor &attenuationColor() const;
 
     Q_REVISION(6, 3) float indexOfRefraction() const;
+    Q_REVISION(6, 8) float fresnelPower() const;
 
     Q_REVISION(6, 5) bool vertexColorsEnabled() const;
 
@@ -225,6 +230,7 @@ public Q_SLOTS:
     Q_REVISION(6, 3) void setClearcoatRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newClearcoatRoughnessChannel);
     Q_REVISION(6, 3) void setClearcoatRoughnessMap(QQuick3DTexture *newClearcoatRoughnessMap);
     Q_REVISION(6, 3) void setClearcoatNormalMap(QQuick3DTexture *newClearcoatNormalMap);
+    Q_REVISION(6, 8) void setClearcoatNormalStrength(float clearcoatNormalStrength);
 
     Q_REVISION(6, 3) void setTransmissionFactor(float newTransmissionFactor);
     Q_REVISION(6, 3) void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
@@ -237,6 +243,7 @@ public Q_SLOTS:
     Q_REVISION(6, 3) void setAttenuationColor(const QColor &newAttenuationColor);
 
     Q_REVISION(6, 3) void setIndexOfRefraction(float indexOfRefraction);
+    Q_REVISION(6, 8) void setFresnelPower(float fresnelPower);
 
     Q_REVISION(6, 5) void setVertexColorsEnabled(bool vertexColorsEnabled);
 
@@ -282,6 +289,7 @@ Q_SIGNALS:
     Q_REVISION(6, 3) void clearcoatRoughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
     Q_REVISION(6, 3) void clearcoatRoughnessMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 3) void clearcoatNormalMapChanged(QQuick3DTexture *texture);
+    Q_REVISION(6, 8) void clearcoatNormalStrengthChanged(float clearcoatNormalStrength);
 
     Q_REVISION(6, 3) void transmissionFactorChanged(float amount);
     Q_REVISION(6, 3) void transmissionMapChanged(QQuick3DTexture *texture);
@@ -294,6 +302,7 @@ Q_SIGNALS:
     Q_REVISION(6, 3) void attenuationColorChanged(QColor color);
 
     Q_REVISION(6, 3) void indexOfRefractionChanged(float indexOfRefraction);
+    Q_REVISION(6, 8) void fresnelPowerChanged(float fresnelPower);
 
     Q_REVISION(6, 5) void vertexColorsEnabledChanged(bool vertexColorsEnabled);
 
@@ -369,6 +378,7 @@ private:
     QQuick3DTexture *m_clearcoatMap = nullptr;
     TextureChannelMapping m_clearcoatChannel = QQuick3DMaterial::R;
     float m_clearcoatRoughnessAmount = 0.0f;
+    float m_clearcoatNormalStrength = 1.0f;
     TextureChannelMapping m_clearcoatRoughnessChannel = QQuick3DMaterial::G;
     QQuick3DTexture *m_clearcoatRoughnessMap = nullptr;
     QQuick3DTexture *m_clearcoatNormalMap = nullptr;
@@ -381,6 +391,7 @@ private:
     float m_attenuationDistance = std::numeric_limits<float>::infinity();
     QColor m_attenuationColor = Qt::white;
     float m_indexOfRefraction = 1.5f;
+    float m_fresnelPower = 5.0f;
     bool m_vertexColorsEnabled = true;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default

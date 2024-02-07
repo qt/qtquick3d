@@ -584,6 +584,13 @@ QT_BEGIN_NAMESPACE
 
 */
 
+
+/*!
+    \qmlproperty real PrincipledMaterial::clearcoatNormalStrength
+
+    This property controls the amount of simulated displacement for the clearcoatNormalMap.
+*/
+
 /*!
     \qmlproperty float PrincipledMaterial::transmissionFactor
 
@@ -701,6 +708,14 @@ QT_BEGIN_NAMESPACE
     \endtable
 
     \note No known material in the world have ior much greater than \c 3.0.
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::fresnelPower
+
+    This property decreases head-on reflections (looking directly at the
+    surface) while maintaining reflections seen at grazing angles.
+    The default value is \c 5.0.
 */
 
 /*!
@@ -1287,7 +1302,6 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->emissiveColor = m_emissiveFactor;
     }
 
-    material->fresnelPower = 5.0f;
     material->vertexColorsEnabled = false;
 
     if (m_dirtyAttributes & RoughnessDirty) {
@@ -1326,6 +1340,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->specularAmount = m_specularAmount;
         material->specularTint = QVector3D(m_specularTint, m_specularTint, m_specularTint);
         material->ior = m_indexOfRefraction;
+        material->fresnelPower = m_fresnelPower;
     }
 
     if (m_dirtyAttributes & OpacityDirty) {
@@ -1396,6 +1411,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->clearcoatNormalMap = nullptr;
         else
             material->clearcoatNormalMap = m_clearcoatNormalMap->getRenderImage();
+        material->clearcoatNormalStrength = m_clearcoatNormalStrength;
     }
 
     if (m_dirtyAttributes & TransmissionDirty) {
@@ -1586,6 +1602,22 @@ void QQuick3DPrincipledMaterial::setClearcoatNormalMap(QQuick3DTexture *newClear
     markDirty(ClearcoatDirty);
 }
 
+
+float QQuick3DPrincipledMaterial::clearcoatNormalStrength() const
+{
+    return m_clearcoatNormalStrength;
+}
+
+void QQuick3DPrincipledMaterial::setClearcoatNormalStrength(float newClearcoatNormalStrength)
+{
+    if (qFuzzyCompare(m_clearcoatNormalStrength, newClearcoatNormalStrength))
+        return;
+
+    m_clearcoatNormalStrength = newClearcoatNormalStrength;
+    emit clearcoatNormalStrengthChanged(m_clearcoatNormalStrength);
+    markDirty(ClearcoatDirty);
+}
+
 float QQuick3DPrincipledMaterial::transmissionFactor() const
 {
     return m_transmissionFactor;
@@ -1625,6 +1657,11 @@ QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::transmission
 float QQuick3DPrincipledMaterial::indexOfRefraction() const
 {
     return m_indexOfRefraction;
+}
+
+float QQuick3DPrincipledMaterial::fresnelPower() const
+{
+    return m_fresnelPower;
 }
 
 bool QQuick3DPrincipledMaterial::vertexColorsEnabled() const
@@ -1721,6 +1758,16 @@ void QQuick3DPrincipledMaterial::setIndexOfRefraction(float indexOfRefraction)
 
     m_indexOfRefraction = indexOfRefraction;
     emit indexOfRefractionChanged(m_indexOfRefraction);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setFresnelPower(float fresnelPower)
+{
+    if (qFuzzyCompare(m_fresnelPower, fresnelPower))
+        return;
+
+    m_fresnelPower = fresnelPower;
+    emit fresnelPowerChanged(m_fresnelPower);
     markDirty(SpecularDirty);
 }
 

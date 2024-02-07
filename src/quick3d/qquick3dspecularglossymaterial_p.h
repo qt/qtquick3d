@@ -77,6 +77,7 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
                        clearcoatRoughnessMapChanged)
     Q_PROPERTY(QQuick3DTexture *clearcoatNormalMap READ clearcoatNormalMap WRITE setClearcoatNormalMap NOTIFY
                        clearcoatNormalMapChanged)
+    Q_PROPERTY(float clearcoatNormalStrength READ clearcoatNormalStrength WRITE setClearcoatNormalStrength NOTIFY clearcoatNormalStrengthChanged REVISION(6, 8))
 
     Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
@@ -167,6 +168,7 @@ public:
     QColor attenuationColor() const;
 
     Q_REVISION(6, 5) bool vertexColorsEnabled() const;
+    Q_REVISION(6, 8) float clearcoatNormalStrength() const;
 
 public Q_SLOTS:
     void setLighting(QQuick3DSpecularGlossyMaterial::Lighting lighting);
@@ -205,6 +207,7 @@ public Q_SLOTS:
     void setClearcoatRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newClearcoatRoughnessChannel);
     void setClearcoatRoughnessMap(QQuick3DTexture *newClearcoatRoughnessMap);
     void setClearcoatNormalMap(QQuick3DTexture *newClearcoatNormalMap);
+    Q_REVISION(6, 8) void setClearcoatNormalStrength( float newClearcoatNormalStrength );
 
     void setTransmissionFactor(float newTransmissionFactor);
     void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
@@ -255,6 +258,7 @@ Q_SIGNALS:
     void clearcoatRoughnessChannelChanged();
     void clearcoatRoughnessMapChanged();
     void clearcoatNormalMapChanged();
+    void clearcoatNormalStrengthChanged();
 
     void transmissionFactorChanged();
     void transmissionMapChanged();
@@ -331,6 +335,7 @@ private:
     TextureChannelMapping m_clearcoatRoughnessChannel = QQuick3DMaterial::G;
     QQuick3DTexture *m_clearcoatRoughnessMap = nullptr;
     QQuick3DTexture *m_clearcoatNormalMap = nullptr;
+    float m_clearcoatNormalStrength = 1.0f;
     float m_transmissionFactor = 0.0f;
     QQuick3DTexture *m_transmissionMap = nullptr;
     TextureChannelMapping m_transmissionChannel = QQuick3DMaterial::R;

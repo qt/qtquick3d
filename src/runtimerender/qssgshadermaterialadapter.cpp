@@ -236,6 +236,11 @@ float QSSGShaderDefaultMaterialAdapter::clearcoatRoughnessAmount()
     return m_material.clearcoatRoughnessAmount;
 }
 
+float QSSGShaderDefaultMaterialAdapter::clearcoatNormalStrength()
+{
+    return m_material.clearcoatNormalStrength;
+}
+
 float QSSGShaderDefaultMaterialAdapter::transmissionFactor()
 {
     return m_material.transmissionFactor;
@@ -437,6 +442,11 @@ float QSSGShaderCustomMaterialAdapter::clearcoatAmount()
 float QSSGShaderCustomMaterialAdapter::clearcoatRoughnessAmount()
 {
     return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::clearcoatNormalStrength()
+{
+    return 1.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::transmissionFactor()
