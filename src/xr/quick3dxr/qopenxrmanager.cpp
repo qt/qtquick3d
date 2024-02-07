@@ -1007,10 +1007,9 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
         const XrSessionState oldState = m_sessionState;
         m_sessionState = stateChangedEvent.state;
 
-        qDebug("XrEventDataSessionStateChanged: state %s->%s session=%p time=%lld",
+        qDebug("XrEventDataSessionStateChanged: state %s->%s time=%lld",
                to_string(oldState),
                to_string(m_sessionState),
-               stateChangedEvent.session,
                static_cast<long long int>(stateChangedEvent.time));
 
         if ((stateChangedEvent.session != XR_NULL_HANDLE) && (stateChangedEvent.session != m_session)) {
