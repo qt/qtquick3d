@@ -182,7 +182,7 @@ private:
     QString m_persistentShaderStorageFileName;
     QSSGBuiltInRhiShaderCache m_builtInShaders;
 
-    QSSGRhiShaderPipelinePtr loadBuiltinForRhi(const QByteArray &inKey, int viewCount);
+    QSSGRhiShaderPipelinePtr loadBuiltinUncached(const QByteArray &inKey, int viewCount);
 
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,

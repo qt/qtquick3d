@@ -29,62 +29,18 @@ class QSSGShaderCache;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBuiltInRhiShaderCache
 {
-    // The shader refs are non-null if we have attempted to generate the
-    // shader. This does not mean we were successul, however.
-    // RHI
-    QSSGRhiShaderPipelinePtr m_cubemapShadowBlurXRhiShader;
-    QSSGRhiShaderPipelinePtr m_cubemapShadowBlurYRhiShader;
-    QSSGRhiShaderPipelinePtr m_gridShader;
-    QSSGRhiShaderPipelinePtr m_orthographicShadowBlurXRhiShader;
-    QSSGRhiShaderPipelinePtr m_orthographicShadowBlurYRhiShader;
-    QSSGRhiShaderPipelinePtr m_ssaoRhiShader;
-    QSSGRhiShaderPipelinePtr m_skyBoxRhiShader[QSSGRenderLayer::TonemapModeCount * 2 /* rgbe+hdr */];
-    QSSGRhiShaderPipelinePtr m_skyBoxCubeRhiShader;
-    QSSGRhiShaderPipelinePtr m_supersampleResolveRhiShader;
-    QSSGRhiShaderPipelinePtr m_progressiveAARhiShader;
-    QSSGRhiShaderPipelinePtr m_texturedQuadRhiShader;
-    QSSGRhiShaderPipelinePtr m_simpleQuadRhiShader;
-    QSSGRhiShaderPipelinePtr m_lightmapUVRasterShader;
-    QSSGRhiShaderPipelinePtr m_lightmapUVRasterShader_uv;
-    QSSGRhiShaderPipelinePtr m_lightmapUVRasterShader_uv_tangent;
-    QSSGRhiShaderPipelinePtr m_lightmapDilateShader;
-    QSSGRhiShaderPipelinePtr m_debugObjectShader;
-
-    QSSGRhiShaderPipelinePtr m_reflectionprobePreFilterShader;
-    QSSGRhiShaderPipelinePtr m_environmentmapPreFilterShader[2];
-    QSSGRhiShaderPipelinePtr m_environmentmapShader;
-
-    QSSGRhiShaderPipelinePtr m_particlesNoLightingSimpleRhiShader;
-    QSSGRhiShaderPipelinePtr m_particlesNoLightingMappedRhiShader;
-    QSSGRhiShaderPipelinePtr m_particlesNoLightingAnimatedRhiShader;
-    QSSGRhiShaderPipelinePtr m_particlesVLightingSimpleRhiShader;
-    QSSGRhiShaderPipelinePtr m_particlesVLightingMappedRhiShader;
-    QSSGRhiShaderPipelinePtr m_particlesVLightingAnimatedRhiShader;
-    QSSGRhiShaderPipelinePtr m_lineParticlesRhiShader;
-    QSSGRhiShaderPipelinePtr m_lineParticlesMappedRhiShader;
-    QSSGRhiShaderPipelinePtr m_lineParticlesAnimatedRhiShader;
-    QSSGRhiShaderPipelinePtr m_lineParticlesVLightRhiShader;
-    QSSGRhiShaderPipelinePtr m_lineParticlesMappedVLightRhiShader;
-    QSSGRhiShaderPipelinePtr m_lineParticlesAnimatedVLightRhiShader;
-
-    QSSGRhiShaderPipelinePtr getBuiltinRhiShader(const QByteArray &name,
-                                                 QSSGRhiShaderPipelinePtr &storage,
-                                                 int viewCount = 1);
-
-    QSSGShaderCache &m_shaderCache; // We're owned by the shadercache
+public:
     explicit QSSGBuiltInRhiShaderCache(QSSGShaderCache &shaderCache)
         : m_shaderCache(shaderCache) {}
 
-    friend class QSSGShaderCache;
+    void releaseCachedResources();
 
-public:
     enum class LightmapUVRasterizationShaderMode {
         Default,
         Uv,
         UvTangent
     };
 
-        // shader implementations, RHI
     QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurXShader();
     QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurYShader();
     QSSGRhiShaderPipelinePtr getRhiGridShader();
@@ -103,6 +59,57 @@ public:
     QSSGRhiShaderPipelinePtr getRhiReflectionprobePreFilterShader();
     QSSGRhiShaderPipelinePtr getRhienvironmentmapPreFilterShader(bool isRGBE);
     QSSGRhiShaderPipelinePtr getRhiEnvironmentmapShader();
+
+private:
+    QSSGShaderCache &m_shaderCache; // We're owned by the shadercache
+
+    struct BuiltinShader {
+        // The shader refs are non-null if we have attempted to generate the
+        // shader. This does not mean we were successul, however.
+        QSSGRhiShaderPipelinePtr shaderPipeline;
+        int viewCount = 1;
+    };
+
+    QSSGRhiShaderPipelinePtr getBuiltinRhiShader(const QByteArray &name,
+                                                BuiltinShader &storage,
+                                                int viewCount = 1);
+
+    struct {
+        BuiltinShader cubemapShadowBlurXRhiShader;
+        BuiltinShader cubemapShadowBlurYRhiShader;
+        BuiltinShader gridShader;
+        BuiltinShader orthographicShadowBlurXRhiShader;
+        BuiltinShader orthographicShadowBlurYRhiShader;
+        BuiltinShader ssaoRhiShader;
+        BuiltinShader skyBoxRhiShader[QSSGRenderLayer::TonemapModeCount * 2 /* rgbe+hdr */];
+        BuiltinShader skyBoxCubeRhiShader;
+        BuiltinShader supersampleResolveRhiShader;
+        BuiltinShader progressiveAARhiShader;
+        BuiltinShader texturedQuadRhiShader;
+        BuiltinShader simpleQuadRhiShader;
+        BuiltinShader lightmapUVRasterShader;
+        BuiltinShader lightmapUVRasterShader_uv;
+        BuiltinShader lightmapUVRasterShader_uv_tangent;
+        BuiltinShader lightmapDilateShader;
+        BuiltinShader debugObjectShader;
+
+        BuiltinShader reflectionprobePreFilterShader;
+        BuiltinShader environmentmapPreFilterShader[2];
+        BuiltinShader environmentmapShader;
+
+        BuiltinShader particlesNoLightingSimpleRhiShader;
+        BuiltinShader particlesNoLightingMappedRhiShader;
+        BuiltinShader particlesNoLightingAnimatedRhiShader;
+        BuiltinShader particlesVLightingSimpleRhiShader;
+        BuiltinShader particlesVLightingMappedRhiShader;
+        BuiltinShader particlesVLightingAnimatedRhiShader;
+        BuiltinShader lineParticlesRhiShader;
+        BuiltinShader lineParticlesMappedRhiShader;
+        BuiltinShader lineParticlesAnimatedRhiShader;
+        BuiltinShader lineParticlesVLightRhiShader;
+        BuiltinShader lineParticlesMappedVLightRhiShader;
+        BuiltinShader lineParticlesAnimatedVLightRhiShader;
+    } m_cache;
 };
 
 QT_END_NAMESPACE

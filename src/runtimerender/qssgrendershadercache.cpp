@@ -292,6 +292,8 @@ QSSGShaderCache::~QSSGShaderCache()
 
 void QSSGShaderCache::releaseCachedResources()
 {
+    m_builtInShaders.releaseCachedResources();
+
     m_rhiShaders.clear();
 
     // m_persistentShaderBakingCache is not cleared, that is intentional,
@@ -587,20 +589,8 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryNewPipelineFromPersistentCache(cons
     return {};
 }
 
-QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey, int viewCount)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinUncached(const QByteArray &inKey, int viewCount)
 {
-    // Material shaders and built-in ones use the same cache. In compileForRhi()
-    // the serialized material key contains the view count Here inKey is merely
-    // the shader identifier, that maps directly to a .qsb file, so we need to
-    // amend it to contain the view count.
-    m_cacheKeyStr.clear();
-    m_cacheKeyStr.append(inKey);
-    m_cacheKeyStr.append(";viewCount=");
-    m_cacheKeyStr.append(QByteArray::number(viewCount));
-    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(m_cacheKeyStr, QSSGShaderFeatures());
-    if (rhiShaders)
-        return rhiShaders;
-
     const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
     if (shaderDebug)
         qDebug("Loading builtin rhi shader: %s (view count: %d)", inKey.constData(), viewCount);
@@ -655,12 +645,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
 
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DLoadShader, 0, inKey);
 
-    QSSGShaderCacheKey cacheKey(m_cacheKeyStr);
-    cacheKey.m_features = QSSGShaderFeatures();
-    cacheKey.updateHashCode();
-
-    const auto inserted = m_rhiShaders.insert(cacheKey, shaders);
-    return inserted.value();
+    return shaders;
 }
 
 namespace QtQuick3DEditorHelpers {

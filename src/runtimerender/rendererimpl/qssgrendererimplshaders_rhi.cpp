@@ -18,51 +18,60 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getBuiltinRhiShader(const QByteArray &name,
-                                                                        QSSGRhiShaderPipelinePtr &storage,
+                                                                        BuiltinShader &storage,
                                                                         int viewCount)
 {
-    QSSGRhiShaderPipelinePtr &result = storage;
-    if (!result) {
+    if (storage.shaderPipeline && storage.viewCount != viewCount)
+        storage = {};
+
+    if (!storage.shaderPipeline) {
         // loadBuiltin must always return a valid QSSGRhiShaderPipeline.
         // There will just be no stages if loading fails.
-        result = m_shaderCache.loadBuiltinForRhi(name, viewCount);
+        storage.shaderPipeline = m_shaderCache.loadBuiltinUncached(name, viewCount);
+        storage.viewCount = viewCount;
     }
-    return result;
+
+    return storage.shaderPipeline;
+}
+
+void QSSGBuiltInRhiShaderCache::releaseCachedResources()
+{
+    m_cache = {};
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiCubemapShadowBlurXShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblurx"), m_cubemapShadowBlurXRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblurx"), m_cache.cubemapShadowBlurXRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiCubemapShadowBlurYShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblury"), m_cubemapShadowBlurYRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblury"), m_cache.cubemapShadowBlurYRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiGridShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("grid"), m_gridShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("grid"), m_cache.gridShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOrthographicShadowBlurXShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblurx"), m_orthographicShadowBlurXRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblurx"), m_cache.orthographicShadowBlurXRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOrthographicShadowBlurYShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblury"), m_orthographicShadowBlurYRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblury"), m_cache.orthographicShadowBlurYRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSsaoShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_cache.ssaoRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxCubeShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("skyboxcube"), m_skyBoxCubeRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("skyboxcube"), m_cache.skyBoxCubeRhiShader);
 }
 
 static inline constexpr size_t getSkyboxIndex(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
@@ -99,106 +108,106 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxShader(QSSGRende
                                           "skybox_rgbe_filmic" };
 
     const size_t skyboxIndex = getSkyboxIndex(tonemapMode, isRGBE);
-    return getBuiltinRhiShader(QByteArray::fromRawData(variant[skyboxIndex], std::char_traits<char>::length(variant[skyboxIndex])), m_skyBoxRhiShader[skyboxIndex]);
+    return getBuiltinRhiShader(QByteArray::fromRawData(variant[skyboxIndex], std::char_traits<char>::length(variant[skyboxIndex])), m_cache.skyBoxRhiShader[skyboxIndex]);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSupersampleResolveShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("ssaaresolve"), m_supersampleResolveRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("ssaaresolve"), m_cache.supersampleResolveRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiProgressiveAAShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("progressiveaa"), m_progressiveAARhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("progressiveaa"), m_cache.progressiveAARhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel, int viewCount)
 {
     switch (featureLevel) {
     case QSSGRenderParticles::FeatureLevel::Simple:
-        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightsimple"), m_particlesNoLightingSimpleRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightsimple"), m_cache.particlesNoLightingSimpleRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::Mapped:
-        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightmapped"), m_particlesNoLightingMappedRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightmapped"), m_cache.particlesNoLightingMappedRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::Animated:
-        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_particlesNoLightingAnimatedRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_cache.particlesNoLightingAnimatedRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::SimpleVLight:
-        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightsimple"), m_particlesVLightingSimpleRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightsimple"), m_cache.particlesVLightingSimpleRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::MappedVLight:
-        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightmapped"), m_particlesVLightingMappedRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightmapped"), m_cache.particlesVLightingMappedRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::AnimatedVLight:
-        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightanimated"), m_particlesVLightingAnimatedRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightanimated"), m_cache.particlesVLightingAnimatedRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::Line:
-        return getBuiltinRhiShader(QByteArrayLiteral("lineparticles"), m_lineParticlesRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticles"), m_cache.lineParticlesRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::LineMapped:
-        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesmapped"), m_lineParticlesMappedRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesmapped"), m_cache.lineParticlesMappedRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::LineAnimated:
-        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesanimated"), m_lineParticlesAnimatedRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesanimated"), m_cache.lineParticlesAnimatedRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::LineVLight:
-        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightsimple"), m_lineParticlesVLightRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightsimple"), m_cache.lineParticlesVLightRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::LineMappedVLight:
-        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightmapped"), m_lineParticlesMappedVLightRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightmapped"), m_cache.lineParticlesMappedVLightRhiShader, viewCount);
         break;
     case QSSGRenderParticles::FeatureLevel::LineAnimatedVLight:
-        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightanimated"), m_lineParticlesAnimatedVLightRhiShader, viewCount);
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightanimated"), m_cache.lineParticlesAnimatedVLightRhiShader, viewCount);
         break;
     }
-    return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_particlesNoLightingAnimatedRhiShader, viewCount);
+    return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_cache.particlesNoLightingAnimatedRhiShader, viewCount);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSimpleQuadShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("simplequad"), m_simpleQuadRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("simplequad"), m_cache.simpleQuadRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode)
 {
     switch (mode) {
     case LightmapUVRasterizationShaderMode::Uv:
-        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_uv"), m_lightmapUVRasterShader_uv);
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_uv"), m_cache.lightmapUVRasterShader_uv);
     case LightmapUVRasterizationShaderMode::UvTangent:
-        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_uv_tangent"), m_lightmapUVRasterShader_uv_tangent);
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_uv_tangent"), m_cache.lightmapUVRasterShader_uv_tangent);
     case LightmapUVRasterizationShaderMode::Default:
-        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster"), m_lightmapUVRasterShader);
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster"), m_cache.lightmapUVRasterShader);
     }
 
-    Q_UNREACHABLE_RETURN(getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster"), m_lightmapUVRasterShader));
+    Q_UNREACHABLE_RETURN(getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster"), m_cache.lightmapUVRasterShader));
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiLightmapDilateShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("lightmapdilate"), m_lightmapDilateShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("lightmapdilate"), m_cache.lightmapDilateShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiDebugObjectShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("debugobject"), m_debugObjectShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("debugobject"), m_cache.debugObjectShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiReflectionprobePreFilterShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("reflectionprobeprefilter"), m_reflectionprobePreFilterShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("reflectionprobeprefilter"), m_cache.reflectionprobePreFilterShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhienvironmentmapPreFilterShader(bool isRGBE)
 {
     static constexpr char variant[][29] { "environmentmapprefilter", "environmentmapprefilter_rgbe" };
     const quint8 idx = quint8(isRGBE);
-    return getBuiltinRhiShader(QByteArray::fromRawData(variant[idx], std::char_traits<char>::length(variant[idx])), m_environmentmapPreFilterShader[idx]);
+    return getBuiltinRhiShader(QByteArray::fromRawData(variant[idx], std::char_traits<char>::length(variant[idx])), m_cache.environmentmapPreFilterShader[idx]);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiEnvironmentmapShader()
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("environmentmap"), m_environmentmapShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("environmentmap"), m_cache.environmentmapShader);
 }
 
 QT_END_NAMESPACE
