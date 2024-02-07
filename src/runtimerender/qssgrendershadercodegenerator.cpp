@@ -404,10 +404,16 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
     QSSGRenderShaderMetadata::ShaderMetaData meta = QSSGRenderShaderMetadata::getShaderMetaData(contents);
 
     for (const QSSGRenderShaderMetadata::Uniform &u : std::as_const(meta.uniforms)) {
-        if (u.type.startsWith(QByteArrayLiteral("sampler")))
+        if (u.type.startsWith(QByteArrayLiteral("sampler"))) {
             mergeContext->registerSampler(u.type, u.name, u.condition, u.conditionName);
-        else
-            mergeContext->registerUniformMember(u.type, u.name, u.condition, u.conditionName);
+        } else {
+            if (u.multiview && mergeContext->viewCount >= 2) {
+                const QByteArray name = u.name + "[" + QByteArray::number(mergeContext->viewCount) + "]";
+                mergeContext->registerUniformMember(u.type, name, u.condition, u.conditionName);
+            } else {
+                mergeContext->registerUniformMember(u.type, u.name, u.condition, u.conditionName);
+            }
+        }
     }
 
     for (const QSSGRenderShaderMetadata::InputOutput &inputVar : std::as_const(meta.inputs)) {
@@ -440,6 +446,7 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
     }
 
     QSSGShaderResourceMergeContext mergeContext;
+    mergeContext.viewCount = viewCount;
 
     for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);

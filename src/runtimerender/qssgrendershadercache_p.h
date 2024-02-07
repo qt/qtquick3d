@@ -81,6 +81,7 @@ enum class Feature : FlagType
     ReflectionProbe = (1 << 21) + 13,
     ReduceMaxNumLights = (1 << 22) + 14,
     Lightmap = (1 << 23) + 15,
+    DisableMultiView = (1 << 24) + 16,
 
     LastFeature
 };
@@ -187,7 +188,8 @@ private:
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
                                ShaderType shaderType,
-                               const QSSGShaderFeatures &inFeatures);
+                               const QSSGShaderFeatures &inFeatures,
+                               int viewCount);
 
 public:
     QSSGShaderCache(QSSGRhiContext &ctx,

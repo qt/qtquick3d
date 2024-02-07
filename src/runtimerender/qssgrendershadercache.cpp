@@ -75,7 +75,8 @@ static constexpr DefineEntry DefineTable[] {
     { "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS", QSSGShaderFeatures::Feature::OpaqueDepthPrePass },
     { "QSSG_ENABLE_REFLECTION_PROBE", QSSGShaderFeatures::Feature::ReflectionProbe },
     { "QSSG_REDUCE_MAX_NUM_LIGHTS", QSSGShaderFeatures::Feature::ReduceMaxNumLights },
-    { "QSSG_ENABLE_LIGHTMAP", QSSGShaderFeatures::Feature::Lightmap }
+    { "QSSG_ENABLE_LIGHTMAP", QSSGShaderFeatures::Feature::Lightmap },
+    { "QSSG_DISABLE_MULTIVIEW", QSSGShaderFeatures::Feature::DisableMultiView }
 };
 
 static_assert(std::size(DefineTable) == QSSGShaderFeatures::Count, "Missing feature define?");
@@ -316,7 +317,8 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryGetRhiShaderPipeline(const QByteArr
 void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
                                             const QByteArray &inKey,
                                             ShaderType shaderType,
-                                            const QSSGShaderFeatures &inFeatures)
+                                            const QSSGShaderFeatures &inFeatures,
+                                            int viewCount)
 {
     m_insertStr.clear();
 
@@ -329,6 +331,11 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
     }
 
     m_insertStr += "#define texture2D texture\n";
+
+    // match Qt Quick and QSGMaterial(Shader)
+    m_insertStr += "#define QSHADER_VIEW_COUNT ";
+    m_insertStr += QByteArray::number(viewCount);
+    m_insertStr += "\n";
 
     str.insert(0, m_insertStr);
     QString::size_type insertPos = int(m_insertStr.size());
@@ -380,10 +387,10 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     QByteArray fragmentCode = inFrag;
 
     if (!vertexCode.isEmpty())
-        addShaderPreprocessor(vertexCode, inKey, ShaderType::Vertex, inFeatures);
+        addShaderPreprocessor(vertexCode, inKey, ShaderType::Vertex, inFeatures, viewCount);
 
     if (!fragmentCode.isEmpty())
-        addShaderPreprocessor(fragmentCode, inKey, ShaderType::Fragment, inFeatures);
+        addShaderPreprocessor(fragmentCode, inKey, ShaderType::Fragment, inFeatures, viewCount);
 
     // lo and behold the final shader strings are ready
 

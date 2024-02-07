@@ -65,6 +65,8 @@ public:
     QHash<int, int> m_nextFreeInLocation;
     QHash<int, int> m_nextFreeOutLocation;
 
+    int viewCount = 1;
+
     void registerInput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name)
     {
         auto it = m_inOutVars.find(name);

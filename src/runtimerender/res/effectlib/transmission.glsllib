@@ -8,7 +8,7 @@
     "uniforms": [
         { "type": "sampler2D", "name": "qt_screenTexture" },
         { "type": "mat4", "name": "qt_modelMatrix" },
-        { "type": "mat4", "name": "qt_viewProjectionMatrix" }
+        { "type": "mat4", "name": "qt_viewProjectionMatrix", "multiview_dependent": true }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -64,7 +64,11 @@ vec3 qt_getIBLVolumeRefraction(in vec3 n, in vec3 v, in float perceptualRoughnes
     vec3 refractedRayExit = position + transmissionRay;
 
     // Project refracted vector on the framebuffer, while mapping to normalized device coordinates.
+#if QSHADER_VIEW_COUNT >= 2
+    vec4 ndcPos = qt_viewProjectionMatrix[gl_ViewIndex] * vec4(refractedRayExit, 1.0);
+#else
     vec4 ndcPos = qt_viewProjectionMatrix * vec4(refractedRayExit, 1.0);
+#endif
     vec2 refractionCoords = ndcPos.xy / ndcPos.w;
     refractionCoords += 1.0;
     refractionCoords /= 2.0;

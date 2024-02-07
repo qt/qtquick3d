@@ -970,6 +970,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     auto debugMode = QSSGRenderLayer::MaterialDebugMode(keyProps.m_debugMode.getValue(inKey));
     const bool enableFog = keyProps.m_fogEnabled.getValue(inKey);
 
+    const int viewCount = featureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
+        ? 1 : keyProps.m_viewCount.getValue(inKey);
+
     // Morphing
     if (numMorphTargets > 0 || hasCustomVert) {
         vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_MAX_COUNT"),
@@ -1183,7 +1186,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *heightImage, true, heightImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Height)];
             fragmentShader.addInclude("parallaxMapping.glsllib");
-            fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ", " << names.imageSampler <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition, qt_material_properties4.x, qt_material_properties4.y, qt_material_properties4.z);\n";
+            if (viewCount < 2) {
+                fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ", " << names.imageSampler
+                            <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition, qt_material_properties4.x, qt_material_properties4.y, qt_material_properties4.z);\n";
+            } else {
+                fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ", " << names.imageSampler
+                            <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition[gl_ViewIndex], qt_material_properties4.x, qt_material_properties4.y, qt_material_properties4.z);\n";
+            }
         }
 
         // Clearcoat Setup (before normalImage code has a change to overwrite qt_world_normal)
@@ -1799,11 +1808,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         if (isOrthoShadowPass) {
+            Q_ASSERT(viewCount == 1);
             fragmentShader.addUniform("qt_shadowDepthAdjust", "vec2");
             fragmentShader << "    // directional shadow pass\n"
                            << "    float qt_shadowDepth = (qt_varDepth + qt_shadowDepthAdjust.x) * qt_shadowDepthAdjust.y;\n"
                            << "    fragOutput = vec4(qt_shadowDepth);\n";
         } else if (isCubeShadowPass) {
+            Q_ASSERT(viewCount == 1);
             fragmentShader.addUniform("qt_cameraPosition", "vec3");
             fragmentShader.addUniform("qt_cameraProperties", "vec2");
             fragmentShader << "    // omnidirectional shadow pass\n"
@@ -1829,7 +1840,8 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                                 QSSGShaderLibraryManager &shaderLibraryManager,
                                                                                 QSSGShaderCache &theCache)
 {
-    const int viewCount = inProperties.m_viewCount.getValue(key);
+    const int viewCount = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
+        ? 1 : inProperties.m_viewCount.getValue(key);
 
     QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
     // inShaderKeyPrefix can be a static string for default materials, but must
@@ -1883,14 +1895,29 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
     materialAdapter->setCustomPropertyUniforms(ubufData, shaders, renderContext);
 
-    // ### multiview
-    const QVector3D camGlobalPos = inCameras[0]->getGlobalPos();
     const QVector2D camProperties(inCameras[0]->clipNear, inCameras[0]->clipFar);
-    const QVector3D camDirection = QSSG_GUARD(inRenderProperties.renderedCameraData.has_value()) ? inRenderProperties.renderedCameraData.value()[0].direction : QVector3D{ 0.0f, 0.0f, -1.0f };
-
-    shaders.setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
-    shaders.setUniform(ubufData, "qt_cameraDirection", &camDirection, 3 * sizeof(float), &cui.cameraDirectionIdx);
     shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
+
+    const int viewCount = inCameras.count();
+    if (viewCount < 2) {
+        const QVector3D camGlobalPos = inCameras[0]->getGlobalPos();
+        shaders.setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
+        const QVector3D camDirection = QSSG_GUARD(inRenderProperties.renderedCameraData.has_value())
+                                                  ? inRenderProperties.renderedCameraData.value()[0].direction
+                                                  : QVector3D{ 0.0f, 0.0f, -1.0f };
+        shaders.setUniform(ubufData, "qt_cameraDirection", &camDirection, 3 * sizeof(float), &cui.cameraDirectionIdx);
+    } else {
+        QVarLengthArray<QVector3D, 2> camGlobalPos(viewCount);
+        QVarLengthArray<QVector3D> camDirection(viewCount);
+        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
+            camGlobalPos[viewIndex] = inCameras[viewIndex]->getGlobalPos();
+            camDirection[viewIndex] = QSSG_GUARD(inRenderProperties.renderedCameraData.has_value())
+                                                ? inRenderProperties.renderedCameraData.value()[viewIndex].direction
+                                                : QVector3D{ 0.0f, 0.0f, -1.0f };
+        }
+        shaders.setUniformArray(ubufData, "qt_cameraPosition", camGlobalPos.constData(), viewCount, QSSGRenderShaderValue::Vec3, &cui.cameraPositionIdx);
+        shaders.setUniformArray(ubufData, "qt_cameraDirection", camDirection.constData(), viewCount, QSSGRenderShaderValue::Vec3, &cui.cameraDirectionIdx);
+    }
 
     const auto globalRenderData = QSSGLayerRenderData::globalRenderProperties(renderContext);
 
@@ -1925,23 +1952,52 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         usesViewProjectionMatrix = true;
 
     // Update matrix uniforms
-    // ### multiview
     if (usesProjectionMatrix || usesInvProjectionMatrix) {
-        const QMatrix4x4 projection = clipSpaceCorrMatrix * inCameras[0]->projection;
-        if (usesProjectionMatrix)
-            shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
-        if (usesInvProjectionMatrix)
-            shaders.setUniform(ubufData, "qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), &cui.inverseProjectionMatrixIdx);
+        if (viewCount < 2) {
+            const QMatrix4x4 projection = clipSpaceCorrMatrix * inCameras[0]->projection;
+            if (usesProjectionMatrix)
+                shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
+            if (usesInvProjectionMatrix)
+                shaders.setUniform(ubufData, "qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), &cui.inverseProjectionMatrixIdx);
+        } else {
+            QVarLengthArray<QMatrix4x4, 2> projections(viewCount);
+            QVarLengthArray<QMatrix4x4, 2> invertedProjections(viewCount);
+            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
+                projections[viewIndex] = clipSpaceCorrMatrix * inCameras[viewIndex]->projection;
+                if (usesInvProjectionMatrix)
+                    invertedProjections[viewIndex] = projections[viewIndex].inverted();
+            }
+            if (usesProjectionMatrix)
+                shaders.setUniformArray(ubufData, "qt_projectionMatrix", projections.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.projectionMatrixIdx);
+            if (usesInvProjectionMatrix)
+                shaders.setUniformArray(ubufData, "qt_inverseProjectionMatrix", invertedProjections.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.inverseProjectionMatrixIdx);
+        }
     }
     if (usesViewMatrix) {
-        const QMatrix4x4 viewMatrix = inCameras[0]->globalTransform.inverted();
-        shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
+        if (viewCount < 2) {
+            const QMatrix4x4 viewMatrix = inCameras[0]->globalTransform.inverted();
+            shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
+        } else {
+            QVarLengthArray<QMatrix4x4, 2> viewMatrices(viewCount);
+            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+                viewMatrices[viewIndex] = inCameras[viewIndex]->globalTransform.inverted();
+            shaders.setUniformArray(ubufData, "qt_viewMatrix", viewMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewMatrixIdx);
+        }
     }
     if (usesViewProjectionMatrix) {
-        QMatrix4x4 viewProj(Qt::Uninitialized);
-        inCameras[0]->calculateViewProjectionMatrix(viewProj);
-        viewProj = clipSpaceCorrMatrix * viewProj;
-        shaders.setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
+        if (viewCount < 2) {
+            QMatrix4x4 viewProj(Qt::Uninitialized);
+            inCameras[0]->calculateViewProjectionMatrix(viewProj);
+            viewProj = clipSpaceCorrMatrix * viewProj;
+            shaders.setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
+        } else {
+            QVarLengthArray<QMatrix4x4, 2> viewProjections(viewCount);
+            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
+                inCameras[viewIndex]->calculateViewProjectionMatrix(viewProjections[viewIndex]);
+                viewProjections[viewIndex] = clipSpaceCorrMatrix * viewProjections[viewIndex];
+            }
+            shaders.setUniformArray(ubufData, "qt_viewProjectionMatrix", viewProjections.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewProjectionMatrixIdx);
+        }
     }
 
     // qt_modelMatrix is always available, but differnt when using instancing
@@ -1951,12 +2007,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders.setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     if (usesModelViewProjectionMatrix) {
-        if (inCameras.count() < 2) {
+        if (viewCount < 2) {
             QMatrix4x4 mvp { clipSpaceCorrMatrix };
             mvp *= inModelViewProjections[0];
             shaders.setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
         } else {
-            const int viewCount = inCameras.count();
             QVarLengthArray<QMatrix4x4, 2> mvps(viewCount);
             for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
                 mvps[viewIndex] = clipSpaceCorrMatrix * inModelViewProjections[viewIndex];

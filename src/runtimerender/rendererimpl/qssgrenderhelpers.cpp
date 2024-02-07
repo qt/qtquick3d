@@ -473,6 +473,9 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
         rhiPrepareSkyBoxForReflectionMap(rhiCtx, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
 
     QSSGShaderFeatures features = inData.getShaderFeatures();
+    // because of alteredCamera/alteredMvp below
+    features.set(QSSGShaderFeatures::Feature::DisableMultiView, true);
+
     const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
     for (const auto &handle : sortedOpaqueObjects) {
@@ -534,6 +537,12 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         featureSet.set(QSSGShaderFeatures::Feature::OrthoShadowPass, true);
     else
         featureSet.set(QSSGShaderFeatures::Feature::CubeShadowPass, true);
+
+    // Do note how updateUniformsForDefaultMaterial() get a single camera and a
+    // custom mvp; make sure multiview is disabled in the shader generator using
+    // the common flag, instead of it having to write logic for checking for
+    // OrthoShadowPoss || CubeShadowPass.
+    featureSet.set(QSSGShaderFeatures::Feature::DisableMultiView, true);
 
     const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
     const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();

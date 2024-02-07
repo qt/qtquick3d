@@ -133,7 +133,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     m_hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(inKey) > 0;
     const auto morphSize = defaultMaterialShaderKeyProperties.m_targetCount.getValue(inKey);
     m_hasMorphing = morphSize > 0;
-    const int viewCount = defaultMaterialShaderKeyProperties.m_viewCount.getValue(inKey);
+    m_viewCount = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
+        ? 1 : defaultMaterialShaderKeyProperties.m_viewCount.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
     if (usesInstancing) {
@@ -226,15 +227,18 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.append("    vec4 qt_vertColor = vec4(1.0);"); // must be 1,1,1,1 to not alter when multiplying with it
 
     if (!usesInstancing) {
-        if (viewCount < 2)
+        if (m_viewCount < 2)
             vertexShader.addUniform("qt_modelViewProjection", "mat4");
         else
-            vertexShader.addUniformArray("qt_modelViewProjection", "mat4", viewCount);
+            vertexShader.addUniformArray("qt_modelViewProjection", "mat4", m_viewCount);
     } else {
         // Must manualy calculate a MVP
         vertexShader.addUniform("qt_modelMatrix", "mat4");
         vertexShader.addUniform("qt_parentMatrix", "mat4");
-        vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
+        if (m_viewCount < 2)
+            vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
+        else
+            vertexShader.addUniformArray("qt_viewProjectionMatrix", "mat4", m_viewCount);
     }
 
     // The custom fragment main should be skipped if this is a
@@ -250,17 +254,28 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         // condition we have to ensure the keywords (VIEW_MATRIX etc.) promised
         // by the documentation are available in *both* the custom vertex and
         // fragment shader snippets, even if only one of them is present.
-        vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
+        if (m_viewCount < 2) {
+            vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
+            vertexShader.addUniform("qt_viewMatrix", "mat4");
+            vertexShader.addUniform("qt_cameraPosition", "vec3");
+            vertexShader.addUniform("qt_cameraDirection", "vec3");
+            if (usesProjectionMatrix)
+                vertexShader.addUniform("qt_projectionMatrix", "mat4");
+            if (usesInvProjectionMatrix)
+                vertexShader.addUniform("qt_inverseProjectionMatrix", "mat4");
+        } else {
+            vertexShader.addUniformArray("qt_viewProjectionMatrix", "mat4", m_viewCount);
+            vertexShader.addUniformArray("qt_viewMatrix", "mat4", m_viewCount);
+            vertexShader.addUniformArray("qt_cameraPosition", "vec3", m_viewCount);
+            vertexShader.addUniformArray("qt_cameraDirection", "vec3", m_viewCount);
+            if (usesProjectionMatrix)
+                vertexShader.addUniformArray("qt_projectionMatrix", "mat4", m_viewCount);
+            if (usesInvProjectionMatrix)
+                vertexShader.addUniformArray("qt_inverseProjectionMatrix", "mat4", m_viewCount);
+        }
         vertexShader.addUniform("qt_modelMatrix", "mat4");
-        vertexShader.addUniform("qt_viewMatrix", "mat4");
         vertexShader.addUniform("qt_normalMatrix", "mat3");
-        vertexShader.addUniform("qt_cameraPosition", "vec3");
-        vertexShader.addUniform("qt_cameraDirection", "vec3");
         vertexShader.addUniform("qt_cameraProperties", "vec2");
-        if (usesProjectionMatrix)
-            vertexShader.addUniform("qt_projectionMatrix", "mat4");
-        if (usesInvProjectionMatrix)
-            vertexShader.addUniform("qt_inverseProjectionMatrix", "mat4");
     }
 
     if (meshHasNormals) {
@@ -312,7 +327,10 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         else
             vertexShader.append("    mat4 qt_instancedModelMatrix =  qt_parentMatrix * transpose(qt_instanceMatrix) * qt_modelMatrix;");
         vertexShader.append("    mat3 qt_instancedNormalMatrix = mat3(transpose(inverse(qt_instancedModelMatrix)));");
-        vertexShader.append("    mat4 qt_instancedMVPMatrix = qt_viewProjectionMatrix * qt_instancedModelMatrix;");
+        if (m_viewCount < 2)
+            vertexShader.append("    mat4 qt_instancedMVPMatrix = qt_viewProjectionMatrix * qt_instancedModelMatrix;");
+        else
+            vertexShader.append("    mat4 qt_instancedMVPMatrix = qt_viewProjectionMatrix[gl_ViewIndex] * qt_instancedModelMatrix;");
     }
 
     if (!materialAdapter->isUnshaded() || !hasCustomVertexShader) {
@@ -338,7 +356,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
 
         if (!hasCustomShadedMain || !overridesPosition) {
             if (!usesInstancing) {
-                if (viewCount < 2)
+                if (m_viewCount < 2)
                     vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
                 else
                     vertexShader.append("    gl_Position = qt_modelViewProjection[gl_ViewIndex] * qt_vertPosition;");

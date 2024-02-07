@@ -14,10 +14,6 @@
 #endif // QQ3D_SHADER_META
 
 #if QSSG_ENABLE_SSAO
-#include "viewProperties.glsllib"
-#endif
-
-#if QSSG_ENABLE_SSAO
 
 float qt_screenSpaceAmbientOcclusionFactor()
 {

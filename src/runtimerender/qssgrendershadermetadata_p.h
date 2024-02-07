@@ -33,6 +33,7 @@ struct Uniform
     Condition condition = Condition::None;
     QByteArray name;
     QByteArray conditionName;
+    bool multiview = false;
 
     static Condition conditionFromString(const QString &condition);
 };

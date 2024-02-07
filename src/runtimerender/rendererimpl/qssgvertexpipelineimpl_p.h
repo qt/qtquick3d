@@ -52,6 +52,7 @@ struct QSSGMaterialVertexPipeline
     bool m_hasMorphing;
     TStrTableStrMap m_interpolationParameters;
     QList<QByteArray> m_addedFunctions;
+    int m_viewCount = 1;
 
     const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties;
     QSSGShaderMaterialAdapter *materialAdapter;
@@ -150,10 +151,15 @@ struct QSSGMaterialVertexPipeline
         generateWorldPosition(inKey);
         generateWorldNormal(inKey);
         QSSGStageGeneratorBase &activeGenerator(activeStage());
-        activeGenerator.addInclude("viewProperties.glsllib");
         addInterpolationParameter("qt_var_object_to_camera", "vec3");
 
-        activeGenerator.append("    qt_var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition );");
+        if (m_viewCount < 2) {
+            activeGenerator.addUniform("qt_cameraPosition", "vec3");
+            activeGenerator.append("    qt_var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition );");
+        } else {
+            activeGenerator.addUniformArray("qt_cameraPosition", "vec3", m_viewCount);
+            activeGenerator.append("    qt_var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition[gl_ViewIndex] );");
+        }
 
         // World normal cannot be relied upon in the vertex shader because of bump maps.
         fragment().append("    vec3 environment_map_reflection = reflect( "
@@ -161,16 +167,21 @@ struct QSSGMaterialVertexPipeline
         fragment().append("    environment_map_reflection *= vec3( 0.5, 0.5, 0 );");
         fragment().append("    environment_map_reflection += vec3( 0.5, 0.5, 1.0 );");
     }
+
     void generateViewVector(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::ViewVector))
             return;
 
         generateWorldPosition(inKey);
-        activeStage().addUniform("qt_cameraPosition", "vec3");
 
-
-        fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition - qt_varWorldPos);\n";
+        if (m_viewCount < 2) {
+            activeStage().addUniform("qt_cameraPosition", "vec3");
+            fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition - qt_varWorldPos);\n";
+        } else {
+            activeStage().addUniformArray("qt_cameraPosition", "vec3", m_viewCount);
+            fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition[gl_ViewIndex] - qt_varWorldPos);\n";
+        }
     }
 
     // fragment shader expects varying vertex normal
