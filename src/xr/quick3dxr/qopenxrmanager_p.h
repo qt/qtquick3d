@@ -66,6 +66,7 @@ private Q_SLOTS:
 Q_SIGNALS:
     void sessionEnded();
     void xrOriginChanged();
+    void frameReady(QRhiTexture *colorBuffer);
 
 protected:
     bool event(QEvent *e) override;

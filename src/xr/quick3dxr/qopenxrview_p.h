@@ -35,6 +35,7 @@ class QQuick3DSceneEnvironment;
 class QOpenXRHandInput;
 class QOpenXRHandTrackerInput;
 class QOpenXRGamepadInput;
+class QRhiTexture;
 
 class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
 {
@@ -96,6 +97,7 @@ Q_SIGNALS:
     void environmentChanged(QQuick3DSceneEnvironment * environment);
     void enablePassthroughChanged(bool enable);
     void quitOnSessionEndChanged();
+    void frameReady(QRhiTexture *colorBuffer); // tooling
 
 private:
     // The XrView does not expose the View3D in its public interface. This is intentional.

@@ -39,6 +39,8 @@ QOpenXRView::QOpenXRView()
     connect(environment(), &QQuick3DSceneEnvironment::clearColorChanged, this, &QOpenXRView::handleClearColorChanged);
 
     connect(&m_openXRManager, &QOpenXRManager::sessionEnded, this, &QOpenXRView::handleSessionEnded);
+    connect(&m_openXRManager, &QOpenXRManager::frameReady, this, &QOpenXRView::frameReady);
+
     m_openXRManager.update();
 }
 

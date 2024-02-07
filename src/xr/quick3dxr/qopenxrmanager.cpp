@@ -10,7 +10,7 @@
 
 #include <rhi/qrhi.h>
 
-#include <QtQuick/QQuickWindow>
+#include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/QQuickRenderControl>
 #include <QtQuick/QQuickRenderTarget>
 #include <QtQuick/QQuickItem>
@@ -1343,6 +1343,11 @@ void QOpenXRManager::doRender(const XrSwapchainSubImage &subImage, const XrSwapc
     m_renderControl->sync();
     m_renderControl->render();
     m_renderControl->endFrame();
+
+    // With multiview this indicates that the frame with both eyes is ready from
+    // the 3D APIs perspective. Without multiview this is done - and so the
+    // signal is emitted - multiple times (twice) per "frame" (eye).
+    emit frameReady(QQuickWindowPrivate::get(m_quickWindow)->redirect.rt.texture);
 }
 
 void QOpenXRManager::preSetupQuickScene()
