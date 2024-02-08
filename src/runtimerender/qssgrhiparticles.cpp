@@ -44,7 +44,6 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &sha
 
     QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders.commonUniformIndices;
 
-    quint32 offset = 0;
     const int viewCount = cameras.count();
     if (viewCount < 2) {
         const QMatrix4x4 projection = clipSpaceCorrMatrix * cameras[0]->projection;
