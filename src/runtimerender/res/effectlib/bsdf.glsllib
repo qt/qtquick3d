@@ -10,7 +10,7 @@
 
 vec3 qt_schlick3(in vec3 f0, in vec3 f90, in float VdotH)
 {
-    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);
+    return f0 + (f90 - f0) * (1.0 - clamp(pow( VdotH, 5.0), 0.0, 1.0 ) );
 }
 
 float qt_G_GGX_2cos(in float cos_theta_m, in float alpha) {
