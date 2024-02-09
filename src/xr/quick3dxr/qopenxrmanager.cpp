@@ -313,6 +313,9 @@ void QOpenXRManager::teardown()
         xrDestroySpace(m_appSpace);
     }
 
+    if (m_viewSpace != XR_NULL_HANDLE)
+        xrDestroySpace(m_viewSpace);
+
     xrDestroySession(m_session);
 
 #ifdef XR_EXT_debug_utils
@@ -775,13 +778,18 @@ void QOpenXRManager::checkReferenceSpaces()
 
     uint32_t spaceCount;
     checkXrResult(xrEnumerateReferenceSpaces(m_session, 0, &spaceCount, nullptr));
-    QVector<XrReferenceSpaceType> spaces(spaceCount);
-    checkXrResult(xrEnumerateReferenceSpaces(m_session, spaceCount, &spaceCount, spaces.data()));
+    m_availableReferenceSpace.resize(spaceCount);
+    checkXrResult(xrEnumerateReferenceSpaces(m_session, spaceCount, &spaceCount, m_availableReferenceSpace.data()));
 
     qDebug("Available reference spaces: %d", spaceCount);
-    for (XrReferenceSpaceType space : spaces) {
+    for (XrReferenceSpaceType space : m_availableReferenceSpace) {
         qDebug("  Name: %s", to_string(space));
     }
+}
+
+bool QOpenXRManager::isReferenceSpaceAvailable(XrReferenceSpaceType type)
+{
+    return m_availableReferenceSpace.contains(type);
 }
 
 void QOpenXRManager::setupVisualizedSpace()
@@ -797,13 +805,16 @@ void QOpenXRManager::setupVisualizedSpace()
     identityPose.position.y = 0;
     identityPose.position.z = 0;
 
-    // View
+    // App Space
     XrReferenceSpaceCreateInfo referenceSpaceCreateInfo{};
     referenceSpaceCreateInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
     referenceSpaceCreateInfo.poseInReferenceSpace = identityPose;
     referenceSpaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
     checkXrResult(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &m_appSpace));
 
+    // View Space
+    referenceSpaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW;
+    checkXrResult(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &m_viewSpace));
 }
 
 void QOpenXRManager::createSwapchains()
@@ -1163,6 +1174,19 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
         // Check for XrOrigin
         checkOrigin();
 
+        // Update the camera/head position
+        XrSpaceLocation location{};
+        location.type = XR_TYPE_SPACE_LOCATION;
+        if (checkXrResult(xrLocateSpace(m_viewSpace, m_appSpace, predictedDisplayTime, &location))) {
+            m_xrOrigin->camera()->setPosition(QVector3D(location.pose.position.x,
+                                                        location.pose.position.y,
+                                                        location.pose.position.z) * 100.0f); // convert m to cm
+            m_xrOrigin->camera()->setRotation(QQuaternion(location.pose.orientation.w,
+                                                          location.pose.orientation.x,
+                                                          location.pose.orientation.y,
+                                                          location.pose.orientation.z));
+        }
+
         // Set the hand positions
         m_inputManager->updatePoses(predictedDisplayTime, m_appSpace);
 
@@ -1336,7 +1360,7 @@ bool QOpenXRManager::setupQuickScene()
     return true;
 }
 
-void QOpenXRManager::updateCameraHelper(QOpenXRCamera *camera, const XrCompositionLayerProjectionView &layerView)
+void QOpenXRManager::updateCameraHelper(QOpenXREyeCamera *camera, const XrCompositionLayerProjectionView &layerView)
 {
     camera->setAngleLeft(layerView.fov.angleLeft);
     camera->setAngleRight(layerView.fov.angleRight);
@@ -1357,7 +1381,7 @@ void QOpenXRManager::updateCameraHelper(QOpenXRCamera *camera, const XrCompositi
 // This is set right before updateing/rendering for that eye's view
 void QOpenXRManager::updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView)
 {
-    QOpenXRCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->camera(eye) : nullptr;
+    QOpenXREyeCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->eyeCamera(eye) : nullptr;
 
     if (eyeCamera)
         updateCameraHelper(eyeCamera, layerView);
@@ -1370,7 +1394,7 @@ void QOpenXRManager::updateCameraMultiview(int projectionLayerViewStartIndex, in
 {
     QVarLengthArray<QQuick3DCamera *, 4> cameras;
     for (int i = projectionLayerViewStartIndex; i < projectionLayerViewStartIndex + count; ++i) {
-        QOpenXRCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->camera(i) : nullptr;
+        QOpenXREyeCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
         if (eyeCamera)
             updateCameraHelper(eyeCamera, m_projectionLayerViews[i]);
         cameras.append(eyeCamera);

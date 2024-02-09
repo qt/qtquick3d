@@ -38,7 +38,7 @@ class QQuickWindow;
 class QQuickRenderControl;
 class QQuick3DNode;
 class QQuick3DViewport;
-class QOpenXRCamera;
+class QOpenXREyeCamera;
 class QOpenXRView;
 class QOpenXROrigin;
 class QOpenXRInputManager;
@@ -88,6 +88,7 @@ private:
     bool setupGraphics();
 
     void checkReferenceSpaces();
+    bool isReferenceSpaceAvailable(XrReferenceSpaceType type);
 
     //void setupActions();
     void setupVisualizedSpace();
@@ -106,7 +107,7 @@ private:
 
     void preSetupQuickScene();
     bool setupQuickScene();
-    void updateCameraHelper(QOpenXRCamera *camera, const XrCompositionLayerProjectionView &layerView);
+    void updateCameraHelper(QOpenXREyeCamera *camera, const XrCompositionLayerProjectionView &layerView);
     void updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView);
     void updateCameraMultiview(int projectionLayerViewStartIndex, int count);
     void checkOrigin();
@@ -133,10 +134,13 @@ private:
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
     XrSpace m_appSpace{XR_NULL_HANDLE};
+    XrSpace m_viewSpace{XR_NULL_HANDLE};
     XrFormFactor m_formFactor{XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY};
     XrViewConfigurationType m_viewConfigType{XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO};
     XrEnvironmentBlendMode m_environmentBlendMode{XR_ENVIRONMENT_BLEND_MODE_OPAQUE};
     XrSystemId m_systemId{XR_NULL_SYSTEM_ID};
+
+    QVector<XrReferenceSpaceType> m_availableReferenceSpace;
 
 #ifdef XR_EXT_debug_utils
     XrDebugUtilsMessengerEXT m_debugMessenger = XR_NULL_HANDLE;

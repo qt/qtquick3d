@@ -28,29 +28,25 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DXR_EXPORT QOpenXROrigin : public QQuick3DNode
 {
     Q_OBJECT
-    Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
-    Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
+    Q_PROPERTY(QOpenXRCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
     QML_NAMED_ELEMENT(XrOrigin)
 
 public:
     QOpenXROrigin();
 
-    QOpenXRCamera *camera(int index) const;
+    QOpenXRCamera *camera() const;
+    void setCamera(QOpenXRCamera *newCamera);
 
-    float clipNear() const;
-    void setClipNear(float newClipNear);
-
-    float clipFar() const;
-    void setClipFar(float newClipFar);
-
-signals:
-    void clipNearChanged();
-    void clipFarChanged();
+Q_SIGNALS:
+    void cameraChanged();
 
 private:
-    QVarLengthArray<QOpenXRCamera *, 2> m_cameras;
-    float m_clipNear = 1.0f;
-    float m_clipFar = 10000.0f;
+    QOpenXREyeCamera *eyeCamera(int index) const;
+    QOpenXRCamera *m_camera = nullptr;
+    QOpenXRCamera *m_builtInCamera = nullptr;
+    QVarLengthArray<QOpenXREyeCamera *, 2> m_eyeCameras;
+
+    friend class QOpenXRManager;
 };
 
 QT_END_NAMESPACE

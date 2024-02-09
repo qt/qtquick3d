@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DXR_EXPORT QOpenXRCamera : public QQuick3DCamera
+class Q_QUICK3DXR_EXPORT QOpenXREyeCamera : public QQuick3DCamera
 {
     Q_OBJECT
     Q_PROPERTY(float angleLeft READ angleLeft WRITE setAngleLeft NOTIFY angleLeftChanged)
@@ -34,7 +34,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRCamera : public QQuick3DCamera
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
 
 public:
-    QOpenXRCamera(QQuick3DNode *parent = nullptr);
+    QOpenXREyeCamera(QQuick3DNode *parent = nullptr);
 
     float angleLeft() const;
     float angleRight() const;
@@ -74,6 +74,33 @@ private:
     QMatrix4x4 m_projection;
     bool m_projectionDirty = true;
 };
+
+class Q_QUICK3DXR_EXPORT QOpenXRCamera : public QQuick3DNode
+{
+    Q_OBJECT
+    Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
+    Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
+    QML_NAMED_ELEMENT(XrCamera)
+
+public:
+    QOpenXRCamera(QQuick3DNode *parent = nullptr);
+    ~QOpenXRCamera();
+    float clipNear() const;
+    float clipFar() const;
+
+public Q_SLOTS:
+    void setClipNear(float clipNear);
+    void setClipFar(float clipFar);
+
+Q_SIGNALS:
+    void clipNearChanged(float clipNear);
+    void clipFarChanged(float clipFar);
+
+private:
+    float m_clipNear = 1.0f;
+    float m_clipFar = 10000.0f;
+};
+
 
 QT_END_NAMESPACE
 

@@ -6,51 +6,64 @@
 QT_BEGIN_NAMESPACE
 
 QOpenXROrigin::QOpenXROrigin()
+    : m_builtInCamera(new QOpenXRCamera(this))
 {
-    QOpenXRCamera *leftEyeCamera = new QOpenXRCamera;
-    leftEyeCamera->setParentItem(this);
+    // These are the "real" cameras that are used for rendering.
+    auto *leftEyeCamera = new QOpenXREyeCamera;
     leftEyeCamera->setParent(this);
-    m_cameras.append(leftEyeCamera);
+    leftEyeCamera->setParentItem(this);
+    m_eyeCameras.append(leftEyeCamera);
 
-    QOpenXRCamera *rightEyeCamera = new QOpenXRCamera;
-    rightEyeCamera->setParentItem(this);
+    auto *rightEyeCamera = new QOpenXREyeCamera;
     rightEyeCamera->setParent(this);
-    m_cameras.append(rightEyeCamera);
+    rightEyeCamera->setParentItem(this);
+    m_eyeCameras.append(rightEyeCamera);
+
+    // This is the user facing camera
+    setCamera(m_builtInCamera);
 }
 
-QOpenXRCamera *QOpenXROrigin::camera(int index) const
+
+QOpenXRCamera *QOpenXROrigin::camera() const
 {
-    return m_cameras[index];
+    return m_camera;
 }
 
-float QOpenXROrigin::clipNear() const
+void QOpenXROrigin::setCamera(QOpenXRCamera *newCamera)
 {
-    return m_clipNear;
-}
-
-void QOpenXROrigin::setClipNear(float newClipNear)
-{
-    if (qFuzzyCompare(m_clipNear, newClipNear))
+    if (m_camera == newCamera)
         return;
-    m_clipNear = newClipNear;
-    for (QOpenXRCamera *camera : std::as_const(m_cameras))
-        camera->setClipNear(newClipNear);
-    emit clipNearChanged();
+
+    if (m_camera) {
+        // connect the near/far properties to the real eye camers
+        for (auto eyeCamera : m_eyeCameras) {
+            // disconnnect the old camera
+            disconnect(m_camera, &QOpenXRCamera::clipNearChanged, eyeCamera, &QOpenXREyeCamera::setClipNear);
+            disconnect(m_camera, &QOpenXRCamera::clipFarChanged, eyeCamera, &QOpenXREyeCamera::setClipFar);
+        }
+    }
+
+    // There will always be a camera, either the built-in one or the user provided one
+    if (newCamera)
+        m_camera = newCamera;
+    else
+        m_camera = m_builtInCamera;
+
+    if (m_camera) {
+        for (auto eyeCamera : m_eyeCameras) {
+            // Set the initial value, and connect the signals
+            eyeCamera->setClipNear(m_camera->clipNear());
+            eyeCamera->setClipFar(m_camera->clipFar());
+            connect(m_camera, &QOpenXRCamera::clipNearChanged, eyeCamera, &QOpenXREyeCamera::setClipNear);
+            connect(m_camera, &QOpenXRCamera::clipFarChanged, eyeCamera, &QOpenXREyeCamera::setClipFar);
+        }
+    }
+    emit cameraChanged();
 }
 
-float QOpenXROrigin::clipFar() const
+QOpenXREyeCamera *QOpenXROrigin::eyeCamera(int index) const
 {
-    return m_clipFar;
-}
-
-void QOpenXROrigin::setClipFar(float newClipFar)
-{
-    if (qFuzzyCompare(m_clipFar, newClipFar))
-        return;
-    m_clipFar = newClipFar;
-    for (QOpenXRCamera *camera : std::as_const(m_cameras))
-        camera->setClipFar(newClipFar);
-    emit clipFarChanged();
+    return m_eyeCameras[index];
 }
 
 QT_END_NAMESPACE

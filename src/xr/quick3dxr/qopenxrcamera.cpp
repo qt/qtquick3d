@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrcamera_p.h"
+#include "qopenxrorigin_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3D/private/qquick3dutils_p.h>
@@ -10,43 +11,43 @@
 
 QT_BEGIN_NAMESPACE
 
-QOpenXRCamera::QOpenXRCamera(QQuick3DNode *parent)
+QOpenXREyeCamera::QOpenXREyeCamera(QQuick3DNode *parent)
     : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera)), parent)
 {
 
 }
 
-float QOpenXRCamera::angleLeft() const
+float QOpenXREyeCamera::angleLeft() const
 {
     return m_angleLeft;
 }
 
-float QOpenXRCamera::angleRight() const
+float QOpenXREyeCamera::angleRight() const
 {
     return m_angleRight;
 }
 
-float QOpenXRCamera::angleUp() const
+float QOpenXREyeCamera::angleUp() const
 {
     return m_angleUp;
 }
 
-float QOpenXRCamera::angleDown() const
+float QOpenXREyeCamera::angleDown() const
 {
     return m_angleDown;
 }
 
-float QOpenXRCamera::clipNear() const
+float QOpenXREyeCamera::clipNear() const
 {
     return m_clipNear;
 }
 
-float QOpenXRCamera::clipFar() const
+float QOpenXREyeCamera::clipFar() const
 {
     return m_clipFar;
 }
 
-void QOpenXRCamera::setAngleLeft(float angleLeft)
+void QOpenXREyeCamera::setAngleLeft(float angleLeft)
 {
     if (qFuzzyCompare(m_angleLeft, angleLeft))
         return;
@@ -56,7 +57,7 @@ void QOpenXRCamera::setAngleLeft(float angleLeft)
     markProjectionDirty();
 }
 
-void QOpenXRCamera::setAngleRight(float angleRight)
+void QOpenXREyeCamera::setAngleRight(float angleRight)
 {
     if (qFuzzyCompare(m_angleRight, angleRight))
         return;
@@ -66,7 +67,7 @@ void QOpenXRCamera::setAngleRight(float angleRight)
     markProjectionDirty();
 }
 
-void QOpenXRCamera::setAngleUp(float angleUp)
+void QOpenXREyeCamera::setAngleUp(float angleUp)
 {
     if (qFuzzyCompare(m_angleUp, angleUp))
         return;
@@ -76,7 +77,7 @@ void QOpenXRCamera::setAngleUp(float angleUp)
     markProjectionDirty();
 }
 
-void QOpenXRCamera::setAngleDown(float angleDown)
+void QOpenXREyeCamera::setAngleDown(float angleDown)
 {
     if (qFuzzyCompare(m_angleDown, angleDown))
         return;
@@ -86,7 +87,7 @@ void QOpenXRCamera::setAngleDown(float angleDown)
     markProjectionDirty();
 }
 
-void QOpenXRCamera::setClipNear(float clipNear)
+void QOpenXREyeCamera::setClipNear(float clipNear)
 {
     if (qFuzzyCompare(m_clipNear, clipNear))
         return;
@@ -96,7 +97,7 @@ void QOpenXRCamera::setClipNear(float clipNear)
     markProjectionDirty();
 }
 
-void QOpenXRCamera::setClipFar(float clipFar)
+void QOpenXREyeCamera::setClipFar(float clipFar)
 {
     if (qFuzzyCompare(m_clipFar, clipFar))
         return;
@@ -106,7 +107,7 @@ void QOpenXRCamera::setClipFar(float clipFar)
     markProjectionDirty();
 }
 
-QSSGRenderGraphObject *QOpenXRCamera::updateSpatialNode(QSSGRenderGraphObject *node)
+QSSGRenderGraphObject *QOpenXREyeCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
     if (camera) {
@@ -122,7 +123,7 @@ QSSGRenderGraphObject *QOpenXRCamera::updateSpatialNode(QSSGRenderGraphObject *n
     return camera;
 }
 
-void QOpenXRCamera::markProjectionDirty()
+void QOpenXREyeCamera::markProjectionDirty()
 {
     if (!m_projectionDirty) {
         m_projectionDirty = true;
@@ -130,7 +131,7 @@ void QOpenXRCamera::markProjectionDirty()
     }
 }
 
-void QOpenXRCamera::maybeUpdateProjection()
+void QOpenXREyeCamera::maybeUpdateProjection()
 {
     if (!m_projectionDirty)
         return;
@@ -166,11 +167,43 @@ void QOpenXRCamera::maybeUpdateProjection()
     m[7] = 0;
     m[11] = -1;
     m[15] = 0;
+}
 
-//    qDebug() << "#### Projection ####";
-//    qDebug() << m_projection;
-//    qDebug() << "angles [l, r, u, d]: [" << m_angleLeft << ", " << m_angleRight << ", " << m_angleUp << ", " << m_angleDown << "]";
+QOpenXRCamera::QOpenXRCamera(QQuick3DNode *parent)
+    : QQuick3DNode(parent)
+{
+}
 
+QOpenXRCamera::~QOpenXRCamera()
+{
+
+}
+
+float QOpenXRCamera::clipNear() const
+{
+    return m_clipNear;
+}
+
+float QOpenXRCamera::clipFar() const
+{
+    return m_clipFar;
+}
+
+
+void QOpenXRCamera::setClipNear(float clipNear)
+{
+    if (qFuzzyCompare(m_clipNear, clipNear))
+        return;
+    m_clipNear = clipNear;
+    emit clipNearChanged(m_clipNear);
+}
+
+void QOpenXRCamera::setClipFar(float clipFar)
+{
+    if (qFuzzyCompare(m_clipFar, clipFar))
+        return;
+    m_clipFar = clipFar;
+    emit clipFarChanged(m_clipFar);
 }
 
 QT_END_NAMESPACE
