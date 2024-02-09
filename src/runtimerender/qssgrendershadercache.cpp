@@ -372,7 +372,8 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
 
 QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
                                                         const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags,
-                                                        int viewCount)
+                                                        int viewCount,
+                                                        bool perTargetCompilation)
 {
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
     const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(inKey, inFeatures);
@@ -399,6 +400,11 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
 
     QShaderBaker baker;
     m_initBaker(&baker, m_rhiContext.rhi());
+
+    // If requested, per-target compilation allows doing things like #if
+    // QSHADER_HLSL in the shader code, at the expense of spending more time in
+    // bake())
+    baker.setPerTargetCompilation(perTargetCompilation);
 
     // This is in the shader key, but cannot query that here anymore now that it's serialized.
     // So we get it as a dedicated argument.

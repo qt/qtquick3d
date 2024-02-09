@@ -1112,7 +1112,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         if (isDoubleSided) {
-            fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;\n");
+            fragmentShader.append("#if QSHADER_HLSL && QSHADER_VIEW_COUNT >= 2");
+            fragmentShader.append("    const float qt_facing = 1.0;");
+            fragmentShader.append("#else");
+            fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;");
+            fragmentShader.append("#endif");
             fragmentShader.append("    qt_world_normal *= qt_facing;\n");
             if (needsTangentAndBinormal) {
                 fragmentShader.append("    qt_tangent *= qt_facing;");
@@ -1851,6 +1855,21 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
     const int viewCount = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
         ? 1 : inProperties.m_viewCount.getValue(key);
 
+    bool perTargetCompilation = false;
+    // Cull mode None implies doing the gl_FrontFacing-based double sided logic
+    // in the shader. This may want to ifdef the generated shader code based the
+    // target shading language. This is only possible if the QShaderBaker is
+    // told to compile to SPIR-V (and then transpile) separately for each target
+    // (GLSL, HLSL, etc.), instead of just compiling to SPIR-V once (and
+    // transpiling the same bytecode to each target language). This takes more
+    // time, so we only do it for multiview since that's also how the logic is
+    // going to be written in the generated shader code.
+    if (viewCount >= 2) {
+        const bool isDoubleSided = inProperties.m_isDoubleSided.getValue(key);
+        if (isDoubleSided)
+            perTargetCompilation = true;
+    }
+
     QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
     // inShaderKeyPrefix can be a static string for default materials, but must
     // be unique for different sets of shaders in custom materials.
@@ -1868,7 +1887,8 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                         shaderLibraryManager,
                                                                         theCache,
                                                                         {},
-                                                                        viewCount);
+                                                                        viewCount,
+                                                                        perTargetCompilation);
 }
 
 static float ZERO_MATRIX[16] = {};

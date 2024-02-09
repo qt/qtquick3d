@@ -437,7 +437,8 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
                                                                          QSSGShaderLibraryManager &shaderLibraryManager,
                                                                          QSSGShaderCache &theCache,
                                                                          QSSGRhiShaderPipeline::StageFlags stageFlags,
-                                                                         int viewCount)
+                                                                         int viewCount,
+                                                                         bool perTargetCompilation)
 {
     // No stages enabled
     if (((quint32)m_enabledStages) == 0) {
@@ -481,7 +482,8 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
                                    m_fs.m_finalBuilder,
                                    inFeatureSet,
                                    stageFlags,
-                                   viewCount);
+                                   viewCount,
+                                   perTargetCompilation);
 }
 
 QSSGVertexShaderGenerator::QSSGVertexShaderGenerator()

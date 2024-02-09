@@ -169,7 +169,8 @@ public:
                                                        QSSGShaderLibraryManager &shaderLibraryManager,
                                                        QSSGShaderCache &theCache,
                                                        QSSGRhiShaderPipeline::StageFlags stageFlags,
-                                                       int viewCount);
+                                                       int viewCount,
+                                                       bool perTargetCompilation);
 };
 
 QT_END_NAMESPACE

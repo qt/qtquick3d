@@ -219,7 +219,8 @@ public:
                                            const QByteArray &inFrag,
                                            const QSSGShaderFeatures &inFeatures,
                                            QSSGRhiShaderPipeline::StageFlags stageFlags,
-                                           int viewCount);
+                                           int viewCount,
+                                           bool perTargetCompilation);
 
     QSSGBuiltInRhiShaderCache &getBuiltInRhiShaders() { return m_builtInShaders; }
 
