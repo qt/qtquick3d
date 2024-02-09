@@ -7,7 +7,7 @@ qt_internal_add_qml_module(Quick3DXr
     DEPENDENCIES QtQuick QtQuick3D
     SOURCES
         qabstractopenxrgraphics.cpp qabstractopenxrgraphics_p.h
-        qopenxractor.cpp qopenxractor_p.h
+        qopenxrorigin.cpp qopenxrorigin_p.h
         qopenxranimationdriver.cpp qopenxranimationdriver_p.h
         qopenxrcamera.cpp qopenxrcamera_p.h
         qopenxrhelpers.cpp qopenxrhelpers_p.h

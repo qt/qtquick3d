@@ -46,7 +46,7 @@
 #endif // XR_USE_PLATFORM_ANDROID
 
 #include "qopenxrhelpers_p.h"
-#include "qopenxractor_p.h"
+#include "qopenxrorigin_p.h"
 
 #include "qopenxrspaceextension_p.h"
 
@@ -1160,8 +1160,8 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
         Q_ASSERT(viewCountOutput == m_projectionLayerViews.size());
         Q_ASSERT(m_multiviewRendering ? viewCountOutput == m_swapchains[0].arraySize : viewCountOutput == m_swapchains.size());
 
-        // Check for actor
-        checkActor();
+        // Check for XrOrigin
+        checkOrigin();
 
         // Set the hand positions
         m_inputManager->updatePoses(predictedDisplayTime, m_appSpace);
@@ -1357,7 +1357,7 @@ void QOpenXRManager::updateCameraHelper(QOpenXRCamera *camera, const XrCompositi
 // This is set right before updateing/rendering for that eye's view
 void QOpenXRManager::updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView)
 {
-    QOpenXRCamera *eyeCamera = m_xrActor ? m_xrActor->camera(eye) : nullptr;
+    QOpenXRCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->camera(eye) : nullptr;
 
     if (eyeCamera)
         updateCameraHelper(eyeCamera, layerView);
@@ -1370,7 +1370,7 @@ void QOpenXRManager::updateCameraMultiview(int projectionLayerViewStartIndex, in
 {
     QVarLengthArray<QQuick3DCamera *, 4> cameras;
     for (int i = projectionLayerViewStartIndex; i < projectionLayerViewStartIndex + count; ++i) {
-        QOpenXRCamera *eyeCamera = m_xrActor ? m_xrActor->camera(i) : nullptr;
+        QOpenXRCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->camera(i) : nullptr;
         if (eyeCamera)
             updateCameraHelper(eyeCamera, m_projectionLayerViews[i]);
         cameras.append(eyeCamera);
@@ -1378,31 +1378,31 @@ void QOpenXRManager::updateCameraMultiview(int projectionLayerViewStartIndex, in
     m_vrViewport->setMultiViewCameras(cameras.data(), cameras.count());
 }
 
-void QOpenXRManager::checkActor()
+void QOpenXRManager::checkOrigin()
 {
-    if (!m_xrActor) {
-        // Check the scene for an actor
-        std::function<QOpenXRActor*(QQuick3DObject *)> findActorNode;
-        findActorNode = [&findActorNode](QQuick3DObject *node) -> QOpenXRActor *{
+    if (!m_xrOrigin) {
+        // Check the scene for an XrOrigin
+        std::function<QOpenXROrigin*(QQuick3DObject *)> findOriginNode;
+        findOriginNode = [&findOriginNode](QQuick3DObject *node) -> QOpenXROrigin *{
             if (!node)
                 return nullptr;
-            auto actor = qobject_cast<QOpenXRActor *>(node);
-            if (actor)
-                return actor;
+            auto origin = qobject_cast<QOpenXROrigin *>(node);
+            if (origin)
+                return origin;
             for (auto child : node->childItems()) {
-                actor = findActorNode(child);
-                if (actor)
-                    return actor;
+                origin = findOriginNode(child);
+                if (origin)
+                    return origin;
             }
             return nullptr;
         };
-        auto actor = findActorNode(m_vrViewport->importScene());
-        if (actor) {
-            m_xrActor = actor;
-            emit actorChanged();
-            connect(m_xrActor, &QObject::destroyed, this, [this](){
-               m_xrActor = nullptr;
-               emit actorChanged();
+        auto origin = findOriginNode(m_vrViewport->importScene());
+        if (origin) {
+            m_xrOrigin = origin;
+            emit xrOriginChanged();
+            connect(m_xrOrigin, &QObject::destroyed, this, [this](){
+                m_xrOrigin = nullptr;
+               emit xrOriginChanged();
             });
         }
     }

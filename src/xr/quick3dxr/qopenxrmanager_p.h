@@ -40,7 +40,7 @@ class QQuick3DNode;
 class QQuick3DViewport;
 class QOpenXRCamera;
 class QOpenXRView;
-class QOpenXRActor;
+class QOpenXROrigin;
 class QOpenXRInputManager;
 class QOpenXRSpaceExtension;
 
@@ -65,7 +65,7 @@ private Q_SLOTS:
 
 Q_SIGNALS:
     void sessionEnded();
-    void actorChanged();
+    void xrOriginChanged();
 
 protected:
     bool event(QEvent *e) override;
@@ -109,7 +109,7 @@ private:
     void updateCameraHelper(QOpenXRCamera *camera, const XrCompositionLayerProjectionView &layerView);
     void updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView);
     void updateCameraMultiview(int projectionLayerViewStartIndex, int count);
-    void checkActor();
+    void checkOrigin();
 
     bool supportsPassthrough() const;
 
@@ -150,7 +150,7 @@ private:
     QQmlComponent *m_qmlContent = nullptr;
     QQuick3DViewport *m_vrViewport = nullptr;
     QQuick3DNode *m_vrCameraContainer = nullptr;
-    QOpenXRActor *m_xrActor = nullptr;
+    QOpenXROrigin *m_xrOrigin = nullptr;
     QOpenXRInputManager *m_inputManager = nullptr;
 
     QOpenXRAnimationDriver *m_animationDriver = nullptr;

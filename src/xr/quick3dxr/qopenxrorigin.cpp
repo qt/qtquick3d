@@ -1,11 +1,11 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxractor_p.h"
+#include "qopenxrorigin_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QOpenXRActor::QOpenXRActor()
+QOpenXROrigin::QOpenXROrigin()
 {
     QOpenXRCamera *leftEyeCamera = new QOpenXRCamera;
     leftEyeCamera->setParentItem(this);
@@ -18,17 +18,17 @@ QOpenXRActor::QOpenXRActor()
     m_cameras.append(rightEyeCamera);
 }
 
-QOpenXRCamera *QOpenXRActor::camera(int index) const
+QOpenXRCamera *QOpenXROrigin::camera(int index) const
 {
     return m_cameras[index];
 }
 
-float QOpenXRActor::clipNear() const
+float QOpenXROrigin::clipNear() const
 {
     return m_clipNear;
 }
 
-void QOpenXRActor::setClipNear(float newClipNear)
+void QOpenXROrigin::setClipNear(float newClipNear)
 {
     if (qFuzzyCompare(m_clipNear, newClipNear))
         return;
@@ -38,12 +38,12 @@ void QOpenXRActor::setClipNear(float newClipNear)
     emit clipNearChanged();
 }
 
-float QOpenXRActor::clipFar() const
+float QOpenXROrigin::clipFar() const
 {
     return m_clipFar;
 }
 
-void QOpenXRActor::setClipFar(float newClipFar)
+void QOpenXROrigin::setClipFar(float newClipFar)
 {
     if (qFuzzyCompare(m_clipFar, newClipFar))
         return;
@@ -54,3 +54,4 @@ void QOpenXRActor::setClipFar(float newClipFar)
 }
 
 QT_END_NAMESPACE
+

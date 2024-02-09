@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRACTOR_H
-#define QOPENXRACTOR_H
+#ifndef QOPENXRORIGIN_H
+#define QOPENXRORIGIN_H
 
 //
 //  W A R N I N G
@@ -25,15 +25,15 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DXR_EXPORT QOpenXRActor : public QQuick3DNode
+class Q_QUICK3DXR_EXPORT QOpenXROrigin : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
-    QML_NAMED_ELEMENT(XrActor)
+    QML_NAMED_ELEMENT(XrOrigin)
 
 public:
-    QOpenXRActor();
+    QOpenXROrigin();
 
     QOpenXRCamera *camera(int index) const;
 
@@ -55,4 +55,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRACTOR_H
+#endif // QOPENXRORIGIN_H

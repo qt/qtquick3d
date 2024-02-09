@@ -47,9 +47,9 @@ QOpenXRView::~QOpenXRView()
     m_inDestructor = true;
 }
 
-QOpenXRActor *QOpenXRView::xrActor() const
+QOpenXROrigin *QOpenXRView::xrOrigin() const
 {
-    return m_openXRManager.m_xrActor;
+    return m_openXRManager.m_xrOrigin;
 }
 
 QQuick3DSceneEnvironment *QOpenXRView::environment() const

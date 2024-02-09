@@ -17,8 +17,7 @@ XrView {
         backgroundMode: SceneEnvironment.Color
     }
 
-    XrActor {
-        id: actor
+    XrOrigin {
         position: Qt.vector3d(50, 2, 50)
 
         LeftHand {
