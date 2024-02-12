@@ -1,8 +1,8 @@
-// Copyright (C) 2023 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRHANDINPUT_H
-#define QOPENXRHANDINPUT_H
+#ifndef QOPENXRHANDTRACKERINPUT_H
+#define QOPENXRHANDTRACKERINPUT_H
 
 //
 //  W A R N I N G
@@ -21,60 +21,66 @@
 #include <QQuaternion>
 #include <QtQml/qqml.h>
 
+#include <QQuick3DGeometry>
+
 QT_BEGIN_NAMESPACE
 
-class QOpenXRHandInput : public QObject
+class QOpenXRHandTrackerInput : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isActive READ isActive NOTIFY isActiveChanged)
     Q_PROPERTY(HandPoseSpace poseSpace READ poseSpace WRITE setPoseSpace NOTIFY poseSpaceChanged)
-    Q_PROPERTY(QVector3D posePosition READ posePosition NOTIFY posePositionChanged)
-    Q_PROPERTY(QQuaternion poseRotation READ poseRotation NOTIFY poseRotationChanged)
 
-    QML_NAMED_ELEMENT(XrHandInput)
+    Q_PROPERTY(QVector3D posePosition READ posePosition NOTIFY posePositionChanged)
+
+    Q_PROPERTY(QQuick3DGeometry *handGeometry READ handGeometry NOTIFY handGeometryChanged FINAL)
+
+    QML_NAMED_ELEMENT(XrHandTrackerInput)
     QML_UNCREATABLE("Created by XrView")
 
 public:
     enum class HandPoseSpace {
         GripPose,
-        AimPose
+        AimPose,
+        PinchPose,
+        PokePose
     };
     Q_ENUM(HandPoseSpace)
 
-
-    explicit QOpenXRHandInput(QObject *parent = nullptr);
+    explicit QOpenXRHandTrackerInput(QObject *parent = nullptr);
 
     bool isActive() const;
     HandPoseSpace poseSpace() const;
     void setIsActive(bool isActive);
-    void setPosePosition(const QVector3D &position);
-    void setPoseRotation(const QQuaternion &rotation);
 
     const QVector3D &posePosition() const;
-
     const QQuaternion &poseRotation() const;
 
-    void setInputValue(int id, const char *shortName, float value) { emit inputValueChange(id, shortName, value); }
+    QQuick3DGeometry *handGeometry() const;
+    void setHandGeometry(QQuick3DGeometry *newHandGeometry);
 
 public Q_SLOTS:
     void setPoseSpace(HandPoseSpace poseSpace);
 
 Q_SIGNALS:
     void isActiveChanged();
-
-    void inputValueChange(int id, const char *shortName, float value);
-
     void poseSpaceChanged();
+
     void posePositionChanged();
     void poseRotationChanged();
+
+    void handGeometryChanged();
 
 private:
     bool m_isActive = false;
     HandPoseSpace m_poseSpace = HandPoseSpace::GripPose;
+
     QVector3D m_posePosition;
     QQuaternion m_poseRotation;
+
+    QQuick3DGeometry *m_handGeometry = nullptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRHANDINPUT_H
+#endif // QOPENXRHANDTRACKERINPUT_H

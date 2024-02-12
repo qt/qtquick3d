@@ -16,8 +16,10 @@
 //
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
-#include <QtQuick3DXr/private/qopenxrgamepadinput_p.h>
-#include <QtQuick3DXr/private/qopenxrhandinput_p.h>
+#include "qopenxrgamepadinput_p.h"
+#include "qopenxrhandinput_p.h"
+#include "qopenxractionmapper_p.h"
+#include "qopenxrhandtrackerinput_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQml/QQmlEngine>
 
@@ -28,6 +30,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRController : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(Controller controller READ controller WRITE setController NOTIFY controllerChanged)
+    Q_PROPERTY(QOpenXRActionMapper* actionMapper READ actionMapper WRITE setActionMapper NOTIFY actionMapperChanged FINAL)
     Q_PROPERTY(QOpenXRHandInput* handInput READ handInput NOTIFY handInputChanged)
     QML_NAMED_ELEMENT(XrController)
 public:
@@ -47,16 +50,23 @@ public:
     QOpenXRHandInput *handInput() const;
     Q_INVOKABLE QOpenXRGamepadInput *gamepadInput() const;
 
+    QOpenXRActionMapper *actionMapper() const;
+    void setActionMapper(QOpenXRActionMapper *newActionMapper);
+
 Q_SIGNALS:
     void controllerChanged();
     void handInputChanged();
+    void actionMapperChanged();
 
 private:
     QOpenXRInputManager *m_inputManager = nullptr;
+    QOpenXRActionMapper *m_actionMapper = nullptr;
     Controller m_controller = ControllerNone;
     QMetaObject::Connection m_posePositionConnection;
     QMetaObject::Connection m_poseRotationConnection;
     QMetaObject::Connection m_isActiveConnection;
+    QMetaObject::Connection m_inputActionConnection;
+    QMetaObject::Connection m_actionMapperConnection;
 };
 
 QT_END_NAMESPACE

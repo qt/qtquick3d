@@ -25,6 +25,7 @@ qt_add_resources(desktop_vr_hybrid_app "qml"
         "/"
     FILES
         "main.qml"
+        "ActionMapper.qml"
         "VrScene.qml"
         "LeftHand.qml"
         "RightHand.qml"

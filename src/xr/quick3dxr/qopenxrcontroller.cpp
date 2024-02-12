@@ -29,6 +29,7 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
     disconnect(m_posePositionConnection);
     disconnect(m_poseRotationConnection);
     disconnect(m_isActiveConnection);
+    disconnect(m_inputActionConnection);
 
     if (m_controller == ControllerLeft) {
         setPosition(m_inputManager->leftHandInput()->posePosition());
@@ -44,6 +45,11 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
         m_isActiveConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::isActiveChanged, this, [this]{
            setVisible(m_inputManager->leftHandInput()->isActive());
         });
+        m_inputActionConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::inputValueChange,
+                                          this, [this](int id, const char *shortName, float value) {
+            if (m_actionMapper)
+                emit m_actionMapper->inputValueChange(QOpenXRActionMapper::InputAction(id), QString::fromLatin1(shortName), value);
+        });
     } else if (m_controller == ControllerRight) {
         setPosition(m_inputManager->rightHandInput()->posePosition());
         setRotation(m_inputManager->rightHandInput()->poseRotation());
@@ -56,6 +62,11 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
         });
         m_isActiveConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::isActiveChanged, this, [this]{
            setVisible(m_inputManager->rightHandInput()->isActive());
+        });
+        m_inputActionConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::inputValueChange,
+                                          this, [this](int id, const char *shortName, float value){
+            if (m_actionMapper)
+                emit m_actionMapper->inputValueChange(QOpenXRActionMapper::InputAction(id), QString::fromLatin1(shortName), value);
         });
     } else {
         setVisible(false);
@@ -74,6 +85,33 @@ QOpenXRHandInput *QOpenXRController::handInput() const
 QOpenXRGamepadInput *QOpenXRController::gamepadInput() const
 {
     return m_inputManager->gamepadInput();
+}
+
+QOpenXRActionMapper *QOpenXRController::actionMapper() const
+{
+    return m_actionMapper;
+}
+
+void QOpenXRController::setActionMapper(QOpenXRActionMapper *newActionMapper)
+{
+    if (m_actionMapper == newActionMapper)
+        return;
+
+    if (m_actionMapperConnection) {
+        QObject::disconnect(m_actionMapperConnection);
+        m_actionMapperConnection = {};
+    }
+
+    if (newActionMapper)
+        m_actionMapperConnection = QObject::connect(newActionMapper, &QObject::destroyed, this, [this](QObject *destroyedMapper) {
+            if (m_actionMapper == destroyedMapper) {
+                m_actionMapper = nullptr;
+                emit actionMapperChanged();
+            }
+        });
+
+    m_actionMapper = newActionMapper;
+    emit actionMapperChanged();
 }
 
 QT_END_NAMESPACE

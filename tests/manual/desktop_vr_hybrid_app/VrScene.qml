@@ -17,7 +17,7 @@ XrView {
         backgroundMode: SceneEnvironment.Color
     }
 
-    XrActor {
+    XrOrigin {
         id: actor
         position: Qt.vector3d(50, 2, 50)
 
@@ -35,18 +35,18 @@ XrView {
         view: xrView
         source: right
         enabled: true
-        leftMouseButton: right.handInput.triggerValue > 0.8
-        rightMouseButton: right.handInput.button1Pressed
-        middleMouseButton: right.handInput.button2Pressed
+        leftMouseButton: right.actionMapper.triggerPressed
+        rightMouseButton: right.actionMapper.button1Pressed
+        middleMouseButton: right.actionMapper.button2Pressed
     }
 
     XrVirtualMouse {
         view: xrView
         source: left
         enabled: true
-        leftMouseButton: left.handInput.triggerValue > 0.8
-        rightMouseButton: left.handInput.button1Pressed
-        middleMouseButton: left.handInput.button2Pressed
+        leftMouseButton: left.actionMapper.triggerPressed
+        rightMouseButton: left.actionMapper.button1Pressed
+        middleMouseButton: left.actionMapper.button2Pressed
     }
 
     DirectionalLight {

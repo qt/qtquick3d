@@ -33,16 +33,20 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DSceneEnvironment;
 class QOpenXRHandInput;
+class QOpenXRHandTrackerInput;
 class QOpenXRGamepadInput;
 
 class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
 {
     Q_OBJECT
-    Q_PROPERTY(QOpenXROrigin* xrOrigin READ xrOrigin NOTIFY xrOriginChanged)
+
+    Q_PROPERTY(QOpenXROrigin *xrOrigin READ xrOrigin NOTIFY xrOriginChanged)
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged)
-    Q_PROPERTY(QOpenXRHandInput* leftHandInput READ leftHandInput CONSTANT)
-    Q_PROPERTY(QOpenXRHandInput* rightHandInput READ rightHandInput CONSTANT)
-    Q_PROPERTY(QOpenXRGamepadInput* gamepadInput READ gamepadInput CONSTANT)
+    Q_PROPERTY(QOpenXRHandInput *leftHandInput READ leftHandInput CONSTANT)
+    Q_PROPERTY(QOpenXRHandInput *rightHandInput READ rightHandInput CONSTANT)
+    Q_PROPERTY(QOpenXRHandTrackerInput *leftHandTrackerInput READ leftHandTrackerInput CONSTANT)
+    Q_PROPERTY(QOpenXRHandTrackerInput *rightHandTrackerInput READ rightHandTrackerInput CONSTANT)
+    Q_PROPERTY(QOpenXRGamepadInput *gamepadInput READ gamepadInput CONSTANT)
     Q_PROPERTY(bool passthroughSupported READ isPassthroughSupported CONSTANT)
     Q_PROPERTY(bool enablePassthrough READ enablePassthrough WRITE setEnablePassthrough NOTIFY enablePassthroughChanged FINAL)
     Q_PROPERTY(QOpenXRRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
@@ -54,10 +58,12 @@ public:
     explicit QOpenXRView();
     ~QOpenXRView();
 
-    QOpenXROrigin* xrOrigin() const;
+    QOpenXROrigin *xrOrigin() const;
     QQuick3DSceneEnvironment *environment() const;
     QOpenXRHandInput *leftHandInput() const;
     QOpenXRHandInput *rightHandInput() const;
+    QOpenXRHandTrackerInput *leftHandTrackerInput() const;
+    QOpenXRHandTrackerInput *rightHandTrackerInput() const;
     QOpenXRGamepadInput *gamepadInput() const;
 
     bool isPassthroughSupported() const;

@@ -490,7 +490,19 @@ XrResult QOpenXRManager::createXrInstance()
     if (isExtensionSupported(XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME, extensionProperties))
         enabledExtensions.append(XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME);
 
+    m_handtrackingExtensionSupported = isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties);
+    if (m_handtrackingExtensionSupported)
+        enabledExtensions.append(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+
     // Oculus Quest Specific Extensions
+
+    m_handtrackingAimExtensionSupported = isExtensionSupported(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME, extensionProperties);
+    if (m_handtrackingAimExtensionSupported)
+        enabledExtensions.append(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+
+    if (isExtensionSupported(XR_MSFT_HAND_INTERACTION_EXTENSION_NAME, extensionProperties))
+        enabledExtensions.append(XR_MSFT_HAND_INTERACTION_EXTENSION_NAME);
+
     // Passthrough extensions (require manifest feature to work)
     // <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
     uint32_t passthroughSpecVersion = 0;
@@ -825,6 +837,11 @@ void QOpenXRManager::createSwapchains()
 
     XrSystemProperties systemProperties{};
     systemProperties.type = XR_TYPE_SYSTEM_PROPERTIES;
+
+    XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties{};
+    handTrackingSystemProperties.type = XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT;
+    systemProperties.next = &handTrackingSystemProperties;
+
     checkXrResult(xrGetSystemProperties(m_instance, m_systemId, &systemProperties));
     qDebug("System Properties: Name=%s VendorId=%d", systemProperties.systemName, systemProperties.vendorId);
     qDebug("System Graphics Properties: MaxWidth=%d MaxHeight=%d MaxLayers=%d",
@@ -834,6 +851,8 @@ void QOpenXRManager::createSwapchains()
     qDebug("System Tracking Properties: OrientationTracking=%s PositionTracking=%s",
            systemProperties.trackingProperties.orientationTracking == XR_TRUE ? "True" : "False",
            systemProperties.trackingProperties.positionTracking == XR_TRUE ? "True" : "False");
+    qDebug("System Hand Tracking Properties: handTracking=%s",
+           handTrackingSystemProperties.supportsHandTracking == XR_TRUE ? "True" : "False");
 
     // View Config type has to be Stereo, because OpenXR doesn't support any other mode yet.
     quint32 viewCount;
@@ -1193,6 +1212,9 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
         // Spatial Anchors
         if (m_spaceExtension)
             m_spaceExtension->updateAnchors(predictedDisplayTime, m_appSpace);
+
+        if (m_handtrackingExtensionSupported)
+            m_inputManager->updateHandtracking(predictedDisplayTime, m_appSpace, m_handtrackingAimExtensionSupported);
 
         // Before rendering individual views, advance the animation driver once according
         // to the expected display time

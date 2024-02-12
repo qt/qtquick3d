@@ -13,6 +13,7 @@ XrController {
     Lazer {
         enableBeam: true
     }
+    ActionMapper {}
     Node {
         x: 10
         y: 10

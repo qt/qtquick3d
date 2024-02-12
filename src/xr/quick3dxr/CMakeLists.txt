@@ -6,6 +6,8 @@ qt_internal_add_qml_module(Quick3DXr
     VERSION "${PROJECT_VERSION}"
     DEPENDENCIES QtQuick QtQuick3D
     SOURCES
+        qopenxrhandtrackerinput_p.h qopenxrhandtrackerinput.cpp
+        qopenxractionmapper_p.h qopenxractionmapper.cpp
         qabstractopenxrgraphics.cpp qabstractopenxrgraphics_p.h
         qopenxrorigin.cpp qopenxrorigin_p.h
         qopenxranimationdriver.cpp qopenxranimationdriver_p.h

@@ -67,6 +67,16 @@ QOpenXRHandInput *QOpenXRView::rightHandInput() const
     return m_openXRManager.m_inputManager ? m_openXRManager.m_inputManager->rightHandInput() : nullptr;
 }
 
+QOpenXRHandTrackerInput *QOpenXRView::leftHandTrackerInput() const
+{
+    return m_openXRManager.m_inputManager->leftHandTrackerInput();
+}
+
+QOpenXRHandTrackerInput *QOpenXRView::rightHandTrackerInput() const
+{
+    return m_openXRManager.m_inputManager->rightHandTrackerInput();
+}
+
 QOpenXRGamepadInput *QOpenXRView::gamepadInput() const
 {
     return m_openXRManager.m_inputManager ? m_openXRManager.m_inputManager->gamepadInput() : nullptr;

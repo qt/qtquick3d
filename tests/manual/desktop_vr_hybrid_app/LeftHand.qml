@@ -8,6 +8,7 @@ import QtQuick3D.Xr
 XrController {
     handInput.poseSpace: XrHandInput.AimPose
     controller: XrController.ControllerLeft
+    ActionMapper {}
     Lazer {
         enableBeam: true
     }

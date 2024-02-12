@@ -4,7 +4,10 @@
 #include "qopenxrinputmanager_p.h"
 #include "qopenxrhelpers_p.h"
 #include "qopenxrhandinput_p.h"
+#include "qopenxrhandtrackerinput_p.h"
 #include "qopenxrgamepadinput_p.h"
+
+#include "qopenxrcontroller_p.h" //### InputAction enum
 
 #include <QDebug>
 
@@ -14,6 +17,8 @@ QOpenXRInputManager::QOpenXRInputManager()
 {
     m_handInputState[QOpenXRInputManager::LeftHand] = new QOpenXRHandInput(this);
     m_handInputState[QOpenXRInputManager::RightHand] = new QOpenXRHandInput(this);
+    m_handTrackerInputState[QOpenXRInputManager::LeftHand] = new QOpenXRHandTrackerInput(this);
+    m_handTrackerInputState[QOpenXRInputManager::RightHand] = new QOpenXRHandTrackerInput(this);
     m_gamepadInputState = new QOpenXRGamepadInput(this);
 }
 
@@ -22,10 +27,14 @@ QOpenXRInputManager::~QOpenXRInputManager()
     teardown();
     delete m_handInputState[QOpenXRInputManager::LeftHand];
     delete m_handInputState[QOpenXRInputManager::RightHand];
+    delete m_handTrackerInputState[QOpenXRInputManager::LeftHand];
+    delete m_handTrackerInputState[QOpenXRInputManager::RightHand];
     delete m_gamepadInputState;
 
     m_handInputState[QOpenXRInputManager::LeftHand] = nullptr;
     m_handInputState[QOpenXRInputManager::RightHand] = nullptr;
+    m_handTrackerInputState[QOpenXRInputManager::LeftHand] = nullptr;
+    m_handTrackerInputState[QOpenXRInputManager::RightHand] = nullptr;
     m_gamepadInputState = nullptr;
 }
 
@@ -35,10 +44,18 @@ QOpenXRInputManager *QOpenXRInputManager::instance()
     return &instance;
 }
 
+QOpenXRInputManager::QXRHandComponentPath QOpenXRInputManager::makeQXRPath(const QByteArrayView path)
+{
+    QXRHandComponentPath res;
+    setPath(res.paths[QOpenXRInputManager::LeftHand], "/user/hand/left/" + path);
+    setPath(res.paths[QOpenXRInputManager::RightHand], "/user/hand/right/" + path);
+    return res;
+}
+
 void QOpenXRInputManager::init(XrInstance instance, XrSession session)
 {
     if (m_initialized) {
-        qWarning() << "QOpenXRInputManager: Trying to initialize an already initialized sesssion";
+        qWarning() << "QOpenXRInputManager: Trying to initialize an already initialized session";
         teardown();
     }
 
@@ -46,6 +63,8 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     m_session = session;
 
     m_disableGamepad = false;
+
+    setupHandTracking();
 
     // Gamepad actions lead to endless XR_ERROR_RUNTIME_FAILURE in
     // xrSyncActions with the Meta XR Simulator (v57 at least). The Simulator
@@ -61,8 +80,7 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
         }
     }
 
-    // Also on Android.
-    // ### Why?
+    // Also on Android. ### Why?
 #ifdef XR_USE_PLATFORM_ANDROID
     qDebug("QOpenXRInputManager: Disabling gamepad actions due to running on Android");
     m_disableGamepad = true;
@@ -70,67 +88,57 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
 
     setupActions();
 
-    // Hand Left
-    XrPath handLeftXClick;                    // OCULUS_TOUCH
-    XrPath handLeftXTouch;                    // OCULUS_TOUCH
-    XrPath handLeftYClick;                    // OCULUS_TOUCH
-    XrPath handLeftYTouch;                    // OCULUS_TOUCH
-    XrPath handLeftAClick;                    // VALVE_INDEX
-    XrPath handLeftATouch;                    // VALVE_INDEX
-    XrPath handLeftBClick;                    // VALVE_INDEX
-    XrPath handLeftBTouch;                    // VALVE_INDEX
-    XrPath handLeftMenuClick;                 // OCULUS_TOUCH | MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftSystemClick;               // VALVE_INDEX | HTC_VIVE
-    XrPath handLeftSystemTouch;               // VALVE_INDEX
-    XrPath handLeftSqueezeValue;              // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handLeftSqueezeForce;              // VALVE_INDEX
-    XrPath handLeftSqueezeClick;              // MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftTriggerValue;              // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftTriggerTouch;              // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handLeftTriggerClick;              // VALVE_INDEX | HTC_VIVE
-    XrPath handLeftThumbstickX;               // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM
-    XrPath handLeftThumbstickY;               // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM
-    XrPath handLeftThumbstickClick;           // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM
-    XrPath handLeftThumbstickTouch;           // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handLeftThumbrestTouch;            // OCULUS_TOUCH
-    XrPath handLeftTrackpadX;                 // VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftTrackpadY;                 // VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftTrackpadForce;             // VALVE_INDEX
-    XrPath handLeftTrackpadTouch;             // VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftTrackpadClick;             // MICROSOFT_MRM | HTC_VIVE
+    QXRHandComponentPath aClick = makeQXRPath("input/a/click"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+    QXRHandComponentPath bClick = makeQXRPath("input/b/click"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+    QXRHandComponentPath aTouch = makeQXRPath("input/a/touch"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+    QXRHandComponentPath bTouch = makeQXRPath("input/b/touch"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+
+    QXRHandComponentPath xClick = makeQXRPath("input/x/click"); // OCULUS_TOUCH (left)
+    QXRHandComponentPath yClick = makeQXRPath("input/y/click"); // OCULUS_TOUCH (left)
+    QXRHandComponentPath xTouch = makeQXRPath("input/x/touch"); // OCULUS_TOUCH (left)
+    QXRHandComponentPath yTouch = makeQXRPath("input/y/touch"); // OCULUS_TOUCH (left)
+
+    QXRHandComponentPath menuClick = makeQXRPath("input/menu/click"); // OCULUS_TOUCH (left) | MICROSOFT_MRM (right + left) | HTC_VIVE (right + left)
+    QXRHandComponentPath systemClick = makeQXRPath("input/system/click"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left) | HTC_VIVE (right + left)
+    QXRHandComponentPath systemTouch = makeQXRPath("input/system/touch"); // VALVE_INDEX (right + left)
+
+    QXRHandComponentPath squeezeValue = makeQXRPath("input/squeeze/value"); // right + left: OCULUS_TOUCH | VALVE_INDEX
+    QXRHandComponentPath squeezeForce = makeQXRPath("input/squeeze/force"); // right + left: VALVE_INDEX
+    QXRHandComponentPath squeezeClick = makeQXRPath("input/squeeze/click"); // right + left: MICROSOFT_MRM | HTC_VIVE
+
+    QXRHandComponentPath triggerValue = makeQXRPath("input/trigger/value"); // right + left: OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    QXRHandComponentPath triggerTouch = makeQXRPath("input/trigger/touch"); // right + left: OCULUS_TOUCH | VALVE_INDEX
+    QXRHandComponentPath triggerClick = makeQXRPath("input/trigger/click"); // right + left: VALVE_INDEX | HTC_VIVE
+
+    QXRHandComponentPath thumbstickX = makeQXRPath("input/thumbstick/x"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+    QXRHandComponentPath thumbstickY = makeQXRPath("input/thumbstick/y"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+    QXRHandComponentPath thumbstickClick = makeQXRPath("input/thumbstick/click"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+    QXRHandComponentPath thumbstickTouch = makeQXRPath("input/thumbstick/touch"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left)
+    QXRHandComponentPath thumbrestTouch = makeQXRPath("input/thumbrest/touch"); // OCULUS_TOUCH (right + left)
+
+    QXRHandComponentPath trackpadX = makeQXRPath("input/trackpad/x"); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    QXRHandComponentPath trackpadY = makeQXRPath("input/trackpad/y"); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    QXRHandComponentPath trackpadForce = makeQXRPath("input/trackpad/force"); // right + left:  VALVE_INDEX
+    QXRHandComponentPath trackpadClick = makeQXRPath("input/trackpad/click"); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    QXRHandComponentPath trackpadTouch = makeQXRPath("input/trackpad/touch"); // right + left:  MICROSOFT_MRM | HTC_VIVE
+
     XrPath handLeftGripPose;                  // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
     XrPath handLeftAimPose;                   // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
     XrPath handLeftHaptic;                    // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
 
-    // Hand Right
-    XrPath handRightAClick;                   // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightATouch;                   // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightBClick;                   // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightBTouch;                   // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightSystemClick;              // OCULUS_TOUCH | VALVE_INDEX | HTC_VIVE
-    XrPath handRightSystemTouch;              // VALVE_INDEX
-    XrPath handRightMenuClick;                // MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightSqueezeValue;             // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightSqueezeForce;             // VALVE_INDEX
-    XrPath handRightSqueezeClick;             // MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightTriggerValue;             // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightTriggerTouch;             // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightTriggerClick;             // VALVE_INDEX | HTC_VIVE
-    XrPath handRightThumbstickX;              // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightThumbstickY;              // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightThumbstickClick;          // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightThumbstickTouch;          // OCULUS_TOUCH | VALVE_INDEX
-    XrPath handRightThumbrestTouch;           // OCULUS_TOUCH
-    XrPath handRightTrackpadX;                // VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightTrackpadY;                // VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightTrackpadForce;            // VALVE_INDEX
-    XrPath handRightTrackpadTouch;            // VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightTrackpadClick;            // MICROSOFT_MRM | HTC_VIVE
     XrPath handRightGripPose;                 // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
     XrPath handRightAimPose;                  // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
     XrPath handRightHaptic;                   // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
 
-    // Gamepad
+    // Hand interaction extension (TODO)
+    // XrPath handLeftSelectValue;
+    // XrPath handLeftPinch;
+    // XrPath handLeftPoke;
+    // XrPath handRightSelectValue;
+    // XrPath handRightPinch;
+    // XrPath handRightPoke;
+
+    // Gamepad ### TODO
     XrPath gamepadMenuClick;
     XrPath gamepadViewClick;
     XrPath gamepadAClick;
@@ -157,66 +165,150 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     XrPath gamepadHapticRightTrigger;
 
     // Hand Left
-    setPath(handLeftXClick, "/user/hand/left/input/x/click");
-    setPath(handLeftXTouch, "/user/hand/left/input/x/touch");
-    setPath(handLeftYClick, "/user/hand/left/input/y/click");
-    setPath(handLeftYTouch, "/user/hand/left/input/y/touch");
-    setPath(handLeftAClick, "/user/hand/left/input/a/click");
-    setPath(handLeftATouch, "/user/hand/left/input/a/touch");
-    setPath(handLeftBClick, "/user/hand/left/input/b/click");
-    setPath(handLeftBTouch, "/user/hand/left/input/b/touch");
-    setPath(handLeftMenuClick, "/user/hand/left/input/menu/click");
-    setPath(handLeftSystemClick, "/user/hand/left/input/system/click");
-    setPath(handLeftSystemTouch, "/user/hand/left/input/system/touch");
-    setPath(handLeftSqueezeValue, "/user/hand/left/input/squeeze/value");
-    setPath(handLeftSqueezeForce, "/user/hand/left/input/squeeze/force");
-    setPath(handLeftSqueezeClick, "/user/hand/left/input/squeeze/click");
-    setPath(handLeftTriggerValue, "/user/hand/left/input/trigger/value");
-    setPath(handLeftTriggerTouch, "/user/hand/left/input/trigger/touch");
-    setPath(handLeftTriggerClick, "/user/hand/left/input/trigger/click");
-    setPath(handLeftThumbstickX, "/user/hand/left/input/thumbstick/x");
-    setPath(handLeftThumbstickY, "/user/hand/left/input/thumbstick/y");
-    setPath(handLeftThumbstickClick, "/user/hand/left/input/thumbstick/click");
-    setPath(handLeftThumbstickTouch, "/user/hand/left/input/thumbstick/touch");
-    setPath(handLeftThumbrestTouch, "/user/hand/left/input/thumbrest/touch");
-    setPath(handLeftTrackpadX, "/user/hand/left/input/trackpad/x");
-    setPath(handLeftTrackpadY, "/user/hand/left/input/trackpad/y");
-    setPath(handLeftTrackpadForce, "/user/hand/left/input/trackpad/force");
-    setPath(handLeftTrackpadTouch, "/user/hand/left/input/trackpad/touch");
-    setPath(handLeftTrackpadClick, "/user/hand/left/input/trackpad/click");
+
     setPath(handLeftGripPose, "/user/hand/left/input/grip/pose");
     setPath(handLeftAimPose, "/user/hand/left/input/aim/pose");
     setPath(handLeftHaptic, "/user/hand/left/output/haptic");
 
-    // Hand Right
-    setPath(handRightAClick, "/user/hand/right/input/a/click");
-    setPath(handRightATouch, "/user/hand/right/input/a/touch");
-    setPath(handRightBClick, "/user/hand/right/input/b/click");
-    setPath(handRightBTouch, "/user/hand/right/input/b/touch");
-    setPath(handRightSystemClick, "/user/hand/right/input/system/click");
-    setPath(handRightSystemTouch, "/user/hand/right/input/system/touch");
-    setPath(handRightMenuClick, "/user/hand/right/input/menu/click");
-    setPath(handRightSqueezeValue, "/user/hand/right/input/squeeze/value");
-    setPath(handRightSqueezeForce, "/user/hand/right/input/squeeze/force");
-    setPath(handRightSqueezeClick, "/user/hand/right/input/squeeze/click");
-    setPath(handRightTriggerValue, "/user/hand/right/input/trigger/value");
-    setPath(handRightTriggerTouch, "/user/hand/right/input/trigger/touch");
-    setPath(handRightTriggerClick, "/user/hand/right/input/trigger/click");
-    setPath(handRightThumbstickX, "/user/hand/right/input/thumbstick/x");
-    setPath(handRightThumbstickY, "/user/hand/right/input/thumbstick/y");
-    setPath(handRightThumbstickClick, "/user/hand/right/input/thumbstick/click");
-    setPath(handRightThumbstickTouch, "/user/hand/right/input/thumbstick/touch");
-    setPath(handRightThumbrestTouch, "/user/hand/right/input/thumbrest/touch");
-    setPath(handRightTrackpadX, "/user/hand/right/input/trackpad/x");
-    setPath(handRightTrackpadY, "/user/hand/right/input/trackpad/y");
-    setPath(handRightTrackpadForce, "/user/hand/right/input/trackpad/force");
-    setPath(handRightTrackpadTouch, "/user/hand/right/input/trackpad/touch");
-    setPath(handRightTrackpadClick, "/user/hand/right/input/trackpad/click");
     setPath(handRightGripPose, "/user/hand/right/input/grip/pose");
     setPath(handRightAimPose, "/user/hand/right/input/aim/pose");
     setPath(handRightHaptic, "/user/hand/right/output/haptic");
 
-    // Gamepad
+    // Bindings
+
+
+    using XrActionBindings = std::vector<XrActionSuggestedBinding>;
+    using InputMapping = std::vector<std::tuple<QOpenXRActionMapper::InputAction, QXRHandComponentPath, SubPathSelector>>;
+    auto addToBindings = [this](XrActionBindings &bindings, const InputMapping &defs){
+        for (const auto &[actionId, path, selector] : defs) {
+            if (selector & LeftHandSubPath)
+                bindings.push_back({ m_handActions.actions[actionId], path.paths[LeftHand] });
+            if (selector & RightHandSubPath)
+                bindings.push_back({ m_handActions.actions[actionId], path.paths[RightHand] });
+        }
+    };
+
+    // Oculus Touch
+    {
+        InputMapping mappingDefs {
+            { QOpenXRActionMapper::Button1Pressed, xClick, LeftHandSubPath },
+            { QOpenXRActionMapper::Button1Pressed, aClick, RightHandSubPath },
+            { QOpenXRActionMapper::Button2Pressed, yClick, LeftHandSubPath },
+            { QOpenXRActionMapper::Button2Pressed, bClick, RightHandSubPath },
+            { QOpenXRActionMapper::Button1Touched, xTouch, LeftHandSubPath },
+            { QOpenXRActionMapper::Button1Touched, aTouch, RightHandSubPath },
+            { QOpenXRActionMapper::Button2Touched, yTouch, LeftHandSubPath },
+            { QOpenXRActionMapper::Button2Touched, bTouch, RightHandSubPath },
+            { QOpenXRActionMapper::ButtonMenuPressed, menuClick, LeftHandSubPath },
+            { QOpenXRActionMapper::ButtonSystemPressed, systemClick, RightHandSubPath },
+            { QOpenXRActionMapper::SqueezeValue, squeezeValue, BothHandsSubPath },
+            { QOpenXRActionMapper::TriggerValue, triggerValue, BothHandsSubPath },
+            { QOpenXRActionMapper::TriggerTouched, triggerTouch, BothHandsSubPath },
+            { QOpenXRActionMapper::ThumbstickX, thumbstickX, BothHandsSubPath },
+            { QOpenXRActionMapper::ThumbstickY, thumbstickY, BothHandsSubPath },
+            { QOpenXRActionMapper::ThumbstickPressed, thumbstickClick, BothHandsSubPath },
+            { QOpenXRActionMapper::ThumbstickTouched, thumbstickTouch, BothHandsSubPath },
+            { QOpenXRActionMapper::ThumbrestTouched, thumbrestTouch, BothHandsSubPath },
+        };
+
+        XrPath oculusTouchProfile;
+        setPath(oculusTouchProfile, "/interaction_profiles/oculus/touch_controller");
+        std::vector<XrActionSuggestedBinding> bindings {{
+                {m_handActions.gripPoseAction, handLeftGripPose},
+                {m_handActions.aimPoseAction, handLeftAimPose},
+                {m_handActions.hapticAction, handLeftHaptic},
+
+                {m_handActions.gripPoseAction, handRightGripPose},
+                {m_handActions.aimPoseAction, handRightAimPose},
+                {m_handActions.hapticAction, handRightHaptic},
+                                                        }};
+
+        addToBindings(bindings, mappingDefs);
+
+        XrInteractionProfileSuggestedBinding suggestedBindings{};
+        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
+        suggestedBindings.interactionProfile = oculusTouchProfile;
+        suggestedBindings.suggestedBindings = bindings.data();
+        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
+        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: Oculus touch");
+    }
+
+    // Microsoft hand interaction extension as supported by Quest 3
+    // TODO: there are other, very similar, extensions: XR_HTC_HAND_INTERACTION_EXTENSION_NAME and XR_EXT_HAND_INTERACTION_EXTENSION_NAME
+    {
+        XrPath handInteractionProfile;
+        setPath(handInteractionProfile, "/interaction_profiles/microsoft/hand_interaction");
+        std::vector<XrActionSuggestedBinding> bindings {{
+                {m_handActions.gripPoseAction, handLeftGripPose},
+                {m_handActions.aimPoseAction, handLeftAimPose}, // ### Binding succeeds, but does not seem to work on the Quest 3
+                {m_handActions.gripPoseAction, handRightGripPose},
+                {m_handActions.aimPoseAction, handRightAimPose},
+        }};
+
+        InputMapping mappingDefs {
+            { QOpenXRActionMapper::SqueezeValue, squeezeValue, BothHandsSubPath },
+        };
+
+        addToBindings(bindings, mappingDefs);
+
+        XrInteractionProfileSuggestedBinding suggestedBindings{};
+        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
+        suggestedBindings.interactionProfile = handInteractionProfile;
+        suggestedBindings.suggestedBindings = bindings.data();
+        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
+
+        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: MSFT hand interaction");
+    }
+
+    {
+        XrPath htcViveProfile;
+        setPath(htcViveProfile, "/interaction_profiles/htc/vive_controller");
+
+        InputMapping mappingDefs {
+            { QOpenXRActionMapper::ButtonMenuPressed, menuClick, BothHandsSubPath },
+            { QOpenXRActionMapper::ButtonSystemPressed, systemClick, BothHandsSubPath },
+            { QOpenXRActionMapper::SqueezePressed, squeezeClick, BothHandsSubPath },
+            { QOpenXRActionMapper::TriggerValue, triggerValue, BothHandsSubPath },
+            { QOpenXRActionMapper::TriggerPressed, triggerClick, BothHandsSubPath },
+            { QOpenXRActionMapper::TrackpadX, trackpadX, BothHandsSubPath },
+            { QOpenXRActionMapper::TrackpadY, trackpadY, BothHandsSubPath },
+            { QOpenXRActionMapper::TrackpadPressed, trackpadClick, BothHandsSubPath },
+            { QOpenXRActionMapper::TrackpadTouched, trackpadTouch, BothHandsSubPath },
+        };
+
+        std::vector<XrActionSuggestedBinding> bindings {{
+                {m_handActions.gripPoseAction, handLeftGripPose},
+                {m_handActions.aimPoseAction, handLeftAimPose},
+                {m_handActions.hapticAction, handLeftHaptic},
+
+                {m_handActions.gripPoseAction, handRightGripPose},
+                {m_handActions.aimPoseAction, handRightAimPose},
+                {m_handActions.hapticAction, handRightHaptic},
+            }};
+
+        addToBindings(bindings, mappingDefs);
+
+        XrInteractionProfileSuggestedBinding suggestedBindings{};
+        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
+        suggestedBindings.interactionProfile = htcViveProfile;
+        suggestedBindings.suggestedBindings = bindings.data();
+        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
+        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: Vive controller");
+    }
+
+    // Microsoft MRM ### TODO
+    {
+        XrPath microsoftMotionProfile;
+        setPath(microsoftMotionProfile, "/interaction_profiles/microsoft/motion_controller");
+    }
+
+    // Valve Index ### TODO
+    {
+        XrPath valveIndexProfile;
+        setPath(valveIndexProfile, "/interaction_profiles/valve/index_controller");
+    }
+
+    // Gamepad ### TODO update to new pattern
     setPath(gamepadMenuClick, "/user/gamepad/input/menu/click");
     setPath(gamepadViewClick, "/user/gamepad/input/view/click");
     setPath(gamepadAClick, "/user/gamepad/input/a/click");
@@ -241,109 +333,6 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     setPath(gamepadHapticRight, "/user/gamepad/output/haptic_right");
     setPath(gamepadHapticLeftTrigger, "/user/gamepad/output/haptic_left_trigger");
     setPath(gamepadHapticRightTrigger, "/user/gamepad/output/haptic_right_trigger");
-
-    // Bindings
-
-    // Oculus Touch
-    {
-        XrPath oculusTouchProfile;
-        setPath(oculusTouchProfile, "/interaction_profiles/oculus/touch_controller");
-        std::vector<XrActionSuggestedBinding> bindings {{
-                {m_handActions.button1PressedAction, handLeftXClick},
-                {m_handActions.button2PressedAction, handLeftYClick},
-                {m_handActions.button1TouchedAction, handLeftXTouch},
-                {m_handActions.button2TouchedAction, handLeftYTouch},
-                {m_handActions.buttonMenuPressedAction, handLeftMenuClick},
-                {m_handActions.squeezeValueAction, handLeftSqueezeValue},
-                {m_handActions.triggerValueAction, handLeftTriggerValue},
-                {m_handActions.triggerTouchedAction, handLeftTriggerTouch},
-                {m_handActions.thumbstickXAction, handLeftThumbstickX},
-                {m_handActions.thumbstickYAction, handLeftThumbstickY},
-                {m_handActions.thumbstickPressedAction, handLeftThumbstickClick},
-                {m_handActions.thumbstickTouchedAction, handLeftThumbstickTouch},
-                {m_handActions.thumbrestTouchedAction, handLeftThumbrestTouch},
-                {m_handActions.gripPoseAction, handLeftGripPose},
-                {m_handActions.aimPoseAction, handLeftAimPose},
-                {m_handActions.hapticAction, handLeftHaptic},
-                {m_handActions.button1PressedAction, handRightAClick},
-                {m_handActions.button2PressedAction, handRightBClick},
-                {m_handActions.button1TouchedAction, handRightATouch},
-                {m_handActions.button2TouchedAction, handRightBTouch},
-                {m_handActions.buttonSystemPressedAction, handRightSystemClick},
-                {m_handActions.squeezeValueAction, handRightSqueezeValue},
-                {m_handActions.triggerValueAction, handRightTriggerValue},
-                {m_handActions.triggerTouchedAction, handRightTriggerTouch},
-                {m_handActions.thumbstickXAction, handRightThumbstickX},
-                {m_handActions.thumbstickYAction, handRightThumbstickY},
-                {m_handActions.thumbstickPressedAction, handRightThumbstickClick},
-                {m_handActions.thumbstickTouchedAction, handRightThumbstickTouch},
-                {m_handActions.thumbrestTouchedAction, handRightThumbrestTouch},
-                {m_handActions.gripPoseAction, handRightGripPose},
-                {m_handActions.aimPoseAction, handRightAimPose},
-                {m_handActions.hapticAction, handRightHaptic},
-                                                        }};
-        XrInteractionProfileSuggestedBinding suggestedBindings{};
-        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-        suggestedBindings.interactionProfile = oculusTouchProfile;
-        suggestedBindings.suggestedBindings = bindings.data();
-        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings));
-    }
-
-    // HTC Vive ### TODO
-    {
-        XrPath htcViveProfile;
-        setPath(htcViveProfile, "/interaction_profiles/htc/vive_controller");
-
-
-        std::vector<XrActionSuggestedBinding> bindings {{
-                {m_handActions.buttonMenuPressedAction, handLeftMenuClick},
-                {m_handActions.buttonSystemPressedAction, handLeftSystemClick },
-                {m_handActions.squeezePressedAction, handLeftSqueezeClick},
-                {m_handActions.triggerValueAction, handLeftTriggerValue},
-                {m_handActions.triggerPressedAction, handLeftTriggerClick},
-                {m_handActions.trackpadXAction, handLeftTrackpadX},
-                {m_handActions.trackpadYAction, handLeftTrackpadY},
-                {m_handActions.trackpadTouchedAction, handLeftTrackpadTouch},
-                {m_handActions.trackpadPressedAction, handLeftTrackpadClick},
-                {m_handActions.gripPoseAction, handLeftGripPose},
-                {m_handActions.aimPoseAction, handLeftAimPose},
-                {m_handActions.hapticAction, handLeftHaptic},
-
-                {m_handActions.buttonMenuPressedAction, handRightMenuClick},
-                {m_handActions.buttonSystemPressedAction, handRightSystemClick },
-                {m_handActions.squeezePressedAction, handRightSqueezeClick},
-                {m_handActions.triggerValueAction, handRightTriggerValue},
-                {m_handActions.triggerPressedAction, handRightTriggerClick},
-                {m_handActions.trackpadXAction, handRightTrackpadX},
-                {m_handActions.trackpadYAction, handRightTrackpadY},
-                {m_handActions.trackpadTouchedAction, handRightTrackpadTouch},
-                {m_handActions.trackpadPressedAction, handRightTrackpadClick},
-                {m_handActions.gripPoseAction, handRightGripPose},
-                {m_handActions.aimPoseAction, handRightAimPose},
-                {m_handActions.hapticAction, handRightHaptic},
-
-
-            }};
-        XrInteractionProfileSuggestedBinding suggestedBindings{};
-        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-        suggestedBindings.interactionProfile = htcViveProfile;
-        suggestedBindings.suggestedBindings = bindings.data();
-        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings));
-    }
-
-    // Microsoft MRM ### TODO
-    {
-        XrPath microsoftMotionProfile;
-        setPath(microsoftMotionProfile, "/interaction_profiles/microsoft/motion_controller");
-    }
-
-    // Valve Index ### TODO
-    {
-        XrPath valveIndexProfile;
-        setPath(valveIndexProfile, "/interaction_profiles/valve/index_controller");
-    }
 
     // XBox Controller
     if (!m_disableGamepad) {
@@ -380,7 +369,7 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
         suggestedBindings.interactionProfile = xboxControllerProfile;
         suggestedBindings.suggestedBindings = bindings.data();
         suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings));
+        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: XBox controller");
     }
 
     // Setup Action Spaces
@@ -391,16 +380,15 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     actionSpaceInfo.poseInActionSpace.orientation.w = 1.0f;
     //actionSpaceInfo.poseInActionSpace.orientation.y = 1.0f;
     actionSpaceInfo.subactionPath = m_handSubactionPath[0];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[0]));
+    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[0]), "action space: handGripSpace[0]");
     actionSpaceInfo.subactionPath = m_handSubactionPath[1];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[1]));
+    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[1]), "action space: handGripSpace[1]");
 
     actionSpaceInfo.action = m_handActions.aimPoseAction;
     actionSpaceInfo.subactionPath = m_handSubactionPath[0];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[0]));
+    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[0]), "action space: handAimSpace[0]");
     actionSpaceInfo.subactionPath = m_handSubactionPath[1];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[1]));
-
+    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[1]), "action space: handAimSpace[1]");
 
     // Attach Action set to session
 
@@ -408,7 +396,7 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     attachInfo.type = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO;
     attachInfo.countActionSets = 1;
     attachInfo.actionSets = &m_actionSet;
-    checkXrResult(xrAttachSessionActionSets(m_session, &attachInfo));
+    checkXrResult(xrAttachSessionActionSets(m_session, &attachInfo), "attach action set");
 
     m_initialized = true;
 }
@@ -426,6 +414,11 @@ void QOpenXRInputManager::teardown()
     xrDestroySpace(m_handAimSpace[1]);
 
     destroyActions();
+
+    if (xrDestroyHandTrackerEXT_) {
+        xrDestroyHandTrackerEXT_(handTracker[LeftHand]);
+        xrDestroyHandTrackerEXT_(handTracker[RightHand]);
+    }
 
     m_instance = {XR_NULL_HANDLE};
     m_session = {XR_NULL_HANDLE};
@@ -446,7 +439,7 @@ void QOpenXRInputManager::pollActions()
     if (!(result == XR_SUCCESS ||
           result == XR_SESSION_LOSS_PENDING ||
           result == XR_SESSION_NOT_FOCUSED)) {
-        checkXrResult(result);
+        checkXrResult(result, "xrSyncActions");
         return;
     }
 
@@ -460,35 +453,42 @@ void QOpenXRInputManager::pollActions()
         getInfo.subactionPath = m_handSubactionPath[i];
         auto &inputState = m_handInputState[i];
 
-        getBoolInputState(getInfo, m_handActions.button1PressedAction, std::bind(&QOpenXRHandInput::setButton1Pressed, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.button1TouchedAction, std::bind(&QOpenXRHandInput::setButton1Touched, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.button2PressedAction, std::bind(&QOpenXRHandInput::setButton2Pressed, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.button2TouchedAction, std::bind(&QOpenXRHandInput::setButton2Touched, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.buttonMenuPressedAction, std::bind(&QOpenXRHandInput::setButtonMenuPressed, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.buttonMenuTouchedAction, std::bind(&QOpenXRHandInput::setButtonMenuTouched, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.buttonSystemPressedAction, std::bind(&QOpenXRHandInput::setButtonSystemPressed, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.buttonSystemTouchedAction, std::bind(&QOpenXRHandInput::setButtonSystemTouched, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.squeezeValueAction, std::bind(&QOpenXRHandInput::setSqueezeValue, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.squeezeForceAction, std::bind(&QOpenXRHandInput::setSqueezeForce, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.squeezePressedAction, std::bind(&QOpenXRHandInput::setSqueezePressed, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.triggerValueAction, std::bind(&QOpenXRHandInput::setTriggerValue, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.triggerPressedAction, std::bind(&QOpenXRHandInput::setTriggerPressed, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.triggerTouchedAction, std::bind(&QOpenXRHandInput::setTriggerTouched, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.thumbstickXAction, std::bind(&QOpenXRHandInput::setThumbstickX, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.thumbstickYAction, std::bind(&QOpenXRHandInput::setThumbstickY, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.thumbstickPressedAction, std::bind(&QOpenXRHandInput::setThumbstickPressed, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.thumbstickTouchedAction, std::bind(&QOpenXRHandInput::setThumbstickTouched, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.thumbrestTouchedAction, std::bind(&QOpenXRHandInput::setThumbrestTouched, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.trackpadXAction, std::bind(&QOpenXRHandInput::setTrackpadX, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.trackpadYAction, std::bind(&QOpenXRHandInput::setTrackpadY, inputState, _1));
-        getFloatInputState(getInfo, m_handActions.trackpadForceAction, std::bind(&QOpenXRHandInput::setTrackpadForce, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.trackpadTouchedAction, std::bind(&QOpenXRHandInput::setTrackpadTouched, inputState, _1));
-        getBoolInputState(getInfo, m_handActions.trackpadPressedAction, std::bind(&QOpenXRHandInput::setTrackpadPressed, inputState, _1));
+        for (const auto &def : handInputActions) {
+            getInfo.action = m_handActions.actions[def.id];
+            switch (def.type) {
+            case XR_ACTION_TYPE_BOOLEAN_INPUT: {
+                XrActionStateBoolean boolValue{};
+                boolValue.type = XR_TYPE_ACTION_STATE_BOOLEAN;
+                checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue), "bool hand input");
+                if (boolValue.isActive && boolValue.changedSinceLastSync) {
+                    //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
+                    m_handInputState[i]->setInputValue(def.id, def.shortName, float(boolValue.currentState));
+                }
+                break;
+            }
+            case XR_ACTION_TYPE_FLOAT_INPUT: {
+                XrActionStateFloat floatValue{};
+                floatValue.type = XR_TYPE_ACTION_STATE_FLOAT;
+                checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue), "float hand input");
+                if (floatValue.isActive && floatValue.changedSinceLastSync) {
+                    //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
+                    m_handInputState[i]->setInputValue(def.id, def.shortName, float(floatValue.currentState));
+                }
+                break;
+            }
+            case XR_ACTION_TYPE_VECTOR2F_INPUT:
+            case XR_ACTION_TYPE_POSE_INPUT:
+            case XR_ACTION_TYPE_VIBRATION_OUTPUT:
+            case XR_ACTION_TYPE_MAX_ENUM:
+                break;
+            }
+        }
+
         // Get pose activity status
         getInfo.action = m_handActions.gripPoseAction;
         XrActionStatePose poseState{};
         poseState.type = XR_TYPE_ACTION_STATE_POSE;
-        checkXrResult(xrGetActionStatePose(m_session, &getInfo, &poseState));
+        checkXrResult(xrGetActionStatePose(m_session, &getInfo, &poseState), "xrGetActionStatePose XR_TYPE_ACTION_STATE_POSE");
         inputState->setIsActive(poseState.isActive);
 
         // TODO handle any output as well here (haptics)
@@ -533,12 +533,20 @@ void QOpenXRInputManager::pollActions()
 void QOpenXRInputManager::updatePoses(XrTime predictedDisplayTime, XrSpace appSpace)
 {
     // Update the Hands pose
+
     for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
         XrSpaceLocation spaceLocation{};
         spaceLocation.type = XR_TYPE_SPACE_LOCATION;
         XrResult res;
         res = xrLocateSpace(handSpace(hand), appSpace, predictedDisplayTime, &spaceLocation);
-        checkXrResult(res);
+        // qDebug() << "LOCATE SPACE hand:" << hand << "res" << res << "flags" << spaceLocation.locationFlags
+        //          << "active" << m_handInputState[hand]->isActive()
+        //          << "Pos" << spaceLocation.pose.position.x << spaceLocation.pose.position.y << spaceLocation.pose.position.z;
+        checkXrResult(res, "xrLocateSpace");
+        m_validAimStateFromUpdatePoses[hand] = m_handInputState[hand]->poseSpace() == QOpenXRHandInput::HandPoseSpace::AimPose
+                && XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT)
+                && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT); // ### Workaround for Quest issue with hand interaction aim pose
+
         if (XR_UNQUALIFIED_SUCCESS(res)) {
             if ((spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
                     (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
@@ -563,8 +571,126 @@ void QOpenXRInputManager::updatePoses(XrTime predictedDisplayTime, XrSpace appSp
     }
 }
 
+void QOpenXRInputManager::updateHandtracking(XrTime predictedDisplayTime, XrSpace appSpace, bool aimExtensionEnabled)
+{
+    if (xrLocateHandJointsEXT_) {
+
+        XrHandTrackingAimStateFB aimState[2] = {{}, {}}; // Only used when aim extension is enabled
+        XrHandJointVelocitiesEXT velocities[2]{{}, {}};
+        XrHandJointLocationsEXT locations[2]{{}, {}};
+        XrHandJointsLocateInfoEXT locateInfo[2] = {{}, {}};
+
+        for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
+            aimState[hand].type = XR_TYPE_HAND_TRACKING_AIM_STATE_FB;
+
+            velocities[hand].type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
+            velocities[hand].jointCount = XR_HAND_JOINT_COUNT_EXT;
+            velocities[hand].jointVelocities = jointVelocities[hand];
+            velocities[hand].next = aimExtensionEnabled ? &aimState[hand] : nullptr;
+
+            locations[hand].type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
+            locations[hand].next = &velocities[hand];
+            locations[hand].jointCount = XR_HAND_JOINT_COUNT_EXT;
+            locations[hand].jointLocations = jointLocations[hand];
+
+            locateInfo[hand].type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT;
+            locateInfo[hand].baseSpace = appSpace;
+            locateInfo[hand].time = predictedDisplayTime;
+            checkXrResult(xrLocateHandJointsEXT_(handTracker[hand], &locateInfo[hand], &locations[hand]), "handTracker");
+        }
+
+        if (aimExtensionEnabled) {
+            // Finger pinch handling
+            for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
+                const uint state = aimState[hand].status;
+                const uint oldState = m_aimStateFlags[hand];
+                auto updateState = [&](const char *name, QOpenXRActionMapper::InputAction id, uint flag) {
+                    if ((state & flag) != (oldState & flag))
+                        m_handInputState[hand]->setInputValue(id, name, float(!!(state & flag)));
+                };
+
+                updateState("index_pinch", QOpenXRActionMapper::IndexFingerPinch, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
+                updateState("middle_pinch", QOpenXRActionMapper::MiddleFingerPinch, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
+                updateState("ring_pinch", QOpenXRActionMapper::RingFingerPinch, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
+                updateState("little_pinch", QOpenXRActionMapper::LittleFingerPinch, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
+                updateState("hand_tracking_menu_press", QOpenXRActionMapper::HandTrackingMenuPress, XR_HAND_TRACKING_AIM_MENU_PRESSED_BIT_FB);
+                m_aimStateFlags[hand] = state;
+            }
+
+            // ### Workaround for Quest issue with hand interaction aim pose
+            for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
+                if (!m_validAimStateFromUpdatePoses[hand]) {
+                    if ((aimState[hand].status & XR_HAND_TRACKING_AIM_VALID_BIT_FB) && m_handInputState[hand]->poseSpace() == QOpenXRHandInput::HandPoseSpace::AimPose) {
+                        setPosePosition(hand, QVector3D(aimState[hand].aimPose.position.x,
+                                                        aimState[hand].aimPose.position.y,
+                                                        aimState[hand].aimPose.position.z) * 100.0f);
+                        setPoseRotation(hand, QQuaternion(aimState[hand].aimPose.orientation.w,
+                                                          aimState[hand].aimPose.orientation.x,
+                                                          aimState[hand].aimPose.orientation.y,
+                                                          aimState[hand].aimPose.orientation.z));
+                        m_handInputState[hand]->setIsActive(true); // TODO: clean up
+                    }
+                }
+            }
+        }
+    }
+}
+
+void QOpenXRInputManager::setupHandTracking()
+{
+    checkXrResult(xrGetInstanceProcAddr(
+        m_instance,
+        "xrCreateHandTrackerEXT",
+        (PFN_xrVoidFunction*)(&xrCreateHandTrackerEXT_)), "xrCreateHandTrackerEXT");
+    checkXrResult(xrGetInstanceProcAddr(
+        m_instance,
+        "xrDestroyHandTrackerEXT",
+        (PFN_xrVoidFunction*)(&xrDestroyHandTrackerEXT_)), "xrDestroyHandTrackerEXT");
+    checkXrResult(xrGetInstanceProcAddr(
+        m_instance,
+        "xrLocateHandJointsEXT",
+        (PFN_xrVoidFunction*)(&xrLocateHandJointsEXT_)), "xrLocateHandJointsEXT");
+
+    if (xrCreateHandTrackerEXT_) {
+        XrHandTrackerCreateInfoEXT createInfo{};
+        createInfo.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT;
+        createInfo.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT;
+        createInfo.hand = XR_HAND_LEFT_EXT;
+        checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[LeftHand]), "xrCreateHandTrackerEXT handTrackerLeft");
+        createInfo.hand = XR_HAND_RIGHT_EXT;
+        checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[RightHand]), "xrCreateHandTrackerEXT handTrackerRight");
+    }
+};
+
 void QOpenXRInputManager::setupActions()
 {
+    handInputActions = {
+        { QOpenXRActionMapper::Button1Pressed, "b1_pressed", "Button 1 Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::Button1Touched, "b1_touched", "Button 1 Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::Button2Pressed, "b2_pressed", "Button 2 Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::Button2Touched, "b2_touched", "Button 2 Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::ButtonMenuPressed, "bmenu_pressed", "Button Menu Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::ButtonMenuTouched, "bmenu_touched", "Button Menu Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::ButtonSystemPressed, "bsystem_pressed", "Button System Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::ButtonSystemTouched, "bsystem_touched", "Button System Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::SqueezeValue, "squeeze_value", "Squeeze Value", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::SqueezeForce, "squeeze_force", "Squeeze Force", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::SqueezePressed, "squeeze_pressed", "Squeeze Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::TriggerValue, "trigger_value", "Trigger Value", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::TriggerPressed, "trigger_pressed", "Trigger Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::TriggerTouched, "trigger_touched", "Trigger Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::ThumbstickX, "thumbstick_x", "Thumbstick X", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::ThumbstickY, "thumbstick_y", "Thumbstick Y", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::ThumbstickPressed, "thumbstick_pressed", "Thumbstick Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::ThumbstickTouched, "thumbstick_touched", "Thumbstick Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::ThumbrestTouched, "thumbrest_touched", "Thumbrest Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::TrackpadX, "trackpad_x", "Trackpad X", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::TrackpadY, "trackpad_y", "Trackpad Y", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::TrackpadForce, "trackpad_force", "Trackpad Force", XR_ACTION_TYPE_FLOAT_INPUT, 0 },
+        { QOpenXRActionMapper::TrackpadTouched, "trackpad_touched", "Trackpad Touched", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 },
+        { QOpenXRActionMapper::TrackpadPressed, "trackpad_pressed", "Trackpad Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT, 0 }
+    };
+
     // Create an action set.
     {
         XrActionSetCreateInfo actionSetInfo{};
@@ -572,156 +698,22 @@ void QOpenXRInputManager::setupActions()
         strcpy(actionSetInfo.actionSetName, "gameplay");
         strcpy(actionSetInfo.localizedActionSetName, "Gameplay");
         actionSetInfo.priority = 0;
-        checkXrResult(xrCreateActionSet(m_instance, &actionSetInfo, &m_actionSet));
+        checkXrResult(xrCreateActionSet(m_instance, &actionSetInfo, &m_actionSet), "xrCreateActionSet gameplay");
     }
 
     // Create Hand Actions
     setPath(m_handSubactionPath[0], "/user/hand/left");
     setPath(m_handSubactionPath[1], "/user/hand/right");
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "b1_pressed",
-                 "Button 1 Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.button1PressedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "b1_touched",
-                 "Button 1 Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.button1TouchedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "b2_pressed",
-                 "Button 2 Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.button2PressedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "b2_touched",
-                 "Button 2 Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.button2TouchedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "bmenu_pressed",
-                 "Button Menu Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.buttonMenuPressedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "bmenu_touched",
-                 "Button Menu Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.buttonMenuTouchedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "bsystem_pressed",
-                 "Button System Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.buttonSystemPressedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "bsystem_touched",
-                 "Button System Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.buttonSystemTouchedAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "squeeze_value",
-                 "Squeeze Value",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.squeezeValueAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "squeeze_force",
-                 "Squeeze Force",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.squeezeForceAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "squeeze_pressed",
-                 "Squeeze Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.squeezePressedAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "trigger_value",
-                 "Trigger Value",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.triggerValueAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "trigger_pressed",
-                 "Trigger Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.triggerPressedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "trigger_touched",
-                 "Trigger Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.triggerTouchedAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "thumbstick_x",
-                 "Thumbstick X",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.thumbstickXAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "thumbstick_y",
-                 "Thumbstick Y",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.thumbstickYAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "thumbstick_pressed",
-                 "Thumbstick Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.thumbstickPressedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "thumbstick_touched",
-                 "Thumbstick Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.thumbstickTouchedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "thumbrest_touched",
-                 "Thumbrest Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.thumbrestTouchedAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "trackpad_x",
-                 "Trackpad X",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.trackpadXAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "trackpad_y",
-                 "Trackpad Y",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.trackpadYAction);
-    createAction(XR_ACTION_TYPE_FLOAT_INPUT,
-                 "trackpad_force",
-                 "Trackpad Force",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.trackpadForceAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "trackpad_touched",
-                 "Trackpad Touched",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.trackpadTouchedAction);
-    createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
-                 "trackpad_pressed",
-                 "Trackpad Pressed",
-                 2,
-                 m_handSubactionPath,
-                 m_handActions.trackpadPressedAction);
+
+    for (const auto &def : handInputActions) {
+        createAction(def.type,
+                     def.shortName,
+                     def.localizedName,
+                     2,
+                     m_handSubactionPath,
+                     m_handActions.actions[def.id]);
+    }
+
     createAction(XR_ACTION_TYPE_VIBRATION_OUTPUT,
                  "vibrate_hand",
                  "Vibrate Hand",
@@ -741,7 +733,7 @@ void QOpenXRInputManager::setupActions()
                  m_handSubactionPath,
                  m_handActions.aimPoseAction);
 
-    // Create Gamepad Actions
+    // Create Gamepad Actions ### TODO
     if (!m_disableGamepad) {
         setPath(m_gamepadSubactionPath, "/user/gamepad");
         createAction(XR_ACTION_TYPE_BOOLEAN_INPUT,
@@ -894,30 +886,11 @@ void QOpenXRInputManager::setupActions()
 
 void QOpenXRInputManager::destroyActions()
 {
-    xrDestroyAction(m_handActions.button1PressedAction);
-    xrDestroyAction(m_handActions.button1TouchedAction);
-    xrDestroyAction(m_handActions.button2PressedAction);
-    xrDestroyAction(m_handActions.button2TouchedAction);
-    xrDestroyAction(m_handActions.buttonMenuPressedAction);
-    xrDestroyAction(m_handActions.buttonMenuTouchedAction);
-    xrDestroyAction(m_handActions.buttonSystemPressedAction);
-    xrDestroyAction(m_handActions.buttonSystemTouchedAction);
-    xrDestroyAction(m_handActions.squeezeValueAction);
-    xrDestroyAction(m_handActions.squeezeForceAction);
-    xrDestroyAction(m_handActions.squeezePressedAction);
-    xrDestroyAction(m_handActions.triggerValueAction);
-    xrDestroyAction(m_handActions.triggerPressedAction);
-    xrDestroyAction(m_handActions.triggerTouchedAction);
-    xrDestroyAction(m_handActions.thumbstickXAction);
-    xrDestroyAction(m_handActions.thumbstickYAction);
-    xrDestroyAction(m_handActions.thumbstickPressedAction);
-    xrDestroyAction(m_handActions.thumbstickTouchedAction);
-    xrDestroyAction(m_handActions.thumbrestTouchedAction);
-    xrDestroyAction(m_handActions.trackpadXAction);
-    xrDestroyAction(m_handActions.trackpadYAction);
-    xrDestroyAction(m_handActions.trackpadForceAction);
-    xrDestroyAction(m_handActions.trackpadTouchedAction);
-    xrDestroyAction(m_handActions.trackpadPressedAction);
+    for (auto &action : m_handActions.actions) {
+        if (action)
+            xrDestroyAction(action);
+    }
+
     xrDestroyAction(m_handActions.gripPoseAction);
     xrDestroyAction(m_handActions.aimPoseAction);
     xrDestroyAction(m_handActions.hapticAction);
@@ -952,19 +925,19 @@ void QOpenXRInputManager::destroyActions()
     xrDestroyActionSet(m_actionSet);
 }
 
-bool QOpenXRInputManager::checkXrResult(const XrResult &result)
+bool QOpenXRInputManager::checkXrResult(const XrResult &result, const char *debugText)
 {
     bool checkResult = OpenXRHelpers::checkXrResult(result, m_instance);
     if (!checkResult) {
-        qDebug("here");
+        qDebug() << "checkXrResult failed" << result << (debugText ? debugText : "");
     }
     return checkResult;
 
 }
 
-void QOpenXRInputManager::setPath(XrPath &path, const char *pathString)
+void QOpenXRInputManager::setPath(XrPath &path, const QByteArray &pathString)
 {
-    checkXrResult(xrStringToPath(m_instance, pathString, &path));
+    checkXrResult(xrStringToPath(m_instance, pathString.constData(), &path), "xrStringToPath");
 }
 
 void QOpenXRInputManager::createAction(XrActionType type,
@@ -981,7 +954,9 @@ void QOpenXRInputManager::createAction(XrActionType type,
     strcpy(actionInfo.localizedActionName, localizedName);
     actionInfo.countSubactionPaths = quint32(numSubactions);
     actionInfo.subactionPaths = subactionPath;
-    checkXrResult(xrCreateAction(m_actionSet, &actionInfo, &action));
+    bool res = checkXrResult(xrCreateAction(m_actionSet, &actionInfo, &action), "xrCreateAction");
+    if (!res)
+        qDebug() << "xrCreateAction failed. Name:" << name << "localizedName:" << localizedName;
 }
 
 void QOpenXRInputManager::getBoolInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(bool)> setter)
@@ -989,7 +964,7 @@ void QOpenXRInputManager::getBoolInputState(XrActionStateGetInfo &getInfo, const
     getInfo.action = action;
     XrActionStateBoolean boolValue{};
     boolValue.type = XR_TYPE_ACTION_STATE_BOOLEAN;
-    checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue));
+    checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue), "getBoolInputState");
     if (boolValue.isActive == XR_TRUE)
         setter(bool(boolValue.currentState));
 }
@@ -999,7 +974,7 @@ void QOpenXRInputManager::getFloatInputState(XrActionStateGetInfo &getInfo, cons
     getInfo.action = action;
     XrActionStateFloat floatValue{};
     floatValue.type = XR_TYPE_ACTION_STATE_FLOAT;
-    checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue));
+    checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue), "getFloatInputState");
     if (floatValue.isActive == XR_TRUE)
         setter(float(floatValue.currentState));
 }
@@ -1012,9 +987,22 @@ XrSpace QOpenXRInputManager::handSpace(QOpenXRInputManager::Hand hand)
         return m_handAimSpace[hand];
 }
 
+XrSpace QOpenXRInputManager::handTrackerSpace(Hand handtracker)
+{
+    if (m_handTrackerInputState[handtracker]->poseSpace() == QOpenXRHandTrackerInput::HandPoseSpace::GripPose)
+        return m_handGripSpace[handtracker];
+    else
+        return m_handAimSpace[handtracker];
+}
+
 bool QOpenXRInputManager::isHandActive(QOpenXRInputManager::Hand hand)
 {
     return m_handInputState[hand]->isActive();
+}
+
+bool QOpenXRInputManager::isHandTrackerActive(Hand handtracker)
+{
+    return m_handTrackerInputState[handtracker]->isActive();
 }
 
 void QOpenXRInputManager::setPosePosition(Hand hand, const QVector3D &position)
@@ -1035,6 +1023,16 @@ QOpenXRHandInput *QOpenXRInputManager::leftHandInput() const
 QOpenXRHandInput *QOpenXRInputManager::rightHandInput() const
 {
     return m_handInputState[QOpenXRInputManager::RightHand];
+}
+
+QOpenXRHandTrackerInput *QOpenXRInputManager::rightHandTrackerInput() const
+{
+    return m_handTrackerInputState[QOpenXRInputManager::RightHand];
+}
+
+QOpenXRHandTrackerInput *QOpenXRInputManager::leftHandTrackerInput() const
+{
+    return m_handTrackerInputState[QOpenXRInputManager::LeftHand];
 }
 
 QOpenXRGamepadInput *QOpenXRInputManager::gamepadInput() const

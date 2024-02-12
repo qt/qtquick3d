@@ -188,6 +188,8 @@ private:
     bool m_colorspaceExtensionSupported = false;
     bool m_displayRefreshRateExtensionSupported = false;
     bool m_foveationExtensionSupported = false;
+    bool m_handtrackingExtensionSupported = false;
+    bool m_handtrackingAimExtensionSupported = false;
 
 #ifdef XR_USE_PLATFORM_ANDROID
     QJniObject m_androidActivity;

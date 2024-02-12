@@ -8,7 +8,7 @@
 
 #include <openxr/openxr.h>
 #include <functional>
-
+#include "qopenxractionmapper_p.h"
 //
 //  W A R N I N G
 //  -------------
@@ -23,6 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QOpenXRHandInput;
+class QOpenXRHandTrackerInput;
 class QOpenXRGamepadInput;
 
 class QOpenXRInputManager : public QObject
@@ -36,30 +37,48 @@ public:
 
     enum Hand {
         LeftHand = 0,
-        RightHand = 1
+        RightHand = 1,
     };
 
     void pollActions();
     void updatePoses(XrTime predictedDisplayTime, XrSpace appSpace);
+    void updateHandtracking(XrTime predictedDisplayTime, XrSpace appSpace, bool aimExtensionEnabled);
 
     XrSpace handSpace(Hand hand);
     bool isHandActive(Hand hand);
 
+    XrSpace handTrackerSpace(Hand handtracker);
+    bool isHandTrackerActive(Hand handtracker);
+
     void setPosePosition(Hand hand, const QVector3D &position);
     void setPoseRotation(Hand hand, const QQuaternion &rotation);
 
-    QOpenXRHandInput* leftHandInput() const;
-    QOpenXRHandInput* rightHandInput() const;
-    QOpenXRGamepadInput* gamepadInput() const;
+    QOpenXRHandInput *leftHandInput() const;
+    QOpenXRHandInput *rightHandInput() const;
+    QOpenXRHandTrackerInput *leftHandTrackerInput() const;
+    QOpenXRHandTrackerInput *rightHandTrackerInput() const;
+    QOpenXRGamepadInput *gamepadInput() const;
+
+    PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT_;
+    PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_;
+    PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT_;
+
+    PFN_xrGetHandMeshFB xrGetHandMeshFB_;
+
+    XrHandTrackerEXT handTracker[2] = {XR_NULL_HANDLE, XR_NULL_HANDLE};
+
+    XrHandJointLocationEXT jointLocations[2][XR_HAND_JOINT_COUNT_EXT];
+    XrHandJointVelocityEXT jointVelocities[2][XR_HAND_JOINT_COUNT_EXT];
 
 private:
     QOpenXRInputManager();
     ~QOpenXRInputManager();
 
+    void setupHandTracking();
     void setupActions();
     void destroyActions();
-    bool checkXrResult(const XrResult &result);
-    void setPath(XrPath &path, const char *pathString);
+    bool checkXrResult(const XrResult &result, const char *debugText = nullptr);
+    void setPath(XrPath &path, const QByteArray &pathString);
 
     void createAction(XrActionType type,
                       const char *name,
@@ -73,31 +92,27 @@ private:
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
 
+    enum SubPathSelector {LeftHandSubPath = 1, RightHandSubPath = 2, BothHandsSubPath = 3};
+
+    struct QXRHandComponentPath
+    {
+        XrPath paths[2] = {{}, {}};
+        QByteArray componentPathString;
+    };
+    QXRHandComponentPath makeQXRPath(const QByteArrayView path);
+
+    struct HandInputAction {
+        QOpenXRActionMapper::InputAction id;
+        const char *shortName;
+        const char *localizedName;
+        XrActionType type;
+        float lastValue;
+    };
+
+    QList<HandInputAction> handInputActions;
+
     struct HandActions {
-        XrAction button1PressedAction{XR_NULL_HANDLE};
-        XrAction button1TouchedAction{XR_NULL_HANDLE};
-        XrAction button2PressedAction{XR_NULL_HANDLE};
-        XrAction button2TouchedAction{XR_NULL_HANDLE};
-        XrAction buttonMenuPressedAction{XR_NULL_HANDLE};
-        XrAction buttonMenuTouchedAction{XR_NULL_HANDLE};
-        XrAction buttonSystemPressedAction{XR_NULL_HANDLE};
-        XrAction buttonSystemTouchedAction{XR_NULL_HANDLE};
-        XrAction squeezeValueAction{XR_NULL_HANDLE};
-        XrAction squeezeForceAction{XR_NULL_HANDLE};
-        XrAction squeezePressedAction{XR_NULL_HANDLE};
-        XrAction triggerValueAction{XR_NULL_HANDLE};
-        XrAction triggerPressedAction{XR_NULL_HANDLE};
-        XrAction triggerTouchedAction{XR_NULL_HANDLE};
-        XrAction thumbstickXAction{XR_NULL_HANDLE};
-        XrAction thumbstickYAction{XR_NULL_HANDLE};
-        XrAction thumbstickPressedAction{XR_NULL_HANDLE};
-        XrAction thumbstickTouchedAction{XR_NULL_HANDLE};
-        XrAction thumbrestTouchedAction{XR_NULL_HANDLE};
-        XrAction trackpadXAction{XR_NULL_HANDLE};
-        XrAction trackpadYAction{XR_NULL_HANDLE};
-        XrAction trackpadForceAction{XR_NULL_HANDLE};
-        XrAction trackpadTouchedAction{XR_NULL_HANDLE};
-        XrAction trackpadPressedAction{XR_NULL_HANDLE};
+        XrAction actions[QOpenXRActionMapper::NumActions] = {};
         XrAction gripPoseAction{XR_NULL_HANDLE};
         XrAction aimPoseAction{XR_NULL_HANDLE};
         XrAction hapticAction{XR_NULL_HANDLE};
@@ -137,13 +152,16 @@ private:
     XrSpace m_handAimSpace[2];
 
     QOpenXRHandInput *m_handInputState[2];
+    QOpenXRHandTrackerInput *m_handTrackerInputState[2];
     QOpenXRGamepadInput *m_gamepadInputState;
     XrPath m_gamepadSubactionPath;
     HandActions m_handActions;
     GamepadActions m_gamepadActions;
 
+    uint m_aimStateFlags[2] = {};
     bool m_initialized = false;
     bool m_disableGamepad = false;
+    bool m_validAimStateFromUpdatePoses[2] = {false, false};
 };
 
 QT_END_NAMESPACE
