@@ -243,7 +243,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                                                                     features);
 
                 if (shaderPipeline) {
-                    shaderString = material.m_shaderPathKey;
+                    shaderString = material.m_shaderPathKey[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex];
                     const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
                     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);
                     const auto vertexStage = shaderPipeline->vertexStage();

@@ -1065,10 +1065,18 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (hasLighting || hasCustomFrag) {
         // Do not move these three. These varyings are exposed to custom material shaders too.
         vertexShader.generateViewVector(inKey);
-        if (keyProps.m_usesProjectionMatrix.getValue(inKey))
-            fragmentShader.addUniform("qt_projectionMatrix", "mat4");
-        if (keyProps.m_usesInverseProjectionMatrix.getValue(inKey))
-            fragmentShader.addUniform("qt_inverseProjectionMatrix", "mat4");
+        if (keyProps.m_usesProjectionMatrix.getValue(inKey)) {
+            if (viewCount >= 2)
+                fragmentShader.addUniformArray("qt_projectionMatrix", "mat4", viewCount);
+            else
+                fragmentShader.addUniform("qt_projectionMatrix", "mat4");
+        }
+        if (keyProps.m_usesInverseProjectionMatrix.getValue(inKey)) {
+            if (viewCount >= 2)
+                fragmentShader.addUniformArray("qt_inverseProjectionMatrix", "mat4", viewCount);
+            else
+                fragmentShader.addUniform("qt_inverseProjectionMatrix", "mat4");
+        }
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition(inKey);
 

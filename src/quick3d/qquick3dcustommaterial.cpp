@@ -1550,6 +1550,40 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Skinning, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesMorphing))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Morphing, true);
+
+    // vertex only
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition, true);
+
+    // fragment only
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesSharedVars))
+        material->m_usesSharedVariables = true;
+}
+
+static QByteArray prepareCustomShader(QSSGRenderCustomMaterial *customMaterial,
+                                      const QSSGShaderCustomMaterialAdapter::StringPairList &uniforms,
+                                      const QByteArray &snippet,
+                                      QSSGShaderCache::ShaderType shaderType,
+                                      QSSGCustomShaderMetaData &meta,
+                                      bool multiViewCompatible)
+{
+    if (snippet.isEmpty())
+        return QByteArray();
+
+    QByteArray sourceCode = snippet;
+    QByteArray buf;
+    auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf,
+                                                                        sourceCode,
+                                                                        shaderType,
+                                                                        uniforms,
+                                                                        {},
+                                                                        {},
+                                                                        multiViewCompatible);
+    sourceCode = result.first;
+    sourceCode.append(buf);
+    meta = result.second;
+    setCustomMaterialFlagsFromShader(customMaterial, meta);
+    return sourceCode;
 }
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -1699,45 +1733,36 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         }
 
         const QQmlContext *context = qmlContext(this);
-        QByteArray vertex, fragment;
-        QSSGCustomShaderMetaData vertexMeta, fragmentMeta;
+        QByteArray vertex;
+        QByteArray fragment;
+        QByteArray vertexProcessed[2];
+        QSSGCustomShaderMetaData vertexMeta;
+        QByteArray fragmentProcessed[2];
+        QSSGCustomShaderMetaData fragmentMeta;
         QByteArray shaderPathKey("custom material --");
 
         customMaterial->m_renderFlags = {};
 
-        if (!m_vertexShader.isEmpty()) {
+        if (!m_vertexShader.isEmpty())
             vertex = QSSGShaderUtils::resolveShader(m_vertexShader, context, shaderPathKey);
-            QByteArray shaderCodeMeta;
-            auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta,
-                                                                               vertex,
-                                                                               QSSGShaderCache::ShaderType::Vertex,
-                                                                               uniforms);
-            vertex = result.first;
-            vertex.append(shaderCodeMeta);
-            vertexMeta = result.second;
 
-            setCustomMaterialFlagsFromShader(customMaterial, vertexMeta);
-
-            if (vertexMeta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))
-                customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition, true);
-        }
-
-        if (!m_fragmentShader.isEmpty()) {
+        if (!m_fragmentShader.isEmpty())
             fragment = QSSGShaderUtils::resolveShader(m_fragmentShader, context, shaderPathKey);
-            QByteArray shaderCodeMeta;
-            auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta,
-                                                                               fragment,
-                                                                               QSSGShaderCache::ShaderType::Fragment,
-                                                                               uniforms);
-            fragment = result.first;
-            fragment.append(shaderCodeMeta);
-            fragmentMeta = result.second;
 
-            setCustomMaterialFlagsFromShader(customMaterial, fragmentMeta);
+        // Multiview is a problem, because we will get a dedicated snippet after
+        // preparation (the one that has [gl_ViewIndex] added where it matters).
+        // But at least the view count plays no role here on this level. So one
+        // normal and one multiview "variant" is good enough.
 
-            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesSharedVars))
-                customMaterial->m_usesSharedVariables = true;
-        }
+        vertexProcessed[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
+            prepareCustomShader(customMaterial, uniforms, vertex, QSSGShaderCache::ShaderType::Vertex, vertexMeta, false);
+        fragmentProcessed[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
+            prepareCustomShader(customMaterial, uniforms, fragment, QSSGShaderCache::ShaderType::Fragment, fragmentMeta, false);
+
+        vertexProcessed[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
+            prepareCustomShader(customMaterial, uniforms, vertex, QSSGShaderCache::ShaderType::Vertex, vertexMeta, true);
+        fragmentProcessed[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
+            prepareCustomShader(customMaterial, uniforms, fragment, QSSGShaderCache::ShaderType::Fragment, fragmentMeta, true);
 
         // At this point we have snippets that look like this:
         //   - the original code, with VARYING ... lines removed
@@ -1745,17 +1770,20 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         //   - followed by QQ3D_SHADER_META block for inputs/outputs
 
         customMaterial->m_customShaderPresence = {};
-        if (!vertex.isEmpty() || !fragment.isEmpty()) {
-            customMaterial->m_shaderPathKey = shaderPathKey.append(':' + QCryptographicHash::hash(QByteArray(vertex + fragment), QCryptographicHash::Algorithm::Sha1).toHex());
+        for (int i : { QSSGRenderCustomMaterial::RegularShaderPathKeyIndex, QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex }) {
+            if (vertexProcessed[i].isEmpty() && fragmentProcessed[i].isEmpty())
+                continue;
 
-            if (!vertex.isEmpty()) {
+            const QByteArray key = shaderPathKey + ':' + QCryptographicHash::hash(QByteArray(vertexProcessed[i] + fragmentProcessed[i]), QCryptographicHash::Algorithm::Sha1).toHex();
+            // the processed snippet code is different for regular and multiview, so 'key' reflects that already
+            customMaterial->m_shaderPathKey[i] = key;
+            if (!vertexProcessed[i].isEmpty()) {
                 customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Vertex);
-                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Vertex, vertex, vertexMeta);
+                renderContext->shaderLibraryManager()->setShaderSource(key, QSSGShaderCache::ShaderType::Vertex, vertexProcessed[i], vertexMeta);
             }
-
-            if (!fragment.isEmpty()) {
+            if (!fragmentProcessed[i].isEmpty()) {
                 customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Fragment);
-                renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, QSSGShaderCache::ShaderType::Fragment, fragment, fragmentMeta);
+                renderContext->shaderLibraryManager()->setShaderSource(key, QSSGShaderCache::ShaderType::Fragment, fragmentProcessed[i], fragmentMeta);
             }
         }
     }

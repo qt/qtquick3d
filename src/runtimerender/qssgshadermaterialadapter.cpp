@@ -41,7 +41,8 @@ bool QSSGShaderMaterialAdapter::hasCustomShaderSnippet(QSSGShaderCache::ShaderTy
 }
 
 QByteArray QSSGShaderMaterialAdapter::customShaderSnippet(QSSGShaderCache::ShaderType,
-                                                          QSSGShaderLibraryManager &)
+                                                          QSSGShaderLibraryManager &,
+                                                          bool)
 {
     return QByteArray();
 }
@@ -483,10 +484,14 @@ bool QSSGShaderCustomMaterialAdapter::hasCustomShaderSnippet(QSSGShaderCache::Sh
 }
 
 QByteArray QSSGShaderCustomMaterialAdapter::customShaderSnippet(QSSGShaderCache::ShaderType type,
-                                                                QSSGShaderLibraryManager &shaderLibraryManager)
+                                                                QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                bool multiViewCompatible)
 {
-    if (hasCustomShaderSnippet(type))
-        return shaderLibraryManager.getShaderSource(m_material.m_shaderPathKey, type);
+    if (hasCustomShaderSnippet(type)) {
+        const QByteArray shaderPathKey = m_material.m_shaderPathKey[multiViewCompatible ? QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex
+                                                                                        : QSSGRenderCustomMaterial::RegularShaderPathKeyIndex];
+        return shaderLibraryManager.getShaderSource(shaderPathKey, type);
+    }
 
     return QByteArray();
 }
@@ -496,7 +501,8 @@ bool QSSGShaderCustomMaterialAdapter::hasCustomShaderFunction(QSSGShaderCache::S
                                                               QSSGShaderLibraryManager &shaderLibraryManager)
 {
     if (hasCustomShaderSnippet(shaderType))
-        return shaderLibraryManager.getShaderMetaData(m_material.m_shaderPathKey, shaderType).customFunctions.contains(funcName);
+        return shaderLibraryManager.getShaderMetaData(m_material.m_shaderPathKey[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex],
+                                                      shaderType).customFunctions.contains(funcName);
 
     return false;
 }
@@ -519,84 +525,84 @@ namespace {
 // Must be in sync with the shader generator.
 static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     // uniform (block members)
-    { "MODELVIEWPROJECTION_MATRIX", "qt_modelViewProjection" },
-    { "VIEWPROJECTION_MATRIX", "qt_viewProjectionMatrix" },
-    { "MODEL_MATRIX", "qt_modelMatrix" },
-    { "VIEW_MATRIX", "qt_viewMatrix" },
-    { "NORMAL_MATRIX", "qt_normalMatrix"},
-    { "BONE_TRANSFORMS", "qt_getTexMatrix" },
-    { "BONE_NORMAL_TRANSFORMS", "qt_getTexMatrix" },
-    { "PROJECTION_MATRIX", "qt_projectionMatrix" },
-    { "INVERSE_PROJECTION_MATRIX", "qt_inverseProjectionMatrix" },
-    { "CAMERA_POSITION", "qt_cameraPosition" },
-    { "CAMERA_DIRECTION", "qt_cameraDirection" },
-    { "CAMERA_PROPERTIES", "qt_cameraProperties" },
-    { "FRAMEBUFFER_Y_UP", "qt_rhi_properties.x" },
-    { "NDC_Y_UP", "qt_rhi_properties.y" },
-    { "NEAR_CLIP_VALUE", "qt_rhi_properties.z" },
-    { "IBL_MAXMIPMAP", "qt_lightProbeProperties.y" },
-    { "IBL_HORIZON", "qt_lightProbeProperties.z" },
-    { "IBL_EXPOSE", "qt_lightProbeProperties.w" },
+    { "MODELVIEWPROJECTION_MATRIX", "qt_modelViewProjection", true },
+    { "VIEWPROJECTION_MATRIX", "qt_viewProjectionMatrix", true },
+    { "MODEL_MATRIX", "qt_modelMatrix", false },
+    { "VIEW_MATRIX", "qt_viewMatrix", true },
+    { "NORMAL_MATRIX", "qt_normalMatrix", false },
+    { "BONE_TRANSFORMS", "qt_getTexMatrix", false },
+    { "BONE_NORMAL_TRANSFORMS", "qt_getTexMatrix", false },
+    { "PROJECTION_MATRIX", "qt_projectionMatrix", true },
+    { "INVERSE_PROJECTION_MATRIX", "qt_inverseProjectionMatrix", true },
+    { "CAMERA_POSITION", "qt_cameraPosition", true },
+    { "CAMERA_DIRECTION", "qt_cameraDirection", true },
+    { "CAMERA_PROPERTIES", "qt_cameraProperties", false },
+    { "FRAMEBUFFER_Y_UP", "qt_rhi_properties.x", false },
+    { "NDC_Y_UP", "qt_rhi_properties.y", false },
+    { "NEAR_CLIP_VALUE", "qt_rhi_properties.z", false },
+    { "IBL_MAXMIPMAP", "qt_lightProbeProperties.y", false },
+    { "IBL_HORIZON", "qt_lightProbeProperties.z", false },
+    { "IBL_EXPOSE", "qt_lightProbeProperties.w", false },
 
     // outputs
-    { "POSITION", "gl_Position" },
-    { "FRAGCOLOR", "fragOutput" },
-    { "POINT_SIZE", "gl_PointSize" },
+    { "POSITION", "gl_Position", false },
+    { "FRAGCOLOR", "fragOutput", false },
+    { "POINT_SIZE", "gl_PointSize", false },
 
     // fragment inputs
-    { "FRAGCOORD", "gl_FragCoord"},
+    { "FRAGCOORD", "gl_FragCoord", false },
 
     // functions
-    { "DIRECTIONAL_LIGHT", "qt_directionalLightProcessor" },
-    { "POINT_LIGHT", "qt_pointLightProcessor" },
-    { "SPOT_LIGHT", "qt_spotLightProcessor" },
-    { "AMBIENT_LIGHT", "qt_ambientLightProcessor" },
-    { "SPECULAR_LIGHT", "qt_specularLightProcessor" },
-    { "MAIN", "qt_customMain" },
-    { "POST_PROCESS", "qt_customPostProcessor" },
-    { "IBL_PROBE", "qt_iblProbeProcessor" },
+    { "DIRECTIONAL_LIGHT", "qt_directionalLightProcessor", false },
+    { "POINT_LIGHT", "qt_pointLightProcessor", false },
+    { "SPOT_LIGHT", "qt_spotLightProcessor", false },
+    { "AMBIENT_LIGHT", "qt_ambientLightProcessor", false },
+    { "SPECULAR_LIGHT", "qt_specularLightProcessor", false },
+    { "MAIN", "qt_customMain", false },
+    { "POST_PROCESS", "qt_customPostProcessor", false },
+    { "IBL_PROBE", "qt_iblProbeProcessor", false },
 
     // textures
-    { "SCREEN_TEXTURE", "qt_screenTexture" },
-    { "SCREEN_MIP_TEXTURE", "qt_screenTexture" }, // same resource as SCREEN_TEXTURE under the hood
-    { "DEPTH_TEXTURE", "qt_depthTexture" },
-    { "AO_TEXTURE", "qt_aoTexture" },
-    { "IBL_TEXTURE", "qt_lightProbe" },
-    { "LIGHTMAP", "qt_lightmap" },
+    { "SCREEN_TEXTURE", "qt_screenTexture", false },
+    { "SCREEN_MIP_TEXTURE", "qt_screenTexture", false }, // same resource as SCREEN_TEXTURE under the hood
+    { "DEPTH_TEXTURE", "qt_depthTexture", false },
+    { "AO_TEXTURE", "qt_aoTexture", false },
+    { "IBL_TEXTURE", "qt_lightProbe", false },
+    { "LIGHTMAP", "qt_lightmap", false },
 
     // For shaded only: vertex outputs, for convenience and perf. (only those
     // that are always present when lighting is enabled) The custom vertex main
     // can also calculate on its own and pass them on with VARYING but that's a
     // bit wasteful since we calculate these anyways.
-    { "VAR_WORLD_NORMAL", "qt_varNormal" },
-    { "VAR_WORLD_TANGENT", "qt_varTangent" },
-    { "VAR_WORLD_BINORMAL", "qt_varBinormal" },
-    { "VAR_WORLD_POSITION", "qt_varWorldPos" },
+    { "VAR_WORLD_NORMAL", "qt_varNormal", false },
+    { "VAR_WORLD_TANGENT", "qt_varTangent", false },
+    { "VAR_WORLD_BINORMAL", "qt_varBinormal", false },
+    { "VAR_WORLD_POSITION", "qt_varWorldPos", false },
     // vertex color is always enabled for custom materials (shaded)
-    { "VAR_COLOR", "qt_varColor" },
+    { "VAR_COLOR", "qt_varColor", false },
 
     // effects
-    { "INPUT", "qt_inputTexture" },
-    { "INPUT_UV", "qt_inputUV" },
-    { "TEXTURE_UV", "qt_textureUV" },
-    { "INPUT_SIZE", "qt_inputSize" },
-    { "OUTPUT_SIZE", "qt_outputSize" },
-    { "FRAME", "qt_frame_num" },
+    { "INPUT", "qt_inputTexture", false },
+    { "INPUT_UV", "qt_inputUV", false },
+    { "TEXTURE_UV", "qt_textureUV", false },
+    { "INPUT_SIZE", "qt_inputSize", false },
+    { "OUTPUT_SIZE", "qt_outputSize", false },
+    { "FRAME", "qt_frame_num", false },
 
     // instancing
-    { "INSTANCE_COLOR", "qt_instanceColor"},
-    { "INSTANCE_DATA", "qt_instanceData"},
-    { "INSTANCE_INDEX", "gl_InstanceIndex"},
+    { "INSTANCE_COLOR", "qt_instanceColor", false },
+    { "INSTANCE_DATA", "qt_instanceData", false },
+    { "INSTANCE_INDEX", "gl_InstanceIndex", false },
 
     // morphing
-    { "MORPH_POSITION", "qt_getTargetPositionFromTargetId"},
-    { "MORPH_NORMAL", "qt_getTargetNormalFromTargetId"},
-    { "MORPH_TANGENT", "qt_getTargetTangentFromTargetId"},
-    { "MORPH_BINORMAL", "qt_getTargetBinormalFromTargetId"},
-    { "MORPH_WEIGHTS", "qt_morphWeights"},
+    { "MORPH_POSITION", "qt_getTargetPositionFromTargetId", false },
+    { "MORPH_NORMAL", "qt_getTargetNormalFromTargetId", false },
+    { "MORPH_TANGENT", "qt_getTargetTangentFromTargetId", false },
+    { "MORPH_BINORMAL", "qt_getTargetBinormalFromTargetId", false },
+    { "MORPH_WEIGHTS", "qt_morphWeights", false },
 
     // custom variables
-    { "SHARED_VARS", "struct QT_SHARED_VARS"}
+    { "SHARED_VARS", "struct QT_SHARED_VARS", false }
 };
 
 // Functions that, if present, get an argument list injected.
@@ -721,7 +727,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                                                      QSSGShaderCache::ShaderType type,
                                                      const StringPairList &baseUniforms,
                                                      const StringPairList &baseInputs,
-                                                     const StringPairList &baseOutputs)
+                                                     const StringPairList &baseOutputs,
+                                                     bool multiViewCompatible)
 {
     QByteArrayList inputs;
     QByteArrayList outputs;
@@ -818,7 +825,11 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
-                        id.replace(subst.builtin, subst.actualName); // replace, not assignment, to keep whitespace etc.
+                        QByteArray newExpr;
+                        newExpr.assign(subst.actualName);
+                        if (subst.multiViewDependent && multiViewCompatible)
+                            newExpr += QByteArrayLiteral("[gl_ViewIndex]");
+                        id.replace(subst.builtin, newExpr); // replace, not assignment, to keep whitespace etc.
                         if (trimmedId == QByteArrayLiteral("BONE_TRANSFORMS")) {
                             useJointTexState = 0;
                             md.flags |= QSSGCustomShaderMetaData::UsesSkinning;

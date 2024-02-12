@@ -61,24 +61,30 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
 
     QSSGRhiShaderPipelinePtr shaderPipeline;
 
+    const bool multiView = featureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
+        ? false
+        : defaultMaterialShaderKeyProperties.m_viewCount.getValue(renderable.shaderDescription) >= 2;
+    const QByteArray shaderPathKey = material.m_shaderPathKey[multiView ? QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex
+                                                                        : QSSGRenderCustomMaterial::RegularShaderPathKeyIndex];
+
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find(). This is the first
     // level, fast lookup. (equivalent to what
     // QSSGRenderer::getShaderPipelineForDefaultMaterial does for the
     // default/principled material)
-    QSSGShaderMapKey skey = QSSGShaderMapKey(material.m_shaderPathKey,
+    QSSGShaderMapKey skey = QSSGShaderMapKey(shaderPathKey,
                                              featureSet,
                                              renderable.shaderDescription);
     auto it = shaderMap.find(skey);
     if (it == shaderMap.end()) {
         // NB this key calculation must replicate exactly what the generator does in generateMaterialRhiShader()
-        QByteArray shaderString = material.m_shaderPathKey;
+        QByteArray shaderString = shaderPathKey;
         QSSGShaderDefaultMaterialKey matKey(renderable.shaderDescription);
         matKey.toString(shaderString, defaultMaterialShaderKeyProperties);
 
         // Try the persistent (disk-based) cache.
         const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(featureSet));
-        shaderPipeline = context->shaderCache()->tryNewPipelineFromPersistentCache(qsbcKey, material.m_shaderPathKey, featureSet);
+        shaderPipeline = context->shaderCache()->tryNewPipelineFromPersistentCache(qsbcKey, shaderPathKey, featureSet);
 
         if (!shaderPipeline) {
             // Have to generate the shaders and send it all through the shader conditioning pipeline.
@@ -88,7 +94,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                                       defaultMaterialShaderKeyProperties,
                                                       material.adapter);
 
-            shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
+            shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(shaderPathKey,
                                                                                     vertexPipeline,
                                                                                     renderable.shaderDescription,
                                                                                     defaultMaterialShaderKeyProperties,

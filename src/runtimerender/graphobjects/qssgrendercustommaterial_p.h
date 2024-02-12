@@ -108,7 +108,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 
-    QByteArray m_shaderPathKey;
+    enum {
+        RegularShaderPathKeyIndex = 0,
+        MultiViewShaderPathKeyIndex = 1
+    };
+    QByteArray m_shaderPathKey[2];
     CustomShaderPresence m_customShaderPresence;
 
     TexturePropertyList m_textureProperties;

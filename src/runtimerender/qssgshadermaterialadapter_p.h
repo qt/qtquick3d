@@ -72,7 +72,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isUnshaded();
     virtual bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type);
     virtual QByteArray customShaderSnippet(QSSGShaderCache::ShaderType type,
-                                           QSSGShaderLibraryManager &shaderLibraryManager);
+                                           QSSGShaderLibraryManager &shaderLibraryManager,
+                                           bool multiViewCompatible);
     virtual bool hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
                                          const QByteArray &funcName,
                                          QSSGShaderLibraryManager &shaderLibraryManager);
@@ -177,7 +178,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isUnshaded() override;
     bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type) override;
     QByteArray customShaderSnippet(QSSGShaderCache::ShaderType type,
-                                   QSSGShaderLibraryManager &shaderLibraryManager) override;
+                                   QSSGShaderLibraryManager &shaderLibraryManager,
+                                   bool multiViewCompatible) override;
     bool hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
                                  const QByteArray &funcName,
                                  QSSGShaderLibraryManager &shaderLibraryManager) override;
@@ -194,7 +196,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
                                                      QSSGShaderCache::ShaderType type,
                                                      const StringPairList &baseUniforms,
                                                      const StringPairList &baseInputs = StringPairList(),
-                                                     const StringPairList &baseOutputs = StringPairList());
+                                                     const StringPairList &baseOutputs = StringPairList(),
+                                                     bool multiViewCompatible = false);
 
 private:
     const QSSGRenderCustomMaterial &m_material;
@@ -204,6 +207,7 @@ struct QSSGCustomMaterialVariableSubstitution
 {
     QByteArrayView builtin;
     QByteArrayView actualName;
+    bool multiViewDependent;
 };
 
 namespace QtQuick3DEditorHelpers {

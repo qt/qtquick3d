@@ -173,7 +173,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool hasCustomFragmentShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
     if (hasCustomVertexShader) {
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Vertex,
-                                                                  shaderLibraryManager);
+                                                                  shaderLibraryManager,
+                                                                  m_viewCount >= 2);
         if (materialAdapter->hasCustomShaderFunction(QSSGShaderCache::ShaderType::Vertex,
                                                      QByteArrayLiteral("qt_customMain"),
                                                      shaderLibraryManager))
@@ -379,7 +380,8 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration(QSSGShaderLibraryManage
 
     if (!skipCustomFragmentSnippet && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,
-                                                                  shaderLibraryManager);
+                                                                  shaderLibraryManager,
+                                                                  m_viewCount >= 2);
         if (!materialAdapter->isUnshaded()) {
             const bool usesShared = materialAdapter->usesSharedVariables();
             insertAmbientLightProcessorArgs(snippet, usesShared);
