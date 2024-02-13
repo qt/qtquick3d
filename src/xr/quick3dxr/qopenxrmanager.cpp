@@ -1372,7 +1372,11 @@ void QOpenXRManager::doRender(const XrSwapchainSubImage &subImage, const XrSwapc
     // With multiview this indicates that the frame with both eyes is ready from
     // the 3D APIs perspective. Without multiview this is done - and so the
     // signal is emitted - multiple times (twice) per "frame" (eye).
-    emit frameReady(QQuickWindowPrivate::get(m_quickWindow)->redirect.rt.texture);
+    QRhiRenderTarget *rt = QQuickWindowPrivate::get(m_quickWindow)->activeCustomRhiRenderTarget();
+    if (rt->resourceType() == QRhiResource::TextureRenderTarget) {
+        QRhiTexture *colorBuffer = static_cast<QRhiTextureRenderTarget *>(rt)->description().colorAttachmentAt(0)->texture();
+        emit frameReady(colorBuffer);
+    }
 }
 
 void QOpenXRManager::preSetupQuickScene()
