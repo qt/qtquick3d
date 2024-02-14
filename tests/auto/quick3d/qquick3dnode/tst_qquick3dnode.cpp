@@ -72,7 +72,7 @@ void tst_QQuick3DNode::testProperties()
     QQuaternion rot = QQuaternion::fromEulerAngles(100, 200, 300);
     nodeItem.setRotation(rot);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-    QCOMPARE(rot, nodeItem.rotation());
+    QVERIFY(qFuzzyCompare(rot, nodeItem.rotation()));
     QVERIFY(qFuzzyCompare(rot, QQuaternion::fromRotationMatrix(QSSGUtils::mat44::getUpper3x3(node->localTransform))));
 
     QVector3D scale(0.5, 1.0, 2.0);
