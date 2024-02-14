@@ -43,6 +43,7 @@ QOpenXRView::QOpenXRView()
 
     connect(&m_openXRManager, &QOpenXRManager::sessionEnded, this, &QOpenXRView::handleSessionEnded);
     connect(&m_openXRManager, &QOpenXRManager::frameReady, this, &QOpenXRView::frameReady);
+    connect(&m_openXRManager, &QOpenXRManager::referenceSpaceChanged, this, &QOpenXRView::referenceSpaceChanged);
 
     m_openXRManager.update();
 }
@@ -283,6 +284,56 @@ QQuick3DPickResult QOpenXRView::rayPick(const QVector3D &origin, const QVector3D
 QList<QQuick3DPickResult> QOpenXRView::rayPickAll(const QVector3D &origin, const QVector3D &direction) const
 {
     return m_openXRManager.m_vrViewport->rayPickAll(origin, direction);
+}
+
+namespace {
+
+XrReferenceSpaceType getXrReferenceSpaceType(QOpenXRView::ReferenceSpace referenceSpace)
+{
+    switch (referenceSpace) {
+    case QOpenXRView::ReferenceSpace::ReferenceSpaceLocal:
+        return XR_REFERENCE_SPACE_TYPE_LOCAL;
+    case QOpenXRView::ReferenceSpace::ReferenceSpaceStage:
+        return XR_REFERENCE_SPACE_TYPE_STAGE;
+    case QOpenXRView::ReferenceSpace::ReferenceSpaceLocalFloor:
+        return XR_REFERENCE_SPACE_TYPE_LOCAL_FLOOR_EXT;
+    default:
+        return XR_REFERENCE_SPACE_TYPE_LOCAL;
+    }
+}
+
+QOpenXRView::ReferenceSpace getReferenceSpaceType(XrReferenceSpaceType referenceSpace)
+{
+    switch (referenceSpace) {
+    case XR_REFERENCE_SPACE_TYPE_LOCAL:
+        return QOpenXRView::ReferenceSpace::ReferenceSpaceLocal;
+    case XR_REFERENCE_SPACE_TYPE_STAGE:
+        return QOpenXRView::ReferenceSpace::ReferenceSpaceStage;
+    case XR_REFERENCE_SPACE_TYPE_LOCAL_FLOOR_EXT:
+        return QOpenXRView::ReferenceSpace::ReferenceSpaceLocalFloor;
+    default:
+        return QOpenXRView::ReferenceSpace::ReferenceSpaceUnknown;
+    }
+}
+
+}
+
+
+QOpenXRView::ReferenceSpace QOpenXRView::referenceSpace() const
+{
+    return getReferenceSpaceType(m_openXRManager.m_referenceSpace);
+}
+
+void QOpenXRView::setReferenceSpace(ReferenceSpace newReferenceSpace)
+{
+    XrReferenceSpaceType referenceSpace = getXrReferenceSpaceType(newReferenceSpace);
+    if (m_openXRManager.m_referenceSpace == referenceSpace)
+        return;
+
+    m_openXRManager.m_requestedReferenceSpace = referenceSpace;
+
+    // we do not emit a changed signal here because it hasn't
+    // changed yet.
 }
 
 QT_END_NAMESPACE

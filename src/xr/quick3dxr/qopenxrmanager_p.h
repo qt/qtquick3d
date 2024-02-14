@@ -70,6 +70,7 @@ Q_SIGNALS:
     void sessionEnded();
     void xrOriginChanged();
     void frameReady(QRhiTexture *colorBuffer);
+    void referenceSpaceChanged();
 
 protected:
     bool event(QEvent *e) override;
@@ -95,8 +96,10 @@ private:
     void checkReferenceSpaces();
     bool isReferenceSpaceAvailable(XrReferenceSpaceType type);
 
-    //void setupActions();
-    void setupVisualizedSpace();
+    bool setupAppSpace();
+    void updateAppSpace(XrTime predictedDisplayTime);
+    bool setupViewSpace();
+    bool resetEmulatedFloorHeight(XrTime predictedDisplayTime);
 
     void createSwapchains();
 
@@ -139,6 +142,10 @@ private:
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
     XrSpace m_appSpace{XR_NULL_HANDLE};
+    XrReferenceSpaceType m_requestedReferenceSpace = XR_REFERENCE_SPACE_TYPE_STAGE;
+    XrReferenceSpaceType m_referenceSpace = XR_REFERENCE_SPACE_TYPE_LOCAL;
+    bool m_isEmulatingLocalFloor = false;
+    bool m_isFloorResetPending = false;
     XrSpace m_viewSpace{XR_NULL_HANDLE};
     XrFormFactor m_formFactor{XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY};
     XrViewConfigurationType m_viewConfigType{XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO};

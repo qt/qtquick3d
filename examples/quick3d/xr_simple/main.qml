@@ -11,6 +11,7 @@ XrView {
     id: xrView
     XrErrorDialog { id: err }
     onInitializeFailed: (errorString) => err.run("XRView", errorString)
+    referenceSpace: XrView.ReferenceSpaceLocal
 
     environment: SceneEnvironment {
         clearColor: "black"

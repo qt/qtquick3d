@@ -279,7 +279,10 @@ bool QOpenXRManager::initialize()
     m_inputManager = QOpenXRInputManager::instance();
     m_inputManager->init(m_instance, m_session);
 
-    setupVisualizedSpace();
+    if (!setupAppSpace())
+        return false;
+    if (!setupViewSpace())
+        return false;
 
     createSwapchains();
 
@@ -809,7 +812,7 @@ bool QOpenXRManager::isReferenceSpaceAvailable(XrReferenceSpaceType type)
     return m_availableReferenceSpace.contains(type);
 }
 
-void QOpenXRManager::setupVisualizedSpace()
+bool QOpenXRManager::setupAppSpace()
 {
     Q_ASSERT(m_session != XR_NULL_HANDLE);
 
@@ -822,16 +825,169 @@ void QOpenXRManager::setupVisualizedSpace()
     identityPose.position.y = 0;
     identityPose.position.z = 0;
 
+    XrReferenceSpaceType newReferenceSpace;
+    XrSpace newAppSpace = XR_NULL_HANDLE;
+    m_isEmulatingLocalFloor = false;
+
+    if (isReferenceSpaceAvailable(m_requestedReferenceSpace)) {
+        newReferenceSpace = m_requestedReferenceSpace;
+    } else if (m_requestedReferenceSpace == XR_REFERENCE_SPACE_TYPE_LOCAL_FLOOR_EXT &&
+               isReferenceSpaceAvailable(XR_REFERENCE_SPACE_TYPE_STAGE)) {
+        m_isEmulatingLocalFloor = true;
+        m_isFloorResetPending = true;
+        newReferenceSpace = XR_REFERENCE_SPACE_TYPE_LOCAL;
+    } else {
+        qWarning("Requested reference space is not available");
+        newReferenceSpace = XR_REFERENCE_SPACE_TYPE_LOCAL;
+    }
+
     // App Space
     XrReferenceSpaceCreateInfo referenceSpaceCreateInfo{};
     referenceSpaceCreateInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
     referenceSpaceCreateInfo.poseInReferenceSpace = identityPose;
-    referenceSpaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
-    checkXrResult(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &m_appSpace));
+    referenceSpaceCreateInfo.referenceSpaceType = newReferenceSpace;
+    if (!checkXrResult(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &newAppSpace))) {
+        qWarning("Failed to create app space");
+        return false;
+    }
 
-    // View Space
+    if (m_appSpace)
+        xrDestroySpace(m_appSpace);
+
+    m_appSpace = newAppSpace;
+    m_referenceSpace = newReferenceSpace;
+    // only broadcast the reference space change if we are not emulating the local floor
+    // since we'll try and change the referenceSpace again once we have tracking
+    if (!m_isFloorResetPending)
+        emit referenceSpaceChanged();
+
+    return true;
+
+}
+
+void QOpenXRManager::updateAppSpace(XrTime predictedDisplayTime)
+{
+    // If the requested reference space is not the current one, we need to
+    // re-create the app space now
+    if (m_requestedReferenceSpace != m_referenceSpace && !m_isFloorResetPending) {
+        if (!setupAppSpace()) {
+            // If we can't set the requested reference space, use the current one
+            qWarning("Setting requested reference space failed");
+            m_requestedReferenceSpace = m_referenceSpace;
+            return;
+        }
+    }
+
+    // This happens when we setup the emulated LOCAL_FLOOR mode
+    // We may have requested it on app setup, but we need to have
+    // some tracking information to calculate the floor height so
+    // that will only happen once we get here.
+    if (m_isFloorResetPending) {
+        if (!resetEmulatedFloorHeight(predictedDisplayTime)) {
+            // It didn't work, so give up and use local space (which is already setup).
+            m_requestedReferenceSpace = XR_REFERENCE_SPACE_TYPE_LOCAL;
+            emit referenceSpaceChanged();
+        }
+        return;
+    }
+
+}
+
+bool QOpenXRManager::setupViewSpace()
+{
+    Q_ASSERT(m_session != XR_NULL_HANDLE);
+
+    XrPosef identityPose;
+    identityPose.orientation.w = 1;
+    identityPose.orientation.x = 0;
+    identityPose.orientation.y = 0;
+    identityPose.orientation.z = 0;
+    identityPose.position.x = 0;
+    identityPose.position.y = 0;
+    identityPose.position.z = 0;
+
+    XrSpace newViewSpace = XR_NULL_HANDLE;
+
+    XrReferenceSpaceCreateInfo referenceSpaceCreateInfo{};
+    referenceSpaceCreateInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
+    referenceSpaceCreateInfo.poseInReferenceSpace = identityPose;
     referenceSpaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW;
-    checkXrResult(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &m_viewSpace));
+    if (!checkXrResult(xrCreateReferenceSpace(m_session, &referenceSpaceCreateInfo, &newViewSpace))) {
+        qWarning("Failed to create view space");
+        return false;
+    }
+
+    if (m_viewSpace != XR_NULL_HANDLE)
+        xrDestroySpace(m_viewSpace);
+
+    m_viewSpace = newViewSpace;
+
+    return true;
+}
+
+bool QOpenXRManager::resetEmulatedFloorHeight(XrTime predictedDisplayTime)
+{
+    Q_ASSERT(m_isEmulatingLocalFloor);
+
+    m_isFloorResetPending = false;
+
+    XrPosef identityPose;
+    identityPose.orientation.w = 1;
+    identityPose.orientation.x = 0;
+    identityPose.orientation.y = 0;
+    identityPose.orientation.z = 0;
+    identityPose.position.x = 0;
+    identityPose.position.y = 0;
+    identityPose.position.z = 0;
+
+    XrSpace localSpace = XR_NULL_HANDLE;
+    XrSpace stageSpace = XR_NULL_HANDLE;
+
+    XrReferenceSpaceCreateInfo createInfo{};
+    createInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
+    createInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
+    createInfo.poseInReferenceSpace = identityPose;
+
+    if (!checkXrResult(xrCreateReferenceSpace(m_session, &createInfo, &localSpace))) {
+        qWarning("Failed to create local space (for emulated LOCAL_FLOOR space)");
+        return false;
+    }
+
+    createInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
+    if (!checkXrResult(xrCreateReferenceSpace(m_session, &createInfo, &stageSpace))) {
+        qWarning("Failed to create stage space (for emulated LOCAL_FLOOR space)");
+        xrDestroySpace(localSpace);
+        return false;
+    }
+
+    XrSpaceLocation stageLocation{};
+    stageLocation.type = XR_TYPE_SPACE_LOCATION;
+    stageLocation.pose = identityPose;
+
+    if (!checkXrResult(xrLocateSpace(stageSpace, localSpace, predictedDisplayTime, &stageLocation))) {
+        qWarning("Failed to locate STAGE space in LOCAL space, in order to emulate LOCAL_FLOOR");
+        xrDestroySpace(localSpace);
+        xrDestroySpace(stageSpace);
+        return false;
+    }
+
+    xrDestroySpace(localSpace);
+    xrDestroySpace(stageSpace);
+
+    XrSpace newAppSpace = XR_NULL_HANDLE;
+    createInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
+    createInfo.poseInReferenceSpace.position.y = stageLocation.pose.position.y;
+    if (!checkXrResult(xrCreateReferenceSpace(m_session, &createInfo, &newAppSpace))) {
+        qWarning("Failed to recreate emulated LOCAL_FLOOR play space with latest floor estimate");
+        return false;
+    }
+
+    xrDestroySpace(m_appSpace);
+    m_appSpace = newAppSpace;
+    m_referenceSpace = XR_REFERENCE_SPACE_TYPE_LOCAL_FLOOR_EXT;
+    emit referenceSpaceChanged();
+
+    return true;
 }
 
 void QOpenXRManager::createSwapchains()
@@ -1203,6 +1359,9 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
     viewState.type = XR_TYPE_VIEW_STATE;
     quint32 viewCapacityInput = m_views.size();
     quint32 viewCountOutput;
+
+    // Check if we need to update the app space before we use it
+    updateAppSpace(predictedDisplayTime);
 
     XrViewLocateInfo viewLocateInfo{};
     viewLocateInfo.type = XR_TYPE_VIEW_LOCATE_INFO;

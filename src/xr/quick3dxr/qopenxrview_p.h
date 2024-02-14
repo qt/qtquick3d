@@ -54,6 +54,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
     Q_PROPERTY(bool quitOnSessionEnd READ isQuitOnSessionEndEnabled WRITE setQuitOnSessionEnd NOTIFY quitOnSessionEndChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(FoveationLevel fixedFoveation READ fixedFoveation WRITE setFixedFoveation NOTIFY fixedFoveationChanged FINAL)
+    Q_PROPERTY(ReferenceSpace referenceSpace READ referenceSpace WRITE setReferenceSpace NOTIFY referenceSpaceChanged FINAL)
 
     QML_NAMED_ELEMENT(XrView)
 
@@ -65,6 +66,14 @@ public:
         HighFoveation = 3
     };
     Q_ENUM(FoveationLevel)
+
+    enum class ReferenceSpace {
+        ReferenceSpaceUnknown,
+        ReferenceSpaceLocal,
+        ReferenceSpaceStage,
+        ReferenceSpaceLocalFloor
+    };
+    Q_ENUM(ReferenceSpace)
 
     explicit QOpenXRView();
     ~QOpenXRView();
@@ -92,6 +101,9 @@ public:
     Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction) const;
     Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;
 
+    ReferenceSpace referenceSpace() const;
+    void setReferenceSpace(ReferenceSpace newReferenceSpace);
+
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setEnablePassthrough(bool enable);
@@ -112,6 +124,7 @@ Q_SIGNALS:
     void quitOnSessionEndChanged();
     void fixedFoveationChanged();
     void frameReady(QRhiTexture *colorBuffer); // tooling
+    void referenceSpaceChanged();
 
 private:
     // The XrView does not expose the View3D in its public interface. This is intentional.
