@@ -158,6 +158,11 @@ void QOpenXRView::setQuitOnSessionEnd(bool enable)
     emit quitOnSessionEndChanged();
 }
 
+QQuick3DRenderStats *QOpenXRView::renderStats() const
+{
+    return m_openXRManager.m_vrViewport ? m_openXRManager.m_vrViewport->renderStats() : nullptr;
+}
+
 void QOpenXRView::updateViewportGeometry()
 {
     auto contentItem = m_openXRManager.m_quickWindow->contentItem();

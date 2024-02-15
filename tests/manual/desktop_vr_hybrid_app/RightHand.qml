@@ -7,7 +7,7 @@ import QtQuick3D.Xr
 
 XrController {
     id: root
-    property Item view3d
+    property XrView view
     controller: XrController.ControllerRight
     handInput.poseSpace: XrHandInput.AimPose
     Lazer {
@@ -24,7 +24,7 @@ XrController {
             height: 30
             Text {
                 font.pointSize: 8
-                text: root.view3d.renderStats.fps + " FPS"
+                text: root.view.renderStats.fps + " FPS"
                 anchors.centerIn: parent
             }
         }

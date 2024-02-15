@@ -51,6 +51,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
     Q_PROPERTY(bool enablePassthrough READ enablePassthrough WRITE setEnablePassthrough NOTIFY enablePassthroughChanged FINAL)
     Q_PROPERTY(QOpenXRRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
     Q_PROPERTY(bool quitOnSessionEnd READ isQuitOnSessionEndEnabled WRITE setQuitOnSessionEnd NOTIFY quitOnSessionEndChanged FINAL)
+    Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
 
     QML_NAMED_ELEMENT(XrView)
 
@@ -72,6 +73,8 @@ public:
     QOpenXRRuntimeInfo *runtimeInfo() const;
 
     bool isQuitOnSessionEndEnabled() const;
+
+    QQuick3DRenderStats *renderStats() const;
 
     Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction) const;
     Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;

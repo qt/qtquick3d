@@ -27,7 +27,7 @@ XrView {
 
         RightHand {
             id: right
-            view3d: xrView.view3d
+            view: xrView
         }
     }
 
