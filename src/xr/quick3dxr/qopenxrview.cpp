@@ -35,8 +35,11 @@ QOpenXRView::QOpenXRView()
     connect(contentItem, &QQuickItem::widthChanged, this, &QOpenXRView::updateViewportGeometry);
     connect(contentItem, &QQuickItem::xChanged, this, &QOpenXRView::updateViewportGeometry);
     connect(contentItem, &QQuickItem::yChanged, this, &QOpenXRView::updateViewportGeometry);
+
     connect(environment(), &QQuick3DSceneEnvironment::backgroundModeChanged, this, &QOpenXRView::handleClearColorChanged);
     connect(environment(), &QQuick3DSceneEnvironment::clearColorChanged, this, &QOpenXRView::handleClearColorChanged);
+    connect(environment(), &QQuick3DSceneEnvironment::antialiasingModeChanged, this, &QOpenXRView::handleAAChanged);
+    connect(environment(), &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QOpenXRView::handleAAChanged);
 
     connect(&m_openXRManager, &QOpenXRManager::sessionEnded, this, &QOpenXRView::handleSessionEnded);
     connect(&m_openXRManager, &QOpenXRManager::frameReady, this, &QOpenXRView::frameReady);
@@ -104,17 +107,23 @@ void QOpenXRView::setEnvironment(QQuick3DSceneEnvironment *environment)
     if (!m_openXRManager.m_vrViewport)
         return;
 
-    if (m_openXRManager.m_vrViewport->environment() == environment)
+    auto oldEnvironment = m_openXRManager.m_vrViewport->environment();
+    if (oldEnvironment == environment)
         return;
 
-    disconnect(m_openXRManager.m_vrViewport->environment(), &QQuick3DSceneEnvironment::backgroundModeChanged, this, &QOpenXRView::handleClearColorChanged);
-    disconnect(m_openXRManager.m_vrViewport->environment(), &QQuick3DSceneEnvironment::clearColorChanged, this, &QOpenXRView::handleClearColorChanged);
+    disconnect(oldEnvironment, &QQuick3DSceneEnvironment::backgroundModeChanged, this, &QOpenXRView::handleClearColorChanged);
+    disconnect(oldEnvironment, &QQuick3DSceneEnvironment::clearColorChanged, this, &QOpenXRView::handleClearColorChanged);
+    disconnect(oldEnvironment, &QQuick3DSceneEnvironment::antialiasingModeChanged, this, &QOpenXRView::handleAAChanged);
+    disconnect(oldEnvironment, &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QOpenXRView::handleAAChanged);
 
     m_openXRManager.m_vrViewport->setEnvironment(environment);
     handleClearColorChanged();
+    handleAAChanged();
 
     connect(environment, &QQuick3DSceneEnvironment::backgroundModeChanged, this, &QOpenXRView::handleClearColorChanged);
     connect(environment, &QQuick3DSceneEnvironment::clearColorChanged, this, &QOpenXRView::handleClearColorChanged);
+    connect(environment, &QQuick3DSceneEnvironment::antialiasingModeChanged, this, &QOpenXRView::handleAAChanged);
+    connect(environment, &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QOpenXRView::handleAAChanged);
 
     emit environmentChanged(m_openXRManager.m_vrViewport->environment());
 }
@@ -219,6 +228,19 @@ void QOpenXRView::handleClearColorChanged()
         else if (env->backgroundMode() == QQuick3DSceneEnvironment::Transparent)
             m_openXRManager.m_quickWindow->setColor(Qt::transparent);
     }
+}
+
+void QOpenXRView::handleAAChanged()
+{
+    auto env = environment();
+    int samples = 1;
+    if (env && env->antialiasingMode() == QQuick3DSceneEnvironment::MSAA) {
+        if (env->antialiasingQuality() == QQuick3DSceneEnvironment::Medium)
+            samples = 2;
+        else
+            samples = 4;
+    }
+    m_openXRManager.setSamples(samples);
 }
 
 /*!

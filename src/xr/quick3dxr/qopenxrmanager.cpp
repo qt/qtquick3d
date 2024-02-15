@@ -283,9 +283,6 @@ bool QOpenXRManager::initialize()
 
     createSwapchains();
 
-    if (m_foveationExtensionSupported)
-        setupMetaQuestFoveation();
-
     return true;
 }
 
@@ -306,8 +303,7 @@ void QOpenXRManager::teardown()
     if (m_passthroughFeature)
         destroyMetaQuestPassthrough();
 
-    for (Swapchain swapchain : m_swapchains)
-        xrDestroySwapchain(swapchain.handle);
+    destroySwapchain();
 
     if (m_appSpace != XR_NULL_HANDLE) {
         xrDestroySpace(m_appSpace);
@@ -326,6 +322,15 @@ void QOpenXRManager::teardown()
 #endif
 
     xrDestroyInstance(m_instance);
+}
+
+void QOpenXRManager::destroySwapchain()
+{
+    for (Swapchain swapchain : m_swapchains)
+        xrDestroySwapchain(swapchain.handle);
+
+    m_swapchains.clear();
+    m_swapchainImages.clear();
 }
 
 void QOpenXRManager::setPassthroughEnabled(bool enabled)
@@ -904,24 +909,31 @@ void QOpenXRManager::createSwapchains()
 
         const XrViewConfigurationView &vp = m_configViews[0]; // use the first view for all views, the sizes should be the same
 
+        const int maxSamples = int(vp.maxSwapchainSampleCount);
+        if (m_samples > maxSamples) {
+            qWarning("Requested sample count for XrSwapchain was %d, but the maximum supported by the view is %d",
+                     m_samples, maxSamples);
+            m_samples = maxSamples;
+        }
+
         if (m_multiviewRendering) {
             // Create a single swapchain with array size > 1
             XrSwapchainCreateInfo swapchainCreateInfo{};
             swapchainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
-            swapchainCreateInfo.arraySize = viewCount;
+            swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT;
             swapchainCreateInfo.format = m_colorSwapchainFormat;
+            swapchainCreateInfo.sampleCount = m_samples;
             swapchainCreateInfo.width = vp.recommendedImageRectWidth;
             swapchainCreateInfo.height = vp.recommendedImageRectHeight;
-            swapchainCreateInfo.mipCount = 1;
             swapchainCreateInfo.faceCount = 1;
-            swapchainCreateInfo.sampleCount = vp.recommendedSwapchainSampleCount;
-            swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT;
+            swapchainCreateInfo.arraySize = viewCount;
+            swapchainCreateInfo.mipCount = 1;
 
             qDebug("Creating multiview swapchain for %d view(s) with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
                 viewCount,
                 vp.recommendedImageRectWidth,
                 vp.recommendedImageRectHeight,
-                vp.recommendedSwapchainSampleCount,
+                m_samples,
                 static_cast<long long unsigned int>(m_colorSwapchainFormat));
 
             Swapchain swapchain;
@@ -947,7 +959,7 @@ void QOpenXRManager::createSwapchains()
                     i,
                     vp.recommendedImageRectWidth,
                     vp.recommendedImageRectHeight,
-                    vp.recommendedSwapchainSampleCount,
+                    m_samples,
                     static_cast<long long unsigned int>(m_colorSwapchainFormat));
 
                 // Create the swapchain.
@@ -959,7 +971,7 @@ void QOpenXRManager::createSwapchains()
                 swapchainCreateInfo.height = vp.recommendedImageRectHeight;
                 swapchainCreateInfo.mipCount = 1;
                 swapchainCreateInfo.faceCount = 1;
-                swapchainCreateInfo.sampleCount = vp.recommendedSwapchainSampleCount;
+                swapchainCreateInfo.sampleCount = m_samples;
                 swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
                 Swapchain swapchain;
                 swapchain.width = swapchainCreateInfo.width;
@@ -991,6 +1003,19 @@ void QOpenXRManager::createSwapchains()
             m_projectionLayerViews[i].subImage.imageRect.extent.height = vp.recommendedImageRectHeight;
         }
     }
+
+    if (m_foveationExtensionSupported)
+        setupMetaQuestFoveation();
+}
+
+void QOpenXRManager::setSamples(int samples)
+{
+    if (m_samples == samples)
+        return;
+
+    m_samples = samples;
+    destroySwapchain();
+    createSwapchains();
 }
 
 void QOpenXRManager::processXrEvents()
@@ -1329,7 +1354,7 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
 void QOpenXRManager::doRender(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage)
 {
     const int arraySize = m_multiviewRendering ? m_swapchains[0].arraySize : 1;
-    m_quickWindow->setRenderTarget(m_graphics->renderTarget(subImage, swapchainImage, m_colorSwapchainFormat, arraySize));
+    m_quickWindow->setRenderTarget(m_graphics->renderTarget(subImage, swapchainImage, m_colorSwapchainFormat, m_samples, arraySize));
 
     m_quickWindow->setGeometry(0,
                                0,

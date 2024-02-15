@@ -101,6 +101,7 @@ private Q_SLOTS:
     void updateViewportGeometry();
     void handleSessionEnded();
     void handleClearColorChanged();
+    void handleAAChanged();
 
 Q_SIGNALS:
     void initializeFailed(const QString &errorString);

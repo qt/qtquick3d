@@ -225,6 +225,7 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsVulkan::allocateSwapchainIma
 QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrSwapchainSubImage &subImage,
                                                        const XrSwapchainImageBaseHeader *swapchainImage,
                                                        quint64 swapchainFormat,
+                                                       int samples,
                                                        int arraySize) const
 {
     VkImage colorTexture = reinterpret_cast<const XrSwapchainImageVulkanKHR*>(swapchainImage)->image;
@@ -245,14 +246,15 @@ QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrSwapchainSubImage
                                                    VK_IMAGE_LAYOUT_UNDEFINED,
                                                    VkFormat(swapchainFormat),
                                                    QSize(subImage.imageRect.extent.width,
-                                                         subImage.imageRect.extent.height));
+                                                         subImage.imageRect.extent.height),
+                                                   samples);
     } else {
         return QQuickRenderTarget::fromVulkanImageMultiView(colorTexture,
                                                             VK_IMAGE_LAYOUT_UNDEFINED,
                                                             VkFormat(swapchainFormat),
                                                             QSize(subImage.imageRect.extent.width,
                                                                   subImage.imageRect.extent.height),
-                                                            1,
+                                                            samples,
                                                             arraySize);
     }
 }

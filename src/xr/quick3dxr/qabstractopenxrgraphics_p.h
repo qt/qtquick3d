@@ -49,6 +49,7 @@ public:
     virtual QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage,
                                             const XrSwapchainImageBaseHeader *swapchainImage,
                                             quint64 swapchainFormat,
+                                            int samples,
                                             int arraySize) const = 0;
 };
 

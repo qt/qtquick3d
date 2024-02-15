@@ -93,7 +93,8 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsD3D11::allocateSwapchainImag
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
+QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
+                                                      quint64 swapchainFormat, int samples, int arraySize) const
 {
     Q_UNUSED(swapchainFormat)
     ID3D11Texture2D* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D11KHR*>(swapchainImage)->texture;
@@ -103,7 +104,8 @@ QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrSwapchainSubImage 
 
     return QQuickRenderTarget::fromD3D11Texture(colorTexture,
                                                 QSize(subImage.imageRect.extent.width,
-                                                      subImage.imageRect.extent.height));
+                                                      subImage.imageRect.extent.height),
+                                                samples);
 
 }
 

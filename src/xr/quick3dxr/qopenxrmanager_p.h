@@ -61,6 +61,8 @@ public:
 
     QString errorString() const { return m_errorString; }
 
+    void setSamples(int samples);
+
 private Q_SLOTS:
     void update();
 
@@ -73,6 +75,7 @@ protected:
     bool event(QEvent *e) override;
 
 private:
+    void destroySwapchain();
     void setErrorString(XrResult result, const char *callName);
     void checkXrExtensions(const char* layerName, int indent = 0);
     void checkXrLayers();
@@ -176,6 +179,7 @@ private:
     QMap<XrSwapchain, QVector<XrSwapchainImageBaseHeader*>> m_swapchainImages;
     QVector<XrView> m_views;
     int64_t m_colorSwapchainFormat{-1};
+    int m_samples = 1;
 
     // Application's current lifecycle state according to the runtime
     XrSessionState m_sessionState{XR_SESSION_STATE_UNKNOWN};

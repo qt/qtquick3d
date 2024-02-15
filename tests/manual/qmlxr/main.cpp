@@ -9,6 +9,7 @@
 #include <QCommandLineParser>
 #include <QQuickWindow>
 #include <private/qopenxrview_p.h>
+#include <private/qquick3dsceneenvironment_p.h>
 #include <rhi/qrhi.h>
 
 int main(int argc, char *argv[])
@@ -42,6 +43,9 @@ int main(int argc, char *argv[])
 
     QCommandLineOption debugOption({ "l", "validate" }, QObject::tr("Enable D3D12/Vulkan/OpenXR debug or validation layer, if available"));
     cmdLineParser.addOption(debugOption);
+
+    QCommandLineOption msaaOption({ "a", "msaa" }, QObject::tr("Request MSAA with <num_samples> samples. <num_samples> is 2 or 4."), QObject::tr("num_samples"));
+    cmdLineParser.addOption(msaaOption);
 
     QCommandLineOption nullOption({ "n", "null" }, QLatin1String("Use QRhi backend Null"));
     cmdLineParser.addOption(nullOption);
@@ -161,6 +165,19 @@ int main(int argc, char *argv[])
         } else {
             qWarning() << subRoot << "is not a QQuick3DObject";
             return 1;
+        }
+
+        if (cmdLineParser.isSet(msaaOption)) {
+            const int samples = qBound(1, cmdLineParser.value(msaaOption).toInt(), 4);
+            if (samples > 1) {
+                QQuick3DSceneEnvironment *sceneEnv = xrView->environment();
+                qDebug() << "Requesting MSAA with sample count" << samples << "on" << sceneEnv;
+                sceneEnv->setAntialiasingMode(QQuick3DSceneEnvironment::MSAA);
+                if (samples == 2)
+                    sceneEnv->setAntialiasingQuality(QQuick3DSceneEnvironment::Medium);
+                else if (samples == 4)
+                    sceneEnv->setAntialiasingQuality(QQuick3DSceneEnvironment::High);
+            }
         }
 
         QObject::connect(xrView, &QOpenXRView::frameReady, xrView, [&](QRhiTexture *colorBuffer) {

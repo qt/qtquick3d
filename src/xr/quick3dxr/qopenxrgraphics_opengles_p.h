@@ -33,7 +33,8 @@ public:
     bool finializeGraphics(QRhi *rhi) override;
     int64_t colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
     QVector<XrSwapchainImageBaseHeader*> allocateSwapchainImages(int count, XrSwapchain swapchain) override;
-    QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const override;
+    QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
+                                    quint64 swapchainFormat, int samples, int arraySize) const override;
 
 private:
 #ifdef XR_USE_PLATFORM_ANDROID

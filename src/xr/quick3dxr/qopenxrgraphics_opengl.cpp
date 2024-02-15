@@ -115,19 +115,21 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsOpenGL::allocateSwapchainIma
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsOpenGL::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage, quint64 swapchainFormat, int arraySize) const
+QQuickRenderTarget QOpenXRGraphicsOpenGL::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
+                                                       quint64 swapchainFormat, int samples, int arraySize) const
 {
     const uint32_t colorTexture = reinterpret_cast<const XrSwapchainImageOpenGLKHR*>(swapchainImage)->image;
     if (arraySize <= 1) {
         return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
                                                      QSize(subImage.imageRect.extent.width,
-                                                           subImage.imageRect.extent.height));
+                                                           subImage.imageRect.extent.height),
+                                                     samples);
     } else {
         return QQuickRenderTarget::fromOpenGLTextureMultiView(colorTexture,
                                                               swapchainFormat,
                                                               QSize(subImage.imageRect.extent.width,
                                                                     subImage.imageRect.extent.height),
-                                                              1,
+                                                              samples,
                                                               arraySize);
     }
 }
