@@ -146,6 +146,29 @@ void QOpenXRView::setEnablePassthrough(bool enable)
     emit enablePassthroughChanged(enable);
 }
 
+QOpenXRView::FoveationLevel QOpenXRView::fixedFoveation() const
+{
+    if (!m_openXRManager.isValid())
+        return NoFoveation;
+
+    return FoveationLevel(m_openXRManager.m_foveationLevel);
+}
+
+void QOpenXRView::setFixedFoveation(FoveationLevel level)
+{
+    if (!m_openXRManager.isValid())
+        return;
+
+    const XrFoveationLevelFB xrLevel = XrFoveationLevelFB(level);
+    if (m_openXRManager.m_foveationLevel == xrLevel)
+        return;
+
+    m_openXRManager.m_foveationLevel = xrLevel;
+    m_openXRManager.setupMetaQuestFoveation();
+
+    emit fixedFoveationChanged();
+}
+
 bool QOpenXRView::isQuitOnSessionEndEnabled() const
 {
     return m_quitOnSessionEnd;

@@ -53,10 +53,19 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
     Q_PROPERTY(QOpenXRRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
     Q_PROPERTY(bool quitOnSessionEnd READ isQuitOnSessionEndEnabled WRITE setQuitOnSessionEnd NOTIFY quitOnSessionEndChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
+    Q_PROPERTY(FoveationLevel fixedFoveation READ fixedFoveation WRITE setFixedFoveation NOTIFY fixedFoveationChanged FINAL)
 
     QML_NAMED_ELEMENT(XrView)
 
 public:
+    enum FoveationLevel {
+        NoFoveation = 0,
+        LowFoveation = 1,
+        MediumFoveation = 2,
+        HighFoveation = 3
+    };
+    Q_ENUM(FoveationLevel)
+
     explicit QOpenXRView();
     ~QOpenXRView();
 
@@ -70,6 +79,9 @@ public:
 
     bool isPassthroughSupported() const;
     bool enablePassthrough() const;
+
+    FoveationLevel fixedFoveation() const;
+    void setFixedFoveation(FoveationLevel level);
 
     QOpenXRRuntimeInfo *runtimeInfo() const;
 
@@ -97,6 +109,7 @@ Q_SIGNALS:
     void environmentChanged(QQuick3DSceneEnvironment * environment);
     void enablePassthroughChanged(bool enable);
     void quitOnSessionEndChanged();
+    void fixedFoveationChanged();
     void frameReady(QRhiTexture *colorBuffer); // tooling
 
 private:

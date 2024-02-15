@@ -190,6 +190,7 @@ private:
     bool m_colorspaceExtensionSupported = false;
     bool m_displayRefreshRateExtensionSupported = false;
     bool m_foveationExtensionSupported = false;
+    XrFoveationLevelFB m_foveationLevel = XR_FOVEATION_LEVEL_HIGH_FB;
     bool m_handtrackingExtensionSupported = false;
     bool m_handtrackingAimExtensionSupported = false;
 

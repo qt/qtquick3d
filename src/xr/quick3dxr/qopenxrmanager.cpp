@@ -1600,23 +1600,20 @@ void QOpenXRManager::setupMetaQuestFoveation()
         m_instance, "xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB)));
 
     for (auto swapchain : m_swapchains) {
-        XrFoveationLevelProfileCreateInfoFB levelProfileCreateInfo;
-        memset(&levelProfileCreateInfo, 0, sizeof(levelProfileCreateInfo));
+        XrFoveationLevelProfileCreateInfoFB levelProfileCreateInfo = {};
         levelProfileCreateInfo.type = XR_TYPE_FOVEATION_LEVEL_PROFILE_CREATE_INFO_FB;
-        levelProfileCreateInfo.level = XR_FOVEATION_LEVEL_HIGH_FB;
+        levelProfileCreateInfo.level = m_foveationLevel;
         levelProfileCreateInfo.verticalOffset = 0;
         levelProfileCreateInfo.dynamic = XR_FOVEATION_DYNAMIC_DISABLED_FB;
 
-        XrFoveationProfileCreateInfoFB profileCreateInfo;
-        memset(&profileCreateInfo, 0, sizeof(profileCreateInfo));
+        XrFoveationProfileCreateInfoFB profileCreateInfo = {};
         profileCreateInfo.type = XR_TYPE_FOVEATION_PROFILE_CREATE_INFO_FB;
         profileCreateInfo.next = &levelProfileCreateInfo;
 
         XrFoveationProfileFB foveationProfile;
-
         pfnCreateFoveationProfileFB(m_session, &profileCreateInfo, &foveationProfile);
 
-        XrSwapchainStateFoveationFB foveationUpdateState;
+        XrSwapchainStateFoveationFB foveationUpdateState = {};
         memset(&foveationUpdateState, 0, sizeof(foveationUpdateState));
         foveationUpdateState.type = XR_TYPE_SWAPCHAIN_STATE_FOVEATION_FB;
         foveationUpdateState.profile = foveationProfile;
@@ -1626,18 +1623,10 @@ void QOpenXRManager::setupMetaQuestFoveation()
             (XrSwapchainStateBaseHeaderFB*)(&foveationUpdateState));
 
         pfnDestroyFoveationProfileFB(foveationProfile);
+
+        qDebug("Fixed foveated rendering requested with level %d", int(m_foveationLevel));
     }
 }
-
-
-//    typedef XrResult (XRAPI_PTR *PFN_xrCreatePassthroughFB)(XrSession session, const XrPassthroughCreateInfoFB* createInfo, XrPassthroughFB* outPassthrough);
-//    typedef XrResult (XRAPI_PTR *PFN_xrDestroyPassthroughFB)(XrPassthroughFB passthrough);
-//    typedef XrResult (XRAPI_PTR *PFN_xrPassthroughStartFB)(XrPassthroughFB passthrough);
-//    typedef XrResult (XRAPI_PTR *PFN_xrPassthroughPauseFB)(XrPassthroughFB passthrough);
-//    typedef XrResult (XRAPI_PTR *PFN_xrCreatePassthroughLayerFB)(XrSession session, const XrPassthroughLayerCreateInfoFB* createInfo, XrPassthroughLayerFB* outLayer);
-//    typedef XrResult (XRAPI_PTR *PFN_xrDestroyPassthroughLayerFB)(XrPassthroughLayerFB layer);
-//    typedef XrResult (XRAPI_PTR *PFN_xrPassthroughLayerPauseFB)(XrPassthroughLayerFB layer);
-//    typedef XrResult (XRAPI_PTR *PFN_xrPassthroughLayerResumeFB)(XrPassthroughLayerFB layer);
 
 void QOpenXRManager::createMetaQuestPassthrough()
 {
