@@ -92,53 +92,33 @@ private:
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
 
-    enum SubPathSelector {LeftHandSubPath = 1, RightHandSubPath = 2, BothHandsSubPath = 3};
+    enum SubPathSelector {NoSubPath = 0, LeftHandSubPath = 1, RightHandSubPath = 2, BothHandsSubPath = 3};
 
     struct QXRHandComponentPath
     {
         XrPath paths[2] = {{}, {}};
         QByteArray componentPathString;
     };
-    QXRHandComponentPath makeQXRPath(const QByteArrayView path);
+    QXRHandComponentPath makeHandInputPaths(const QByteArrayView path);
+    XrPath makeInputPath(const QByteArrayView path);
 
-    struct HandInputAction {
+    struct InputActionInfo {
         QOpenXRActionMapper::InputAction id;
         const char *shortName;
         const char *localizedName;
         XrActionType type;
-        float lastValue;
     };
 
-    QList<HandInputAction> handInputActions;
+    QList<InputActionInfo> m_handInputActionDefs;
+    QList<InputActionInfo> m_gamepadInputActionDefs;
 
     struct HandActions {
-        XrAction actions[QOpenXRActionMapper::NumActions] = {};
         XrAction gripPoseAction{XR_NULL_HANDLE};
         XrAction aimPoseAction{XR_NULL_HANDLE};
         XrAction hapticAction{XR_NULL_HANDLE};
     };
 
     struct GamepadActions {
-        XrAction buttonMenuPressedAction{XR_NULL_HANDLE};
-        XrAction buttonViewPressedAction{XR_NULL_HANDLE};
-        XrAction buttonAPressedAction{XR_NULL_HANDLE};
-        XrAction buttonBPressedAction{XR_NULL_HANDLE};
-        XrAction buttonXPressedAction{XR_NULL_HANDLE};
-        XrAction buttonYPressedAction{XR_NULL_HANDLE};
-        XrAction buttonDownPressedAction{XR_NULL_HANDLE};
-        XrAction buttonRightPressedAction{XR_NULL_HANDLE};
-        XrAction buttonUpPressedAction{XR_NULL_HANDLE};
-        XrAction buttonLeftPressedAction{XR_NULL_HANDLE};
-        XrAction shoulderLeftPressedAction{XR_NULL_HANDLE};
-        XrAction shoulderRightPressedAction{XR_NULL_HANDLE};
-        XrAction thumbstickLeftPressedAction{XR_NULL_HANDLE};
-        XrAction thumbstickRightPressedAction{XR_NULL_HANDLE};
-        XrAction triggerLeftAction{XR_NULL_HANDLE};
-        XrAction triggerRightAction{XR_NULL_HANDLE};
-        XrAction thumbstickLeftXAction{XR_NULL_HANDLE};
-        XrAction thumbstickLeftYAction{XR_NULL_HANDLE};
-        XrAction thumbstickRightXAction{XR_NULL_HANDLE};
-        XrAction thumbstickRightYAction{XR_NULL_HANDLE};
         XrAction hapticLeftAction{XR_NULL_HANDLE};
         XrAction hapticRightAction{XR_NULL_HANDLE};
         XrAction hapticLeftTriggerAction{XR_NULL_HANDLE};
@@ -157,6 +137,7 @@ private:
     XrPath m_gamepadSubactionPath;
     HandActions m_handActions;
     GamepadActions m_gamepadActions;
+    XrAction m_inputActions[QOpenXRActionMapper::NumActions] = {};
 
     uint m_aimStateFlags[2] = {};
     bool m_initialized = false;

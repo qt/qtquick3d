@@ -8,45 +8,34 @@ import QtQuick3D.Xr
 XrActionMapper {
     id: actionMapper
 
-    property bool triggerPressed: false
-    property bool gripPressed: false
-    property real trackpadY: 0
-    property real trackpadX: 0
-    property bool trackpadPressed: false
-    property bool button1Pressed: false
-    property bool button2Pressed: false
+    property alias triggerPressed: trigger.pressed
+    property bool button1Pressed: button1.pressed || trackpad.rightPressed
+    property bool button2Pressed: button2.pressed || trackpad.leftPressed
 
-    onInputValueChange: (id, name, value) => {
-        switch (id) {
-            case XrActionMapper.TrackpadY:
-                trackpadY = value
-            break
-            case XrActionMapper.TrackpadX:
-                trackpadX = value
-            break
-            case XrActionMapper.TrackpadPressed:
-                trackpadPressed = value > 0.8
-            break
-            case XrActionMapper.TriggerValue:
-            case XrActionMapper.TriggerPressed:
-                triggerPressed = value > 0.8
-            break
-            case XrActionMapper.SqueezeValue:
-            case XrActionMapper.SqueezePressed:
-                gripPressed = value > 0.8
-            break
-            case XrActionMapper.Button1Pressed:
-            case XrActionMapper.ButtonMenuPressed:
-                button1Pressed = value > 0.8
-            break
-            case XrActionMapper.Button2Pressed:
-                button2Pressed = value > 0.8
-            break
-        }
+    XrInputAction {
+        id: trigger
+        actionId: [XrActionMapper.TriggerValue, XrActionMapper.TriggerPressed, XrActionMapper.IndexFingerPinch]
     }
 
-    onTrackpadPressedChanged: {
-        button1Pressed = trackpadPressed && trackpadX < -0.1
-        button2Pressed = trackpadPressed && trackpadX > 0.1
+    XrInputAction {
+        id: button1
+        actionId: [XrActionMapper.Button1Pressed, XrActionMapper.MiddleFingerPinch]
+    }
+
+    XrInputAction {
+        id: button2
+        actionId: [XrActionMapper.Button2Pressed, XrActionMapper.ButtonMenuPressed, XrActionMapper.RingFingerPinch]
+    }
+
+    XrInputAction {
+        id: trackpadX
+        actionId: [XrActionMapper.TrackpadX]
+    }
+
+    XrInputAction {
+        id: trackpad
+        actionId: [XrActionMapper.TrackpadPressed]
+        property bool rightPressed: pressed && trackpadX > 0.1
+        property bool leftPressed: pressed && trackpadX < -0.1
     }
 }

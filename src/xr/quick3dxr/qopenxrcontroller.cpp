@@ -31,45 +31,29 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
     disconnect(m_isActiveConnection);
     disconnect(m_inputActionConnection);
 
-    if (m_controller == ControllerLeft) {
-        setPosition(m_inputManager->leftHandInput()->posePosition());
-        setRotation(m_inputManager->leftHandInput()->poseRotation());
-        setVisible(m_inputManager->leftHandInput()->isActive());
+    auto *input = handInput();
+    if (input) {
+        setPosition(input->posePosition());
+        setRotation(input->poseRotation());
+        setVisible(input->isActive());
 
-        m_posePositionConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::posePositionChanged, this, [this]{
-            setPosition(m_inputManager->leftHandInput()->posePosition());
+        m_posePositionConnection = connect(input, &QOpenXRHandInput::posePositionChanged, this, [this, input]{
+            setPosition(input->posePosition());
         });
-        m_poseRotationConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::poseRotationChanged, this, [this]{
-            setRotation(m_inputManager->leftHandInput()->poseRotation());
+        m_poseRotationConnection = connect(input, &QOpenXRHandInput::poseRotationChanged, this, [this, input]{
+            setRotation(input->poseRotation());
         });
-        m_isActiveConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::isActiveChanged, this, [this]{
-           setVisible(m_inputManager->leftHandInput()->isActive());
+        m_isActiveConnection = connect(input, &QOpenXRHandInput::isActiveChanged, this, [this, input]{
+            setVisible(input->isActive());
         });
-        m_inputActionConnection = connect(m_inputManager->leftHandInput(), &QOpenXRHandInput::inputValueChange,
+        m_inputActionConnection = connect(input, &QOpenXRHandInput::inputValueChange,
                                           this, [this](int id, const char *shortName, float value) {
-            if (m_actionMapper)
-                emit m_actionMapper->inputValueChange(QOpenXRActionMapper::InputAction(id), QString::fromLatin1(shortName), value);
-        });
-    } else if (m_controller == ControllerRight) {
-        setPosition(m_inputManager->rightHandInput()->posePosition());
-        setRotation(m_inputManager->rightHandInput()->poseRotation());
-        setVisible(m_inputManager->rightHandInput()->isActive());
-        m_posePositionConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::posePositionChanged, this, [this]{
-            setPosition(m_inputManager->rightHandInput()->posePosition());
-        });
-        m_poseRotationConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::poseRotationChanged, this, [this]{
-            setRotation(m_inputManager->rightHandInput()->poseRotation());
-        });
-        m_isActiveConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::isActiveChanged, this, [this]{
-           setVisible(m_inputManager->rightHandInput()->isActive());
-        });
-        m_inputActionConnection = connect(m_inputManager->rightHandInput(), &QOpenXRHandInput::inputValueChange,
-                                          this, [this](int id, const char *shortName, float value){
-            if (m_actionMapper)
-                emit m_actionMapper->inputValueChange(QOpenXRActionMapper::InputAction(id), QString::fromLatin1(shortName), value);
-        });
+                                              if (m_actionMapper)
+                                                  m_actionMapper->handleInput(QOpenXRActionMapper::InputAction(id), shortName, value);
+                                          });
     } else {
         setVisible(false);
+        //TODO handle gamepad connections
     }
 }
 
