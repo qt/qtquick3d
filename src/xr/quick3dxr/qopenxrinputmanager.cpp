@@ -52,11 +52,140 @@ QOpenXRInputManager::QXRHandComponentPath QOpenXRInputManager::makeHandInputPath
     return res;
 }
 
+
 XrPath QOpenXRInputManager::makeInputPath(const QByteArrayView path)
 {
     XrPath res;
     setPath(res, path.toByteArray());
     return res;
+}
+
+static inline QVector3D toQVector(const XrVector3f &v)
+{
+    return {v.x * 100, v.y * 100, v.z * 100};
+}
+
+QQuick3DGeometry *QOpenXRInputManager::createHandMeshGeometry(const HandMeshData &handMeshData)
+{
+    QQuick3DGeometry *geometry = new QQuick3DGeometry();
+    geometry->setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
+
+    // Figure out which attributes should be used
+    const qsizetype expectedLength = handMeshData.vertexPositions.size();
+    bool hasPositions = !handMeshData.vertexPositions.isEmpty();
+    bool hasNormals = handMeshData.vertexNormals.size() >= expectedLength;
+    bool hasUV0s = handMeshData.vertexUVs.size() >= expectedLength;
+    bool hasJoints = handMeshData.vertexBlendIndices.size() >= expectedLength;
+    bool hasWeights = handMeshData.vertexBlendWeights.size() >= expectedLength;
+    bool hasIndexes = !handMeshData.indices.isEmpty();
+
+    int offset = 0;
+    if (hasPositions) {
+        geometry->addAttribute(QQuick3DGeometry::Attribute::PositionSemantic, offset, QQuick3DGeometry::Attribute::ComponentType::F32Type);
+        offset += 3 * sizeof(float);
+    }
+
+    if (hasNormals) {
+        geometry->addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, offset, QQuick3DGeometry::Attribute::ComponentType::F32Type);
+        offset += 3 * sizeof(float);
+    }
+
+    if (hasUV0s) {
+        geometry->addAttribute(QQuick3DGeometry::Attribute::TexCoordSemantic, offset, QQuick3DGeometry::Attribute::ComponentType::F32Type);
+        offset += 2 * sizeof(float);
+    }
+
+    if (hasJoints) {
+        geometry->addAttribute(QQuick3DGeometry::Attribute::JointSemantic, offset, QQuick3DGeometry::Attribute::ComponentType::I32Type);
+        offset += 4 * sizeof(qint32);
+    }
+
+    if (hasWeights) {
+        geometry->addAttribute(QQuick3DGeometry::Attribute::WeightSemantic, offset, QQuick3DGeometry::Attribute::ComponentType::F32Type);
+        offset += 4 * sizeof(float);
+    }
+
+    if (hasIndexes)
+        geometry->addAttribute(QQuick3DGeometry::Attribute::IndexSemantic, 0, QQuick3DGeometry::Attribute::ComponentType::U16Type);
+
+    // set up the vertex buffer
+    const int stride = offset;
+    const qsizetype bufferSize = expectedLength * stride;
+    geometry->setStride(stride);
+
+    QByteArray vertexBuffer;
+    vertexBuffer.reserve(bufferSize);
+
+    QVector3D minBounds;
+    QVector3D maxBounds;
+
+    auto appendFloat = [&vertexBuffer](float f) {
+        vertexBuffer.append(reinterpret_cast<const char *>(&f), sizeof(float));
+    };
+    auto appendInt = [&vertexBuffer](qint32 i) {
+        vertexBuffer.append(reinterpret_cast<const char *>(&i), sizeof(qint32));
+    };
+
+    for (qsizetype i = 0; i < expectedLength; ++i) {
+        // start writing float values to vertexBuffer
+        if (hasPositions) {
+            const QVector3D position = toQVector(handMeshData.vertexPositions[i]);
+            appendFloat(position.x());
+            appendFloat(position.y());
+            appendFloat(position.z());
+            minBounds.setX(qMin(minBounds.x(), position.x()));
+            maxBounds.setX(qMax(maxBounds.x(), position.x()));
+            minBounds.setY(qMin(minBounds.y(), position.y()));
+            maxBounds.setY(qMax(maxBounds.y(), position.y()));
+            minBounds.setZ(qMin(minBounds.z(), position.z()));
+            maxBounds.setZ(qMax(maxBounds.z(), position.z()));
+        }
+        if (hasNormals) {
+            const auto &normal = handMeshData.vertexNormals[i];
+            appendFloat(normal.x);
+            appendFloat(normal.y);
+            appendFloat(normal.z);
+        }
+
+        if (hasUV0s) {
+            const auto &uv0 = handMeshData.vertexUVs[i];
+            appendFloat(uv0.x);
+            appendFloat(uv0.y);
+        }
+
+        if (hasJoints) {
+            const auto &joint = handMeshData.vertexBlendIndices[i];
+            appendInt(joint.x);
+            appendInt(joint.y);
+            appendInt(joint.z);
+            appendInt(joint.w);
+        }
+
+        if (hasWeights) {
+            const auto &weight = handMeshData.vertexBlendWeights[i];
+            appendFloat(weight.x);
+            appendFloat(weight.y);
+            appendFloat(weight.z);
+            appendFloat(weight.w);
+        }
+    }
+
+    geometry->setBounds(minBounds, maxBounds);
+    geometry->setVertexData(vertexBuffer);
+
+    // Index Buffer
+    if (hasIndexes) {
+        const qsizetype indexLength = handMeshData.indices.size();
+        QByteArray indexBuffer;
+        indexBuffer.reserve(indexLength * sizeof(int16_t));
+        for (qsizetype i = 0; i < indexLength; ++i) {
+            const auto &index = handMeshData.indices[i];
+            indexBuffer.append(reinterpret_cast<const char *>(&index), sizeof(int16_t));
+        }
+        geometry->setIndexData(indexBuffer);
+    }
+
+    return geometry;
 }
 
 void QOpenXRInputManager::init(XrInstance instance, XrSession session)
@@ -641,6 +770,10 @@ void QOpenXRInputManager::setupHandTracking()
         m_instance,
         "xrLocateHandJointsEXT",
         (PFN_xrVoidFunction*)(&xrLocateHandJointsEXT_)), "xrLocateHandJointsEXT");
+    checkXrResult(xrGetInstanceProcAddr(
+        m_instance,
+        "xrGetHandMeshFB",
+        (PFN_xrVoidFunction*)(&xrGetHandMeshFB_)), "xrGetHandMeshFB");
 
     if (xrCreateHandTrackerEXT_) {
         XrHandTrackerCreateInfoEXT createInfo{};
@@ -651,6 +784,50 @@ void QOpenXRInputManager::setupHandTracking()
         createInfo.hand = XR_HAND_RIGHT_EXT;
         checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[RightHand]), "xrCreateHandTrackerEXT handTrackerRight");
     }
+
+    if (xrGetHandMeshFB_) {
+        if (queryHandMesh(Hand::LeftHand))
+            m_handTrackerInputState[Hand::LeftHand]->setHandGeometry(createHandMeshGeometry(m_handMeshData[Hand::LeftHand]));
+        if (queryHandMesh(Hand::RightHand))
+            m_handTrackerInputState[Hand::RightHand]->setHandGeometry(createHandMeshGeometry(m_handMeshData[Hand::RightHand]));
+    }
+}
+
+bool QOpenXRInputManager::queryHandMesh(Hand hand)
+{
+    XrHandTrackingMeshFB mesh {};
+    mesh.type = XR_TYPE_HAND_TRACKING_MESH_FB;
+    // Left hand
+    if (!checkXrResult(xrGetHandMeshFB_(handTracker[hand], &mesh))) {
+        qWarning("Failed to query hand mesh info.");
+        return false;
+    }
+
+    mesh.jointCapacityInput = mesh.jointCountOutput;
+    mesh.vertexCapacityInput = mesh.vertexCountOutput;
+    mesh.indexCapacityInput = mesh.indexCountOutput;
+    m_handMeshData[hand].vertexPositions.resize(mesh.vertexCapacityInput);
+    m_handMeshData[hand].vertexNormals.resize(mesh.vertexCapacityInput);
+    m_handMeshData[hand].vertexUVs.resize(mesh.vertexCapacityInput);
+    m_handMeshData[hand].vertexBlendIndices.resize(mesh.vertexCapacityInput);
+    m_handMeshData[hand].vertexBlendWeights.resize(mesh.vertexCapacityInput);
+    m_handMeshData[hand].indices.resize(mesh.indexCapacityInput);
+    mesh.jointBindPoses = m_handMeshData[hand].jointBindPoses;
+    mesh.jointParents = m_handMeshData[hand].jointParents;
+    mesh.jointRadii = m_handMeshData[hand].jointRadii;
+    mesh.vertexPositions = m_handMeshData[hand].vertexPositions.data();
+    mesh.vertexNormals = m_handMeshData[hand].vertexNormals.data();
+    mesh.vertexUVs = m_handMeshData[hand].vertexUVs.data();
+    mesh.vertexBlendIndices = m_handMeshData[hand].vertexBlendIndices.data();
+    mesh.vertexBlendWeights = m_handMeshData[hand].vertexBlendWeights.data();
+    mesh.indices = m_handMeshData[hand].indices.data();
+
+    if (!checkXrResult(xrGetHandMeshFB_(handTracker[hand], &mesh))) {
+        qWarning("Failed to get hand mesh data.");
+        return false;
+    }
+
+    return true;
 };
 
 void QOpenXRInputManager::setupActions()

@@ -25,6 +25,7 @@ QT_BEGIN_NAMESPACE
 class QOpenXRHandInput;
 class QOpenXRHandTrackerInput;
 class QOpenXRGamepadInput;
+class QQuick3DGeometry;
 
 class QOpenXRInputManager : public QObject
 {
@@ -75,6 +76,7 @@ private:
     ~QOpenXRInputManager();
 
     void setupHandTracking();
+    bool queryHandMesh(Hand hand);
     void setupActions();
     void destroyActions();
     bool checkXrResult(const XrResult &result, const char *debugText = nullptr);
@@ -143,6 +145,21 @@ private:
     bool m_initialized = false;
     bool m_disableGamepad = false;
     bool m_validAimStateFromUpdatePoses[2] = {false, false};
+
+    // Hand Mesh Data
+    struct HandMeshData {
+        QVector<XrVector3f> vertexPositions;
+        QVector<XrVector3f> vertexNormals;
+        QVector<XrVector2f> vertexUVs;
+        QVector<XrVector4sFB> vertexBlendIndices;
+        QVector<XrVector4f> vertexBlendWeights;
+        QVector<int16_t> indices;
+        XrPosef jointBindPoses[XR_HAND_JOINT_COUNT_EXT];
+        XrHandJointEXT jointParents[XR_HAND_JOINT_COUNT_EXT];
+        float jointRadii[XR_HAND_JOINT_COUNT_EXT];
+    } m_handMeshData[2];
+
+    QQuick3DGeometry *createHandMeshGeometry(const HandMeshData &handMeshData);
 };
 
 QT_END_NAMESPACE

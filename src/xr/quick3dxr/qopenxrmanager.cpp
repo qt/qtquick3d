@@ -511,6 +511,9 @@ XrResult QOpenXRManager::createXrInstance()
     if (isExtensionSupported(XR_MSFT_HAND_INTERACTION_EXTENSION_NAME, extensionProperties))
         enabledExtensions.append(XR_MSFT_HAND_INTERACTION_EXTENSION_NAME);
 
+    if (isExtensionSupported(XR_FB_HAND_TRACKING_MESH_EXTENSION_NAME, extensionProperties))
+        enabledExtensions.append(XR_FB_HAND_TRACKING_MESH_EXTENSION_NAME);
+
     // Passthrough extensions (require manifest feature to work)
     // <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
     uint32_t passthroughSpecVersion = 0;
