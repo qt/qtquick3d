@@ -242,20 +242,39 @@ QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrSwapchainSubImage
     }
 
     if (arraySize <= 1) {
-        return QQuickRenderTarget::fromVulkanImage(colorTexture,
-                                                   VK_IMAGE_LAYOUT_UNDEFINED,
-                                                   VkFormat(swapchainFormat),
-                                                   QSize(subImage.imageRect.extent.width,
-                                                         subImage.imageRect.extent.height),
-                                                   samples);
+        if (samples > 1) {
+            return QQuickRenderTarget::fromVulkanImageWithMultiSampleResolve(colorTexture,
+                                                                             VK_IMAGE_LAYOUT_UNDEFINED,
+                                                                             VkFormat(swapchainFormat),
+                                                                             QSize(subImage.imageRect.extent.width,
+                                                                                   subImage.imageRect.extent.height),
+                                                                             samples);
+        } else {
+            return QQuickRenderTarget::fromVulkanImage(colorTexture,
+                                                       VK_IMAGE_LAYOUT_UNDEFINED,
+                                                       VkFormat(swapchainFormat),
+                                                       QSize(subImage.imageRect.extent.width,
+                                                             subImage.imageRect.extent.height),
+                                                       1);
+        }
     } else {
-        return QQuickRenderTarget::fromVulkanImageMultiView(colorTexture,
-                                                            VK_IMAGE_LAYOUT_UNDEFINED,
-                                                            VkFormat(swapchainFormat),
-                                                            QSize(subImage.imageRect.extent.width,
-                                                                  subImage.imageRect.extent.height),
-                                                            samples,
-                                                            arraySize);
+        if (samples > 1) {
+            return QQuickRenderTarget::fromVulkanImageMultiViewWithMultiSampleResolve(colorTexture,
+                                                                                      VK_IMAGE_LAYOUT_UNDEFINED,
+                                                                                      VkFormat(swapchainFormat),
+                                                                                      QSize(subImage.imageRect.extent.width,
+                                                                                            subImage.imageRect.extent.height),
+                                                                                       samples,
+                                                                                       arraySize);
+        } else {
+            return QQuickRenderTarget::fromVulkanImageMultiView(colorTexture,
+                                                                VK_IMAGE_LAYOUT_UNDEFINED,
+                                                                VkFormat(swapchainFormat),
+                                                                QSize(subImage.imageRect.extent.width,
+                                                                    subImage.imageRect.extent.height),
+                                                                1,
+                                                                arraySize);
+        }
     }
 }
 

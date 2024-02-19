@@ -235,10 +235,17 @@ void QOpenXRView::handleAAChanged()
     auto env = environment();
     int samples = 1;
     if (env && env->antialiasingMode() == QQuick3DSceneEnvironment::MSAA) {
-        if (env->antialiasingQuality() == QQuick3DSceneEnvironment::Medium)
+        switch (env->antialiasingQuality()) {
+        case QQuick3DSceneEnvironment::Medium:
             samples = 2;
-        else
+            break;
+        case QQuick3DSceneEnvironment::High:
             samples = 4;
+            break;
+        case QQuick3DSceneEnvironment::VeryHigh:
+            samples = 8;
+            break;
+        }
     }
     m_openXRManager.setSamples(samples);
 }

@@ -84,7 +84,7 @@ QOpenXRManager::~QOpenXRManager()
     delete m_quickWindow;
     delete m_renderControl;
     delete m_animationDriver;
-    delete m_graphics;
+    delete m_graphics; // last, with Vulkan this may own the VkInstance
 }
 
 namespace  {
@@ -909,12 +909,14 @@ void QOpenXRManager::createSwapchains()
 
         const XrViewConfigurationView &vp = m_configViews[0]; // use the first view for all views, the sizes should be the same
 
-        const int maxSamples = int(vp.maxSwapchainSampleCount);
-        if (m_samples > maxSamples) {
-            qWarning("Requested sample count for XrSwapchain was %d, but the maximum supported by the view is %d",
-                     m_samples, maxSamples);
-            m_samples = maxSamples;
-        }
+        // sampleCount for the XrSwapchain is always 1. We could take m_samples
+        // here, clamp it to vp.maxSwapchainSampleCount, and pass it in to the
+        // swapchain to get multisample textures (or a multisample texture
+        // array) out of the swapchain. This we do not do, because it was only
+        // supported with 1 out of 5 OpenXR(+streaming) combination tested on
+        // the Quest 3. In most cases, incl. Quest 3 native Android,
+        // maxSwapchainSampleCount is 1. Therefore, we do MSAA on our own, and
+        // do not rely on the XrSwapchain for this.
 
         if (m_multiviewRendering) {
             // Create a single swapchain with array size > 1
@@ -922,7 +924,7 @@ void QOpenXRManager::createSwapchains()
             swapchainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
             swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT;
             swapchainCreateInfo.format = m_colorSwapchainFormat;
-            swapchainCreateInfo.sampleCount = m_samples;
+            swapchainCreateInfo.sampleCount = 1; // we do MSAA on our own, do not need ms textures from the swapchain
             swapchainCreateInfo.width = vp.recommendedImageRectWidth;
             swapchainCreateInfo.height = vp.recommendedImageRectHeight;
             swapchainCreateInfo.faceCount = 1;
@@ -933,7 +935,7 @@ void QOpenXRManager::createSwapchains()
                 viewCount,
                 vp.recommendedImageRectWidth,
                 vp.recommendedImageRectHeight,
-                m_samples,
+                1,
                 static_cast<long long unsigned int>(m_colorSwapchainFormat));
 
             Swapchain swapchain;
@@ -959,7 +961,7 @@ void QOpenXRManager::createSwapchains()
                     i,
                     vp.recommendedImageRectWidth,
                     vp.recommendedImageRectHeight,
-                    m_samples,
+                    1,
                     static_cast<long long unsigned int>(m_colorSwapchainFormat));
 
                 // Create the swapchain.
@@ -971,7 +973,7 @@ void QOpenXRManager::createSwapchains()
                 swapchainCreateInfo.height = vp.recommendedImageRectHeight;
                 swapchainCreateInfo.mipCount = 1;
                 swapchainCreateInfo.faceCount = 1;
-                swapchainCreateInfo.sampleCount = m_samples;
+                swapchainCreateInfo.sampleCount = 1; // we do MSAA on our own, do not need ms textures from the swapchain
                 swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
                 Swapchain swapchain;
                 swapchain.width = swapchainCreateInfo.width;
@@ -1014,8 +1016,9 @@ void QOpenXRManager::setSamples(int samples)
         return;
 
     m_samples = samples;
-    destroySwapchain();
-    createSwapchains();
+
+    // No need to do anything more here (such as destroying and recreating the
+    // XrSwapchain) since we do not do MSAA through the swapchain.
 }
 
 void QOpenXRManager::processXrEvents()

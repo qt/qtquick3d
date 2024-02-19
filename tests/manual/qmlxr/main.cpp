@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
         }
 
         if (cmdLineParser.isSet(msaaOption)) {
-            const int samples = qBound(1, cmdLineParser.value(msaaOption).toInt(), 4);
+            const int samples = qBound(1, cmdLineParser.value(msaaOption).toInt(), 8);
             if (samples > 1) {
                 QQuick3DSceneEnvironment *sceneEnv = xrView->environment();
                 qDebug() << "Requesting MSAA with sample count" << samples << "on" << sceneEnv;
@@ -177,6 +177,8 @@ int main(int argc, char *argv[])
                     sceneEnv->setAntialiasingQuality(QQuick3DSceneEnvironment::Medium);
                 else if (samples == 4)
                     sceneEnv->setAntialiasingQuality(QQuick3DSceneEnvironment::High);
+                else
+                    sceneEnv->setAntialiasingQuality(QQuick3DSceneEnvironment::VeryHigh);
             }
         }
 

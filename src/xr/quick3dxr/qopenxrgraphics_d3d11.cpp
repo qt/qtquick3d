@@ -96,17 +96,35 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsD3D11::allocateSwapchainImag
 QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
                                                       quint64 swapchainFormat, int samples, int arraySize) const
 {
-    Q_UNUSED(swapchainFormat)
     ID3D11Texture2D* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D11KHR*>(swapchainImage)->texture;
+
+    switch (swapchainFormat) {
+    case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+        swapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+        break;
+    case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+        swapchainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+        break;
+    default:
+        break;
+    }
 
     if (arraySize > 1)
         qWarning("Qt Quick 3D XR: The D3D11 integration has no support for multiview");
 
-    return QQuickRenderTarget::fromD3D11Texture(colorTexture,
-                                                QSize(subImage.imageRect.extent.width,
-                                                      subImage.imageRect.extent.height),
-                                                samples);
-
+    if (samples > 1) {
+        return QQuickRenderTarget::fromD3D11TextureWithMultiSampleResolve(colorTexture,
+                                                                          swapchainFormat,
+                                                                          QSize(subImage.imageRect.extent.width,
+                                                                                subImage.imageRect.extent.height),
+                                                                          samples);
+    } else {
+        return QQuickRenderTarget::fromD3D11Texture(colorTexture,
+                                                    swapchainFormat,
+                                                    QSize(subImage.imageRect.extent.width,
+                                                          subImage.imageRect.extent.height),
+                                                    1);
+    }
 }
 
 

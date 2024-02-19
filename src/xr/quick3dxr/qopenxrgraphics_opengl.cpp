@@ -11,6 +11,14 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef GL_RGBA8
+#define GL_RGBA8                          0x8058
+#endif
+
+#ifndef GL_SRGB8_ALPHA8_EXT
+#define GL_SRGB8_ALPHA8_EXT               0x8C43
+#endif
+
 QOpenXRGraphicsOpenGL::QOpenXRGraphicsOpenGL()
 {
 #ifdef XR_USE_PLATFORM_WIN32
@@ -119,18 +127,45 @@ QQuickRenderTarget QOpenXRGraphicsOpenGL::renderTarget(const XrSwapchainSubImage
                                                        quint64 swapchainFormat, int samples, int arraySize) const
 {
     const uint32_t colorTexture = reinterpret_cast<const XrSwapchainImageOpenGLKHR*>(swapchainImage)->image;
+
+    switch (swapchainFormat) {
+    case GL_SRGB8_ALPHA8_EXT:
+        swapchainFormat = GL_RGBA8;
+        break;
+    default:
+        break;
+    }
+
     if (arraySize <= 1) {
-        return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
-                                                     QSize(subImage.imageRect.extent.width,
-                                                           subImage.imageRect.extent.height),
-                                                     samples);
+        if (samples > 1) {
+            return QQuickRenderTarget::fromOpenGLTextureWithMultiSampleResolve(colorTexture,
+                                                                               swapchainFormat,
+                                                                               QSize(subImage.imageRect.extent.width,
+                                                                                     subImage.imageRect.extent.height),
+                                                                               samples);
+        } else {
+            return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
+                                                        swapchainFormat,
+                                                        QSize(subImage.imageRect.extent.width,
+                                                              subImage.imageRect.extent.height),
+                                                        1);
+        }
     } else {
-        return QQuickRenderTarget::fromOpenGLTextureMultiView(colorTexture,
-                                                              swapchainFormat,
-                                                              QSize(subImage.imageRect.extent.width,
-                                                                    subImage.imageRect.extent.height),
-                                                              samples,
-                                                              arraySize);
+        if (samples > 1) {
+            return QQuickRenderTarget::fromOpenGLTextureMultiViewWithMultiSampleResolve(colorTexture,
+                                                                                        swapchainFormat,
+                                                                                        QSize(subImage.imageRect.extent.width,
+                                                                                                subImage.imageRect.extent.height),
+                                                                                        samples,
+                                                                                        arraySize);
+        } else {
+            return QQuickRenderTarget::fromOpenGLTextureMultiView(colorTexture,
+                                                                swapchainFormat,
+                                                                QSize(subImage.imageRect.extent.width,
+                                                                        subImage.imageRect.extent.height),
+                                                                1,
+                                                                arraySize);
+        }
     }
 }
 
