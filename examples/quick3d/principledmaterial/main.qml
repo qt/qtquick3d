@@ -31,8 +31,8 @@ Window {
         Page {
             id: toolPage
             SplitView.fillHeight: true
-            SplitView.preferredWidth: 420
-            SplitView.minimumWidth: 300
+            SplitView.preferredWidth: 450
+            SplitView.minimumWidth: 400
             header: TabBar {
                id: tabBar
                TabButton {
@@ -52,6 +52,9 @@ Window {
                }
                TabButton {
                    text: "Special"
+               }
+               TabButton {
+                   text: "Vertex Color"
                }
             }
 
@@ -90,6 +93,11 @@ Window {
                     targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                     linesModel: linesLogo
                     pointsModel: pointsLogo
+                    specularGlossyMode: viewport.specularGlossyMode
+                }
+
+                VertexColorPane {
+                    targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                     specularGlossyMode: viewport.specularGlossyMode
                 }
             }
@@ -131,7 +139,7 @@ Window {
 
             PrincipledMaterial {
                 id: basicMaterial
-                baseColor: "red"
+                baseColor: "white"
             }
 
             SpecularGlossyMaterial {
@@ -139,9 +147,8 @@ Window {
                 property alias baseColor: specularGlossyMaterial.albedoColor
                 property real specularAmount: 1.0
                 property real specularTint: 1.0
-
                 specularColor: Qt.rgba(0.22, 0.22, 0.22, 1.0)
-                albedoColor: "red"
+                albedoColor: "white"
             }
 
             Model {
@@ -166,6 +173,7 @@ Window {
                 source: "meshes/suzanne.mesh"
                 materials: viewport.specularGlossyMode ? [ specularGlossyMaterial ] : [ basicMaterial ]
                 pickable: true
+                scale: Qt.vector3d(100, 100, 100)
             }
 
             Model {

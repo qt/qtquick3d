@@ -97,6 +97,11 @@ bool QSSGShaderDefaultMaterialAdapter::isVertexColorsEnabled()
     return m_material.isVertexColorsEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isVertexColorsMaskEnabled()
+{
+    return m_material.isVertexColorsMaskEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::isClearcoatEnabled()
 {
     return m_material.isClearcoatEnabled();
@@ -130,6 +135,26 @@ QSSGRenderDefaultMaterial::MaterialSpecularModel QSSGShaderDefaultMaterialAdapte
 QSSGRenderDefaultMaterial::MaterialAlphaMode QSSGShaderDefaultMaterialAdapter::alphaMode()
 {
     return m_material.alphaMode;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderDefaultMaterialAdapter::vertexColorRedMask()
+{
+    return m_material.vertexColorRedMask;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderDefaultMaterialAdapter::vertexColorGreenMask()
+{
+    return m_material.vertexColorGreenMask;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderDefaultMaterialAdapter::vertexColorBlueMask()
+{
+    return m_material.vertexColorBlueMask;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderDefaultMaterialAdapter::vertexColorAlphaMask()
+{
+    return m_material.vertexColorAlphaMask;
 }
 
 QSSGRenderImage *QSSGShaderDefaultMaterialAdapter::iblProbe()
@@ -296,6 +321,11 @@ bool QSSGShaderCustomMaterialAdapter::isVertexColorsEnabled()
     return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::VarColor);
 }
 
+bool QSSGShaderCustomMaterialAdapter::isVertexColorsMaskEnabled()
+{
+    return false;
+}
+
 bool QSSGShaderCustomMaterialAdapter::isClearcoatEnabled()
 {
     // TODO: Expose Clearcoat properties to custom material
@@ -331,6 +361,26 @@ QSSGRenderDefaultMaterial::MaterialSpecularModel QSSGShaderCustomMaterialAdapter
 QSSGRenderDefaultMaterial::MaterialAlphaMode QSSGShaderCustomMaterialAdapter::alphaMode()
 {
     return QSSGRenderDefaultMaterial::MaterialAlphaMode::Default;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderCustomMaterialAdapter::vertexColorRedMask()
+{
+    return QSSGRenderDefaultMaterial::NoMask;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderCustomMaterialAdapter::vertexColorGreenMask()
+{
+    return QSSGRenderDefaultMaterial::NoMask;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderCustomMaterialAdapter::vertexColorBlueMask()
+{
+    return QSSGRenderDefaultMaterial::NoMask;
+}
+
+QSSGRenderDefaultMaterial::VertexColorMaskFlags QSSGShaderCustomMaterialAdapter::vertexColorAlphaMask()
+{
+    return QSSGRenderDefaultMaterial::NoMask;
 }
 
 QSSGRenderImage *QSSGShaderCustomMaterialAdapter::iblProbe()

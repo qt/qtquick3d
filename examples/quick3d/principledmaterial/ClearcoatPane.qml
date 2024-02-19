@@ -124,6 +124,7 @@ layer for the material.`
             }
         }
 
+
         MarkdownLabel {
             text: `## Clearcoat Normal Map
 Finally, the clearcoat layer also supports applying a normal map to further
@@ -141,6 +142,23 @@ case.
             stampSource: "maps/normal_stamp.png"
             onTargetTextureChanged: {
                 rootView.targetMaterial.clearcoatNormalMap = targetTexture
+            }
+        }
+        MarkdownLabel {
+            text: `### Clearcoat Normal Strength
+By adjusting the normal strength you will see that the amount of influence the
+normal map has on the material changes.`
+        }
+        RowLayout {
+            Label {
+                text: "Clearcoat Normal Strength (" + rootView.targetMaterial.clearcoatNormalStrength.toFixed(2) + ")"
+                Layout.fillWidth: true
+            }
+            Slider {
+                from: 0
+                to: 1
+                value: rootView.targetMaterial.clearcoatNormalStrength
+                onValueChanged: rootView.targetMaterial.clearcoatNormalStrength = value
             }
         }
     }

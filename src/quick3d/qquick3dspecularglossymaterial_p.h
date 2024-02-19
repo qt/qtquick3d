@@ -92,6 +92,12 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged REVISION(6, 5))
 
+    Q_PROPERTY(bool vertexColorsMaskEnabled READ vertexColorsMaskEnabled WRITE setVertexColorsMaskEnabled NOTIFY vertexColorsMaskEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorRedMask READ vertexColorRedMask WRITE setVertexColorRedMask NOTIFY vertexColorRedMaskChanged REVISION(6, 8))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorGreenMask READ vertexColorGreenMask WRITE setVertexColorGreenMask NOTIFY vertexColorGreenMaskChanged REVISION(6, 8))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorBlueMask READ vertexColorBlueMask WRITE setVertexColorBlueMask NOTIFY vertexColorBlueMaskChanged REVISION(6, 8))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorAlphaMask READ vertexColorAlphaMask WRITE setVertexColorAlphaMask NOTIFY vertexColorAlphaMaskChanged REVISION(6, 8))
+
     QML_NAMED_ELEMENT(SpecularGlossyMaterial)
     QML_ADDED_IN_VERSION(6, 4)
 
@@ -116,6 +122,21 @@ public:
         Opaque
     };
     Q_ENUM(AlphaMode)
+
+    enum VertexColorMask {
+        NoMask = QQuick3DMaterial::NoMask,
+        GlossinessMask = QQuick3DMaterial::RoughnessMask,
+        NormalStrengthMask = QQuick3DMaterial::NormalStrengthMask,
+        ClearcoatAmountMask = QQuick3DMaterial::ClearcoatAmountMask,
+        ClearcoatRoughnessAmountMask = QQuick3DMaterial::ClearcoatRoughnessAmountMask,
+        ClearcoatNormalStrengthMask = QQuick3DMaterial::NormalStrengthMask,
+        HeightAmountMask = QQuick3DMaterial::HeightAmountMask,
+        OcclusionAmountMask = QQuick3DMaterial::OcclusionAmountMask,
+        ThicknessFactorMask = QQuick3DMaterial::ThicknessFactorMask,
+        TransmissionFactorMask = QQuick3DMaterial::TransmissionFactorMask
+    };
+    Q_ENUM(VertexColorMask)
+    Q_DECLARE_FLAGS(VertexColorMaskFlags, VertexColorMask)
 
     explicit QQuick3DSpecularGlossyMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DSpecularGlossyMaterial() override;
@@ -170,6 +191,12 @@ public:
     Q_REVISION(6, 5) bool vertexColorsEnabled() const;
     Q_REVISION(6, 8) float clearcoatNormalStrength() const;
 
+    Q_REVISION(6, 8) bool vertexColorsMaskEnabled() const;
+    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorRedMask() const;
+    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorGreenMask() const;
+    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorBlueMask() const;
+    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorAlphaMask() const;
+
 public Q_SLOTS:
     void setLighting(QQuick3DSpecularGlossyMaterial::Lighting lighting);
     void setBlendMode(QQuick3DSpecularGlossyMaterial::BlendMode blendMode);
@@ -221,6 +248,12 @@ public Q_SLOTS:
 
     Q_REVISION(6, 5) void setVertexColorsEnabled(bool vertexColorsEnabled);
 
+    Q_REVISION(6, 8) void setVertexColorsMaskEnabled(bool vertexColorsMaskEnabled);
+    Q_REVISION(6, 8) void setVertexColorRedMask(VertexColorMaskFlags vertexColorRedMask);
+    Q_REVISION(6, 8) void setVertexColorGreenMask(VertexColorMaskFlags vertexColorGreenMask);
+    Q_REVISION(6, 8) void setVertexColorBlueMask(VertexColorMaskFlags vertexColorBlueMask);
+    Q_REVISION(6, 8) void setVertexColorAlphaMask(VertexColorMaskFlags vertexColorAlphaMask);
+
 Q_SIGNALS:
     void lightingChanged();
     void blendModeChanged();
@@ -271,6 +304,12 @@ Q_SIGNALS:
     void attenuationColorChanged();
 
     Q_REVISION(6, 5) void vertexColorsEnabledChanged(bool vertexColorsEnabled);
+
+    Q_REVISION(6, 8) void vertexColorsMaskEnabledChanged();
+    Q_REVISION(6, 8) void vertexColorRedMaskChanged();
+    Q_REVISION(6, 8) void vertexColorGreenMaskChanged();
+    Q_REVISION(6, 8) void vertexColorBlueMaskChanged();
+    Q_REVISION(6, 8) void vertexColorAlphaMaskChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -345,6 +384,11 @@ private:
     float m_attenuationDistance = std::numeric_limits<float>::infinity();
     QColor m_attenuationColor = Qt::white;
     bool m_vertexColorsEnabled = true;
+    bool m_vertexColorsMaskEnabled = false;
+    VertexColorMaskFlags m_vertexColorRedMask = NoMask;
+    VertexColorMaskFlags m_vertexColorGreenMask = NoMask;
+    VertexColorMaskFlags m_vertexColorBlueMask = NoMask;
+    VertexColorMaskFlags m_vertexColorAlphaMask = NoMask;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

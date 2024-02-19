@@ -555,6 +555,11 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_specularEnabled;
     QSSGShaderKeyBoolean m_fresnelEnabled;
     QSSGShaderKeyBoolean m_vertexColorsEnabled;
+    QSSGShaderKeyBoolean m_vertexColorsMaskEnabled;
+    QSSGShaderKeyUnsigned<16> m_vertexColorRedMask;
+    QSSGShaderKeyUnsigned<16> m_vertexColorGreenMask;
+    QSSGShaderKeyUnsigned<16> m_vertexColorBlueMask;
+    QSSGShaderKeyUnsigned<16> m_vertexColorAlphaMask;
     QSSGShaderKeySpecularModel m_specularModel;
     QSSGShaderKeyImageMap m_imageMaps[ImageMapCount];
     QSSGShaderKeyTextureChannel m_textureChannels[SingleChannelImageCount];
@@ -595,6 +600,11 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_specularEnabled("specularEnabled")
         , m_fresnelEnabled("fresnelEnabled")
         , m_vertexColorsEnabled("vertexColorsEnabled")
+        , m_vertexColorsMaskEnabled("vertexColorsMaskEnabled")
+        , m_vertexColorRedMask("vertexColorRedMask")
+        , m_vertexColorGreenMask("vertexColorGreenMask")
+        , m_vertexColorBlueMask("vertexColorBlueMask")
+        , m_vertexColorAlphaMask("vertexColorAlphaMask")
         , m_specularModel("specularModel")
         , m_boneCount("boneCount")
         , m_isDoubleSided("isDoubleSided")
@@ -744,6 +754,11 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_specularEnabled);
         inVisitor.visit(m_fresnelEnabled);
         inVisitor.visit(m_vertexColorsEnabled);
+        inVisitor.visit(m_vertexColorsMaskEnabled);
+        inVisitor.visit(m_vertexColorRedMask);
+        inVisitor.visit(m_vertexColorGreenMask);
+        inVisitor.visit(m_vertexColorBlueMask);
+        inVisitor.visit(m_vertexColorAlphaMask);
         inVisitor.visit(m_specularModel);
 
         for (quint32 idx = 0, end = ImageMapCount; idx < end; ++idx)

@@ -129,6 +129,8 @@ be left at 1.0, but can be adjusted to reduce the specularity. Adjusting this
 property will not affect reflections caused by Image Based Lighting.`
             }
             RowLayout {
+
+
                 Label {
                     text: "Specular Amount  (" + rootView.targetMaterial.specularAmount.toFixed(2) + ")"
                     Layout.fillWidth: true
@@ -140,6 +142,25 @@ property will not affect reflections caused by Image Based Lighting.`
                     onValueChanged: rootView.targetMaterial.specularAmount = value
                 }
             }
+
+            MarkdownLabel {
+                text: `### Fresnel Power
+This property decreases head-on reflections (looking directly at the
+surface) while maintaining reflections seen at grazing angles.`
+            }
+            RowLayout {
+                Label {
+                    text: "Fresnel Power  (" + (rootView.targetMaterial.fresnelPower !== undefined ? rootView.targetMaterial.fresnelPower.toFixed(2) : 5.0) + ")"
+                    Layout.fillWidth: true
+                }
+                Slider {
+                    from: 0.0
+                    to: 5.0
+                    value: (rootView.targetMaterial.fresnelPower !== undefined ? rootView.targetMaterial.fresnelPower : 5.0)
+                    onValueChanged: rootView.targetMaterial.fresnelPower = value
+                }
+            }
+
 
             MarkdownLabel {
                 text: `### Specular Tint

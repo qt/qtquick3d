@@ -57,6 +57,23 @@ public:
     };
     Q_ENUM(DepthDrawMode)
 
+    enum VertexColorMask {
+        NoMask = 0,
+        RoughnessMask = 1,
+        NormalStrengthMask = 2,
+        SpecularAmountMask = 4,
+        ClearcoatAmountMask = 8,
+        ClearcoatRoughnessAmountMask = 16,
+        ClearcoatNormalStrengthMask = 32,
+        HeightAmountMask = 64,
+        MetalnessMask = 128,
+        OcclusionAmountMask = 256,
+        ThicknessFactorMask = 512,
+        TransmissionFactorMask = 1024
+    };
+    Q_ENUM(VertexColorMask)
+    Q_DECLARE_FLAGS(VertexColorMaskFlags, VertexColorMask)
+
     ~QQuick3DMaterial() override;
 
     QQuick3DTexture *lightProbe() const;

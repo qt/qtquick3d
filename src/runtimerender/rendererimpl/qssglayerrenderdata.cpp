@@ -1148,6 +1148,17 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
         defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.setValue(theGeneratedKey,
                                                                                       theMaterial->isVertexColorsEnabled());
+        defaultMaterialShaderKeyProperties.m_vertexColorsMaskEnabled.setValue(theGeneratedKey,
+                                                                         theMaterial->isVertexColorsMaskEnabled());
+        defaultMaterialShaderKeyProperties.m_vertexColorRedMask.setValue(theGeneratedKey,
+                                                                         theMaterial->vertexColorRedMask.toInt());
+        defaultMaterialShaderKeyProperties.m_vertexColorGreenMask.setValue(theGeneratedKey,
+                                                                         quint16(theMaterial->vertexColorGreenMask.toInt()));
+        defaultMaterialShaderKeyProperties.m_vertexColorBlueMask.setValue(theGeneratedKey,
+                                                                         quint16(theMaterial->vertexColorBlueMask.toInt()));
+        defaultMaterialShaderKeyProperties.m_vertexColorAlphaMask.setValue(theGeneratedKey,
+                                                                         quint16(theMaterial->vertexColorAlphaMask.toInt()));
+
         defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey,
                                                                                    theMaterial->isClearcoatEnabled());
         defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey,
