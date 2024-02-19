@@ -52,11 +52,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 
     struct ShadowVariableNames
     {
-        QByteArray shadowMapStem;
-        QByteArray shadowCubeStem;
-        QByteArray shadowMatrixStem;
-        QByteArray shadowCoordStem;
-        QByteArray shadowControlStem;
+        QByteArray shadowMap;
+        QByteArray shadowCube;
+        QByteArray shadowMatrix;
+        QByteArray shadowCoord;
+        QByteArray shadowControl;
     };
 
     ~QSSGMaterialShaderGenerator() = default;
