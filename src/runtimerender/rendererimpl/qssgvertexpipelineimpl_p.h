@@ -291,16 +291,27 @@ struct QSSGMaterialVertexPipeline
         const bool meshHasColor = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Color, inKey);
 
         const bool vColorEnabled = defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.getValue(inKey);
+        const bool vColorMaskEnabled = defaultMaterialShaderKeyProperties.m_vertexColorsMaskEnabled.getValue(inKey);
         const bool usesVarColor = defaultMaterialShaderKeyProperties.m_usesVarColor.getValue(inKey);
         const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
         const bool usesBlendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(inKey);
-        if ((vColorEnabled && meshHasColor) || usesInstancing || usesBlendParticles || usesVarColor) {
+
+        const bool vertexColorsEnabled = (vColorEnabled && meshHasColor) || usesInstancing || usesBlendParticles || usesVarColor;
+        const bool vertexColorsMaskEnabled = (vColorMaskEnabled && meshHasColor);
+
+        if (vertexColorsEnabled || vertexColorsMaskEnabled) {
             addInterpolationParameter("qt_varColor", "vec4");
             if (m_hasMorphing)
                 vertex().append("    qt_vertColor = qt_getTargetColor(qt_vertColor);");
             vertex().append("    qt_varColor = qt_vertColor;");
-            fragment().append("    vec4 qt_vertColor = qt_varColor;\n");
-        } else {
+
+            fragment().append("    vec4 qt_vertColorMask = qt_varColor;\n");
+            if (vertexColorsEnabled)
+                fragment().append("    vec4 qt_vertColor = qt_varColor;\n");
+            else
+                fragment().append("    vec4 qt_vertColor = vec4(1.0);\n");
+        }else {
+            fragment().append("    vec4 qt_vertColorMask = vec4(1.0);\n");
             fragment().append("    vec4 qt_vertColor = vec4(1.0);\n"); // must be 1,1,1,1 to not alter when multiplying with it
         }
     }

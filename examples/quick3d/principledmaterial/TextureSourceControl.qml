@@ -45,6 +45,33 @@ RowLayout {
                 text: "Draw Texture"
                 onCheckedChanged: targetTexture = drawerTexture
             }
+            Label {
+                visible: uvScale.visible
+                Layout.fillWidth: true
+                text: "UV Scale (" + uvScale.value.toFixed(2) + ")"
+            }
+            Slider {
+                id: uvScale
+                visible: !noTextureChoice.checked
+                from: 0.0
+                to: 50.0
+                value: 1.0
+                onValueChanged: {
+                    updateUVScale()
+                }
+                function updateUVScale(){
+                    if ( targetTexture ) {
+                        targetTexture.scaleU = value
+                        targetTexture.scaleV = value
+                    }
+                }
+                Connections {
+                    target: root
+                    function onTargetTextureChanged(targetTexture){
+                        uvScale.updateUVScale()
+                    }
+                }
+            }
         }
     }
     Item {
@@ -65,7 +92,6 @@ RowLayout {
             }
         }
     }
-
 
     Rectangle {
         id: loadTextureFrame
@@ -115,7 +141,6 @@ RowLayout {
                 }
             }
         }
-
     }
     ColumnLayout {
         visible: drawerChoice.checked
@@ -308,13 +333,11 @@ RowLayout {
             }
             Label {
                 text: " "
-
             }
 
             Button {
                 text: "Clear"
                 onClicked: {
-
                     drawer.needsClear = true
                     drawer.requestPaint()
                 }
@@ -334,7 +357,6 @@ RowLayout {
                 text: "Pen Width"
             }
         }
-
     }
 
     Texture {

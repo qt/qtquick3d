@@ -61,6 +61,23 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
         A
     };
 
+    enum VertexColorMask : quint16
+    {
+        NoMask = 0,
+        RoughnessMask = 1,
+        NormalStrengthMask = 2,
+        SpecularAmountMask = 4,
+        ClearcoatAmountMask = 8,
+        ClearcoatRoughnessAmountMask = 16,
+        ClearcoatNormalStrengthMask = 32,
+        HeightAmountMask = 64,
+        MetalnessMask = 128,
+        OcclusionAmountMask = 256,
+        ThicknessFactorMask = 512,
+        TransmissionFactorMask = 1024
+    };
+    Q_DECLARE_FLAGS(VertexColorMaskFlags, VertexColorMask)
+
     QSSGRenderImage *colorMap = nullptr;
     // material section
     QSSGRenderImage *iblProbe = nullptr;
@@ -116,6 +133,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGCullFaceMode cullMode = QSSGCullFaceMode::Back;
     QSSGDepthDrawMode depthDrawMode = QSSGDepthDrawMode::OpaqueOnly;
     bool vertexColorsEnabled = false;
+    bool vertexColorsMaskEnabled = false;
     bool dirty = true;
     TextureChannelMapping roughnessChannel = TextureChannelMapping::R;
     TextureChannelMapping opacityChannel = TextureChannelMapping::A;
@@ -129,6 +147,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping thicknessChannel = TextureChannelMapping::G;
     float pointSize = 1.0f;
     float lineWidth = 1.0f;
+    VertexColorMaskFlags vertexColorRedMask = VertexColorMask::NoMask;
+    VertexColorMaskFlags vertexColorGreenMask = VertexColorMask::NoMask;
+    VertexColorMaskFlags vertexColorBlueMask = VertexColorMask::NoMask;
+    VertexColorMaskFlags vertexColorAlphaMask = VertexColorMask::NoMask;
 
     QSSGRenderDefaultMaterial(Type type = Type::DefaultMaterial);
     ~QSSGRenderDefaultMaterial();
@@ -137,6 +159,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
     bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
+    bool isVertexColorsMaskEnabled() const { return vertexColorsMaskEnabled; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
     bool isClearcoatEnabled() const { return clearcoatAmount > 0.01f; }
     bool isTransmissionEnabled() const { return transmissionFactor > 0.01f; }

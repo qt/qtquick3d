@@ -581,6 +581,96 @@ QT_BEGIN_NAMESPACE
     material. The default value is true.
 */
 
+/*!
+    \qmlproperty bool SpecularGlossyMaterial::vertexColorsMaskEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use vertex colors from the
+    mesh as mask of various properties e.g Glossiness, OcclusionAmount, ... .
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration SpecularGlossyMaterial::vertexColorRedMask
+    \since 6.8
+
+    This property defines the vertex color red channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c SpecularGlossyMaterial.NoMask.
+
+    \value SpecularGlossyMaterial.NoMask.
+    \value SpecularGlossyMaterial.GlossinessMask.
+    \value SpecularGlossyMaterial.NormalStrengthMask.
+    \value SpecularGlossyMaterial.ClearcoatAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatRoughnessAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatNormalStrengthMask.
+    \value SpecularGlossyMaterial.HeightAmountMask.
+    \value SpecularGlossyMaterial.OcclusionAmountMask.
+    \value SpecularGlossyMaterial.ThicknessFactorMask.
+    \value SpecularGlossyMaterial.TransmissionFactorMask.
+
+*/
+
+/*!
+    \qmlproperty enumeration SpecularGlossyMaterial::vertexColorGreenMask
+    \since 6.8
+
+    This property defines the vertex color green channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c SpecularGlossyMaterial.NoMask.
+
+    \value SpecularGlossyMaterial.NoMask.
+    \value SpecularGlossyMaterial.GlossinessMask.
+    \value SpecularGlossyMaterial.NormalStrengthMask.
+    \value SpecularGlossyMaterial.ClearcoatAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatRoughnessAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatNormalStrengthMask.
+    \value SpecularGlossyMaterial.HeightAmountMask.
+    \value SpecularGlossyMaterial.OcclusionAmountMask.
+    \value SpecularGlossyMaterial.ThicknessFactorMask.
+    \value SpecularGlossyMaterial.TransmissionFactorMask.
+*/
+
+/*!
+    \qmlproperty enumeration SpecularGlossyMaterial::vertexColorBlueMask
+    \since 6.8
+
+    This property defines the vertex color blue channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c SpecularGlossyMaterial.NoMask.
+
+    \value SpecularGlossyMaterial.NoMask.
+    \value SpecularGlossyMaterial.GlossinessMask.
+    \value SpecularGlossyMaterial.NormalStrengthMask.
+    \value SpecularGlossyMaterial.ClearcoatAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatRoughnessAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatNormalStrengthMask.
+    \value SpecularGlossyMaterial.HeightAmountMask.
+    \value SpecularGlossyMaterial.OcclusionAmountMask.
+    \value SpecularGlossyMaterial.ThicknessFactorMask.
+    \value SpecularGlossyMaterial.TransmissionFactorMask.
+*/
+
+/*!
+    \qmlproperty enumeration SpecularGlossyMaterial::vertexColorAlphaMask
+    \since 6.8
+
+    This property defines the vertex color alpha channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c SpecularGlossyMaterial.NoMask.
+
+    \value SpecularGlossyMaterial.NoMask.
+    \value SpecularGlossyMaterial.GlossinessMask.
+    \value SpecularGlossyMaterial.NormalStrengthMask.
+    \value SpecularGlossyMaterial.ClearcoatAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatRoughnessAmountMask.
+    \value SpecularGlossyMaterial.ClearcoatNormalStrengthMask.
+    \value SpecularGlossyMaterial.HeightAmountMask.
+    \value SpecularGlossyMaterial.OcclusionAmountMask.
+    \value SpecularGlossyMaterial.ThicknessFactorMask.
+    \value SpecularGlossyMaterial.TransmissionFactorMask.
+*/
+
 QQuick3DSpecularGlossyMaterial::QQuick3DSpecularGlossyMaterial(QQuick3DObject *parent)
     : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::SpecularGlossyMaterial)), parent)
 {}
@@ -1075,7 +1165,6 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
     }
 
     material->fresnelPower = 5.0f;
-    material->vertexColorsEnabled = false;
 
     if (m_dirtyAttributes & GlossyDirty) {
         if (!m_glossinessMap)
@@ -1187,8 +1276,14 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         material->attenuationColor = QSSGUtils::color::sRGBToLinear(m_attenuationColor).toVector3D();
     }
 
-    if (m_dirtyAttributes & VertexColorsDirty)
+    if (m_dirtyAttributes & VertexColorsDirty) {
         material->vertexColorsEnabled = m_vertexColorsEnabled;
+        material->vertexColorsMaskEnabled = m_vertexColorsMaskEnabled;
+        material->vertexColorRedMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorRedMask);
+        material->vertexColorGreenMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorGreenMask);
+        material->vertexColorBlueMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorBlueMask);
+        material->vertexColorAlphaMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorAlphaMask);
+    }
 
     m_dirtyAttributes = 0;
 
@@ -1495,6 +1590,76 @@ void QQuick3DSpecularGlossyMaterial::setVertexColorsEnabled(bool vertexColors)
 
     m_vertexColorsEnabled = vertexColors;
     emit vertexColorsEnabledChanged(m_vertexColorsEnabled);
+    markDirty(VertexColorsDirty);
+}
+
+bool QQuick3DSpecularGlossyMaterial::vertexColorsMaskEnabled() const
+{
+    return m_vertexColorsMaskEnabled;
+}
+
+void QQuick3DSpecularGlossyMaterial::setVertexColorsMaskEnabled(bool vertexColorsMaskEnabled)
+{
+    if (m_vertexColorsMaskEnabled == vertexColorsMaskEnabled)
+        return;
+    m_vertexColorsMaskEnabled = vertexColorsMaskEnabled;
+    emit vertexColorsMaskEnabledChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags QQuick3DSpecularGlossyMaterial::vertexColorRedMask() const
+{
+    return m_vertexColorRedMask;
+}
+
+void QQuick3DSpecularGlossyMaterial::setVertexColorRedMask(QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags vertexColorRedMask)
+{
+    if (m_vertexColorRedMask == vertexColorRedMask)
+        return;
+    m_vertexColorRedMask = vertexColorRedMask;
+    emit vertexColorRedMaskChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags QQuick3DSpecularGlossyMaterial::vertexColorGreenMask() const
+{
+    return m_vertexColorGreenMask;
+}
+
+void QQuick3DSpecularGlossyMaterial::setVertexColorGreenMask(QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags vertexColorGreenMask)
+{
+    if (m_vertexColorGreenMask == vertexColorGreenMask)
+        return;
+    m_vertexColorGreenMask = vertexColorGreenMask;
+    emit vertexColorGreenMaskChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags QQuick3DSpecularGlossyMaterial::vertexColorBlueMask() const
+{
+    return m_vertexColorBlueMask;
+}
+
+void QQuick3DSpecularGlossyMaterial::setVertexColorBlueMask(QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags vertexColorBlueMask)
+{
+    if (m_vertexColorBlueMask == vertexColorBlueMask)
+        return;
+    m_vertexColorBlueMask = vertexColorBlueMask;
+    emit vertexColorBlueMaskChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags QQuick3DSpecularGlossyMaterial::vertexColorAlphaMask() const
+{
+    return m_vertexColorAlphaMask;
+}
+
+void QQuick3DSpecularGlossyMaterial::setVertexColorAlphaMask(QQuick3DSpecularGlossyMaterial::VertexColorMaskFlags vertexColorAlphaMask)
+{
+    if (m_vertexColorAlphaMask == vertexColorAlphaMask)
+        return;
+    m_vertexColorAlphaMask = vertexColorAlphaMask;
+    emit vertexColorAlphaMaskChanged();
     markDirty(VertexColorsDirty);
 }
 

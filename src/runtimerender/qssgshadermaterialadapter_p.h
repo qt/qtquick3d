@@ -35,6 +35,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isMetalnessEnabled() = 0;
     virtual bool isSpecularEnabled() = 0;
     virtual bool isVertexColorsEnabled() = 0;
+    virtual bool isVertexColorsMaskEnabled() = 0;
     virtual bool isClearcoatEnabled() = 0;
     virtual bool isTransmissionEnabled() = 0;
     virtual bool hasLighting() = 0;
@@ -42,6 +43,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool usesCustomMorphing() = 0;
     virtual QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() = 0;
     virtual QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() = 0;
+    virtual QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorRedMask() = 0;
+    virtual QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorGreenMask() = 0;
+    virtual QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorBlueMask() = 0;
+    virtual QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorAlphaMask() = 0;
 
     virtual QSSGRenderImage *iblProbe() = 0;
     virtual QVector3D emissiveColor() = 0;
@@ -92,6 +97,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool isMetalnessEnabled() override;
     bool isSpecularEnabled() override;
     bool isVertexColorsEnabled() override;
+    bool isVertexColorsMaskEnabled() override;
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
     bool hasLighting() override;
@@ -99,6 +105,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool usesCustomMorphing() override;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() override;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorRedMask() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorGreenMask() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorBlueMask() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorAlphaMask() override;
 
     QSSGRenderImage *iblProbe() override;
     QVector3D emissiveColor() override;
@@ -140,6 +150,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isMetalnessEnabled() override;
     bool isSpecularEnabled() override;
     bool isVertexColorsEnabled() override;
+    bool isVertexColorsMaskEnabled() override;
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
     bool hasLighting() override;
@@ -147,6 +158,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool usesCustomMorphing() override;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() override;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorRedMask() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorGreenMask() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorBlueMask() override;
+    QSSGRenderDefaultMaterial::VertexColorMaskFlags vertexColorAlphaMask() override;
 
     QSSGRenderImage *iblProbe() override;
     QVector3D emissiveColor() override;

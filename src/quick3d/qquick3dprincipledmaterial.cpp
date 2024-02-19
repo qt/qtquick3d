@@ -727,6 +727,103 @@ QT_BEGIN_NAMESPACE
     material. The default value is true.
 */
 
+/*!
+    \qmlproperty bool PrincipledMaterial::vertexColorsMaskEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use vertex colors from the
+    mesh as mask of various properties e.g RoughnessAmount, SpecularAmount, ... .
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::vertexColorRedMask
+    \since 6.8
+
+    This property defines the vertex color red channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c PrincipledMaterial.NoMask.
+
+    \value PrincipledMaterial.NoMask.
+    \value PrincipledMaterial.ClearcoatAmountMask.
+    \value PrincipledMaterial.ClearcoatRoughnessAmountMask.
+    \value PrincipledMaterial.ClearcoatNormalStrengthMask.
+    \value PrincipledMaterial.HeightAmountMask.
+    \value PrincipledMaterial.MetalnessMask.
+    \value PrincipledMaterial.RoughnessMask.
+    \value PrincipledMaterial.NormalStrengthMask.
+    \value PrincipledMaterial.OcclusionAmountMask.
+    \value PrincipledMaterial.SpecularAmountMask.
+    \value PrincipledMaterial.ThicknessFactorMask.
+    \value PrincipledMaterial.TransmissionFactorMask.
+ */
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::vertexColorGreenMask
+    \since 6.8
+
+    This property defines the vertex color green channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c PrincipledMaterial.NoMask.
+
+    \value PrincipledMaterial.NoMask.
+    \value PrincipledMaterial.ClearcoatAmountMask.
+    \value PrincipledMaterial.ClearcoatRoughnessAmountMask.
+    \value PrincipledMaterial.ClearcoatNormalStrengthMask.
+    \value PrincipledMaterial.HeightAmountMask.
+    \value PrincipledMaterial.MetalnessMask.
+    \value PrincipledMaterial.RoughnessMask.
+    \value PrincipledMaterial.NormalStrengthMask.
+    \value PrincipledMaterial.OcclusionAmountMask.
+    \value PrincipledMaterial.SpecularAmountMask.
+    \value PrincipledMaterial.ThicknessFactorMask.
+    \value PrincipledMaterial.TransmissionFactorMask.
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::vertexColorBlueMask
+    \since 6.8
+
+    This property defines the vertex color blue channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c PrincipledMaterial.NoMask.
+
+    \value PrincipledMaterial.NoMask.
+    \value PrincipledMaterial.ClearcoatAmountMask.
+    \value PrincipledMaterial.ClearcoatRoughnessAmountMask.
+    \value PrincipledMaterial.ClearcoatNormalStrengthMask.
+    \value PrincipledMaterial.HeightAmountMask.
+    \value PrincipledMaterial.MetalnessMask.
+    \value PrincipledMaterial.RoughnessMask.
+    \value PrincipledMaterial.NormalStrengthMask.
+    \value PrincipledMaterial.OcclusionAmountMask.
+    \value PrincipledMaterial.SpecularAmountMask.
+    \value PrincipledMaterial.ThicknessFactorMask.
+    \value PrincipledMaterial.TransmissionFactorMask.
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::vertexColorAlphaMask
+    \since 6.8
+
+    This property defines the vertex color alpha channel used as the specifies mask.
+    The value is a bit-wise combination of flags.
+    The default value is \c PrincipledMaterial.NoMask.
+
+    \value PrincipledMaterial.NoMask.
+    \value PrincipledMaterial.ClearcoatAmountMask.
+    \value PrincipledMaterial.ClearcoatRoughnessAmountMask.
+    \value PrincipledMaterial.ClearcoatNormalStrengthMask.
+    \value PrincipledMaterial.HeightAmountMask.
+    \value PrincipledMaterial.MetalnessMask.
+    \value PrincipledMaterial.RoughnessMask.
+    \value PrincipledMaterial.NormalStrengthMask.
+    \value PrincipledMaterial.OcclusionAmountMask.
+    \value PrincipledMaterial.SpecularAmountMask.
+    \value PrincipledMaterial.ThicknessFactorMask.
+    \value PrincipledMaterial.TransmissionFactorMask.
+*/
+
 QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
     : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::PrincipledMaterial)), parent)
 {}
@@ -1302,8 +1399,6 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->emissiveColor = m_emissiveFactor;
     }
 
-    material->vertexColorsEnabled = false;
-
     if (m_dirtyAttributes & RoughnessDirty) {
         if (!m_roughnessMap)
             material->roughnessMap = nullptr;
@@ -1435,8 +1530,14 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->attenuationColor = QSSGUtils::color::sRGBToLinear(m_attenuationColor).toVector3D();
     }
 
-    if (m_dirtyAttributes & VertexColorsDirty)
+    if (m_dirtyAttributes & VertexColorsDirty) {
         material->vertexColorsEnabled = m_vertexColorsEnabled;
+        material->vertexColorsMaskEnabled = m_vertexColorsMaskEnabled;
+        material->vertexColorRedMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorRedMask);
+        material->vertexColorGreenMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorGreenMask);
+        material->vertexColorBlueMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorBlueMask);
+        material->vertexColorAlphaMask = QSSGRenderDefaultMaterial::VertexColorMaskFlags::fromInt(m_vertexColorAlphaMask);
+    }
 
     m_dirtyAttributes = 0;
 
@@ -1781,4 +1882,75 @@ void QQuick3DPrincipledMaterial::setVertexColorsEnabled(bool vertexColors)
     markDirty(VertexColorsDirty);
 }
 
+bool QQuick3DPrincipledMaterial::vertexColorsMaskEnabled() const
+{
+    return m_vertexColorsMaskEnabled;
+}
+
+void QQuick3DPrincipledMaterial::setVertexColorsMaskEnabled(bool vertexColorsMaskEnabled)
+{
+    if (m_vertexColorsMaskEnabled == vertexColorsMaskEnabled)
+        return;
+    m_vertexColorsMaskEnabled = vertexColorsMaskEnabled;
+    emit vertexColorsMaskEnabledChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DPrincipledMaterial::VertexColorMaskFlags QQuick3DPrincipledMaterial::vertexColorRedMask() const
+{
+    return m_vertexColorRedMask;
+}
+
+void QQuick3DPrincipledMaterial::setVertexColorRedMask(QQuick3DPrincipledMaterial::VertexColorMaskFlags vertexColorRedMask)
+{
+    if (m_vertexColorRedMask == vertexColorRedMask)
+        return;
+    m_vertexColorRedMask = vertexColorRedMask;
+    emit vertexColorRedMaskChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DPrincipledMaterial::VertexColorMaskFlags QQuick3DPrincipledMaterial::vertexColorGreenMask() const
+{
+    return m_vertexColorGreenMask;
+}
+
+void QQuick3DPrincipledMaterial::setVertexColorGreenMask(QQuick3DPrincipledMaterial::VertexColorMaskFlags vertexColorGreenMask)
+{
+    if (m_vertexColorGreenMask == vertexColorGreenMask)
+        return;
+    m_vertexColorGreenMask = vertexColorGreenMask;
+    emit vertexColorGreenMaskChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DPrincipledMaterial::VertexColorMaskFlags QQuick3DPrincipledMaterial::vertexColorBlueMask() const
+{
+    return m_vertexColorBlueMask;
+}
+
+void QQuick3DPrincipledMaterial::setVertexColorBlueMask(QQuick3DPrincipledMaterial::VertexColorMaskFlags vertexColorBlueMask)
+{
+    if (m_vertexColorBlueMask == vertexColorBlueMask)
+        return;
+    m_vertexColorBlueMask = vertexColorBlueMask;
+    emit vertexColorBlueMaskChanged();
+    markDirty(VertexColorsDirty);
+}
+
+QQuick3DPrincipledMaterial::VertexColorMaskFlags QQuick3DPrincipledMaterial::vertexColorAlphaMask() const
+{
+    return m_vertexColorAlphaMask;
+}
+
+void QQuick3DPrincipledMaterial::setVertexColorAlphaMask(QQuick3DPrincipledMaterial::VertexColorMaskFlags vertexColorAlphaMask)
+{
+    if (m_vertexColorAlphaMask == vertexColorAlphaMask)
+        return;
+    m_vertexColorAlphaMask = vertexColorAlphaMask;
+    emit vertexColorAlphaMaskChanged();
+    markDirty(VertexColorsDirty);
+}
+
 QT_END_NAMESPACE
+
