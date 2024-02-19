@@ -43,6 +43,7 @@ class QOpenXRView;
 class QOpenXROrigin;
 class QOpenXRInputManager;
 class QOpenXRSpaceExtension;
+class QRhiTexture;
 
 class QOpenXRManager : public QObject
 {
