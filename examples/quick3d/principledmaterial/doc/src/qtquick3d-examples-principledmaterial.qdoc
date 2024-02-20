@@ -3,10 +3,10 @@
 
 /*!
     \example principledmaterial
-    \examplecategory {Data Visualization & 3D}
+    \examplecategory {3D}
     \ingroup quick3d-examples
     \title Qt Quick 3D - Principled Material Example
-    \examplecategory {Data Visualization & 3D}
+    \examplecategory {3D}
     \brief Demonstrates the use of Principled Material.
     \image principledmaterial-example.png
 

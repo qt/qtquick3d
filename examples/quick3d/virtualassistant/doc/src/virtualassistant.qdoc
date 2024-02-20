@@ -5,7 +5,7 @@
     \title Qt Quick 3D - Virtual Assistant Example
     \ingroup quick3d-examples
     \example virtualassistant
-    \examplecategory {Data Visualization & 3D}
+    \examplecategory {3D}
     \brief Qt Quick application that presents a 3D model of a virtual assistant with dynamic animations created using QML and timelines.
     \meta {tag} {quick,quick3D}
 
