@@ -44,6 +44,8 @@ private:
     XrGraphicsBindingOpenGLXcbKHR m_graphicsBinding{};
 #elif defined(XR_USE_PLATFORM_WAYLAND)
     XrGraphicsBindingOpenGLWaylandKHR m_graphicsBinding{};
+#else
+    XrBaseInStructure m_graphicsBinding{}; // just so that the code compiles
 #endif
     QMap<XrSwapchain, QVector<XrSwapchainImageOpenGLKHR>> m_swapchainImageBuffer;
 
