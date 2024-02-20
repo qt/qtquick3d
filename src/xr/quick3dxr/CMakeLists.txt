@@ -73,7 +73,7 @@ qt_internal_extend_target(Quick3DXr CONDITION WIN32
 )
 
 # Linux / xcb
-qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_xcb
+qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_xcb AND QT_FEATURE_xcb_glx_plugin
     DEFINES
         XR_USE_PLATFORM_XCB
 )
