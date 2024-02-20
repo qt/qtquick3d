@@ -5,7 +5,7 @@
     \example extensions/stenciloutline
     \ingroup quick3d-examples
     \title Qt Quick 3D - Stencil Outline Extension Example
-    \examplecategory {Data Visualization & 3D}
+    \examplecategory {3D}
     \brief Demonstrates how the QtQuick3D Render Extension can be used to implement stencil outlining.
     \image stencil_outline.jpg
 
