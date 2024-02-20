@@ -3,10 +3,10 @@
 
 /*!
     \example reflectionprobes
-    \examplecategory {Data Visualization & 3D}
+    \examplecategory {3D}
     \ingroup quick3d-examples
     \title Qt Quick 3D - Reflection Probes Example
-    \examplecategory {Data Visualization & 3D}
+    \examplecategory {3D}
     \brief Demonstrates the use of reflection probes in Qt Quick 3D.
     \image reflectionprobes-example.jpg
 
