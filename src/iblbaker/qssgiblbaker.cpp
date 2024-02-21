@@ -657,7 +657,9 @@ QString renderToKTXFile(const QString &inPath, const QString &outPath)
             params.format.setVersion(3, 0);
         }
         params.fallbackSurface = QRhiGles2InitParams::newFallbackSurface();
-        return renderToKTXFileInternal("OpenGL", inPath, outPath, QRhi::OpenGLES2, &params);
+        const QString result = renderToKTXFileInternal("OpenGL", inPath, outPath, QRhi::OpenGLES2, &params);
+        delete params.fallbackSurface;
+        return result;
     }
 #endif
 
