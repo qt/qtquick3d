@@ -74,7 +74,8 @@ excludefiles += "*_p.h"
 
 manifestmeta.highlighted.names = \
     "QtQuick3D/Qt Quick 3D - Particles 3D Testbed Example" \
-    "QtQuick3D/Qt Quick 3D - View 3D Example"
+    "QtQuick3D/Qt Quick 3D - View 3D Example" \
+    "QtQuick3D/Virtual Assistant"
 
 navigation.landingpage = "Qt Quick 3D"
 navigation.qmltypespage = "Qt Quick 3D QML Types"
