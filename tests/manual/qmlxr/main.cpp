@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     QCommandLineOption exitOption({ "x", "exit-after" }, QObject::tr("Exit after <num_frames> frames"), QObject::tr("num_frames"));
     cmdLineParser.addOption(exitOption);
 
-    QCommandLineOption debugOption({ "l", "validate" }, QObject::tr("Enable D3D12/Vulkan/OpenXR debug or validation layer, if available"));
+    QCommandLineOption debugOption({ "l", "validate" }, QObject::tr("Enable D3D12/Vulkan/OpenXR debug or validation layer, if available. Also enables QRhi leak checking."));
     cmdLineParser.addOption(debugOption);
 
     QCommandLineOption msaaOption({ "a", "msaa" }, QObject::tr("Request MSAA with <num_samples> samples. <num_samples> is 2 or 4."), QObject::tr("num_samples"));
@@ -105,8 +105,10 @@ int main(int argc, char *argv[])
         qputenv("QT_QUICK3D_XR_FRAME_CAPTURE", "1");
     }
 
-    if (cmdLineParser.isSet(debugOption))
+    if (cmdLineParser.isSet(debugOption)) {
         qputenv("QSG_RHI_DEBUG_LAYER", "1");
+        qputenv("QT_RHI_LEAK_CHECK", "1");
+    }
 
     QCoreApplication::setApplicationName("Qt XR Runner");
     QCoreApplication::setOrganizationName("The Qt Company");
