@@ -19,11 +19,15 @@
 
 #if __has_include(<openxr/fb_spatial_entity.h>) && __has_include(<openxr/fb_scene.h>)
 #include <openxr/fb_spatial_entity.h>
+#if __has_include(<openxr/fb_spatial_entity_query.h>) && __has_include(<openxr/fb_spatial_entity_storage.h>) && __has_include(<openxr/fb_spatial_entity_container.h>)
 #include <openxr/fb_spatial_entity_query.h>
 #include <openxr/fb_spatial_entity_storage.h>
 #include <openxr/fb_spatial_entity_container.h>
+#endif
 #include <openxr/fb_scene.h>
+#if __has_include(<openxr/fb_scene_capture.h>)
 #include <openxr/fb_scene_capture.h>
+#endif
 #endif
 // Otherwise, these may be all provided in openxr.h, if it is new enough, no
 // need for the Mobile SDK specific headers anymore. If that's not the case
