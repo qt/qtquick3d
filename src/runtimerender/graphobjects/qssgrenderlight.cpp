@@ -21,7 +21,7 @@ QSSGRenderLight::QSSGRenderLight(QSSGRenderGraphObject::Type type)
     , m_castShadow(false)
     , m_shadowBias(0.0f)
     , m_shadowFactor(5.0f)
-    , m_shadowMapRes(9)
+    , m_shadowMapRes(512)
     , m_shadowMapFar(5000.0f)
     , m_shadowFilter(35.0f)
 {

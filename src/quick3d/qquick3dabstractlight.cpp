@@ -352,15 +352,15 @@ quint32 QQuick3DAbstractLight::mapToShadowResolution(QSSGShadowMapQuality qualit
 {
     switch (quality) {
     case QSSGShadowMapQuality::ShadowMapQualityMedium:
-        return 9;
+        return 512;
     case QSSGShadowMapQuality::ShadowMapQualityHigh:
-        return 10;
+        return 1024;
     case QSSGShadowMapQuality::ShadowMapQualityVeryHigh:
-        return 11;
+        return 2048;
     default:
         break;
     }
-    return 8;
+    return 256;
 }
 
 QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphObject *node)

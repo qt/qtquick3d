@@ -190,7 +190,7 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
     using namespace RenderHelpers;
 
     // setup light matrix
-    quint32 mapRes = 1 << inLight->m_shadowMapRes;
+    quint32 mapRes = inLight->m_shadowMapRes;
     QRectF theViewport(0.0f, 0.0f, (float)mapRes, (float)mapRes);
     theCamera.clipNear = 1.0f;
     theCamera.clipFar = inLight->m_shadowMapFar;
@@ -384,7 +384,7 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
     Q_ASSERT(inLight->type != QSSGRenderLight::Type::DirectionalLight);
 
     // setup light matrix
-    quint32 mapRes = 1 << inLight->m_shadowMapRes;
+    quint32 mapRes = inLight->m_shadowMapRes;
     QRectF theViewport(0.0f, 0.0f, (float)mapRes, (float)mapRes);
     static const QQuaternion rotOfs[6] {
                                          QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(-QSSG_HALFPI), qRadiansToDegrees(QSSG_PI)),

@@ -2326,7 +2326,7 @@ void QSSGLayerRenderData::prepareForRender()
         for (int i = 0, end = renderableLights.size(); i != end; ++i) {
             const auto &shaderLight = renderableLights.at(i);
             if (shaderLight.shadows) {
-                quint32 mapSize = 1 << shaderLight.light->m_shadowMapRes;
+                quint32 mapSize = shaderLight.light->m_shadowMapRes;
                 ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
                         ? ShadowMapModes::CUBE
                         : ShadowMapModes::VSM;
