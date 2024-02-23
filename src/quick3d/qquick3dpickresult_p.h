@@ -20,7 +20,6 @@
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
 #include "qquick3dmodel_p.h"
-#include "qquick3dcamera_p.h"
 
 QT_BEGIN_NAMESPACE
 class QQuick3DModel;
@@ -36,8 +35,17 @@ class Q_QUICK3D_EXPORT QQuick3DPickResult
     Q_PROPERTY(QVector3D normal READ normal CONSTANT)
     Q_PROPERTY(QVector3D sceneNormal READ sceneNormal CONSTANT)
     Q_PROPERTY(int instanceIndex READ instanceIndex CONSTANT)
-
+    Q_PROPERTY(QQuickItem *itemHit READ itemHit CONSTANT REVISION(6, 8))
+    Q_PROPERTY(HitType hitType READ hitType CONSTANT REVISION(6, 8))
+    QML_VALUE_TYPE(pickResult)
 public:
+
+    enum class HitType {
+        Null,
+        Model,
+        Item,
+    };
+    Q_ENUM(HitType)
 
     QQuick3DPickResult();
     explicit QQuick3DPickResult(QQuick3DModel *hitObject,
@@ -47,6 +55,12 @@ public:
                                 const QVector3D &position,
                                 const QVector3D &normal,
                                 int instanceIndex);
+    explicit QQuick3DPickResult(QQuickItem *itemHit,
+                                float distanceFromCamera,
+                                const QVector2D &uvPosition,
+                                const QVector3D &scenePosition,
+                                const QVector3D &position,
+                                const QVector3D &sceneNormal);
     QQuick3DModel *objectHit() const;
     float distance() const;
     QVector2D uvPosition() const;
@@ -55,6 +69,8 @@ public:
     QVector3D normal() const;
     QVector3D sceneNormal() const;
     int instanceIndex() const;
+    Q_REVISION(6, 8) QQuickItem *itemHit() const;
+    Q_REVISION(6, 8) HitType hitType() const;
 
 private:
     QQuick3DModel *m_objectHit;
@@ -64,6 +80,8 @@ private:
     QVector3D m_position;
     QVector3D m_normal;
     int m_instanceIndex;
+    QQuickItem *m_itemHit;
+    HitType m_hitType;
 };
 
 QT_END_NAMESPACE

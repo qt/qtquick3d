@@ -566,7 +566,7 @@ void QSSGRendererPrivate::intersectRayWithItem2D(const QSSGRenderRay &inRay, con
                                                                        qmlCoordinate,
                                                                        intersectionPoint,
                                                                        localIntersectionPoint,
-                                                                       normal });
+                                                                       -normal });
         }
     }
 }

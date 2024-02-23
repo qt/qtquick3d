@@ -1192,8 +1192,11 @@ QList<QQuick3DPickResult> QQuick3DViewport::rayPickAll(const QVector3D &origin, 
     const auto resultList = renderer->syncPickAll(ray);
     QList<QQuick3DPickResult> processedResultList;
     processedResultList.reserve(resultList.size());
-    for (const auto &result : resultList)
-        processedResultList.append(processPickResult(result));
+    for (const auto &result : resultList) {
+        auto processedResult = processPickResult(result);
+        if (processedResult.hitType() != QQuick3DPickResult::HitType::Null)
+            processedResultList.append(processedResult);
+    }
 
     return processedResultList;
 }
@@ -1689,16 +1692,40 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
     QQuick3DObject *frontendObject = findFrontendNode(pickResult.m_hitObject);
 
     QQuick3DModel *model = qobject_cast<QQuick3DModel *>(frontendObject);
-    if (!model)
-        return QQuick3DPickResult();
+    if (model)
+        return QQuick3DPickResult(model,
+                                  ::sqrtf(pickResult.m_distanceSq),
+                                  pickResult.m_localUVCoords,
+                                  pickResult.m_scenePosition,
+                                  pickResult.m_localPosition,
+                                  pickResult.m_faceNormal,
+                                  pickResult.m_instanceIndex);
 
-    return QQuick3DPickResult(model,
-                              ::sqrtf(pickResult.m_distanceSq),
-                              pickResult.m_localUVCoords,
-                              pickResult.m_scenePosition,
-                              pickResult.m_localPosition,
-                              pickResult.m_faceNormal,
-                              pickResult.m_instanceIndex);
+    QQuick3DItem2D *frontend2DItem = qobject_cast<QQuick3DItem2D *>(frontendObject);
+    if (frontend2DItem && frontend2DItem->contentItem()) {
+        // Check if the pick is inside the content item (since the ray just intersected on the items plane)
+        const auto &childItems = frontend2DItem->contentItem()->childItems();
+        const QPointF subscenePosition = pickResult.m_localUVCoords.toPointF();
+
+        // In practice there should only be one child, but will handle the case where
+        // there are 0 or more than one. We return "child" instead of "frontend2DItem" or even the "contentItem"
+        // because child will be the actual item the user created while the rest are just implimentaiton detail.
+        // This helps when looking up by ID in QML.
+        for (auto child : childItems) {
+            auto mappedPosition = child->mapFromItem(frontend2DItem->contentItem(), subscenePosition);
+            if (child->contains(mappedPosition))
+                return QQuick3DPickResult(child,
+                                          ::sqrtf(pickResult.m_distanceSq),
+                                          pickResult.m_localUVCoords,
+                                          pickResult.m_scenePosition,
+                                          pickResult.m_localPosition,
+                                          frontend2DItem->mapDirectionToScene(pickResult.m_faceNormal));
+
+        }
+    }
+
+    return QQuick3DPickResult();
+
 }
 
 // Returns the first found scene manager of objects children

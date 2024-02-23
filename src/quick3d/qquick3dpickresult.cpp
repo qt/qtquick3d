@@ -7,7 +7,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype PickResult
+    \qmltype pickResult
     \inqmlmodule QtQuick3D
     \brief Contains the results of a pick.
 
@@ -17,6 +17,9 @@ QT_BEGIN_NAMESPACE
 QQuick3DPickResult::QQuick3DPickResult()
     : m_objectHit(nullptr)
     , m_distance(0.0f)
+    , m_instanceIndex(-1)
+    , m_itemHit(nullptr)
+    , m_hitType(HitType::Null)
 {
 
 }
@@ -35,14 +38,41 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
     , m_position(position)
     , m_normal(normal)
     , m_instanceIndex(instanceIndex)
+    , m_itemHit(nullptr)
+    , m_hitType(HitType::Model)
 {
 }
 
+// NB: we are intentionally storing the sceneNormal in the "m_normal" member variable
+// as 2D Items always have the same face normal, but we can't calculate the scene normal
+// on demand either. This logic should be handled in the respective getters.
+QQuick3DPickResult::QQuick3DPickResult(QQuickItem *itemHit,
+                                       float distanceFromCamera,
+                                       const QVector2D &uvPosition,
+                                       const QVector3D &scenePosition,
+                                       const QVector3D &position,
+                                       const QVector3D &sceneNormal)
+    : m_objectHit(nullptr)
+    , m_distance(distanceFromCamera)
+    , m_uvPosition(uvPosition)
+    , m_scenePosition(scenePosition)
+    , m_position(position)
+    , m_normal(sceneNormal)
+    , m_instanceIndex(-1)
+    , m_itemHit(itemHit)
+    , m_hitType(HitType::Item)
+{
+
+}
+
 /*!
-    \qmlproperty Model PickResult::objectHit
+    \qmlproperty Model pickResult::objectHit
     \readonly
 
-    This property holds the model object hit by the pick.
+    This property holds the model object hit by the pick. This value will be null if
+    \l{pickResult::hitType} {hitType} is not \c pickResult.Model.
+
+    \sa itemHit
 */
 QQuick3DModel *QQuick3DPickResult::objectHit() const
 {
@@ -50,7 +80,7 @@ QQuick3DModel *QQuick3DPickResult::objectHit() const
 }
 
 /*!
-    \qmlproperty float PickResult::distance
+    \qmlproperty float pickResult::distance
     \readonly
 
     This property holds the distance between the pick origin and the hit position
@@ -63,7 +93,7 @@ float QQuick3DPickResult::distance() const
 }
 
 /*!
-    \qmlproperty vector2d PickResult::uvPosition
+    \qmlproperty vector2d pickResult::uvPosition
     \readonly
 
     This property holds the UV position of the hit. The UV position is calculated as
@@ -76,7 +106,7 @@ QVector2D QQuick3DPickResult::uvPosition() const
 }
 
 /*!
-    \qmlproperty vector3d PickResult::scenePosition
+    \qmlproperty vector3d pickResult::scenePosition
     \readonly
 
     This property holds the scene position of the hit.
@@ -87,7 +117,7 @@ QVector3D QQuick3DPickResult::scenePosition() const
 }
 
 /*!
-    \qmlproperty vector3d PickResult::position
+    \qmlproperty vector3d pickResult::position
     \readonly
 
     This property holds the scene position of the hit in local coordinate
@@ -99,20 +129,25 @@ QVector3D QQuick3DPickResult::position() const
 }
 
 /*!
-    \qmlproperty vector3d PickResult::normal
+    \qmlproperty vector3d pickResult::normal
     \readonly
 
     This property holds the normal of the face that was hit in local coordinate
     space.
+
+    \note for 2D Items this will always be (0, 0, 1).
 */
 QVector3D QQuick3DPickResult::normal() const
 {
+    if (m_itemHit)
+        return QVector3D(0, 0, 1);
+
     return m_normal;
 }
 
 
 /*!
-    \qmlproperty vector3d PickResult::sceneNormal
+    \qmlproperty vector3d pickResult::sceneNormal
     \readonly
 
     This property holds the normal of the face that was hit in scene coordinate
@@ -120,15 +155,15 @@ QVector3D QQuick3DPickResult::normal() const
 */
 QVector3D QQuick3DPickResult::sceneNormal() const
 {
-    if (!m_objectHit)
-        return QVector3D();
+    if (m_objectHit)
+        return m_objectHit->mapDirectionToScene(m_normal);
 
-    return m_objectHit->mapDirectionToScene(m_normal);
+    return m_normal;
 }
 
 
 /*!
-    \qmlproperty int PickResult::instanceIndex
+    \qmlproperty int pickResult::instanceIndex
     \readonly
     \since 6.5
 
@@ -138,6 +173,39 @@ QVector3D QQuick3DPickResult::sceneNormal() const
 int QQuick3DPickResult::instanceIndex() const
 {
     return m_instanceIndex;
+}
+
+/*!
+    \qmlproperty Item pickResult::itemHit
+    \readonly
+    \since 6.8
+
+    This property holds the Qt Quick Item hit by the pick. This value will be null if
+    \l{pickResult::type} {type} is not \c pickResult.Item.
+
+    \sa objectHit
+*/
+
+QQuickItem *QQuick3DPickResult::itemHit() const
+{
+    return m_itemHit;
+}
+
+/*!
+    \qmlproperty enumeration pickResult::hitType
+    \readonly
+    \since 6.8
+
+    This property holds the hit type of the pick result.
+
+    \value pickResult.Null The pick did not hit anything.
+    \value pickResult.Model The pick hit a Model.
+    \value pickResult.Item The pick hit a QQuickItem.
+*/
+
+QQuick3DPickResult::HitType QQuick3DPickResult::hitType() const
+{
+    return m_hitType;
 }
 
 QT_END_NAMESPACE
