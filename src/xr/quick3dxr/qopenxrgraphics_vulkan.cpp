@@ -235,52 +235,30 @@ QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrSwapchainSubImage
 {
     VkImage colorTexture = reinterpret_cast<const XrSwapchainImageVulkanKHR*>(swapchainImage)->image;
 
+    VkFormat viewFormat = VkFormat(swapchainFormat);
     switch (swapchainFormat) {
     case VK_FORMAT_R8G8B8A8_SRGB:
-        swapchainFormat = VK_FORMAT_R8G8B8A8_UNORM;
+        viewFormat = VK_FORMAT_R8G8B8A8_UNORM;
         break;
     case VK_FORMAT_B8G8R8A8_SRGB:
-        swapchainFormat = VK_FORMAT_B8G8R8A8_UNORM;
+        viewFormat = VK_FORMAT_B8G8R8A8_UNORM;
         break;
     default:
         break;
     }
 
-    if (arraySize <= 1) {
-        if (samples > 1) {
-            return QQuickRenderTarget::fromVulkanImageWithMultiSampleResolve(colorTexture,
-                                                                             VK_IMAGE_LAYOUT_UNDEFINED,
-                                                                             VkFormat(swapchainFormat),
-                                                                             QSize(subImage.imageRect.extent.width,
-                                                                                   subImage.imageRect.extent.height),
-                                                                             samples);
-        } else {
-            return QQuickRenderTarget::fromVulkanImage(colorTexture,
-                                                       VK_IMAGE_LAYOUT_UNDEFINED,
-                                                       VkFormat(swapchainFormat),
-                                                       QSize(subImage.imageRect.extent.width,
-                                                             subImage.imageRect.extent.height),
-                                                       1);
-        }
-    } else {
-        if (samples > 1) {
-            return QQuickRenderTarget::fromVulkanImageMultiViewWithMultiSampleResolve(colorTexture,
-                                                                                      VK_IMAGE_LAYOUT_UNDEFINED,
-                                                                                      VkFormat(swapchainFormat),
-                                                                                      QSize(subImage.imageRect.extent.width,
-                                                                                            subImage.imageRect.extent.height),
-                                                                                       samples,
-                                                                                       arraySize);
-        } else {
-            return QQuickRenderTarget::fromVulkanImageMultiView(colorTexture,
-                                                                VK_IMAGE_LAYOUT_UNDEFINED,
-                                                                VkFormat(swapchainFormat),
-                                                                QSize(subImage.imageRect.extent.width,
-                                                                    subImage.imageRect.extent.height),
-                                                                1,
-                                                                arraySize);
-        }
-    }
+    QQuickRenderTarget::Flags flags;
+    if (samples > 1)
+        flags |= QQuickRenderTarget::Flag::MultisampleResolve;
+
+    return QQuickRenderTarget::fromVulkanImage(colorTexture,
+                                               VK_IMAGE_LAYOUT_UNDEFINED,
+                                               VkFormat(swapchainFormat),
+                                               viewFormat,
+                                               QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height),
+                                               samples,
+                                               arraySize,
+                                               flags);
 }
 
 void QOpenXRGraphicsVulkan::setupWindow(QQuickWindow *quickWindow)

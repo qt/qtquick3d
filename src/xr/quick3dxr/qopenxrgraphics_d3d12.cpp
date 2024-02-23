@@ -103,52 +103,30 @@ QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrSwapchainSubImage 
 {
     ID3D12Resource* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D12KHR*>(swapchainImage)->texture;
 
+    DXGI_FORMAT viewFormat = DXGI_FORMAT(swapchainFormat);
     switch (swapchainFormat) {
     case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-        swapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+        viewFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
         break;
     case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
-        swapchainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+        viewFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
         break;
     default:
         break;
     }
 
-    if (arraySize <= 1) {
-        if (samples > 1) {
-            return QQuickRenderTarget::fromD3D12TextureWithMultiSampleResolve(colorTexture,
-                                                                              0,
-                                                                              swapchainFormat,
-                                                                              QSize(subImage.imageRect.extent.width,
-                                                                                    subImage.imageRect.extent.height),
-                                                                              samples);
-        } else {
-            return QQuickRenderTarget::fromD3D12Texture(colorTexture,
-                                                        0,
-                                                        swapchainFormat,
-                                                        QSize(subImage.imageRect.extent.width,
-                                                              subImage.imageRect.extent.height),
-                                                        1);
-        }
-    } else {
-        if (samples > 1) {
-            return QQuickRenderTarget::fromD3D12TextureMultiViewWithMultiSampleResolve(colorTexture,
-                                                                                       0,
-                                                                                       swapchainFormat,
-                                                                                       QSize(subImage.imageRect.extent.width,
-                                                                                             subImage.imageRect.extent.height),
-                                                                                       samples,
-                                                                                       arraySize);
-        } else {
-            return QQuickRenderTarget::fromD3D12TextureMultiView(colorTexture,
-                                                                0,
-                                                                swapchainFormat,
-                                                                QSize(subImage.imageRect.extent.width,
-                                                                    subImage.imageRect.extent.height),
-                                                                1,
-                                                                arraySize);
-        }
-    }
+    QQuickRenderTarget::Flags flags;
+    if (samples > 1)
+        flags |= QQuickRenderTarget::Flag::MultisampleResolve;
+
+    return QQuickRenderTarget::fromD3D12Texture(colorTexture,
+                                                0,
+                                                swapchainFormat,
+                                                viewFormat,
+                                                QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height),
+                                                samples,
+                                                arraySize,
+                                                flags);
 }
 
 

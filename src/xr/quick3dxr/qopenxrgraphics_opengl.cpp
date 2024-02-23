@@ -140,37 +140,16 @@ QQuickRenderTarget QOpenXRGraphicsOpenGL::renderTarget(const XrSwapchainSubImage
         break;
     }
 
-    if (arraySize <= 1) {
-        if (samples > 1) {
-            return QQuickRenderTarget::fromOpenGLTextureWithMultiSampleResolve(colorTexture,
-                                                                               swapchainFormat,
-                                                                               QSize(subImage.imageRect.extent.width,
-                                                                                     subImage.imageRect.extent.height),
-                                                                               samples);
-        } else {
-            return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
-                                                        swapchainFormat,
-                                                        QSize(subImage.imageRect.extent.width,
-                                                              subImage.imageRect.extent.height),
-                                                        1);
-        }
-    } else {
-        if (samples > 1) {
-            return QQuickRenderTarget::fromOpenGLTextureMultiViewWithMultiSampleResolve(colorTexture,
-                                                                                        swapchainFormat,
-                                                                                        QSize(subImage.imageRect.extent.width,
-                                                                                                subImage.imageRect.extent.height),
-                                                                                        samples,
-                                                                                        arraySize);
-        } else {
-            return QQuickRenderTarget::fromOpenGLTextureMultiView(colorTexture,
-                                                                swapchainFormat,
-                                                                QSize(subImage.imageRect.extent.width,
-                                                                        subImage.imageRect.extent.height),
-                                                                1,
-                                                                arraySize);
-        }
-    }
+    QQuickRenderTarget::Flags flags;
+    if (samples > 1)
+        flags |= QQuickRenderTarget::Flag::MultisampleResolve;
+
+    return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
+                                                swapchainFormat,
+                                                QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height),
+                                                samples,
+                                                arraySize,
+                                                flags);
 }
 
 void QOpenXRGraphicsOpenGL::setupWindow(QQuickWindow *window)

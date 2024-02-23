@@ -103,12 +103,16 @@ QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrSwapchainSubImage 
 {
     ID3D11Texture2D* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D11KHR*>(swapchainImage)->texture;
 
+    // No real view format support for D3D11 in QRhi, but can strip off the
+    // _SRGB and pass that in as the texture format, which in the end also
+    // avoids incorrect (unwanted) linear->sRGB conversions.
+    DXGI_FORMAT viewFormat = DXGI_FORMAT(swapchainFormat);
     switch (swapchainFormat) {
     case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-        swapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+        viewFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
         break;
     case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
-        swapchainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+        viewFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
         break;
     default:
         break;
@@ -117,19 +121,15 @@ QQuickRenderTarget QOpenXRGraphicsD3D11::renderTarget(const XrSwapchainSubImage 
     if (arraySize > 1)
         qWarning("Qt Quick 3D XR: The D3D11 integration has no support for multiview");
 
-    if (samples > 1) {
-        return QQuickRenderTarget::fromD3D11TextureWithMultiSampleResolve(colorTexture,
-                                                                          swapchainFormat,
-                                                                          QSize(subImage.imageRect.extent.width,
-                                                                                subImage.imageRect.extent.height),
-                                                                          samples);
-    } else {
-        return QQuickRenderTarget::fromD3D11Texture(colorTexture,
-                                                    swapchainFormat,
-                                                    QSize(subImage.imageRect.extent.width,
-                                                          subImage.imageRect.extent.height),
-                                                    1);
-    }
+    QQuickRenderTarget::Flags flags;
+    if (samples > 1)
+        flags |= QQuickRenderTarget::Flag::MultisampleResolve;
+
+    return QQuickRenderTarget::fromD3D11Texture(colorTexture,
+                                                viewFormat,
+                                                QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height),
+                                                samples,
+                                                flags);
 }
 
 
