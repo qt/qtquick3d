@@ -11,6 +11,8 @@
 
 #include <QDebug>
 
+#include <private/qquick3djoint_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QOpenXRInputManager::QOpenXRInputManager()
@@ -58,6 +60,11 @@ XrPath QOpenXRInputManager::makeInputPath(const QByteArrayView path)
     XrPath res;
     setPath(res, path.toByteArray());
     return res;
+}
+
+static inline QQuaternion toQQuaternion(const XrQuaternionf &q)
+{
+    return {q.w, q.x, q.y, q.z};
 }
 
 static inline QVector3D toQVector(const XrVector3f &v)
@@ -717,6 +724,18 @@ void QOpenXRInputManager::updateHandtracking(XrTime predictedDisplayTime, XrSpac
             locateInfo[hand].baseSpace = appSpace;
             locateInfo[hand].time = predictedDisplayTime;
             checkXrResult(xrLocateHandJointsEXT_(handTracker[hand], &locateInfo[hand], &locations[hand]), "handTracker");
+
+            QList<QVector3D> jp;
+            jp.reserve(XR_HAND_JOINT_COUNT_EXT);
+            QList<QQuaternion> jr;
+            jr.reserve(XR_HAND_JOINT_COUNT_EXT);
+            for (uint i = 0; i < locations[hand].jointCount; ++i) {
+                auto &pose = jointLocations[hand][i].pose;
+                jp.append(toQVector(pose.position));
+                jr.append(toQQuaternion(pose.orientation));
+            }
+            m_handTrackerInputState[hand]->setJointPositionsAndRotations(jp, jr);
+            m_handTrackerInputState[hand]->setIsActive(locations[hand].isActive);
         }
 
         if (aimExtensionEnabled) {
@@ -784,12 +803,11 @@ void QOpenXRInputManager::setupHandTracking()
         createInfo.hand = XR_HAND_RIGHT_EXT;
         checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[RightHand]), "xrCreateHandTrackerEXT handTrackerRight");
     }
-
     if (xrGetHandMeshFB_) {
-        if (queryHandMesh(Hand::LeftHand))
-            m_handTrackerInputState[Hand::LeftHand]->setHandGeometry(createHandMeshGeometry(m_handMeshData[Hand::LeftHand]));
-        if (queryHandMesh(Hand::RightHand))
-            m_handTrackerInputState[Hand::RightHand]->setHandGeometry(createHandMeshGeometry(m_handMeshData[Hand::RightHand]));
+        for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
+            if (queryHandMesh(hand))
+                createHandModelData(hand);
+        }
     }
 }
 
@@ -1099,6 +1117,15 @@ QOpenXRHandTrackerInput *QOpenXRInputManager::leftHandTrackerInput() const
 QOpenXRGamepadInput *QOpenXRInputManager::gamepadInput() const
 {
     return m_gamepadInputState;
+}
+
+void QOpenXRInputManager::createHandModelData(Hand hand)
+{
+    const auto &handMeshData = m_handMeshData[hand];
+
+    auto &geometry = m_handGeometryData[hand].geometry;
+    delete geometry;
+    geometry = createHandMeshGeometry(handMeshData);
 }
 
 QT_END_NAMESPACE

@@ -20,6 +20,7 @@
 #include <QVector3D>
 #include <QQuaternion>
 #include <QtQml/qqml.h>
+#include <private/qquick3dmodel_p.h>
 
 #include <QQuick3DGeometry>
 
@@ -33,7 +34,8 @@ class QOpenXRHandTrackerInput : public QObject
 
     Q_PROPERTY(QVector3D posePosition READ posePosition NOTIFY posePositionChanged)
 
-    Q_PROPERTY(QQuick3DGeometry *handGeometry READ handGeometry NOTIFY handGeometryChanged FINAL)
+    Q_PROPERTY(QList<QVector3D> jointPositions READ jointPositions NOTIFY jointPositionsChanged FINAL)
+    Q_PROPERTY(QList<QQuaternion> jointRotations READ jointRotations NOTIFY jointRotationsChanged FINAL)
 
     QML_NAMED_ELEMENT(XrHandTrackerInput)
     QML_UNCREATABLE("Created by XrView")
@@ -56,8 +58,10 @@ public:
     const QVector3D &posePosition() const;
     const QQuaternion &poseRotation() const;
 
-    QQuick3DGeometry *handGeometry() const;
-    void setHandGeometry(QQuick3DGeometry *newHandGeometry);
+    QList<QVector3D> jointPositions() const;
+    void setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations);
+
+    QList<QQuaternion> jointRotations() const;
 
 public Q_SLOTS:
     void setPoseSpace(HandPoseSpace poseSpace);
@@ -69,7 +73,10 @@ Q_SIGNALS:
     void posePositionChanged();
     void poseRotationChanged();
 
-    void handGeometryChanged();
+    void jointPositionsChanged();
+    void jointDataUpdated();
+
+    void jointRotationsChanged();
 
 private:
     bool m_isActive = false;
@@ -78,7 +85,37 @@ private:
     QVector3D m_posePosition;
     QQuaternion m_poseRotation;
 
-    QQuick3DGeometry *m_handGeometry = nullptr;
+    QList<QVector3D> m_jointPositions;
+    QList<QQuaternion> m_jointRotations;
+};
+
+class QOpenXrHandModel : public QQuick3DModel
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QOpenXRHandTrackerInput *handTracker READ handTracker WRITE setHandTracker NOTIFY handTrackerChanged FINAL)
+
+    QML_NAMED_ELEMENT(XrHandModel)
+
+public:
+    QOpenXrHandModel(QQuick3DNode *parent = nullptr);
+
+    void componentComplete() override;
+
+    QOpenXRHandTrackerInput *handTracker() const;
+    void setHandTracker(QOpenXRHandTrackerInput *newHandTracker);
+
+Q_SIGNALS:
+    void handChanged();
+    void handTrackerChanged();
+
+private Q_SLOTS:
+    void updatePose();
+
+private:
+    void setupModel();
+    QOpenXRHandTrackerInput *m_handTracker = nullptr;
+    bool m_initialized = false;
 };
 
 QT_END_NAMESPACE

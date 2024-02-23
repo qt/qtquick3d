@@ -9,6 +9,9 @@
 #include <openxr/openxr.h>
 #include <functional>
 #include "qopenxractionmapper_p.h"
+
+#include <private/qquick3dmodel_p.h>
+
 //
 //  W A R N I N G
 //  -------------
@@ -159,7 +162,14 @@ private:
         float jointRadii[XR_HAND_JOINT_COUNT_EXT];
     } m_handMeshData[2];
 
+
+    struct HandGeometryData {
+        QQuick3DGeometry *geometry = nullptr;
+    } m_handGeometryData[2];
+
     QQuick3DGeometry *createHandMeshGeometry(const HandMeshData &handMeshData);
+    void createHandModelData(Hand hand);
+    friend class QOpenXrHandModel;
 };
 
 QT_END_NAMESPACE
