@@ -1432,12 +1432,12 @@ void QQuick3DViewport::processPickedObject(const QSSGRenderGraphObject *backendO
         if (!subsceneRootItem || subsceneRootItem->childItems().isEmpty())
             return; // ignore empty 2D subscenes
 
-        // In this case the "UV" coordinates are in pixels in the subscene root item, so we can just use them.
+        // In this case the "UV" coordinates are in pixels in the subscene root item's coordinate system.
         subscenePosition = pickResult.m_localUVCoords.toPointF();
-        // Even though an Item2D is an "infinite plane" for rendering purposes,
-        // avoid delivering events outside the rectangular area that is occupied by child items,
-        // so that events can "fall through" to other interactive content in the scene or behind it.
-        if (!subsceneRootItem->childrenRect().contains(subscenePosition))
+
+        // The following code will account for custom input masking, as well any
+        // transformations that might have been applied to the Item
+        if (!subsceneRootItem->childAt(subscenePosition.x(), subscenePosition.y()))
             return;
     } else if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Model) {
         // Model
