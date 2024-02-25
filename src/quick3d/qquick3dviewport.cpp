@@ -72,6 +72,11 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
     */
     QPointF map(const QPointF &viewportPoint) override {
         QPointF point = viewportPoint;
+        // Despite the name, the input coordinates are the window viewport coordinates
+        // so unless the View3D is the same size of the Window, we need to translate
+        // to the View3D coordinates before doing any picking.
+        if (viewport)
+            point = viewport->mapFromScene(viewportPoint);
         point.rx() *= scaleX;
         point.ry() *= scaleY;
         std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(point);
@@ -95,9 +100,10 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
         return QPointF();
     }
 
+    QPointer<QQuick3DViewport> viewport;
     QQuick3DSceneRenderer *renderer = nullptr;
     QSSGRenderNode *sceneParentNode = nullptr;
-    QQuickItem* targetItem = nullptr;
+    QPointer<QQuickItem> targetItem;
     qreal scaleX = 1;
     qreal scaleY = 1;
     bool uvCoordsArePixels = false; // if false, they are in the range 0..1
@@ -1582,6 +1588,7 @@ bool QQuick3DViewport::forwardEventToSubscenes(QPointerEvent *event,
                 auto frontendObjectPrivate = QQuick3DObjectPrivate::get(subsceneInfo.obj);
                 const bool item2Dcase = (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Item2D);
                 ViewportTransformHelper *transform = new ViewportTransformHelper;
+                transform->viewport = const_cast<QQuick3DViewport *>(this);
                 transform->renderer = renderer;
                 transform->sceneParentNode = static_cast<QSSGRenderNode*>(frontendObjectPrivate->spatialNode);
                 transform->targetItem = subsceneRoot;
