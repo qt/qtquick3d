@@ -483,11 +483,11 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             currentTexture = m_texture;
         }
-        endFrame();
 
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
-                                           STAT_PAYLOAD(m_sgContext->rhiContext()->stats()),
-                                           profilingId);
+                                      STAT_PAYLOAD(m_sgContext->rhiContext()->stats()),
+                                      profilingId);
+        endFrame();
 
         Q_TRACE(QSSG_renderFrame_exit);
 
@@ -1375,9 +1375,9 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
         queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().get());
 
         renderer->rhiRender();
-        renderer->endFrame();
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
-                                        STAT_PAYLOAD(renderer->m_sgContext->rhiContext()->stats()), renderer->profilingId);
+                                      STAT_PAYLOAD(renderer->m_sgContext->rhiContext()->stats()), renderer->profilingId);
+        renderer->endFrame();
     }
 }
 
@@ -1522,11 +1522,11 @@ void QQuick3DSGDirectRenderer::render()
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
 
             m_renderer->rhiRender();
-            m_renderer->endFrame();
 
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
-                                            STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()),
-                                            m_renderer->profilingId);
+                                          STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()),
+                                          m_renderer->profilingId);
+            m_renderer->endFrame();
 
             if (m_renderer->renderStats())
                 m_renderer->renderStats()->endRender(dumpRenderTimes);
