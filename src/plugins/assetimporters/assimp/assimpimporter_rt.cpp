@@ -207,6 +207,9 @@ size_t ResourceIOStream::Read(void *pvBuffer, size_t pSize, size_t pCount)
 
 size_t ResourceIOStream::Write(const void *pvBuffer, size_t pSize, size_t pCount)
 {
+    Q_UNUSED(pvBuffer);
+    Q_UNUSED(pSize);
+    Q_UNUSED(pCount);
     Q_UNIMPLEMENTED();
     return 0;
 }
