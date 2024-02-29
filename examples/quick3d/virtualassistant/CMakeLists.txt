@@ -14,7 +14,12 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/virtualassistant")
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 6.5
+    REQUIRED COMPONENTS
+        Core Gui Qml Quick Quick3D Quick3DHelpers
+    OPTIONAL_COMPONENTS
+        QuickControls2 QuickLayouts QuickTimeline
+)
 
 qt_standard_project_setup(REQUIRES 6.5)
 

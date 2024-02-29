@@ -14,3 +14,20 @@ qt_add_qml_module(robotassistant
     RESOURCES
         colosseum_4k.hdr
 )
+
+target_link_libraries(robotassistant
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Quick
+        Qt${QT_VERSION_MAJOR}::Quick3D
+        Qt${QT_VERSION_MAJOR}::Quick3DHelpers
+        Constantsplugin
+        VirtualAssistantplugin
+)
+
+if(TARGET Qt${QT_VERSION_MAJOR}::QuickControls2)
+    target_link_libraries(robotassistant PRIVATE Qt${QT_VERSION_MAJOR}::QuickControls2)
+endif()
+
+if(TARGET Qt${QT_VERSION_MAJOR}::QuickLayouts)
+    target_link_libraries(robotassistant PRIVATE Qt${QT_VERSION_MAJOR}::QuickLayouts)
+endif()

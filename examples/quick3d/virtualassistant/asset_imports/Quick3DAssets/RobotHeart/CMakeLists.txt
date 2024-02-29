@@ -11,3 +11,9 @@ qt_add_qml_module(RobotHeart
     RESOURCES
         meshes/plane.mesh
 )
+
+target_link_libraries(RobotHeart PRIVATE Qt${QT_VERSION_MAJOR}::Quick3D)
+
+if(TARGET Qt${QT_VERSION_MAJOR}::QuickTimeline)
+    target_link_libraries(RobotHeart PRIVATE Qt${QT_VERSION_MAJOR}::QuickTimeline)
+endif()
