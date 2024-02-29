@@ -82,7 +82,7 @@ void QOpenXRSpaceExtension::teardown()
 QList<const char *> QOpenXRSpaceExtension::requiredExtensions() const
 {
     return {
-        XR_EXT_UUID_EXTENSION_NAME, // required for XR_FB_spatial_entity (would work anyway, but is a validation error)
+        // XR_EXT_UUID_EXTENSION_NAME, // ### Crashes on Quest 3. Theoretically required for XR_FB_spatial_entity (would work anyway, but is a validation error)
         XR_FB_SPATIAL_ENTITY_EXTENSION_NAME,
         XR_FB_SPATIAL_ENTITY_QUERY_EXTENSION_NAME,
         XR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME,
