@@ -1854,6 +1854,7 @@ QString QSSGLightmapper::lightmapAssetPathForSave(LightmapAsset asset, const QSt
     switch (asset) {
     case LightmapAsset::LightmapImageList:
         result += QStringLiteral("qlm_list.txt");
+        break;
     default:
         break;
     }
