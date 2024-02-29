@@ -13,5 +13,9 @@ qt_add_qml_module(Constants
     RESOURCE_PREFIX "/qt/qml"
     QML_FILES
         Constants.qml
+)
 
+target_link_libraries(Constants
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Quick
 )

@@ -14,3 +14,14 @@ qt_add_qml_module(VirtualAssistant
         meshes/mesh_108.mesh
         meshes/mesh_109.mesh
 )
+
+target_link_libraries(VirtualAssistant
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Quick3D
+        Qt${QT_VERSION_MAJOR}::Quick
+        RobotHeartplugin
+)
+
+if(TARGET Qt${QT_VERSION_MAJOR}::QuickTimeline)
+    target_link_libraries(VirtualAssistant PRIVATE Qt${QT_VERSION_MAJOR}::QuickTimeline)
+endif()
