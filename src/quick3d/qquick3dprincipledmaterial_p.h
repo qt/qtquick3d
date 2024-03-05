@@ -47,6 +47,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
+    Q_PROPERTY(bool invertOpacityMapValue READ invertOpacityMapValue WRITE setInvertOpacityMapValue NOTIFY invertOpacityMapValueChanged REVISION(6, 8))
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
     Q_PROPERTY(QQuick3DTexture *opacityMap READ opacityMap WRITE setOpacityMap NOTIFY opacityMapChanged)
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged)
@@ -165,6 +166,7 @@ public:
     float specularAmount() const;
     float roughness() const;
     QQuick3DTexture *roughnessMap() const;
+    bool invertOpacityMapValue() const;
     float opacity() const;
     QQuick3DTexture *opacityMap() const;
     QQuick3DTexture *normalMap() const;
@@ -231,11 +233,12 @@ public Q_SLOTS:
     void setSpecularAmount(float specularAmount);
     void setRoughness(float roughness);
     void setRoughnessMap(QQuick3DTexture *roughnessMap);
+    void setInvertOpacityMapValue(bool invertOpacityMapValue);
     void setOpacity(float opacity);
     void setOpacityMap(QQuick3DTexture *opacityMap);
     void setNormalMap(QQuick3DTexture *normalMap);
     void setMetalness(float metalnessAmount);
-    void setMetalnessMap(QQuick3DTexture * metalnessMap);
+    void setMetalnessMap(QQuick3DTexture *metalnessMap);
     void setNormalStrength(float normalStrength);
     void setOcclusionMap(QQuick3DTexture *occlusionMap);
     void setOcclusionAmount(float occlusionAmount);
@@ -296,11 +299,12 @@ Q_SIGNALS:
     void specularAmountChanged(float specularAmount);
     void roughnessChanged(float roughness);
     void roughnessMapChanged(QQuick3DTexture *roughnessMap);
+    void invertOpacityMapValueChanged(bool invertOpacityMapValue);
     void opacityChanged(float opacity);
     void opacityMapChanged(QQuick3DTexture *opacityMap);
     void normalMapChanged(QQuick3DTexture *normalMap);
     void metalnessChanged(float metalness);
-    void metalnessMapChanged(QQuick3DTexture * metalnessMap);
+    void metalnessMapChanged(QQuick3DTexture *metalnessMap);
     void normalStrengthChanged(float normalStrength);
     void occlusionMapChanged(QQuick3DTexture *occlusionMap);
     void occlusionAmountChanged(float occlusionAmount);
@@ -400,6 +404,7 @@ private:
     float m_specularTint = 0.0f;
     float m_specularAmount = 1.0f;
     float m_roughness = 0.0f;
+    bool m_invertOpacityMapValue = false;
     float m_opacity = 1.0f;
     float m_metalnessAmount = 0.0f;
     float m_normalStrength = 1.0f;

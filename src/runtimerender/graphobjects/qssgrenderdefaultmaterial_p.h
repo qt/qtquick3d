@@ -111,6 +111,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float specularRoughness = 0.0f; // 0-1
     float metalnessAmount = 0.0f;
     float opacity = 1.0f; // 0-1
+    bool invertOpacityMapValue = false;
     float bumpAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
     float occlusionAmount = 1.0f; // 0 - 1
@@ -160,6 +161,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
     bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
     bool isVertexColorsMaskEnabled() const { return vertexColorsMaskEnabled; }
+    bool isInvertOpacityMapValue() const { return invertOpacityMapValue; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
     bool isClearcoatEnabled() const { return clearcoatAmount > 0.01f; }
     bool isTransmissionEnabled() const { return transmissionFactor > 0.01f; }

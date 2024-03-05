@@ -102,6 +102,11 @@ bool QSSGShaderDefaultMaterialAdapter::isVertexColorsMaskEnabled()
     return m_material.isVertexColorsMaskEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isInvertOpacityMapValue()
+{
+    return m_material.isInvertOpacityMapValue();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::isClearcoatEnabled()
 {
     return m_material.isClearcoatEnabled();
@@ -322,6 +327,11 @@ bool QSSGShaderCustomMaterialAdapter::isVertexColorsEnabled()
 }
 
 bool QSSGShaderCustomMaterialAdapter::isVertexColorsMaskEnabled()
+{
+    return false;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isInvertOpacityMapValue()
 {
     return false;
 }

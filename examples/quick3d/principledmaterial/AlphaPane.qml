@@ -274,11 +274,21 @@ value in the Opacity property. So most of the time when using a Opacity
 Map it will make sense to leave the value of Opacity to 1.0.
 `
         }
+        RowLayout {
+            Label {
+                text: "Inverts the opacity value of the opacityMap"
+            }
+            Switch {
+                checked: targetMaterial.invertOpacityMapValue
+                onCheckedChanged: {
+                    targetMaterial.invertOpacityMapValue = checked
+                }
+            }
+        }
         Button {
             text: "Reset Opacity Value"
             onClicked: rootView.targetMaterial.opacity = 1.0
         }
-
         TextureSourceControl {
             defaultClearColor: "white"
             defaultTexture: "maps/metallic/metallic.jpg"

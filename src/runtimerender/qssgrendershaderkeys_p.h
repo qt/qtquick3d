@@ -554,6 +554,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_lightShadowFlags[LightCount];
     QSSGShaderKeyBoolean m_specularEnabled;
     QSSGShaderKeyBoolean m_fresnelEnabled;
+    QSSGShaderKeyBoolean m_invertOpacityMapValue;
     QSSGShaderKeyBoolean m_vertexColorsEnabled;
     QSSGShaderKeyBoolean m_vertexColorsMaskEnabled;
     QSSGShaderKeyUnsigned<16> m_vertexColorRedMask;
@@ -599,6 +600,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_lightCount("lightCount")
         , m_specularEnabled("specularEnabled")
         , m_fresnelEnabled("fresnelEnabled")
+        , m_invertOpacityMapValue("invertOpacityMapValue")
         , m_vertexColorsEnabled("vertexColorsEnabled")
         , m_vertexColorsMaskEnabled("vertexColorsMaskEnabled")
         , m_vertexColorRedMask("vertexColorRedMask")

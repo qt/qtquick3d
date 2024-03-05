@@ -205,6 +205,14 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty real SpecularGlossyMaterial::invertOpacityMapValue
+    \since 6.8
+
+    This property inverts the opacity value of the opacityMap.
+    The default value is \c false.
+*/
+
+/*!
     \qmlproperty enumeration SpecularGlossyMaterial::opacityChannel
 
     This property defines the texture channel used to read the opacity value from opacityMap.
@@ -719,6 +727,11 @@ QQuick3DTexture *QQuick3DSpecularGlossyMaterial::glossinessMap() const
     return m_glossinessMap;
 }
 
+bool QQuick3DSpecularGlossyMaterial::invertOpacityMapValue() const
+{
+    return m_invertOpacityMapValue;
+}
+
 float QQuick3DSpecularGlossyMaterial::opacity() const
 {
     return m_opacity;
@@ -910,6 +923,16 @@ void QQuick3DSpecularGlossyMaterial::setGlossinessMap(QQuick3DTexture *glossines
     m_glossinessMap = glossinessMap;
     emit glossinessMapChanged();
     markDirty(GlossyDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setInvertOpacityMapValue(bool invertOpacityMapValue)
+{
+    if (invertOpacityMapValue == m_invertOpacityMapValue)
+        return;
+
+    m_invertOpacityMapValue = invertOpacityMapValue;
+    emit invertOpacityMapValueChanged();
+    markDirty(OpacityDirty);
 }
 
 void QQuick3DSpecularGlossyMaterial::setOpacity(float opacity)
@@ -1191,6 +1214,7 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         else
             material->opacityMap = m_opacityMap->getRenderImage();
 
+        material->invertOpacityMapValue = m_invertOpacityMapValue;
         material->opacity = m_opacity;
         material->opacityChannel = channelMapping(m_opacityChannel);
     }

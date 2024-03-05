@@ -194,6 +194,7 @@ bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1,
     COMPARE_PROP(m_hasIbl)
     COMPARE_PROP(m_specularEnabled)
     COMPARE_PROP(m_fresnelEnabled)
+    COMPARE_PROP(m_invertOpacityMapValue)
     COMPARE_PROP(m_vertexColorsEnabled)
     COMPARE_PROP(m_vertexColorsMaskEnabled)
     COMPARE_PROP(m_vertexColorRedMask)
