@@ -42,6 +42,7 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
     Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
+    Q_PROPERTY(bool invertOpacityMapValue READ invertOpacityMapValue WRITE setInvertOpacityMapValue NOTIFY invertOpacityMapValueChanged REVISION(6, 8))
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
     Q_PROPERTY(QQuick3DTexture *opacityMap READ opacityMap WRITE setOpacityMap NOTIFY opacityMapChanged)
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged)
@@ -149,6 +150,7 @@ public:
     QVector3D emissiveFactor() const;
     float glossiness() const;
     QQuick3DTexture *glossinessMap() const;
+    bool invertOpacityMapValue() const;
     float opacity() const;
     QQuick3DTexture *opacityMap() const;
     QQuick3DTexture *normalMap() const;
@@ -206,6 +208,7 @@ public Q_SLOTS:
     void setEmissiveFactor(const QVector3D &emissiveFactor);
     void setGlossiness(float glossiness);
     void setGlossinessMap(QQuick3DTexture *glossinessMap);
+    void setInvertOpacityMapValue(bool invertOpacityMapValue);
     void setOpacity(float opacity);
     void setOpacityMap(QQuick3DTexture *opacityMap);
     void setNormalMap(QQuick3DTexture *normalMap);
@@ -263,6 +266,7 @@ Q_SIGNALS:
     void emissiveFactorChanged();
     void glossinessChanged();
     void glossinessMapChanged();
+    void invertOpacityMapValueChanged();
     void opacityChanged();
     void opacityMapChanged();
     void normalMapChanged();
@@ -352,6 +356,7 @@ private:
     QQuick3DTexture *m_specularMap = nullptr;
     QQuick3DTexture *m_occlusionMap = nullptr;
     float m_glossiness = 1.0f;
+    bool m_invertOpacityMapValue = false;
     float m_opacity = 1.0f;
     QColor m_specular = Qt::white;
     float m_normalStrength = 1.0f;

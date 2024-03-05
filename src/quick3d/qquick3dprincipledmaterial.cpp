@@ -300,6 +300,14 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty real PrincipledMaterial::invertOpacityMapValue
+    \since 6.8
+
+    This property inverts the opacity value of the opacityMap.
+    The default value is \c false.
+*/
+
+/*!
     \qmlproperty enumeration PrincipledMaterial::opacityChannel
 
     This property defines the texture channel used to read the opacity value from opacityMap.
@@ -892,6 +900,11 @@ QQuick3DTexture *QQuick3DPrincipledMaterial::roughnessMap() const
     return m_roughnessMap;
 }
 
+bool QQuick3DPrincipledMaterial::invertOpacityMapValue() const
+{
+    return m_invertOpacityMapValue;
+}
+
 float QQuick3DPrincipledMaterial::opacity() const
 {
     return m_opacity;
@@ -1134,6 +1147,16 @@ void QQuick3DPrincipledMaterial::setRoughnessMap(QQuick3DTexture *roughnessMap)
     m_roughnessMap = roughnessMap;
     emit roughnessMapChanged(m_roughnessMap);
     markDirty(RoughnessDirty);
+}
+
+void QQuick3DPrincipledMaterial::setInvertOpacityMapValue(bool invertOpacityMapValue)
+{
+    if (invertOpacityMapValue == m_invertOpacityMapValue)
+        return;
+
+    m_invertOpacityMapValue = invertOpacityMapValue;
+    emit invertOpacityMapValueChanged(m_invertOpacityMapValue);
+    markDirty(OpacityDirty);
 }
 
 void QQuick3DPrincipledMaterial::setOpacity(float opacity)
@@ -1445,6 +1468,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         else
             material->opacityMap = m_opacityMap->getRenderImage();
 
+        material->invertOpacityMapValue = m_invertOpacityMapValue;
         material->opacity = m_opacity;
         material->opacityChannel = channelMapping(m_opacityChannel);
     }

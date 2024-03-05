@@ -1129,6 +1129,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
         defaultMaterialShaderKeyProperties.m_fresnelEnabled.setValue(theGeneratedKey, theMaterial->isFresnelEnabled());
 
+        defaultMaterialShaderKeyProperties.m_invertOpacityMapValue.setValue(theGeneratedKey,
+                                                                            theMaterial->isInvertOpacityMapValue());
         defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.setValue(theGeneratedKey,
                                                                                       theMaterial->isVertexColorsEnabled());
         defaultMaterialShaderKeyProperties.m_vertexColorsMaskEnabled.setValue(theGeneratedKey,

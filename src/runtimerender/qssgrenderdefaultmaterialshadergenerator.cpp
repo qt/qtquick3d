@@ -1310,7 +1310,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Opacity)];
         const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
-        fragmentShader << "    qt_objectOpacity *= texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+        fragmentShader << "    float qt_opacity_map_value = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+        if ( materialAdapter->isInvertOpacityMapValue() )
+            fragmentShader << "    qt_opacity_map_value = 1.0 - qt_opacity_map_value;\n";
+        fragmentShader << "    qt_objectOpacity *= qt_opacity_map_value;\n";
     }
 
     if (hasLighting) {
