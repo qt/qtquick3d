@@ -16,6 +16,7 @@
 #include "qquick3dscenemanager_p.h"
 #include "qquick3dutils_p.h"
 #include "qquick3drenderextensions.h"
+#include "qquick3dviewport_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -1169,9 +1170,14 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                     qWarning("Unable to get window, this will probably not work");
             }
 
+            // Workaround: Due to limitation in how the texture provider works in View3D we can't use it in the
+            // special case when a non-visible View3D is used as a sourceItem, at least not in its current incarnation.
+            // There's also a drawback here, since we now have an extra indirection by rendering to the layer texture first..
+            const bool isHiddenView3D = !m_sourceItem->isVisible() && (qobject_cast<QQuick3DViewport *>(m_sourceItem) != nullptr);
+
             // This assumes that the QSGTextureProvider returned never changes,
             // which is hopefully the case for both Image and Item layers.
-            if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
+            if (QSGTextureProvider *provider = m_sourceItem->textureProvider(); provider != nullptr && !isHiddenView3D) {
                 imageNode->m_qsgTexture = provider->texture();
 
                 disconnect(m_textureProviderConnection);
