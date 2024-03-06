@@ -555,7 +555,11 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::newPipelineFromPregenerated(const QByt
             qDebug("Loading of vertex and fragment stages succeeded");
     }
 
+#if !QT_CONFIG(qml_debug)
+    Q_UNUSED(obj);
+#else
     Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DLoadShader, 0, obj.profilingId);
+#endif
 
     QSSGShaderCacheKey cacheKey(inKey);
     cacheKey.m_features = inFeatures;
