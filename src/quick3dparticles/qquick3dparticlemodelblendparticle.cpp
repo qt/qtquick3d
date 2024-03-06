@@ -567,9 +567,11 @@ QSSGRenderGraphObject *QQuick3DParticleModelBlendParticle::updateSpatialNode(QSS
         QQuick3DObjectPrivate::get(m_model)->spatialNode = spatialNode;
         Q_QUICK3D_PROFILE_ASSIGN_ID_SG(this, spatialNode);
     }
+#if QT_CONFIG(qml_debug)
     auto *geometrySpatialNode = QQuick3DObjectPrivate::get(m_modelGeometry)->spatialNode;
     if (geometrySpatialNode)
         Q_QUICK3D_PROFILE_ASSIGN_ID_SG(this, geometrySpatialNode);
+#endif
 
     QSSGRenderModel *model = static_cast<QSSGRenderModel *>(spatialNode);
 
