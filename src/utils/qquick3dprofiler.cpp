@@ -3,13 +3,14 @@
 
 #include "qquick3dprofiler_p.h"
 
-#include <QtQml/private/qqmlabstractprofileradapter_p.h>
 #include <QtQml/qqmlfile.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qthread.h>
 
 QT_BEGIN_NAMESPACE
+
+#if QT_CONFIG(qml_debug)
 
 // Enable to debug profiling without client app.
 //#define PROFILE_WITHOUT_CLIENT
@@ -132,4 +133,5 @@ void QQuick3DProfiler::setTimer(const QElapsedTimer &t)
     m_timer = t;
 }
 
+#endif
 QT_END_NAMESPACE
