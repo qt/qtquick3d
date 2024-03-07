@@ -294,10 +294,8 @@ QQuick3DViewport::~QQuick3DViewport()
     // might still be rendering.
     m_renderStats->deleteLater();
 
-    if (!window() && sceneManager && sceneManager->wattached) {
-        if (sceneManager->wattached->rci().use_count() <= 1)
-            delete sceneManager->wattached;
-    }
+    if (!window() && sceneManager && sceneManager->wattached)
+        QMetaObject::invokeMethod(sceneManager->wattached, &QQuick3DWindowAttachment::evaluateEol, Qt::QueuedConnection);
 }
 
 static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)

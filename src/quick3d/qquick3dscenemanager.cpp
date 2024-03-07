@@ -600,6 +600,17 @@ void QQuick3DWindowAttachment::requestUpdate()
         sm->requestUpdate();
 }
 
+void QQuick3DWindowAttachment::evaluateEol()
+{
+    // NOTE: We'll re-iterate this list either on the next sync or if there's no sceneManagers left.
+    // See: sync and dtor.
+    for (QQuick3DSceneManager *manager : std::as_const(sceneManagerCleanupQueue))
+        sceneManagers.removeOne(manager);
+
+    if (sceneManagers.isEmpty())
+        delete this;
+}
+
 QQuickWindow *QQuick3DWindowAttachment::window() const { return m_window; }
 
 void QQuick3DWindowAttachment::setRci(const std::shared_ptr<QSSGRenderContextInterface> &rciptr)
