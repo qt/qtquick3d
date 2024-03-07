@@ -44,6 +44,7 @@ public:
     Q_INVOKABLE void cleanupResources();
     Q_INVOKABLE bool synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders);
     Q_INVOKABLE void requestUpdate();
+    Q_INVOKABLE void evaluateEol();
 
     QQuickWindow *window() const;
 
