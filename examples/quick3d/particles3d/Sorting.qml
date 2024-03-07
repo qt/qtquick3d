@@ -83,6 +83,8 @@ Item {
                 }
                 emitRate: 10
                 lifeSpan: 6000
+                // Sort emitters based on camera rotation
+                depthBias: cameraController.rot - 180
             }
             ParticleEmitter3D {
                 x: -35
