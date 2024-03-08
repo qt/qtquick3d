@@ -31,13 +31,13 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QColor albedoColor READ albedoColor WRITE setAlbedoColor NOTIFY albedoColorChanged)
     Q_PROPERTY(QQuick3DTexture *albedoMap READ albedoMap WRITE setAlbedoMap NOTIFY albedoMapChanged)
-    Q_PROPERTY(bool albedoSingleChannelEnabled READ albedoSingleChannelEnabled WRITE setAlbedoSingleChannelEnabled NOTIFY albedoSingleChannelEnabledChanged REVISION(6, 8))
-    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping albedoChannel READ albedoChannel WRITE setAlbedoChannel NOTIFY albedoChannelChanged REVISION(6, 8))
+    Q_PROPERTY(bool albedoSingleChannelEnabled READ albedoSingleChannelEnabled WRITE setAlbedoSingleChannelEnabled NOTIFY albedoSingleChannelEnabledChanged REVISION(6, 7))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping albedoChannel READ albedoChannel WRITE setAlbedoChannel NOTIFY albedoChannelChanged REVISION(6, 7))
 
     Q_PROPERTY(QColor specularColor READ specularColor WRITE setSpecularColor NOTIFY specularColorChanged)
     Q_PROPERTY(QQuick3DTexture *specularMap READ specularMap WRITE setSpecularMap NOTIFY specularMapChanged)
-    Q_PROPERTY(bool specularSingleChannelEnabled READ specularSingleChannelEnabled WRITE setSpecularSingleChannelEnabled NOTIFY specularSingleChannelEnabledChanged REVISION(6, 8))
-    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping specularChannel READ specularChannel WRITE setSpecularChannel NOTIFY specularChannelChanged REVISION(6, 8))
+    Q_PROPERTY(bool specularSingleChannelEnabled READ specularSingleChannelEnabled WRITE setSpecularSingleChannelEnabled NOTIFY specularSingleChannelEnabledChanged REVISION(6, 7))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping specularChannel READ specularChannel WRITE setSpecularChannel NOTIFY specularChannelChanged REVISION(6, 7))
 
     Q_PROPERTY(float glossiness READ glossiness WRITE setGlossiness NOTIFY glossinessChanged)
     Q_PROPERTY(QQuick3DTexture *glossinessMap READ glossinessMap WRITE setGlossinessMap NOTIFY glossinessMapChanged)
@@ -45,10 +45,10 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
-    Q_PROPERTY(bool emissiveSingleChannelEnabled READ emissiveSingleChannelEnabled WRITE setEmissiveSingleChannelEnabled NOTIFY emissiveSingleChannelEnabledChanged REVISION(6, 8))
-    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping emissiveChannel READ emissiveChannel WRITE setEmissiveChannel NOTIFY emissiveChannelChanged REVISION(6, 8))
+    Q_PROPERTY(bool emissiveSingleChannelEnabled READ emissiveSingleChannelEnabled WRITE setEmissiveSingleChannelEnabled NOTIFY emissiveSingleChannelEnabledChanged REVISION(6, 7))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping emissiveChannel READ emissiveChannel WRITE setEmissiveChannel NOTIFY emissiveChannelChanged REVISION(6, 7))
 
-    Q_PROPERTY(bool invertOpacityMapValue READ invertOpacityMapValue WRITE setInvertOpacityMapValue NOTIFY invertOpacityMapValueChanged REVISION(6, 8))
+    Q_PROPERTY(bool invertOpacityMapValue READ invertOpacityMapValue WRITE setInvertOpacityMapValue NOTIFY invertOpacityMapValueChanged REVISION(6, 7))
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
     Q_PROPERTY(QQuick3DTexture *opacityMap READ opacityMap WRITE setOpacityMap NOTIFY opacityMapChanged)
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged)
@@ -84,7 +84,7 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
                        clearcoatRoughnessMapChanged)
     Q_PROPERTY(QQuick3DTexture *clearcoatNormalMap READ clearcoatNormalMap WRITE setClearcoatNormalMap NOTIFY
                        clearcoatNormalMapChanged)
-    Q_PROPERTY(float clearcoatNormalStrength READ clearcoatNormalStrength WRITE setClearcoatNormalStrength NOTIFY clearcoatNormalStrengthChanged REVISION(6, 8))
+    Q_PROPERTY(float clearcoatNormalStrength READ clearcoatNormalStrength WRITE setClearcoatNormalStrength NOTIFY clearcoatNormalStrengthChanged REVISION(6, 7))
 
     Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
@@ -99,21 +99,21 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged REVISION(6, 5))
 
-    Q_PROPERTY(bool fresnelScaleBiasEnabled READ fresnelScaleBiasEnabled WRITE setFresnelScaleBiasEnabled NOTIFY fresnelScaleBiasEnabledChanged REVISION(6, 8))
-    Q_PROPERTY(float fresnelScale READ fresnelScale WRITE setFresnelScale NOTIFY fresnelScaleChanged REVISION(6, 8))
-    Q_PROPERTY(float fresnelBias READ fresnelBias WRITE setFresnelBias NOTIFY fresnelBiasChanged REVISION(6, 8))
-    Q_PROPERTY(float fresnelPower READ fresnelPower WRITE setFresnelPower NOTIFY fresnelPowerChanged REVISION(6, 8))
+    Q_PROPERTY(bool fresnelScaleBiasEnabled READ fresnelScaleBiasEnabled WRITE setFresnelScaleBiasEnabled NOTIFY fresnelScaleBiasEnabledChanged REVISION(6, 7))
+    Q_PROPERTY(float fresnelScale READ fresnelScale WRITE setFresnelScale NOTIFY fresnelScaleChanged REVISION(6, 7))
+    Q_PROPERTY(float fresnelBias READ fresnelBias WRITE setFresnelBias NOTIFY fresnelBiasChanged REVISION(6, 7))
+    Q_PROPERTY(float fresnelPower READ fresnelPower WRITE setFresnelPower NOTIFY fresnelPowerChanged REVISION(6, 7))
 
-    Q_PROPERTY(bool clearcoatFresnelScaleBiasEnabled READ clearcoatFresnelScaleBiasEnabled WRITE setClearcoatFresnelScaleBiasEnabled NOTIFY clearcoatFresnelScaleBiasEnabledChanged REVISION(6, 8))
-    Q_PROPERTY(float clearcoatFresnelScale READ clearcoatFresnelScale WRITE setClearcoatFresnelScale NOTIFY clearcoatFresnelScaleChanged REVISION(6, 8))
-    Q_PROPERTY(float clearcoatFresnelBias READ clearcoatFresnelBias WRITE setClearcoatFresnelBias NOTIFY clearcoatFresnelBiasChanged REVISION(6, 8))
-    Q_PROPERTY(float clearcoatFresnelPower READ clearcoatFresnelPower WRITE setClearcoatFresnelPower NOTIFY clearcoatFresnelPowerChanged REVISION(6, 8))
+    Q_PROPERTY(bool clearcoatFresnelScaleBiasEnabled READ clearcoatFresnelScaleBiasEnabled WRITE setClearcoatFresnelScaleBiasEnabled NOTIFY clearcoatFresnelScaleBiasEnabledChanged REVISION(6, 7))
+    Q_PROPERTY(float clearcoatFresnelScale READ clearcoatFresnelScale WRITE setClearcoatFresnelScale NOTIFY clearcoatFresnelScaleChanged REVISION(6, 7))
+    Q_PROPERTY(float clearcoatFresnelBias READ clearcoatFresnelBias WRITE setClearcoatFresnelBias NOTIFY clearcoatFresnelBiasChanged REVISION(6, 7))
+    Q_PROPERTY(float clearcoatFresnelPower READ clearcoatFresnelPower WRITE setClearcoatFresnelPower NOTIFY clearcoatFresnelPowerChanged REVISION(6, 7))
 
-    Q_PROPERTY(bool vertexColorsMaskEnabled READ vertexColorsMaskEnabled WRITE setVertexColorsMaskEnabled NOTIFY vertexColorsMaskEnabledChanged REVISION(6, 8))
-    Q_PROPERTY(VertexColorMaskFlags vertexColorRedMask READ vertexColorRedMask WRITE setVertexColorRedMask NOTIFY vertexColorRedMaskChanged REVISION(6, 8))
-    Q_PROPERTY(VertexColorMaskFlags vertexColorGreenMask READ vertexColorGreenMask WRITE setVertexColorGreenMask NOTIFY vertexColorGreenMaskChanged REVISION(6, 8))
-    Q_PROPERTY(VertexColorMaskFlags vertexColorBlueMask READ vertexColorBlueMask WRITE setVertexColorBlueMask NOTIFY vertexColorBlueMaskChanged REVISION(6, 8))
-    Q_PROPERTY(VertexColorMaskFlags vertexColorAlphaMask READ vertexColorAlphaMask WRITE setVertexColorAlphaMask NOTIFY vertexColorAlphaMaskChanged REVISION(6, 8))
+    Q_PROPERTY(bool vertexColorsMaskEnabled READ vertexColorsMaskEnabled WRITE setVertexColorsMaskEnabled NOTIFY vertexColorsMaskEnabledChanged REVISION(6, 7))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorRedMask READ vertexColorRedMask WRITE setVertexColorRedMask NOTIFY vertexColorRedMaskChanged REVISION(6, 7))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorGreenMask READ vertexColorGreenMask WRITE setVertexColorGreenMask NOTIFY vertexColorGreenMaskChanged REVISION(6, 7))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorBlueMask READ vertexColorBlueMask WRITE setVertexColorBlueMask NOTIFY vertexColorBlueMaskChanged REVISION(6, 7))
+    Q_PROPERTY(VertexColorMaskFlags vertexColorAlphaMask READ vertexColorAlphaMask WRITE setVertexColorAlphaMask NOTIFY vertexColorAlphaMaskChanged REVISION(6, 7))
 
     QML_NAMED_ELEMENT(SpecularGlossyMaterial)
     QML_ADDED_IN_VERSION(6, 4)
@@ -212,24 +212,24 @@ public:
     float attenuationDistance() const;
     QColor attenuationColor() const;
 
-    Q_REVISION(6, 8) bool fresnelScaleBiasEnabled() const;
-    Q_REVISION(6, 8) float fresnelScale() const;
-    Q_REVISION(6, 8) float fresnelBias() const;
-    Q_REVISION(6, 8) float fresnelPower() const;
+    Q_REVISION(6, 7) bool fresnelScaleBiasEnabled() const;
+    Q_REVISION(6, 7) float fresnelScale() const;
+    Q_REVISION(6, 7) float fresnelBias() const;
+    Q_REVISION(6, 7) float fresnelPower() const;
 
-    Q_REVISION(6, 8) bool clearcoatFresnelScaleBiasEnabled() const;
-    Q_REVISION(6, 8) float clearcoatFresnelScale() const;
-    Q_REVISION(6, 8) float clearcoatFresnelBias() const;
-    Q_REVISION(6, 8) float clearcoatFresnelPower() const;
+    Q_REVISION(6, 7) bool clearcoatFresnelScaleBiasEnabled() const;
+    Q_REVISION(6, 7) float clearcoatFresnelScale() const;
+    Q_REVISION(6, 7) float clearcoatFresnelBias() const;
+    Q_REVISION(6, 7) float clearcoatFresnelPower() const;
 
     Q_REVISION(6, 5) bool vertexColorsEnabled() const;
-    Q_REVISION(6, 8) float clearcoatNormalStrength() const;
+    Q_REVISION(6, 7) float clearcoatNormalStrength() const;
 
-    Q_REVISION(6, 8) bool vertexColorsMaskEnabled() const;
-    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorRedMask() const;
-    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorGreenMask() const;
-    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorBlueMask() const;
-    Q_REVISION(6, 8) VertexColorMaskFlags vertexColorAlphaMask() const;
+    Q_REVISION(6, 7) bool vertexColorsMaskEnabled() const;
+    Q_REVISION(6, 7) VertexColorMaskFlags vertexColorRedMask() const;
+    Q_REVISION(6, 7) VertexColorMaskFlags vertexColorGreenMask() const;
+    Q_REVISION(6, 7) VertexColorMaskFlags vertexColorBlueMask() const;
+    Q_REVISION(6, 7) VertexColorMaskFlags vertexColorAlphaMask() const;
 
 public Q_SLOTS:
     void setLighting(QQuick3DSpecularGlossyMaterial::Lighting lighting);
@@ -275,7 +275,7 @@ public Q_SLOTS:
     void setClearcoatRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newClearcoatRoughnessChannel);
     void setClearcoatRoughnessMap(QQuick3DTexture *newClearcoatRoughnessMap);
     void setClearcoatNormalMap(QQuick3DTexture *newClearcoatNormalMap);
-    Q_REVISION(6, 8) void setClearcoatNormalStrength( float newClearcoatNormalStrength );
+    Q_REVISION(6, 7) void setClearcoatNormalStrength( float newClearcoatNormalStrength );
 
     void setTransmissionFactor(float newTransmissionFactor);
     void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
@@ -287,23 +287,23 @@ public Q_SLOTS:
     void setAttenuationDistance(float newAttenuationDistance);
     void setAttenuationColor(const QColor &newAttenuationColor);
 
-    Q_REVISION(6, 8) void setFresnelScaleBiasEnabled(bool fresnelScaleBias);
-    Q_REVISION(6, 8) void setFresnelScale(float fresnelScale);
-    Q_REVISION(6, 8) void setFresnelBias(float fresnelBias);
-    Q_REVISION(6, 8) void setFresnelPower(float fresnelPower);
+    Q_REVISION(6, 7) void setFresnelScaleBiasEnabled(bool fresnelScaleBias);
+    Q_REVISION(6, 7) void setFresnelScale(float fresnelScale);
+    Q_REVISION(6, 7) void setFresnelBias(float fresnelBias);
+    Q_REVISION(6, 7) void setFresnelPower(float fresnelPower);
 
-    Q_REVISION(6, 8) void setClearcoatFresnelScaleBiasEnabled(bool clearcoatFresnelScaleBias);
-    Q_REVISION(6, 8) void setClearcoatFresnelScale(float clearcoatFresnelScale);
-    Q_REVISION(6, 8) void setClearcoatFresnelBias(float clearcoatFresnelBias);
-    Q_REVISION(6, 8) void setClearcoatFresnelPower(float clearcoatFresnelPower);
+    Q_REVISION(6, 7) void setClearcoatFresnelScaleBiasEnabled(bool clearcoatFresnelScaleBias);
+    Q_REVISION(6, 7) void setClearcoatFresnelScale(float clearcoatFresnelScale);
+    Q_REVISION(6, 7) void setClearcoatFresnelBias(float clearcoatFresnelBias);
+    Q_REVISION(6, 7) void setClearcoatFresnelPower(float clearcoatFresnelPower);
 
     Q_REVISION(6, 5) void setVertexColorsEnabled(bool vertexColorsEnabled);
 
-    Q_REVISION(6, 8) void setVertexColorsMaskEnabled(bool vertexColorsMaskEnabled);
-    Q_REVISION(6, 8) void setVertexColorRedMask(VertexColorMaskFlags vertexColorRedMask);
-    Q_REVISION(6, 8) void setVertexColorGreenMask(VertexColorMaskFlags vertexColorGreenMask);
-    Q_REVISION(6, 8) void setVertexColorBlueMask(VertexColorMaskFlags vertexColorBlueMask);
-    Q_REVISION(6, 8) void setVertexColorAlphaMask(VertexColorMaskFlags vertexColorAlphaMask);
+    Q_REVISION(6, 7) void setVertexColorsMaskEnabled(bool vertexColorsMaskEnabled);
+    Q_REVISION(6, 7) void setVertexColorRedMask(VertexColorMaskFlags vertexColorRedMask);
+    Q_REVISION(6, 7) void setVertexColorGreenMask(VertexColorMaskFlags vertexColorGreenMask);
+    Q_REVISION(6, 7) void setVertexColorBlueMask(VertexColorMaskFlags vertexColorBlueMask);
+    Q_REVISION(6, 7) void setVertexColorAlphaMask(VertexColorMaskFlags vertexColorAlphaMask);
 
 Q_SIGNALS:
     void lightingChanged();
@@ -363,21 +363,21 @@ Q_SIGNALS:
 
     Q_REVISION(6, 5) void vertexColorsEnabledChanged(bool vertexColorsEnabled);
 
-    Q_REVISION(6, 8) void fresnelScaleBiasEnabledChanged(bool fresnelScaleBiasEnabled);
-    Q_REVISION(6, 8) void fresnelScaleChanged(float fresnelScale);
-    Q_REVISION(6, 8) void fresnelBiasChanged(float fresnelBias);
-    Q_REVISION(6, 8) void fresnelPowerChanged(float fresnelPower);
+    Q_REVISION(6, 7) void fresnelScaleBiasEnabledChanged(bool fresnelScaleBiasEnabled);
+    Q_REVISION(6, 7) void fresnelScaleChanged(float fresnelScale);
+    Q_REVISION(6, 7) void fresnelBiasChanged(float fresnelBias);
+    Q_REVISION(6, 7) void fresnelPowerChanged(float fresnelPower);
 
-    Q_REVISION(6, 8) void clearcoatFresnelScaleBiasEnabledChanged(bool clearcoatFresnelScaleBiasEnabled);
-    Q_REVISION(6, 8) void clearcoatFresnelScaleChanged(float clearcoatFresnelScale);
-    Q_REVISION(6, 8) void clearcoatFresnelBiasChanged(float clearcoatFresnelBias);
-    Q_REVISION(6, 8) void clearcoatFresnelPowerChanged(float clearcoatFresnelPower);
+    Q_REVISION(6, 7) void clearcoatFresnelScaleBiasEnabledChanged(bool clearcoatFresnelScaleBiasEnabled);
+    Q_REVISION(6, 7) void clearcoatFresnelScaleChanged(float clearcoatFresnelScale);
+    Q_REVISION(6, 7) void clearcoatFresnelBiasChanged(float clearcoatFresnelBias);
+    Q_REVISION(6, 7) void clearcoatFresnelPowerChanged(float clearcoatFresnelPower);
 
-    Q_REVISION(6, 8) void vertexColorsMaskEnabledChanged();
-    Q_REVISION(6, 8) void vertexColorRedMaskChanged();
-    Q_REVISION(6, 8) void vertexColorGreenMaskChanged();
-    Q_REVISION(6, 8) void vertexColorBlueMaskChanged();
-    Q_REVISION(6, 8) void vertexColorAlphaMaskChanged();
+    Q_REVISION(6, 7) void vertexColorsMaskEnabledChanged();
+    Q_REVISION(6, 7) void vertexColorRedMaskChanged();
+    Q_REVISION(6, 7) void vertexColorGreenMaskChanged();
+    Q_REVISION(6, 7) void vertexColorBlueMaskChanged();
+    Q_REVISION(6, 7) void vertexColorAlphaMaskChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
