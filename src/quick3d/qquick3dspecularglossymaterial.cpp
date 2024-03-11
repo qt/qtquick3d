@@ -127,6 +127,29 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty bool SpecularGlossyMaterial::albedoSingleChannelEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use the single value of the albedoChannel from
+    the albedoMap as RGB value and use 1.0 as alpha value.
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration SpecularGlossyMaterial::albedoChannel
+    \since 6.8
+
+    This property defines the texture channel used to read the albedo color value from albedoMap.
+    In order to use a single texture channel as color you have to enable the albedoSingleChannelEnabled
+    The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+*/
+
+/*!
     \qmlproperty color SpecularGlossyMaterial::specularColor
 
     This property defines the specular RGB color. If an alpha value is provided it
@@ -140,6 +163,29 @@ QT_BEGIN_NAMESPACE
 
     This property sets a Texture to be used to set the specular color for the
     different parts of the material. Only the RGB channels are used.
+*/
+
+/*!
+    \qmlproperty bool SpecularGlossyMaterial::specularSingleChannelEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use the single value of the specularChannel from
+    the specularMap as RGB value.
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration SpecularGlossyMaterial::specularChannel
+    \since 6.8
+
+    This property defines the texture channel used to read the specular color value from specularMap.
+    In order to use a single texture channel as color you have to enable the specularSingleChannelEnabled
+    The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
 */
 
 /*!
@@ -164,6 +210,29 @@ QT_BEGIN_NAMESPACE
     This property defines the texture channel used to read the glossiness value
     from glossinessMap.
     The default value is \c Material.A.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+*/
+
+/*!
+    \qmlproperty bool SpecularGlossyMaterial::emissiveSingleChannelEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use the single value of the emissiveChannel from
+    the emissiveMap as RGB value.
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration SpecularGlossyMaterial::emissiveChannel
+    \since 6.8
+
+    This property defines the texture channel used to read the emissive color value from emissiveMap.
+    In order to use a single texture channel as color you have to enable the emissiveSingleChannelEnabled
+    The default value is \c Material.R.
 
     \value Material.R Read value from texture R channel.
     \value Material.G Read value from texture G channel.
@@ -707,6 +776,36 @@ QQuick3DTexture *QQuick3DSpecularGlossyMaterial::albedoMap() const
     return m_albedoMap;
 }
 
+bool QQuick3DSpecularGlossyMaterial::albedoSingleChannelEnabled() const
+{
+    return m_albedoSingleChannelEnabled;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DSpecularGlossyMaterial::albedoChannel() const
+{
+    return m_albedoChannel;
+}
+
+bool QQuick3DSpecularGlossyMaterial::specularSingleChannelEnabled() const
+{
+    return m_specularSingleChannelEnabled;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DSpecularGlossyMaterial::specularChannel() const
+{
+    return m_specularChannel;
+}
+
+bool QQuick3DSpecularGlossyMaterial::emissiveSingleChannelEnabled() const
+{
+    return m_emissiveSingleChannelEnabled;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DSpecularGlossyMaterial::emissiveChannel() const
+{
+    return m_emissiveChannel;
+}
+
 QQuick3DTexture *QQuick3DSpecularGlossyMaterial::emissiveMap() const
 {
     return m_emissiveMap;
@@ -878,6 +977,66 @@ void QQuick3DSpecularGlossyMaterial::setAlbedoMap(QQuick3DTexture *albedoMap)
     m_albedoMap = albedoMap;
     emit albedoMapChanged();
     markDirty(AlbedoDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setAlbedoSingleChannelEnabled(bool albedoSingleChannelEnabled)
+{
+    if (m_albedoSingleChannelEnabled == albedoSingleChannelEnabled)
+        return;
+
+    m_albedoSingleChannelEnabled = albedoSingleChannelEnabled;
+    emit albedoSingleChannelEnabledChanged();
+    markDirty(AlbedoDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setAlbedoChannel(TextureChannelMapping channel)
+{
+    if (m_albedoChannel == channel)
+        return;
+
+    m_albedoChannel = channel;
+    emit albedoChannelChanged();
+    markDirty(AlbedoDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setSpecularSingleChannelEnabled(bool specularSingleChannelEnabled)
+{
+    if (m_specularSingleChannelEnabled == specularSingleChannelEnabled)
+        return;
+
+    m_specularSingleChannelEnabled = specularSingleChannelEnabled;
+    emit specularSingleChannelEnabledChanged();
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setSpecularChannel(TextureChannelMapping channel)
+{
+    if (m_specularChannel == channel)
+        return;
+
+    m_specularChannel = channel;
+    emit specularChannelChanged();
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setEmissiveSingleChannelEnabled(bool emissiveSingleChannelEnabled)
+{
+    if (m_emissiveSingleChannelEnabled == emissiveSingleChannelEnabled)
+        return;
+
+    m_emissiveSingleChannelEnabled = emissiveSingleChannelEnabled;
+    emit emissiveSingleChannelEnabledChanged();
+    markDirty(EmissiveDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setEmissiveChannel(TextureChannelMapping channel)
+{
+    if (m_emissiveChannel == channel)
+        return;
+
+    m_emissiveChannel = channel;
+    emit emissiveChannelChanged();
+    markDirty(EmissiveDirty);
 }
 
 void QQuick3DSpecularGlossyMaterial::setEmissiveMap(QQuick3DTexture *emissiveMap)
@@ -1176,6 +1335,8 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
             material->colorMap = m_albedoMap->getRenderImage();
 
         material->color = QSSGUtils::color::sRGBToLinear(m_albedo);
+        material->baseColorSingleChannelEnabled = m_albedoSingleChannelEnabled;
+        material->baseColorChannel = channelMapping(m_albedoChannel);
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
@@ -1185,6 +1346,8 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
             material->emissiveMap = m_emissiveMap->getRenderImage();
 
         material->emissiveColor = m_emissiveFactor;
+        material->emissiveSingleChannelEnabled = m_emissiveSingleChannelEnabled;
+        material->emissiveChannel = channelMapping(m_emissiveChannel);
     }
 
     material->fresnelPower = 5.0f;
@@ -1206,6 +1369,8 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
             material->specularMap = m_specularMap->getRenderImage();
 
         material->specularTint = QSSGUtils::color::sRGBToLinear(m_specular).toVector3D();
+        material->specularAmountSingleChannelEnabled = m_specularSingleChannelEnabled;
+        material->specularAmountChannel = channelMapping(m_specularChannel);
     }
 
     if (m_dirtyAttributes & OpacityDirty) {

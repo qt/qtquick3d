@@ -286,6 +286,35 @@ multiplier for the color values read from the Emissive Map.  This multiplied
 value is then added to the materials color value after all other lighting calculations
 have been preformed.`
         }
+
+        RowLayout {
+            Label {
+                text: "Enable emissive color single channel Map
+The material will use the single value of the emissiveChannel from
+the emissiveMap as RGB value."
+            }
+            Switch {
+                checked: rootView.targetMaterial.emissiveSingleChannelEnabled
+                onCheckedChanged: {
+                    rootView.targetMaterial.emissiveSingleChannelEnabled = checked
+                }
+            }
+        }
+        ComboBox {
+            enabled: rootView.targetMaterial.emissiveSingleChannelEnabled
+            textRole: "text"
+            valueRole: "value"
+            implicitContentWidthPolicy: ComboBox.WidestText
+            onActivated: rootView.targetMaterial.emissiveChannel = currentValue
+            Component.onCompleted: currentIndex = indexOfValue(rootView.targetMaterial.emissiveChannel)
+            model: [
+                { value: PrincipledMaterial.R, text: "Red Channel"},
+                { value: PrincipledMaterial.G, text: "Green Channel"},
+                { value: PrincipledMaterial.B, text: "Blue Channel"},
+                { value: PrincipledMaterial.A, text: "Alpha Channel"}
+            ]
+        }
+
         TextureSourceControl {
             defaultTexture: "maps/monkey_ao.jpg"
             defaultClearColor: "black"

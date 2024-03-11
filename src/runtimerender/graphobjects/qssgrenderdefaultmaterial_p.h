@@ -112,6 +112,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float metalnessAmount = 0.0f;
     float opacity = 1.0f; // 0-1
     bool invertOpacityMapValue = false;
+    bool baseColorSingleChannelEnabled = false;
+    bool specularAmountSingleChannelEnabled = false;
+    bool emissiveSingleChannelEnabled = false;
     float bumpAmount = 0.0f; // 0-??
     float translucentFalloff = 0.0f; // 0 - ??
     float occlusionAmount = 1.0f; // 0 - 1
@@ -146,6 +149,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping clearcoatRoughnessChannel = TextureChannelMapping::G;
     TextureChannelMapping transmissionChannel = TextureChannelMapping::R;
     TextureChannelMapping thicknessChannel = TextureChannelMapping::G;
+    TextureChannelMapping baseColorChannel = TextureChannelMapping::R;
+    TextureChannelMapping specularAmountChannel = TextureChannelMapping::R;
+    TextureChannelMapping emissiveChannel = TextureChannelMapping::R;
     float pointSize = 1.0f;
     float lineWidth = 1.0f;
     VertexColorMaskFlags vertexColorRedMask = VertexColorMask::NoMask;
@@ -162,6 +168,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
     bool isVertexColorsMaskEnabled() const { return vertexColorsMaskEnabled; }
     bool isInvertOpacityMapValue() const { return invertOpacityMapValue; }
+    bool isBaseColorSingleChannelEnabled() const { return baseColorSingleChannelEnabled; }
+    bool isSpecularAmountSingleChannelEnabled() const { return specularAmountSingleChannelEnabled; }
+    bool isEmissiveSingleChannelEnabled() const { return emissiveSingleChannelEnabled; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
     bool isClearcoatEnabled() const { return clearcoatAmount > 0.01f; }
     bool isTransmissionEnabled() const { return transmissionFactor > 0.01f; }

@@ -104,6 +104,34 @@ words 1.0 for all color channels, the Colors in the Base Color Map will be exact
 as intended.
     `
             }
+
+            RowLayout {
+                Label {
+                    text: "Enable base color single channel Map
+The material will use the single value of the baseColorChannel from
+the baseColorMap as RGB value and use 1.0 as alpha value."
+                }
+                Switch {
+                    checked: rootView.principledMaterial.baseColorSingleChannelEnabled
+                    onCheckedChanged: {
+                        rootView.principledMaterial.baseColorSingleChannelEnabled = checked
+                    }
+                }
+            }
+            ComboBox {
+                enabled: rootView.principledMaterial.baseColorSingleChannelEnabled
+                textRole: "text"
+                valueRole: "value"
+                implicitContentWidthPolicy: ComboBox.WidestText
+                onActivated: rootView.principledMaterial.baseColorChannel = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(rootView.principledMaterial.baseColorChannel)
+                model: [
+                    { value: PrincipledMaterial.R, text: "Red Channel"},
+                    { value: PrincipledMaterial.G, text: "Green Channel"},
+                    { value: PrincipledMaterial.B, text: "Blue Channel"},
+                    { value: PrincipledMaterial.A, text: "Alpha Channel"}
+                ]
+            }
             Button {
                 text: "Reset Base Color"
                 onClicked: {
@@ -315,6 +343,33 @@ words 1.0 for all color channels, the Colors in the Albedo Map will be exactly
 as intended.
     `
             }
+            RowLayout {
+                Label {
+                    text: "Enable albedo single channel Map
+The material will use the single value of the albedoChannel from
+the albedoMap as RGB value and use 1.0 as alpha value."
+                }
+                Switch {
+                    checked: rootView.specularGlossyMaterial.albedoSingleChannelEnabled
+                    onCheckedChanged: {
+                        rootView.specularGlossyMaterial.albedoSingleChannelEnabled = checked
+                    }
+                }
+            }
+            ComboBox {
+                enabled: rootView.specularGlossyMaterial.albedoSingleChannelEnabled
+                textRole: "text"
+                valueRole: "value"
+                implicitContentWidthPolicy: ComboBox.WidestText
+                onActivated: rootView.specularGlossyMaterial.albedoChannel = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(rootView.specularGlossyMaterial.albedoChannel)
+                model: [
+                    { value: PrincipledMaterial.R, text: "Red Channel"},
+                    { value: PrincipledMaterial.G, text: "Green Channel"},
+                    { value: PrincipledMaterial.B, text: "Blue Channel"},
+                    { value: PrincipledMaterial.A, text: "Alpha Channel"}
+                ]
+            }
             Button {
                 text: "Reset Albedo Color"
                 onClicked: {
@@ -383,6 +438,33 @@ Specular value possible will be the value set by the Specular map is the
 value in the Specular color property. So most of the time when using a Specular
 Map it will make sense to leave the value of Specular to 1.0.
     `
+            }
+            RowLayout {
+                Label {
+                    text: "Enable specular single channel Map
+The material will use the single value of the specularChannel from
+the specularMap as RGB value."
+                }
+                Switch {
+                    checked: rootView.specularGlossyMaterial.specularSingleChannelEnabled
+                    onCheckedChanged: {
+                        rootView.specularGlossyMaterial.specularSingleChannelEnabled = checked
+                    }
+                }
+            }
+            ComboBox {
+                enabled: rootView.specularGlossyMaterial.specularSingleChannelEnabled
+                textRole: "text"
+                valueRole: "value"
+                implicitContentWidthPolicy: ComboBox.WidestText
+                onActivated: rootView.specularGlossyMaterial.specularChannel = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(rootView.specularGlossyMaterial.specularChannel)
+                model: [
+                    { value: PrincipledMaterial.R, text: "Red Channel"},
+                    { value: PrincipledMaterial.G, text: "Green Channel"},
+                    { value: PrincipledMaterial.B, text: "Blue Channel"},
+                    { value: PrincipledMaterial.A, text: "Alpha Channel"}
+                ]
             }
             Button {
                 text: "Reset Specular Color Value"

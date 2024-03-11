@@ -37,6 +37,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isVertexColorsEnabled() = 0;
     virtual bool isVertexColorsMaskEnabled() = 0;
     virtual bool isInvertOpacityMapValue() = 0;
+    virtual bool isBaseColorSingleChannelEnabled() = 0;
+    virtual bool isSpecularAmountSingleChannelEnabled() = 0;
+    virtual bool isEmissiveSingleChannelEnabled() = 0;
+
     virtual bool isClearcoatEnabled() = 0;
     virtual bool isTransmissionEnabled() = 0;
     virtual bool hasLighting() = 0;
@@ -100,6 +104,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool isVertexColorsEnabled() override;
     bool isVertexColorsMaskEnabled() override;
     bool isInvertOpacityMapValue() override;
+    bool isBaseColorSingleChannelEnabled() override;
+    bool isSpecularAmountSingleChannelEnabled() override;
+    bool isEmissiveSingleChannelEnabled() override;
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
     bool hasLighting() override;
@@ -154,6 +161,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isVertexColorsEnabled() override;
     bool isVertexColorsMaskEnabled() override;
     bool isInvertOpacityMapValue() override;
+    bool isBaseColorSingleChannelEnabled() override;
+    bool isSpecularAmountSingleChannelEnabled() override;
+    bool isEmissiveSingleChannelEnabled() override;
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
     bool hasLighting() override;

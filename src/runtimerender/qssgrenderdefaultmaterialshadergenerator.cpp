@@ -1279,10 +1279,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         const auto &names = imageStringTable[int(baseImage->m_mapType)];
         // Diffuse and BaseColor maps need to converted to linear color space
         fragmentShader.addInclude("tonemapping.glsllib");
-        if (keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::BaseColorMap].isLinear(inKey))
+        if (materialAdapter->isBaseColorSingleChannelEnabled()) {
+            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::BaseColorChannel];
+            fragmentShader << "    vec4 qt_base_texture_color = vec4(vec3(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << "), 1.0f);\n";
+        } else {
             fragmentShader << "    vec4 qt_base_texture_color = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
-        else
-            fragmentShader << "    vec4 qt_base_texture_color = qt_sRGBToLinear(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << "));\n";
+        }
+        if (!keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::BaseColorMap].isLinear(inKey))
+            fragmentShader << "    qt_base_texture_color = qt_sRGBToLinear(qt_base_texture_color);\n";
         fragmentShader << "    qt_diffuseColor *= qt_base_texture_color;\n";
     }
 
@@ -1392,8 +1396,15 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             else
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, enableParallaxMapping, specularAmountImage->m_imageNode.m_indexUV);
 
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap)];
-            fragmentShader << "    qt_specularBase *= qt_sRGBToLinear(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")).rgb;\n";
+            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap )];
+
+        if (materialAdapter->isSpecularAmountSingleChannelEnabled()) {
+            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::SpecularAmountChannel];
+            fragmentShader << "    vec4 qt_specular_amount_map = vec4(vec3(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << "), 1.0f);\n";
+        } else {
+            fragmentShader << "    vec4 qt_specular_amount_map = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
+        }
+            fragmentShader << "    qt_specularBase *= qt_sRGBToLinear(qt_specular_amount_map).rgb;\n";
         }
 
         if (specularLightingEnabled) {
@@ -1744,7 +1755,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     break;
                 case QSSGRenderableImage::Type::Emissive:
                     fragmentShader.addInclude("tonemapping.glsllib");
-                    fragmentShader.append("    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb);");
+                    if (materialAdapter->isEmissiveSingleChannelEnabled()) {
+                        const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::EmissiveChannel];
+                        fragmentShader << "    qt_global_emission *= qt_sRGBToLinear(vec3(qt_texture_color" <<
+                                                        channelStr(channelProps, inKey) << "));\n";
+                    } else {
+                        fragmentShader.append("    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb);");
+                    }
                     break;
                 default:
                     Q_ASSERT(false);

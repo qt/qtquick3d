@@ -506,15 +506,12 @@ struct QSSGShaderDefaultMaterialKeyProperties
         LightCount = QSSG_MAX_NUM_LIGHTS,
     };
     enum {
-        SingleChannelImageCount = 10,
+        SingleChannelImageCount = 13,
     };
     enum ImageMapNames {
         DiffuseMap = 0,
-        EmissiveMap,
-        SpecularMap,
-        BaseColorMap,
         BumpMap,
-        SpecularAmountMap,
+        SpecularMap,
         NormalMap,
         ClearcoatNormalMap,
         // single channel images
@@ -528,6 +525,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
         ClearcoatRoughnessMap,
         TransmissionMap,
         ThicknessMap,
+        BaseColorMap,
+        SpecularAmountMap,
+        EmissiveMap,
 
         ImageMapCount,
         SingleChannelImagesFirst = OpacityMap
@@ -542,7 +542,10 @@ struct QSSGShaderDefaultMaterialKeyProperties
         ClearcoatChannel,
         ClearcoatRoughnessChannel,
         TransmissionChannel,
-        ThicknessChannel
+        ThicknessChannel,
+        BaseColorChannel,
+        SpecularAmountChannel,
+        EmissiveChannel,
     };
 
     QSSGShaderKeyBoolean m_hasLighting;
@@ -554,6 +557,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_lightShadowFlags[LightCount];
     QSSGShaderKeyBoolean m_specularEnabled;
     QSSGShaderKeyBoolean m_fresnelEnabled;
+    QSSGShaderKeyBoolean m_baseColorSingleChannelEnabled;
+    QSSGShaderKeyBoolean m_specularSingleChannelEnabled;
+    QSSGShaderKeyBoolean m_emissiveSingleChannelEnabled;
     QSSGShaderKeyBoolean m_invertOpacityMapValue;
     QSSGShaderKeyBoolean m_vertexColorsEnabled;
     QSSGShaderKeyBoolean m_vertexColorsMaskEnabled;
@@ -599,6 +605,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_lightCount("lightCount")
         , m_specularEnabled("specularEnabled")
         , m_fresnelEnabled("fresnelEnabled")
+        , m_baseColorSingleChannelEnabled("baseColorSingleChannelEnabled")
+        , m_specularSingleChannelEnabled("specularSingleChannelEnabled")
+        , m_emissiveSingleChannelEnabled("emissiveSingleChannelEnabled")
         , m_invertOpacityMapValue("invertOpacityMapValue")
         , m_vertexColorsEnabled("vertexColorsEnabled")
         , m_vertexColorsMaskEnabled("vertexColorsMaskEnabled")
@@ -728,6 +737,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureChannels[7].name = "clearcoatRoughnessMap_channel";
         m_textureChannels[8].name = "transmissionMap_channel";
         m_textureChannels[9].name = "thicknessMap_channel";
+        m_textureChannels[10].name = "baseColorMap_channel";
+        m_textureChannels[11].name = "specularAmountMap_channel";
 
         init();
     }
@@ -753,6 +764,10 @@ struct QSSGShaderDefaultMaterialKeyProperties
 
         inVisitor.visit(m_specularEnabled);
         inVisitor.visit(m_fresnelEnabled);
+        inVisitor.visit(m_baseColorSingleChannelEnabled);
+        inVisitor.visit(m_specularSingleChannelEnabled);
+        inVisitor.visit(m_emissiveSingleChannelEnabled);
+        inVisitor.visit(m_invertOpacityMapValue);
         inVisitor.visit(m_vertexColorsEnabled);
         inVisitor.visit(m_vertexColorsMaskEnabled);
         inVisitor.visit(m_vertexColorRedMask);

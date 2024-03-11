@@ -191,7 +191,33 @@ and the color of specularity across the surface of the material. These values
 are multiplied by the Specular Amount property. This property will only have
 an affect if the material is a dielectric (non-metallic).`
             }
-
+            RowLayout {
+                Label {
+                    text: "Enable specular single channel Map
+The material will use the single value of the specularChannel from
+the specularMap as RGB value."
+                }
+                Switch {
+                    checked: rootView.targetMaterial.specularSingleChannelEnabled
+                    onCheckedChanged: {
+                        rootView.targetMaterial.specularSingleChannelEnabled = checked
+                    }
+                }
+            }
+            ComboBox {
+                enabled: rootView.targetMaterial.specularSingleChannelEnabled
+                textRole: "text"
+                valueRole: "value"
+                implicitContentWidthPolicy: ComboBox.WidestText
+                onActivated: rootView.targetMaterial.specularChannel = currentValue
+                Component.onCompleted: currentIndex = indexOfValue(rootView.targetMaterial.specularChannel)
+                model: [
+                    { value: PrincipledMaterial.R, text: "Red Channel"},
+                    { value: PrincipledMaterial.G, text: "Green Channel"},
+                    { value: PrincipledMaterial.B, text: "Blue Channel"},
+                    { value: PrincipledMaterial.A, text: "Alpha Channel"}
+                ]
+            }
             TextureSourceControl {
                 defaultClearColor: "black"
                 defaultTexture: "maps/metallic/metallic.jpg"
