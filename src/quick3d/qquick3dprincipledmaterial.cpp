@@ -145,6 +145,29 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty bool PrincipledMaterial::baseColorSingleChannelEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use the single value of the baseColorChannel from
+    the baseColorMap as RGB value and use 1.0 as alpha value.
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::baseColorChannel
+    \since 6.8
+
+    This property defines the texture channel used to read the baseColor value from baseColorMap.
+    In order to use a single texture channel as color you have to enable the baseColorSingleChannelEnabled
+    The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+*/
+
+/*!
     \qmlproperty real PrincipledMaterial::metalness
 
     The metalness property defines the \e metalness of the the material. The value
@@ -175,6 +198,29 @@ QT_BEGIN_NAMESPACE
     \value Material.G Read value from texture G channel.
     \value Material.B Read value from texture B channel.
     \value Material.A Read value from texture A channel.
+*/
+
+/*!
+    \qmlproperty bool PrincipledMaterial::emissiveSingleChannelEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use the single value of the emissiveChannel from
+    the emissiveMap as RGB value.
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::emissiveChannel
+    \since 6.8
+
+    This property defines the texture channel used to read the emissive value from emissiveMap.
+    In order to use a single texture channel as color you have to enable the emissiveSingleChannelEnabled
+    The default value is \c Material.R.
+
+     \value Material.R Read value from texture R channel.
+     \value Material.G Read value from texture G channel.
+     \value Material.B Read value from texture B channel.
+     \value Material.A Read value from texture A channel.
 */
 
 /*!
@@ -233,6 +279,29 @@ QT_BEGIN_NAMESPACE
     by the specularAmount.
 
     \note The specular map will be ignored unless the material is dielectric.
+*/
+
+/*!
+    \qmlproperty bool PrincipledMaterial::specularSingleChannelEnabled
+    \since 6.8
+
+    When this property is enabled, the material will use the single value of the specularChannel from
+    the specularMap as RGB value.
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::specularChannel
+    \since 6.8
+
+    This property defines the texture channel used to read the specular color value from specularMap.
+    In order to use a single texture channel as color you have to enable the specularSingleChannelEnabled
+    The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
 */
 
 /*!
@@ -860,6 +929,36 @@ QQuick3DTexture *QQuick3DPrincipledMaterial::baseColorMap() const
     return m_baseColorMap;
 }
 
+bool QQuick3DPrincipledMaterial::baseColorSingleChannelEnabled() const
+{
+    return m_baseColorSingleChannelEnabled;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::baseColorChannel() const
+{
+    return m_baseColorChannel;
+}
+
+bool QQuick3DPrincipledMaterial::specularSingleChannelEnabled() const
+{
+    return m_specularSingleChannelEnabled;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::specularChannel() const
+{
+    return m_specularChannel;
+}
+
+bool QQuick3DPrincipledMaterial::emissiveSingleChannelEnabled() const
+{
+    return m_emissiveSingleChannelEnabled;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::emissiveChannel() const
+{
+    return m_emissiveChannel;
+}
+
 QQuick3DTexture *QQuick3DPrincipledMaterial::emissiveMap() const
 {
     return m_emissiveMap;
@@ -1056,6 +1155,66 @@ void QQuick3DPrincipledMaterial::setBaseColorMap(QQuick3DTexture *baseColorMap)
     m_baseColorMap = baseColorMap;
     emit baseColorMapChanged(m_baseColorMap);
     markDirty(BaseColorDirty);
+}
+
+void QQuick3DPrincipledMaterial::setBaseColorSingleChannelEnabled(bool baseColorSingleChannelEnabled)
+{
+    if (m_baseColorSingleChannelEnabled == baseColorSingleChannelEnabled)
+        return;
+
+    m_baseColorSingleChannelEnabled = baseColorSingleChannelEnabled;
+    emit baseColorSingleChannelEnabledChanged(baseColorSingleChannelEnabled);
+    markDirty(BaseColorDirty);
+}
+
+void QQuick3DPrincipledMaterial::setBaseColorChannel(TextureChannelMapping channel)
+{
+    if (m_baseColorChannel == channel)
+        return;
+
+    m_baseColorChannel = channel;
+    emit baseColorChannelChanged(channel);
+    markDirty(BaseColorDirty);
+}
+
+void QQuick3DPrincipledMaterial::setSpecularSingleChannelEnabled(bool specularSingleChannelEnabled)
+{
+    if (m_specularSingleChannelEnabled == specularSingleChannelEnabled)
+        return;
+
+    m_specularSingleChannelEnabled = specularSingleChannelEnabled;
+    emit specularSingleChannelEnabledChanged(specularSingleChannelEnabled);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setSpecularChannel(TextureChannelMapping channel)
+{
+    if (m_specularChannel == channel)
+        return;
+
+    m_specularChannel = channel;
+    emit specularChannelChanged(channel);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setEmissiveSingleChannelEnabled(bool emissiveSingleChannelEnabled)
+{
+    if (m_emissiveSingleChannelEnabled == emissiveSingleChannelEnabled)
+        return;
+
+    m_emissiveSingleChannelEnabled = emissiveSingleChannelEnabled;
+    emit emissiveSingleChannelEnabledChanged(emissiveSingleChannelEnabled);
+    markDirty(EmissiveDirty);
+}
+
+void QQuick3DPrincipledMaterial::setEmissiveChannel(TextureChannelMapping channel)
+{
+    if (m_emissiveChannel == channel)
+        return;
+
+    m_emissiveChannel = channel;
+    emit emissiveChannelChanged(channel);
+    markDirty(EmissiveDirty);
 }
 
 void QQuick3DPrincipledMaterial::setEmissiveMap(QQuick3DTexture *emissiveMap)
@@ -1411,6 +1570,8 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->colorMap = m_baseColorMap->getRenderImage();
 
         material->color = QSSGUtils::color::sRGBToLinear(m_baseColor);
+        material->baseColorSingleChannelEnabled = m_baseColorSingleChannelEnabled;
+        material->baseColorChannel = channelMapping(m_baseColorChannel);
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
@@ -1420,6 +1581,8 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->emissiveMap = m_emissiveMap->getRenderImage();
 
         material->emissiveColor = m_emissiveFactor;
+        material->emissiveSingleChannelEnabled = m_emissiveSingleChannelEnabled;
+        material->emissiveChannel = channelMapping(m_emissiveChannel);
     }
 
     if (m_dirtyAttributes & RoughnessDirty) {
@@ -1459,6 +1622,9 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->specularTint = QVector3D(m_specularTint, m_specularTint, m_specularTint);
         material->ior = m_indexOfRefraction;
         material->fresnelPower = m_fresnelPower;
+        material->specularAmountSingleChannelEnabled = m_specularSingleChannelEnabled;
+        material->specularAmountChannel = channelMapping(m_specularChannel);
+
     }
 
     if (m_dirtyAttributes & OpacityDirty) {

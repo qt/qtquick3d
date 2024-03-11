@@ -999,6 +999,15 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
             case QSSGShaderDefaultMaterialKeyProperties::ThicknessMap:
                 value = inMaterial->thicknessChannel;
                 break;
+            case QSSGShaderDefaultMaterialKeyProperties::BaseColorMap:
+                value = inMaterial->baseColorChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::SpecularAmountMap:
+                value = inMaterial->specularAmountChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::EmissiveMap:
+                value = inMaterial->emissiveChannel;
+                break;
             default:
                 break;
             }
@@ -1146,6 +1155,12 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
         defaultMaterialShaderKeyProperties.m_fresnelEnabled.setValue(theGeneratedKey, theMaterial->isFresnelEnabled());
 
+        defaultMaterialShaderKeyProperties.m_baseColorSingleChannelEnabled.setValue(theGeneratedKey,
+                                                                            theMaterial->isBaseColorSingleChannelEnabled());
+        defaultMaterialShaderKeyProperties.m_specularSingleChannelEnabled.setValue(theGeneratedKey,
+                                                                            theMaterial->isSpecularAmountSingleChannelEnabled());
+        defaultMaterialShaderKeyProperties.m_emissiveSingleChannelEnabled.setValue(theGeneratedKey,
+                                                                                   theMaterial->isEmissiveSingleChannelEnabled());
         defaultMaterialShaderKeyProperties.m_invertOpacityMapValue.setValue(theGeneratedKey,
                                                                             theMaterial->isInvertOpacityMapValue());
         defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.setValue(theGeneratedKey,

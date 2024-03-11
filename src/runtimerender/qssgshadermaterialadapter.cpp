@@ -107,6 +107,21 @@ bool QSSGShaderDefaultMaterialAdapter::isInvertOpacityMapValue()
     return m_material.isInvertOpacityMapValue();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isBaseColorSingleChannelEnabled()
+{
+    return m_material.isBaseColorSingleChannelEnabled();
+}
+
+bool QSSGShaderDefaultMaterialAdapter::isSpecularAmountSingleChannelEnabled()
+{
+    return m_material.isSpecularAmountSingleChannelEnabled();
+}
+
+bool QSSGShaderDefaultMaterialAdapter::isEmissiveSingleChannelEnabled()
+{
+    return m_material.isEmissiveSingleChannelEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::isClearcoatEnabled()
 {
     return m_material.isClearcoatEnabled();
@@ -332,6 +347,21 @@ bool QSSGShaderCustomMaterialAdapter::isVertexColorsMaskEnabled()
 }
 
 bool QSSGShaderCustomMaterialAdapter::isInvertOpacityMapValue()
+{
+    return false;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isBaseColorSingleChannelEnabled()
+{
+    return false;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isSpecularAmountSingleChannelEnabled()
+{
+    return false;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isEmissiveSingleChannelEnabled()
 {
     return false;
 }

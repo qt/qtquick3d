@@ -31,9 +31,13 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QColor albedoColor READ albedoColor WRITE setAlbedoColor NOTIFY albedoColorChanged)
     Q_PROPERTY(QQuick3DTexture *albedoMap READ albedoMap WRITE setAlbedoMap NOTIFY albedoMapChanged)
+    Q_PROPERTY(bool albedoSingleChannelEnabled READ albedoSingleChannelEnabled WRITE setAlbedoSingleChannelEnabled NOTIFY albedoSingleChannelEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping albedoChannel READ albedoChannel WRITE setAlbedoChannel NOTIFY albedoChannelChanged REVISION(6, 8))
 
     Q_PROPERTY(QColor specularColor READ specularColor WRITE setSpecularColor NOTIFY specularColorChanged)
     Q_PROPERTY(QQuick3DTexture *specularMap READ specularMap WRITE setSpecularMap NOTIFY specularMapChanged)
+    Q_PROPERTY(bool specularSingleChannelEnabled READ specularSingleChannelEnabled WRITE setSpecularSingleChannelEnabled NOTIFY specularSingleChannelEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping specularChannel READ specularChannel WRITE setSpecularChannel NOTIFY specularChannelChanged REVISION(6, 8))
 
     Q_PROPERTY(float glossiness READ glossiness WRITE setGlossiness NOTIFY glossinessChanged)
     Q_PROPERTY(QQuick3DTexture *glossinessMap READ glossinessMap WRITE setGlossinessMap NOTIFY glossinessMapChanged)
@@ -41,6 +45,8 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
+    Q_PROPERTY(bool emissiveSingleChannelEnabled READ emissiveSingleChannelEnabled WRITE setEmissiveSingleChannelEnabled NOTIFY emissiveSingleChannelEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping emissiveChannel READ emissiveChannel WRITE setEmissiveChannel NOTIFY emissiveChannelChanged REVISION(6, 8))
 
     Q_PROPERTY(bool invertOpacityMapValue READ invertOpacityMapValue WRITE setInvertOpacityMapValue NOTIFY invertOpacityMapValueChanged REVISION(6, 8))
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
@@ -146,6 +152,12 @@ public:
     BlendMode blendMode() const;
     QColor albedoColor() const;
     QQuick3DTexture *albedoMap() const;
+    bool albedoSingleChannelEnabled() const;
+    TextureChannelMapping albedoChannel() const;
+    bool specularSingleChannelEnabled() const;
+    TextureChannelMapping specularChannel() const;
+    bool emissiveSingleChannelEnabled() const;
+    TextureChannelMapping emissiveChannel() const;
     QQuick3DTexture *emissiveMap() const;
     QVector3D emissiveFactor() const;
     float glossiness() const;
@@ -204,6 +216,12 @@ public Q_SLOTS:
     void setBlendMode(QQuick3DSpecularGlossyMaterial::BlendMode blendMode);
     void setAlbedoColor(const QColor &albedo);
     void setAlbedoMap(QQuick3DTexture *albedoMap);
+    void setAlbedoSingleChannelEnabled(bool albedoSingleChannelEnabled);
+    void setAlbedoChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setSpecularSingleChannelEnabled(bool specularSingleChannelEnabled);
+    void setSpecularChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setEmissiveSingleChannelEnabled(bool emissiveSingleChannelEnabled);
+    void setEmissiveChannel(QQuick3DMaterial::TextureChannelMapping channel);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
     void setEmissiveFactor(const QVector3D &emissiveFactor);
     void setGlossiness(float glossiness);
@@ -262,6 +280,12 @@ Q_SIGNALS:
     void blendModeChanged();
     void albedoColorChanged();
     void albedoMapChanged();
+    void albedoSingleChannelEnabledChanged();
+    void albedoChannelChanged();
+    void specularSingleChannelEnabledChanged();
+    void specularChannelChanged();
+    void emissiveSingleChannelEnabledChanged();
+    void emissiveChannelChanged();
     void emissiveMapChanged();
     void emissiveFactorChanged();
     void glossinessChanged();
@@ -348,6 +372,12 @@ private:
     AlphaMode m_alphaMode = Default;
     QColor m_albedo = Qt::white;
     QQuick3DTexture *m_albedoMap = nullptr;
+    bool m_albedoSingleChannelEnabled = false;
+    TextureChannelMapping m_albedoChannel = QQuick3DMaterial::R;
+    bool m_specularSingleChannelEnabled = false;
+    TextureChannelMapping m_specularChannel = QQuick3DMaterial::R;
+    bool m_emissiveSingleChannelEnabled = false;
+    TextureChannelMapping m_emissiveChannel = QQuick3DMaterial::R;
     QVector3D m_emissiveFactor;
     QQuick3DTexture *m_emissiveMap = nullptr;
     QQuick3DTexture *m_glossinessMap = nullptr;

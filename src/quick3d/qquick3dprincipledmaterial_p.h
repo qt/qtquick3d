@@ -31,6 +31,8 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor NOTIFY baseColorChanged)
     Q_PROPERTY(QQuick3DTexture *baseColorMap READ baseColorMap WRITE setBaseColorMap NOTIFY baseColorMapChanged)
+    Q_PROPERTY(bool baseColorSingleChannelEnabled READ baseColorSingleChannelEnabled WRITE setBaseColorSingleChannelEnabled NOTIFY baseColorSingleChannelEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping baseColorChannel READ baseColorChannel WRITE setBaseColorChannel NOTIFY baseColorChannelChanged REVISION(6, 8))
 
     Q_PROPERTY(float metalness READ metalness WRITE setMetalness NOTIFY metalnessChanged)
     Q_PROPERTY(QQuick3DTexture *metalnessMap READ metalnessMap WRITE setMetalnessMap NOTIFY metalnessMapChanged)
@@ -39,6 +41,8 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(float specularAmount READ specularAmount WRITE setSpecularAmount NOTIFY specularAmountChanged)
     Q_PROPERTY(QQuick3DTexture *specularMap READ specularMap WRITE setSpecularMap NOTIFY specularMapChanged)
     Q_PROPERTY(float specularTint READ specularTint WRITE setSpecularTint NOTIFY specularTintChanged)
+    Q_PROPERTY(bool specularSingleChannelEnabled READ specularSingleChannelEnabled WRITE setSpecularSingleChannelEnabled NOTIFY specularSingleChannelEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping specularChannel READ specularChannel WRITE setSpecularChannel NOTIFY specularChannelChanged REVISION(6, 8))
 
     Q_PROPERTY(float roughness READ roughness WRITE setRoughness NOTIFY roughnessChanged)
     Q_PROPERTY(QQuick3DTexture *roughnessMap READ roughnessMap WRITE setRoughnessMap NOTIFY roughnessMapChanged)
@@ -46,6 +50,8 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
+    Q_PROPERTY(bool emissiveSingleChannelEnabled READ emissiveSingleChannelEnabled WRITE setEmissiveSingleChannelEnabled NOTIFY emissiveSingleChannelEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping emissiveChannel READ emissiveChannel WRITE setEmissiveChannel NOTIFY emissiveChannelChanged REVISION(6, 8))
 
     Q_PROPERTY(bool invertOpacityMapValue READ invertOpacityMapValue WRITE setInvertOpacityMapValue NOTIFY invertOpacityMapValueChanged REVISION(6, 8))
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
@@ -158,6 +164,12 @@ public:
     BlendMode blendMode() const;
     QColor baseColor() const;
     QQuick3DTexture *baseColorMap() const;
+    bool baseColorSingleChannelEnabled() const;
+    TextureChannelMapping baseColorChannel() const;
+    bool specularSingleChannelEnabled() const;
+    TextureChannelMapping specularChannel() const;
+    bool emissiveSingleChannelEnabled() const;
+    TextureChannelMapping emissiveChannel() const;
     QQuick3DTexture *emissiveMap() const;
     QVector3D emissiveFactor() const;
     QQuick3DTexture *specularReflectionMap() const;
@@ -225,6 +237,12 @@ public Q_SLOTS:
     void setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode);
     void setBaseColor(QColor baseColor);
     void setBaseColorMap(QQuick3DTexture *baseColorMap);
+    void setBaseColorSingleChannelEnabled(bool baseColorSingleChannelEnabled);
+    void setBaseColorChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setSpecularSingleChannelEnabled(bool specularSingleChannelEnabled);
+    void setSpecularChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setEmissiveSingleChannelEnabled(bool emissiveSingleChannelEnabled);
+    void setEmissiveChannel(QQuick3DMaterial::TextureChannelMapping channel);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
     void setEmissiveFactor(QVector3D emissiveFactor);
     void setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap);
@@ -291,6 +309,12 @@ Q_SIGNALS:
     void blendModeChanged(QQuick3DPrincipledMaterial::BlendMode blendMode);
     void baseColorChanged(QColor baseColor);
     void baseColorMapChanged(QQuick3DTexture *baseColorMap);
+    void baseColorSingleChannelEnabledChanged(bool baseColorSingleChannelEnabled);
+    void baseColorChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    void specularSingleChannelEnabledChanged(bool specularColorSingleChannelEnabled);
+    void specularChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    void emissiveSingleChannelEnabledChanged(bool emissiveColorSingleChannelEnabled);
+    void emissiveChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
     void emissiveMapChanged(QQuick3DTexture *emissiveMap);
     void emissiveFactorChanged(QVector3D emissiveFactor);
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
@@ -391,6 +415,12 @@ private:
     AlphaMode m_alphaMode = Default;
     QColor m_baseColor = Qt::white;
     QQuick3DTexture *m_baseColorMap = nullptr;
+    bool m_baseColorSingleChannelEnabled = false;
+    TextureChannelMapping m_baseColorChannel = QQuick3DMaterial::R;
+    bool m_specularSingleChannelEnabled = false;
+    TextureChannelMapping m_specularChannel = QQuick3DMaterial::R;
+    TextureChannelMapping m_emissiveChannel = QQuick3DMaterial::R;
+    bool m_emissiveSingleChannelEnabled = false;
     QVector3D m_emissiveFactor;
     QQuick3DTexture *m_emissiveMap = nullptr;
 
