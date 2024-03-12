@@ -52,9 +52,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 
     struct ShadowVariableNames
     {
-        QByteArray shadowMap;
         QByteArray shadowCube;
         QByteArray shadowData;
+        QByteArray shadowMapTexture;
     };
 
     ~QSSGMaterialShaderGenerator() = default;

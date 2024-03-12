@@ -20,13 +20,13 @@ float qt_sampleCubemap( in samplerCube shadowCube, in ShadowData shadowData, in 
     return min(1.0, exp(shadowData.factor * sampleDepth) / exp(shadowData.factor * currentDepth));
 }
 
-float qt_sampleOrthographic( in sampler2D shadowMap, in ShadowData shadowData, in vec3 worldPos )
+float qt_sampleOrthographic( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 worldPos )
 {
     vec4 projCoord = shadowData.matrix * vec4( worldPos, 1.0 );
     vec3 smpCoord = projCoord.xyz / projCoord.w;
     smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, shadowData.isYUp);
 
-    float sampleDepth = texture( shadowMap, smpCoord.xy ).x + shadowData.bias;
+    float sampleDepth = texture( shadowMap, vec3(smpCoord.xy, float(shadowData.layerIndex))).x + shadowData.bias;
 
     return min(1.0, exp(shadowData.factor * sampleDepth) / exp(shadowData.factor * smpCoord.z));
 }

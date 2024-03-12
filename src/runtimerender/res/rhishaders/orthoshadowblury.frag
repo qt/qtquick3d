@@ -6,7 +6,7 @@ layout(location = 0) out vec4 fragOutput;
 
 layout(std140, binding = 0) uniform buf {
     mat4 matrix;
-    vec2 cameraProperties;
+    vec4 cameraProperties;
 } ubuf;
 
 layout(binding = 1) uniform sampler2D depthSrc;

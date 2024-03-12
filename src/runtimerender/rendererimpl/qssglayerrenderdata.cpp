@@ -872,6 +872,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
             defaultMaterialShaderKeyProperties.m_lightFlags[lightIdx].setValue(theGeneratedKey, !isDirectional);
             defaultMaterialShaderKeyProperties.m_lightSpotFlags[lightIdx].setValue(theGeneratedKey, isSpot);
             defaultMaterialShaderKeyProperties.m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castsShadows);
+            defaultMaterialShaderKeyProperties.m_lightShadowMapSize[lightIdx].setValue(theGeneratedKey, theLight->m_shadowMapRes);
         }
     }
     return theGeneratedKey;
@@ -2368,27 +2369,16 @@ void QSSGLayerRenderData::prepareForRender()
 
     if (shadowMapCount > 0) { // Setup Shadow Maps Entries for Lights casting shadows
         requestShadowMapManager(); // Ensure we have a shadow map manager
-
-        for (int i = 0, end = renderableLights.size(); i != end; ++i) {
-            const auto &shaderLight = renderableLights.at(i);
-            if (shaderLight.shadows) {
-                quint32 mapSize = shaderLight.light->m_shadowMapRes;
-                ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
-                        ? ShadowMapModes::CUBE
-                        : ShadowMapModes::VSM;
-                shadowMapManager->addShadowMapEntry(i,
-                                                    mapSize,
-                                                    mapSize,
-                                                    mapMode,
-                                                    shaderLight.light->debugObjectName);
-                layerPrepResult.flags.setRequiresShadowMapPass(true);
-                // Any light with castShadow=true triggers shadow mapping
-                // in the generated shaders. The fact that some (or even
-                // all) objects may opt out from receiving shadows plays no
-                // role here whatsoever.
-                features.set(QSSGShaderFeatures::Feature::Ssm, true);
-            }
-        }
+        layerPrepResult.flags.setRequiresShadowMapPass(true);
+        // Any light with castShadow=true triggers shadow mapping
+        // in the generated shaders. The fact that some (or even
+        // all) objects may opt out from receiving shadows plays no
+        // role here whatsoever.
+        features.set(QSSGShaderFeatures::Feature::Ssm, true);
+        shadowMapManager->addShadowMaps(renderableLights);
+    } else if (shadowMapManager) {
+        // No shadows but a shadow manager so clear old resources
+        shadowMapManager->releaseCachedResources();
     }
 
     // Give each renderable a copy of the lights available

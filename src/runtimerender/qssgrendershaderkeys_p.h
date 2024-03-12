@@ -555,6 +555,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_lightSpotFlags[LightCount];
     QSSGShaderKeyBoolean m_lightAreaFlags[LightCount];
     QSSGShaderKeyBoolean m_lightShadowFlags[LightCount];
+    QSSGShaderKeyUnsigned<16> m_lightShadowMapSize[LightCount];
     QSSGShaderKeyBoolean m_specularEnabled;
     QSSGShaderKeyBoolean m_fresnelScaleBiasEnabled;
     QSSGShaderKeyBoolean m_clearcoatFresnelScaleBiasEnabled;
@@ -714,6 +715,22 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightShadowFlags[13].name = "light13HasShadow";
         m_lightShadowFlags[14].name = "light14HasShadow";
 
+        m_lightShadowMapSize[0].name = "light0ShadowMapSize";
+        m_lightShadowMapSize[1].name = "light1ShadowMapSize";
+        m_lightShadowMapSize[2].name = "light2ShadowMapSize";
+        m_lightShadowMapSize[3].name = "light3ShadowMapSize";
+        m_lightShadowMapSize[4].name = "light4ShadowMapSize";
+        m_lightShadowMapSize[5].name = "light5ShadowMapSize";
+        m_lightShadowMapSize[6].name = "light6ShadowMapSize";
+        m_lightShadowMapSize[7].name = "light7ShadowMapSize";
+        m_lightShadowMapSize[8].name = "light8ShadowMapSize";
+        m_lightShadowMapSize[9].name = "light9ShadowMapSize";
+        m_lightShadowMapSize[10].name = "light10ShadowMapSize";
+        m_lightShadowMapSize[11].name = "light11ShadowMapSize";
+        m_lightShadowMapSize[12].name = "light12ShadowMapSize";
+        m_lightShadowMapSize[13].name = "light13ShadowMapSize";
+        m_lightShadowMapSize[14].name = "light14ShadowMapSize";
+
         m_imageMaps[0].name = "diffuseMap";
         m_imageMaps[1].name = "emissiveMap";
         m_imageMaps[2].name = "specularMap";
@@ -767,6 +784,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
 
         for (auto &lightShadowFlag : m_lightShadowFlags)
             inVisitor.visit(lightShadowFlag);
+
+        for (auto &lightShadowMapSize : m_lightShadowMapSize)
+            inVisitor.visit(lightShadowMapSize);
 
         inVisitor.visit(m_specularEnabled);
         inVisitor.visit(m_fresnelEnabled);
@@ -871,7 +891,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         visitProperties(visitor);
 
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.offsetVisitor.m_offset < 416);
+        Q_ASSERT(visitor.offsetVisitor.m_offset < 672);
         // This is so we can do some guestimate of how big the string buffer needs
         // to be to avoid doing a lot of allocations when concatenating the strings.
         m_stringBufferSizeHint = visitor.stringSizeVisitor.size;
@@ -881,9 +901,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
 struct QSSGShaderDefaultMaterialKey
 {
     enum {
-        DataBufferSize = 13,
+        DataBufferSize = 21,
     };
-    quint32 m_dataBuffer[DataBufferSize]; // 13 * 4 * 8 = 416 bits
+    quint32 m_dataBuffer[DataBufferSize]; // 21 * 4 * 8 = 672 bits
     size_t m_featureSetHash;
 
     explicit QSSGShaderDefaultMaterialKey(size_t inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)

@@ -32,6 +32,7 @@ struct ShadowData {
     float clipNear;
     float clipFar;
     float shadowMapFar; // Used by point lights for historical reasons will be removed later
+    int layerIndex;
 };
 
 layout (std140, binding = 1) uniform cbLights

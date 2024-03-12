@@ -10,7 +10,7 @@ layout(location = 0) out vec2 uv_coords;
 
 layout(std140, binding = 0) uniform buf {
     mat4 matrix;
-    vec2 cameraProperties;
+    vec4 cameraProperties;
 } ubuf;
 
 out gl_PerVertex { vec4 gl_Position; };

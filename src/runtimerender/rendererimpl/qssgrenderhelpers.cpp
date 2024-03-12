@@ -880,12 +880,9 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             if (shaderPipeline->isLightingEnabled()) {
                 // Shadow map textures
                 const int shadowMapCount = shaderPipeline->shadowMapCount();
+                QVarLengthArray<QSize, 4> usedTextureArraySizes;
                 for (int i = 0; i < shadowMapCount; ++i) {
                     QSSGRhiShadowMapProperties &shadowMapProperties(shaderPipeline->shadowMapAt(i));
-                    QRhiTexture *texture = shadowMapProperties.shadowMapTexture;
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                    Q_ASSERT(texture && sampler);
                     const QByteArray &name(shadowMapProperties.shadowMapTextureUniformName);
                     if (shadowMapProperties.cachedBinding < 0)
                         shadowMapProperties.cachedBinding = shaderPipeline->bindingForTexture(name);
@@ -893,8 +890,20 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                         qWarning("No combined image sampler for shadow map texture '%s'", name.data());
                         continue;
                     }
+
+                    // Re-use same texture array if already created
+                    if (shadowMapProperties.shadowMapTexture->flags() & QRhiTexture::TextureArray) {
+                        if (usedTextureArraySizes.contains(shadowMapProperties.shadowMapTexture->pixelSize()))
+                            continue;
+                        usedTextureArraySizes.append(shadowMapProperties.shadowMapTexture->pixelSize());
+                    }
+
+                    QRhiTexture *texture = shadowMapProperties.shadowMapTexture;
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                    Q_ASSERT(texture && sampler);
                     bindings.addTexture(shadowMapProperties.cachedBinding, QRhiShaderResourceBinding::FragmentStage,
-                                        texture, sampler);
+                                            texture, sampler);
                 }
 
                  // Prioritize reflection texture over Light Probe texture because
@@ -1220,7 +1229,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
         QRhi *rhi = rhiCtx->rhi();
         QSSGRhiGraphicsPipelineState ps;
-        QRhiTexture *map = orthographic ? pEntry->m_rhiDepthMap : pEntry->m_rhiDepthCube;
+        QRhiTexture *map = orthographic ? pEntry->m_rhiDepthTextureArray : pEntry->m_rhiDepthCube;
         QRhiTexture *workMap = orthographic ? pEntry->m_rhiDepthCopy : pEntry->m_rhiCubeCopy;
         const QSize size = map->pixelSize();
         ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
@@ -1240,9 +1249,9 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         // construct a key that is unique for this frame (we use a dynamic buffer
         // so even if the same key gets used in the next frame, just updating the
         // contents on the same QRhiBuffer is ok due to QRhi's internal double buffering)
-        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ map, nullptr, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ map, &pEntry->m_depthArrayIndex, nullptr, 0 });
         if (!dcd.ubuf) {
-            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 8);
+            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 4 * sizeof(float));
             dcd.ubuf->create();
         }
 
@@ -1255,10 +1264,10 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         // in NDC so that kind of self-corrects...
         if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
             flipY.data()[5] = -1.0f;
-        float cameraProperties[2] = { shadowFilter, shadowMapFar };
+        float cameraProperties[4] = { shadowFilter, shadowMapFar, (float)pEntry->m_depthArrayIndex, 0.0f };
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         memcpy(ubufData, flipY.constData(), 64);
-        memcpy(ubufData + 64, cameraProperties, 8);
+        memcpy(ubufData + 64, cameraProperties, 4 * sizeof(float));
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
         QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
@@ -1319,9 +1328,9 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             continue;
 
         Q_ASSERT(pEntry->m_rhiDepthStencil);
-        const bool orthographic = pEntry->m_rhiDepthMap && pEntry->m_rhiDepthCopy;
+        const bool orthographic = pEntry->m_rhiDepthTextureArray && pEntry->m_rhiDepthCopy;
         if (orthographic) {
-            const QSize size = pEntry->m_rhiDepthMap->pixelSize();
+            const QSize size = pEntry->m_rhiDepthTextureArray->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             const auto &light = globalLights[i].light;

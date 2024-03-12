@@ -308,7 +308,8 @@ struct QSSGShaderShadowData {
     float clipNear;
     float clipFar;
     float shadowMapFar; // Used by point lights for historical reasons will be removed later
-    float padding[2];
+    qint32 layerIndex;
+    float padding[1];
 };
 
 struct QSSGShaderShadowsUniformData
