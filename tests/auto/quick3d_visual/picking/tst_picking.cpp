@@ -123,8 +123,10 @@ class tst_Picking : public QQuick3DDataTest
     Q_OBJECT
 private Q_SLOTS:
     void initTestCase() override;
-    void test_object_picking();
+    void test_view_picking();
+    void test_ray_picking();
     void test_object_picking2();
+    void test_item_picking();
     void test_picking_QTBUG_111997();
     void test_picking_corner_case();
     void test_triangleIntersect();
@@ -155,7 +157,7 @@ QQuickItem *tst_Picking::find2DChildIn3DNode(QQuickView *view, const QString &ob
     return static_cast<QQuickItem *>(child);
 }
 
-void tst_Picking::test_object_picking()
+void tst_Picking::test_view_picking()
 {
     QScopedPointer<QQuickView> view(createView(QLatin1String("picking.qml"), QSize(400, 400)));
     QVERIFY(view);
@@ -181,53 +183,120 @@ void tst_Picking::test_object_picking()
 
     // Center of model1
     auto result = view3d->pick(200, 200);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model1);
+    QCOMPARE(result.distance(), 550.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.5f, 0.5f));
+    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 50.0f));
+    QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Upper right corner of model1
     result = view3d->pick(250, 150);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model1);
+    QCOMPARE(result.distance(), 550.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(1.0f, 1.0f));
+    QCOMPARE(result.scenePosition(), QVector3D(50.0f, 50.0f, 50.0f));
+    QCOMPARE(result.position(), QVector3D(50.0f, 50.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Just outside model1's upper right corner, so should hit the model behind (model2)
+    // This one might cause some floating point grief
     result = view3d->pick(251, 151);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model2);
+    QCOMPARE(result.distance(), 600.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.5099999904632568, 0.4899999797344208));
+    QCOMPARE(result.scenePosition(), QVector3D(51.0f, 49.0f, -0.000003814697265625));
+    QCOMPARE(result.position(), QVector3D(1.0f, -1.0f, 49.999996185302734f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Upper right corner of model2
     result = view3d->pick(300, 100);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model2);
+    QCOMPARE(result.distance(), 600.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(1.0f, 1.0f));
+    QCOMPARE(result.scenePosition(), QVector3D(100.0f, 100.0f, 0.0f));
+    QCOMPARE(result.position(), QVector3D(50.0f, 50.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Just outside model2's upper right corner, so there should be no hit
     result = view3d->pick(301, 99);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
     QCOMPARE(result.objectHit(), nullptr);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Center of the third entry in the instance table
     result = view3d->pick(350, 200);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), instancedModel);
+    QCOMPARE(result.distance(), 550.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.5f));
+    QCOMPARE(result.scenePosition(), QVector3D(150.0f, 0.0f, 50.0f));
+    QCOMPARE(result.position(), QVector3D(-50.0f, 0.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
     QCOMPARE(result.instanceIndex(), 2);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // The bottom right of instancedModel,
     // overlapped by model1 and then model2, should hit model1
     result = view3d->pick(225, 175);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model1);
+    QCOMPARE(result.distance(), 550.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.75f, 0.75f));
+    QCOMPARE(result.scenePosition(), QVector3D(25.0f, 25.0f, 50.0f));
+    QCOMPARE(result.position(), QVector3D(25.0f, 25.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Pick one specific based on viewport position
 
     // Center of model1, overlapping model2,
     // only check for model2, so should hit model2
     result = view3d->pick(200, 200, model2);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model2);
+    QCOMPARE(result.distance(), 600.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.0f));
+    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 0.0f));
+    QCOMPARE(result.position(), QVector3D(-50.0f, -50.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // The bottom right of instancedModel,
     // overlapped model1 and then model2,
     // only check for instancedModel, should hit instancedModel
     result = view3d->pick(225, 175, instancedModel);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), instancedModel);
+    QCOMPARE(result.distance(), 650.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(1.0f, 0.0f));
+    QCOMPARE(result.scenePosition(), QVector3D(25.0f, 25.0f, -50.0f));
+    QCOMPARE(result.position(), QVector3D(50.0f, -50.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 1);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Pick subset based on viewport position
 
@@ -239,7 +308,16 @@ void tst_Picking::test_object_picking()
     array.setProperty(0, engine.newQObject(model2));
     auto resultList = view3d->pickSubset(250, 150, array);
     QCOMPARE(resultList.size(), 1);
+    QCOMPARE(resultList[0].hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(resultList[0].objectHit(), model2);
+    QCOMPARE(resultList[0].distance(), 600.0f);
+    QCOMPARE(resultList[0].uvPosition(), QVector2D(0.5f, 0.5f));
+    QCOMPARE(resultList[0].scenePosition(), QVector3D(50.0f, 50.0f, 0.0f));
+    QCOMPARE(resultList[0].position(), QVector3D(0.0f, 0.0f, 50.0f));
+    QCOMPARE(resultList[0].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(resultList[0].normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(resultList[0].instanceIndex(), 0);
+    QCOMPARE(resultList[0].itemHit(), nullptr);
 
     // The bottom right of instancedModel,
     // overlapped model1 and then model2,
@@ -250,22 +328,49 @@ void tst_Picking::test_object_picking()
     array.setProperty(1, engine.newQObject(instancedModel));
     resultList = view3d->pickSubset(225, 175, array);
     QCOMPARE(resultList.size(), 2);
+    QCOMPARE(resultList[0].hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(resultList[0].objectHit(), model2);
+    QCOMPARE(resultList[0].distance(), 600.0f);
+    QCOMPARE(resultList[0].uvPosition(), QVector2D(0.25f, 0.25f));
+    QCOMPARE(resultList[0].scenePosition(), QVector3D(25.0f, 25.0f, 0.0f));
+    QCOMPARE(resultList[0].position(), QVector3D(-25.0f, -25.0f, 50.0f));
+    QCOMPARE(resultList[0].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(resultList[0].normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(resultList[0].instanceIndex(), 0);
+    QCOMPARE(resultList[0].itemHit(), nullptr);
+    QCOMPARE(resultList[1].hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(resultList[1].objectHit(), instancedModel);
+    QCOMPARE(resultList[1].distance(), 650.0f);
+    QCOMPARE(resultList[1].uvPosition(), QVector2D(1.0f, 0.0f));
+    QCOMPARE(resultList[1].scenePosition(), QVector3D(25.0f, 25.0f, -50.0f));
+    QCOMPARE(resultList[1].position(), QVector3D(50.0f, -50.0f, 50.0f));
+    QCOMPARE(resultList[1].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(resultList[1].normal(), QVector3D(0.0f, 0.0f, 1.0f));
     QCOMPARE(resultList[1].instanceIndex(), 1);
+    QCOMPARE(resultList[1].itemHit(), nullptr);
+
 
     // Enable the 2D item
     item2d->setEnabled(true);
     QTest::qWait(100);
     // Then picking on top of model1 should not pick it anymore
     result = view3d->pick(200, 200);
-    QVERIFY(result.objectHit() != model1);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2d);
+    QCOMPARE(result.distance(), 400.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.0f));
+    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 200.0f));
+    QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 0.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), -1);
+    QCOMPARE(result.objectHit(), nullptr);
     // Hide the 2D item
     item2d->setVisible(false);
     QTest::qWait(100);
     // Then picking on top of model1 should pick it again
     result = view3d->pick(200, 200);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model1);
 
     // Pick all based on viewport position
@@ -276,10 +381,27 @@ void tst_Picking::test_object_picking()
     QCOMPARE(resultList[0].objectHit(), model1);
     QCOMPARE(resultList[1].objectHit(), model2);
 
+    // Add the 2D item
+    item2d->setVisible(true);
+    QTest::qWait(100);
+    resultList = view3d->pickAll(200, 200);
+    QCOMPARE(resultList.size(), 3);
+    QCOMPARE(resultList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultList[0].itemHit(), item2d);
+    QCOMPARE(resultList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultList[1].objectHit(), model1);
+    QCOMPARE(resultList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultList[2].objectHit(), model2);
+    // Hide the 2D item
+    item2d->setVisible(false);
+    QTest::qWait(100);
+
     // Top right corner of model1, center of model2
     resultList = view3d->pickAll(250, 150);
     QCOMPARE(resultList.size(), 2);
+    QCOMPARE(resultList[0].hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(resultList[0].objectHit(), model1);
+    QCOMPARE(resultList[1].hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(resultList[1].objectHit(), model2);
 
     // Just outside model1's upper right corner, so should hit the model behind (model2)
@@ -299,45 +421,105 @@ void tst_Picking::test_object_picking()
     // Just outside model2's upper right corner, so there should be no hit
     resultList = view3d->pickAll(301, 99);
     QVERIFY(resultList.isEmpty());
+}
+
+void tst_Picking::test_ray_picking()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("picking.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+    QQuick3DModel *model1 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model1"));
+    QVERIFY(model1);
+    QQuick3DModel *model2 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model2"));
+    QVERIFY(model2);
+    QQuick3DModel *instancedModel = view3d->findChild<QQuick3DModel *>(QStringLiteral("instancedModel"));
+    QVERIFY(instancedModel);
+    QQuickItem *item2d = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dNode", "item2d"));
+    QVERIFY(item2d);
+
+    item2d->setEnabled(true);
+    item2d->setVisible(true);
+    QTest::qWait(100);
 
     // Ray based picking one result
 
     // Down the z axis from 0,0,100 (towards 0,0,0)
     QVector3D origin(0.0f, 0.0f, 100.0f);
     QVector3D direction(0.0f, 0.0f, -1.0f);
-    result = view3d->rayPick(origin, direction);
-    QVERIFY(result.objectHit() != nullptr);
+    auto result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model1);
+    QCOMPARE(result.distance(), 50.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.5f, 0.5f));
+    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 50.0f));
+    QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
+
+    // Down the z axis from 0,0,250 (towards 0,0,0) through the item2d
+    origin = QVector3D(0.0f, 0.0f, 250.0f);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2d);
+    QCOMPARE(result.distance(), 50.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.0f));
+    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 200.0f));
+    QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 0.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), -1);
+    QCOMPARE(result.objectHit(), nullptr);
 
     // Up the z axis from 0, 0, -101 (towards 0,0,0)
     origin = QVector3D(0.0f, 0.0f, -101.0f);
     direction = QVector3D(0.0f, 0.0f, 1.0f);
     result = view3d->rayPick(origin, direction);
-    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(result.objectHit(), model2);
+    QCOMPARE(result.distance(), 1.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(1.0f, 0.0f));
+    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, -100.0f));
+    QCOMPARE(result.position(), QVector3D(-50.0f, -50.0f, -50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, -1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, -1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Up the z axis from 0, 0, -100 (towards 0,0,-1000)
     origin = QVector3D(0.0f, 0.0f, -100.0f);
     direction = QVector3D(0.0f, 0.0f, -1.0f);
     result = view3d->rayPick(origin, direction);
-    QVERIFY(result.objectHit() == nullptr);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QCOMPARE(result.objectHit(), nullptr);
+    QCOMPARE(result.itemHit(), nullptr);
 
     // Ray based picking all results
 
-    // Down the z axis from 0,0,100 (towards 0,0,0)
-    origin = QVector3D(0.0f, 0.0f, 100.0f);
+    // Down the z axis from 0,0,250 (towards 0,0,0)
+    origin = QVector3D(0.0f, 0.0f, 250.0f);
     direction = QVector3D(0.0f, 0.0f, -1.0f);
-    resultList = view3d->rayPickAll(origin, direction);
-    QCOMPARE(resultList.size(), 2);
-    QCOMPARE(resultList[0].objectHit(), model1);
-    QCOMPARE(resultList[1].objectHit(), model2);
+    auto resultList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultList.size(), 3);
+    QCOMPARE(resultList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultList[0].itemHit(), item2d);
+    QCOMPARE(resultList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultList[1].objectHit(), model1);
+    QCOMPARE(resultList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultList[2].objectHit(), model2);
 
     // Up the z axis from 0, 0, -101 (towards 0,0,0)
     origin = QVector3D(0.0f, 0.0f, -101.0f);
     direction = QVector3D(0.0f, 0.0f, 1.0f);
     resultList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultList.size(), 2);
+    QCOMPARE(resultList[0].hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(resultList[0].objectHit(), model2);
+    QCOMPARE(resultList[1].hitType(), QQuick3DPickResult::HitType::Model);
     QCOMPARE(resultList[1].objectHit(), model1);
 
     // Up the z axis from 0, 0, -100 (towards 0,0,-1000)
@@ -346,6 +528,7 @@ void tst_Picking::test_object_picking()
     resultList = view3d->rayPickAll(origin, direction);
     QVERIFY(resultList.isEmpty());
 }
+
 
 void tst_Picking::test_object_picking2()
 {
@@ -381,6 +564,298 @@ void tst_Picking::test_object_picking2()
     result = view3d->pick(halfWidth + 11, horizontalPickLine);
     QCOMPARE(result.objectHit(), nullptr);
 }
+
+void tst_Picking::test_item_picking()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("item_picking.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+    QQuick3DModel *model1 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model1"));
+    QVERIFY(model1);
+    QQuick3DModel *model2 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model2"));
+    QVERIFY(model2);
+    QQuickItem *item2dPlusZ = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dPlusZNode", "item2dPlusZ"));
+    QVERIFY(item2dPlusZ);
+    QQuickItem *item2dMinusZ = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dMinusZNode", "item2dMinusZ"));
+    QVERIFY(item2dMinusZ);
+    QQuickItem *item2dPlusX = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dPlusXNode", "item2dPlusX"));
+    QVERIFY(item2dPlusX);
+    QQuickItem *item2dMinusX = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dMinusXNode", "item2dMinusX"));
+    QVERIFY(item2dMinusX);
+    QQuickItem *item2dPlusY = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dPlusYNode", "item2dPlusY"));
+    QVERIFY(item2dPlusY);
+    QQuickItem *item2dMinusY = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dMinusYNode", "item2dMinusY"));
+    QVERIFY(item2dMinusY);
+
+    QQuickItem *item2dRotation = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dRotationNode", "item2dRotation"));
+    QVERIFY(item2dRotation);
+    QQuickItem *item2dTranslation = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dTranslationNode", "item2dTranslation"));
+    QVERIFY(item2dTranslation);
+    QQuickItem *item2dScale = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dScaleNode", "item2dScale"));
+    QVERIFY(item2dScale);
+    QQuickItem *item2dComplex = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dComplexNode", "item2dComplex"));
+    QVERIFY(item2dComplex);
+    QQuickItem *item2dMadness = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dMadnessNode", "item2dMadness"));
+    QVERIFY(item2dMadness);
+
+
+    // These tests intentionally try to cast rays into nothing, to check that item2ds picking stays within the bounds of the items
+    // This is necessary since items2ds uses plane intersection for ray collision tests
+    // Z Axes
+    auto origin = QVector3D(200, 200, 200);
+    auto direction = QVector3D(0, 0, -1);
+    auto result = view3d->rayPick(origin, direction);
+    auto resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    origin = QVector3D(200, 200, -200);
+    direction = QVector3D(0, 0, -1);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // X Axes
+    origin = QVector3D(200, 200, 200);
+    direction = QVector3D(-1, 0, 0);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    origin = QVector3D(-200, 200, 200);
+    direction = QVector3D(1, 0, 0);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // Y Axes
+    origin = QVector3D(200, 200, 200);
+    direction = QVector3D(0, -1, 0);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    origin = QVector3D(200, -200, 200);
+    direction = QVector3D(0, 1, 0);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // These tests all cast a ray down from above
+    direction = QVector3D (0, -1, 0);
+    // Rotation
+    origin = QVector3D(250, 100, -50);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // Translation
+    origin = QVector3D(450, 100, 10);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // Scale
+    origin = QVector3D(700, 100, 110);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // Complex
+    origin = QVector3D(900, 100, 110);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // Madness (fake 3D transforms in 2D)
+    origin = QVector3D(1150, 100, 90);
+    result = view3d->rayPick(origin, direction);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Null);
+    QVERIFY(resultsList.isEmpty());
+
+    // The following tests try to hit the item2ds
+    // NB: Only a front-face hit of an item2d should count as a hit
+
+    // +Z
+    origin = QVector3D(25, 25, 200);
+    direction = QVector3D(0, 0, -1);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2dPlusZ);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 3);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dPlusZ);
+    QCOMPARE(resultsList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[1].objectHit(), model1);
+    QCOMPARE(resultsList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[2].objectHit(), model2);
+
+    // -Z
+    // NB: In this case the distance of collision should be the exact same for both
+    // model2 and item2dMinusZ. Item2D collision always occurs first, so it should
+    // be the first in the list.
+    origin = QVector3D(25, 25, -200);
+    direction = QVector3D(0, 0, 1);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2dMinusZ);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 3);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dMinusZ);
+    QCOMPARE(resultsList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[1].objectHit(), model2);
+    QCOMPARE(resultsList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[2].objectHit(), model1);
+    QCOMPARE(resultsList[0].distance(), resultsList[1].distance());
+
+    // +X
+    // NB: in this case the distance of collision should be the exact same for both
+    // model2 and item2dPlusX. Item2D collision always occurs first, so it should
+    // be the first in the list.
+    origin = QVector3D(200, 25, -25);
+    direction = QVector3D(-1, 0, 0);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2dPlusX);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 3);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dPlusX);
+    QCOMPARE(resultsList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[1].objectHit(), model2);
+    QCOMPARE(resultsList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[2].objectHit(), model1);
+    QCOMPARE(resultsList[0].distance(), resultsList[1].distance());
+
+    // -X
+    origin = QVector3D(-200, 25, -25);
+    direction = QVector3D(1, 0, 0);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2dMinusX);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 3);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dMinusX);
+    QCOMPARE(resultsList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[1].objectHit(), model1);
+    QCOMPARE(resultsList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[2].objectHit(), model2);
+
+    // +Y
+    // NB: in this case the distance of collision should be the exact same for both
+    // model2 and item2dPlusY. Item2D collision always occurs first, so it should
+    // be the first in the list.
+    origin = QVector3D(25, 200, -25);
+    direction = QVector3D(0, -1, 0);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2dPlusY);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 3);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dPlusY);
+    QCOMPARE(resultsList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[1].objectHit(), model2);
+    QCOMPARE(resultsList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[2].objectHit(), model1);
+    QCOMPARE(resultsList[0].distance(), resultsList[1].distance());
+
+    // -Y
+    origin = QVector3D(25, -200, -25);
+    direction = QVector3D(0, 1, 0);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2dMinusY);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 3);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dMinusY);
+    QCOMPARE(resultsList[1].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[1].objectHit(), model1);
+    QCOMPARE(resultsList[2].hitType(), QQuick3DPickResult::HitType::Model);
+    QCOMPARE(resultsList[2].objectHit(), model2);
+
+
+    // The transform tests are aligned to the XZ plane, so all directions
+    // will be down the Y axis
+    direction = QVector3D(0, -1, 0);
+
+    // Rotation
+    origin = QVector3D(300, 100, 0);
+    result = view3d->rayPick(origin, direction);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.itemHit(), item2dRotation);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 1);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dRotation);
+
+    // Translate
+    origin = QVector3D(450, 100, -50);
+    result = view3d->rayPick(origin, direction);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.itemHit(), item2dTranslation);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 1);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dTranslation);
+
+    // Scale
+    origin = QVector3D(700, 100, 0);
+    result = view3d->rayPick(origin, direction);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.itemHit(), item2dScale);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 1);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dScale);
+
+    // Complex
+    origin = QVector3D(900, 100, 0);
+    result = view3d->rayPick(origin, direction);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
+    QCOMPARE(result.itemHit(), item2dComplex);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 1);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dComplex);
+
+    // Madness
+    origin = QVector3D(1150, 100, 50);
+    result = view3d->rayPick(origin, direction);
+    QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(result.itemHit(), item2dMadness);
+    resultsList = view3d->rayPickAll(origin, direction);
+    QCOMPARE(resultsList.size(), 1);
+    QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
+    QCOMPARE(resultsList[0].itemHit(), item2dMadness);
+
+}
+
 
 // When triangles become so small the picking algorithm fails because of floating point
 // precision. This test generates a quad with count * count subdivisions leading to smaller
