@@ -4,9 +4,8 @@
 #include "qopenxrgraphics_opengles_p.h"
 #include "qopenxrhelpers_p.h"
 
-#include <QtGui/private/qrhigles2_p.h>
-#include <QtGui/private/qeglplatformcontext_p.h>
 #include <QtGui/QOpenGLContext>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,10 +70,12 @@ bool QOpenXRGraphicsOpenGLES::finializeGraphics(QRhi *rhi)
     }
 
 #ifdef XR_USE_PLATFORM_ANDROID
-    QEGLPlatformContext *eglPlatformContext = static_cast<QEGLPlatformContext *>(context->handle());
-    m_graphicsBinding.display = eglPlatformContext->eglDisplay();
-    m_graphicsBinding.config = eglPlatformContext->eglConfig();
-    m_graphicsBinding.context = eglPlatformContext->eglContext();
+    auto nativeContext = context->nativeInterface<QNativeInterface::QEGLContext>();
+    if (nativeContext) {
+        m_graphicsBinding.display = nativeContext->display();
+        m_graphicsBinding.config = nativeContext->config();
+        m_graphicsBinding.context = nativeContext->nativeContext();
+    }
 #endif
 
     return true;
