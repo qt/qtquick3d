@@ -48,6 +48,11 @@ bool QOpenXRGraphicsD3D11::setupGraphics(const XrInstance &instance, XrSystemId 
                                                        reinterpret_cast<PFN_xrVoidFunction*>(&pfnGetD3D11GraphicsRequirementsKHR)),
                                  instance);
 
+    if (!pfnGetD3D11GraphicsRequirementsKHR) {
+        qWarning("Could not resolve xrGetD3D11GraphicsRequirementsKHR; perhaps the OpenXR implementation does not support D3D11?");
+        return false;
+    }
+
     // Create the D3D11 device for the adapter associated with the system.
     OpenXRHelpers::checkXrResult(pfnGetD3D11GraphicsRequirementsKHR(instance, systemId, &m_graphicsRequirements),
                                  instance);

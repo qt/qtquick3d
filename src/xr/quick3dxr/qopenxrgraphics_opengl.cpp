@@ -65,6 +65,10 @@ bool QOpenXRGraphicsOpenGL::setupGraphics(const XrInstance &instance, XrSystemId
     OpenXRHelpers::checkXrResult(xrGetInstanceProcAddr(instance, "xrGetOpenGLGraphicsRequirementsKHR",
                                                        reinterpret_cast<PFN_xrVoidFunction*>(&pfnGetOpenGLGraphicsRequirementsKHR)),
                                  instance);
+    if (!pfnGetOpenGLGraphicsRequirementsKHR) {
+        qWarning("Could not resolve xrGetOpenGLGraphicsRequirementsKHR; perhaps the OpenXR implementation does not support OpenGL?");
+        return false;
+    }
     OpenXRHelpers::checkXrResult(pfnGetOpenGLGraphicsRequirementsKHR(instance, systemId, &m_graphicsRequirements),
                                  instance);
     return true;

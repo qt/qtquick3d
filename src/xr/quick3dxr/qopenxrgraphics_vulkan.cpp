@@ -65,6 +65,11 @@ bool QOpenXRGraphicsVulkan::setupGraphics(const XrInstance &instance, XrSystemId
                                                        reinterpret_cast<PFN_xrVoidFunction*>(&pfnGetVulkanGraphicsRequirementsKHR)),
                                  instance);
 
+    if (!pfnGetVulkanGraphicsRequirementsKHR) {
+        qWarning("Could not resolve xrGetVulkanGraphicsRequirementsKHR; perhaps the OpenXR implementation does not support Vulkan?");
+        return false;
+    }
+
     PFN_xrGetVulkanInstanceExtensionsKHR pfnGetVulkanInstanceExtensionsKHR = nullptr;
     OpenXRHelpers::checkXrResult(xrGetInstanceProcAddr(instance,
                                                        "xrGetVulkanInstanceExtensionsKHR",

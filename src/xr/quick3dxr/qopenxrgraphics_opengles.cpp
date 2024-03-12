@@ -50,6 +50,10 @@ bool QOpenXRGraphicsOpenGLES::setupGraphics(const XrInstance &instance, XrSystem
                                                        reinterpret_cast<PFN_xrVoidFunction*>(&pfnGetOpenGLESGraphicsRequirementsKHR)),
                                  instance);
 
+    if (!pfnGetOpenGLESGraphicsRequirementsKHR) {
+        qWarning("Could not resolve xrGetOpenGLESGraphicsRequirementsKHR; perhaps the OpenXR implementation does not support OpenGL ES?");
+        return false;
+    }
     OpenXRHelpers::checkXrResult(pfnGetOpenGLESGraphicsRequirementsKHR(instance, systemId, &m_graphicsRequirements),
                                  instance);
     return true;

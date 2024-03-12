@@ -48,6 +48,11 @@ bool QOpenXRGraphicsD3D12::setupGraphics(const XrInstance &instance, XrSystemId 
                                                        reinterpret_cast<PFN_xrVoidFunction*>(&pfnGetD3D12GraphicsRequirementsKHR)),
                                  instance);
 
+    if (!pfnGetD3D12GraphicsRequirementsKHR) {
+        qWarning("Could not resolve xrGetD3D12GraphicsRequirementsKHR; perhaps the OpenXR implementation does not support D3D12?");
+        return false;
+    }
+
     OpenXRHelpers::checkXrResult(pfnGetD3D12GraphicsRequirementsKHR(instance, systemId, &m_graphicsRequirements),
                                  instance);
     return true;
