@@ -153,10 +153,10 @@ public:
                                       const QSSGRenderLayer &layer,
                                       const QSSGRenderRay &ray);
 
-    static QSSGRenderPickResult syncPick(const QSSGRenderContextInterface &ctx,
-                                         const QSSGRenderLayer &layer,
-                                         const QSSGRenderRay &ray,
-                                         QSSGRenderNode *target = nullptr);
+    static PickResultList syncPick(const QSSGRenderContextInterface &ctx,
+                                   const QSSGRenderLayer &layer,
+                                   const QSSGRenderRay &ray,
+                                   QSSGRenderNode *target = nullptr);
 
     static PickResultList syncPickSubset(const QSSGRenderLayer &layer,
                                          QSSGBufferManager &bufferManager,

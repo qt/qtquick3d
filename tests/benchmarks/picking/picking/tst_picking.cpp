@@ -109,12 +109,13 @@ void picking::benchImpl(int count, bool hit)
     // Since we're using the same mesh for each model, we only need to call loadMesh() once.
     bufferManager->loadMesh(models);
 
-    QSSGRenderPickResult res;
+    QVarLengthArray<QSSGRenderPickResult, 20> res;
     QSSGRenderRay ray = hit ? QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 0.0f, 0.0f, 1.0f } } : QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 1.0f, 0.0f, 0.0f } };
     QBENCHMARK {
         res = QSSGRendererPrivate::syncPick(*renderCtx, dummyLayer, ray);
     }
-    QVERIFY(res.m_hitObject != nullptr);
+    QVERIFY(!res.isEmpty());
+    QVERIFY(res.first().m_hitObject != nullptr);
 }
 
 QTEST_APPLESS_MAIN(picking)

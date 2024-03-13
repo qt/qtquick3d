@@ -1045,20 +1045,20 @@ std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const 
     return m_layer->renderedCameras[0]->unproject(theLocalMouse, viewportRect);
 }
 
-QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)
+QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)
 {
     if (!m_layer)
-        return QSSGRenderPickResult();
+        return QQuick3DSceneRenderer::PickResultList();
 
     return QSSGRendererPrivate::syncPick(*m_sgContext,
                                          *m_layer,
                                          ray);
 }
 
-QSSGRenderPickResult QQuick3DSceneRenderer::syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node)
+QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node)
 {
     if (!m_layer)
-        return QSSGRenderPickResult();
+        return QQuick3DSceneRenderer::PickResultList();
 
     return QSSGRendererPrivate::syncPick(*m_sgContext,
                                          *m_layer,

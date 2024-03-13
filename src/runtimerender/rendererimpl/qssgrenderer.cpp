@@ -328,38 +328,25 @@ QSSGRendererPrivate::PickResultList QSSGRendererPrivate::syncPickAll(const QSSGR
     return pickResults;
 }
 
-QSSGRenderPickResult QSSGRendererPrivate::syncPick(const QSSGRenderContextInterface &ctx,
-                                                   const QSSGRenderLayer &layer,
-                                                   const QSSGRenderRay &ray,
-                                                   QSSGRenderNode *target)
+QSSGRendererPrivate::PickResultList QSSGRendererPrivate::syncPick(const QSSGRenderContextInterface &ctx,
+                                                                  const QSSGRenderLayer &layer,
+                                                                  const QSSGRenderRay &ray,
+                                                                  QSSGRenderNode *target)
 {
-    static const auto processResults = [](PickResultList &pickResults) {
-        if (pickResults.empty())
-            return QSSGPickResultProcessResult();
-        // Things are rendered in a particular order and we need to respect that ordering.
-        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
-            return lhs.m_distanceSq < rhs.m_distanceSq;
-        });
-        return QSSGPickResultProcessResult{ pickResults.at(0), true };
-    };
-
     const auto &bufferManager = ctx.bufferManager();
     const bool isGlobalPickingEnabled = QSSGRendererPrivate::isGlobalPickingEnabled(*ctx.renderer());
 
     Q_ASSERT(layer.getGlobalState(QSSGRenderNode::GlobalState::Active));
     PickResultList pickResults;
-    if (target) {
-        // Pick against only one target
+    if (target)
         intersectRayWithSubsetRenderable(*bufferManager, ray, *target, pickResults);
-        return processResults(pickResults);
-    } else {
+    else
         getLayerHitObjectList(layer, *bufferManager, ray, isGlobalPickingEnabled, pickResults);
-        QSSGPickResultProcessResult retval = processResults(pickResults);
-        if (retval.m_wasPickConsumed)
-            return retval;
-    }
 
-    return QSSGPickResultProcessResult();
+    std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
+        return lhs.m_distanceSq < rhs.m_distanceSq;
+    });
+    return pickResults;
 }
 
 QSSGRendererPrivate::PickResultList QSSGRendererPrivate::syncPickSubset(const QSSGRenderLayer &layer,

@@ -81,20 +81,23 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
         point.ry() *= scaleY;
         std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(point);
         if (rayResult.has_value()) {
-            auto pickResult = renderer->syncPickOne(rayResult.value(), sceneParentNode);
-            auto ret = pickResult.m_localUVCoords.toPointF();
-            if (!uvCoordsArePixels) {
-                ret = QPointF(targetItem->x() + ret.x() * targetItem->width(),
-                              targetItem->y() - ret.y() * targetItem->height() + targetItem->height());
-            }
-            const bool outOfModel = pickResult.m_localUVCoords.isNull();
-            qCDebug(lcEv) << viewportPoint << "->" << (outOfModel ? "OOM" : "") << ret << "@" << pickResult.m_scenePosition
-                          << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq);
-            if (outOfModel) {
-                return lastGoodMapping;
-            } else {
-                lastGoodMapping = ret;
-                return ret;
+            const auto pickResults = renderer->syncPickOne(rayResult.value(), sceneParentNode);
+            if (!pickResults.isEmpty()) {
+                const auto pickResult = pickResults.first();
+                auto ret = pickResult.m_localUVCoords.toPointF();
+                if (!uvCoordsArePixels) {
+                    ret = QPointF(targetItem->x() + ret.x() * targetItem->width(),
+                                  targetItem->y() - ret.y() * targetItem->height() + targetItem->height());
+                }
+                const bool outOfModel = pickResult.m_localUVCoords.isNull();
+                qCDebug(lcEv) << viewportPoint << "->" << (outOfModel ? "OOM" : "") << ret << "@" << pickResult.m_scenePosition
+                              << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq);
+                if (outOfModel) {
+                    return lastGoodMapping;
+                } else {
+                    lastGoodMapping = ret;
+                    return ret;
+                }
             }
         }
         return QPointF();
@@ -989,8 +992,8 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     if (!rayResult.has_value())
         return QQuick3DPickResult();
 
-    return processPickResult(renderer->syncPick(rayResult.value()));
-
+    const auto resultList = renderer->syncPick(rayResult.value());
+    return getNearestPickResult(resultList);
 }
 
 /*!
@@ -1017,7 +1020,8 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y, QQuick3DModel *model
         return QQuick3DPickResult();
 
     const auto renderNode = static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(model)->spatialNode);
-    return processPickResult(renderer->syncPickOne(rayResult.value(), renderNode));
+    const auto resultList = renderer->syncPickOne(rayResult.value(), renderNode);
+    return getNearestPickResult(resultList);
 }
 
 /*!
@@ -1161,8 +1165,8 @@ QQuick3DPickResult QQuick3DViewport::rayPick(const QVector3D &origin, const QVec
         return QQuick3DPickResult();
 
     const QSSGRenderRay ray(origin, direction);
-
-    return processPickResult(renderer->syncPick(ray));
+    const auto resultList = renderer->syncPick(ray);
+    return getNearestPickResult(resultList);
 }
 
 /*!
@@ -1541,6 +1545,21 @@ QQuickItem *QQuick3DViewport::getSubSceneRootItem(QQuick3DMaterial *material) co
         }
     }
     return subsceneRootItem;
+}
+
+
+/*!
+    \internal
+*/
+QQuick3DPickResult QQuick3DViewport::getNearestPickResult(const QVarLengthArray<QSSGRenderPickResult, 20> &pickResults) const
+{
+    for (const auto &result : pickResults) {
+        auto pickResult = processPickResult(result);
+        if (pickResult.hitType() != QQuick3DPickResult::HitType::Null)
+            return pickResult;
+    }
+
+    return QQuick3DPickResult();
 }
 
 /*!

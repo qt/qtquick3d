@@ -799,9 +799,7 @@ void tst_Picking::test_item_picking()
     // Rotation
     origin = QVector3D(300, 100, 0);
     result = view3d->rayPick(origin, direction);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.itemHit(), item2dRotation);
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
@@ -811,9 +809,7 @@ void tst_Picking::test_item_picking()
     // Translate
     origin = QVector3D(450, 100, -50);
     result = view3d->rayPick(origin, direction);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.itemHit(), item2dTranslation);
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
@@ -823,9 +819,7 @@ void tst_Picking::test_item_picking()
     // Scale
     origin = QVector3D(700, 100, 0);
     result = view3d->rayPick(origin, direction);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.itemHit(), item2dScale);
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
@@ -835,9 +829,7 @@ void tst_Picking::test_item_picking()
     // Complex
     origin = QVector3D(900, 100, 0);
     result = view3d->rayPick(origin, direction);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
-    QEXPECT_FAIL("", "Doesn't seem to work correctly in single pick mode", Continue);
     QCOMPARE(result.itemHit(), item2dComplex);
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);

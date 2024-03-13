@@ -190,6 +190,7 @@ private:
                              QPointerEvent *event,
                              QFlatMap<QQuickItem *, SubsceneInfo> &vistedSubscenes) const;
     QQuickItem *getSubSceneRootItem(QQuick3DMaterial *material) const;
+    QQuick3DPickResult getNearestPickResult(const QVarLengthArray<QSSGRenderPickResult, 20> &pickResults) const;
     QQuick3DPickResult processPickResult(const QSSGRenderPickResult &pickResult) const;
     QQuick3DObject *findFrontendNode(const QSSGRenderGraphObject *backendObject) const;
     QQuick3DSceneManager *findChildSceneManager(QQuick3DObject *inObject, QQuick3DSceneManager *manager = nullptr);
