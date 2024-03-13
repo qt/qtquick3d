@@ -565,6 +565,14 @@ void tst_Picking::test_object_picking2()
     QCOMPARE(result.objectHit(), nullptr);
 }
 
+// Necessary for doing comparisons of normalized vectors
+static bool fuzzyCompareVectors(const QVector3D& v1, const QVector3D& v2, float epsilon = 0.000001f) {
+    return std::abs(v1.x() - v2.x()) < epsilon &&
+           std::abs(v1.y() - v2.y()) < epsilon &&
+           std::abs(v1.z() - v2.z()) < epsilon;
+
+}
+
 void tst_Picking::test_item_picking()
 {
     QScopedPointer<QQuickView> view(createView(QLatin1String("item_picking.qml"), QSize(400, 400)));
@@ -695,6 +703,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dPlusZ);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 0, 1)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 3);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -713,6 +722,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dMinusZ);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 0, -1)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 3);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -732,6 +742,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dPlusX);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(1, 0, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 3);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -748,6 +759,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dMinusX);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(-1, 0, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 3);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -766,6 +778,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dPlusY);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 1, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 3);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -782,6 +795,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dMinusY);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, -1, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 3);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -801,6 +815,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dRotation);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 1, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -811,6 +826,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dTranslation);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 1, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -821,6 +837,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dScale);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 1, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -831,6 +848,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dComplex);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 1, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
@@ -841,6 +859,7 @@ void tst_Picking::test_item_picking()
     result = view3d->rayPick(origin, direction);
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2dMadness);
+    QVERIFY(fuzzyCompareVectors(result.sceneNormal(), QVector3D(0, 1, 0)));
     resultsList = view3d->rayPickAll(origin, direction);
     QCOMPARE(resultsList.size(), 1);
     QCOMPARE(resultsList[0].hitType(), QQuick3DPickResult::HitType::Item);
