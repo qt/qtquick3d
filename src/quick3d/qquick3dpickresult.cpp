@@ -99,6 +99,9 @@ float QQuick3DPickResult::distance() const
     This property holds the UV position of the hit. The UV position is calculated as
     the normalized local x and y coordinates of the hit point relative to the bounding volume.
     Useful for further picking against an offscreen-rendered object.
+
+    When \l{pickResult::type} {type} is \c pickResult.Item this value will represent the position
+    of the hit in the coordinate space of \l{pickResult::itemHit} {itemHit}.
 */
 QVector2D QQuick3DPickResult::uvPosition() const
 {

@@ -358,7 +358,7 @@ void tst_Picking::test_view_picking()
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2d);
     QCOMPARE(result.distance(), 400.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.0f));
+    QCOMPARE(result.uvPosition(), QVector2D(75.0f, 75.0f));
     QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 200.0f));
     QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 0.0f));
     QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
@@ -467,7 +467,7 @@ void tst_Picking::test_ray_picking()
     QCOMPARE(result.hitType(), QQuick3DPickResult::HitType::Item);
     QCOMPARE(result.itemHit(), item2d);
     QCOMPARE(result.distance(), 50.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.0f));
+    QCOMPARE(result.uvPosition(), QVector2D(75.0f, 75.0f));
     QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 200.0f));
     QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 0.0f));
     QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));

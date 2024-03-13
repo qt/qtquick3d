@@ -1728,7 +1728,7 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
         if (child) {
             return QQuick3DPickResult(child,
                                       ::sqrtf(pickResult.m_distanceSq),
-                                      pickResult.m_localUVCoords,
+                                      QVector2D(frontend2DItem->contentItem()->mapToItem(child, subscenePosition)),
                                       pickResult.m_scenePosition,
                                       pickResult.m_localPosition,
                                       pickResult.m_faceNormal);
