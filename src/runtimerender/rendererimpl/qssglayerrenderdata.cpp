@@ -1659,6 +1659,18 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
             if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLodNormal))
                 debugDrawSystem->debugNormals(*bufferManager, theModelContext, theSubset, subsetLevelOfDetail, (theModelCenter - camera.getGlobalPos()).length() * 0.01);
 
+            static auto checkF32TypeIndex = [&rhiCtx](QRhiVertexInputAttribute::Format f) {
+                if ((f ==  QRhiVertexInputAttribute::Format::Float4)
+                        || (f == QRhiVertexInputAttribute::Format::Float3)
+                        || (f == QRhiVertexInputAttribute::Format::Float2)
+                        || (f == QRhiVertexInputAttribute::Format::Float)) {
+                    return true;
+                }
+                if (!rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes))
+                    qWarning() << "WARN: Model has non-integer type indices for skinning but current RHI backend doesn't support it!";
+                return false;
+            };
+
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
@@ -1677,8 +1689,11 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                 const auto boneCount = model.skin ? model.skin->boneCount :
                                                     model.skeleton ? model.skeleton->boneCount : 0;
                 defaultMaterialShaderKeyProperties.m_boneCount.setValue(theGeneratedKey, boneCount);
-                defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.setValue(
-                        theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
+                if (auto idJoint = theSubset.rhi.ia.inputs.indexOf(QSSGRhiInputAssemblerState::JointSemantic); idJoint != -1) {
+                    const auto attr = theSubset.rhi.ia.inputLayout.attributeAt(idJoint);
+                    defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.setValue(theGeneratedKey, checkF32TypeIndex(attr->format()));
+                }
+
                 // Instancing
                 defaultMaterialShaderKeyProperties.m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
                 // Morphing
@@ -1735,8 +1750,10 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                 const auto boneCount = model.skin ? model.skin->boneCount :
                                                     model.skeleton ? model.skeleton->boneCount : 0;
                 defaultMaterialShaderKeyProperties.m_boneCount.setValue(theGeneratedKey, boneCount);
-                defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.setValue(
-                        theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
+                if (auto idJoint = theSubset.rhi.ia.inputs.indexOf(QSSGRhiInputAssemblerState::JointSemantic); idJoint != -1) {
+                    const auto attr = theSubset.rhi.ia.inputLayout.attributeAt(idJoint);
+                    defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.setValue(theGeneratedKey, checkF32TypeIndex(attr->format()));
+                }
 
                 // Instancing
                 bool usesInstancing = theModelContext.model.instancing()
