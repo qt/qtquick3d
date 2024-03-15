@@ -47,6 +47,9 @@ int main(int argc, char *argv[])
     QCommandLineOption msaaOption({ "a", "msaa" }, QObject::tr("Request MSAA with <num_samples> samples. <num_samples> is 2 or 4."), QObject::tr("num_samples"));
     cmdLineParser.addOption(msaaOption);
 
+    QCommandLineOption submitDepthOption({ "e", "submit-depth" }, QObject::tr("Forces submitting the depth buffer (XR_KHR_composition_layer_depth), if supported."));
+    cmdLineParser.addOption(submitDepthOption);
+
     QCommandLineOption nullOption({ "n", "null" }, QLatin1String("Use QRhi backend Null"));
     cmdLineParser.addOption(nullOption);
     QCommandLineOption glOption({ "g", "opengl" }, QLatin1String("Use QRhi backend OpenGL (ES)"));
@@ -109,6 +112,9 @@ int main(int argc, char *argv[])
         qputenv("QSG_RHI_DEBUG_LAYER", "1");
         qputenv("QT_RHI_LEAK_CHECK", "1");
     }
+
+    if (cmdLineParser.isSet(submitDepthOption))
+        qputenv("QT_QUICK3D_XR_SUBMIT_DEPTH", "1");
 
     QCoreApplication::setApplicationName("Qt XR Runner");
     QCoreApplication::setOrganizationName("The Qt Company");

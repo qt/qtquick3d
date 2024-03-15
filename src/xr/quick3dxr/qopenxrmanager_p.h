@@ -111,7 +111,8 @@ private:
                      XrDuration predictedDisplayPeriod,
                      XrCompositionLayerProjection &layer);
     void doRender(const XrSwapchainSubImage &subImage,
-                  const XrSwapchainImageBaseHeader *swapchainImage);
+                  const XrSwapchainImageBaseHeader *swapchainImage,
+                  const XrSwapchainImageBaseHeader *depthSwapchainImage = nullptr);
 
     void preSetupQuickScene();
     bool setupQuickScene();
@@ -182,10 +183,14 @@ private:
     bool m_multiviewRendering = false;
     QVector<XrViewConfigurationView> m_configViews;
     QVector<XrCompositionLayerProjectionView> m_projectionLayerViews;
+    QVector<XrCompositionLayerDepthInfoKHR> m_layerDepthInfos;
     QVector<Swapchain> m_swapchains;
+    QVector<Swapchain> m_depthSwapchains;
     QMap<XrSwapchain, QVector<XrSwapchainImageBaseHeader*>> m_swapchainImages;
+    QMap<XrSwapchain, QVector<XrSwapchainImageBaseHeader*>> m_depthSwapchainImages;
     QVector<XrView> m_views;
-    int64_t m_colorSwapchainFormat{-1};
+    int64_t m_colorSwapchainFormat = -1;
+    int64_t m_depthSwapchainFormat = -1;
     int m_samples = 1;
 
     // Application's current lifecycle state according to the runtime
@@ -202,6 +207,8 @@ private:
     bool m_displayRefreshRateExtensionSupported = false;
     bool m_foveationExtensionSupported = false;
     XrFoveationLevelFB m_foveationLevel = XR_FOVEATION_LEVEL_HIGH_FB;
+    bool m_compositionLayerDepthSupported = false;
+    bool m_submitLayerDepth = false;
     bool m_handtrackingExtensionSupported = false;
     bool m_handtrackingAimExtensionSupported = false;
 

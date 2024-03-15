@@ -7,6 +7,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/QQuickGraphicsDevice>
 #include <QtQuick/QQuickGraphicsConfiguration>
+#include <QtQuick/private/qquickrendertarget_p.h>
 
 #include <rhi/qrhi.h>
 
@@ -192,6 +193,8 @@ bool QOpenXRGraphicsVulkan::finializeGraphics(QRhi *rhi)
     m_graphicsBinding.queueFamilyIndex = m_queueFamilyIndex;
     m_graphicsBinding.queueIndex = 0;
 
+    m_rhi = rhi;
+
     return true;
 }
 
@@ -199,20 +202,36 @@ bool QOpenXRGraphicsVulkan::finializeGraphics(QRhi *rhi)
 int64_t QOpenXRGraphicsVulkan::colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
 {
     // List of supported color swapchain formats.
-    constexpr int64_t SupportedColorSwapchainFormats[] = {
+    constexpr int64_t supportedColorSwapchainFormats[] = {
         VK_FORMAT_B8G8R8A8_SRGB,
         VK_FORMAT_R8G8B8A8_SRGB,
         VK_FORMAT_B8G8R8A8_UNORM,
         VK_FORMAT_R8G8B8A8_UNORM
     };
 
-    auto swapchainFormatIt = std::find_first_of(swapchainFormats.begin(),
-                                                swapchainFormats.end(),
-                                                std::begin(SupportedColorSwapchainFormats),
-                                                std::end(SupportedColorSwapchainFormats));
+    auto swapchainFormatIt = std::find_first_of(std::begin(supportedColorSwapchainFormats),
+                                                std::end(supportedColorSwapchainFormats),
+                                                swapchainFormats.begin(),
+                                                swapchainFormats.end());
     return *swapchainFormatIt;
 }
 
+int64_t QOpenXRGraphicsVulkan::depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
+{
+    // in order of preference
+    constexpr int64_t supportedDepthSwapchainFormats[] = {
+        VK_FORMAT_D24_UNORM_S8_UINT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D16_UNORM
+    };
+
+    // order matters, we prefer D24S8 above all the others
+    return *std::find_first_of(std::begin(supportedDepthSwapchainFormats),
+                               std::end(supportedDepthSwapchainFormats),
+                               swapchainFormats.begin(),
+                               swapchainFormats.end());
+}
 
 QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsVulkan::allocateSwapchainImages(int count, XrSwapchain swapchain)
 {
@@ -231,7 +250,9 @@ QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrSwapchainSubImage
                                                        const XrSwapchainImageBaseHeader *swapchainImage,
                                                        quint64 swapchainFormat,
                                                        int samples,
-                                                       int arraySize) const
+                                                       int arraySize,
+                                                       const XrSwapchainImageBaseHeader *depthSwapchainImage,
+                                                       quint64 depthSwapchainFormat) const
 {
     VkImage colorTexture = reinterpret_cast<const XrSwapchainImageVulkanKHR*>(swapchainImage)->image;
 
@@ -251,14 +272,47 @@ QQuickRenderTarget QOpenXRGraphicsVulkan::renderTarget(const XrSwapchainSubImage
     if (samples > 1)
         flags |= QQuickRenderTarget::Flag::MultisampleResolve;
 
-    return QQuickRenderTarget::fromVulkanImage(colorTexture,
-                                               VK_IMAGE_LAYOUT_UNDEFINED,
-                                               VkFormat(swapchainFormat),
-                                               viewFormat,
-                                               QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height),
-                                               samples,
-                                               arraySize,
-                                               flags);
+    const QSize pixelSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height);
+    QQuickRenderTarget rt = QQuickRenderTarget::fromVulkanImage(colorTexture,
+                                                                VK_IMAGE_LAYOUT_UNDEFINED,
+                                                                VkFormat(swapchainFormat),
+                                                                viewFormat,
+                                                                pixelSize,
+                                                                samples,
+                                                                arraySize,
+                                                                flags);
+    if (depthSwapchainImage) {
+        // There might be issues with stencil when MSAA is not used and the
+        // format is D16 or D32F or the half-unsupported D32FS8 (because then
+        // the OpenXR-provided texture is the one and only depth-stencil buffer,
+        // perhaps without stencil). But we prefer D24S8 whenever that's
+        // available, so hopefully this problem won't come up in practice.
+        QRhiTexture::Format format = QRhiTexture::D24S8;
+        switch (depthSwapchainFormat) {
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+        case VK_FORMAT_D32_SFLOAT:
+            format = QRhiTexture::D32F;
+            break;
+        case VK_FORMAT_D16_UNORM:
+            format = QRhiTexture::D16;
+            break;
+        }
+        VkImage depthImage = reinterpret_cast<const XrSwapchainImageVulkanKHR*>(depthSwapchainImage)->image;
+        if (m_depthTexture && (m_depthTexture->format() != format || m_depthTexture->pixelSize() != pixelSize || m_depthTexture->arraySize() != arraySize)) {
+            delete m_depthTexture;
+            m_depthTexture = nullptr;
+        }
+        if (!m_depthTexture) {
+            // this is never multisample, QQuickRt takes care of resolving depth-stencil
+            if (arraySize > 1)
+                m_depthTexture = m_rhi->newTextureArray(format, arraySize, pixelSize, 1, QRhiTexture::RenderTarget);
+            else
+                m_depthTexture = m_rhi->newTexture(format, pixelSize, 1, QRhiTexture::RenderTarget);
+        }
+        m_depthTexture->createFrom({ quint64(depthImage), VK_IMAGE_LAYOUT_UNDEFINED });
+        rt.setDepthTexture(m_depthTexture);
+    }
+    return rt;
 }
 
 void QOpenXRGraphicsVulkan::setupWindow(QQuickWindow *quickWindow)
@@ -266,6 +320,12 @@ void QOpenXRGraphicsVulkan::setupWindow(QQuickWindow *quickWindow)
     quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromPhysicalDevice(m_vulkanPhysicalDevice));
     quickWindow->setGraphicsConfiguration(m_graphicsConfiguration);
     quickWindow->setVulkanInstance(&m_vulkanInstance);
+}
+
+void QOpenXRGraphicsVulkan::releaseResources()
+{
+    delete m_depthTexture;
+    m_depthTexture = nullptr;
 }
 
 QT_END_NAMESPACE

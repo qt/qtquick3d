@@ -21,6 +21,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QRhiTexture;
+
 class QOpenXRGraphicsOpenGLES : public QAbstractOpenXRGraphics
 {
 public:
@@ -32,9 +34,12 @@ public:
     bool setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig) override;
     bool finializeGraphics(QRhi *rhi) override;
     int64_t colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
+    int64_t depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
     QVector<XrSwapchainImageBaseHeader*> allocateSwapchainImages(int count, XrSwapchain swapchain) override;
     QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
-                                    quint64 swapchainFormat, int samples, int arraySize) const override;
+                                    quint64 swapchainFormat, int samples, int arraySize,
+                                    const XrSwapchainImageBaseHeader *depthSwapchainImage, quint64 depthSwapchainFormat) const override;
+    void releaseResources() override;
 
 private:
 #ifdef XR_USE_PLATFORM_ANDROID
@@ -43,6 +48,9 @@ private:
     QMap<XrSwapchain, QVector<XrSwapchainImageOpenGLESKHR>> m_swapchainImageBuffer;
 
     XrGraphicsRequirementsOpenGLESKHR m_graphicsRequirements{};
+
+    QRhi *m_rhi = nullptr;
+    mutable QRhiTexture *m_depthTexture = nullptr;
 };
 
 QT_END_NAMESPACE

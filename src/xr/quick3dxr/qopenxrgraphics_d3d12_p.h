@@ -33,9 +33,11 @@ public:
     bool setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig) override;
     bool finializeGraphics(QRhi *rhi) override;
     int64_t colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
+    int64_t depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
     QVector<XrSwapchainImageBaseHeader*> allocateSwapchainImages(int count, XrSwapchain swapchain) override;
     QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
-                                    quint64 swapchainFormat, int samples, int arraySize) const override;
+                                    quint64 swapchainFormat, int samples, int arraySize,
+                                    const XrSwapchainImageBaseHeader *depthSwapchainImage, quint64 depthSwapchainFormat) const override;
     void setupWindow(QQuickWindow *quickWindow) override;
 
 private:

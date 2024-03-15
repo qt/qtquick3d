@@ -70,20 +70,35 @@ bool QOpenXRGraphicsD3D12::finializeGraphics(QRhi *rhi)
 int64_t QOpenXRGraphicsD3D12::colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
 {
     // List of supported color swapchain formats.
-    constexpr DXGI_FORMAT SupportedColorSwapchainFormats[] = {
-        DXGI_FORMAT_R8G8B8A8_UNORM,
-        DXGI_FORMAT_B8G8R8A8_UNORM,
-        DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+    constexpr DXGI_FORMAT supportedColorSwapchainFormats[] = {
         DXGI_FORMAT_B8G8R8A8_UNORM_SRGB,
+        DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        DXGI_FORMAT_R8G8B8A8_UNORM
     };
-    auto swapchainFormatIt = std::find_first_of(swapchainFormats.begin(),
-                                                swapchainFormats.end(),
-                                                std::begin(SupportedColorSwapchainFormats),
-                                                std::end(SupportedColorSwapchainFormats));
+
+    auto swapchainFormatIt = std::find_first_of(std::begin(supportedColorSwapchainFormats),
+                                                std::end(supportedColorSwapchainFormats),
+                                                swapchainFormats.begin(),
+                                                swapchainFormats.end());
 
     return *swapchainFormatIt;
 }
 
+int64_t QOpenXRGraphicsD3D12::depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
+{
+    // in order of preference
+    constexpr int64_t supportedDepthSwapchainFormats[] = {
+        DXGI_FORMAT_D32_FLOAT_S8X24_UINT,
+        DXGI_FORMAT_D32_FLOAT,
+        DXGI_FORMAT_D16_UNORM
+    };
+
+    return *std::find_first_of(std::begin(supportedDepthSwapchainFormats),
+                               std::end(supportedDepthSwapchainFormats),
+                               swapchainFormats.begin(),
+                               swapchainFormats.end());
+}
 
 QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsD3D12::allocateSwapchainImages(int count, XrSwapchain swapchain)
 {
@@ -98,8 +113,13 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsD3D12::allocateSwapchainImag
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
-                                                      quint64 swapchainFormat, int samples, int arraySize) const
+QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrSwapchainSubImage &subImage,
+                                                      const XrSwapchainImageBaseHeader *swapchainImage,
+                                                      quint64 swapchainFormat,
+                                                      int samples,
+                                                      int arraySize,
+                                                      const XrSwapchainImageBaseHeader *depthSwapchainImage,
+                                                      quint64 depthSwapchainFormat) const
 {
     ID3D12Resource* const colorTexture = reinterpret_cast<const XrSwapchainImageD3D12KHR*>(swapchainImage)->texture;
 
@@ -127,6 +147,11 @@ QQuickRenderTarget QOpenXRGraphicsD3D12::renderTarget(const XrSwapchainSubImage 
                                                 samples,
                                                 arraySize,
                                                 flags);
+
+    // No depthSwapchainImage support because ResolveDepthStencil will be
+    // unsupported with D3D11/12 no matter what.
+    Q_UNUSED(depthSwapchainImage);
+    Q_UNUSED(depthSwapchainFormat);
 }
 
 

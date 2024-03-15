@@ -23,6 +23,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QRhiTexture;
+
 class QOpenXRGraphicsVulkan : public QAbstractOpenXRGraphics
 {
 public:
@@ -34,10 +36,13 @@ public:
     bool setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig) override;
     bool finializeGraphics(QRhi *rhi) override;
     int64_t colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
+    int64_t depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const override;
     QVector<XrSwapchainImageBaseHeader*> allocateSwapchainImages(int count, XrSwapchain swapchain) override;
     QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
-                                    quint64 swapchainFormat, int samples, int arraySize) const override;
+                                    quint64 swapchainFormat, int samples, int arraySize,
+                                    const XrSwapchainImageBaseHeader *depthSwapchainImage, quint64 depthSwapchainFormat) const override;
     void setupWindow(QQuickWindow *quickWindow) override;
+    void releaseResources() override;
 
 private:
     QVulkanInstance m_vulkanInstance;
@@ -48,6 +53,8 @@ private:
     int m_queueFamilyIndex = -1;
     XrGraphicsBindingVulkanKHR m_graphicsBinding{};
     QMap<XrSwapchain, QVector<XrSwapchainImageVulkanKHR>> m_swapchainImageBuffer;
+    QRhi *m_rhi = nullptr;
+    mutable QRhiTexture *m_depthTexture = nullptr;
 };
 
 QT_END_NAMESPACE

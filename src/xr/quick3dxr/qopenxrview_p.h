@@ -55,6 +55,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(FoveationLevel fixedFoveation READ fixedFoveation WRITE setFixedFoveation NOTIFY fixedFoveationChanged FINAL)
     Q_PROPERTY(ReferenceSpace referenceSpace READ referenceSpace WRITE setReferenceSpace NOTIFY referenceSpaceChanged FINAL)
+    Q_PROPERTY(bool enableDepthSubmission READ isDepthSubmissionEnabled WRITE setEnableDepthSubmission NOTIFY enableDepthSubmissionChanged FINAL)
 
     QML_NAMED_ELEMENT(XrView)
 
@@ -104,10 +105,13 @@ public:
     ReferenceSpace referenceSpace() const;
     void setReferenceSpace(ReferenceSpace newReferenceSpace);
 
+    bool isDepthSubmissionEnabled() const;
+
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setEnablePassthrough(bool enable);
     void setQuitOnSessionEnd(bool enable);
+    void setEnableDepthSubmission(bool enable);
 
 private Q_SLOTS:
     void updateViewportGeometry();
@@ -125,6 +129,7 @@ Q_SIGNALS:
     void fixedFoveationChanged();
     void frameReady(QRhiTexture *colorBuffer); // tooling
     void referenceSpaceChanged();
+    void enableDepthSubmissionChanged();
 
 private:
     // The XrView does not expose the View3D in its public interface. This is intentional.

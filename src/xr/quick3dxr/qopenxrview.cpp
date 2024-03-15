@@ -336,4 +336,30 @@ void QOpenXRView::setReferenceSpace(ReferenceSpace newReferenceSpace)
     // changed yet.
 }
 
+bool QOpenXRView::isDepthSubmissionEnabled() const
+{
+    if (!m_openXRManager.isValid())
+        return false;
+
+    return m_openXRManager.m_submitLayerDepth;
+}
+
+void QOpenXRView::setEnableDepthSubmission(bool enable)
+{
+    if (!m_openXRManager.isValid()) {
+        qWarning("Attempted to set depth submission mode without having m_openXRManager initialized");
+        return;
+    }
+
+    if (m_openXRManager.m_submitLayerDepth == enable)
+        return;
+
+    if (m_openXRManager.m_compositionLayerDepthSupported) {
+        if (enable)
+            qDebug("Enabling submitLayerDepth");
+        m_openXRManager.m_submitLayerDepth = enable;
+        emit enableDepthSubmissionChanged();
+    }
+}
+
 QT_END_NAMESPACE

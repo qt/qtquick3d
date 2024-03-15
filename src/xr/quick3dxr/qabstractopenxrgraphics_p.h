@@ -43,6 +43,7 @@ public:
     virtual void setupWindow(QQuickWindow *);
     virtual bool finializeGraphics(QRhi *rhi) = 0;
     virtual int64_t colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const = 0;
+    virtual int64_t depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const = 0;
     virtual QVector<XrSwapchainImageBaseHeader*> allocateSwapchainImages(int count,
                                                                          XrSwapchain swapchain) = 0;
 
@@ -50,7 +51,11 @@ public:
                                             const XrSwapchainImageBaseHeader *swapchainImage,
                                             quint64 swapchainFormat,
                                             int samples,
-                                            int arraySize) const = 0;
+                                            int arraySize,
+                                            const XrSwapchainImageBaseHeader *depthSwapchainImage,
+                                            quint64 depthSwapchainFormat) const = 0;
+
+    virtual void releaseResources() { }
 };
 
 QT_END_NAMESPACE

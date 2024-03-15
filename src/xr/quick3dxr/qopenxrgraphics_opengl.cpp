@@ -6,6 +6,7 @@
 
 #include <QtGui/QOpenGLContext>
 #include <QtQuick/QQuickWindow>
+#include <QtQuick/private/qquickrendertarget_p.h>
 
 #include <rhi/qrhi.h>
 
@@ -17,6 +18,22 @@ QT_BEGIN_NAMESPACE
 
 #ifndef GL_SRGB8_ALPHA8_EXT
 #define GL_SRGB8_ALPHA8_EXT               0x8C43
+#endif
+
+#ifndef GL_DEPTH_COMPONENT16
+#define GL_DEPTH_COMPONENT16              0x81A5
+#endif
+
+#ifndef GL_DEPTH_COMPONENT24
+#define GL_DEPTH_COMPONENT24              0x81A6
+#endif
+
+#ifndef GL_DEPTH_COMPONENT32F
+#define GL_DEPTH_COMPONENT32F             0x8CAC
+#endif
+
+#ifndef GL_DEPTH24_STENCIL8
+#define GL_DEPTH24_STENCIL8               0x88F0
 #endif
 
 QOpenXRGraphicsOpenGL::QOpenXRGraphicsOpenGL()
@@ -94,6 +111,8 @@ bool QOpenXRGraphicsOpenGL::finializeGraphics(QRhi *rhi)
     }
 # endif
 
+    m_rhi = rhi;
+
     return true;
 }
 
@@ -101,18 +120,33 @@ bool QOpenXRGraphicsOpenGL::finializeGraphics(QRhi *rhi)
 int64_t QOpenXRGraphicsOpenGL::colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
 {
     // List of supported color swapchain formats.
-    constexpr int64_t SupportedColorSwapchainFormats[] = {
+    constexpr int64_t supportedColorSwapchainFormats[] = {
         GL_RGBA8,
-        GL_RGBA8_SNORM,
+        GL_RGBA8_SNORM
     };
-    auto swapchainFormatIt = std::find_first_of(swapchainFormats.begin(),
-                                                swapchainFormats.end(),
-                                                std::begin(SupportedColorSwapchainFormats),
-                                                std::end(SupportedColorSwapchainFormats));
 
+    auto swapchainFormatIt = std::find_first_of(std::begin(supportedColorSwapchainFormats),
+                                                std::end(supportedColorSwapchainFormats),
+                                                swapchainFormats.begin(),
+                                                swapchainFormats.end());
     return *swapchainFormatIt;
 }
 
+int64_t QOpenXRGraphicsOpenGL::depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
+{
+    // in order of preference
+    constexpr int64_t supportedDepthSwapchainFormats[] = {
+        GL_DEPTH24_STENCIL8,
+        GL_DEPTH_COMPONENT32F,
+        GL_DEPTH_COMPONENT24,
+        GL_DEPTH_COMPONENT16
+    };
+
+    return *std::find_first_of(std::begin(supportedDepthSwapchainFormats),
+                               std::end(supportedDepthSwapchainFormats),
+                               swapchainFormats.begin(),
+                               swapchainFormats.end());
+}
 
 QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsOpenGL::allocateSwapchainImages(int count, XrSwapchain swapchain)
 {
@@ -127,8 +161,13 @@ QVector<XrSwapchainImageBaseHeader*> QOpenXRGraphicsOpenGL::allocateSwapchainIma
 }
 
 
-QQuickRenderTarget QOpenXRGraphicsOpenGL::renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
-                                                       quint64 swapchainFormat, int samples, int arraySize) const
+QQuickRenderTarget QOpenXRGraphicsOpenGL::renderTarget(const XrSwapchainSubImage &subImage,
+                                                       const XrSwapchainImageBaseHeader *swapchainImage,
+                                                       quint64 swapchainFormat,
+                                                       int samples,
+                                                       int arraySize,
+                                                       const XrSwapchainImageBaseHeader *depthSwapchainImage,
+                                                       quint64 depthSwapchainFormat) const
 {
     const uint32_t colorTexture = reinterpret_cast<const XrSwapchainImageOpenGLKHR*>(swapchainImage)->image;
 
@@ -144,17 +183,53 @@ QQuickRenderTarget QOpenXRGraphicsOpenGL::renderTarget(const XrSwapchainSubImage
     if (samples > 1)
         flags |= QQuickRenderTarget::Flag::MultisampleResolve;
 
-    return QQuickRenderTarget::fromOpenGLTexture(colorTexture,
-                                                swapchainFormat,
-                                                QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height),
-                                                samples,
-                                                arraySize,
-                                                flags);
+    const QSize pixelSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height);
+    QQuickRenderTarget rt = QQuickRenderTarget::fromOpenGLTexture(colorTexture,
+                                                                  swapchainFormat,
+                                                                  pixelSize,
+                                                                  samples,
+                                                                  arraySize,
+                                                                  flags);
+    if (depthSwapchainImage) {
+        QRhiTexture::Format format = QRhiTexture::D24S8;
+        switch (depthSwapchainFormat) {
+        case GL_DEPTH_COMPONENT32F:
+            format = QRhiTexture::D32F;
+            break;
+        case GL_DEPTH_COMPONENT24:
+            format = QRhiTexture::D24;
+            break;
+        case GL_DEPTH_COMPONENT16:
+            format = QRhiTexture::D16;
+            break;
+        }
+        GLuint depthImage = reinterpret_cast<const XrSwapchainImageOpenGLKHR*>(depthSwapchainImage)->image;
+        if (m_depthTexture && (m_depthTexture->format() != format || m_depthTexture->pixelSize() != pixelSize || m_depthTexture->arraySize() != arraySize)) {
+            delete m_depthTexture;
+            m_depthTexture = nullptr;
+        }
+        if (!m_depthTexture) {
+            // this is never multisample, QQuickRt takes care of resolving depth-stencil
+            if (arraySize > 1)
+                m_depthTexture = m_rhi->newTextureArray(format, arraySize, pixelSize, 1, QRhiTexture::RenderTarget);
+            else
+                m_depthTexture = m_rhi->newTexture(format, pixelSize, 1, QRhiTexture::RenderTarget);
+        }
+        m_depthTexture->createFrom({ depthImage, 0 });
+        rt.setDepthTexture(m_depthTexture);
+    }
+    return rt;
 }
 
 void QOpenXRGraphicsOpenGL::setupWindow(QQuickWindow *window)
 {
     m_window = window;
+}
+
+void QOpenXRGraphicsOpenGL::releaseResources()
+{
+    delete m_depthTexture;
+    m_depthTexture = nullptr;
 }
 
 QT_END_NAMESPACE

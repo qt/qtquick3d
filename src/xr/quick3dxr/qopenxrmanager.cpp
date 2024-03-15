@@ -62,12 +62,11 @@ QT_BEGIN_NAMESPACE
     }                                              \
     }
 
-MAKE_TO_STRING_FUNC(XrReferenceSpaceType);
-MAKE_TO_STRING_FUNC(XrViewConfigurationType);
-MAKE_TO_STRING_FUNC(XrEnvironmentBlendMode);
-MAKE_TO_STRING_FUNC(XrSessionState);
-MAKE_TO_STRING_FUNC(XrResult);
-//MAKE_TO_STRING_FUNC(XrFormFactor);
+MAKE_TO_STRING_FUNC(XrReferenceSpaceType)
+MAKE_TO_STRING_FUNC(XrViewConfigurationType)
+MAKE_TO_STRING_FUNC(XrEnvironmentBlendMode)
+MAKE_TO_STRING_FUNC(XrSessionState)
+MAKE_TO_STRING_FUNC(XrResult)
 
 QOpenXRManager::QOpenXRManager(QObject *parent)
     : QObject(parent)
@@ -78,6 +77,10 @@ QOpenXRManager::QOpenXRManager(QObject *parent)
 QOpenXRManager::~QOpenXRManager()
 {
     teardown();
+
+    // early deinit for graphics, so it can destroy owned QRhi resources
+    if (m_graphics)
+        m_graphics->releaseResources();
 
     // maintain the correct order
     delete m_vrViewport;
@@ -329,11 +332,17 @@ void QOpenXRManager::teardown()
 
 void QOpenXRManager::destroySwapchain()
 {
-    for (Swapchain swapchain : m_swapchains)
+    for (const Swapchain &swapchain : m_swapchains)
         xrDestroySwapchain(swapchain.handle);
 
     m_swapchains.clear();
     m_swapchainImages.clear();
+
+    for (const Swapchain &swapchain : m_depthSwapchains)
+        xrDestroySwapchain(swapchain.handle);
+
+    m_depthSwapchains.clear();
+    m_depthSwapchainImages.clear();
 }
 
 void QOpenXRManager::setPassthroughEnabled(bool enabled)
@@ -501,6 +510,18 @@ XrResult QOpenXRManager::createXrInstance()
     m_handtrackingExtensionSupported = isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties);
     if (m_handtrackingExtensionSupported)
         enabledExtensions.append(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+
+    m_compositionLayerDepthSupported = isExtensionSupported(XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME, extensionProperties);
+    if (m_compositionLayerDepthSupported) {
+        // The extension is enabled, whenever supported; however, if we actually
+        // submit depth in xrEndFrame(), is a different question.
+        enabledExtensions.append(XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME);
+        m_submitLayerDepth = qEnvironmentVariableIntValue("QT_QUICK3D_XR_SUBMIT_DEPTH");
+        if (m_submitLayerDepth)
+            qDebug("submitLayerDepth defaults to true due to env.var.");
+    } else {
+        m_submitLayerDepth = false;
+    }
 
     // Oculus Quest Specific Extensions
 
@@ -845,6 +866,7 @@ bool QOpenXRManager::setupAppSpace()
     }
 
     // App Space
+    qDebug("Creating new reference space for app space: %s", to_string(newReferenceSpace));
     XrReferenceSpaceCreateInfo referenceSpaceCreateInfo{};
     referenceSpaceCreateInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
     referenceSpaceCreateInfo.poseInReferenceSpace = identityPose;
@@ -1035,6 +1057,7 @@ void QOpenXRManager::createSwapchains()
                                                     m_configViews.data()));
     m_views.resize(viewCount, {XR_TYPE_VIEW, nullptr, {}, {}});
     m_projectionLayerViews.resize(viewCount, {});
+    m_layerDepthInfos.resize(viewCount, {});
 
     // Create the swapchain and get the images.
     if (viewCount > 0) {
@@ -1048,22 +1071,27 @@ void QOpenXRManager::createSwapchains()
                                                   swapchainFormats.data()));
         Q_ASSERT(swapchainFormatCount == swapchainFormats.size());
         m_colorSwapchainFormat = m_graphics->colorSwapchainFormat(swapchainFormats);
+        if (m_compositionLayerDepthSupported)
+            m_depthSwapchainFormat = m_graphics->depthSwapchainFormat(swapchainFormats);
 
         // Print swapchain formats and the selected one.
         {
             QString swapchainFormatsString;
             for (int64_t format : swapchainFormats) {
-                const bool selected = format == m_colorSwapchainFormat;
+                const bool selectedColor = format == m_colorSwapchainFormat;
+                const bool selectedDepth = format == m_depthSwapchainFormat;
                 swapchainFormatsString += u" ";
-                if (selected) {
+                if (selectedColor)
                     swapchainFormatsString += u"[";
-                }
+                else if (selectedDepth)
+                    swapchainFormatsString += u"<";
                 swapchainFormatsString += QString::number(format);
-                if (selected) {
+                if (selectedColor)
                     swapchainFormatsString += u"]";
-                }
+                else if (selectedDepth)
+                    swapchainFormatsString += u">";
             }
-            qDebug("Swapchain Formats: %s", qPrintable(swapchainFormatsString));
+            qDebug("Swapchain formats: %s", qPrintable(swapchainFormatsString));
         }
 
         const XrViewConfigurationView &vp = m_configViews[0]; // use the first view for all views, the sizes should be the same
@@ -1101,18 +1129,41 @@ void QOpenXRManager::createSwapchains()
             swapchain.width = swapchainCreateInfo.width;
             swapchain.height = swapchainCreateInfo.height;
             swapchain.arraySize = swapchainCreateInfo.arraySize;
-            if (!checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle)))
-                qWarning("xrCreateSwapchain failed");
+            if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
+                m_swapchains.append(swapchain);
 
-            m_swapchains.append(swapchain);
+                uint32_t imageCount = 0;
+                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
 
-            uint32_t imageCount;
-            checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+                auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
+                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
 
-            auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
-            checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+                m_swapchainImages.insert(swapchain.handle, swapchainImages);
+            } else {
+                qWarning("xrCreateSwapchain failed (multiview)");
+            }
 
-            m_swapchainImages.insert(swapchain.handle, swapchainImages);
+            // Create the depth swapchain always when
+            // XR_KHR_composition_layer_depth is supported. If we are going to
+            // submit (use the depth image), that's a different question, and is
+            // dynamically controlled by the user.
+            if (m_compositionLayerDepthSupported && m_depthSwapchainFormat > 0) {
+                swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+                swapchainCreateInfo.format = m_depthSwapchainFormat;
+                if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
+                    m_depthSwapchains.append(swapchain);
+
+                    uint32_t imageCount = 0;
+                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+
+                    auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
+                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+
+                    m_depthSwapchainImages.insert(swapchain.handle, swapchainImages);
+                } else {
+                    qWarning("xrCreateSwapchain failed for depth swapchain (multiview)");
+                }
+            }
         } else {
             // Create a swapchain for each view.
             for (uint32_t i = 0; i < viewCount; i++) {
@@ -1137,19 +1188,50 @@ void QOpenXRManager::createSwapchains()
                 Swapchain swapchain;
                 swapchain.width = swapchainCreateInfo.width;
                 swapchain.height = swapchainCreateInfo.height;
-                if (!checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle)))
-                    qWarning("xrCreateSwapchain failed");
+                if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
+                    m_swapchains.append(swapchain);
 
-                m_swapchains.append(swapchain);
+                    uint32_t imageCount = 0;
+                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
 
-                uint32_t imageCount;
-                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+                    auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
+                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
 
-                auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
-                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+                    m_swapchainImages.insert(swapchain.handle, swapchainImages);
+                } else {
+                    qWarning("xrCreateSwapchain failed (view %d)", viewCount);
+                }
 
-                m_swapchainImages.insert(swapchain.handle, swapchainImages);
+                if (m_compositionLayerDepthSupported && m_depthSwapchainFormat > 0) {
+                    swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+                    swapchainCreateInfo.format = m_depthSwapchainFormat;
+                    if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
+                        m_depthSwapchains.append(swapchain);
+
+                        uint32_t imageCount = 0;
+                        checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+
+                        auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
+                        checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+
+                        m_depthSwapchainImages.insert(swapchain.handle, swapchainImages);
+                    } else {
+                        qWarning("xrCreateSwapchain failed for depth swapchain (view %d)", viewCount);
+                    }
+                }
             }
+        }
+
+        if (m_multiviewRendering) {
+            if (m_swapchains.isEmpty())
+                return;
+            if (m_compositionLayerDepthSupported && m_depthSwapchains.isEmpty())
+                return;
+        } else {
+            if (m_swapchains.count() != viewCount)
+                return;
+            if (m_compositionLayerDepthSupported && m_depthSwapchains.count() != viewCount)
+                return;
         }
 
         // Setup the projection layer views.
@@ -1162,6 +1244,15 @@ void QOpenXRManager::createSwapchains()
             m_projectionLayerViews[i].subImage.imageRect.offset.y = 0;
             m_projectionLayerViews[i].subImage.imageRect.extent.width = vp.recommendedImageRectWidth;
             m_projectionLayerViews[i].subImage.imageRect.extent.height = vp.recommendedImageRectHeight;
+
+            m_layerDepthInfos[i].type = XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR;
+            m_layerDepthInfos[i].next = nullptr;
+            m_layerDepthInfos[i].subImage.swapchain = m_depthSwapchains[0].handle; // for non-multiview this gets overwritten later
+            m_layerDepthInfos[i].subImage.imageArrayIndex = i; // this too
+            m_layerDepthInfos[i].subImage.imageRect.offset.x = 0;
+            m_layerDepthInfos[i].subImage.imageRect.offset.y = 0;
+            m_layerDepthInfos[i].subImage.imageRect.extent.width = vp.recommendedImageRectWidth;
+            m_layerDepthInfos[i].subImage.imageRect.extent.height = vp.recommendedImageRectHeight;
         }
     }
 
@@ -1428,23 +1519,39 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
             m_frameCapture->startCaptureFrame();
 #endif
 
+        if (m_submitLayerDepth && m_samples > 1) {
+            if (!m_renderControl->rhi()->isFeatureSupported(QRhi::ResolveDepthStencil)) {
+                static bool warned = false;
+                if (!warned) {
+                    warned = true;
+                    qWarning("Quick3D XR: Submitting depth buffer with MSAA cannot be enabled"
+                             " when depth-stencil resolve is not supported by the underlying 3D API (%s)",
+                             m_renderControl->rhi()->backendName());
+                }
+                m_submitLayerDepth = false;
+            }
+        }
+
         if (m_multiviewRendering) {
             const Swapchain swapchain = m_swapchains[0];
 
             // Acquire the swapchain image array
             XrSwapchainImageAcquireInfo acquireInfo{};
             acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
-
             uint32_t swapchainImageIndex;
             checkXrResult(xrAcquireSwapchainImage(swapchain.handle, &acquireInfo, &swapchainImageIndex));
-
             XrSwapchainImageWaitInfo waitInfo{};
             waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
             waitInfo.timeout = XR_INFINITE_DURATION;
             checkXrResult(xrWaitSwapchainImage(swapchain.handle, &waitInfo));
+            XrSwapchainImageBaseHeader *swapchainImage = m_swapchainImages[swapchain.handle][swapchainImageIndex];
 
-            const XrSwapchainImageBaseHeader* const swapchainImage =
-                m_swapchainImages[swapchain.handle][swapchainImageIndex];
+            XrSwapchainImageBaseHeader *depthSwapchainImage = nullptr;
+            if (m_submitLayerDepth) {
+                checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[0].handle, &acquireInfo, &swapchainImageIndex));
+                checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[0].handle, &waitInfo));
+                depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[0].handle][swapchainImageIndex];
+            }
 
             // First update both cameras with the latest view information and
             // then set them on the viewport (since this is going to be
@@ -1460,12 +1567,29 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
             // targeting all the views (outputting simultaneously to all texture
             // array layers). The subImage dimensions are the same, that's why
             // passing in the first layerView's subImage works.
-            doRender(m_projectionLayerViews[0].subImage, swapchainImage);
+            doRender(m_projectionLayerViews[0].subImage,
+                     swapchainImage,
+                     depthSwapchainImage);
+
+            for (uint32_t i = 0; i < viewCountOutput; i++) {
+                if (m_submitLayerDepth) {
+                    m_layerDepthInfos[i].minDepth = 0;
+                    m_layerDepthInfos[i].maxDepth = 1;
+                    QOpenXREyeCamera *cam = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
+                    m_layerDepthInfos[i].nearZ = cam ? cam->clipNear() : 1.0f;
+                    m_layerDepthInfos[i].farZ = cam ? cam->clipFar() : 10000.0f;
+                    m_projectionLayerViews[i].next = &m_layerDepthInfos[i];
+                } else {
+                    m_projectionLayerViews[i].next = nullptr;
+                }
+            }
 
             // release the swapchain image array
             XrSwapchainImageReleaseInfo releaseInfo{};
             releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
             checkXrResult(xrReleaseSwapchainImage(swapchain.handle, &releaseInfo));
+            if (depthSwapchainImage)
+                checkXrResult(xrReleaseSwapchainImage(m_depthSwapchains[0].handle, &releaseInfo));
         } else {
             for (uint32_t i = 0; i < viewCountOutput; i++) {
                 // Each view has a separate swapchain which is acquired, rendered to, and released.
@@ -1474,17 +1598,20 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
                 // Render view to the appropriate part of the swapchain image.
                 XrSwapchainImageAcquireInfo acquireInfo{};
                 acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
-
                 uint32_t swapchainImageIndex;
                 checkXrResult(xrAcquireSwapchainImage(viewSwapchain.handle, &acquireInfo, &swapchainImageIndex));
-
                 XrSwapchainImageWaitInfo waitInfo{};
                 waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
                 waitInfo.timeout = XR_INFINITE_DURATION;
                 checkXrResult(xrWaitSwapchainImage(viewSwapchain.handle, &waitInfo));
+                XrSwapchainImageBaseHeader *swapchainImage = m_swapchainImages[viewSwapchain.handle][swapchainImageIndex];
 
-                const XrSwapchainImageBaseHeader* const swapchainImage =
-                        m_swapchainImages[viewSwapchain.handle][swapchainImageIndex];
+                XrSwapchainImageBaseHeader *depthSwapchainImage = nullptr;
+                if (m_submitLayerDepth) {
+                    checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[i].handle, &acquireInfo, &swapchainImageIndex));
+                    checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[i].handle, &waitInfo));
+                    depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[i].handle][swapchainImageIndex];
+                }
 
                 m_projectionLayerViews[i].subImage.swapchain = viewSwapchain.handle;
                 m_projectionLayerViews[i].subImage.imageArrayIndex = 0;
@@ -1493,11 +1620,28 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
 
                 updateCameraNonMultiview(i, m_projectionLayerViews[i]);
 
-                doRender(m_projectionLayerViews[i].subImage, swapchainImage);
+                doRender(m_projectionLayerViews[i].subImage,
+                         swapchainImage,
+                         depthSwapchainImage);
+
+                if (depthSwapchainImage) {
+                    m_layerDepthInfos[i].subImage.swapchain = m_depthSwapchains[i].handle;
+                    m_layerDepthInfos[i].subImage.imageArrayIndex = 0;
+                    m_layerDepthInfos[i].minDepth = 0;
+                    m_layerDepthInfos[i].maxDepth = 1;
+                    QOpenXREyeCamera *cam = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
+                    m_layerDepthInfos[i].nearZ = cam ? cam->clipNear() : 1.0f;
+                    m_layerDepthInfos[i].farZ = cam ? cam->clipFar() : 10000.0f;
+                    m_projectionLayerViews[i].next = &m_layerDepthInfos[i];
+                } else {
+                    m_projectionLayerViews[i].next = nullptr;
+                }
 
                 XrSwapchainImageReleaseInfo releaseInfo{};
                 releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
                 checkXrResult(xrReleaseSwapchainImage(viewSwapchain.handle, &releaseInfo));
+                if (depthSwapchainImage)
+                    checkXrResult(xrReleaseSwapchainImage(m_depthSwapchains[i].handle, &releaseInfo));
             }
         }
 
@@ -1516,10 +1660,18 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
     return false;
 }
 
-void QOpenXRManager::doRender(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage)
+void QOpenXRManager::doRender(const XrSwapchainSubImage &subImage,
+                              const XrSwapchainImageBaseHeader *swapchainImage,
+                              const XrSwapchainImageBaseHeader *depthSwapchainImage)
 {
     const int arraySize = m_multiviewRendering ? m_swapchains[0].arraySize : 1;
-    m_quickWindow->setRenderTarget(m_graphics->renderTarget(subImage, swapchainImage, m_colorSwapchainFormat, m_samples, arraySize));
+    m_quickWindow->setRenderTarget(m_graphics->renderTarget(subImage,
+                                                            swapchainImage,
+                                                            m_colorSwapchainFormat,
+                                                            m_samples,
+                                                            arraySize,
+                                                            depthSwapchainImage,
+                                                            m_depthSwapchainFormat));
 
     m_quickWindow->setGeometry(0,
                                0,
