@@ -426,7 +426,7 @@ struct VertexBufferDataExt {
             entries.append({
                                QSSGMesh::MeshInternal::getJointAttrName(),
                                boneIndexData,
-                               QSSGMesh::Mesh::ComponentType::Int32,
+                               requirments.useFloatJointIndices ?  QSSGMesh::Mesh::ComponentType::Float32 : QSSGMesh::Mesh::ComponentType::Int32,
                                4
                            });
             entries.append({
