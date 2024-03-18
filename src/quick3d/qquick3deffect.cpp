@@ -580,6 +580,10 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     if (fullUpdate || shadersMayChange) {
         markAllDirty();
 
+        // Need to clear the old list with properties and textures first.
+        effectNode->properties.clear();
+        effectNode->textureProperties.clear();
+
         QMetaMethod propertyDirtyMethod;
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
         if (idx != -1)
