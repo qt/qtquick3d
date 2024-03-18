@@ -575,7 +575,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     if (m_dirtyAttributes & Dirty::EffectChainDirty)
         shadersMayChange = true;
 
-    const bool fullUpdate = newBackendNode || effectNode->incompleteBuildTimeObject;
+    const bool fullUpdate = newBackendNode || effectNode->incompleteBuildTimeObject || (m_dirtyAttributes & Dirty::TextureDirty);
 
     if (fullUpdate || shadersMayChange) {
         markAllDirty();
