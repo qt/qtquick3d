@@ -755,6 +755,9 @@ MetaInfo {
             libraryIcon: "images/reflectionProbe.png"
             version: "6.3"
             requiredImport: "QtQuick3D"
+            Property { name: "boxSize.x"; type: "int"; value: 1000; }
+            Property { name: "boxSize.y"; type: "int"; value: 1000; }
+            Property { name: "boxSize.z"; type: "int"; value: 1000; }
             toolTip: qsTr("Reflects the current scene to the objects.")
         }
     }
