@@ -913,7 +913,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
         auto layerPrepResult = data.layerPrepResult;
 
-        const auto &renderTarget = rhiCtx->renderTarget();
+        QRhiRenderTarget *renderTarget = rhiCtx->renderTarget();
         item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
         const int viewCount = rhiCtx->mainPassViewCount();

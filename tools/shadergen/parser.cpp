@@ -399,10 +399,8 @@ static void cloneQmlList(const QObject &so, QMetaProperty &sp, QObject &to, QMet
         auto tl = tv.value<QQmlListProperty<T>>();
         auto sl = sv.value<QQmlListProperty<T>>();
         const auto count = sl.count(&sl);
-        for (int i = 0; count != i; ++i) {
-            const auto &item = sl.at(&sl, i);
-            tl.append(&tl, item);
-        }
+        for (int i = 0; count != i; ++i)
+            tl.append(&tl, sl.at(&sl, i));
     }
 }
 
