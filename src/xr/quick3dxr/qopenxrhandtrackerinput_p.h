@@ -37,6 +37,8 @@ class QOpenXRHandTrackerInput : public QObject
     Q_PROPERTY(QList<QVector3D> jointPositions READ jointPositions NOTIFY jointPositionsChanged FINAL)
     Q_PROPERTY(QList<QQuaternion> jointRotations READ jointRotations NOTIFY jointRotationsChanged FINAL)
 
+    Q_PROPERTY(QVector3D pokePosition READ pokePosition NOTIFY pokePositionChanged FINAL)
+
     QML_NAMED_ELEMENT(XrHandTrackerInput)
     QML_UNCREATABLE("Created by XrView")
 
@@ -63,6 +65,9 @@ public:
 
     QList<QQuaternion> jointRotations() const;
 
+    QVector3D pokePosition() const;
+    void setPokePosition(const QVector3D &newPokePosition);
+
 public Q_SLOTS:
     void setPoseSpace(HandPoseSpace poseSpace);
 
@@ -78,6 +83,8 @@ Q_SIGNALS:
 
     void jointRotationsChanged();
 
+    void pokePositionChanged();
+
 private:
     bool m_isActive = false;
     HandPoseSpace m_poseSpace = HandPoseSpace::GripPose;
@@ -87,6 +94,7 @@ private:
 
     QList<QVector3D> m_jointPositions;
     QList<QQuaternion> m_jointRotations;
+    QVector3D m_pokePosition;
 };
 
 class QOpenXrHandModel : public QQuick3DModel

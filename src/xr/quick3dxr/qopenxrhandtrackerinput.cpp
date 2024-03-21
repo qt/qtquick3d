@@ -62,11 +62,25 @@ void QOpenXRHandTrackerInput::setJointPositionsAndRotations(const QList<QVector3
     m_jointRotations = newJointRotations;
     emit jointRotationsChanged();
     emit jointDataUpdated();
+    setPokePosition(m_jointPositions[XR_HAND_JOINT_INDEX_TIP_EXT]);
 }
 
 QList<QQuaternion> QOpenXRHandTrackerInput::jointRotations() const
 {
     return m_jointRotations;
+}
+
+QVector3D QOpenXRHandTrackerInput::pokePosition() const
+{
+    return m_pokePosition;
+}
+
+void QOpenXRHandTrackerInput::setPokePosition(const QVector3D &newPokePosition)
+{
+    if (m_pokePosition == newPokePosition)
+        return;
+    m_pokePosition = newPokePosition;
+    emit pokePositionChanged();
 }
 
 static inline QQuaternion toQQuaternion(const XrQuaternionf &q)
