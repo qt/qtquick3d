@@ -1631,6 +1631,27 @@ bool QQuick3DViewport::forwardEventToSubscenes(QPointerEvent *event,
         for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex)
             QMutableEventPoint::setScenePosition(event->point(pointIndex), originalScenePositions.at(pointIndex));
     }
+
+    // Normally this would occur in QQuickWindowPrivate::clearGrabbers(...) but
+    // for ray based input, input never goes through QQuickWindow (since events
+    // are generated from within scene space and not window/screen space).
+    if (event->isEndEvent() && useRayPicking) {
+        if (event->isSinglePointEvent()) {
+            if (static_cast<QSinglePointEvent *>(event)->buttons() == Qt::NoButton) {
+                auto &firstPt = event->point(0);
+                event->setExclusiveGrabber(firstPt, nullptr);
+                event->clearPassiveGrabbers(firstPt);
+            }
+        } else {
+            for (auto &point : event->points()) {
+                if (point.state() == QEventPoint::State::Released) {
+                    event->setExclusiveGrabber(point, nullptr);
+                    event->clearPassiveGrabbers(point);
+                }
+            }
+        }
+    }
+
     return ret;
 }
 
