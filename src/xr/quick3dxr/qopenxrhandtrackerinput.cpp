@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrhandtrackerinput_p.h"
+#include "qopenxrhelpers_p.h"
 #include "qopenxrinputmanager_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -83,16 +84,6 @@ void QOpenXRHandTrackerInput::setPokePosition(const QVector3D &newPokePosition)
     emit pokePositionChanged();
 }
 
-static inline QQuaternion toQQuaternion(const XrQuaternionf &q)
-{
-    return {q.w, q.x, q.y, q.z};
-}
-
-static inline QVector3D toQVector(const XrVector3f &v)
-{
-    return {v.x * 100, v.y * 100, v.z * 100};
-}
-
 static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuaternion &rotation)
 {
     QMatrix4x4 transform = QMatrix4x4{rotation.toRotationMatrix()};
@@ -153,8 +144,8 @@ void QOpenXrHandModel::setupModel()
 
     for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; ++i) {
         const auto &pose = handMeshData.jointBindPoses[i];
-        const QVector3D pos = toQVector(pose.position);
-        const QQuaternion rot = toQQuaternion(pose.orientation);
+        const QVector3D pos = OpenXRHelpers::toQVector(pose.position);
+        const QQuaternion rot = OpenXRHelpers::toQQuaternion(pose.orientation);
         inverseBindPoses.append(transformMatrix(pos, rot).inverted());
         auto *joint = new QQuick3DNode(this);
         joint->setPosition(pos);

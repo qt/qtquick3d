@@ -18,7 +18,9 @@
 
 #include <openxr/openxr.h>
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
+#include <QQuaternion>
 #include <QString>
+#include <QVector3D>
 
 QT_BEGIN_NAMESPACE
 
@@ -26,6 +28,16 @@ namespace OpenXRHelpers
 {
 QString getXrResultAsString(XrResult result, XrInstance instance);
 bool checkXrResult(XrResult result, XrInstance instance);
+
+inline QQuaternion toQQuaternion(const XrQuaternionf &q)
+{
+    return { q.w, q.x, q.y, q.z };
+}
+
+inline QVector3D toQVector(const XrVector3f &v)
+{
+    return { v.x * 100, v.y * 100, v.z * 100 };
+}
 }
 
 QT_END_NAMESPACE

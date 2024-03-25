@@ -62,16 +62,6 @@ XrPath QOpenXRInputManager::makeInputPath(const QByteArrayView path)
     return res;
 }
 
-static inline QQuaternion toQQuaternion(const XrQuaternionf &q)
-{
-    return {q.w, q.x, q.y, q.z};
-}
-
-static inline QVector3D toQVector(const XrVector3f &v)
-{
-    return {v.x * 100, v.y * 100, v.z * 100};
-}
-
 QQuick3DGeometry *QOpenXRInputManager::createHandMeshGeometry(const HandMeshData &handMeshData)
 {
     QQuick3DGeometry *geometry = new QQuick3DGeometry();
@@ -136,7 +126,7 @@ QQuick3DGeometry *QOpenXRInputManager::createHandMeshGeometry(const HandMeshData
     for (qsizetype i = 0; i < expectedLength; ++i) {
         // start writing float values to vertexBuffer
         if (hasPositions) {
-            const QVector3D position = toQVector(handMeshData.vertexPositions[i]);
+            const QVector3D position = OpenXRHelpers::toQVector(handMeshData.vertexPositions[i]);
             appendFloat(position.x());
             appendFloat(position.y());
             appendFloat(position.z());
@@ -734,8 +724,8 @@ void QOpenXRInputManager::updateHandtracking(XrTime predictedDisplayTime, XrSpac
             jr.reserve(XR_HAND_JOINT_COUNT_EXT);
             for (uint i = 0; i < locations[hand].jointCount; ++i) {
                 auto &pose = jointLocations[hand][i].pose;
-                jp.append(toQVector(pose.position));
-                jr.append(toQQuaternion(pose.orientation));
+                jp.append(OpenXRHelpers::toQVector(pose.position));
+                jr.append(OpenXRHelpers::toQQuaternion(pose.orientation));
             }
             m_handTrackerInputState[hand]->setJointPositionsAndRotations(jp, jr);
             m_handTrackerInputState[hand]->setIsActive(locations[hand].isActive);
