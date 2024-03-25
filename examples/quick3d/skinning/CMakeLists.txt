@@ -6,12 +6,6 @@ project(skinning LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/skinning")
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Quick3D)
 
 qt_add_executable(skinning
@@ -45,7 +39,16 @@ qt_add_qml_module(skinning
 )
 
 install(TARGETS skinning
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+
+qt_generate_deploy_qml_app_script(
+    TARGET skinning
+    OUTPUT_SCRIPT deploy_script
+    MACOS_BUNDLE_POST_BUILD
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})

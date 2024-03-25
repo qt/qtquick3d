@@ -6,12 +6,6 @@ project(sceneeffects LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/sceneeffects")
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
 
 set(CMAKE_AUTORCC ON)
@@ -54,7 +48,16 @@ qt_add_shaders(sceneeffects "baked-shaders"
 )
 
 install(TARGETS sceneeffects
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+
+qt_generate_deploy_qml_app_script(
+    TARGET sceneeffects
+    OUTPUT_SCRIPT deploy_script
+    MACOS_BUNDLE_POST_BUILD
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})
