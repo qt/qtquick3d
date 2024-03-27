@@ -977,6 +977,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool enableParallaxMapping = heightImage != nullptr;
     const bool enableClearcoat = materialAdapter->isClearcoatEnabled();
     const bool enableTransmission = materialAdapter->isTransmissionEnabled();
+    const bool enableFresnelScaleBias = materialAdapter->isFresnelScaleBiasEnabled();
+    const bool enableClearcoatFresnelScaleBias = materialAdapter->isClearcoatFresnelScaleBiasEnabled();
 
     specularLightingEnabled |= specularAmountImage != nullptr;
     specularLightingEnabled |= hasReflectionProbe;
@@ -1058,11 +1060,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     fragmentShader.addUniform("qt_material_properties3", "vec4");
     if (enableParallaxMapping || enableTransmission)
         fragmentShader.addUniform("qt_material_properties4", "vec4");
+    if (enableFresnelScaleBias || enableClearcoatFresnelScaleBias)
+        fragmentShader.addUniform("qt_material_properties5", "vec4");
     if (enableTransmission) {
         fragmentShader.addUniform("qt_material_attenuation", "vec4");
         fragmentShader.addUniform("qt_material_thickness", "float");
     }
     fragmentShader.addUniform("qt_material_clearcoat_normal_strength", "float");
+    fragmentShader.addUniform("qt_material_clearcoat_fresnel_power", "float");
 
     if (vertexColorsEnabled) {
         vertexShader.generateVertexColor(inKey);
@@ -1598,13 +1603,21 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 else
                     fragmentShader << "    float qt_fresnelPower = qt_material_properties2.x;\n";
 
-                if (materialAdapter->isPrincipled()) {
-                    fragmentShader << "    qt_specularAmount *= qt_principledMaterialFresnel(qt_world_normal, qt_view_vector, "
+                if (materialAdapter->isPrincipled() || materialAdapter->isSpecularGlossy()) {
+                    fragmentShader << "    vec3 qt_principledMaterialFresnelValue = qt_principledMaterialFresnel(qt_world_normal, qt_view_vector, "
                                    << "qt_f0, qt_roughnessAmount, qt_fresnelPower);\n";
-
-                    // Make sure that we scale the specularTint with repsect to metalness (no tint if qt_metalnessAmount == 1)
-                    // We actually need to do this here because we won't know the final metalness value until this point.
-                    fragmentShader << "    qt_specularTint = mix(vec3(1.0), qt_specularTint, 1.0 - qt_metalnessAmount);\n";
+                    if (enableFresnelScaleBias) {
+                        fragmentShader << "    float qt_fresnelScale = qt_material_properties5.x;\n";
+                        fragmentShader << "    float qt_fresnelBias = qt_material_properties5.y;\n";
+                        fragmentShader << "    qt_principledMaterialFresnelValue = clamp(vec3(qt_fresnelBias) + "
+                                       << "qt_fresnelScale * qt_principledMaterialFresnelValue, 0.0, 1.0);\n";
+                    }
+                    fragmentShader << "    qt_specularAmount *= qt_principledMaterialFresnelValue;\n";
+                    if (materialAdapter->isPrincipled()) {
+                        // Make sure that we scale the specularTint with repsect to metalness (no tint if qt_metalnessAmount == 1)
+                        // We actually need to do this here because we won't know the final metalness value until this point.
+                        fragmentShader << "    qt_specularTint = mix(vec3(1.0), qt_specularTint, 1.0 - qt_metalnessAmount);\n";
+                    }
                 } else {
                     fragmentShader << "    qt_specularAmount *= qt_principledMaterialFresnel(qt_world_normal, qt_view_vector, "
                                    << "qt_f0, qt_roughnessAmount, qt_fresnelPower);\n";
@@ -1786,7 +1799,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         if (enableClearcoat) {
             fragmentShader.addInclude("bsdf.glsllib");
-            fragmentShader << "    vec3 qt_clearcoatFresnel = qt_schlick3(qt_clearcoatF0, qt_clearcoatF90, clamp(dot(qt_clearcoatNormal, qt_view_vector), 0.0, 1.0));\n";
+            fragmentShader << "    vec3 qt_clearcoatFresnel = qt_schlick3(qt_clearcoatF0, qt_clearcoatF90, clamp(dot(qt_clearcoatNormal, qt_view_vector), 0.0, 1.0), qt_material_clearcoat_fresnel_power);\n";
+            if (enableClearcoatFresnelScaleBias) {
+                fragmentShader << "    float qt_clearcoatFresnelScale = qt_material_properties5.z;\n";
+                fragmentShader << "    float qt_clearcoatFresnelBias = qt_material_properties5.w;\n";
+                fragmentShader << "    qt_clearcoatFresnel = clamp(vec3(qt_clearcoatFresnelBias) + qt_clearcoatFresnelScale * qt_clearcoatFresnel, 0.0, 1.0);\n";
+            }
             fragmentShader << "    qt_global_clearcoat = qt_global_clearcoat * qt_clearcoatAmount;\n";
             fragmentShader << "    qt_color_sum.rgb = qt_color_sum.rgb * (1.0 - qt_clearcoatAmount * qt_clearcoatFresnel) + qt_global_clearcoat;\n";
         }
@@ -2251,8 +2269,21 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     };
     shaders.setUniform(ubufData, "qt_material_properties4", materialProperties4, 4 * sizeof(float), &cui.material_properties4Idx);
 
+    if (inProperties.m_fresnelScaleBiasEnabled.getValue(inKey) || inProperties.m_clearcoatFresnelScaleBiasEnabled.getValue(inKey)) {
+        const float materialProperties5[4] = {
+            materialAdapter->fresnelScale(),
+            materialAdapter->fresnelBias(),
+            materialAdapter->clearcoatFresnelScale(),
+            materialAdapter->clearcoatFresnelBias()
+        };
+        shaders.setUniform(ubufData, "qt_material_properties5", materialProperties5, 4 * sizeof(float), &cui.material_properties5Idx);
+    }
+
     const float material_clearcoat_normal_strength = materialAdapter->clearcoatNormalStrength();
     shaders.setUniform(ubufData, "qt_material_clearcoat_normal_strength", &material_clearcoat_normal_strength, sizeof(float), &cui.clearcoatNormalStrengthIdx);
+
+    const float material_clearcoat_fresnel_power = materialAdapter->clearcoatFresnelPower();
+    shaders.setUniform(ubufData, "qt_material_clearcoat_fresnel_power", &material_clearcoat_fresnel_power, sizeof(float), &cui.clearcoatFresnelPowerIdx);
 
     // We only ever use attenuation and thickness uniforms when using transmission
     if (materialAdapter->isTransmissionEnabled()) {

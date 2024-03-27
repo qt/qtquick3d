@@ -201,9 +201,44 @@ float QSSGShaderDefaultMaterialAdapter::ior()
     return m_material.ior;
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isFresnelScaleBiasEnabled()
+{
+    return m_material.fresnelScaleBiasEnabled;
+}
+
+float QSSGShaderDefaultMaterialAdapter::fresnelScale()
+{
+    return m_material.fresnelScale;
+}
+
+float QSSGShaderDefaultMaterialAdapter::fresnelBias()
+{
+    return m_material.fresnelBias;
+}
+
 float QSSGShaderDefaultMaterialAdapter::fresnelPower()
 {
     return m_material.fresnelPower;
+}
+
+bool QSSGShaderDefaultMaterialAdapter::isClearcoatFresnelScaleBiasEnabled()
+{
+    return m_material.clearcoatFresnelScaleBiasEnabled;
+}
+
+float QSSGShaderDefaultMaterialAdapter::clearcoatFresnelScale()
+{
+    return m_material.clearcoatFresnelScale;
+}
+
+float QSSGShaderDefaultMaterialAdapter::clearcoatFresnelBias()
+{
+    return m_material.clearcoatFresnelBias;
+}
+
+float QSSGShaderDefaultMaterialAdapter::clearcoatFresnelPower()
+{
+    return m_material.clearcoatFresnelPower;
 }
 
 float QSSGShaderDefaultMaterialAdapter::metalnessAmount()
@@ -454,7 +489,42 @@ float QSSGShaderCustomMaterialAdapter::ior()
     return 1.45f;
 }
 
+bool QSSGShaderCustomMaterialAdapter::isFresnelScaleBiasEnabled()
+{
+    return false;
+}
+
+float QSSGShaderCustomMaterialAdapter::fresnelScale()
+{
+    return 1.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::fresnelBias()
+{
+    return 0.0f;
+}
+
 float QSSGShaderCustomMaterialAdapter::fresnelPower()
+{
+    return 0.0f;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isClearcoatFresnelScaleBiasEnabled()
+{
+    return false;
+}
+
+float QSSGShaderCustomMaterialAdapter::clearcoatFresnelScale()
+{
+    return 1.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::clearcoatFresnelBias()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::clearcoatFresnelPower()
 {
     return 0.0f;
 }

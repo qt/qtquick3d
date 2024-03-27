@@ -194,6 +194,8 @@ bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1,
     COMPARE_PROP(m_hasIbl)
     COMPARE_PROP(m_specularEnabled)
     COMPARE_PROP(m_fresnelEnabled)
+    COMPARE_PROP(m_fresnelScaleBiasEnabled)
+    COMPARE_PROP(m_clearcoatFresnelScaleBiasEnabled)
     COMPARE_PROP(m_baseColorSingleChannelEnabled)
     COMPARE_PROP(m_specularSingleChannelEnabled)
     COMPARE_PROP(m_emissiveSingleChannelEnabled)

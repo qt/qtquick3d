@@ -40,7 +40,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isBaseColorSingleChannelEnabled() = 0;
     virtual bool isSpecularAmountSingleChannelEnabled() = 0;
     virtual bool isEmissiveSingleChannelEnabled() = 0;
-
+    virtual bool isFresnelScaleBiasEnabled() = 0;
+    virtual bool isClearcoatFresnelScaleBiasEnabled() = 0;
     virtual bool isClearcoatEnabled() = 0;
     virtual bool isTransmissionEnabled() = 0;
     virtual bool hasLighting() = 0;
@@ -58,7 +59,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual QVector4D color() = 0;
     virtual QVector3D specularTint() = 0;
     virtual float ior() = 0;
+    virtual float fresnelScale() = 0;
+    virtual float fresnelBias() = 0;
     virtual float fresnelPower() = 0;
+    virtual float clearcoatFresnelScale() = 0;
+    virtual float clearcoatFresnelBias() = 0;
+    virtual float clearcoatFresnelPower() = 0;
     virtual float metalnessAmount() = 0;
     virtual float specularAmount() = 0;
     virtual float specularRoughness() = 0;
@@ -109,6 +115,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool isEmissiveSingleChannelEnabled() override;
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
+    bool isFresnelScaleBiasEnabled() override;
+    bool isClearcoatFresnelScaleBiasEnabled() override;
     bool hasLighting() override;
     bool usesCustomSkinning() override;
     bool usesCustomMorphing() override;
@@ -124,7 +132,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     QVector4D color() override;
     QVector3D specularTint() override;
     float ior() override;
+    float fresnelScale() override;
+    float fresnelBias() override;
     float fresnelPower() override;
+    float clearcoatFresnelScale() override;
+    float clearcoatFresnelBias() override;
+    float clearcoatFresnelPower() override;
     float metalnessAmount() override;
     float specularAmount() override;
     float specularRoughness() override;
@@ -166,6 +179,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isEmissiveSingleChannelEnabled() override;
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
+    bool isFresnelScaleBiasEnabled() override;
+    bool isClearcoatFresnelScaleBiasEnabled() override;
     bool hasLighting() override;
     bool usesCustomSkinning() override;
     bool usesCustomMorphing() override;
@@ -181,7 +196,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     QVector4D color() override;
     QVector3D specularTint() override;
     float ior() override;
+    float fresnelScale() override;
+    float fresnelBias() override;
     float fresnelPower() override;
+    float clearcoatFresnelScale() override;
+    float clearcoatFresnelBias() override;
+    float clearcoatFresnelPower() override;
     float metalnessAmount() override;
     float specularAmount() override;
     float specularRoughness() override;

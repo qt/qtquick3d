@@ -106,7 +106,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
     QVector4D color{ 1.0f, 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
     float diffuseLightWrap = 0.0f; // 0 - 1
+    float fresnelScaleBiasEnabled = false;
+    float fresnelScale = 1.0f;
+    float fresnelBias = 0.0f;
     float fresnelPower = 0.0f;
+    float clearcoatFresnelScaleBiasEnabled = false;
+    float clearcoatFresnelScale = 1.0f;
+    float clearcoatFresnelBias = 0.0f;
+    float clearcoatFresnelPower = 5.0f;
     float specularAmount = 1.0f; // 0-1
     float specularRoughness = 0.0f; // 0-1
     float metalnessAmount = 0.0f;
@@ -164,6 +171,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
 
     bool isSpecularEnabled() const { return specularAmount > .01f; }
     bool isMetalnessEnabled() const { return metalnessAmount > 0.01f; }
+    bool isFresnelScaleBiasEnabled() const { return fresnelScaleBiasEnabled; }
+    bool isClearcoatFresnelScaleBiasEnabled() const { return clearcoatFresnelScaleBiasEnabled; }
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
     bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
     bool isVertexColorsMaskEnabled() const { return vertexColorsMaskEnabled; }
