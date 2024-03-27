@@ -27,6 +27,9 @@ qt_internal_add_qml_module(Quick3DXr
         qopenxrruntimeinfo_p.h qopenxrruntimeinfo.cpp
         qtquick3dxrglobal_p.h
         qtquick3dxrglobal.h
+    NO_UNITY_BUILD_SOURCES
+         # Clashing inline functions
+         qopenxrhandtrackerinput.cpp
     QML_FILES
         XrErrorDialog.qml
     DEFINES
