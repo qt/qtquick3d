@@ -650,6 +650,72 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty real SpecularGlossyMaterial::fresnelScaleBiasEnabled
+
+     By Setting the value to true the material will take Fresnel Scale and Fresnel Bias into account.
+     The default value is \c false.
+*/
+
+/*!
+    \qmlproperty real SpecularGlossyMaterial::fresnelScale
+
+     This property scale head-on reflections (looking directly at the
+     surface) while maintaining reflections seen at grazing angles.
+     In order to affect changes to the material you have to enable fresnelScaleBiasEnabled.
+     The default value is \c 1.0.
+*/
+
+/*!
+    \qmlproperty real SpecularGlossyMaterial::fresnelBias
+
+     This property push forward head-on reflections (looking directly at the
+     surface) while maintaining reflections seen at grazing angles.
+     In order to affect changes to the material you have to enable fresnelScaleBiasEnabled.
+     The default value is \c 0.0.
+*/
+
+/*!
+    \qmlproperty real SpecularGlossyMaterial::fresnelPower
+
+     This property decreases head-on reflections (looking directly at the
+     surface) while maintaining reflections seen at grazing angles.
+     The default value is \c 5.0.
+*/
+
+/*!
+    \qmlproperty real SpecularGlossyMaterial::clearcoatFresnelScaleBiasEnabled
+
+    By Setting the value to true the material will take Clearcoat Fresnel Scale and Clearcoat Fresnel Bias into account.
+    The default value is \c false.
+*/
+
+/*!
+    \qmlproperty real SpecularGlossyMaterial::clearcoatFresnelScale
+
+    This property scale head-on reflections (looking directly at the
+    surface) while maintaining reflections seen at grazing angles.
+    In order to affect changes to the material you have to enable clearcoatFresnelScaleBiasEnabled.
+    The default value is \c 1.0.
+*/
+
+/*!
+    \qmlproperty real SpecularGlossyMaterial::clearcoatFresnelBias
+
+    This property push forward head-on reflections (looking directly at the
+    surface) while maintaining reflections seen at grazing angles.
+    In order to affect changes to the material you have to enable clearcoatFresnelScaleBiasEnabled.
+    The default value is \c 0.0.
+*/
+
+/*!
+    \qmlproperty real SpecularGlossyMaterial::clearcoatFresnelPower
+
+    This property decreases head-on reflections (looking directly at the
+    surface) while maintaining reflections seen at grazing angles.
+    The default value is \c 5.0.
+*/
+
+/*!
     \qmlproperty bool SpecularGlossyMaterial::vertexColorsEnabled
     \since 6.5
 
@@ -1350,8 +1416,6 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         material->emissiveChannel = channelMapping(m_emissiveChannel);
     }
 
-    material->fresnelPower = 5.0f;
-
     if (m_dirtyAttributes & GlossyDirty) {
         if (!m_glossinessMap)
             material->roughnessMap = nullptr;
@@ -1369,6 +1433,10 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
             material->specularMap = m_specularMap->getRenderImage();
 
         material->specularTint = QSSGUtils::color::sRGBToLinear(m_specular).toVector3D();
+        material->fresnelScaleBiasEnabled = m_fresnelScaleBiasEnabled;
+        material->fresnelScale = m_fresnelScale;
+        material->fresnelBias = m_fresnelBias;
+        material->fresnelPower = m_fresnelPower;
         material->specularAmountSingleChannelEnabled = m_specularSingleChannelEnabled;
         material->specularAmountChannel = channelMapping(m_specularChannel);
     }
@@ -1442,6 +1510,10 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         else
             material->clearcoatNormalMap = m_clearcoatNormalMap->getRenderImage();
         material->clearcoatNormalStrength = m_clearcoatNormalStrength;
+        material->clearcoatFresnelScaleBiasEnabled = m_clearcoatFresnelScaleBiasEnabled;
+        material->clearcoatFresnelScale = m_clearcoatFresnelScale;
+        material->clearcoatFresnelBias = m_clearcoatFresnelBias;
+        material->clearcoatFresnelPower = m_clearcoatFresnelPower;
     }
 
     if (m_dirtyAttributes & TransmissionDirty) {
@@ -1758,6 +1830,46 @@ QColor QQuick3DSpecularGlossyMaterial::attenuationColor() const
     return m_attenuationColor;
 }
 
+bool QQuick3DSpecularGlossyMaterial::fresnelScaleBiasEnabled() const
+{
+    return m_fresnelScaleBiasEnabled;
+}
+
+float QQuick3DSpecularGlossyMaterial::fresnelScale() const
+{
+    return m_fresnelScale;
+}
+
+float QQuick3DSpecularGlossyMaterial::fresnelBias() const
+{
+    return m_fresnelBias;
+}
+
+float QQuick3DSpecularGlossyMaterial::fresnelPower() const
+{
+    return m_fresnelPower;
+}
+
+bool QQuick3DSpecularGlossyMaterial::clearcoatFresnelScaleBiasEnabled() const
+{
+    return m_clearcoatFresnelScaleBiasEnabled;
+}
+
+float QQuick3DSpecularGlossyMaterial::clearcoatFresnelScale() const
+{
+    return m_clearcoatFresnelScale;
+}
+
+float QQuick3DSpecularGlossyMaterial::clearcoatFresnelBias() const
+{
+    return m_clearcoatFresnelBias;
+}
+
+float QQuick3DSpecularGlossyMaterial::clearcoatFresnelPower() const
+{
+    return m_clearcoatFresnelPower;
+}
+
 bool QQuick3DSpecularGlossyMaterial::vertexColorsEnabled() const
 {
     return m_vertexColorsEnabled;
@@ -1770,6 +1882,86 @@ void QQuick3DSpecularGlossyMaterial::setAttenuationColor(const QColor &newAttenu
     m_attenuationColor = newAttenuationColor;
     emit attenuationColorChanged();
     markDirty(VolumeDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setFresnelScaleBiasEnabled(bool fresnelScaleBiasEnabled)
+{
+    if (m_fresnelScaleBiasEnabled == fresnelScaleBiasEnabled)
+        return;
+
+    m_fresnelScaleBiasEnabled = fresnelScaleBiasEnabled;
+    emit fresnelScaleBiasEnabledChanged(m_fresnelScaleBiasEnabled);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setFresnelScale(float fresnelScale)
+{
+    if (qFuzzyCompare(m_fresnelScale, fresnelScale))
+        return;
+
+    m_fresnelScale = fresnelScale;
+    emit fresnelScaleChanged(m_fresnelScale);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setFresnelBias(float fresnelBias)
+{
+    if (qFuzzyCompare(m_fresnelBias, fresnelBias))
+        return;
+
+    m_fresnelBias = fresnelBias;
+    emit fresnelBiasChanged(m_fresnelBias);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setFresnelPower(float fresnelPower)
+{
+    if (qFuzzyCompare(m_fresnelPower, fresnelPower))
+        return;
+
+    m_fresnelPower = fresnelPower;
+    emit fresnelPowerChanged(m_fresnelPower);
+    markDirty(SpecularDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setClearcoatFresnelScaleBiasEnabled(bool clearcoatFresnelScaleBiasEnabled)
+{
+    if (m_clearcoatFresnelScaleBiasEnabled == clearcoatFresnelScaleBiasEnabled)
+        return;
+
+    m_clearcoatFresnelScaleBiasEnabled = clearcoatFresnelScaleBiasEnabled;
+    emit clearcoatFresnelScaleBiasEnabledChanged(m_clearcoatFresnelScaleBiasEnabled);
+    markDirty(ClearcoatDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setClearcoatFresnelScale(float clearcoatFresnelScale)
+{
+    if (qFuzzyCompare(m_clearcoatFresnelScale, clearcoatFresnelScale))
+        return;
+
+    m_clearcoatFresnelScale = clearcoatFresnelScale;
+    emit clearcoatFresnelScaleChanged(m_clearcoatFresnelScale);
+    markDirty(ClearcoatDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setClearcoatFresnelBias(float clearcoatFresnelBias)
+{
+    if (qFuzzyCompare(m_clearcoatFresnelBias, clearcoatFresnelBias))
+        return;
+
+    m_clearcoatFresnelBias = clearcoatFresnelBias;
+    emit clearcoatFresnelBiasChanged(m_clearcoatFresnelBias);
+    markDirty(ClearcoatDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setClearcoatFresnelPower(float clearcoatFresnelPower)
+{
+    if (qFuzzyCompare(m_clearcoatFresnelPower, clearcoatFresnelPower))
+        return;
+
+    m_clearcoatFresnelPower = clearcoatFresnelPower;
+    emit clearcoatFresnelPowerChanged(m_clearcoatFresnelPower);
+    markDirty(ClearcoatDirty);
 }
 
 void QQuick3DSpecularGlossyMaterial::setVertexColorsEnabled(bool vertexColors)

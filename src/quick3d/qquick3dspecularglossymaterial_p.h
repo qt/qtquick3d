@@ -99,6 +99,16 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged REVISION(6, 5))
 
+    Q_PROPERTY(bool fresnelScaleBiasEnabled READ fresnelScaleBiasEnabled WRITE setFresnelScaleBiasEnabled NOTIFY fresnelScaleBiasEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(float fresnelScale READ fresnelScale WRITE setFresnelScale NOTIFY fresnelScaleChanged REVISION(6, 8))
+    Q_PROPERTY(float fresnelBias READ fresnelBias WRITE setFresnelBias NOTIFY fresnelBiasChanged REVISION(6, 8))
+    Q_PROPERTY(float fresnelPower READ fresnelPower WRITE setFresnelPower NOTIFY fresnelPowerChanged REVISION(6, 8))
+
+    Q_PROPERTY(bool clearcoatFresnelScaleBiasEnabled READ clearcoatFresnelScaleBiasEnabled WRITE setClearcoatFresnelScaleBiasEnabled NOTIFY clearcoatFresnelScaleBiasEnabledChanged REVISION(6, 8))
+    Q_PROPERTY(float clearcoatFresnelScale READ clearcoatFresnelScale WRITE setClearcoatFresnelScale NOTIFY clearcoatFresnelScaleChanged REVISION(6, 8))
+    Q_PROPERTY(float clearcoatFresnelBias READ clearcoatFresnelBias WRITE setClearcoatFresnelBias NOTIFY clearcoatFresnelBiasChanged REVISION(6, 8))
+    Q_PROPERTY(float clearcoatFresnelPower READ clearcoatFresnelPower WRITE setClearcoatFresnelPower NOTIFY clearcoatFresnelPowerChanged REVISION(6, 8))
+
     Q_PROPERTY(bool vertexColorsMaskEnabled READ vertexColorsMaskEnabled WRITE setVertexColorsMaskEnabled NOTIFY vertexColorsMaskEnabledChanged REVISION(6, 8))
     Q_PROPERTY(VertexColorMaskFlags vertexColorRedMask READ vertexColorRedMask WRITE setVertexColorRedMask NOTIFY vertexColorRedMaskChanged REVISION(6, 8))
     Q_PROPERTY(VertexColorMaskFlags vertexColorGreenMask READ vertexColorGreenMask WRITE setVertexColorGreenMask NOTIFY vertexColorGreenMaskChanged REVISION(6, 8))
@@ -202,6 +212,16 @@ public:
     float attenuationDistance() const;
     QColor attenuationColor() const;
 
+    Q_REVISION(6, 8) bool fresnelScaleBiasEnabled() const;
+    Q_REVISION(6, 8) float fresnelScale() const;
+    Q_REVISION(6, 8) float fresnelBias() const;
+    Q_REVISION(6, 8) float fresnelPower() const;
+
+    Q_REVISION(6, 8) bool clearcoatFresnelScaleBiasEnabled() const;
+    Q_REVISION(6, 8) float clearcoatFresnelScale() const;
+    Q_REVISION(6, 8) float clearcoatFresnelBias() const;
+    Q_REVISION(6, 8) float clearcoatFresnelPower() const;
+
     Q_REVISION(6, 5) bool vertexColorsEnabled() const;
     Q_REVISION(6, 8) float clearcoatNormalStrength() const;
 
@@ -266,6 +286,16 @@ public Q_SLOTS:
     void setThicknessChannel(QQuick3DMaterial::TextureChannelMapping newThicknessChannel);
     void setAttenuationDistance(float newAttenuationDistance);
     void setAttenuationColor(const QColor &newAttenuationColor);
+
+    Q_REVISION(6, 8) void setFresnelScaleBiasEnabled(bool fresnelScaleBias);
+    Q_REVISION(6, 8) void setFresnelScale(float fresnelScale);
+    Q_REVISION(6, 8) void setFresnelBias(float fresnelBias);
+    Q_REVISION(6, 8) void setFresnelPower(float fresnelPower);
+
+    Q_REVISION(6, 8) void setClearcoatFresnelScaleBiasEnabled(bool clearcoatFresnelScaleBias);
+    Q_REVISION(6, 8) void setClearcoatFresnelScale(float clearcoatFresnelScale);
+    Q_REVISION(6, 8) void setClearcoatFresnelBias(float clearcoatFresnelBias);
+    Q_REVISION(6, 8) void setClearcoatFresnelPower(float clearcoatFresnelPower);
 
     Q_REVISION(6, 5) void setVertexColorsEnabled(bool vertexColorsEnabled);
 
@@ -332,6 +362,16 @@ Q_SIGNALS:
     void attenuationColorChanged();
 
     Q_REVISION(6, 5) void vertexColorsEnabledChanged(bool vertexColorsEnabled);
+
+    Q_REVISION(6, 8) void fresnelScaleBiasEnabledChanged(bool fresnelScaleBiasEnabled);
+    Q_REVISION(6, 8) void fresnelScaleChanged(float fresnelScale);
+    Q_REVISION(6, 8) void fresnelBiasChanged(float fresnelBias);
+    Q_REVISION(6, 8) void fresnelPowerChanged(float fresnelPower);
+
+    Q_REVISION(6, 8) void clearcoatFresnelScaleBiasEnabledChanged(bool clearcoatFresnelScaleBiasEnabled);
+    Q_REVISION(6, 8) void clearcoatFresnelScaleChanged(float clearcoatFresnelScale);
+    Q_REVISION(6, 8) void clearcoatFresnelBiasChanged(float clearcoatFresnelBias);
+    Q_REVISION(6, 8) void clearcoatFresnelPowerChanged(float clearcoatFresnelPower);
 
     Q_REVISION(6, 8) void vertexColorsMaskEnabledChanged();
     Q_REVISION(6, 8) void vertexColorRedMaskChanged();
@@ -418,6 +458,14 @@ private:
     TextureChannelMapping m_thicknessChannel = QQuick3DMaterial::G;
     float m_attenuationDistance = std::numeric_limits<float>::infinity();
     QColor m_attenuationColor = Qt::white;
+    bool m_fresnelScaleBiasEnabled = false;
+    float m_fresnelScale = 1.0f;
+    float m_fresnelBias = 0.0f;
+    float m_fresnelPower = 5.0f;
+    bool m_clearcoatFresnelScaleBiasEnabled = false;
+    float m_clearcoatFresnelScale = 1.0f;
+    float m_clearcoatFresnelBias = 0.0f;
+    float m_clearcoatFresnelPower = 5.0f;
     bool m_vertexColorsEnabled = true;
     bool m_vertexColorsMaskEnabled = false;
     VertexColorMaskFlags m_vertexColorRedMask = NoMask;

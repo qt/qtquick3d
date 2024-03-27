@@ -8,9 +8,9 @@
 #define M_PI 3.14159265359
 #endif
 
-vec3 qt_schlick3(in vec3 f0, in vec3 f90, in float VdotH)
+vec3 qt_schlick3(in vec3 f0, in vec3 f90, in float VdotH, in float fresnelPower)
 {
-    return f0 + (f90 - f0) * (1.0 - clamp(pow( VdotH, 5.0), 0.0, 1.0 ) );
+    return f0 + (f90 - f0) * (1.0 - clamp(pow( VdotH, fresnelPower), 0.0, 1.0 ) );
 }
 
 float qt_G_GGX_2cos(in float cos_theta_m, in float alpha) {
@@ -62,7 +62,7 @@ vec3 qt_getPunctualRadianceTransmission(in vec3 normal, in vec3 view, in vec3 po
     vec3 h = normalize(l_mirror + v);            // Halfway vector between transmission light vector and v
 
     float D = qt_D_GGX(clamp(dot(n, h), 0.0, 1.0), transmissionRougness);
-    vec3 F = qt_schlick3(f0, f90, clamp(dot(v, h), 0.0, 1.0));
+    vec3 F = qt_schlick3(f0, f90, clamp(dot(v, h), 0.0, 1.0), 5.0);
     float Vis = qt_V_GGX(clamp(dot(n, l_mirror), 0.0, 1.0), clamp(dot(n, v), 0.0, 1.0), transmissionRougness);
 
     // Transmission BTDF

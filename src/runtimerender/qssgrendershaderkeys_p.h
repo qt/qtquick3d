@@ -556,6 +556,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_lightAreaFlags[LightCount];
     QSSGShaderKeyBoolean m_lightShadowFlags[LightCount];
     QSSGShaderKeyBoolean m_specularEnabled;
+    QSSGShaderKeyBoolean m_fresnelScaleBiasEnabled;
+    QSSGShaderKeyBoolean m_clearcoatFresnelScaleBiasEnabled;
     QSSGShaderKeyBoolean m_fresnelEnabled;
     QSSGShaderKeyBoolean m_baseColorSingleChannelEnabled;
     QSSGShaderKeyBoolean m_specularSingleChannelEnabled;
@@ -766,6 +768,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
 
         inVisitor.visit(m_specularEnabled);
         inVisitor.visit(m_fresnelEnabled);
+        inVisitor.visit(m_fresnelScaleBiasEnabled);
+        inVisitor.visit(m_clearcoatFresnelScaleBiasEnabled);
         inVisitor.visit(m_baseColorSingleChannelEnabled);
         inVisitor.visit(m_specularSingleChannelEnabled);
         inVisitor.visit(m_emissiveSingleChannelEnabled);
