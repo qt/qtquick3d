@@ -1778,7 +1778,7 @@ std::unique_ptr<QSSGMeshBVH> QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *
 
     // Build BVH
     bool hasIndexBuffer = false;
-    QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::Int32;
+    QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::UnsignedInt32;
     bool hasUV = false;
     int uvOffset = -1;
     int posOffset = -1;
@@ -1795,10 +1795,10 @@ std::unique_ptr<QSSGMeshBVH> QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *
             uvOffset = attribute.offset;
         } else if (attribute.semantic == QSSGMesh::RuntimeMeshData::Attribute::IndexSemantic) {
             hasIndexBuffer = true;
-            if (attribute.componentType == QSSGMesh::Mesh::ComponentType::Int16)
-                indexBufferFormat = QSSGRenderComponentType::Int16;
-            else if (attribute.componentType == QSSGMesh::Mesh::ComponentType::Int32)
-                indexBufferFormat = QSSGRenderComponentType::Int32;
+            if (attribute.componentType == QSSGMesh::Mesh::ComponentType::UnsignedInt16)
+                indexBufferFormat = QSSGRenderComponentType::UnsignedInt16;
+            else if (attribute.componentType == QSSGMesh::Mesh::ComponentType::UnsignedInt32)
+                indexBufferFormat = QSSGRenderComponentType::UnsignedInt32;
         }
     }
 
