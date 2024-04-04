@@ -679,7 +679,7 @@ QString renderToKTXFile(const QString &inPath, const QString &outPath)
     }
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     if (rhiImplementation == QRhi::Metal) {
         QRhiMetalInitParams params;
         return renderToKTXFileInternal("Metal", inPath, outPath, QRhi::Metal, &params);
