@@ -168,6 +168,7 @@ void QOpenXrHandModel::setupModel()
     connect(m_handTracker, &QOpenXRHandTrackerInput::isActiveChanged, this, [this](){
         setVisible(m_handTracker->isActive());
     });
+    setVisible(m_handTracker->isActive());
     m_initialized = true;
 }
 
