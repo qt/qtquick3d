@@ -20,6 +20,10 @@ import QtQuick3D
 
 \generatelist qmltypesbymodule QtQuick3D
 
+\section2 QML Value Types
+
+\generatelist qmlvaluetypesbymodule QtQuick3D
+
 \section1 QtQuick3D.Helpers QML Types
 
 Import the QtQuick3D.Helpers module with the following statement:

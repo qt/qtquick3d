@@ -7,7 +7,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype PickResult
+    \qmlvaluetype pickResult
     \inqmlmodule QtQuick3D
     \brief Contains the results of a pick.
 
@@ -39,7 +39,7 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
 }
 
 /*!
-    \qmlproperty Model PickResult::objectHit
+    \qmlproperty Model pickResult::objectHit
     \readonly
 
     This property holds the model object hit by the pick.
@@ -50,7 +50,7 @@ QQuick3DModel *QQuick3DPickResult::objectHit() const
 }
 
 /*!
-    \qmlproperty float PickResult::distance
+    \qmlproperty float pickResult::distance
     \readonly
 
     This property holds the distance between the pick origin and the hit position
@@ -63,12 +63,15 @@ float QQuick3DPickResult::distance() const
 }
 
 /*!
-    \qmlproperty vector2d PickResult::uvPosition
+    \qmlproperty vector2d pickResult::uvPosition
     \readonly
 
     This property holds the UV position of the hit. The UV position is calculated as
     the normalized local x and y coordinates of the hit point relative to the bounding volume.
     Useful for further picking against an offscreen-rendered object.
+
+    When \l{pickResult::}{hitType} is \c pickResult.Item this value will represent the position
+    of the hit in the coordinate space of \l{pickResult::}{itemHit}.
 */
 QVector2D QQuick3DPickResult::uvPosition() const
 {
@@ -76,7 +79,7 @@ QVector2D QQuick3DPickResult::uvPosition() const
 }
 
 /*!
-    \qmlproperty vector3d PickResult::scenePosition
+    \qmlproperty vector3d pickResult::scenePosition
     \readonly
 
     This property holds the scene position of the hit.
@@ -87,7 +90,7 @@ QVector3D QQuick3DPickResult::scenePosition() const
 }
 
 /*!
-    \qmlproperty vector3d PickResult::position
+    \qmlproperty vector3d pickResult::position
     \readonly
 
     This property holds the scene position of the hit in local coordinate
@@ -99,7 +102,7 @@ QVector3D QQuick3DPickResult::position() const
 }
 
 /*!
-    \qmlproperty vector3d PickResult::normal
+    \qmlproperty vector3d pickResult::normal
     \readonly
 
     This property holds the normal of the face that was hit in local coordinate
@@ -112,7 +115,7 @@ QVector3D QQuick3DPickResult::normal() const
 
 
 /*!
-    \qmlproperty vector3d PickResult::sceneNormal
+    \qmlproperty vector3d pickResult::sceneNormal
     \readonly
 
     This property holds the normal of the face that was hit in scene coordinate
@@ -128,7 +131,7 @@ QVector3D QQuick3DPickResult::sceneNormal() const
 
 
 /*!
-    \qmlproperty int PickResult::instanceIndex
+    \qmlproperty int pickResult::instanceIndex
     \readonly
     \since 6.5
 

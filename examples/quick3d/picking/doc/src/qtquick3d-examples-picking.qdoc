@@ -42,7 +42,7 @@
 
     \snippet picking/main.qml pick result
 
-    If the result has a \l {PickResult::objectHit}{target object}, we go through the
+    If the result has a \l {pickResult::objectHit}{target object}, we go through the
     specifics of the result, and display them in the text field at the top of the application
     view.
 

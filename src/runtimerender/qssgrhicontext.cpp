@@ -98,9 +98,9 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
 
     The active stencil reference value.
 
-    \note Only used when \l{QSSGRhiGraphicsPipeline::Flags::UsesStencilRef}{UsesStencilRef} is set.
+    \note Only used when \l{QSSGRhiGraphicsPipelineState::Flag::}{UsesStencilRef} is set.
 
-    \sa QRhiCommandBuffer::stencilRef()
+    \sa QRhiCommandBuffer::setStencilRef()
  */
 
 /*!
@@ -147,7 +147,7 @@ Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
 
     The scissor rect.
 
-    \note Only used if \l{QSSGRhiGraphicsPipelineState::Flags::UsesScissor}{UsesScissor} is set.
+    \note Only used if \l{QSSGRhiGraphicsPipelineState::Flag::}{UsesScissor} is set.
 
     \sa QRhiCommandBuffer::setScissor()
  */

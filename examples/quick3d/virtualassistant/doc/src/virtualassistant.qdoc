@@ -14,7 +14,7 @@
     \e{Virtual Assistant Example} demonstrates how to bring a 3D model of a virtual assistant to life through timeline animations, increasing user engagement and interaction. The example can be run and edited in both QtDesignStudio and QtCreator.
 
     \section1 Importing 3D Model
-    To load the model in QtDesingStudio it is enough to import the .gltf file to the project. QtDesignStudio automatically create a qml file that represents the object and it wil also generate necessary assets. Without QtDesignStudio you need to use \l balsam tool, and run it manually. In this example the generated qml file was modified to introduce the states, animations and some additional invicible models that allows to pick specific parts of the Virtual Assistant.
+    To load the model in QtDesingStudio it is enough to import the .gltf file to the project. QtDesignStudio automatically create a qml file that represents the object and it wil also generate necessary assets. Without QtDesignStudio you need to use \l {Balsam Asset Import Tool}{balsam} tool, and run it manually. In this example the generated qml file was modified to introduce the states, animations and some additional invicible models that allows to pick specific parts of the Virtual Assistant.
 
     \section1 Preparing \l {SceneEnvironment} Scene Environment
     Scene use HDR images to create a skybox and to provide natural lighthing.
