@@ -6,6 +6,7 @@ version                 = $QT_VERSION
 buildversion            = Qt Quick 3D | Commercial or GPLv3
 
 examplesinstallpath     = quick3d
+url.examples            = "https://code.qt.io/cgit/qt/qtquick3d.git/tree/examples/\1?h=$QT_VER"
 
 qhp.projects            = QtQuick3D
 

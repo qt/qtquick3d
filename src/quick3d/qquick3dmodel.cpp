@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     starting position to find which models intersect with the ray. In
     Qt Quick 3D, the ray is normally sent from the view using 2D coordinates
     resulting from a touch or mouse event. If a model was hit by the ray,
-    \l {PickResult} will be returned with a handle to the model and information
+    \l {pickResult} will be returned with a handle to the model and information
     about where the ray hit the model. For models that use
     \l {QQuick3DGeometry}{custom geometry}, the picking is less accurate than
     for static mesh data, as picking is only done against the model's
@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmltype bounds
+    \qmlvaluetype bounds
     \inqmlmodule QtQuick3D
     \since 5.15
     \brief Specifies the bounds of a model.

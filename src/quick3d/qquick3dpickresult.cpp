@@ -7,7 +7,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype pickResult
+    \qmlvaluetype pickResult
     \inqmlmodule QtQuick3D
     \brief Contains the results of a pick.
 
@@ -100,8 +100,8 @@ float QQuick3DPickResult::distance() const
     the normalized local x and y coordinates of the hit point relative to the bounding volume.
     Useful for further picking against an offscreen-rendered object.
 
-    When \l{pickResult::type} {type} is \c pickResult.Item this value will represent the position
-    of the hit in the coordinate space of \l{pickResult::itemHit} {itemHit}.
+    When \l{pickResult::}{hitType} is \c pickResult.Item this value will represent the position
+    of the hit in the coordinate space of \l{pickResult::}{itemHit}.
 */
 QVector2D QQuick3DPickResult::uvPosition() const
 {
@@ -184,7 +184,7 @@ int QQuick3DPickResult::instanceIndex() const
     \since 6.8
 
     This property holds the Qt Quick Item hit by the pick. This value will be null if
-    \l{pickResult::type} {type} is not \c pickResult.Item.
+    \l{pickResult::}{hitType} is not \c pickResult.Item.
 
     \sa objectHit
 */
