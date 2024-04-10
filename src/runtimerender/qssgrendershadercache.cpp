@@ -75,7 +75,9 @@ static constexpr DefineEntry DefineTable[] {
     { "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS", QSSGShaderFeatures::Feature::OpaqueDepthPrePass },
     { "QSSG_ENABLE_REFLECTION_PROBE", QSSGShaderFeatures::Feature::ReflectionProbe },
     { "QSSG_REDUCE_MAX_NUM_LIGHTS", QSSGShaderFeatures::Feature::ReduceMaxNumLights },
-    { "QSSG_ENABLE_LIGHTMAP", QSSGShaderFeatures::Feature::Lightmap }
+    { "QSSG_ENABLE_LIGHTMAP", QSSGShaderFeatures::Feature::Lightmap },
+    { "QSSG_DISABLE_MULTIVIEW", QSSGShaderFeatures::Feature::DisableMultiView },
+    { "QSSG_FORCE_IBL_EXPOSURE", QSSGShaderFeatures::Feature::ForceIblExposure }
 };
 
 static_assert(std::size(DefineTable) == QSSGShaderFeatures::Count, "Missing feature define?");

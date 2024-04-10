@@ -81,6 +81,8 @@ enum class Feature : FlagType
     ReflectionProbe = (1 << 21) + 13,
     ReduceMaxNumLights = (1 << 22) + 14,
     Lightmap = (1 << 23) + 15,
+    DisableMultiView = (1 << 24) + 16,
+    ForceIblExposure = (1 << 25) + 17,
 
     LastFeature
 };
@@ -105,6 +107,7 @@ void disableTonemapping()
     set(Feature::AcesTonemapping, false);
     set(Feature::FilmicTonemapping, false);
     set(Feature::HejlDawsonTonemapping, false);
+    set(Feature::ForceIblExposure, false);
 }
 
 inline friend QDebug operator<<(QDebug stream, const QSSGShaderFeatures &features)

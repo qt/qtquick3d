@@ -332,6 +332,41 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_none"
     DEFINES
         QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_custom"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/skybox.vert
+        res/rhishaders/skybox.frag
+    OUTPUTS
+        res/rhishaders/skybox_hdr_custom.vert.qsb
+        res/rhishaders/skybox_hdr_custom.frag.qsb
+    DEFINES
+        QSSG_FORCE_IBL_EXPOSURE=1
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_custom"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/skybox.vert
+        res/rhishaders/skybox.frag
+    OUTPUTS
+        res/rhishaders/skybox_rgbe_custom.vert.qsb
+        res/rhishaders/skybox_rgbe_custom.frag.qsb
+    DEFINES
+        QSSG_ENABLE_RGBE_LIGHT_PROBE=1
+        QSSG_FORCE_IBL_EXPOSURE=1
+)
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_linear"
     SILENT
     PRECOMPILE

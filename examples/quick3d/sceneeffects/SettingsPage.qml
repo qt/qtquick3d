@@ -207,6 +207,19 @@ Page {
                 }
 
                 Label {
+                    text: "Probe Exposure (" + (toolPage.sceneEnvironment.probeExposure).toFixed(2) + ")"
+                    Layout.fillWidth: true
+                }
+                Slider {
+                    Layout.fillWidth: true
+                    from: 0.0
+                    to: 10.0
+                    value: toolPage.sceneEnvironment.probeExposure
+                    onValueChanged:
+                        toolPage.sceneEnvironment.probeExposure = value
+                }
+
+                Label {
                     enabled: !(toolPage.sceneEnvironment.tonemapMode === SceneEnvironment.TonemapModeLinear || toolPage.sceneEnvironment.tonemapMode === SceneEnvironment.TonemapModeNone)
                     text: "White Point (" + (toolPage.sceneEnvironment.whitePoint).toFixed(2) + ")"
                     Layout.fillWidth: true

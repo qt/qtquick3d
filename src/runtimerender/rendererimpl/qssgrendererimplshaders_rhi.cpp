@@ -77,6 +77,8 @@ static inline constexpr size_t getSkyboxIndex(QSSGRenderLayer::TonemapMode tonem
         return 3 + (size_t(isRGBE) * QSSGRenderLayer::TonemapModeCount);
     case QSSGRenderLayer::TonemapMode::Filmic:
         return 4 + (size_t(isRGBE) * QSSGRenderLayer::TonemapModeCount);
+    case QSSGRenderLayer::TonemapMode::Custom:
+        return 5 + (size_t(isRGBE) * QSSGRenderLayer::TonemapModeCount);
     }
 
     Q_UNREACHABLE_RETURN(0);
@@ -91,11 +93,14 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxShader(QSSGRende
                                           "skybox_hdr_aces",
                                           "skybox_hdr_hejldawson",
                                           "skybox_hdr_filmic",
+                                          "skybox_hdr_custom",
                                           "skybox_rgbe_none",
                                           "skybox_rgbe_linear",
                                           "skybox_rgbe_aces",
                                           "skybox_rgbe_hejldawson",
-                                          "skybox_rgbe_filmic" };
+                                          "skybox_rgbe_filmic",
+                                          "skybox_rgbe_custom",
+    };
 
     const size_t skyboxIndex = getSkyboxIndex(tonemapMode, isRGBE);
     return getBuiltinRhiShader(QByteArray::fromRawData(variant[skyboxIndex], std::char_traits<char>::length(variant[skyboxIndex])), m_skyBoxRhiShader[skyboxIndex]);

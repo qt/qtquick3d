@@ -90,9 +90,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         Linear,
         Aces,
         HejlDawson,
-        Filmic
+        Filmic,
+        Custom
     };
-    static size_t constexpr TonemapModeCount = 5;
+    static size_t constexpr TonemapModeCount = 6;
 
     enum class LayerFlag
     {
