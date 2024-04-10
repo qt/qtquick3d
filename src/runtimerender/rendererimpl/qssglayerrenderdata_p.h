@@ -361,6 +361,8 @@ public:
                      tonemapMode == QSSGRenderLayer::TonemapMode::HejlDawson);
         features.set(QSSGShaderFeatures::Feature::FilmicTonemapping,
                      tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
+        features.set(QSSGShaderFeatures::Feature::ForceIblExposure,
+                     tonemapMode == QSSGRenderLayer::TonemapMode::Custom);
     }
 
     QSSGPrepContextId getOrCreateExtensionContext(const QSSGRenderExtension &ext,

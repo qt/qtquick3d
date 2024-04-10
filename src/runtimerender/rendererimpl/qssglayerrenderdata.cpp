@@ -2233,6 +2233,9 @@ void QSSGLayerRenderData::prepareForRender()
         } else {
             layer.lightProbe = nullptr;
         }
+
+        const bool forceIblExposureValues = (features.isSet(QSSGShaderFeatures::Feature::LightProbe) && layer.tonemapMode == QSSGRenderLayer::TonemapMode::Custom);
+        features.set(QSSGShaderFeatures::Feature::ForceIblExposure, forceIblExposureValues);
     }
 
     // Gather Spatial Nodes from Render Tree

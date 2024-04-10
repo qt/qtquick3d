@@ -48,8 +48,12 @@ public:
 
     static QSSGRenderLayer::TonemapMode getTonemapMode(const QQuick3DSceneEnvironment &environment)
     {
-        return environment.useBuiltinTonemapper() ? QSSGRenderLayer::TonemapMode(environment.tonemapMode())
-                                                  : QSSGRenderLayer::TonemapMode::None;
+        if (environment.useBuiltinTonemapper())
+            return QSSGRenderLayer::TonemapMode(environment.tonemapMode());
+
+        // Special case for the extend scene environment...
+        return (environment.tonemapMode() != QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes::TonemapModeNone) ? QSSGRenderLayer::TonemapMode::Custom
+                                                                                                                         : QSSGRenderLayer::TonemapMode::None;
     }
 
 protected:

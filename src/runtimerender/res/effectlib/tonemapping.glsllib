@@ -23,6 +23,9 @@
 #ifndef QSSG_ENABLE_FILMIC_TONEMAPPING
 #define QSSG_ENABLE_FILMIC_TONEMAPPING 0
 #endif
+#ifndef QSSG_FORCE_IBL_EXPOSURE
+#define QSSG_FORCE_IBL_EXPOSURE 0
+#endif
 
 // The following methods are described in this article:
 // http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html
@@ -148,10 +151,11 @@ vec4 qt_tonemap(vec4 color)
 
 vec3 qt_exposure(vec3 color, float exposure)
 {
-#if QSSG_ENABLE_ACES_TONEMAPPING || QSSG_ENABLE_HEJLDAWSON_TONEMAPPING || QSSG_ENABLE_FILMIC_TONEMAPPING || QSSG_ENABLE_LINEAR_TONEMAPPING
+#if QSSG_ENABLE_ACES_TONEMAPPING || QSSG_ENABLE_HEJLDAWSON_TONEMAPPING || QSSG_ENABLE_FILMIC_TONEMAPPING || QSSG_ENABLE_LINEAR_TONEMAPPING || QSSG_FORCE_IBL_EXPOSURE
     return vec3(vec3(1.0) - exp(-color * exposure));
-#endif
+#else
     return color;
+#endif
 }
 
 #endif // TONEMAPPPING_GLSLIB

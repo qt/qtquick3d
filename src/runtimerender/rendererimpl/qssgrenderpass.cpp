@@ -847,7 +847,8 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
 
     // Note: We get the shader here, as the screen map pass might modify the state of
     // the tonemap mode.
-    QSSGRenderLayer::TonemapMode tonemapMode = skipTonemapping ? QSSGRenderLayer::TonemapMode::None : layer->tonemapMode;
+
+    QSSGRenderLayer::TonemapMode tonemapMode = skipTonemapping && (layer->tonemapMode != QSSGRenderLayer::TonemapMode::Custom) ?  QSSGRenderLayer::TonemapMode::None : layer->tonemapMode;
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
     auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8);
     QSSG_CHECK(shaderPipeline);
