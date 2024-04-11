@@ -68,12 +68,6 @@ Window {
                 }
             }
         }
-
-        DebugView {
-            anchors.top: parent.top
-            anchors.right: parent.right
-            source: view
-        }
     }
 
     WasdController {
@@ -174,5 +168,12 @@ Window {
                 enabled: checkBoxDirectionalLight.checked
             }
         }
+    }
+
+    DebugView {
+        anchors.top: parent.top
+        anchors.right: parent.right
+        source: view
+        visible: true
     }
 }
