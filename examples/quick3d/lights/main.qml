@@ -121,8 +121,8 @@ ApplicationWindow {
             scale: Qt.vector3d(15, 15, 15)
             eulerRotation.x: -90
             materials: [
-                DefaultMaterial {
-                    diffuseColor: Qt.rgba(0.8, 0.6, 0.4, 1.0)
+                PrincipledMaterial {
+                    baseColor: Qt.rgba(0.8, 0.6, 0.4, 1.0)
                 }
             ]
         }
@@ -131,8 +131,8 @@ ApplicationWindow {
             z: -400
             scale: Qt.vector3d(15, 15, 15)
             materials: [
-                DefaultMaterial {
-                    diffuseColor: Qt.rgba(0.8, 0.8, 0.9, 1.0)
+                 PrincipledMaterial {
+                    baseColor: Qt.rgba(0.8, 0.8, 0.9, 1.0)
                 }
             ]
         }
@@ -140,8 +140,8 @@ ApplicationWindow {
 
         RotatingTeaPot {
             visible: !checkBoxCustomMaterial.checked
-            material: DefaultMaterial {
-                diffuseColor: Qt.rgba(0.9, 0.9, 0.9, 1.0)
+            material: PrincipledMaterial {
+                baseColor: Qt.rgba(0.9, 0.9, 0.9, 1.0)
             }
             animate: checkBoxAnimate.checked
         }
