@@ -60,7 +60,7 @@ public:
     bool active() const;
     void setActive(bool newVal);
 
-    Q_INVOKABLE void setSource(QQmlV4Function *);
+    Q_INVOKABLE void setSource(QQmlV4FunctionPtr);
 
     QUrl source() const;
     void setSource(const QUrl &);
@@ -107,8 +107,8 @@ private:
     void incubatorStateChanged(QQmlIncubator::Status status);
     void setInitialState(QObject *obj);
     void disposeInitialPropertyValues();
-    static QUrl resolveSourceUrl(QQmlV4Function *args);
-    QV4::ReturnedValue extractInitialPropertyValues(QQmlV4Function *args, bool *error);
+    static QUrl resolveSourceUrl(QQmlV4FunctionPtr args);
+    QV4::ReturnedValue extractInitialPropertyValues(QQmlV4FunctionPtr args, bool *error);
 
     void createComponent();
 

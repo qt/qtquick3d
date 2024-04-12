@@ -133,7 +133,7 @@ void QQuick3DLoader::setActive(bool newVal)
     emit activeChanged();
 }
 
-void QQuick3DLoader::setSource(QQmlV4Function *args)
+void QQuick3DLoader::setSource(QQmlV4FunctionPtr args)
 {
     bool ipvError = false;
     args->setReturnValue(QV4::Encode::undefined());
@@ -640,7 +640,7 @@ void QQuick3DLoader::disposeInitialPropertyValues()
 
 }
 
-QUrl QQuick3DLoader::resolveSourceUrl(QQmlV4Function *args)
+QUrl QQuick3DLoader::resolveSourceUrl(QQmlV4FunctionPtr args)
 {
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue v(scope, (*args)[0]);
@@ -653,7 +653,7 @@ QUrl QQuick3DLoader::resolveSourceUrl(QQmlV4Function *args)
     return context->resolvedUrl(QUrl(arg));
 }
 
-QV4::ReturnedValue QQuick3DLoader::extractInitialPropertyValues(QQmlV4Function *args, bool *error)
+QV4::ReturnedValue QQuick3DLoader::extractInitialPropertyValues(QQmlV4FunctionPtr args, bool *error)
 {
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue valuemap(scope, QV4::Encode::undefined());
