@@ -36,7 +36,7 @@ XrView {
     Model {
         source: "#Cube"
         materials: DefaultMaterial {
-            diffuseColor: "red"
+            diffuseColor: Qt.rgba(0.4, 0.7, 0.0, 1.0)
         }
 
         y: -10
