@@ -74,6 +74,7 @@ Window {
                 ballsBonus = currentBalls * 10;
             }
             gameOn = false;
+            ballModel.resetBall();
         }
         //! [view functions]
 
@@ -174,6 +175,7 @@ Window {
             }
 
             function moveBall(posX, posY) {
+                if (!mainWindow.gameOn) return;
                 var pos = view3D.mapTo3DScene(Qt.vector3d(posX, posY, ballModel.z + mainWindow.ballSize));
                 pos.y = Math.max(mainWindow.ballSize / 2, pos.y);
                 var point = {"x": pos.x, "y": pos.y };
@@ -185,6 +187,7 @@ Window {
             }
 
             function throwBall() {
+                if (!mainWindow.gameOn) return;
                 mainWindow.currentBalls--;
                 var moveX = 0;
                 var moveY = 0;
