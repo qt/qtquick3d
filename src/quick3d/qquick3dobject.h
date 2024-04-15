@@ -36,7 +36,7 @@ class Q_QUICK3D_EXPORT QQuick3DObject : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString state READ state WRITE setState NOTIFY stateChanged)
 
     Q_CLASSINFO("DefaultProperty", "data")
-    Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
+    Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QQmlV4ExecutionEnginePtr)")
 
     QML_NAMED_ELEMENT(Object3D)
     QML_UNCREATABLE("Object3D is Abstract")
@@ -102,7 +102,7 @@ protected:
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))
-    Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QV4::ExecutionEngine *))
+    Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QQmlV4ExecutionEnginePtr))
     Q_PRIVATE_SLOT(d_func(), void _q_cleanupContentItem2D())
 
     friend class QQuick3DSceneManager;

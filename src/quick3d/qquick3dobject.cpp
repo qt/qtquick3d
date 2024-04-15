@@ -1101,7 +1101,7 @@ void QV4::Heap::QSSGItemWrapper::markObjects(QV4::Heap::Base *that, QV4::MarkSta
     QObjectWrapper::markObjects(that, markStack);
 }
 
-quint64 QQuick3DObjectPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
+quint64 QQuick3DObjectPrivate::_q_createJSWrapper(QQmlV4ExecutionEnginePtr engine)
 {
     return (engine->memoryManager->allocate<QSSGItemWrapper>(q_func()))->asReturnedValue();
 }
