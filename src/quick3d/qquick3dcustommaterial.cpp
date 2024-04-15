@@ -1750,7 +1750,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             fragment = QSSGShaderUtils::resolveShader(m_fragmentShader, context, shaderPathKey);
 
         // Multiview is a problem, because we will get a dedicated snippet after
-        // preparation (the one that has [gl_ViewIndex] added where it matters).
+        // preparation (the one that has [qt_viewIndex] added where it matters).
         // But at least the view count plays no role here on this level. So one
         // normal and one multiview "variant" is good enough.
 

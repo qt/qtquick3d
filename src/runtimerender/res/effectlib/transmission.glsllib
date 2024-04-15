@@ -65,7 +65,7 @@ vec3 qt_getIBLVolumeRefraction(in vec3 n, in vec3 v, in float perceptualRoughnes
 
     // Project refracted vector on the framebuffer, while mapping to normalized device coordinates.
 #if QSHADER_VIEW_COUNT >= 2
-    vec4 ndcPos = qt_viewProjectionMatrix[gl_ViewIndex] * vec4(refractedRayExit, 1.0);
+    vec4 ndcPos = qt_viewProjectionMatrix[qt_viewIndex] * vec4(refractedRayExit, 1.0);
 #else
     vec4 ndcPos = qt_viewProjectionMatrix * vec4(refractedRayExit, 1.0);
 #endif

@@ -50,7 +50,6 @@ struct QSSGMaterialVertexPipeline
     GenerationFlags m_generationFlags;
     bool m_hasSkinning;
     bool m_hasMorphing;
-    TStrTableStrMap m_interpolationParameters;
     QList<QByteArray> m_addedFunctions;
     int m_viewCount = 1;
 
@@ -158,7 +157,7 @@ struct QSSGMaterialVertexPipeline
             activeGenerator.append("    qt_var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition );");
         } else {
             activeGenerator.addUniformArray("qt_cameraPosition", "vec3", m_viewCount);
-            activeGenerator.append("    qt_var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition[gl_ViewIndex] );");
+            activeGenerator.append("    qt_var_object_to_camera = normalize( qt_local_model_world_position - qt_cameraPosition[qt_viewIndex] );");
         }
 
         // World normal cannot be relied upon in the vertex shader because of bump maps.
@@ -180,7 +179,7 @@ struct QSSGMaterialVertexPipeline
             fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition - qt_varWorldPos);\n";
         } else {
             activeStage().addUniformArray("qt_cameraPosition", "vec3", m_viewCount);
-            fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition[gl_ViewIndex] - qt_varWorldPos);\n";
+            fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition[qt_viewIndex] - qt_varWorldPos);\n";
         }
     }
 
@@ -392,6 +391,7 @@ struct QSSGMaterialVertexPipeline
 
     QSSGStageGeneratorBase &activeStage();
     void addInterpolationParameter(const QByteArray &inParamName, const QByteArray &inParamType);
+    void addFlatParameter(const QByteArray &inParamName, const QByteArray &inParamType);
 
     void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey);
     void doGenerateVarTangent(const QSSGShaderDefaultMaterialKey &inKey);

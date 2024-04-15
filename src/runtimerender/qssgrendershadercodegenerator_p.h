@@ -49,6 +49,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
         Uniform
     };
 
+    enum class ShaderItemMapFlag {
+        Flat = 0x01
+    };
+    Q_DECLARE_FLAGS(ShaderItemMapFlags, ShaderItemMapFlag)
+
     // Using QMap intentionally - being sorted by key when iterating is helpful
     // to get the same ordered list of vertex inputs, uniforms, etc. on every
     // run, which in turn helps shader (disk) cache efficiency due to not
@@ -62,7 +67,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     typedef QVector<TConstantBufferParamPair> TConstantBufferParamArray;
 
     TStrTableStrMap m_incoming;
-    TStrTableStrMap *m_outgoing;
+    TStrTableStrMap *m_outgoing = nullptr;
+    TStrTableStrMap m_flatIncoming;
+    TStrTableStrMap *m_flatOutgoing = nullptr;
     QSet<QByteArray> m_includes;
     TStrTableStrMap m_uniforms;
     TStrTableSizedStrMap m_uniformArrays;
@@ -82,8 +89,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     virtual void begin(QSSGShaderGeneratorStageFlags inEnabledStages);
 
     virtual void addIncoming(const QByteArray &name, const QByteArray &type);
-
     virtual void addOutgoing(const QByteArray &name, const QByteArray &type);
+
+    virtual void addFlatIncoming(const QByteArray &name, const QByteArray &type);
+    virtual void addFlatOutgoing(const QByteArray &name, const QByteArray &type);
 
     virtual void addUniform(const QByteArray &name, const QByteArray &type);
 
@@ -98,12 +107,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
     void addShaderPass2Marker(ShaderItemType itemType);
 
-    void addShaderItemMap(ShaderItemType itemType,
-                          const TStrTableStrMap &itemMap,
-                          const QByteArray &inItemSuffix = QByteArray());
-
-    void addShaderItemMap(ShaderItemType itemType,
-                          const TStrTableSizedStrMap &itemMap);
+    void addShaderItemMap(ShaderItemType itemType, const TStrTableStrMap &itemMap, ShaderItemMapFlags flags = {});
 
     virtual void addShaderIncomingMap();
 
@@ -125,6 +129,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
 
     virtual void addDefinition(const QByteArray &name, const QByteArray &value) final;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGStageGeneratorBase::ShaderItemMapFlags)
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGVertexShaderGenerator final : public QSSGStageGeneratorBase
 {

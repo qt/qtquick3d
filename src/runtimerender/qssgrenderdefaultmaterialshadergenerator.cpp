@@ -1227,7 +1227,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                             <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition, qt_heightAmount, qt_material_properties4.y, qt_material_properties4.z);\n";
             } else {
                 fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ", " << names.imageSampler
-                            <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition[gl_ViewIndex], qt_heightAmount, qt_material_properties4.y, qt_material_properties4.z);\n";
+                            <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition[qt_viewIndex], qt_heightAmount, qt_material_properties4.y, qt_material_properties4.z);\n";
             }
         }
 

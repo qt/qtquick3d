@@ -279,6 +279,11 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_cameraProperties", "vec2");
     }
 
+    if (m_viewCount >= 2) {
+        addFlatParameter("qt_viewIndex", "uint");
+        vertexShader.append("    qt_viewIndex = gl_ViewIndex;");
+    }
+
     if (meshHasNormals) {
         vertexShader.append("    qt_vertNormal = attr_norm;");
         vertexShader.addIncoming("attr_norm", "vec3");
@@ -331,7 +336,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         if (m_viewCount < 2)
             vertexShader.append("    mat4 qt_instancedMVPMatrix = qt_viewProjectionMatrix * qt_instancedModelMatrix;");
         else
-            vertexShader.append("    mat4 qt_instancedMVPMatrix = qt_viewProjectionMatrix[gl_ViewIndex] * qt_instancedModelMatrix;");
+            vertexShader.append("    mat4 qt_instancedMVPMatrix = qt_viewProjectionMatrix[qt_viewIndex] * qt_instancedModelMatrix;");
     }
 
     if (!materialAdapter->isUnshaded() || !hasCustomVertexShader) {
@@ -360,7 +365,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
                 if (m_viewCount < 2)
                     vertexShader.append("    gl_Position = qt_modelViewProjection * qt_vertPosition;");
                 else
-                    vertexShader.append("    gl_Position = qt_modelViewProjection[gl_ViewIndex] * qt_vertPosition;");
+                    vertexShader.append("    gl_Position = qt_modelViewProjection[qt_viewIndex] * qt_vertPosition;");
             } else {
                 vertexShader.append("    gl_Position = qt_instancedMVPMatrix * qt_vertPosition;");
             }
@@ -497,9 +502,14 @@ void QSSGMaterialVertexPipeline::endFragmentGeneration()
 
 void QSSGMaterialVertexPipeline::addInterpolationParameter(const QByteArray &inName, const QByteArray &inType)
 {
-    m_interpolationParameters.insert(inName, inType);
     vertex().addOutgoing(inName, inType);
     fragment().addIncoming(inName, inType);
+}
+
+void QSSGMaterialVertexPipeline::addFlatParameter(const QByteArray &inName, const QByteArray &inType)
+{
+    vertex().addFlatOutgoing(inName, inType);
+    fragment().addFlatIncoming(inName, inType);
 }
 
 QSSGStageGeneratorBase &QSSGMaterialVertexPipeline::activeStage()

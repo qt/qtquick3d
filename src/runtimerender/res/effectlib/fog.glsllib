@@ -25,7 +25,7 @@ void calculateFog(inout vec3 emission, inout vec3 specular, inout vec3 diffuse) 
     if (qt_fogDepthProperties.w > 0.5) {
         float fogFar = qt_fogDepthProperties.y > 0.0 ? qt_fogDepthProperties.y : qt_cameraProperties.y;
 #if QSHADER_VIEW_COUNT >= 2
-        float fogZ = smoothstep(qt_fogDepthProperties.x, fogFar, length(qt_cameraPosition[gl_ViewIndex] - qt_varWorldPos));
+        float fogZ = smoothstep(qt_fogDepthProperties.x, fogFar, length(qt_cameraPosition[qt_viewIndex] - qt_varWorldPos));
 #else
         float fogZ = smoothstep(qt_fogDepthProperties.x, fogFar, length(qt_cameraPosition - qt_varWorldPos));
 #endif

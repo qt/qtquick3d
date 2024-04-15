@@ -34,6 +34,7 @@ public:
         QByteArray name;
         int location;
         bool output;
+        bool flat;
     };
 
     struct Sampler {
@@ -67,25 +68,25 @@ public:
 
     int viewCount = 1;
 
-    void registerInput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name)
+    void registerInput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name, bool flat = false)
     {
         auto it = m_inOutVars.find(name);
         if (it != m_inOutVars.end()) {
             it->stagesInputIn |= stage;
             return;
         }
-        InOutVar var { {}, stage, type, name, m_nextFreeInLocation[int(stage)]++, false };
+        InOutVar var { {}, stage, type, name, m_nextFreeInLocation[int(stage)]++, false, flat };
         m_inOutVars.insert(name, var);
     }
 
-    void registerOutput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name)
+    void registerOutput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name, bool flat = false)
     {
         auto it = m_inOutVars.find(name);
         if (it != m_inOutVars.end()) {
             it->stageOutputFrom |= stage;
             return;
         }
-        InOutVar var { stage, {}, type, name, m_nextFreeOutLocation[int(stage)]++, true };
+        InOutVar var { stage, {}, type, name, m_nextFreeOutLocation[int(stage)]++, true, flat };
         m_inOutVars.insert(name, var);
     }
 

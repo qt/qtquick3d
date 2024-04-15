@@ -988,7 +988,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                         QByteArray newExpr;
                         newExpr.assign(subst.actualName);
                         if (subst.multiViewDependent && multiViewCompatible)
-                            newExpr += QByteArrayLiteral("[gl_ViewIndex]");
+                            newExpr += QByteArrayLiteral("[qt_viewIndex]");
                         id.replace(subst.builtin, newExpr); // replace, not assignment, to keep whitespace etc.
                         if (trimmedId == QByteArrayLiteral("BONE_TRANSFORMS")) {
                             useJointTexState = 0;
