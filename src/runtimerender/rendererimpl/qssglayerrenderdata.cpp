@@ -2567,7 +2567,7 @@ void QSSGLayerRenderData::prepareForRender()
 
     // NOTE: When the a screen texture is used, the skybox pass will be called twice. First from
     // the screen texture pass and later as part of the normal run through the list.
-    if (renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::TexelFetch)) { // TODO:
+    if (renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::TexelFetch)) {
         if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap)
             activePasses.push_back(&skyboxCubeMapPass);
         else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)

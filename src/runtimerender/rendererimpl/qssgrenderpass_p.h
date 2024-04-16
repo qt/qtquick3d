@@ -132,6 +132,36 @@ public:
     QSSGRhiRenderableTexture *rhiDepthTexture = nullptr;
 };
 
+class SkyboxPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void resetForFrame() final;
+
+    QSSGRenderLayer *layer = nullptr;
+    QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QSSGRhiGraphicsPipelineState ps;
+    bool skipTonemapping = false;
+    bool skipPrep = false;
+};
+
+class SkyboxCubeMapPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void resetForFrame() final;
+
+    QSSGRhiShaderPipelinePtr skyBoxCubeShader;
+    QSSGRenderLayer *layer = nullptr;
+    QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QSSGRhiGraphicsPipelineState ps;
+    bool skipTonemapping = false;
+};
+
 class ScreenMapPass : public QSSGRenderPass
 {
 public:
@@ -141,7 +171,8 @@ public:
     void resetForFrame() final;
 
     QSSGRhiRenderableTexture *rhiScreenTexture = nullptr;
-    QSSGRenderPass *skyboxPass = nullptr;
+    std::optional<SkyboxPass> skyboxPass;
+    std::optional<SkyboxCubeMapPass> skyboxCubeMapPass;
     QSSGShaderFeatures shaderFeatures;
     QSSGRenderableObjectList sortedOpaqueObjects;
     QSSGRhiGraphicsPipelineState ps;
@@ -213,34 +244,6 @@ public:
     QSSGRenderableObjectList sortedTransparentObjects;
     QSSGRhiGraphicsPipelineState ps;
     QSSGShaderFeatures shaderFeatures;
-};
-
-class SkyboxPass : public QSSGRenderPass
-{
-public:
-    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::Main; }
-    void resetForFrame() final;
-
-    QSSGRenderLayer *layer = nullptr;
-    QSSGRhiGraphicsPipelineState ps;
-    bool skipTonemapping = false;
-    bool skipPrep = false;
-};
-
-class SkyboxCubeMapPass : public QSSGRenderPass
-{
-public:
-    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::Main; }
-    void resetForFrame() final;
-
-    QSSGRhiShaderPipelinePtr skyBoxCubeShader;
-    QSSGRenderLayer *layer = nullptr;
-    QSSGRhiGraphicsPipelineState ps;
-    bool skipTonemapping = false;
 };
 
 class Item2DPass : public QSSGRenderPass

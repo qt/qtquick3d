@@ -453,26 +453,46 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     wantsMips = layerPrepResult.flags.requiresMipmapsForScreenTexture();
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
     ps = data.getPipelineState();
+    ps.samples = 1; // screen texture is always non-MSAA
+    ps.viewCount = rhiCtx->mainPassViewCount(); // but is a 2D texture array when multiview
 
     if (layer.background == QSSGRenderLayer::Background::Color)
         clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
 
     if (rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)) {
         if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap) {
-            skyboxPass = &data.skyboxCubeMapPass;
-            data.skyboxCubeMapPass.renderPrep(renderer, data);
+            if (!skyboxCubeMapPass)
+                skyboxCubeMapPass = SkyboxCubeMapPass();
+
+            skyboxCubeMapPass->skipTonemapping = true;
+            skyboxCubeMapPass->renderPrep(renderer, data);
+
+            // The pass expects to output to the main render target, but we have
+            // our own texture here, possibly with a differing sample count, so
+            // override the relevant settings once renderPrep() is done.
+            skyboxCubeMapPass->ps.samples = ps.samples;
+
+            skyboxPass = std::nullopt;
         } else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) {
-            skyboxPass = &data.skyboxPass;
-            const bool tonemappingEnabled = data.skyboxPass.skipTonemapping;
-            data.skyboxPass.skipTonemapping = true;
-            data.skyboxPass.renderPrep(renderer, data);
-            data.skyboxPass.skipTonemapping = tonemappingEnabled;
+            if (!skyboxPass)
+                skyboxPass = SkyboxPass();
+
+            skyboxPass->skipTonemapping = true;
+            skyboxPass->renderPrep(renderer, data);
+
+            skyboxPass->ps.samples = ps.samples;
+
+            skyboxCubeMapPass = std::nullopt;
         }
     }
 
     bool ready = false;
     if (Q_LIKELY(rhiScreenTexture && rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), wantsMips, rhiScreenTexture))) {
         ready = true;
+        if (skyboxCubeMapPass)
+            skyboxCubeMapPass->rpDesc = rhiScreenTexture->rpDesc;
+        if (skyboxPass)
+            skyboxPass->rpDesc = rhiScreenTexture->rpDesc;
         // NB: not compatible with disabling LayerEnableDepthTest
         // because there are effectively no "opaque" objects then.
         // Disable Tonemapping for all materials in the screen pass texture
@@ -521,7 +541,9 @@ void ScreenMapPass::renderPass(QSSGRenderer &renderer)
         for (const auto &handle : std::as_const(sortedOpaqueObjects))
             rhiRenderRenderable(rhiCtx.get(), ps, *handle.obj, &needsSetViewport);
 
-        if (skyboxPass)
+        if (skyboxCubeMapPass)
+            skyboxCubeMapPass->renderPass(renderer);
+        else if (skyboxPass)
             skyboxPass->renderPass(renderer);
 
         QRhiResourceUpdateBatch *rub = nullptr;
@@ -540,13 +562,10 @@ void ScreenMapPass::renderPass(QSSGRenderer &renderer)
 void ScreenMapPass::resetForFrame()
 {
     rhiScreenTexture = nullptr;
-    if (skyboxPass) {
-        // NOTE: The screen map pass is prepped and rendered before we render the skybox to the main render target,
-        // i.e., we are not interfering with the skybox pass' state. Just make sure sure to leave the skybox pass
-        // in a good state now that we're done with it.
+    if (skyboxPass)
         skyboxPass->resetForFrame();
-        skyboxPass = nullptr;
-    }
+    if (skyboxCubeMapPass)
+        skyboxCubeMapPass->resetForFrame();
     ps = {};
     wantsMips = false;
     clearColor = Qt::transparent;
@@ -798,7 +817,10 @@ void SkyboxPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         layer = &data.layer;
         QSSG_ASSERT(layer, return);
 
+        rpDesc = rhiCtx->mainRenderPassDescriptor();
         ps = data.getPipelineState();
+        ps.samples = rhiCtx->mainPassSampleCount();
+        ps.viewCount = rhiCtx->mainPassViewCount();
         ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
         // When there are effects, then it is up to the last pass of the
@@ -830,9 +852,6 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
     auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8);
     QSSG_CHECK(shaderPipeline);
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, shaderPipeline.get());
-    QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-    ps.samples = rhiCtx->mainPassSampleCount();
-    ps.viewCount = rhiCtx->mainPassViewCount();
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_map"));
 }
@@ -853,7 +872,10 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
+    rpDesc = rhiCtx->mainRenderPassDescriptor();
     ps = data.getPipelineState();
+    ps.samples = rhiCtx->mainPassSampleCount();
+    ps.viewCount = rhiCtx->mainPassViewCount();
     ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
@@ -875,7 +897,6 @@ void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render skybox"));
 
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, skyBoxCubeShader.get());
-    QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
     renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_cube"));
 }
