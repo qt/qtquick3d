@@ -34,10 +34,21 @@ if (ANDROID)
 
         add_library(WrapSystemOpenXR::WrapSystemOpenXR INTERFACE IMPORTED)
         target_link_libraries(WrapSystemOpenXR::WrapSystemOpenXR INTERFACE openxr_loader)
+
+        # Oculus OpenXR Mobile SDK pre-v64
+        if((EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Include) AND (EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/3rdParty/khronos/openxr/OpenXR-SDK/include))
+            set(META_PREVIEW ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Include)
+            set(OPENXR_HEADERS ${OCULUS_OPENXR_MOBILE_SDK}/3rdParty/khronos/openxr/OpenXR-SDK/include)
+        # Oculus OpenXR Mobile SDK v64 and newer
+        elseif((EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/meta_openxr_preview) AND (EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/Samples/3rdParty/khronos/openxr/OpenXR-SDK/include))
+            set(META_PREVIEW ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/meta_openxr_preview)
+            set(OPENXR_HEADERS ${OCULUS_OPENXR_MOBILE_SDK}/Samples/3rdParty/khronos/openxr/OpenXR-SDK/include)
+        endif()
+
         target_include_directories(
             WrapSystemOpenXR::WrapSystemOpenXR INTERFACE
-            ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Include
-            ${OCULUS_OPENXR_MOBILE_SDK}/3rdParty/khronos/openxr/OpenXR-SDK/include
+            ${META_PREVIEW}
+            ${OPENXR_HEADERS}
         )
         set(WrapSystemOpenXR_FOUND TRUE)
         include(FindPackageHandleStandardArgs)
