@@ -25,6 +25,7 @@ qt_internal_add_qml_module(Quick3DXr
         qopenxrspatialanchormodel_p.h qopenxrspatialanchormodel.cpp
         qopenxrspaceextension_p.h qopenxrspaceextension.cpp
         qopenxrruntimeinfo_p.h qopenxrruntimeinfo.cpp
+        qopenxritem_p.h qopenxritem.cpp
         qtquick3dxrglobal_p.h
         qtquick3dxrglobal.h
     NO_UNITY_BUILD_SOURCES
