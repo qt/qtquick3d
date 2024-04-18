@@ -63,6 +63,7 @@ XrView {
             id: rightController
             controller: XrController.ControllerRight
             Component.onCompleted: handInput.poseSpace = XrHandInput.AimPose
+            ActionMapper { }
             Lazer {
                 enableBeam: true
             }
@@ -73,8 +74,8 @@ XrView {
         view: xrView
         source: rightController
         enabled: true
-        leftMouseButton: rightController.handInput.triggerValue > 0.8
-        rightMouseButton: rightController.handInput.button1Pressed
-        middleMouseButton: rightController.handInput.button2Pressed
+        leftMouseButton: rightController.actionMapper.triggerPressed
+        rightMouseButton: rightController.actionMapper.button1Pressed
+        middleMouseButton: rightController.actionMapper.button2Pressed
     }
 }

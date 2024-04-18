@@ -31,6 +31,7 @@ qt_add_qml_module(qmlxr
     VERSION 1.0
     QML_FILES
         main.qml
+        ActionMapper.qml
         Lazer.qml
         Beam.qml
     RESOURCE_PREFIX
