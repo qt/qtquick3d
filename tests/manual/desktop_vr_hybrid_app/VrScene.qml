@@ -7,7 +7,7 @@ import QtQuick3D.Xr
 
 XrView {
     id: xrView
-
+    referenceSpace: XrView.ReferenceSpaceLocal
     quitOnSessionEnd: false
 
     signal sessionEndRequested()
