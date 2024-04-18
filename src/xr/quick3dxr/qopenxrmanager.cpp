@@ -1118,7 +1118,7 @@ void QOpenXRManager::createSwapchains()
             swapchainCreateInfo.arraySize = viewCount;
             swapchainCreateInfo.mipCount = 1;
 
-            qDebug("Creating multiview swapchain for %d view(s) with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
+            qDebug("Creating multiview swapchain for %u view(s) with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
                 viewCount,
                 vp.recommendedImageRectWidth,
                 vp.recommendedImageRectHeight,
@@ -1167,7 +1167,7 @@ void QOpenXRManager::createSwapchains()
         } else {
             // Create a swapchain for each view.
             for (uint32_t i = 0; i < viewCount; i++) {
-                qDebug("Creating swapchain for view %d with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
+                qDebug("Creating swapchain for view %u with dimensions Width=%d Height=%d SampleCount=%d Format=%llx",
                     i,
                     vp.recommendedImageRectWidth,
                     vp.recommendedImageRectHeight,
@@ -1199,7 +1199,7 @@ void QOpenXRManager::createSwapchains()
 
                     m_swapchainImages.insert(swapchain.handle, swapchainImages);
                 } else {
-                    qWarning("xrCreateSwapchain failed (view %d)", viewCount);
+                    qWarning("xrCreateSwapchain failed (view %u)", viewCount);
                 }
 
                 if (m_compositionLayerDepthSupported && m_depthSwapchainFormat > 0) {
@@ -1216,7 +1216,7 @@ void QOpenXRManager::createSwapchains()
 
                         m_depthSwapchainImages.insert(swapchain.handle, swapchainImages);
                     } else {
-                        qWarning("xrCreateSwapchain failed for depth swapchain (view %d)", viewCount);
+                        qWarning("xrCreateSwapchain failed for depth swapchain (view %u)", viewCount);
                     }
                 }
             }
@@ -1228,9 +1228,9 @@ void QOpenXRManager::createSwapchains()
             if (m_compositionLayerDepthSupported && m_depthSwapchains.isEmpty())
                 return;
         } else {
-            if (m_swapchains.count() != viewCount)
+            if (m_swapchains.count() != qsizetype(viewCount))
                 return;
-            if (m_compositionLayerDepthSupported && m_depthSwapchains.count() != viewCount)
+            if (m_compositionLayerDepthSupported && m_depthSwapchains.count() != qsizetype(viewCount))
                 return;
         }
 
