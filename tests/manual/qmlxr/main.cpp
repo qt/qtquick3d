@@ -170,6 +170,12 @@ int main(int argc, char *argv[])
                 qDebug() << "Setting origin rotation to" << camRot;
                 origin->setProperty("eulerRotation", camRot);
             }
+            QVariant envProp = obj->property("qmlxr_environment");
+            if (!envProp.isNull()) {
+                QQuick3DSceneEnvironment *env = envProp.value<QQuick3DSceneEnvironment *>();
+                qDebug() << "Setting SceneEnvironment to" << env;
+                xrView->setEnvironment(env);
+            }
         } else {
             qWarning() << subRoot << "is not a QQuick3DObject";
             return 1;
