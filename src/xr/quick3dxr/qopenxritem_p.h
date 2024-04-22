@@ -23,6 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QOpenXRItemPrivate;
+class QOpenXRView;
 
 class QOpenXRItem : public QQuick3DNode
 {
@@ -38,8 +39,18 @@ class QOpenXRItem : public QQuick3DNode
 
     QML_NAMED_ELEMENT(XrItem)
 public:
+    struct TouchState
+    {
+        int pointId = -1;
+        QOpenXRItem *target = nullptr;
+        bool grabbed = false;
+        bool pressed = false;
+        qreal touchDistance = 1e6;
+        QPointF cursorPos;
+    };
 
     explicit QOpenXRItem(QQuick3DNode *parent = nullptr);
+    ~QOpenXRItem() override;
 
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *newContentItem);
@@ -63,6 +74,8 @@ public:
     void setColor(const QColor &newColor);
 
     void componentComplete() override;
+
+    bool handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset);
 
 signals:
     void contentItemChanged();

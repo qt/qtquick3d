@@ -1210,6 +1210,130 @@ void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const
     internalPick(event, origin, direction);
 }
 
+// Note: we have enough information to implement Capability::Hover and Capability::ZPosition,
+// but those properties are not currently available in QTouchEvent/QEventPoint
+
+namespace {
+class SyntheticTouchDevice : public QPointingDevice
+{
+public:
+    SyntheticTouchDevice(QObject *parent = nullptr)
+        : QPointingDevice(QLatin1StringView("QtQuick3D Touch Synthesizer"),
+                          0,
+                          DeviceType::TouchScreen,
+                          PointerType::Finger,
+                          Capability::Position,
+                          10, 0,
+                          QString(), QPointingDeviceUniqueId(),
+                          parent)
+    {
+    }
+};
+}
+
+/*!
+    \qmlmethod View3D::setTouchpoint(Item target, point position, int pointId, bool pressed)
+
+    Sends a synthetic touch event to \a target, moving the touch point with ID \a pointId to \a position,
+    with \a pressed determining if the point is pressed.
+    Also sends the appropriate touch release event if \a pointId was previously active on a different
+    item.
+
+    \since 6.8
+ */
+
+void QQuick3DViewport::setTouchpoint(QQuickItem *target, const QPointF &position, int pointId, bool pressed)
+{
+    if (pointId >= m_touchState.size())
+        m_touchState.resize(pointId + 1);
+    auto prevState = m_touchState[pointId];
+
+    const bool sameTarget = prevState.target == target;
+    const bool wasPressed = prevState.isPressed;
+
+    const bool isPress = pressed && (!sameTarget || !wasPressed);
+    const bool isRelease = !pressed && wasPressed && sameTarget;
+
+    // Hover if we're not active, and we weren't previously active.
+    // We assume that we always get a non-active for a target when we release.
+    // This function sends a release events if the target is changed.
+    if (!sameTarget && wasPressed)
+        qWarning("QQuick3DViewport::setTouchpoint missing release event");
+
+    if (!pressed && !wasPressed) {
+        // This would be a hover event: skipping
+        return;
+    }
+
+    m_touchState[pointId] = { target, position, pressed };
+
+    if (!m_syntheticTouchDevice)
+        m_syntheticTouchDevice = new SyntheticTouchDevice(this);
+
+    QPointingDevicePrivate *devPriv = QPointingDevicePrivate::get(m_syntheticTouchDevice);
+
+    auto makePoint = [devPriv](int id, QEventPoint::State pointState, QPointF pos) -> QEventPoint {
+        auto epd = devPriv->pointById(id);
+        auto &ep = epd->eventPoint;
+        if (pointState != QEventPoint::State::Stationary)
+            ep.setAccepted(false);
+
+        auto res = QMutableEventPoint::withTimeStamp(0, id, pointState, pos, pos, pos);
+        QMutableEventPoint::update(res, ep);
+        return res;
+    };
+
+    auto sendTouchEvent = [&](QQuickItem *t, const QPointF &position, int pointId, QEventPoint::State pointState) -> void {
+        QList<QEventPoint> points;
+        bool otherPoint = false; // Does the event have another point already?
+        for (int i = 0; i < m_touchState.size(); ++i) {
+            const auto &ts = m_touchState[i];
+            if (ts.target != t)
+                continue;
+            if (i == pointId) {
+                auto newPoint = makePoint(i, pointState, position);
+                points << newPoint;
+            } else if (ts.isPressed) {
+                otherPoint = true;
+                points << makePoint(i, QEventPoint::Stationary, ts.position);
+            }
+        }
+
+        QEvent::Type type;
+        if (pointState == QEventPoint::Pressed && !otherPoint)
+            type = QEvent::Type::TouchBegin;
+        else if (pointState == QEventPoint::Released && !otherPoint)
+            type = QEvent::Type::TouchEnd;
+        else
+            type = QEvent::Type::TouchUpdate;
+
+        QTouchEvent ev(type, m_syntheticTouchDevice, {}, points);
+
+        // Actually send event:
+        auto da = QQuickItemPrivate::get(t)->deliveryAgent();
+        bool handled = da->event(&ev);
+        Q_UNUSED(handled);
+
+        // Duplicate logic from QQuickWindowPrivate::clearGrabbers
+        if (ev.isEndEvent()) {
+            for (auto &point : ev.points()) {
+                if (point.state() == QEventPoint::State::Released) {
+                    ev.setExclusiveGrabber(point, nullptr);
+                    ev.clearPassiveGrabbers(point);
+                }
+            }
+        }
+    };
+
+    // Send a release event to the previous target
+    if (prevState.target && !sameTarget)
+        sendTouchEvent(prevState.target, prevState.position, pointId, QEventPoint::Released);
+
+    // Now send an event for the new state
+    QEventPoint::State newState = isPress ? QEventPoint::Pressed : isRelease ? QEventPoint::Released : QEventPoint::Updated;
+    sendTouchEvent(target, position, pointId, newState);
+}
+
 QQuick3DLightmapBaker *QQuick3DViewport::maybeLightmapBaker()
 {
     return m_lightmapBaker;

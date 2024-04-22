@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxritem_p.h"
+#include "qopenxrview_p.h"
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QColor>
@@ -29,8 +30,8 @@ public:
             m_contentItemDestroyedConnection = {};
         }
         if (m_contentItem) {
-            m_contentItem->setParentItem(m_parentItem);
-            m_contentItem->setParent(m_parentItem);
+            m_contentItem->setParentItem(m_containerItem);
+            m_contentItem->setParent(m_containerItem);
             m_contentItemDestroyedConnection = QObject::connect(m_contentItem, &QObject::destroyed, q, [q]() {
                 q->setContentItem(nullptr);
             });
@@ -42,20 +43,21 @@ public:
     void initParentItem()
     {
         Q_Q(QOpenXRItem);
-        if (!m_parentItem) {
-            m_parentItem = new QQuickRectangle;
-            m_parentItem->setTransformOrigin(QQuickItem::TopLeft);
-            m_parentItem->setParent(q);
+        if (!m_containerItem) {
+            m_containerItem = new QQuickRectangle;
+            m_containerItem->setTransformOrigin(QQuickItem::TopLeft);
+            m_containerItem->setParent(q);
 
             auto dataProp = data();
-            dataProp.append(&dataProp, m_parentItem);
+            dataProp.append(&dataProp, m_containerItem);
         }
     }
 
     void updateContent();
 
     QQuickItem *m_contentItem = nullptr;
-    QQuickRectangle *m_parentItem = nullptr;
+    QQuickRectangle *m_containerItem = nullptr;
+    QPointer<QOpenXRView> m_XrView;
     QMetaObject::Connection m_contentItemDestroyedConnection;
     QColor m_color = Qt::white;
     qreal m_pixelsPerUnit { 1.0 };
@@ -75,7 +77,7 @@ void QOpenXRItemPrivate::updateContent()
         return;
     Q_Q(QOpenXRItem);
     initParentItem();
-    m_parentItem->setColor(m_color);
+    m_containerItem->setColor(m_color);
     if (m_contentItem) {
         if (Q_UNLIKELY(m_manualPixelsPerUnit && m_pixelsPerUnit < 0)) {
             qWarning() << "XrItem invalid pixelPerUnit" << m_pixelsPerUnit;
@@ -94,8 +96,8 @@ void QOpenXRItemPrivate::updateContent()
             newScale = 1.0 / ppu;
         }
         QSizeF newSize(m_width / newScale, m_height / newScale);
-        m_parentItem->setSize(newSize);
-        m_parentItem->setScale(newScale);
+        m_containerItem->setSize(newSize);
+        m_containerItem->setScale(newScale);
     }
 }
 
@@ -104,20 +106,13 @@ void QOpenXRItemPrivate::updateContent()
     \inqmlmodule QtQuick3D.Xr
     \inherits Node
     \brief A virtual surface in 3D space that can hold 2D user interface content
-*/
-QOpenXRItem::QOpenXRItem(QQuick3DNode *parent)
-    : QQuick3DNode(*(new QOpenXRItemPrivate()), parent)
-{
-}
 
-/*!
-    \qmlproperty Item XrItem::contentItem
-
-    This property holds the content item that will be displayed on the virtual surface.
-    The content item's size will be used to calculate the pixels per unit value and scale based on this items size.
-
-    This item is a convenient way to take traditional 2D user interfaces and display them on a virtual surface that has
+    The XrItem type is a Qt Quick 3D \l Node that represents a rectangle with \l width and \l height.
+    It holds one Qt Quick \l Item, specified by \l contentItem, and scales it to fit.
+    This gives a convenient way to take traditional 2D user interfaces and display them on a virtual surface that has
     a real world size.
+
+    Any other children of the XrItem will be treated as normal children of a Node, and will not be scaled.
 
     For example the following code will create a virtual surface that's 1 meter by 1 meter and with a content item
     that's 600 pixels by 600 pixels. Note that the effect here is achieved by scaling the content item and not
@@ -134,6 +129,46 @@ QOpenXRItem::QOpenXRItem(QQuick3DNode *parent)
         }
     }
     \endcode
+*/
+QOpenXRItem::QOpenXRItem(QQuick3DNode *parent)
+    : QQuick3DNode(*(new QOpenXRItemPrivate()), parent)
+{
+}
+
+QOpenXRItem::~QOpenXRItem()
+{
+    Q_D(QOpenXRItem);
+    if (d->m_XrView)
+        d->m_XrView->unregisterXrItem(this);
+}
+
+void QOpenXRItem::componentComplete()
+{
+    Q_D(QOpenXRItem);
+    QQuick3DNode::componentComplete(); // Sets d->componentComplete, so must be called first
+
+    auto findView = [this]() -> QOpenXRView * {
+        QQuick3DNode *parent = parentNode();
+        while (parent) {
+            if (auto *xrView = qobject_cast<QOpenXRView*>(parent))
+                return xrView;
+            parent = parent->parentNode();
+        }
+        return nullptr;
+    };
+    d->m_XrView = findView();
+    if (d->m_XrView)
+        d->m_XrView->registerXrItem(this);
+    else
+        qWarning("Could not find XrView for XrItem");
+    d->updateContent();
+}
+
+/*!
+    \qmlproperty Item XrItem::contentItem
+
+    This property holds the content item that will be displayed on the virtual surface.
+    The content item's size will be used to calculate the pixels per unit value and scale based on this item's size.
 
     \sa pixelsPerUnit
  */
@@ -187,11 +222,11 @@ void QOpenXRItem::setPixelsPerUnit(qreal newPixelsPerUnit)
 /*!
     \qmlproperty bool XrItem::manualPixelsPerUnit
 
-    If this property is true, the ratio between the contentItems's 2D coordinate system and this
-    XrItem's 3D coordinate system is defined by the value of \l pixelsPerUnit. If this property is false,
+    If this property is \c true, the ratio between the contentItems's 2D coordinate system and this
+    XrItem's 3D coordinate system is defined by the value of \l pixelsPerUnit. If this property is \c false,
     the ratio is calculated based on the content item's size and the size of the XrItem.
 
-    The default value is false.
+    \default false
     \sa pixelsPerUnit
 */
 
@@ -259,11 +294,63 @@ void QOpenXRItem::setHeight(qreal newHeight)
     d->updateContent();
 }
 
-void QOpenXRItem::componentComplete()
+// Sends appropriate touch events.
+// Updates the touchState and returns true if this item grabs the touch point.
+// touchState is input/output, and input contains the previous state if touchState->grabbed is true
+
+bool QOpenXRItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset)
 {
     Q_D(QOpenXRItem);
-    QQuick3DNode::componentComplete();
-    d->updateContent();
+
+    auto mappedPos = mapPositionFromScene(pos);
+
+    QPointF point = {mappedPos.x(), -mappedPos.y()};
+
+    constexpr qreal sideMargin = 20; // How far outside the rect do you have to go to cancel the grab (cm)
+    constexpr qreal cancelDepth = 50; // How far through the rect do you have to go to cancel the grab (cm)
+    constexpr qreal hoverHeight = 10; // How far above does the hover state begin (cm). NOTE: no hover events actually sent
+
+    const float z = mappedPos.z();
+
+    const bool wayOutside = point.x() < -sideMargin || point.x() > width() + sideMargin
+            || point.y() < -sideMargin || point.y() > height() + sideMargin || z < -cancelDepth;
+    const bool inside = point.x() >= 0 && point.x() <= width() && point.y() >= 0 && point.y() <= height() && !wayOutside;
+
+    const bool wasGrabbed = touchState->grabbed;
+
+    bool hover = z > 0 && z < hoverHeight;
+
+    bool pressed = false;
+    bool grab;
+    if (wasGrabbed) {
+        // We maintain a grab as long as we don't move too far away while pressed, or if we hover inside
+        pressed = z <= 0; // TODO: we should release when the finger is moved upwards, even if it's below the surface
+        grab = (pressed && !wayOutside) || (hover && inside);
+    } else {
+        // We don't want movement behind the surface to register as pressed, so we need at least one hover before a press
+        grab = hover && inside;
+    }
+
+    if (grab) {
+        float zOffset = qMin(z, 0.0);
+        if (offset)
+            *offset = sceneRotation() * QVector3D{ 0, 0, -zOffset };
+        touchState->grabbed = true;
+        touchState->target = this;
+        touchState->touchDistance = z;
+        touchState->pressed = pressed;
+        touchState->cursorPos = point;
+        view->setTouchpoint(d->m_containerItem, point, touchState->pointId, pressed);
+        return true;
+    }
+
+    if (wasGrabbed) {
+        touchState->grabbed = false;
+        touchState->target = nullptr;
+        view->setTouchpoint(d->m_containerItem, point, touchState->pointId, false);
+    }
+
+    return false;
 }
 
 /*!
@@ -271,7 +358,7 @@ void QOpenXRItem::componentComplete()
 
     This property defines the background color of the XrItem.
 
-    The default value is \c white
+    \default "white"
  */
 
 QColor QOpenXRItem::color() const

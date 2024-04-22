@@ -1,6 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "qopenxritem_p.h"
 #include "qopenxrview_p.h"
 #include <QQuickWindow>
 #include <QQuickItem>
@@ -286,6 +287,119 @@ QList<QQuick3DPickResult> QOpenXRView::rayPickAll(const QVector3D &origin, const
     return m_openXRManager.m_vrViewport->rayPickAll(origin, direction);
 }
 
+/*!
+    \qmlmethod XrView::setTouchpoint(Item target, point position, int pointId, bool pressed)
+
+    Sends a synthetic touch event to \a target, moving the touch point with ID \a pointId to \a position,
+    with \a pressed determining if the point is pressed.
+    Also sends the appropriate touch release event if \a pointId was previously active on a different
+    item.
+*/
+
+void QOpenXRView::setTouchpoint(QQuickItem *target, const QPointF &position, int pointId, bool pressed)
+{
+    view3d()->setTouchpoint(target, position, pointId, pressed);
+}
+
+// TODO: Maybe do a proper QOpenXRViewPrivate instead
+struct QOpenXRView::XrTouchState
+{
+    QHash<int, QOpenXRItem::TouchState> points;
+};
+
+/*!
+    \qmlmethod vector3d XrView::processTouch(vector3d position, int pointId)
+
+    This method will search for an XrItem near \a position, and send a virtual
+    touch event with touch point ID \a pointId if \a position maps to a point
+    on the surface.
+
+    The return value is the offset between \a position and the touched point on
+    the surface. This can be used to prevent a hand model from passing through
+    an XrItem.
+
+    \sa XrHandModel
+
+*/
+
+QVector3D QOpenXRView::processTouch(const QVector3D &pos, int pointId)
+{
+    QVector3D offset;
+    if (m_xrItems.isEmpty())
+        return offset;
+
+    if (!m_touchState)
+        m_touchState = new XrTouchState;
+    QOpenXRItem::TouchState &state = m_touchState->points[pointId];
+    state.pointId = pointId; // in case it's a new point that was default-constructed
+
+    auto *prevTarget = state.target;
+    bool grabbed = false;
+    if (prevTarget) {
+        grabbed = prevTarget->handleVirtualTouch(this, pos, &state, &offset);
+    }
+    for (auto *item : std::as_const(m_xrItems)) {
+        if (grabbed)
+            break;
+        if (item != prevTarget)
+            grabbed = item->handleVirtualTouch(this, pos, &state, &offset);
+    }
+
+    return offset;
+}
+
+/*!
+    \qmlmethod object XrView::touchpointState(int pointId)
+
+    This method returns the state of the touch point with ID \a pointId.
+    The state is represented by a map from property names to values:
+
+    \table
+    \header
+    \li Key
+    \li Type
+    \li Description
+    \row
+    \li \c grabbed
+    \li \c bool
+    \li Is the point grabbed by an item? If \c false, all other values are \c undefined.
+    \row
+    \li \c target
+    \li XrItem
+    \li The item that is grabbing the touch point.
+    \row
+    \li \c pressed
+    \li \c bool
+    \li Is the touch point pressed?
+    \row
+    \li \c cursorPos
+    \li \c point
+    \li The 2D position of the touch point within \c target
+    \row
+    \li \c touchDistance
+    \li \c real
+    \li The distance from the plane to the touch point. Will be \c 0 if \c pressed is \c true.
+    \endtable
+
+ */
+
+#define Q_TOUCHPOINT_STATE(prop) { QStringLiteral(#prop), QVariant::fromValue(it->prop) }
+QVariantMap QOpenXRView::touchpointState(int pointId) const
+{
+    auto constexpr end = QHash<int, QOpenXRItem::TouchState>::const_iterator();
+    auto it = m_touchState ? m_touchState->points.constFind(pointId) : end;
+
+    if (it == end)
+        return { { QStringLiteral("grabbed"), QVariant::fromValue(false) } };
+
+    return { Q_TOUCHPOINT_STATE(target),
+             Q_TOUCHPOINT_STATE(grabbed),
+             Q_TOUCHPOINT_STATE(pressed),
+             Q_TOUCHPOINT_STATE(cursorPos),
+             Q_TOUCHPOINT_STATE(touchDistance) };
+}
+#undef Q_TOUCHPOINT_STATE
+
 namespace {
 
 XrReferenceSpaceType getXrReferenceSpaceType(QOpenXRView::ReferenceSpace referenceSpace)
@@ -318,7 +432,6 @@ QOpenXRView::ReferenceSpace getReferenceSpaceType(XrReferenceSpaceType reference
 
 }
 
-
 QOpenXRView::ReferenceSpace QOpenXRView::referenceSpace() const
 {
     return getReferenceSpaceType(m_openXRManager.m_referenceSpace);
@@ -342,6 +455,16 @@ bool QOpenXRView::isDepthSubmissionEnabled() const
         return false;
 
     return m_openXRManager.m_submitLayerDepth;
+}
+
+void QOpenXRView::registerXrItem(QOpenXRItem *newXrItem)
+{
+    m_xrItems.append(newXrItem);
+}
+
+void QOpenXRView::unregisterXrItem(QOpenXRItem *xrItem)
+{
+    m_xrItems.removeAll(xrItem);
 }
 
 void QOpenXRView::setEnableDepthSubmission(bool enable)

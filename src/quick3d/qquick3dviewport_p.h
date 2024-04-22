@@ -102,6 +102,8 @@ public:
 
     void processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event);
 
+    Q_REVISION(6, 8) Q_INVOKABLE void setTouchpoint(QQuickItem *target, const QPointF &position, int pointId, bool active);
+
     QQuick3DLightmapBaker *maybeLightmapBaker();
     QQuick3DLightmapBaker *lightmapBaker();
 
@@ -215,6 +217,15 @@ private:
     QQuick3DLightmapBaker *m_lightmapBaker = nullptr;
     QList<QQuick3DObject *> m_extensions;
     bool m_extensionListDirty = false;
+
+    struct TouchState {
+        QQuickItem *target = nullptr;
+        QPointF position;
+        bool isPressed = false;
+    };
+    QPointingDevice *m_syntheticTouchDevice = nullptr;
+    QVarLengthArray<TouchState, 2> m_touchState{2};
+
     Q_QUICK3D_PROFILE_ID
 };
 
