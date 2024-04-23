@@ -1449,8 +1449,9 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
                 const auto &shaderCache = renderer.contextInterface()->shaderCache();
                 const bool isSkyBox = inData.layer.background == QSSGRenderLayer::Background::SkyBox;
-                const auto &shaderPipeline = isSkyBox ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8)
-                                                      : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader();
+                // ### multiview
+                const auto &shaderPipeline = isSkyBox ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8, 1)
+                                                      : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(1);
                 Q_ASSERT(shaderPipeline);
                 QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
@@ -1721,7 +1722,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
 static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                                     QSSGPassKey passKey,
                                     QSSGRenderLayer &layer,
-                                    QSSGRenderCamera &inCamera,
+                                    QSSGRenderCameraList &cameras,
                                     QSSGRenderer &renderer,
                                     QSSGReflectionMapEntry *entry = nullptr,
                                     QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone)
@@ -1745,7 +1746,7 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                                                  QRhiSampler::ClampToEdge,
                                                  QRhiSampler::Repeat });
         int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
-        const int ubufSize = 2 * 4 * 3 * sizeof(float) + 2 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 2x mat3 + 2x mat4 + 2 floats
+        const quint32 ubufSize = cameras.count() >= 2 ? 416 : 240; // same ubuf layout for both skybox and skyboxcube
         bindings.addTexture(samplerBinding,
                             QRhiShaderResourceBinding::FragmentStage,
                             lightProbeTexture.m_texture, sampler);
@@ -1759,11 +1760,6 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
             dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
             dcd.ubuf->create();
         }
-
-        const QMatrix4x4 &inverseProjection = inCamera.projection.inverted();
-        const QMatrix4x4 &viewMatrix = inCamera.globalTransform;
-        QMatrix4x4 viewProjection(Qt::Uninitialized); // For cube mode
-        inCamera.calculateViewProjectionWithoutTranslation(0.1f, 5.0f, viewProjection);
 
         float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
         const float exposure = layer.lightProbeSettings.probeExposure;
@@ -1780,13 +1776,31 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
         };
 
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-        memcpy(ubufData, viewMatrix.constData(), 44);
-        memcpy(ubufData + 48, inverseProjection.constData(), 64);
-        memcpy(ubufData + 112, rotationMatrix.constData(), 12);
-        memcpy(ubufData + 128, (char *)rotationMatrix.constData() + 12, 12);
-        memcpy(ubufData + 144, (char *)rotationMatrix.constData() + 24, 12);
-        memcpy(ubufData + 160, &skyboxProperties, 16);
-        memcpy(ubufData + 176, viewProjection.constData(), 64); //###
+        quint32 ubufOffset = 0;
+        // skyboxProperties
+        memcpy(ubufData + ubufOffset, &skyboxProperties, 16);
+        ubufOffset += 16;
+        // orientation
+        memcpy(ubufData + ubufOffset, rotationMatrix.constData(), 12);
+        ubufOffset += 16;
+        memcpy(ubufData + ubufOffset, (char *)rotationMatrix.constData() + 12, 12);
+        ubufOffset += 16;
+        memcpy(ubufData + ubufOffset, (char *)rotationMatrix.constData() + 24, 12);
+        ubufOffset += 16;
+
+        for (qsizetype viewIdx = 0; viewIdx < cameras.count(); ++viewIdx) {
+            const QMatrix4x4 &inverseProjection = cameras[viewIdx]->projection.inverted();
+            const QMatrix4x4 &viewMatrix = cameras[viewIdx]->globalTransform;
+            QMatrix4x4 viewProjection(Qt::Uninitialized); // For cube mode
+            cameras[viewIdx]->calculateViewProjectionWithoutTranslation(0.1f, 5.0f, viewProjection);
+
+            quint32 viewDataOffset = ubufOffset;
+            memcpy(ubufData + viewDataOffset + viewIdx * 64, viewProjection.constData(), 64);
+            viewDataOffset += cameras.count() * 64;
+            memcpy(ubufData + viewDataOffset + viewIdx * 64, inverseProjection.constData(), 64);
+            viewDataOffset += cameras.count() * 64;
+            memcpy(ubufData + viewDataOffset + viewIdx * 48, viewMatrix.constData(), 48);
+        }
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
         bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
@@ -1808,13 +1822,13 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
 void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
                                      QSSGPassKey passKey,
                                      QSSGRenderLayer &layer,
-                                     QSSGRenderCamera &inCamera,
+                                     QSSGRenderCameraList &cameras,
                                      QSSGRenderer &renderer)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
-    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, inCamera, renderer);
+    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, cameras, renderer);
 
     cb->debugMarkEnd();
 }
@@ -1830,7 +1844,9 @@ void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox for reflection cube map"));
 
-    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, inCamera, renderer, entry, cubeFace);
+    // ### multiview
+    QSSGRenderCameraList cameras({ &inCamera });
+    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, cameras, renderer, entry, cubeFace);
 
     cb->debugMarkEnd();
 }

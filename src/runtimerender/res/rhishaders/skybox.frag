@@ -10,10 +10,17 @@
 layout(location = 0) out vec4 fragOutput;
 
 layout(std140, binding = 0) uniform buf {
-    mat3 viewMatrix;
-    mat4 inverseProjection;
-    mat3 orientation;
     vec4 skyboxProperties;
+    mat3 orientation;
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 viewProjection[QSHADER_VIEW_COUNT];
+    mat4 inverseProjection[QSHADER_VIEW_COUNT];
+    mat3 viewMatrix[QSHADER_VIEW_COUNT];
+#else
+    mat4 viewProjection;
+    mat4 inverseProjection;
+    mat3 viewMatrix;
+#endif
 } ubuf;
 
 // skyboxProperties

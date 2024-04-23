@@ -69,9 +69,9 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSsaoShader()
     return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_cache.ssaoRhiShader);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxCubeShader()
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxCubeShader(int viewCount)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("skyboxcube"), m_cache.skyBoxCubeRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("skyboxcube"), m_cache.skyBoxCubeRhiShader, viewCount);
 }
 
 static inline constexpr size_t getSkyboxIndex(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
@@ -94,7 +94,7 @@ static inline constexpr size_t getSkyboxIndex(QSSGRenderLayer::TonemapMode tonem
     Q_UNREACHABLE_RETURN(0);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE, int viewCount)
 {
     // Skybox shader is special and has multiple possible shaders so we have to do
     // a bit of manual work here (mapping resolved in getSkyboxIndex()).
@@ -113,7 +113,7 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxShader(QSSGRende
     };
 
     const size_t skyboxIndex = getSkyboxIndex(tonemapMode, isRGBE);
-    return getBuiltinRhiShader(QByteArray::fromRawData(variant[skyboxIndex], std::char_traits<char>::length(variant[skyboxIndex])), m_cache.skyBoxRhiShader[skyboxIndex]);
+    return getBuiltinRhiShader(QByteArray::fromRawData(variant[skyboxIndex], std::char_traits<char>::length(variant[skyboxIndex])), m_cache.skyBoxRhiShader[skyboxIndex], viewCount);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSupersampleResolveShader()

@@ -813,7 +813,6 @@ void SkyboxPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         const auto &rhiCtx = renderer.contextInterface()->rhiContext();
         QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
         QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-        QSSGRenderCamera *camera = data.renderedCameras[0];
         layer = &data.layer;
         QSSG_ASSERT(layer, return);
 
@@ -828,7 +827,7 @@ void SkyboxPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         // main render pass should alter the colors then.
         skipTonemapping = layer->firstEffect != nullptr;
 
-        RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, *camera, renderer);
+        RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
         skipPrep = true;
     }
 }
@@ -850,7 +849,7 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
 
     QSSGRenderLayer::TonemapMode tonemapMode = skipTonemapping && (layer->tonemapMode != QSSGRenderLayer::TonemapMode::Custom) ?  QSSGRenderLayer::TonemapMode::None : layer->tonemapMode;
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8);
+    auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8, rhiCtx->mainPassViewCount());
     QSSG_CHECK(shaderPipeline);
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, shaderPipeline.get());
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
@@ -869,7 +868,6 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-    QSSGRenderCamera *camera = data.renderedCameras[0];
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
@@ -880,9 +878,9 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader();
+    skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(rhiCtx->mainPassViewCount());
 
-    RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, *camera, renderer);
+    RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
 }
 
 void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)

@@ -94,7 +94,7 @@ void rhiPrepareGrid(QSSGRhiContext *rhiCtx,
 void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
                       QSSGPassKey passKey,
                       QSSGRenderLayer &layer,
-                      QSSGRenderCamera &inCamera,
+                      QSSGRenderCameraList &cameras,
                       QSSGRenderer &renderer);
 
 void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,

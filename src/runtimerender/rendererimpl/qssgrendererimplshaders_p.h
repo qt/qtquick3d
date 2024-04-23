@@ -47,8 +47,8 @@ public:
     QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurXShader();
     QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurYShader();
     QSSGRhiShaderPipelinePtr getRhiSsaoShader();
-    QSSGRhiShaderPipelinePtr getRhiSkyBoxCubeShader();
-    QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
+    QSSGRhiShaderPipelinePtr getRhiSkyBoxCubeShader(int viewCount);
+    QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE, int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSupersampleResolveShader();
     QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();
     QSSGRhiShaderPipelinePtr getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel, int viewCount);
