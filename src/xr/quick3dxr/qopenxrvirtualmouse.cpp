@@ -123,6 +123,13 @@ void QOpenXRVirtualMouse::setEnabled(bool enabled)
         return;
     m_enabled = enabled;
     emit enabledChanged(m_enabled);
+
+    // Generate mouse release event if we disable when pressed
+    if (!m_enabled && (m_leftMouseButton || m_rightMouseButton || m_middleMouseButton)) {
+        Qt::MouseButton button = m_leftMouseButton ? Qt::LeftButton : m_rightMouseButton ? Qt::RightButton : Qt::MiddleButton;
+        m_leftMouseButton = m_rightMouseButton = m_middleMouseButton = false;
+        generateEvent(QEvent::MouseButtonRelease, button);
+    }
 }
 
 void QOpenXRVirtualMouse::moveEvent()
@@ -132,7 +139,7 @@ void QOpenXRVirtualMouse::moveEvent()
 
 void QOpenXRVirtualMouse::generateEvent(QEvent::Type type, Qt::MouseButton button)
 {
-    if (!m_view || !m_source || m_view->m_inDestructor)
+    if (!m_view || !m_source || m_view->m_inDestructor || !m_enabled)
         return;
 
     // Get Ray
