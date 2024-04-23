@@ -1670,7 +1670,7 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
     return true;
 }
 
-void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRenderLayer &layer, QSSGRenderCamera &inCamera, QSSGRenderer &renderer)
+void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRenderLayer &layer, QSSGRenderCameraList &cameras, QSSGRenderer &renderer)
 {
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -1679,7 +1679,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
     QSSGRhiShaderResourceBindingList bindings;
 
     int uniformBinding = 0;
-    const int ubufSize = 64 * 2 * sizeof(float) + 4 * sizeof(float) + 4 * sizeof(quint32); // 2x mat4 + 4x float + 1x bool
+    const int ubufSize = cameras.count() >= 2 ? 276 : 148;
 
     QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ passKey, nullptr, nullptr, 0 })); // Change to Grid?
 
@@ -1690,25 +1690,37 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
     }
 
     // Param
-    const float nearF = inCamera.clipNear;
-    const float farF = inCamera.clipFar;
+    const float nearF = cameras[0]->clipNear;
+    const float farF = cameras[0]->clipFar;
     const float scale = layer.gridScale;
     const quint32 gridFlags = layer.gridFlags;
 
     const float yFactor = rhi->isYUpInNDC() ? 1.0f : -1.0f;
 
-    QMatrix4x4 viewProj(Qt::Uninitialized);
-    inCamera.calculateViewProjectionMatrix(viewProj);
-    QMatrix4x4 invViewProj = viewProj.inverted();
-
+    quint32 ubufOffset = 0;
     char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-    memcpy(ubufData + 64 * 0, viewProj.constData(), 64);
-    memcpy(ubufData + 64 * 1, invViewProj.constData(), 64);
-    memcpy(ubufData + 64 * 2 + 0, &nearF, 4);
-    memcpy(ubufData + 64 * 2 + 4 * 1, &farF, 4);
-    memcpy(ubufData + 64 * 2 + 4 * 2, &scale, 4);
-    memcpy(ubufData + 64 * 2 + 4 * 3, &yFactor, 4);
-    memcpy(ubufData + 64 * 2 + 4 * 4, &gridFlags, 4);
+
+    for (qsizetype viewIdx = 0; viewIdx < cameras.count(); ++viewIdx) {
+        QMatrix4x4 viewProj(Qt::Uninitialized);
+        cameras[viewIdx]->calculateViewProjectionMatrix(viewProj);
+        QMatrix4x4 invViewProj = viewProj.inverted();
+        quint32 viewDataOffset = ubufOffset;
+        memcpy(ubufData + viewDataOffset + viewIdx * 64, viewProj.constData(), 64);
+        viewDataOffset += 64 * cameras.count();
+        memcpy(ubufData + viewDataOffset + viewIdx * 64, invViewProj.constData(), 64);
+    }
+    ubufOffset += (64 + 64) * cameras.count();
+
+    memcpy(ubufData + ubufOffset, &nearF, 4);
+    ubufOffset += 4;
+    memcpy(ubufData + ubufOffset, &farF, 4);
+    ubufOffset += 4;
+    memcpy(ubufData + ubufOffset, &scale, 4);
+    ubufOffset += 4;
+    memcpy(ubufData + ubufOffset, &yFactor, 4);
+    ubufOffset += 4;
+    memcpy(ubufData + ubufOffset, &gridFlags, 4);
+
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
     bindings.addUniformBuffer(uniformBinding, RENDERER_VISIBILITY_ALL, dcd.ubuf);

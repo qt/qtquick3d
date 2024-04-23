@@ -2,12 +2,18 @@
 
 layout(location=0) in vec3 v_nearPoint;
 layout(location=1) in vec3 v_farPoint;
+layout(location=2) in flat uint v_viewIndex;
 
 layout(location=0) out vec4 fragColor;
 
 layout(std140, binding=0) uniform buf {
-    mat4 viewProj; // viewProj
-    mat4 invViewProj; // invViewProj
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 viewProj[QSHADER_VIEW_COUNT];
+    mat4 invViewProj[QSHADER_VIEW_COUNT];
+#else
+    mat4 viewProj;
+    mat4 invViewProj;
+#endif
     float near;
     float far;
     float scale;
@@ -71,7 +77,11 @@ void main(void)
     const vec2 fragPos2D = fragPos3D.xz;
 
     // Getting the fragment position in clip space
+#if QSHADER_VIEW_COUNT >= 2
+    const vec4 clipSpacePos = u_buf.viewProj[v_viewIndex] * vec4(fragPos3D, 1.0);
+#else
     const vec4 clipSpacePos = u_buf.viewProj * vec4(fragPos3D, 1.0);
+#endif
 
     // The out color is a combination of a larger grid and a smaller grid.
     // The grid is only shown at y=0.

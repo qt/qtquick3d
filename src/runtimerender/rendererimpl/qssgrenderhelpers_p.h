@@ -87,7 +87,7 @@ bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wan
 void rhiPrepareGrid(QSSGRhiContext *rhiCtx,
                     QSSGPassKey passKey,
                     QSSGRenderLayer &layer,
-                    QSSGRenderCamera &inCamera,
+                    QSSGRenderCameraList &cameras,
                     QSSGRenderer &renderer);
 
 

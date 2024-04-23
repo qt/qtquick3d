@@ -1007,19 +1007,18 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-    QSSGRenderCamera *camera = data.renderedCameras[0];
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    gridShader = shaderCache->getBuiltInRhiShaders().getRhiGridShader();
+    gridShader = shaderCache->getBuiltInRhiShaders().getRhiGridShader(rhiCtx->mainPassViewCount());
 
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
     ps.viewCount = rhiCtx->mainPassViewCount();
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
 
-    RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, *camera, renderer);
+    RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
 }
 
 void InfiniteGridPass::renderPass(QSSGRenderer &renderer)

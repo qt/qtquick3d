@@ -43,7 +43,7 @@ public:
 
     QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurXShader();
     QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurYShader();
-    QSSGRhiShaderPipelinePtr getRhiGridShader();
+    QSSGRhiShaderPipelinePtr getRhiGridShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurXShader();
     QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurYShader();
     QSSGRhiShaderPipelinePtr getRhiSsaoShader();
