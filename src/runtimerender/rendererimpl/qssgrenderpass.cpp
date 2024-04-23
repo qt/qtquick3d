@@ -1015,7 +1015,10 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     gridShader = shaderCache->getBuiltInRhiShaders().getRhiGridShader();
 
     ps = data.getPipelineState();
+    ps.samples = rhiCtx->mainPassSampleCount();
+    ps.viewCount = rhiCtx->mainPassViewCount();
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
+
     RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, *camera, renderer);
 }
 
