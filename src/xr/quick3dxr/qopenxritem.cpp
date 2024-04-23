@@ -310,6 +310,14 @@ bool QOpenXRItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, To
     constexpr qreal cancelDepth = 50; // How far through the rect do you have to go to cancel the grab (cm)
     constexpr qreal hoverHeight = 10; // How far above does the hover state begin (cm). NOTE: no hover events actually sent
 
+    constexpr qreal releaseHeight = 2; // How far to move towards/from the surface to count as a press/release when below
+    constexpr qreal smallDistance = 0.5; // Any movement shorter than this distance is ignored for press/release below the surface
+    constexpr qreal longDistance = 5; // Any in-surface movement larger than this distance means this is not a press/release below the surface
+    constexpr int releaseTime = 500; // How fast does the finger have to move to count as press/release below the surface
+    constexpr qreal releaseHeightSquared = releaseHeight * releaseHeight;
+    constexpr qreal smallDistanceSquared = smallDistance * smallDistance;
+    constexpr qreal longDistanceSquared = longDistance * longDistance;
+
     const float z = mappedPos.z();
 
     const bool wayOutside = point.x() < -sideMargin || point.x() > width() + sideMargin
@@ -317,18 +325,66 @@ bool QOpenXRItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, To
     const bool inside = point.x() >= 0 && point.x() <= width() && point.y() >= 0 && point.y() <= height() && !wayOutside;
 
     const bool wasGrabbed = touchState->grabbed;
+    const bool wasPressed = touchState->pressed;
 
     bool hover = z > 0 && z < hoverHeight;
 
     bool pressed = false;
     bool grab;
+    bool resetPrevious = false;
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+
     if (wasGrabbed) {
-        // We maintain a grab as long as we don't move too far away while pressed, or if we hover inside
-        pressed = z <= 0; // TODO: we should release when the finger is moved upwards, even if it's below the surface
-        grab = (pressed && !wayOutside) || (hover && inside);
+        // We maintain a grab as long as we don't move too far away while below the surface, or if we hover inside
+
+        // We release if we go from below to above, or if we move upwards fast enough
+        // We press if we go from above to below, or if we push downwards fast enough
+        // We maintain press otherwise
+        // If we move outside when pressed, we should maintain pressed state, but send release event
+
+        QVector3D distFromPrev = mappedPos - touchState->previous;
+        qint64 msSincePrev = now - touchState->timestamp;
+
+        const qreal prevZ = touchState->previous.z();
+
+        if (prevZ > 0 && z <= 0) {
+            // New press from above
+            pressed = true;
+            resetPrevious = true;
+        } else if (msSincePrev > releaseTime || z > 0) {
+            resetPrevious = true;
+            // If the timestamp of the last significant move is older than the cutoff, we maintain the press state if we're below the surface
+            // We're never pressed if we're above the surface
+            pressed = z <= 0 && wasPressed;
+        } else {
+            // We know we're within the cutoff interval, and below the surface.
+            const qreal hDistSquared = distFromPrev.x() * distFromPrev.x() + distFromPrev.y() * distFromPrev.y();
+            const qreal vDistSquared = distFromPrev.z() * distFromPrev.z();
+            const qreal distSquared = hDistSquared + vDistSquared;
+
+            if (distSquared < smallDistanceSquared) {
+                // Ignore the movement if it's small.
+                resetPrevious = false;
+                pressed = wasPressed;
+            } else if (hDistSquared > longDistanceSquared) {
+                // It's not a press/release if it's a long move inside the surface
+                resetPrevious = true;
+                pressed = wasPressed;
+            } else if (vDistSquared > releaseHeightSquared) {
+                // Significant vertical move
+                resetPrevious = true;
+                pressed = distFromPrev.z() < 0;
+            } else {
+                resetPrevious = false;
+                pressed = wasPressed;
+            }
+        }
+
+        grab = (z <= 0 && !wayOutside) || (hover && inside);
     } else {
         // We don't want movement behind the surface to register as pressed, so we need at least one hover before a press
         grab = hover && inside;
+        resetPrevious = true;
     }
 
     if (grab) {
@@ -340,7 +396,11 @@ bool QOpenXRItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, To
         touchState->touchDistance = z;
         touchState->pressed = pressed;
         touchState->cursorPos = point;
-        view->setTouchpoint(d->m_containerItem, point, touchState->pointId, pressed);
+        if (resetPrevious) {
+            touchState->previous = mappedPos;
+            touchState->timestamp = now;
+        }
+        view->setTouchpoint(d->m_containerItem, point, touchState->pointId, pressed && inside); // pressed state maintained outside, but release/press events must be sent when leave/enter
         return true;
     }
 

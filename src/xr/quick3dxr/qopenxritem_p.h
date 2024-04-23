@@ -47,6 +47,8 @@ public:
         bool pressed = false;
         qreal touchDistance = 1e6;
         QPointF cursorPos;
+        QVector3D previous;
+        qint64 timestamp;
     };
 
     explicit QOpenXRItem(QQuick3DNode *parent = nullptr);
