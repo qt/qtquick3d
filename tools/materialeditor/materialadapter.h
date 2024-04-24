@@ -141,7 +141,6 @@ private:
     QString m_vertexShader;
     ShaderBuildMessage m_vertexMsg;
     ShaderBuildMessage m_fragmentMsg;
-    bool m_ready = false;
     bool m_unsavedChanges = true;
     QUrl m_materialSaveFile;
     QPointer<QQuick3DNode> m_rootNode;
