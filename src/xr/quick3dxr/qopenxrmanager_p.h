@@ -164,9 +164,7 @@ private:
 
     QQuickWindow *m_quickWindow = nullptr;
     QQuickRenderControl *m_renderControl = nullptr;
-    QQmlComponent *m_qmlContent = nullptr;
     QQuick3DViewport *m_vrViewport = nullptr;
-    QQuick3DNode *m_vrCameraContainer = nullptr;
     QOpenXROrigin *m_xrOrigin = nullptr;
     QOpenXRInputManager *m_inputManager = nullptr;
 

@@ -125,7 +125,6 @@ private:
     PFN_xrGetSpaceContainerFB xrGetSpaceContainerFB = nullptr;
     PFN_xrRequestSceneCaptureFB xrRequestSceneCaptureFB = nullptr;
 
-    bool m_queryAllAnchorsInRoom = true;
     QList<QOpenXRSpatialAnchor *> m_anchors;
     QHash<QUuid,QOpenXRSpatialAnchor *> m_anchorsByUuid;
 };
