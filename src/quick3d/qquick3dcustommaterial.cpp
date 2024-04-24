@@ -1122,6 +1122,18 @@ QT_BEGIN_NAMESPACE
         d /= zFar;
     \endcode
 
+    \li \c DEPTH_TEXTURE_ARRAY - When present, a texture array (sampler2DArray)
+    with the (non-linearized) depth buffer contents is exposed to the shader
+    under this name. Only opaque objects are included. Use \c VIEW_INDEX to
+    select the layer to use. When multiview rendering is not active, this
+    should not relied on. Therefore, the portable approach is the following: \badcode
+        #if QSHADER_VIEW_COUNT >= 2
+            vec4 depthSample = texture(DEPTH_TEXTURE_ARRAY, vec3(uv, VIEW_INDEX));
+        #else
+            vec4 depthSample = texture(DEPTH_TEXTURE, uv);
+        #endif
+    \endcode
+
     \li \c AO_TEXTURE - When present and screen space ambient occlusion is
     enabled (meaning when the AO strength and distance are both non-zero) in
     SceneEnvironment, the SSAO texture (sampler2D) is exposed to the shader
@@ -1145,6 +1157,12 @@ QT_BEGIN_NAMESPACE
             DIFFUSE += AO_FACTOR * BASE_COLOR.rgb * textureLod(IBL_TEXTURE, NORMAL, IBL_MAXMIPMAP).rgb;
         }
     \endcode
+
+    \li \c VIEW_INDEX - When used in the custom shader code, this is a
+    (non-interpolated) uint variable. When multiview rendering is not used, the
+    value is always 0. With multiview rendering, the value is the current view
+    index (e.g., gl_ViewIndex). Useful in particular in combination with \c
+    DEPTH_TEXTURE_ARRAY and similar.
 
     \endlist
 
@@ -1550,6 +1568,10 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Skinning, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesMorphing))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Morphing, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesViewIndex))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ViewIndex, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTextureArray))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTextureArray, true);
 
     // vertex only
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))

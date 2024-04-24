@@ -1116,6 +1116,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     // multiview
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
     defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, rhiCtx->mainPassViewCount());
+    defaultMaterialShaderKeyProperties.m_usesViewIndex.setValue(theGeneratedKey, rhiCtx->mainPassViewCount() >= 2);
 
     if (!defaultMaterialShaderKeyProperties.m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
         features.set(QSSGShaderFeatures::Feature::LightProbe, true);
@@ -1341,6 +1342,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     // multiview
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
     defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, rhiCtx->mainPassViewCount());
+    defaultMaterialShaderKeyProperties.m_usesViewIndex.setValue(theGeneratedKey,
+        inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ViewIndex));
 
     // Knowing whether VAR_COLOR is used becomes relevant when there is no
     // custom vertex shader, but VAR_COLOR is present in the custom fragment
@@ -1363,6 +1366,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     }
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture))
+        ioFlags.setRequiresDepthTexture(true);
+
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTextureArray))
         ioFlags.setRequiresDepthTexture(true);
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture)) {

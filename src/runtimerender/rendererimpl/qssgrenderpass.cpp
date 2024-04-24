@@ -244,7 +244,7 @@ void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     active = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
                                          renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects,
-                                         rhiCtx->mainPassSampleCount());
+                                         rhiCtx->mainPassSampleCount(), rhiCtx->mainPassViewCount());
     data.setZPrePassPrepResult(active);
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("prepare_z_prepass"));
@@ -373,9 +373,10 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     if (Q_LIKELY(rhiDepthTexture && rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiDepthTexture))) {
         sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
         sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
+        // the depth texture is always non-MSAA, but is a 2D array with multiview
         ready = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiDepthTexture->rpDesc, data,
                                     sortedOpaqueObjects, sortedTransparentObjects,
-                                    1);
+                                    1, rhiCtx->mainPassViewCount());
     }
 
     if (Q_UNLIKELY(!ready))

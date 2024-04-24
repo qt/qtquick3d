@@ -394,15 +394,24 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->depthTexture()) {
-            int binding = shaderPipeline->bindingForTexture("qt_depthTexture", int(QSSGRhiSamplerBindingHints::DepthTexture));
-            if (binding >= 0) {
-                samplerBindingsSpecified.setBit(binding);
+            const int depthTextureBinding = shaderPipeline->bindingForTexture("qt_depthTexture", int(QSSGRhiSamplerBindingHints::DepthTexture));
+            const int depthTextureArrayBinding = shaderPipeline->bindingForTexture("qt_depthTextureArray", int(QSSGRhiSamplerBindingHints::DepthTextureArray));
+            if (depthTextureBinding >= 0 || depthTextureArrayBinding >= 0) {
                 // nearest min/mag, no mipmap
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                bindings.addTexture(binding,
-                                    QRhiShaderResourceBinding::FragmentStage,
-                                    shaderPipeline->depthTexture(), sampler);
+                if (depthTextureBinding >= 0) {
+                    samplerBindingsSpecified.setBit(depthTextureBinding);
+                    bindings.addTexture(depthTextureBinding,
+                                        QRhiShaderResourceBinding::FragmentStage,
+                                        shaderPipeline->depthTexture(), sampler);
+                }
+                if (depthTextureArrayBinding >= 0) {
+                    samplerBindingsSpecified.setBit(depthTextureArrayBinding);
+                    bindings.addTexture(depthTextureArrayBinding,
+                                        QRhiShaderResourceBinding::FragmentStage,
+                                        shaderPipeline->depthTexture(), sampler);
+                }
             } // else ignore, not an error
         }
 

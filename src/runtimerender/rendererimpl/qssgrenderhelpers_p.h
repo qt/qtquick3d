@@ -63,7 +63,8 @@ bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                          QSSGLayerRenderData &inData,
                          const QSSGRenderableObjectList &sortedOpaqueObjects,
                          const QSSGRenderableObjectList &sortedTransparentObjects,
-                         int samples);
+                         int samples,
+                         int viewCount);
 
 void rhiRenderDepthPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineState &ps,
                         const QSSGRenderableObjectList &sortedOpaqueObjects,

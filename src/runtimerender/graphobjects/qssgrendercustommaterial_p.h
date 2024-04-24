@@ -104,7 +104,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         IblOrientation = 1 << 9,
         Lightmap = 1 << 10,
         Skinning = 1 << 11,
-        Morphing = 1 << 12
+        Morphing = 1 << 12,
+        ViewIndex = 1 << 13,
+        DepthTextureArray = 1 << 14
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

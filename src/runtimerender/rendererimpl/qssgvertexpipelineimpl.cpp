@@ -135,6 +135,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     m_hasMorphing = morphSize > 0;
     m_viewCount = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
         ? 1 : defaultMaterialShaderKeyProperties.m_viewCount.getValue(inKey);
+    const bool usesViewIndex = defaultMaterialShaderKeyProperties.m_usesViewIndex.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
     if (usesInstancing) {
@@ -279,9 +280,15 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_cameraProperties", "vec2");
     }
 
+    // With multiview, qt_viewIndex (aka VIEW_INDEX) is always present.
+    // Otherwise, we still make VIEW_INDEX functional (always 0) in custom
+    // materials, if the keyword is used.
     if (m_viewCount >= 2) {
         addFlatParameter("qt_viewIndex", "uint");
         vertexShader.append("    qt_viewIndex = gl_ViewIndex;");
+    } else if (usesViewIndex) {
+        addFlatParameter("qt_viewIndex", "uint");
+        vertexShader.append("    qt_viewIndex = 0;");
     }
 
     if (meshHasNormals) {

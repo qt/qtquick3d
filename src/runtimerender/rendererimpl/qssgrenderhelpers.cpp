@@ -500,12 +500,16 @@ static inline void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
                                            QSSGRhiShaderResourceBindingList &bindings)
 {
     if (shaderPipeline->depthTexture()) {
-        int binding = shaderPipeline->bindingForTexture("qt_depthTexture", int(QSSGRhiSamplerBindingHints::DepthTexture));
-        if (binding >= 0) {
+        const int depthTextureBinding = shaderPipeline->bindingForTexture("qt_depthTexture", int(QSSGRhiSamplerBindingHints::DepthTexture));
+        const int depthTextureArrayBinding = shaderPipeline->bindingForTexture("qt_depthTextureArray", int(QSSGRhiSamplerBindingHints::DepthTextureArray));
+        if (depthTextureBinding >= 0 || depthTextureArrayBinding >= 0) {
             // nearest min/mag, no mipmap
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-            bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, shaderPipeline->depthTexture(), sampler);
+            if (depthTextureBinding >= 0)
+                bindings.addTexture(depthTextureBinding, QRhiShaderResourceBinding::FragmentStage, shaderPipeline->depthTexture(), sampler);
+            if (depthTextureArrayBinding >= 0)
+                bindings.addTexture(depthTextureBinding, QRhiShaderResourceBinding::FragmentStage, shaderPipeline->depthTexture(), sampler);
         } // else ignore, not an error
     }
 
@@ -1868,7 +1872,8 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                         QSSGLayerRenderData &inData,
                                         const QSSGRenderableObjectList &sortedOpaqueObjects,
                                         const QSSGRenderableObjectList &sortedTransparentObjects,
-                                        int samples)
+                                        int samples,
+                                        int viewCount)
 {
     static const auto rhiPrepareDepthPassForObject = [](QSSGRhiContext *rhiCtx,
                                                         QSSGPassKey passKey,
@@ -1973,6 +1978,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     // whatever we need.
 
     ps.samples = samples;
+    ps.viewCount = viewCount;
     ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled };
     ps.targetBlend.colorWrite = {};
 

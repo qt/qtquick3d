@@ -262,6 +262,7 @@ enum class QSSGRhiSamplerBindingHints
     DepthTexture,
     AoTexture,
     LightmapTexture,
+    DepthTextureArray,
 
     BindingMapSize
 };

@@ -601,6 +601,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyUnsigned<4> m_debugMode;
     QSSGShaderKeyBoolean m_fogEnabled;
     QSSGShaderKeyUnsigned<3> m_viewCount;
+    QSSGShaderKeyBoolean m_usesViewIndex;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -647,6 +648,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_debugMode("debugMode")
         , m_fogEnabled("fogEnabled")
         , m_viewCount("viewCount")
+        , m_usesViewIndex("usesViewIndex")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -816,6 +818,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_debugMode);
         inVisitor.visit(m_fogEnabled);
         inVisitor.visit(m_viewCount);
+        inVisitor.visit(m_usesViewIndex);
     }
 
     struct OffsetVisitor

@@ -624,6 +624,7 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat
         };
         addTextureToShaderPipeline("qt_depthTexture", m_depthTexture, depthSamplerDesc);
+        addTextureToShaderPipeline("qt_depthTextureArray", m_depthTexture, depthSamplerDesc);
     }
 }
 

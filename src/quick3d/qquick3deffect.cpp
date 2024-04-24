@@ -812,8 +812,11 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                                                                                       uniforms, builtinVertexOutputs);
                     }
 
-                    if (result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+                    if (result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture)
+                        || result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTextureArray))
+                    {
                         effectNode->requiresDepthTexture = true;
+                    }
 
                     code = result.first + shaderCodeMeta;
 

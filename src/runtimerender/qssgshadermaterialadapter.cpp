@@ -726,6 +726,7 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "SCREEN_TEXTURE", "qt_screenTexture", false },
     { "SCREEN_MIP_TEXTURE", "qt_screenTexture", false }, // same resource as SCREEN_TEXTURE under the hood
     { "DEPTH_TEXTURE", "qt_depthTexture", false },
+    { "DEPTH_TEXTURE_ARRAY", "qt_depthTextureArray", false },
     { "AO_TEXTURE", "qt_aoTexture", false },
     { "IBL_TEXTURE", "qt_lightProbe", false },
     { "LIGHTMAP", "qt_lightmap", false },
@@ -762,7 +763,10 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "MORPH_WEIGHTS", "qt_morphWeights", false },
 
     // custom variables
-    { "SHARED_VARS", "struct QT_SHARED_VARS", false }
+    { "SHARED_VARS", "struct QT_SHARED_VARS", false },
+
+    // multiview
+    { "VIEW_INDEX", "qt_viewIndex", false }
 };
 
 // Functions that, if present, get an argument list injected.
@@ -982,6 +986,10 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesIblOrientation;
                 else if (trimmedId == QByteArrayLiteral("LIGHTMAP"))
                     md.flags |= QSSGCustomShaderMetaData::UsesLightmap;
+                else if (trimmedId == QByteArrayLiteral("VIEW_INDEX"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesViewIndex;
+                else if (trimmedId == QByteArrayLiteral("DEPTH_TEXTURE_ARRAY"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesDepthTextureArray;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
@@ -1078,8 +1086,17 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     StringPairList allUniforms = baseUniforms;
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture) || md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))
         allUniforms.append({ "sampler2D", "qt_screenTexture" });
-    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+
+    // We either have qt_depthTexture or qt_depthTextureArray (or none of them),
+    // but never both. We do not generally support binding a 2D texture to a
+    // sampler2DArray binding point and vice versa. Therefore it is up to the
+    // shader snippet to ifdef with QSHADER_VIEW_COUNT if it wants to support
+    // both multiview and non-multiview rendering.
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture) && !multiViewCompatible)
         allUniforms.append({ "sampler2D", "qt_depthTexture" });
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTextureArray) && multiViewCompatible)
+        allUniforms.append({ "sampler2DArray", "qt_depthTextureArray" });
+
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
         allUniforms.append({ "sampler2D", "qt_aoTexture" });
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesLightmap))
