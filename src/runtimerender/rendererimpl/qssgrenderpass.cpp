@@ -813,6 +813,7 @@ void SkyboxPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         const auto &rhiCtx = renderer.contextInterface()->rhiContext();
         QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
         QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+        QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
         layer = &data.layer;
         QSSG_ASSERT(layer, return);
 
@@ -868,6 +869,7 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
@@ -1007,6 +1009,7 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
@@ -1049,7 +1052,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-    QSSGRenderCamera *camera = data.renderedCameras[0];
+    QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
     debugObjectShader = shaderCache->getBuiltInRhiShaders().getRhiDebugObjectShader();
@@ -1058,18 +1061,21 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     // debug objects
     const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
     if (debugDraw && debugDraw->hasContent()) {
-        QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+        QRhi *rhi = rhiCtx->rhi();
+        QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
         debugDraw->prepareGeometry(rhiCtx.get(), rub);
         QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 });
         if (!dcd.ubuf) {
-            dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64);
+            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 * data.renderedCameras.count());
             dcd.ubuf->create();
         }
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-        QMatrix4x4 viewProjection(Qt::Uninitialized);
-        camera->calculateViewProjectionMatrix(viewProjection);
-        viewProjection = rhiCtx->rhi()->clipSpaceCorrMatrix() * viewProjection;
-        memcpy(ubufData, viewProjection.constData(), 64);
+        for (qsizetype viewIdx = 0; viewIdx < data.renderedCameras.count(); ++viewIdx) {
+            QMatrix4x4 viewProjection(Qt::Uninitialized);
+            data.renderedCameras[viewIdx]->calculateViewProjectionMatrix(viewProjection);
+            viewProjection = rhi->clipSpaceCorrMatrix() * viewProjection;
+            memcpy(ubufData, viewProjection.constData() + viewIdx * 64, 64);
+        }
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
         QSSGRhiShaderResourceBindingList bindings;
