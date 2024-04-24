@@ -1449,7 +1449,6 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
                 const auto &shaderCache = renderer.contextInterface()->shaderCache();
                 const bool isSkyBox = inData.layer.background == QSSGRenderLayer::Background::SkyBox;
-                // ### multiview
                 const auto &shaderPipeline = isSkyBox ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8, 1)
                                                       : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(1);
                 Q_ASSERT(shaderPipeline);
@@ -1856,7 +1855,6 @@ void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox for reflection cube map"));
 
-    // ### multiview
     QSSGRenderCameraList cameras({ &inCamera });
     rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, cameras, renderer, entry, cubeFace);
 
