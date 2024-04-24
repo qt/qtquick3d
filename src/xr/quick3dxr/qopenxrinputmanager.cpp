@@ -708,6 +708,9 @@ void QOpenXRInputManager::updateHandtracking(XrTime predictedDisplayTime, XrSpac
         XrHandJointsLocateInfoEXT locateInfo[2] = {{}, {}};
 
         for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
+            if (handTracker[hand] == XR_NULL_HANDLE)
+                continue;
+
             aimState[hand].type = XR_TYPE_HAND_TRACKING_AIM_STATE_FB;
 
             velocities[hand].type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
