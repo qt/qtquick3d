@@ -73,6 +73,8 @@ QVector4D Q_QUICK3DUTILS_EXPORT transform(const QMatrix4x4 &m, const QVector4D &
 QVector3D Q_QUICK3DUTILS_EXPORT getPosition(const QMatrix4x4 &m);
 QVector3D Q_QUICK3DUTILS_EXPORT getScale(const QMatrix4x4 &m);
 
+bool Q_QUICK3DUTILS_EXPORT decompose(const QMatrix4x4 &m, QVector3D &position, QVector3D &scale, QQuaternion &rotation);
+
 inline void flip(QMatrix4x4 &matrix)
 {
     // Flip between left-handed and right-handed orientation

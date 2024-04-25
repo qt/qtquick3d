@@ -173,5 +173,18 @@ QColor QSSGUtils::color::sRGBToLinearColor(const QColor &color)
     return QColor::fromRgbF(c.x(), c.y(), c.z(), c.w());
 }
 
-QT_END_NAMESPACE
+bool QSSGUtils::mat44::decompose(const QMatrix4x4 &transform, QVector3D &position, QVector3D &scale, QQuaternion &rotation)
+{
+    QMatrix4x4 m { transform };
+    QSSGUtils::mat44::normalize(m);
 
+    rotation = QQuaternion::fromRotationMatrix(QSSGUtils::mat44::getUpper3x3(m)).normalized();
+    scale = QSSGUtils::mat44::getScale(transform);
+    position = QSSGUtils::mat44::getPosition(transform);
+
+    const auto det = m.determinant();
+
+    return qFuzzyCompare(det, 1.0) && qFuzzyCompare(det, -1.0);
+}
+
+QT_END_NAMESPACE

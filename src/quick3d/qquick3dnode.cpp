@@ -37,6 +37,32 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
     q->update();
 }
 
+void QQuick3DNodePrivate::setLocalTransform(const QMatrix4x4 &transform)
+{
+    Q_Q(QQuick3DNode);
+
+    // decompose the 4x4 affine transform into scale, rotation and translation
+    QVector3D scale;
+    QQuaternion rotation;
+    QVector3D position;
+
+    if (QSSGUtils::mat44::decompose(transform, position, scale, rotation)) {
+        q->setScale(scale);
+        q->setRotation(rotation);
+        q->setPosition(position);
+    }
+
+    // We set the local transform as-is regardless if it could be decomposed or not.
+    // We'd likely want some way to notify about this, but for now the transform
+    // can potentially change silently.
+    m_localTransform = transform;
+    // Note: If any of the transform properties are set before the update
+    // the explicit local transform should be ignored by setting this value to false.
+    m_hasExplicitLocalTransform = true;
+
+    q->update();
+}
+
 /*!
     \qmltype Node
     \inherits Object3D
@@ -600,6 +626,7 @@ void QQuick3DNode::setRotation(const QQuaternion &rotation)
     if (d->m_rotation == rotation)
         return;
 
+    d->m_hasExplicitLocalTransform = false;
     d->m_rotation = rotation;
     d->markSceneTransformDirty();
     emit rotationChanged();
@@ -629,6 +656,8 @@ void QQuick3DNode::setPosition(const QVector3D &position)
     if (!zUnchanged)
         emit zChanged();
 
+    d->m_hasExplicitLocalTransform = false;
+
     update();
 }
 
@@ -638,6 +667,7 @@ void QQuick3DNode::setScale(const QVector3D &scale)
     if (d->m_scale == scale)
         return;
 
+    d->m_hasExplicitLocalTransform = false;
     d->m_scale = scale;
     d->markSceneTransformDirty();
     emit scaleChanged();
@@ -650,6 +680,7 @@ void QQuick3DNode::setPivot(const QVector3D &pivot)
     if (d->m_pivot == pivot)
         return;
 
+    d->m_hasExplicitLocalTransform = false;
     d->m_pivot = pivot;
     d->markSceneTransformDirty();
     emit pivotChanged();
@@ -695,6 +726,7 @@ void QQuick3DNode::setEulerRotation(const QVector3D &eulerRotation) {
     if (d->m_rotation == eulerRotation)
         return;
 
+    d->m_hasExplicitLocalTransform = false;
     d->m_rotation = eulerRotation;
 
     emit rotationChanged();
@@ -749,6 +781,7 @@ void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace s
     if (d->m_rotation == newRotationQuaternion)
         return;
 
+    d->m_hasExplicitLocalTransform = false;
     d->m_rotation = newRotationQuaternion;
     d->markSceneTransformDirty();
 
@@ -779,18 +812,24 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         spacialNode->markDirty(QSSGRenderNode::DirtyFlag::OpacityDirty);
     }
 
-    if (!transformIsDirty && !qFuzzyCompare(d->m_position, QSSGUtils::mat44::getPosition(spacialNode->localTransform)))
-        transformIsDirty = true;
-
-    if (!transformIsDirty && !qFuzzyCompare(d->m_scale, QSSGUtils::mat44::getScale(spacialNode->localTransform)))
-        transformIsDirty = true;
-
-    if (!transformIsDirty && !qFuzzyCompare(d->m_rotation, QQuaternion::fromRotationMatrix(QSSGUtils::mat44::getUpper3x3(spacialNode->localTransform))))
-        transformIsDirty = true;
-
-    if (transformIsDirty) {
-        spacialNode->localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);;
+    if (d->m_hasExplicitLocalTransform) {
+        spacialNode->localTransform = d->m_localTransform;
         spacialNode->markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
+        d->m_hasExplicitLocalTransform = false;
+    } else {
+        if (!transformIsDirty && !qFuzzyCompare(d->m_position, QSSGUtils::mat44::getPosition(spacialNode->localTransform)))
+            transformIsDirty = true;
+
+        if (!transformIsDirty && !qFuzzyCompare(d->m_scale, QSSGUtils::mat44::getScale(spacialNode->localTransform)))
+            transformIsDirty = true;
+
+        if (!transformIsDirty && !qFuzzyCompare(d->m_rotation, QQuaternion::fromRotationMatrix(QSSGUtils::mat44::getUpper3x3(spacialNode->localTransform))))
+            transformIsDirty = true;
+
+        if (transformIsDirty) {
+            spacialNode->localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);;
+            spacialNode->markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
+        }
     }
 
     spacialNode->staticFlags = d->m_staticFlags;
