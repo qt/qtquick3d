@@ -7,11 +7,11 @@
     "SecurityCritical": true,
 
     "Homepage": "http://www.assimp.org/",
-    "Version": "5.3.1",
-    "DownloadLocation": "https://github.com/assimp/assimp/releases/tag/v5.3.1",
+    "Version": "5.4.0",
+    "DownloadLocation": "https://github.com/assimp/assimp/releases/tag/v5.4.0",
 
     "License": "BSD 3-clause \"New\" or \"Revised\" Licensee",
     "LicenseId": "BSD-3-Clause",
     "LicenseFile": "LICENSE",
-    "Copyright": "Copyright (c) 2006-2022, assimp team"
+    "Copyright": "Copyright (c) 2006-2024, assimp team"
 }
