@@ -6,7 +6,7 @@
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type": "sampler2D", "name": "qt_screenTexture" },
+        { "type": "sampler2D", "name": "qt_screenTexture", "multiview_dependent": true },
         { "type": "mat4", "name": "qt_modelMatrix" },
         { "type": "mat4", "name": "qt_viewProjectionMatrix", "multiview_dependent": true }
     ]
@@ -51,9 +51,14 @@ vec2 qt_correctFrambufferUV(in vec2 uv)
 
 vec3 qt_getTransmissionSample(in vec2 fragCoord, in float roughness, in float ior)
 {
-    const float framebufferLod = log2(float(textureSize(qt_screenTexture, 0).x)) * qt_applyIorToRoughness(roughness, ior);
     const vec2 fbCoord = qt_correctFrambufferUV(fragCoord);
+#if QSHADER_VIEW_COUNT >= 2
+    const float framebufferLod = log2(float(textureSize(qt_screenTextureArray, 0).x)) * qt_applyIorToRoughness(roughness, ior);
+    vec3 transmittedLight = textureLod(qt_screenTextureArray, vec3(fbCoord, qt_viewIndex), framebufferLod).rgb;
+#else
+    const float framebufferLod = log2(float(textureSize(qt_screenTexture, 0).x)) * qt_applyIorToRoughness(roughness, ior);
     vec3 transmittedLight = textureLod(qt_screenTexture, fbCoord, framebufferLod).rgb;
+#endif
     return transmittedLight;
 }
 

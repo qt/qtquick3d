@@ -638,16 +638,27 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             // custom material may rely on it, and an object with that material
             // can end up in the shadow map's object list. So bind a dummy
             // texture then due to the lack of other options.
-            int binding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
-            if (binding >= 0) {
+            const int screenTextureBinding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
+            const int screenTextureArrayBinding = shaderPipeline->bindingForTexture("qt_screenTextureArray", int(QSSGRhiSamplerBindingHints::ScreenTextureArray));
+            if (screenTextureBinding >= 0 || screenTextureArrayBinding >= 0) {
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                          QRhiSampler::Repeat, QRhiSampler::Repeat, QRhiSampler::Repeat });
-                QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
-                QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
-                rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
-                bindings.addTexture(binding,
-                                    QRhiShaderResourceBinding::FragmentStage,
-                                    dummyTexture, sampler);
+                if (screenTextureBinding >= 0) {
+                    QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                    QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+                    rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                    bindings.addTexture(screenTextureBinding,
+                                        QRhiShaderResourceBinding::FragmentStage,
+                                        dummyTexture, sampler);
+                }
+                if (screenTextureArrayBinding >= 0) {
+                    QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                    QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates, QSize(64, 64), Qt::black, rhiCtx->mainPassViewCount());
+                    rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                    bindings.addTexture(screenTextureArrayBinding,
+                                        QRhiShaderResourceBinding::FragmentStage,
+                                        dummyTexture, sampler);
+                }
             }
 
             QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
@@ -895,8 +906,9 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
                 // Screen Texture
                 if (shaderPipeline->screenTexture()) {
-                    int binding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
-                    if (binding >= 0) {
+                    const int screenTextureBinding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
+                    const int screenTextureArrayBinding = shaderPipeline->bindingForTexture("qt_screenTextureArray", int(QSSGRhiSamplerBindingHints::ScreenTextureArray));
+                    if (screenTextureBinding >= 0 || screenTextureArrayBinding >= 0) {
                         // linear min/mag, mipmap filtering depends on the
                         // texture, with SCREEN_TEXTURE there are no mipmaps, but
                         // once SCREEN_MIP_TEXTURE is seen the texture (the same
@@ -905,9 +917,16 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                 ? QRhiSampler::Linear : QRhiSampler::None;
                         QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, mipFilter,
                                                                  QRhiSampler::Repeat, QRhiSampler::Repeat, QRhiSampler::Repeat });
-                        bindings.addTexture(binding,
-                                            QRhiShaderResourceBinding::FragmentStage,
-                                            shaderPipeline->screenTexture(), sampler);
+                        if (screenTextureBinding >= 0) {
+                            bindings.addTexture(screenTextureBinding,
+                                                QRhiShaderResourceBinding::FragmentStage,
+                                                shaderPipeline->screenTexture(), sampler);
+                        }
+                        if (screenTextureArrayBinding >= 0) {
+                            bindings.addTexture(screenTextureArrayBinding,
+                                                QRhiShaderResourceBinding::FragmentStage,
+                                                shaderPipeline->screenTexture(), sampler);
+                        }
                     } // else ignore, not an error
                 }
 
@@ -1654,7 +1673,9 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
         }
         renderableTex->resetRenderTarget();
         QRhiTextureRenderTargetDescription desc;
-        desc.setColorAttachments({ QRhiColorAttachment(renderableTex->texture) });
+        QRhiColorAttachment colorAttachment(renderableTex->texture);
+        colorAttachment.setMultiViewCount(rhiCtx->mainPassViewCount());
+        desc.setColorAttachments({ colorAttachment });
         if (renderableTex->depthStencil)
             desc.setDepthStencilBuffer(renderableTex->depthStencil);
         else if (renderableTex->depthTexture)

@@ -431,7 +431,12 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
 
     for (const QSSGRenderShaderMetadata::Uniform &u : std::as_const(meta.uniforms)) {
         if (u.type.startsWith(QByteArrayLiteral("sampler"))) {
-            mergeContext->registerSampler(u.type, u.name, u.condition, u.conditionName);
+            if (u.multiview && mergeContext->viewCount >= 2) {
+                // 'sampler2D qt_screenTexture' becomes 'sampler2DArray qt_screenTextureArray'
+                mergeContext->registerSampler(u.type + QByteArrayLiteral("Array"), u.name + QByteArrayLiteral("Array"), u.condition, u.conditionName);
+            } else {
+                mergeContext->registerSampler(u.type, u.name, u.condition, u.conditionName);
+            }
         } else {
             if (u.multiview && mergeContext->viewCount >= 2) {
                 const QByteArray name = u.name + "[" + QByteArray::number(mergeContext->viewCount) + "]";

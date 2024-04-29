@@ -263,6 +263,7 @@ enum class QSSGRhiSamplerBindingHints
     AoTexture,
     LightmapTexture,
     DepthTextureArray,
+    ScreenTextureArray,
 
     BindingMapSize
 };
@@ -669,18 +670,19 @@ struct QSSGRhiDummyTextureKey
     QRhiTexture::Flags flags;
     QSize size;
     QColor color;
+    int arraySize;
 };
 
 inline size_t qHash(const QSSGRhiDummyTextureKey &k, size_t seed) Q_DECL_NOTHROW
 {
     return qHash(k.flags, seed)
             ^ qHash(k.size.width() ^ k.size.height() ^ k.color.red() ^ k.color.green()
-                        ^ k.color.blue() ^ k.color.alpha());
+                        ^ k.color.blue() ^ k.color.alpha() ^ k.arraySize);
 }
 
 inline bool operator==(const QSSGRhiDummyTextureKey &a, const QSSGRhiDummyTextureKey &b) Q_DECL_NOTHROW
 {
-    return a.flags == b.flags && a.size == b.size && a.color == b.color;
+    return a.flags == b.flags && a.size == b.size && a.color == b.color && a.arraySize == b.arraySize;
 }
 
 inline bool operator!=(const QSSGRhiDummyTextureKey &a, const QSSGRhiDummyTextureKey &b) Q_DECL_NOTHROW

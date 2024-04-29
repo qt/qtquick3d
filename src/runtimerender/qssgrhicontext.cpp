@@ -1373,26 +1373,32 @@ void QSSGRhiContextPrivate::cleanupDrawCallData(const QSSGRenderModel *model)
     object is not found. The necessary upload operations are then enqueued on
     this given update batch.
 
+    When \a arraySize is 2 or more, a 2D texture array is returned.
+
     The ownership of the returned texture stays with Qt Quick 3D.
  */
 QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
-                                          const QSize &size, const QColor &fillColor)
+                                          const QSize &size, const QColor &fillColor, int arraySize)
 {
     Q_D(QSSGRhiContext);
-    auto it = d->m_dummyTextures.constFind({flags, size, fillColor});
+    auto it = d->m_dummyTextures.constFind({flags, size, fillColor, arraySize});
     if (it != d->m_dummyTextures.constEnd())
         return *it;
 
-    QRhiTexture *t = d->m_rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
+    QRhiTexture *t = arraySize < 2
+        ? d->m_rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags)
+        : d->m_rhi->newTextureArray(QRhiTexture::RGBA8, arraySize, size, 1, flags);
     if (t->create()) {
         QImage image(t->pixelSize(), QImage::Format_RGBA8888);
         image.fill(fillColor);
         rub->uploadTexture(t, image);
+        for (int layer = 1; layer < arraySize; ++layer)
+            rub->uploadTexture(t, QRhiTextureUploadDescription(QRhiTextureUploadEntry(layer, 0, QRhiTextureSubresourceUploadDescription(image))));
     } else {
         qWarning("Failed to build dummy texture");
     }
 
-    d->m_dummyTextures.insert({flags, size, fillColor}, t);
+    d->m_dummyTextures.insert({flags, size, fillColor, arraySize}, t);
     return t;
 }
 

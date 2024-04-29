@@ -106,7 +106,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         Skinning = 1 << 11,
         Morphing = 1 << 12,
         ViewIndex = 1 << 13,
-        DepthTextureArray = 1 << 14
+        DepthTextureArray = 1 << 14,
+        ScreenTextureArray = 1 << 15,
+        ScreenMipTextureArray = 1 << 16
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

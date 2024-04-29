@@ -113,7 +113,8 @@ public:
     QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
     void checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription);
     QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
-                              const QSize &size = QSize(64, 64), const QColor &fillColor = Qt::black);
+                              const QSize &size = QSize(64, 64), const QColor &fillColor = Qt::black,
+                              int arraySize = 0);
 
     QRhiCommandBuffer::BeginPassFlags commonPassFlags() const;
 

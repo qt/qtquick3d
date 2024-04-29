@@ -1107,6 +1107,22 @@ QT_BEGIN_NAMESPACE
     relying on the texture mip levels (e.g. using \c textureLod in the shader)
     is implemented by the custom material.
 
+    \li \c SCREEN_TEXTURE_ARRAY - When present, a texture array (sampler2DArray)
+    with the color buffer from a rendering pass containing the contents of the
+    scene excluding any transparent materials or any materials also using the
+    screen texture is exposed to the shader under this name. Use \c VIEW_INDEX
+    to select the layer to use. When multiview rendering is not active, this
+    should not relied on. Therefore, the portable approach is the following: \badcode
+        #if QSHADER_VIEW_COUNT >= 2
+            vec4 c = texture(SCREEN_TEXTURE_ARRAY, vec3(uv, VIEW_INDEX));
+        #else
+            vec4 c = texture(SCREEN_TEXTURE, uv);
+        #endif
+    \endcode
+
+    \li \c SCREEN_MIP_TEXTURE_ARRAY - Identical to \c SCREEN_TEXTURE_ARRAY,
+    except that the texture has mipmaps generated.
+
     \li \c DEPTH_TEXTURE - When present, a texture (sampler2D) with the
     (non-linearized) depth buffer contents is exposed to the shader under this
     name. Only opaque objects are included.
@@ -1572,6 +1588,10 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ViewIndex, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTextureArray))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTextureArray, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTextureArray))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTextureArray, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTextureArray))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTextureArray, true);
 
     // vertex only
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))
