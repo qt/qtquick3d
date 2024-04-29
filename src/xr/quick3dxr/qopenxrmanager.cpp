@@ -1735,10 +1735,10 @@ bool QOpenXRManager::setupQuickScene()
 
 void QOpenXRManager::updateCameraHelper(QOpenXREyeCamera *camera, const XrCompositionLayerProjectionView &layerView)
 {
-    camera->setAngleLeft(layerView.fov.angleLeft);
-    camera->setAngleRight(layerView.fov.angleRight);
-    camera->setAngleUp(layerView.fov.angleUp);
-    camera->setAngleDown(layerView.fov.angleDown);
+    camera->setLeftTangent(qTan(layerView.fov.angleLeft));
+    camera->setRightTangent(qTan(layerView.fov.angleRight));
+    camera->setUpTangent(qTan(layerView.fov.angleUp));
+    camera->setDownTangent(qTan(layerView.fov.angleDown));
 
     camera->setPosition(QVector3D(layerView.pose.position.x,
                                   layerView.pose.position.y,

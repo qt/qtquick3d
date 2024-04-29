@@ -26,38 +26,41 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DXR_EXPORT QOpenXREyeCamera : public QQuick3DCamera
 {
     Q_OBJECT
-    Q_PROPERTY(float angleLeft READ angleLeft WRITE setAngleLeft NOTIFY angleLeftChanged)
-    Q_PROPERTY(float angleRight READ angleRight WRITE setAngleRight NOTIFY angleRightChanged)
-    Q_PROPERTY(float angleUp READ angleUp WRITE setAngleUp NOTIFY angleUpChanged)
-    Q_PROPERTY(float angleDown READ angleDown WRITE setAngleDown NOTIFY angleDownChanged)
+    Q_PROPERTY(float leftTangent READ leftTangent WRITE setLeftTangent NOTIFY leftTangentChanged)
+    Q_PROPERTY(float rightTangent READ rightTangent WRITE setRightTangent NOTIFY rightTangentChanged)
+    Q_PROPERTY(float upTangent READ upTangent WRITE setUpTangent NOTIFY upTangentChanged)
+    Q_PROPERTY(float downTangent READ downTangent WRITE setDownTangent NOTIFY downTangentChanged)
     Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
 
 public:
     QOpenXREyeCamera(QQuick3DNode *parent = nullptr);
 
-    float angleLeft() const;
-    float angleRight() const;
-    float angleUp() const;
-    float angleDown() const;
+    float leftTangent() const;
+    float rightTangent() const;
+    float upTangent() const;
+    float downTangent() const;
     float clipNear() const;
     float clipFar() const;
 
 public Q_SLOTS:
-    void setAngleLeft(float angleLeft);
-    void setAngleRight(float angleRight);
-    void setAngleUp(float angleUp);
-    void setAngleDown(float angleDown);
+    void setLeftTangent(float leftTangent);
+    void setRightTangent(float rightTangent);
+    void setUpTangent(float upTangent);
+    void setDownTangent(float downTangent);
     void setClipNear(float clipNear);
     void setClipFar(float clipFar);
 
 Q_SIGNALS:
-    void angleLeftChanged(float angleLeft);
-    void angleRightChanged(float angleRight);
-    void angleUpChanged(float angleUp);
-    void angleDownChanged(float angleDown);
+    void leftTangentChanged(float leftTangent);
+    void rightTangentChanged(float rightTangent);
+    void upTangentChanged(float upTangent);
+    void downTangentChanged(float downTangent);
     void clipNearChanged(float clipNear);
     void clipFarChanged(float clipFar);
+
+public:
+    QMatrix4x4 m_projection;
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -65,13 +68,12 @@ protected:
 private:
     void markProjectionDirty();
     void maybeUpdateProjection();
-    float m_angleLeft = -1.0f;
-    float m_angleRight = 1.0f;
-    float m_angleUp = 1.0f;
-    float m_angleDown = -1.0f;
+    float m_leftTangent = -0.017455064928218f;  // tan(-1)
+    float m_rightTangent = 0.017455064928218f;  // tan(1)
+    float m_upTangent = 0.017455064928218f;     // tan(1)
+    float m_downTangent = -0.017455064928218f;  // tan(-1)
     float m_clipNear = 1.0f;
     float m_clipFar = 10000.0f;
-    QMatrix4x4 m_projection;
     bool m_projectionDirty = true;
 };
 

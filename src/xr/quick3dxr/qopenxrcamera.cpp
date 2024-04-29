@@ -3,11 +3,11 @@
 
 #include "qopenxrcamera_p.h"
 #include "qopenxrorigin_p.h"
-
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3D/private/qquick3dutils_p.h>
-
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
+
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -17,24 +17,24 @@ QOpenXREyeCamera::QOpenXREyeCamera(QQuick3DNode *parent)
 
 }
 
-float QOpenXREyeCamera::angleLeft() const
+float QOpenXREyeCamera::leftTangent() const
 {
-    return m_angleLeft;
+    return m_leftTangent;
 }
 
-float QOpenXREyeCamera::angleRight() const
+float QOpenXREyeCamera::rightTangent() const
 {
-    return m_angleRight;
+    return m_rightTangent;
 }
 
-float QOpenXREyeCamera::angleUp() const
+float QOpenXREyeCamera::upTangent() const
 {
-    return m_angleUp;
+    return m_upTangent;
 }
 
-float QOpenXREyeCamera::angleDown() const
+float QOpenXREyeCamera::downTangent() const
 {
-    return m_angleDown;
+    return m_downTangent;
 }
 
 float QOpenXREyeCamera::clipNear() const
@@ -47,43 +47,43 @@ float QOpenXREyeCamera::clipFar() const
     return m_clipFar;
 }
 
-void QOpenXREyeCamera::setAngleLeft(float angleLeft)
+void QOpenXREyeCamera::setLeftTangent(float leftTangent)
 {
-    if (qFuzzyCompare(m_angleLeft, angleLeft))
+    if (qFuzzyCompare(m_leftTangent, leftTangent))
         return;
 
-    m_angleLeft = angleLeft;
-    emit angleLeftChanged(m_angleLeft);
+    m_leftTangent = leftTangent;
+    emit leftTangentChanged(m_leftTangent);
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setAngleRight(float angleRight)
+void QOpenXREyeCamera::setRightTangent(float rightTangent)
 {
-    if (qFuzzyCompare(m_angleRight, angleRight))
+    if (qFuzzyCompare(m_rightTangent, rightTangent))
         return;
 
-    m_angleRight = angleRight;
-    emit angleRightChanged(m_angleRight);
+    m_rightTangent = rightTangent;
+    emit rightTangentChanged(m_rightTangent);
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setAngleUp(float angleUp)
+void QOpenXREyeCamera::setUpTangent(float upTangent)
 {
-    if (qFuzzyCompare(m_angleUp, angleUp))
+    if (qFuzzyCompare(m_upTangent, upTangent))
         return;
 
-    m_angleUp = angleUp;
-    emit angleUpChanged(m_angleUp);
+    m_upTangent = upTangent;
+    emit upTangentChanged(m_upTangent);
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setAngleDown(float angleDown)
+void QOpenXREyeCamera::setDownTangent(float downTangent)
 {
-    if (qFuzzyCompare(m_angleDown, angleDown))
+    if (qFuzzyCompare(m_downTangent, downTangent))
         return;
 
-    m_angleDown = angleDown;
-    emit angleDownChanged(m_angleDown);
+    m_downTangent = downTangent;
+    emit downTangentChanged(m_downTangent);
     markProjectionDirty();
 }
 
@@ -136,37 +136,54 @@ void QOpenXREyeCamera::maybeUpdateProjection()
     if (!m_projectionDirty)
         return;
 
-    const float tanLeft = qTan(m_angleLeft);
-    const float tanRight = qTan(m_angleRight);
-
-    const float tanDown = qTan(m_angleDown);
-    const float tanUp = qTan(m_angleUp);
-
-    const float tanAngleWidth = tanRight - tanLeft;
-    const float tanAngleHeight = tanUp - tanDown;
+    const float right = m_rightTangent * m_clipNear;
+    const float top = m_upTangent * m_clipNear;
+#if defined(Q_OS_VISIONOS)
+    // cp_view_get_tangents always returns positive values
+    // so we need to negate the left and down tangents
+    const float left = -m_leftTangent * m_clipNear;
+    const float bottom = -m_downTangent * m_clipNear;
+#else
+    const float left = m_leftTangent * m_clipNear;
+    const float bottom = m_downTangent * m_clipNear;
+#endif
 
     float *m = m_projection.data();
 
-
-    m[0] = 2 / tanAngleWidth;
+    m[0] = 2 * m_clipNear / (right - left);
     m[4] = 0;
-    m[8] = (tanRight + tanLeft) / tanAngleWidth;
+    m[8] = (right + left) / (right - left);
     m[12] = 0;
 
     m[1] = 0;
-    m[5] = 2 / tanAngleHeight;
-    m[9] = (tanUp + tanDown) / tanAngleHeight;
+    m[5] = 2 * m_clipNear / (top - bottom);
+    m[9] = (top + bottom) / (top - bottom);
     m[13] = 0;
 
     m[2] = 0;
     m[6] = 0;
-    m[10] = -(m_clipFar + m_clipNear) / (m_clipFar - m_clipNear);
-    m[14] = -2 *(m_clipFar * m_clipNear) / (m_clipFar - m_clipNear);
+    m[10] = m_clipFar / (m_clipNear - m_clipFar);
+    m[14] = m_clipFar * m_clipNear / (m_clipNear - m_clipFar);
+
 
     m[3] = 0;
     m[7] = 0;
     m[11] = -1;
     m[15] = 0;
+
+    const bool isReverseZ = false; // placeholder
+    if (isReverseZ) {
+        if (std::isinf(m_clipFar)) {
+            m[10] = 0;
+            m[14] = m_clipNear;
+        } else {
+            m[10] = -m[10] - 1;
+            m[14] = -m[14];
+        }
+    } else if (std::isinf(m_clipFar)) {
+        m[10] = -1;
+        m[14] = -m_clipNear;
+    }
 }
 
 QOpenXRCamera::QOpenXRCamera(QQuick3DNode *parent)
