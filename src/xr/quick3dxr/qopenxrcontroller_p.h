@@ -59,7 +59,9 @@ Q_SIGNALS:
     void actionMapperChanged();
 
 private:
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     QOpenXRInputManager *m_inputManager = nullptr;
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
     QOpenXRActionMapper *m_actionMapper = nullptr;
     Controller m_controller = ControllerNone;
     QMetaObject::Connection m_posePositionConnection;

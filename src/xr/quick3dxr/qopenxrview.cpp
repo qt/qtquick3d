@@ -6,47 +6,16 @@
 #include <QQuickWindow>
 #include <QQuickItem>
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 #include "qopenxrinputmanager_p.h"
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 QT_BEGIN_NAMESPACE
 
 QOpenXRView::QOpenXRView()
     : m_openXRRuntimeInfo(&m_openXRManager)
 {
-    if (!m_openXRManager.initialize()) {
-        QString errorString = m_openXRManager.errorString();
-        if (errorString.isEmpty())
-            errorString = tr("Failed to initialize OpenXR");
-        qWarning("\n%s\n", qPrintable(errorString));
-        QMetaObject::invokeMethod(this, "initializeFailed", Qt::QueuedConnection, errorString);
-        return;
-    }
-
-    // Create View3D
-    auto viewport = new QQuick3DViewport();
-    viewport->setRenderMode(QQuick3DViewport::Underlay);
-    auto contentItem = m_openXRManager.m_quickWindow->contentItem();
-    viewport->setParentItem(contentItem);
-    m_openXRManager.m_vrViewport = viewport;
-    viewport->setImportScene(this);
-
-    contentItem->forceActiveFocus(Qt::MouseFocusReason);
-
-    connect(contentItem, &QQuickItem::heightChanged, this, &QOpenXRView::updateViewportGeometry);
-    connect(contentItem, &QQuickItem::widthChanged, this, &QOpenXRView::updateViewportGeometry);
-    connect(contentItem, &QQuickItem::xChanged, this, &QOpenXRView::updateViewportGeometry);
-    connect(contentItem, &QQuickItem::yChanged, this, &QOpenXRView::updateViewportGeometry);
-
-    connect(environment(), &QQuick3DSceneEnvironment::backgroundModeChanged, this, &QOpenXRView::handleClearColorChanged);
-    connect(environment(), &QQuick3DSceneEnvironment::clearColorChanged, this, &QOpenXRView::handleClearColorChanged);
-    connect(environment(), &QQuick3DSceneEnvironment::antialiasingModeChanged, this, &QOpenXRView::handleAAChanged);
-    connect(environment(), &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QOpenXRView::handleAAChanged);
-
-    connect(&m_openXRManager, &QOpenXRManager::sessionEnded, this, &QOpenXRView::handleSessionEnded);
-    connect(&m_openXRManager, &QOpenXRManager::frameReady, this, &QOpenXRView::frameReady);
-    connect(&m_openXRManager, &QOpenXRManager::referenceSpaceChanged, this, &QOpenXRView::referenceSpaceChanged);
-
-    m_openXRManager.update();
+    init();
 }
 
 QOpenXRView::~QOpenXRView()
@@ -66,27 +35,47 @@ QQuick3DSceneEnvironment *QOpenXRView::environment() const
 
 QOpenXRHandInput *QOpenXRView::leftHandInput() const
 {
+#if !defined(Q_OS_VISIONOS)
     return m_openXRManager.m_inputManager ? m_openXRManager.m_inputManager->leftHandInput() : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 QOpenXRHandInput *QOpenXRView::rightHandInput() const
 {
+#if !defined(Q_OS_VISIONOS)
     return m_openXRManager.m_inputManager ? m_openXRManager.m_inputManager->rightHandInput() : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 QOpenXRHandTrackerInput *QOpenXRView::leftHandTrackerInput() const
 {
+#if !defined(Q_OS_VISIONOS)
     return m_openXRManager.m_inputManager->leftHandTrackerInput();
+#else
+    return nullptr;
+#endif
 }
 
 QOpenXRHandTrackerInput *QOpenXRView::rightHandTrackerInput() const
 {
+#if !defined(Q_OS_VISIONOS)
     return m_openXRManager.m_inputManager->rightHandTrackerInput();
+#else
+    return nullptr;
+#endif
 }
 
 QOpenXRGamepadInput *QOpenXRView::gamepadInput() const
 {
+#if !defined(Q_OS_VISIONOS)
     return m_openXRManager.m_inputManager ? m_openXRManager.m_inputManager->gamepadInput() : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 QQuick3DViewport *QOpenXRView::view3d() const
@@ -106,6 +95,9 @@ QOpenXRRuntimeInfo *QOpenXRView::runtimeInfo() const
 
 void QOpenXRView::setEnvironment(QQuick3DSceneEnvironment *environment)
 {
+    if (environment != m_sceneEnvironment)
+        m_sceneEnvironment = environment;
+
     if (!m_openXRManager.m_vrViewport)
         return;
 
@@ -159,14 +151,20 @@ void QOpenXRView::setEnablePassthrough(bool enable)
 
 QOpenXRView::FoveationLevel QOpenXRView::fixedFoveation() const
 {
+#if !defined(Q_OS_VISIONOS)
     if (!m_openXRManager.isValid())
         return NoFoveation;
 
     return FoveationLevel(m_openXRManager.m_foveationLevel);
+#else
+    // Foveation is not configurable on VisionOS
+    return QOpenXRView::HighFoveation;
+#endif
 }
 
 void QOpenXRView::setFixedFoveation(FoveationLevel level)
 {
+#if !defined(Q_OS_VISIONOS)
     if (!m_openXRManager.isValid())
         return;
 
@@ -178,6 +176,10 @@ void QOpenXRView::setFixedFoveation(FoveationLevel level)
     m_openXRManager.setupMetaQuestFoveation();
 
     emit fixedFoveationChanged();
+#else
+    // Foveation is not configurable on VisionOS
+    Q_UNUSED(level);
+#endif
 }
 
 bool QOpenXRView::isQuitOnSessionEndEnabled() const
@@ -250,6 +252,62 @@ void QOpenXRView::handleAAChanged()
         }
     }
     m_openXRManager.setSamples(samples);
+}
+
+bool QOpenXRView::init()
+{
+    if (m_isInitialized) {
+        qWarning("Already initialized!");
+        return false;
+    }
+
+    if (!m_openXRManager.isReady() && !m_openXRManager.initialize()) {
+        qDebug() << "Waiting for OpenXR to be initialized...";
+        connect(&m_openXRManager, &QOpenXRManager::initialized, this, &QOpenXRView::init, Qt::UniqueConnection);
+        return false;
+    }
+
+    if (!m_openXRManager.initialize()) {
+        QString errorString = m_openXRManager.errorString();
+        if (errorString.isEmpty())
+            errorString = tr("Failed to initialize OpenXR");
+        qWarning("\n%s\n", qPrintable(errorString));
+        QMetaObject::invokeMethod(this, "initializeFailed", Qt::QueuedConnection, errorString);
+        return false;
+    }
+
+    // Create View3D
+    auto viewport = new QQuick3DViewport();
+    viewport->setRenderMode(QQuick3DViewport::Underlay);
+    auto contentItem = m_openXRManager.m_quickWindow->contentItem();
+    viewport->setParentItem(contentItem);
+    m_openXRManager.m_vrViewport = viewport;
+    viewport->setImportScene(this);
+
+    contentItem->forceActiveFocus(Qt::MouseFocusReason);
+
+    connect(contentItem, &QQuickItem::heightChanged, this, &QOpenXRView::updateViewportGeometry);
+    connect(contentItem, &QQuickItem::widthChanged, this, &QOpenXRView::updateViewportGeometry);
+    connect(contentItem, &QQuickItem::xChanged, this, &QOpenXRView::updateViewportGeometry);
+    connect(contentItem, &QQuickItem::yChanged, this, &QOpenXRView::updateViewportGeometry);
+
+    connect(environment(), &QQuick3DSceneEnvironment::backgroundModeChanged, this, &QOpenXRView::handleClearColorChanged);
+    connect(environment(), &QQuick3DSceneEnvironment::clearColorChanged, this, &QOpenXRView::handleClearColorChanged);
+    connect(environment(), &QQuick3DSceneEnvironment::antialiasingModeChanged, this, &QOpenXRView::handleAAChanged);
+    connect(environment(), &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QOpenXRView::handleAAChanged);
+
+    connect(&m_openXRManager, &QOpenXRManager::sessionEnded, this, &QOpenXRView::handleSessionEnded);
+    connect(&m_openXRManager, &QOpenXRManager::frameReady, this, &QOpenXRView::frameReady);
+    connect(&m_openXRManager, &QOpenXRManager::referenceSpaceChanged, this, &QOpenXRView::referenceSpaceChanged);
+
+    // NOTE: If we're called async we need to make sure the environment etc. is set again
+    setEnvironment(m_sceneEnvironment);
+
+    m_openXRManager.update();
+
+    m_isInitialized = true;
+
+    return m_isInitialized;
 }
 
 /*!
@@ -400,6 +458,7 @@ QVariantMap QOpenXRView::touchpointState(int pointId) const
 }
 #undef Q_TOUCHPOINT_STATE
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 namespace {
 
 XrReferenceSpaceType getXrReferenceSpaceType(QOpenXRView::ReferenceSpace referenceSpace)
@@ -432,13 +491,22 @@ QOpenXRView::ReferenceSpace getReferenceSpaceType(XrReferenceSpaceType reference
 
 }
 
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
+
 QOpenXRView::ReferenceSpace QOpenXRView::referenceSpace() const
 {
+#if !defined(Q_OS_VISIONOS)
     return getReferenceSpaceType(m_openXRManager.m_referenceSpace);
+#else
+    // I am not sure exactly what reference space is default
+    // or what is supported etc.
+    return ReferenceSpace::ReferenceSpaceLocalFloor;
+#endif
 }
 
 void QOpenXRView::setReferenceSpace(ReferenceSpace newReferenceSpace)
 {
+#if !defined(Q_OS_VISIONOS)
     XrReferenceSpaceType referenceSpace = getXrReferenceSpaceType(newReferenceSpace);
     if (m_openXRManager.m_referenceSpace == referenceSpace)
         return;
@@ -447,14 +515,23 @@ void QOpenXRView::setReferenceSpace(ReferenceSpace newReferenceSpace)
 
     // we do not emit a changed signal here because it hasn't
     // changed yet.
+#else
+    // I'm not sure if it's possible to set a reference space on VisionOS
+    Q_UNUSED(newReferenceSpace);
+#endif
 }
 
 bool QOpenXRView::isDepthSubmissionEnabled() const
 {
+#if !defined(Q_OS_VISIONOS)
     if (!m_openXRManager.isValid())
         return false;
 
     return m_openXRManager.m_submitLayerDepth;
+#else
+    // Depth submission is required on VisionOS
+    return true;
+#endif
 }
 
 void QOpenXRView::registerXrItem(QOpenXRItem *newXrItem)
@@ -469,6 +546,7 @@ void QOpenXRView::unregisterXrItem(QOpenXRItem *xrItem)
 
 void QOpenXRView::setEnableDepthSubmission(bool enable)
 {
+#if !defined(Q_OS_VISIONOS)
     if (!m_openXRManager.isValid()) {
         qWarning("Attempted to set depth submission mode without having m_openXRManager initialized");
         return;
@@ -483,6 +561,10 @@ void QOpenXRView::setEnableDepthSubmission(bool enable)
         m_openXRManager.m_submitLayerDepth = enable;
         emit enableDepthSubmissionChanged();
     }
+#else
+    // VisionOS requires depth submission to be enabled
+    Q_UNUSED(enable);
+#endif
 }
 
 QT_END_NAMESPACE

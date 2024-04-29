@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrcontroller_p.h"
-#include "qopenxrinputmanager_p.h"
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
+# include "qopenxrinputmanager_p.h"
+#endif
 
 #include "qopenxrview_p.h"
 
@@ -10,7 +12,9 @@ QT_BEGIN_NAMESPACE
 
 QOpenXRController::QOpenXRController()
 {
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     m_inputManager = QOpenXRInputManager::instance();
+#endif
 }
 
 QOpenXRController::Controller QOpenXRController::controller() const
@@ -59,16 +63,22 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
 
 QOpenXRHandInput *QOpenXRController::handInput() const
 {
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     if (m_controller == ControllerRight)
         return m_inputManager->rightHandInput();
     else if (m_controller == ControllerLeft)
         return m_inputManager->leftHandInput();
+#endif
     return nullptr;
 }
 
 QOpenXRGamepadInput *QOpenXRController::gamepadInput() const
 {
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     return m_inputManager->gamepadInput();
+#else
+    return nullptr;
+#endif
 }
 
 QOpenXRActionMapper *QOpenXRController::actionMapper() const

@@ -47,6 +47,7 @@ private:
     QVarLengthArray<QOpenXREyeCamera *, 2> m_eyeCameras;
 
     friend class QOpenXRManager;
+    friend class QQuick3DXRVisionOSRenderManager;
 };
 
 QT_END_NAMESPACE

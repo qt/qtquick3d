@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrhandtrackerinput_p.h"
+
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 #include "qopenxrhelpers_p.h"
 #include "qopenxrinputmanager_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -63,7 +66,9 @@ void QOpenXRHandTrackerInput::setJointPositionsAndRotations(const QList<QVector3
     m_jointRotations = newJointRotations;
     emit jointRotationsChanged();
     emit jointDataUpdated();
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     setPokePosition(m_jointPositions[XR_HAND_JOINT_INDEX_TIP_EXT]);
+#endif
 }
 
 QList<QQuaternion> QOpenXRHandTrackerInput::jointRotations() const
@@ -84,6 +89,7 @@ void QOpenXRHandTrackerInput::setPokePosition(const QVector3D &newPokePosition)
     emit pokePositionChanged();
 }
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuaternion &rotation)
 {
     QMatrix4x4 transform = QMatrix4x4{rotation.toRotationMatrix()};
@@ -94,6 +100,7 @@ static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuate
 
     return transform;
 }
+#endif
 
 QOpenXrHandModel::QOpenXrHandModel(QQuick3DNode *parent)
     : QQuick3DModel(parent)
@@ -124,6 +131,7 @@ void QOpenXrHandModel::setupModel()
         qWarning() << "XrHandModel does not support changing hand tracker";
         return;
     }
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     Q_ASSERT(QOpenXRInputManager::instance());
     auto *inputMan = QOpenXRInputManager::instance();
     QOpenXRInputManager::Hand hand = m_handTracker == inputMan->leftHandTrackerInput()
@@ -161,6 +169,7 @@ void QOpenXrHandModel::setupModel()
     });
     setVisible(m_handTracker->isActive());
     m_initialized = true;
+#endif
 }
 
 void QOpenXrHandModel::componentComplete()

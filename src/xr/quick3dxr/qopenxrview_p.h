@@ -58,7 +58,6 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
     Q_PROPERTY(FoveationLevel fixedFoveation READ fixedFoveation WRITE setFixedFoveation NOTIFY fixedFoveationChanged FINAL)
     Q_PROPERTY(ReferenceSpace referenceSpace READ referenceSpace WRITE setReferenceSpace NOTIFY referenceSpaceChanged FINAL)
     Q_PROPERTY(bool enableDepthSubmission READ isDepthSubmissionEnabled WRITE setEnableDepthSubmission NOTIFY enableDepthSubmissionChanged FINAL)
-
     QML_NAMED_ELEMENT(XrView)
 
 public:
@@ -127,6 +126,7 @@ private Q_SLOTS:
     void handleSessionEnded();
     void handleClearColorChanged();
     void handleAAChanged();
+    bool init();
 
 Q_SIGNALS:
     void initializeFailed(const QString &errorString);
@@ -144,10 +144,12 @@ private:
     // The XrView does not expose the View3D in its public interface. This is intentional.
     QQuick3DViewport *view3d() const;
 
+    QPointer<QQuick3DSceneEnvironment> m_sceneEnvironment;
     QOpenXRManager m_openXRManager;
     mutable QOpenXRRuntimeInfo m_openXRRuntimeInfo;
     bool m_quitOnSessionEnd = true;
     bool m_inDestructor = false;
+    bool m_isInitialized = false;
 
     friend class QOpenXRVirtualMouse;
     QList<QOpenXRItem *> m_xrItems;

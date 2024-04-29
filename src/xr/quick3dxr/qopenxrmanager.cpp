@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrmanager_p.h"
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 #include "qopenxrinputmanager_p.h"
 #include <openxr/openxr_reflection.h>
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
@@ -20,6 +22,7 @@
 
 #include "qopenxrcamera_p.h"
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 #ifdef XR_USE_GRAPHICS_API_VULKAN
 # include "qopenxrgraphics_vulkan_p.h"
 #endif
@@ -46,12 +49,15 @@
 #endif // XR_USE_PLATFORM_ANDROID
 
 #include "qopenxrhelpers_p.h"
-#include "qopenxrorigin_p.h"
-
 #include "qopenxrspaceextension_p.h"
+
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
+
+#include "qopenxrorigin_p.h"
 
 QT_BEGIN_NAMESPACE
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 // Macro to generate stringify functions for OpenXR enumerations based data provided in openxr_reflection.h
 #define ENUM_CASE_STR(name, val) case name: return #name;
 #define MAKE_TO_STRING_FUNC(enumType)                  \
@@ -67,6 +73,7 @@ MAKE_TO_STRING_FUNC(XrViewConfigurationType)
 MAKE_TO_STRING_FUNC(XrEnvironmentBlendMode)
 MAKE_TO_STRING_FUNC(XrSessionState)
 MAKE_TO_STRING_FUNC(XrResult)
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 QOpenXRManager::QOpenXRManager(QObject *parent)
     : QObject(parent)
@@ -78,18 +85,32 @@ QOpenXRManager::~QOpenXRManager()
 {
     teardown();
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     // early deinit for graphics, so it can destroy owned QRhi resources
     if (m_graphics)
         m_graphics->releaseResources();
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
     // maintain the correct order
     delete m_vrViewport;
     delete m_quickWindow;
     delete m_renderControl;
     delete m_animationDriver;
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     delete m_graphics; // last, with Vulkan this may own the VkInstance
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 }
 
+bool QOpenXRManager::isReady() const
+{
+#if defined(Q_OS_VISIONOS)
+    return m_visionOSRenderManager->isReady();
+#else
+    return true;
+#endif
+}
+
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 namespace  {
 bool isExtensionSupported(const char *extensionName, const QVector<XrExtensionProperties> &instanceExtensionProperties, uint32_t *extensionVersion = nullptr)
 {
@@ -142,11 +163,31 @@ void QOpenXRManager::setErrorString(XrResult result, const char *callName)
     if (result == XR_ERROR_FORM_FACTOR_UNAVAILABLE) // this is very common
         m_errorString += tr("\nThe OpenXR runtime has no connection to the headset; check if connection is active and functional.");
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 bool QOpenXRManager::initialize()
 {
+#if defined(Q_OS_VISIONOS)
     m_errorString.clear();
 
+    if (!m_visionOSRenderManager) {
+        m_visionOSRenderManager = new QQuick3DXRVisionOSRenderManager(this);
+        connect(m_visionOSRenderManager, &QQuick3DXRVisionOSRenderManager::initialized, this, &QOpenXRManager::initialized);
+    }
+
+    if (!m_visionOSRenderManager->initialize()) {
+        if (m_visionOSRenderManager->isReady())
+            m_errorString = QStringLiteral("Waiting for the renderer to start.");
+        else
+            m_errorString = QStringLiteral("Failed to initialize CompositorServices (visionOS).");
+        return false;
+    }
+
+    // Setup Graphics
+    setupGraphics();
+#endif
+
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     // This, meaning constructing the QGraphicsFrameCapture if we'll want it,
     // must be done as early as possible, before initalizing graphics. In fact
     // in hybrid apps it might be too late at this point if Qt Quick (so someone
@@ -288,12 +329,14 @@ bool QOpenXRManager::initialize()
         return false;
 
     createSwapchains();
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
     return true;
 }
 
 void QOpenXRManager::teardown()
 {
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     if (m_inputManager) {
         m_inputManager->teardown();
         m_inputManager = nullptr;
@@ -328,8 +371,19 @@ void QOpenXRManager::teardown()
 #endif
 
     xrDestroyInstance(m_instance);
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 }
 
+bool QOpenXRManager::isValid() const
+{
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
+    return m_graphics != nullptr;
+#else
+    return true;
+#endif
+}
+
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 void QOpenXRManager::destroySwapchain()
 {
     for (const Swapchain &swapchain : m_swapchains)
@@ -344,6 +398,7 @@ void QOpenXRManager::destroySwapchain()
     m_depthSwapchains.clear();
     m_depthSwapchainImages.clear();
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 void QOpenXRManager::setPassthroughEnabled(bool enabled)
 {
@@ -352,6 +407,7 @@ void QOpenXRManager::setPassthroughEnabled(bool enabled)
 
     m_enablePassthrough = enabled;
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API) && !defined(Q_OS_VISIONOS)
     if (m_passthroughSupported) {
         if (m_enablePassthrough) {
             if (m_passthroughFeature == XR_NULL_HANDLE)
@@ -372,6 +428,7 @@ void QOpenXRManager::setPassthroughEnabled(bool enabled)
                 pauseMetaQuestPassthrough();
         }
     }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 }
 
 void QOpenXRManager::update()
@@ -389,6 +446,7 @@ bool QOpenXRManager::event(QEvent *e)
     return QObject::event(e);
 }
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 void QOpenXRManager::checkXrExtensions(const char *layerName, int indent)
 {
     quint32 instanceExtensionCount;
@@ -786,13 +844,15 @@ void QOpenXRManager::checkEnvironmentBlendMode(XrViewConfigurationType type)
     if (!blendModeFound)
         qWarning("No matching environment blend mode found");
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 bool QOpenXRManager::setupGraphics()
 {
     preSetupQuickScene();
-
+#if !defined(Q_OS_VISIONOS)
     if (!m_graphics->setupGraphics(m_instance, m_systemId, m_quickWindow->graphicsConfiguration()))
         return false;
+#endif
 
     if (!setupQuickScene())
         return false;
@@ -812,10 +872,14 @@ bool QOpenXRManager::setupGraphics()
         }
     }
 #endif
-
+#if !defined(Q_OS_VISIONOS)
     return m_graphics->finializeGraphics(rhi);
+#else
+    return m_visionOSRenderManager->finalizeGraphics(rhi);
+#endif
 }
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 void QOpenXRManager::checkReferenceSpaces()
 {
     Q_ASSERT(m_session != XR_NULL_HANDLE);
@@ -1259,6 +1323,7 @@ void QOpenXRManager::createSwapchains()
     if (m_foveationExtensionSupported)
         setupMetaQuestFoveation();
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 void QOpenXRManager::setSamples(int samples)
 {
@@ -1273,6 +1338,7 @@ void QOpenXRManager::setSamples(int samples)
 
 void QOpenXRManager::processXrEvents()
 {
+#if !defined(Q_OS_VISIONOS)
     bool exitRenderLoop = false;
     bool requestrestart = false;
     pollEvents(&exitRenderLoop, &requestrestart);
@@ -1284,9 +1350,46 @@ void QOpenXRManager::processXrEvents()
         m_inputManager->pollActions();
         renderFrame();
     }
+#else
+    enum RenderState : quint8 {
+        Paused,
+        Running,
+        Invalidated
+    };
+    static bool logOnce[3] = {false, false, false};
+    auto renderState = m_visionOSRenderManager->getRenderState();
+    if (renderState == QQuick3DXRVisionOSRenderManager::RenderState::Paused) {
+        // Wait
+        if (!logOnce[RenderState::Paused]) {
+            qDebug() << "-- Wait --";
+            logOnce[RenderState::Paused] = true;
+            logOnce[RenderState::Running] = false;
+            logOnce[RenderState::Invalidated] = false;
+        }
+    } else if (renderState == QQuick3DXRVisionOSRenderManager::RenderState::Running) {
+        //m_inputManager->pollActions();
+        renderFrame();
+        //m_visionOSRenderManager->renderFrame();
+        if (!logOnce[RenderState::Running]) {
+            qDebug() << "-- Running --";
+            logOnce[RenderState::Paused] = false;
+            logOnce[RenderState::Running] = true;
+            logOnce[RenderState::Invalidated] = false;
+        }
+    } else if (renderState == QQuick3DXRVisionOSRenderManager::RenderState::Invalidated) {
+        if (!logOnce[RenderState::Invalidated]) {
+            qDebug() << "-- Invalidated --";
+            logOnce[RenderState::Paused] = false;
+            logOnce[RenderState::Running] = false;
+            logOnce[RenderState::Invalidated] = true;
+        }
+        emit sessionEnded();
+    }
+#endif
     update();
 }
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
     *exitRenderLoop = false;
     *requestRestart = false;
@@ -1391,9 +1494,11 @@ void QOpenXRManager::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
         }
     }
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 void QOpenXRManager::renderFrame()
 {
+#if !defined(Q_OS_VISIONOS)
     Q_ASSERT(m_session != XR_NULL_HANDLE);
 
     XrFrameWaitInfo frameWaitInfo{};
@@ -1441,8 +1546,14 @@ void QOpenXRManager::renderFrame()
     frameEndInfo.layerCount = (uint32_t)layers.size();
     frameEndInfo.layers = layers.data();
     checkXrResult(xrEndFrame(m_session, &frameEndInfo));
+#else
+    checkOrigin();
+    m_visionOSRenderManager->renderFrame(m_quickWindow, m_renderControl, m_xrOrigin, m_vrViewport);
+
+#endif // !defined(Q_OS_VISIONOS)
 }
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
                                 XrDuration predictedDisplayPeriod,
                                 XrCompositionLayerProjection &layer)
@@ -1695,6 +1806,7 @@ void QOpenXRManager::doRender(const XrSwapchainSubImage &subImage,
         emit frameReady(colorBuffer);
     }
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 void QOpenXRManager::preSetupQuickScene()
 {
@@ -1704,9 +1816,15 @@ void QOpenXRManager::preSetupQuickScene()
 
 bool QOpenXRManager::setupQuickScene()
 {
+
+#if !defined(Q_OS_VISIONOS)
     m_graphics->setupWindow(m_quickWindow);
+#else
+    m_visionOSRenderManager->setupWindow(m_quickWindow);
+#endif
     m_animationDriver = new QOpenXRAnimationDriver;
     m_animationDriver->install();
+
 
     const bool initSuccess = m_renderControl->initialize();
     if (!initSuccess) {
@@ -1733,6 +1851,7 @@ bool QOpenXRManager::setupQuickScene()
     return true;
 }
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 void QOpenXRManager::updateCameraHelper(QOpenXREyeCamera *camera, const XrCompositionLayerProjectionView &layerView)
 {
     camera->setLeftTangent(qTan(layerView.fov.angleLeft));
@@ -1774,6 +1893,7 @@ void QOpenXRManager::updateCameraMultiview(int projectionLayerViewStartIndex, in
     }
     m_vrViewport->setMultiViewCameras(cameras.data(), cameras.count());
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 void QOpenXRManager::checkOrigin()
 {
@@ -1807,6 +1927,8 @@ void QOpenXRManager::checkOrigin()
 
 bool QOpenXRManager::supportsPassthrough() const
 {
+    bool supported = false;
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     XrSystemPassthroughProperties2FB passthroughSystemProperties{};
     passthroughSystemProperties.type = XR_TYPE_SYSTEM_PASSTHROUGH_PROPERTIES2_FB;
 
@@ -1822,7 +1944,7 @@ bool QOpenXRManager::supportsPassthrough() const
     xrGetSystem(m_instance, &systemGetInfo, &systemId);
     xrGetSystemProperties(m_instance, systemId, &systemProperties);
 
-    bool supported = (passthroughSystemProperties.capabilities & XR_PASSTHROUGH_CAPABILITY_BIT_FB) == XR_PASSTHROUGH_CAPABILITY_BIT_FB;
+    supported = (passthroughSystemProperties.capabilities & XR_PASSTHROUGH_CAPABILITY_BIT_FB) == XR_PASSTHROUGH_CAPABILITY_BIT_FB;
 
     if (!supported) {
         // Try the old one. (the Simulator reports spec version 3 for
@@ -1834,10 +1956,11 @@ bool QOpenXRManager::supportsPassthrough() const
         xrGetSystemProperties(m_instance, systemId, &systemProperties);
         supported = oldPassthroughSystemProperties.supportsPassthrough;
     }
-
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
     return supported;
 }
 
+#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 void QOpenXRManager::setupMetaQuestColorSpaces()
 {
     PFN_xrEnumerateColorSpacesFB pfnxrEnumerateColorSpacesFB = NULL;
@@ -2073,5 +2196,6 @@ void QOpenXRManager::resumeMetaQuestPassthroughLayer()
                                         (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerResumeFBX)));
     checkXrResult(pfnXrPassthroughLayerResumeFBX(m_passthroughLayer));
 }
+#endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
 QT_END_NAMESPACE

@@ -10,6 +10,6 @@ qt_feature_module_begin(
 include("configure.cmake")
 qt_feature_module_end(NO_MODULE)
 
-if(QT_FEATURE_quick3dxr_openxr)
+if(QT_FEATURE_quick3dxr_openxr OR VISIONOS)
     add_subdirectory(quick3dxr)
 endif()
