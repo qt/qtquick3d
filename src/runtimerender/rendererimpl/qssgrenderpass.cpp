@@ -297,7 +297,7 @@ void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     QSSG_ASSERT_X((rhiDepthTexture && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing equired texture(s)", return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    ssaoShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSsaoShader();
+    ssaoShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSsaoShader(rhiCtx->mainPassViewCount());
     aoSettings = { data.layer.aoStrength, data.layer.aoDistance, data.layer.aoSoftness, data.layer.aoBias, data.layer.aoSamplerate, data.layer.aoDither };
 
     ps = data.getPipelineState();

@@ -1163,6 +1163,22 @@ QT_BEGIN_NAMESPACE
         float aoFactor = texture(AO_TEXTURE, aoUV).x;
     \endcode
 
+    \li \c AO_TEXTURE_ARRAY - Available only when multiview rendering is in use.
+    Similar to \c AO_TEXTURE, but this is a 2D texture array (sampler2DArray).
+    Use \c VIEW_INDEX as the layer (the third coordinate in the \c uv argument in
+    \c{texture()}). Portable custom materials that wish to function both with and
+    without multiview rendering, can do the following: \badcode
+        #if QSHADER_VIEW_COUNT >= 2
+            ivec2 aoSize = textureSize(AO_TEXTURE_ARRAY, 0).xy;
+            vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
+            float aoFactor = texture(AO_TEXTURE_ARRAY, vec3(aoUV, VIEW_INDEX)).x;
+        #else
+            ivec2 aoSize = textureSize(AO_TEXTURE, 0);
+            vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
+            float aoFactor = texture(AO_TEXTURE, aoUV).x;
+        #endif
+    \endcode
+
     \li \c IBL_TEXTURE - It will not enable any special rendering pass, but it can
     be used when the material has \l {Material::lightProbe} or the model is in the scope of
     \l {SceneEnvironment::lightProbe}.
@@ -1592,6 +1608,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTextureArray, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTextureArray))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTextureArray, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTextureArray))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTextureArray, true);
 
     // vertex only
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))

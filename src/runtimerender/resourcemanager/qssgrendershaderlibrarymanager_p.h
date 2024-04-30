@@ -51,7 +51,8 @@ struct QSSGCustomShaderMetaData
         UsesViewIndex = 1 << 13,
         UsesDepthTextureArray = 1 << 14,
         UsesScreenTextureArray = 1 << 15,
-        UsesScreenMipTextureArray = 1 << 16
+        UsesScreenMipTextureArray = 1 << 16,
+        UsesAoTextureArray = 1 << 17
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

@@ -2,6 +2,10 @@
 
 layout(location = 0) out vec4 fragOutput;
 
+#if QSHADER_VIEW_COUNT >= 2
+layout(location = 0) flat in uint v_viewIndex;
+#endif
+
 layout(std140, binding = 0) uniform buf {
     vec4 aoProperties;
     vec4 aoProperties2;
@@ -10,7 +14,11 @@ layout(std140, binding = 0) uniform buf {
     vec2 cameraProperties;
 } ubuf;
 
+#if QSHADER_VIEW_COUNT >= 2
+layout(binding = 1) uniform sampler2DArray depthTextureArray;
+#else
 layout(binding = 1) uniform sampler2D depthTexture;
+#endif
 
 float calculateVertexDepth( vec2 cameraProperties, vec4 position )
 {
@@ -59,9 +67,15 @@ vec3 quatRotate( vec4 q, vec3 v )
     return v + 2.0 * cross( cross( v, q.xyz ) + q.w * v, q.xyz );
 }
 
+#if QSHADER_VIEW_COUNT >= 2
+vec3 getViewSpacePos( sampler2DArray depthSampler, vec2 camProps, vec2 UV, vec4 UvToEye )
+{
+    float sampleDepth = getDepthValue( texture(depthSampler, vec3(UV, v_viewIndex)), camProps );
+#else
 vec3 getViewSpacePos( sampler2D depthSampler, vec2 camProps, vec2 UV, vec4 UvToEye )
 {
     float sampleDepth = getDepthValue( texture(depthSampler, UV), camProps );
+#endif
     sampleDepth = depthValueToLinearDistance( sampleDepth, camProps );
 
     vec2 scaledUV = (UV * UvToEye.xy) + UvToEye.zw;
@@ -86,8 +100,13 @@ vec2 offsetDir( vec2 baseDir, int v )
     return vec2( dot(baseDir, vX), dot(baseDir, vY) );
 }
 
+#if QSHADER_VIEW_COUNT >= 2
+float calculateAo(int j, vec3 kernel[9], vec4 aoParams, vec4 aoParams2, vec2 camProps, vec2 centerUV, vec4 aoScreen, vec4 UvToEye,
+                  vec3 viewPos, vec3 viewNorm, float radStep, sampler2DArray depthSampler)
+#else
 float calculateAo(int j, vec3 kernel[9], vec4 aoParams, vec4 aoParams2, vec2 camProps, vec2 centerUV, vec4 aoScreen, vec4 UvToEye,
                   vec3 viewPos, vec3 viewNorm, float radStep, sampler2D depthSampler)
+#endif
 {
     float ret = 0.0;
     // manually unroll the loop 0..8
@@ -344,7 +363,11 @@ float calculateAo(int j, vec3 kernel[9], vec4 aoParams, vec4 aoParams2, vec2 cam
     return ret;
 }
 
+#if QSHADER_VIEW_COUNT >= 2
+float SSambientOcclusion(sampler2DArray depthSampler, vec3 viewNorm, vec4 aoParams, vec4 aoParams2, vec2 camProps, vec4 aoScreen, vec4 UvToEye)
+#else
 float SSambientOcclusion(sampler2D depthSampler, vec3 viewNorm, vec4 aoParams, vec4 aoParams2, vec2 camProps, vec4 aoScreen, vec4 UvToEye)
+#endif
 {
     vec2 centerUV = gl_FragCoord.xy * aoScreen.zw;
     vec3 viewPos = getViewSpacePos( depthSampler, camProps, centerUV, UvToEye );
@@ -399,12 +422,24 @@ float SSambientOcclusion(sampler2D depthSampler, vec3 viewNorm, vec4 aoParams, v
 void main()
 {
     ivec2 iCoords = ivec2(gl_FragCoord.xy);
+#if QSHADER_VIEW_COUNT >= 2
+    float depth = getDepthValue(texelFetch(depthTextureArray, ivec3(iCoords, v_viewIndex), 0), ubuf.cameraProperties);
+#else
     float depth = getDepthValue(texelFetch(depthTexture, iCoords, 0), ubuf.cameraProperties);
+#endif
     depth = depthValueToLinearDistance( depth, ubuf.cameraProperties );
     depth = (depth - ubuf.cameraProperties.x) / (ubuf.cameraProperties.y - ubuf.cameraProperties.x);
+#if QSHADER_VIEW_COUNT >= 2
+    float depth2 = getDepthValue(texelFetch(depthTextureArray, ivec3(iCoords+ivec2(1), v_viewIndex), 0), ubuf.cameraProperties);
+#else
     float depth2 = getDepthValue(texelFetch(depthTexture, iCoords+ivec2(1), 0), ubuf.cameraProperties);
+#endif
     depth2 = depthValueToLinearDistance( depth, ubuf.cameraProperties );
+#if QSHADER_VIEW_COUNT >= 2
+    float depth3 = getDepthValue(texelFetch(depthTextureArray, ivec3(iCoords-ivec2(1), v_viewIndex), 0), ubuf.cameraProperties);
+#else
     float depth3 = getDepthValue(texelFetch(depthTexture, iCoords-ivec2(1), 0), ubuf.cameraProperties);
+#endif
 
     depth3 = depthValueToLinearDistance( depth, ubuf.cameraProperties );
 
@@ -419,7 +454,12 @@ void main()
     screenNorm += normalize(cross(tanU, tanV));
     screenNorm = -normalize(screenNorm);
 
-    float aoFactor = SSambientOcclusion( depthTexture, screenNorm, ubuf.aoProperties, ubuf.aoProperties2,
+#if QSHADER_VIEW_COUNT >= 2
+    float aoFactor = SSambientOcclusion( depthTextureArray,
+#else
+    float aoFactor = SSambientOcclusion( depthTexture,
+#endif
+                                         screenNorm, ubuf.aoProperties, ubuf.aoProperties2,
                                          ubuf.cameraProperties, ubuf.aoScreenConst, ubuf.uvToEyeConst );
 
     fragOutput = vec4(aoFactor, aoFactor, aoFactor, 1.0);

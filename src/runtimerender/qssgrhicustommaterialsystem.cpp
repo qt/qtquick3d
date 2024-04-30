@@ -425,15 +425,24 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->ssaoTexture()) {
-            int binding = shaderPipeline->bindingForTexture("qt_aoTexture", int(QSSGRhiSamplerBindingHints::AoTexture));
-            if (binding >= 0) {
-                samplerBindingsSpecified.setBit(binding);
+            const int ssaoTextureBinding = shaderPipeline->bindingForTexture("qt_aoTexture", int(QSSGRhiSamplerBindingHints::AoTexture));
+            const int ssaoTextureArrayBinding = shaderPipeline->bindingForTexture("qt_aoTextureArray", int(QSSGRhiSamplerBindingHints::AoTextureArray));
+            if (ssaoTextureBinding >= 0 || ssaoTextureArrayBinding >= 0) {
                 // linear min/mag, no mipmap
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                bindings.addTexture(binding,
-                                    QRhiShaderResourceBinding::FragmentStage,
-                                    shaderPipeline->ssaoTexture(), sampler);
+                if (ssaoTextureBinding >= 0) {
+                    samplerBindingsSpecified.setBit(ssaoTextureBinding);
+                    bindings.addTexture(ssaoTextureBinding,
+                                        QRhiShaderResourceBinding::FragmentStage,
+                                        shaderPipeline->ssaoTexture(), sampler);
+                }
+                if (ssaoTextureArrayBinding >= 0) {
+                    samplerBindingsSpecified.setBit(ssaoTextureArrayBinding);
+                    bindings.addTexture(ssaoTextureArrayBinding,
+                                        QRhiShaderResourceBinding::FragmentStage,
+                                        shaderPipeline->ssaoTexture(), sampler);
+                }
             } // else ignore, not an error
         }
 

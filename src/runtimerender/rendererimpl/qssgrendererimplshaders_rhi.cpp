@@ -64,9 +64,9 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOrthographicShadowBlur
     return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblury"), m_cache.orthographicShadowBlurYRhiShader);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSsaoShader()
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSsaoShader(int viewCount)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_cache.ssaoRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_cache.ssaoRhiShader, viewCount);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxCubeShader(int viewCount)

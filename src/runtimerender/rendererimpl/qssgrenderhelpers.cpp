@@ -515,12 +515,22 @@ static inline void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
 
     // SSAO texture
     if (shaderPipeline->ssaoTexture()) {
-        int binding = shaderPipeline->bindingForTexture("qt_aoTexture", int(QSSGRhiSamplerBindingHints::AoTexture));
-        if (binding >= 0) {
+        const int ssaoTextureBinding = shaderPipeline->bindingForTexture("qt_aoTexture", int(QSSGRhiSamplerBindingHints::AoTexture));
+        const int ssaoTextureArrayBinding = shaderPipeline->bindingForTexture("qt_aoTextureArray", int(QSSGRhiSamplerBindingHints::AoTextureArray));
+        if (ssaoTextureBinding >= 0 || ssaoTextureArrayBinding >= 0) {
             // linear min/mag, no mipmap
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-            bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, shaderPipeline->ssaoTexture(), sampler);
+                                                        QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+            if (ssaoTextureBinding >= 0) {
+                bindings.addTexture(ssaoTextureBinding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->ssaoTexture(), sampler);
+            }
+            if (ssaoTextureArrayBinding >= 0) {
+                bindings.addTexture(ssaoTextureArrayBinding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->ssaoTexture(), sampler);
+            }
         } // else ignore, not an error
     }
 }
@@ -1517,8 +1527,12 @@ bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &siz
     bool needsBuild = false;
 
     if (!renderableTex->texture) {
+        QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
         // the ambient occlusion texture is always non-msaa, even if multisampling is used in the main pass
-        renderableTex->texture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::RenderTarget);
+        if (rhiCtx->mainPassViewCount() <= 1)
+            renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
+        else
+            renderableTex->texture = rhi->newTextureArray(QRhiTexture::RGBA8, rhiCtx->mainPassViewCount(), size, 1, flags);
         needsBuild = true;
     } else if (renderableTex->texture->pixelSize() != size) {
         renderableTex->texture->setPixelSize(size);
@@ -1532,7 +1546,11 @@ bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &siz
             return false;
         }
         renderableTex->resetRenderTarget();
-        renderableTex->rt = rhi->newTextureRenderTarget({ renderableTex->texture });
+        QRhiTextureRenderTargetDescription desc;
+        QRhiColorAttachment colorAttachment(renderableTex->texture);
+        colorAttachment.setMultiViewCount(rhiCtx->mainPassViewCount());
+        desc.setColorAttachments({ colorAttachment });
+        renderableTex->rt = rhi->newTextureRenderTarget(desc);
         renderableTex->rt->setName(QByteArrayLiteral("Ambient occlusion"));
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
         renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
@@ -1611,6 +1629,8 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
     QSSGRhiShaderResourceBindingList bindings;
     bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
+    // binding 1 is either a sampler2D or sampler2DArray, matching
+    // rhiDepthTexture.texture, no special casing needed here
     bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, rhiDepthTexture.texture, sampler);
     QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 

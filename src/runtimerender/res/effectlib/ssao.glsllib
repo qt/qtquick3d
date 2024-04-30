@@ -8,7 +8,7 @@
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type": "sampler2D", "name": "qt_aoTexture" , "condition": "QSSG_ENABLE_SSAO" }
+        { "type": "sampler2D", "name": "qt_aoTexture" , "condition": "QSSG_ENABLE_SSAO", "multiview_dependent": true }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -17,9 +17,15 @@
 
 float qt_screenSpaceAmbientOcclusionFactor()
 {
+#if QSHADER_VIEW_COUNT >= 2
+    ivec2 iSize = textureSize(qt_aoTextureArray, 0).xy;
+    vec2 smpUV = (gl_FragCoord.xy) / vec2(iSize);
+    return texture(qt_aoTextureArray, vec3(smpUV, qt_viewIndex)).x;
+#else
     ivec2 iSize = textureSize(qt_aoTexture, 0);
     vec2 smpUV = (gl_FragCoord.xy) / vec2(iSize);
     return texture(qt_aoTexture, smpUV).x;
+#endif
 }
 
 #else

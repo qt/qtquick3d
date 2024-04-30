@@ -5,6 +5,10 @@
 
 layout(location = 0) in vec3 attr_pos;
 
+#if QSHADER_VIEW_COUNT >= 2
+layout(location = 0) flat out uint v_viewIndex;
+#endif
+
 layout(std140, binding = 0) uniform buf {
     vec4 aoProperties;
     vec4 aoProperties2;
@@ -13,9 +17,10 @@ layout(std140, binding = 0) uniform buf {
     vec2 cameraProperties;
 } ubuf;
 
-out gl_PerVertex { vec4 gl_Position; };
-
 void main()
 {
+#if QSHADER_VIEW_COUNT >= 2
+    v_viewIndex = gl_ViewIndex;
+#endif
     gl_Position = vec4(attr_pos.xy, 0.5, 1.0 );
 }
