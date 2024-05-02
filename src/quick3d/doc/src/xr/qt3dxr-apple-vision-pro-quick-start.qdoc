@@ -1,0 +1,37 @@
+// Copyright (C) 2021 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+/*!
+    \page qt3dxr-quick-start-guide-applevisionpro.html
+    \title Getting Started With the Apple Vision Pro
+
+    \summary This topic provides instructions on how to get up and running
+    with \qxr on an Apple Vision Pro.
+
+
+    For the Meta Quest 3 see \l{\qxr Quick Starter Guide}.
+    The video below demonstrates the process.
+
+    //!TODO Add video link
+
+    \section1 Download and installation
+
+    Complete the steps on the \l{Installing \qxr} page.
+
+    \section1 Setting up the Simple Example Project
+    \list 1
+    \li Open the example project from the qt creator welcome screen.
+    \li Configure the project settings (Projects mode: Ctrl+5 by default)
+        \list 1
+        \li Confirm that the applicable Android Kit for your target device is
+        chosen for compilation.
+        \li Choose the target , This can be quickly selected from the deploy widget,
+        as shown below:
+        \endlist
+    \endlist
+
+    \section1 Deploy the app
+
+    Click \uicontrol{Run}. This will complete the build, and install the device
+    to the headset and run it.
+
+*/

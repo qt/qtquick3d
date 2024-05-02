@@ -1,0 +1,26 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+
+/*!
+    \page qt3dxr-known-issues.html
+    \title \qxr Known Issues and Limitations
+
+    \section1 Known limitations
+    \qxr at the current stage has the following limitations:
+
+    \list
+        \li \qxr is in technology preview in this release.
+    \endlist
+
+    \section1 Known issues, bugs, and defects
+
+    All known issues, bugs, and defects with this patch release are listed here.
+
+    \generatelist qtxr-has-known-issues
+
+    \section1 Reporting issues
+
+    Please log any issues you may find by following the instructions at
+    \l{Reporting}.
+
+*/

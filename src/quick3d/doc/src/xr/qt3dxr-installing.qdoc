@@ -1,0 +1,63 @@
+// Copyright (C) 2021 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+/*!
+    \page qt3dxr-installing.html
+    \title Installing \qxr
+    \previouspage \qxr Quick Starter Guide
+
+    \brief Covers the steps required to install \qxr .
+
+    Before starting, check if there are any instructions regarding the current
+    \l{\qxr Known Issues and Limitations} that are relevant to installation.
+
+    \section1 Quick install with the Qt Online Installer
+
+    Go to \l{Get and Install Qt} and follow the instructions there, making sure
+    at \e{step 3} to select \uicontrol{Qt Quick 3d XR} under the relevant Qt Version.
+
+    Then move on to \l{Installing 3rd Party Dependencies}.
+
+    \section1 Custom install with the Qt Online Installer
+
+    If you want to install additional Qt modules or tools at the same time, then
+    this method is for you.
+
+    Go to \l{Get and Install Qt} and follow the instructions there, except now
+    as opposed to the quick install method, making sure at \e{step 3} to select
+    \uicontrol{Custom Installation} and then select the following components:
+
+    \list
+        \li \qxr
+        \li Under the same \c{Qt Version} that you selected for \qxr, select:
+        \list
+            \li Qt for Android. (If developing for the Meta Quest 3)
+            \li Qt Quick 3D
+        \endlist
+    \endlist
+
+    Then, select other Qt modules or tools that are available to you.
+
+    \section1 Installing 3rd Party Dependencies
+
+    The following dependencies are required:
+
+    \section2 Meta devices
+
+    Meta's SDK is based on the \l OpenXR API, and as such, \qxr has been designed
+    to support that SDK. It is also Meta's ongoing supported SDK.
+
+    \list
+        \li The \l{Oculus OpenXR Mobile SDK}
+    \endlist
+
+    \section2 Apple devices
+
+    \section3 Host Environment
+
+    \section2 Android-based devices
+
+    If this is your first time developing with Qt for Android or using Qt Creator,
+    you must complete some additional steps to set up your build environment.
+    See \l{Getting Started with Qt for Android} for more information.
+
+*/

@@ -80,7 +80,7 @@ navigation.qmltypespage = "Qt Quick 3D QML Types"
 navigation.cppclassespage = "Qt Quick 3D C++ Classes"
 
 tagfile                 = qtquick3d.tags
-
+macro.qxr = "Qt Quick 3D Xr"
 # Fail the documentation build if warnings exceed the limit
 #   src/quick3d/qquick3dtexture.cpp:653: (qdoc) warning: Can't link to 'RenderExtension'
 warninglimit = 1

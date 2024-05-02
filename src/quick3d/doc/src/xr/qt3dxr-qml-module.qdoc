@@ -1,0 +1,11 @@
+// Copyright (C) 2021 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \qmlmodule QtQuick3D.Xr
+    \title \qxr QML Types
+    \brief Types for leveraging XR device features.
+
+    This module provides QML types that enable you to use the features
+    on XR platforms.
+*/

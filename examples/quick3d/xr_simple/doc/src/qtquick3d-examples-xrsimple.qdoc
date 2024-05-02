@@ -4,8 +4,12 @@
 /*!
     \example xr_simple
     \ingroup quick3d-examples
+    \ingroup qt3dxr-examples
     \title Qt Quick 3D - XR Simple Example
     \examplecategory {3D}
     \brief Demonstrates setting up a simple VR scene with Qt Quick 3D XR.
     \image xrsimple-example.jpg
+
+    As with any XR application the root item of our main.qml is an XrView.
+
 */

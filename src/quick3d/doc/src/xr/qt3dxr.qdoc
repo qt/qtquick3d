@@ -1,0 +1,45 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+/*!
+    \nextpage \qxr Overview
+    \page qt-quick-3d-xr.html
+    \title \qxr
+    //! A placeholder image, using exising image
+    \image dragon.jpg
+
+    \qxr allows you to develop Qt applications for extended reality
+    devices that take full advantage of the different immersion levels and
+    human-machine interface styles offered
+
+    The \l{\qxr Overview} page discusses the different approaches to modifying a
+    users perceived reality and clarified the concepts and technologies that are
+    referenced throughout this documentation.
+
+    \section1 Quick Links
+
+    \list
+    \include qt3dxr-toc.qdoc listitems-quick-links
+    \endlist
+
+    //! NOTE: This table refers to list items in qt3dxr-toc.qdoc - add new items there
+    //! Using existing placeholder images for now
+    \table
+        \header
+            \li \image quick3d-custom-cube1-small.jpg
+            \li \image quick3d-custom-cube1-small.jpg
+            \li \image quick3d-custom-cube1-small.jpg
+        \row
+            \include qt3dxr-toc.qdoc listitems-platforms-and-toolchains
+            \include qt3dxr-toc.qdoc listitems-getting-started
+            \include qt3dxr-toc.qdoc listitems-api-reference
+        \header
+            \li \image quick3d-custom-cube1-small.jpg
+            \li \image quick3d-custom-cube1-small.jpg
+            \li \image quick3d-custom-cube1-small.jpg
+        \row
+            \include qt3dxr-toc.qdoc listitems-examples
+            \include qt3dxr-toc.qdoc tools-ide
+            \include qt3dxr-toc.qdoc developing-applications
+    \endtable
+
+*/

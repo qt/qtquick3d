@@ -13,6 +13,8 @@ provides extensions to the existing \l{Qt Quick Scene Graph} for spatial content
 and a renderer for that extended scene graph. When using the spatial scene
 graph, it's possible to mix Qt Quick 2D content with 3D content.
 
+Qt Quick 3D also provides for XR and VR applications with \l{\qxr}.
+
 \image dragon.jpg
 
 \section1 Using the Module
@@ -27,6 +29,7 @@ The following module imports provide additional functionality:
 import QtQuick3D.AssetUtils
 import QtQuick3D.Helpers
 import QtQuick3D.Particles3D
+import QtQuick3D.Xr
 \endqml
 
 \section2 C++ API
@@ -76,6 +79,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D Level of Detail}{Level of Detail}
     \li \l{Custom Material Editor}{Custom Material Editor}
     \li \l{quick3d-lightmap}{Lightmaps and Global Illumination}
+    \li \l{\qxr Overview}
 \endlist
 
 \section1 Examples
@@ -94,6 +98,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D - Custom Geometry Example}{Adding Custom Geometry from C++}
     \li \l{Qt Quick 3D - Procedural Texture Example}{Adding Custom Texture Data from C++}
     \li \l{Qt Quick 3D - Baked Lightmap Example}{Using baked lightmaps}
+    \li \l{Qt Quick 3D - XR Simple Example}{Demonstrates setting up a simple VR scene}
     \li \l{Qt Quick 3D Examples and Tutorials}{All examples}
 \endlist
 
@@ -105,6 +110,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{QtQuick3D.AssetUtils QML Types}
           {Qt Quick 3D Asset Utility QML Types}
     \li \l{Qt Quick 3D Particles3D QML Types}
+    \li \l{\qxr}
 \endlist
 
 \section1 Related Modules
