@@ -313,7 +313,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                                                                                           *shaderProgramGenerator,
                                                                                           *shaderLibraryManager,
                                                                                           *shaderCache,
-                                                                                          isYUpInFramebuffer);
+                                                                                          isYUpInFramebuffer,
+                                                                                          1); // no multiview support here yet
                     if (shaderPipeline) {
                         const auto &key = bindShaderCommand.m_shaderPathKey;
                         const QSSGShaderFeatures features = shaderLibraryManager->getShaderMetaData(key, QSSGShaderCache::ShaderType::Fragment).features;

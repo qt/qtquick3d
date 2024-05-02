@@ -297,7 +297,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         // renderer needs to know the value.
         rhiCtxD->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() : 1);
 
-        rhiCtxD->setMainPassViewCount(1); // ### multiview for postproc effects?
+        // mainPassViewCount is left unchanged
 
         int ssaaAdjustedWidth = m_surfaceSize.width();
         int ssaaAdjustedHeight = m_surfaceSize.height();
@@ -1483,7 +1483,11 @@ void QQuick3DSGDirectRenderer::prepare()
         if (m_renderer->m_postProcessingStack) {
             if (renderPending) {
                 renderPending = false;
+                // Make sure stuff on the rhiContext is set before invoking
+                // renderToRhiTexture() since the effect system may rely on some of it.
+                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
                 m_rhiTexture = m_renderer->renderToRhiTexture(m_window);
+                // Set up the main render target again, the effect stuff may have changed some settings (e.g. the sample count).
                 queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
                 const auto &quadRenderer = m_renderer->m_sgContext->renderer()->rhiQuadRenderer();
                 quadRenderer->prepareQuad(m_renderer->m_sgContext->rhiContext().get(), nullptr);

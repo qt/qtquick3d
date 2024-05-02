@@ -381,7 +381,8 @@ QSSGRhiShaderPipelinePtr QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBin
                                                                    QSSGProgramGenerator &generator,
                                                                    QSSGShaderLibraryManager &shaderLib,
                                                                    QSSGShaderCache &shaderCache,
-                                                                   bool isYUpInFramebuffer)
+                                                                   bool isYUpInFramebuffer,
+                                                                   int viewCount)
 {
     const auto &key = inCmd.m_shaderPathKey;
     qCDebug(lcEffectSystem) << "    generating new shader pipeline for: " << key;
@@ -407,7 +408,7 @@ QSSGRhiShaderPipelinePtr QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBin
                                                 shaderLib,
                                                 shaderCache,
                                                 QSSGRhiShaderPipeline::UsedWithoutIa,
-                                                1, // ### multiview for postproc effects?
+                                                viewCount,
                                                 false);
 }
 
@@ -420,7 +421,8 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     m_pendingClears.clear();
     m_currentShaderPipeline = nullptr;
 
-    QRhi *rhi = m_sgContext->rhiContext()->rhi();
+    const auto &rhiCtx = m_sgContext->rhiContext();
+    QRhi *rhi = rhiCtx->rhi();
     const auto &shaderLib = m_sgContext->shaderLibraryManager();
     const auto &shaderCache = m_sgContext->shaderCache();
 
@@ -486,7 +488,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
         Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         const auto &generator = m_sgContext->shaderProgramGenerator();
-        if (auto stages = buildShaderForEffect(*inCmd, *generator, *shaderLib, *shaderCache, rhi->isYUpInFramebuffer())) {
+        if (auto stages = buildShaderForEffect(*inCmd, *generator, *shaderLib, *shaderCache, rhi->isYUpInFramebuffer(), rhiCtx->mainPassViewCount())) {
             m_shaderPipelines.insert(cacheKey, stages);
             m_currentShaderPipeline = stages.get();
         }

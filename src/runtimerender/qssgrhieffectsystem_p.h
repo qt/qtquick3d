@@ -78,7 +78,8 @@ public:
                                                          QSSGProgramGenerator &generator,
                                                          QSSGShaderLibraryManager &shaderLib,
                                                          QSSGShaderCache &shaderCache,
-                                                         bool isYUpInFramebuffer);
+                                                         bool isYUpInFramebuffer,
+                                                         int viewCount);
 
 private:
     void releaseResources();
