@@ -1368,9 +1368,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture))
         ioFlags.setRequiresDepthTexture(true);
 
-    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTextureArray))
-        ioFlags.setRequiresDepthTexture(true);
-
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture)) {
         ioFlags.setRequiresDepthTexture(true);
         ioFlags.setRequiresSsaoPass(true);

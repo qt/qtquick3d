@@ -10,7 +10,7 @@ void MAIN()
     if (FRAMEBUFFER_Y_UP < 0.0)
         screencoord.y = 1.0 - screencoord.y;
 #if QSHADER_VIEW_COUNT >= 2
-    BASE_COLOR *= texture(SCREEN_TEXTURE_ARRAY, vec3(screencoord, VIEW_INDEX));
+    BASE_COLOR *= texture(SCREEN_TEXTURE, vec3(screencoord, VIEW_INDEX));
 #else
     BASE_COLOR *= texture(SCREEN_TEXTURE, screencoord);
 #endif

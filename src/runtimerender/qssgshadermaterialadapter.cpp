@@ -723,14 +723,10 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "IBL_PROBE", "qt_iblProbeProcessor", false },
 
     // textures
-    { "SCREEN_TEXTURE", "qt_screenTexture", false },
-    { "SCREEN_MIP_TEXTURE", "qt_screenTexture", false }, // same resource as SCREEN_TEXTURE under the hood
-    { "SCREEN_TEXTURE_ARRAY", "qt_screenTextureArray", false },
-    { "SCREEN_MIP_TEXTURE_ARRAY", "qt_screenTextureArray", false },
-    { "DEPTH_TEXTURE", "qt_depthTexture", false },
-    { "DEPTH_TEXTURE_ARRAY", "qt_depthTextureArray", false },
-    { "AO_TEXTURE", "qt_aoTexture", false },
-    { "AO_TEXTURE", "qt_aoTextureArray", false },
+    { "SCREEN_TEXTURE", "qt_screenTexture", true },
+    { "SCREEN_MIP_TEXTURE", "qt_screenTexture", true }, // same resource as SCREEN_TEXTURE under the hood
+    { "DEPTH_TEXTURE", "qt_depthTexture", true },
+    { "AO_TEXTURE", "qt_aoTexture", true },
     { "IBL_TEXTURE", "qt_lightProbe", false },
     { "LIGHTMAP", "qt_lightmap", false },
 
@@ -975,8 +971,6 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesDepthTexture;
                 else if (trimmedId == QByteArrayLiteral("AO_TEXTURE"))
                     md.flags |= QSSGCustomShaderMetaData::UsesAoTexture;
-                else if (trimmedId == QByteArrayLiteral("AO_TEXTURE_ARRAY"))
-                    md.flags |= QSSGCustomShaderMetaData::UsesAoTextureArray;
                 else if (trimmedId == QByteArrayLiteral("POSITION"))
                     md.flags |= QSSGCustomShaderMetaData::OverridesPosition;
                 else if (trimmedId == QByteArrayLiteral("PROJECTION_MATRIX"))
@@ -993,19 +987,20 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesLightmap;
                 else if (trimmedId == QByteArrayLiteral("VIEW_INDEX"))
                     md.flags |= QSSGCustomShaderMetaData::UsesViewIndex;
-                else if (trimmedId == QByteArrayLiteral("DEPTH_TEXTURE_ARRAY"))
-                    md.flags |= QSSGCustomShaderMetaData::UsesDepthTextureArray;
-                else if (trimmedId == QByteArrayLiteral("SCREEN_TEXTURE_ARRAY"))
-                    md.flags |= QSSGCustomShaderMetaData::UsesScreenTextureArray;
-                else if (trimmedId == QByteArrayLiteral("SCREEN_MIP_TEXTURE_ARRAY"))
-                    md.flags |= QSSGCustomShaderMetaData::UsesScreenMipTextureArray;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
                         QByteArray newExpr;
                         newExpr.assign(subst.actualName);
-                        if (subst.multiViewDependent && multiViewCompatible)
-                            newExpr += QByteArrayLiteral("[qt_viewIndex]");
+                        if (subst.multiViewDependent && multiViewCompatible) {
+                            if (subst.builtin.endsWith(QByteArrayLiteral("_TEXTURE"))
+                                || subst.builtin == QByteArrayLiteral("INPUT"))
+                            {
+                                newExpr += QByteArrayLiteral("Array"); // e.g. qt_depthTexture -> qt_depthTextureArray
+                            } else {
+                                newExpr += QByteArrayLiteral("[qt_viewIndex]"); // e.g. qt_viewProjectionMatrix -> qt_viewProjectionMatrix[qt_viewIndex]
+                            }
+                        }
                         id.replace(subst.builtin, newExpr); // replace, not assignment, to keep whitespace etc.
                         if (trimmedId == QByteArrayLiteral("BONE_TRANSFORMS")) {
                             useJointTexState = 0;
@@ -1099,22 +1094,28 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     // sampler2DArray binding point and vice versa. Therefore it is up to the
     // shader snippet to ifdef with QSHADER_VIEW_COUNT if it wants to support
     // both multiview and non-multiview rendering.
-    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture) && !multiViewCompatible)
-        allUniforms.append({ "sampler2D", "qt_depthTexture" });
-    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTextureArray) && multiViewCompatible)
-        allUniforms.append({ "sampler2DArray", "qt_depthTextureArray" });
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture)) {
+        if (multiViewCompatible)
+            allUniforms.append({ "sampler2DArray", "qt_depthTextureArray" });
+        else
+            allUniforms.append({ "sampler2D", "qt_depthTexture" });
+    }
 
     // And the same pattern for qt_screenTexture(Array).
-    if ((md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture) || md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture)) && !multiViewCompatible)
-        allUniforms.append({ "sampler2D", "qt_screenTexture" });
-    if ((md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTextureArray) || md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTextureArray)) && multiViewCompatible)
-        allUniforms.append({ "sampler2DArray", "qt_screenTextureArray" });
+    if ((md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTexture) || md.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTexture))) {
+        if (multiViewCompatible)
+            allUniforms.append({ "sampler2DArray", "qt_screenTextureArray" });
+        else
+            allUniforms.append({ "sampler2D", "qt_screenTexture" });
+    }
 
     // And for SSAO.
-    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
-        allUniforms.append({ "sampler2D", "qt_aoTexture" });
-    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTextureArray))
-        allUniforms.append({ "sampler2DArray", "qt_aoTextureArray" });
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture)) {
+        if (multiViewCompatible)
+            allUniforms.append({ "sampler2DArray", "qt_aoTextureArray" });
+        else
+            allUniforms.append({ "sampler2D", "qt_aoTexture" });
+    }
 
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesLightmap))
         allUniforms.append({ "sampler2D", "qt_lightmap" });

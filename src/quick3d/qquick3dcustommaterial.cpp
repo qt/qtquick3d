@@ -1098,6 +1098,16 @@ QT_BEGIN_NAMESPACE
             BASE_COLOR = vec4(vec3(c), alpha);
         }
     \endcode
+    With multiview rendering, \c SCREEN_TEXTURE is a \c sampler2DArray. Use
+    \c VIEW_INDEX to select the layer to use. For VR/AR applications that wish to
+    support both types of rendering, the portable approach is the following:
+    \badcode
+        #if QSHADER_VIEW_COUNT >= 2
+            vec4 c = texture(SCREEN_TEXTURE, vec3(uv, VIEW_INDEX));
+        #else
+            vec4 c = texture(SCREEN_TEXTURE, uv);
+        #endif
+    \endcode
 
     \li \c SCREEN_MIP_TEXTURE - Identical to \c SCREEN_TEXTURE in most ways,
     the difference being that this texture has mipmaps generated. This can be
@@ -1107,23 +1117,7 @@ QT_BEGIN_NAMESPACE
     relying on the texture mip levels (e.g. using \c textureLod in the shader)
     is implemented by the custom material.
 
-    \li \c SCREEN_TEXTURE_ARRAY - When present, a texture array (sampler2DArray)
-    with the color buffer from a rendering pass containing the contents of the
-    scene excluding any transparent materials or any materials also using the
-    screen texture is exposed to the shader under this name. Use \c VIEW_INDEX
-    to select the layer to use. When multiview rendering is not active, this
-    should not relied on. Therefore, the portable approach is the following: \badcode
-        #if QSHADER_VIEW_COUNT >= 2
-            vec4 c = texture(SCREEN_TEXTURE_ARRAY, vec3(uv, VIEW_INDEX));
-        #else
-            vec4 c = texture(SCREEN_TEXTURE, uv);
-        #endif
-    \endcode
-
-    \li \c SCREEN_MIP_TEXTURE_ARRAY - Identical to \c SCREEN_TEXTURE_ARRAY,
-    except that the texture has mipmaps generated.
-
-    \li \c DEPTH_TEXTURE - When present, a texture (sampler2D) with the
+    \li \c DEPTH_TEXTURE - When present, a texture (\c sampler2D) with the
     (non-linearized) depth buffer contents is exposed to the shader under this
     name. Only opaque objects are included.
     For example, a fragment shader could contain the following: \badcode
@@ -1137,14 +1131,12 @@ QT_BEGIN_NAMESPACE
         float d = 2.0 * zNear * zFar / (zFar + zNear - z_n * zRange);
         d /= zFar;
     \endcode
-
-    \li \c DEPTH_TEXTURE_ARRAY - When present, a texture array (sampler2DArray)
-    with the (non-linearized) depth buffer contents is exposed to the shader
-    under this name. Only opaque objects are included. Use \c VIEW_INDEX to
-    select the layer to use. When multiview rendering is not active, this
-    should not relied on. Therefore, the portable approach is the following: \badcode
+    With multiview rendering, \c DEPTH_TEXTURE is a \c sampler2DArray. Use
+    \c VIEW_INDEX to select the layer to use. For VR/AR applications that wish to
+    support both types of rendering, the portable approach is the following:
+    \badcode
         #if QSHADER_VIEW_COUNT >= 2
-            vec4 depthSample = texture(DEPTH_TEXTURE_ARRAY, vec3(uv, VIEW_INDEX));
+            vec4 depthSample = texture(DEPTH_TEXTURE, vec3(uv, VIEW_INDEX));
         #else
             vec4 depthSample = texture(DEPTH_TEXTURE, uv);
         #endif
@@ -1162,16 +1154,14 @@ QT_BEGIN_NAMESPACE
         vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
         float aoFactor = texture(AO_TEXTURE, aoUV).x;
     \endcode
-
-    \li \c AO_TEXTURE_ARRAY - Available only when multiview rendering is in use.
-    Similar to \c AO_TEXTURE, but this is a 2D texture array (sampler2DArray).
-    Use \c VIEW_INDEX as the layer (the third coordinate in the \c uv argument in
-    \c{texture()}). Portable custom materials that wish to function both with and
-    without multiview rendering, can do the following: \badcode
+    With multiview rendering, \c AO_TEXTURE is a \c sampler2DArray. Use
+    \c VIEW_INDEX to select the layer to use. For VR/AR applications that wish to
+    support both types of rendering, the portable approach is the following:
+    \badcode
         #if QSHADER_VIEW_COUNT >= 2
-            ivec2 aoSize = textureSize(AO_TEXTURE_ARRAY, 0).xy;
+            ivec2 aoSize = textureSize(AO_TEXTURE, 0).xy;
             vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
-            float aoFactor = texture(AO_TEXTURE_ARRAY, vec3(aoUV, VIEW_INDEX)).x;
+            float aoFactor = texture(AO_TEXTURE, vec3(aoUV, VIEW_INDEX)).x;
         #else
             ivec2 aoSize = textureSize(AO_TEXTURE, 0);
             vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
@@ -1193,8 +1183,8 @@ QT_BEGIN_NAMESPACE
     \li \c VIEW_INDEX - When used in the custom shader code, this is a
     (non-interpolated) uint variable. When multiview rendering is not used, the
     value is always 0. With multiview rendering, the value is the current view
-    index (e.g., gl_ViewIndex). Useful in particular in combination with \c
-    DEPTH_TEXTURE_ARRAY and similar.
+    index (e.g., gl_ViewIndex). Useful in particular in combination with
+    \c DEPTH_TEXTURE and similar when multiview rendering is enabled.
 
     \endlist
 
@@ -1602,14 +1592,6 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Morphing, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesViewIndex))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ViewIndex, true);
-    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTextureArray))
-        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTextureArray, true);
-    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenTextureArray))
-        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTextureArray, true);
-    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesScreenMipTextureArray))
-        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTextureArray, true);
-    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTextureArray))
-        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTextureArray, true);
 
     // vertex only
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))

@@ -1310,20 +1310,6 @@ void MAIN()
 Here the rectangle is textured with \c SCREEN_TEXTURE, while replacing transparent pixels
 with purple.
 
-Custom materials written to be used with Qt Quick 3D XR should consider relying
-on \c DEPTH_TEXTURE_ARRAY instead of \c DEPTH_TEXTURE, and \c
-SCREEN_TEXTURE_ARRAY instead of \c SCREEN_TEXTURE. This needs to be ifdefed so
-that referencing the texture array is only done when multiview rendering is in
-use:
-
-\badcode
-    #if QSHADER_VIEW_COUNT >= 2
-        vec4 depthSample = texture(DEPTH_TEXTURE_ARRAY, vec3(uv, VIEW_INDEX));
-    #else
-        vec4 depthSample = texture(DEPTH_TEXTURE, uv);
-    #endif
-\endcode
-
 \section2 Light processor functions
 
 An advanced feature of \l CustomMaterial is the ability to define functions in the

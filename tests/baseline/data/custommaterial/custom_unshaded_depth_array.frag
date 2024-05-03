@@ -6,8 +6,8 @@ void MAIN()
     // not really using the texture array version, unless multiview rendering is active,
     // nonetheless this test verifies that QSHADER_VIEW_COUNT is defined etc.
 #if QSHADER_VIEW_COUNT >= 2
-    vec2 uv = (gl_FragCoord.xy) / vec2(textureSize(DEPTH_TEXTURE_ARRAY, 0).xy);
-    vec4 depthSample = texture(DEPTH_TEXTURE_ARRAY, vec3(uv, VIEW_INDEX));
+    vec2 uv = (gl_FragCoord.xy) / vec2(textureSize(DEPTH_TEXTURE, 0).xy);
+    vec4 depthSample = texture(DEPTH_TEXTURE, vec3(uv, VIEW_INDEX));
 #else
     vec2 uv = (gl_FragCoord.xy) / vec2(textureSize(DEPTH_TEXTURE, 0));
     vec4 depthSample = texture(DEPTH_TEXTURE, uv);
