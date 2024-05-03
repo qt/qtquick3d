@@ -1521,6 +1521,7 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
     m_directRenderer->setViewport(QRectF(window()->effectiveDevicePixelRatio() * mapToScene(QPointF(0, 0)), targetSize));
     m_directRenderer->setVisibility(isVisible());
     if (isVisible()) {
+        m_directRenderer->preSynchronize();
         m_directRenderer->renderer()->synchronize(this, targetSize.toSize(), window()->effectiveDevicePixelRatio());
         updateDynamicTextures();
         m_directRenderer->requestRender();

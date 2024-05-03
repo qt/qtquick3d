@@ -1060,14 +1060,15 @@ QT_BEGIN_NAMESPACE
 
     \list
 
-    \li \c SCREEN_TEXTURE - When present, a texture (sampler2D) with the color
-    buffer from a rendering pass containing the contents of the scene excluding
-    any transparent materials or any materials also using the SCREEN_TEXTURE is
-    exposed to the shader under this name. The texture can be used for techniques
-    that require the contents of the framebuffer they are being rendered to. The
-    SCREEN_TEXTURE texture uses the same clear mode as the View3D. The size of
-    these textures matches the size of the View3D in pixels. For example, a
-    fragment shader could contain the following:
+    \li \c SCREEN_TEXTURE - When present, a texture (\c sampler2D or \c
+    sampler2DArray) with the color buffer from a rendering pass containing the
+    contents of the scene excluding any transparent materials or any materials
+    also using the SCREEN_TEXTURE is exposed to the shader under this name. The
+    texture can be used for techniques that require the contents of the
+    framebuffer they are being rendered to. The SCREEN_TEXTURE texture uses the
+    same clear mode as the View3D. The size of these textures matches the size
+    of the View3D in pixels. For example, a fragment shader could contain the
+    following:
     \badcode
         vec2 uv = FRAGCOORD.xy / vec2(textureSize(SCREEN_TEXTURE, 0));
         vec2 displace = vec2(0.1);
@@ -1117,9 +1118,9 @@ QT_BEGIN_NAMESPACE
     relying on the texture mip levels (e.g. using \c textureLod in the shader)
     is implemented by the custom material.
 
-    \li \c DEPTH_TEXTURE - When present, a texture (\c sampler2D) with the
-    (non-linearized) depth buffer contents is exposed to the shader under this
-    name. Only opaque objects are included.
+    \li \c DEPTH_TEXTURE - When present, a texture (\c sampler2D or \c
+    sampler2DArray) with the (non-linearized) depth buffer contents is exposed
+    to the shader under this name. Only opaque objects are included.
     For example, a fragment shader could contain the following: \badcode
         ivec2 dtSize = textureSize(DEPTH_TEXTURE, 0);
         vec2 dtUV = (FRAGCOORD.xy) / vec2(dtSize);
@@ -1144,12 +1145,12 @@ QT_BEGIN_NAMESPACE
 
     \li \c AO_TEXTURE - When present and screen space ambient occlusion is
     enabled (meaning when the AO strength and distance are both non-zero) in
-    SceneEnvironment, the SSAO texture (sampler2D) is exposed to the shader
-    under this name. Sampling this texture can be useful in unshaded materials.
-    Shaded materials have ambient occlusion support built in. This means that
-    the ambient occlusion factor is taken into account automatically. Whereas in a
-    fragment shader for an unshaded material one could write the following
-    to achieve the same: \badcode
+    SceneEnvironment, the SSAO texture (\c sampler2D or \c sampler2DArray) is
+    exposed to the shader under this name. Sampling this texture can be useful
+    in unshaded materials. Shaded materials have ambient occlusion support built
+    in. This means that the ambient occlusion factor is taken into account
+    automatically. Whereas in a fragment shader for an unshaded material one
+    could write the following to achieve the same: \badcode
         ivec2 aoSize = textureSize(AO_TEXTURE, 0);
         vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
         float aoFactor = texture(AO_TEXTURE, aoUV).x;

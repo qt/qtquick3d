@@ -237,6 +237,21 @@ QT_BEGIN_NAMESPACE
     function, and optionally a set of \c VARYING declarations, which are then
     amended with further shader code by the engine.
 
+    \note The above example is not compatible with the optional multiview rendering mode that is used in some VR/AR applications.
+    To make it function both with and without multiview mode, change MAIN() like this:
+    \badcode
+    void MAIN()
+    {
+        vec4 c = texture(tex, TEXTURE_UV);
+        c.r *= redLevel;
+    #if QSHADER_VIEW_COUNT >= 2
+        FRAGCOLOR = c * texture(INPUT, vec3(INPUT_UV, VIEW_INDEX));
+    #else
+        FRAGCOLOR = c * texture(INPUT, INPUT_UV);
+    #endif
+    }
+    \endcode
+
     \section1 Effects with vertex shaders
 
     A vertex shader, when present, must provide a function called \c MAIN. In
@@ -321,10 +336,12 @@ QT_BEGIN_NAMESPACE
     \li \c MODELVIEWPROJECTION_MATRIX - \c mat4 - The transformation matrix for the screen quad.
     \li \c VERTEX - \c vec3 - The vertices of the quad; the input to the vertex shader. (vertex shader only)
 
-    \li \c INPUT - \c sampler2D - The sampler for the input texture with the
-    scene rendered into it, unless a pass redirects its input via a BufferInput
-    object, in which case \c INPUT refers to the additional color buffer's
-    texture referenced by the BufferInput.
+    \li \c INPUT - \c sampler2D or \c sampler2DArray - The sampler for the input
+    texture with the scene rendered into it, unless a pass redirects its input
+    via a BufferInput object, in which case \c INPUT refers to the additional
+    color buffer's texture referenced by the BufferInput. With multiview
+    rendering enabled, which can be relevant for VR/AR applications, this is
+    a sampler2DArray, while the input texture becomes a 2D texture array.
 
     \li \c INPUT_UV - \c vec2 - UV coordinates for sampling \c INPUT.
 
@@ -343,6 +360,10 @@ QT_BEGIN_NAMESPACE
     contents with the opaque objects in the scene. Like with CustomMaterial, the
     presence of this keyword in the shader triggers generating the depth texture
     automatically.
+
+    \li \c VIEW_INDEX - \c uint - With multiview rendering enabled, this is the
+    current view index, available in both vertex and fragment shaders. Always 0
+    when multiview rendering is not used.
 
     \endlist
 
@@ -507,6 +528,39 @@ QT_BEGIN_NAMESPACE
     increased resource and performance costs can quickly outweigh the benefits
     from better quality on systems with limited GPU power.
 
+    \section1 VR/AR considerations
+
+    When developing applications for virtual or augmented reality by using Qt
+    Quick 3D XR, postprocessing effects are functional and available to use.
+    However, designers are developers should take special care to understand
+    which and what kind of effects make sense in a virtual reality environment.
+    Some effects, including some of the built-in ones in
+    ExtendedSceneEnvironment or the deprecated Effects module, do not lead to a
+    good visual experience in a VR environment, possibly affecting the user
+    physically even (causing, for example, motion sickness or dizziness).
+
+    When the more efficient multiview rendering mode is enabled in a VR/AR
+    application, there is no separate render pass for the left and right eye
+    contents. Instead, it all happens in one pass, using a 2D texture array with
+    two layers instead of two independent 2D textures. This also means that many
+    intermediate buffers, meaning color or depth textures, will need to become
+    texture arrays in this mode. This then has implications for custom materials
+    and postprocessing effects. Textures such as the input texture (\c INPUT),
+    the depth texture (\c DEPTH_TEXTURE), the screen texture (\c
+    SCREEN_TEXTURE), and some others becomes 2D texture arrays, exposed in the
+    shader as a \c sampler2DArray instead of \c sampler2D. This has implications
+    for GLSL functions such as texture(), textureLod(), or textureSize(). The UV
+    coordinate is then a vec3, not a vec2. Whereas textureSize() returns a vec3,
+    not a vec2. Effects intended to function regardless of the rendering mode,
+    can be written with an appropriate ifdef:
+    \badcode
+    #if QSHADER_VIEW_COUNT >= 2
+        vec4 c = texture(INPUT, vec3(INPUT_UV, VIEW_INDEX));
+    #else
+        vec4 c = texture(INPUT, INPUT_UV);
+    #endif
+    \endcode
+
     \sa Shader, Pass, Buffer, BufferInput, {Qt Quick 3D - Custom Effect Example}
 */
 
@@ -542,7 +596,11 @@ static const char *default_effect_vertex_shader =
 static const char *default_effect_fragment_shader =
         "void MAIN()\n"
         "{\n"
+        "#if QSHADER_VIEW_COUNT >= 2\n"
+        "    FRAGCOLOR = texture(INPUT, vec3(INPUT_UV, VIEW_INDEX));\n"
+        "#else\n"
         "    FRAGCOLOR = texture(INPUT, INPUT_UV);\n"
+        "#endif\n"
         "}\n";
 
 static inline void insertVertexMainArgs(QByteArray &snippet)
@@ -725,7 +783,6 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         // built-ins
         uniforms.append({ "mat4", "qt_modelViewProjection" });
-        uniforms.append({ "sampler2D", "qt_inputTexture" });
         uniforms.append({ "vec2", "qt_inputSize" });
         uniforms.append({ "vec2", "qt_outputSize" });
         uniforms.append({ "float", "qt_frame_num" });
@@ -734,6 +791,9 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         uniforms.append({ "float", "qt_normalAdjustViewportFactor" });
         uniforms.append({ "float", "qt_nearClipValue" });
 
+        // qt_inputTexture is not listed in uniforms, will be added by prepareCustomShader()
+        // since the name and type varies between non-multiview and multiview mode
+
         QSSGShaderCustomMaterialAdapter::StringPairList builtinVertexInputs;
         builtinVertexInputs.append({ "vec3", "attr_pos" });
         builtinVertexInputs.append({ "vec2", "attr_uv" });
@@ -741,6 +801,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         QSSGShaderCustomMaterialAdapter::StringPairList builtinVertexOutputs;
         builtinVertexOutputs.append({ "vec2", "qt_inputUV" });
         builtinVertexOutputs.append({ "vec2", "qt_textureUV" });
+        builtinVertexOutputs.append({ "flat uint", "qt_viewIndex" });
 
         // fragOutput is added automatically by the program generator
 
@@ -802,29 +863,44 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                             code = default_effect_fragment_shader;
                     }
 
-                    QByteArray shaderCodeMeta;
-                    QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
+                    QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result[2];
                     if (type == QSSGShaderCache::ShaderType::Vertex) {
-                        result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta, code, type,
-                                                                                      uniforms, builtinVertexInputs, builtinVertexOutputs);
+                        QByteArray buf;
+                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
+                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
+                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs, false);
+                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].first += buf;
+                        buf.clear();
+                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
+                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
+                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs, true);
+                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex].first += buf;
                     } else {
-                        result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta, code, type,
-                                                                                      uniforms, builtinVertexOutputs);
+                        QByteArray buf;
+                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
+                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
+                                                                                 uniforms, builtinVertexOutputs, {}, false);
+                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].first += buf;
+                        buf.clear();
+                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
+                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
+                                                                                 uniforms, builtinVertexOutputs, {}, true);
+                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex].first += buf;
                     }
 
-                    if (result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+                    if (result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
                         effectNode->requiresDepthTexture = true;
 
-                    code = result.first + shaderCodeMeta;
-
-                    if (type == QSSGShaderCache::ShaderType::Vertex) {
-                        // qt_customMain() has an argument list which gets injected here
-                        insertVertexMainArgs(code);
-                        passData.vertexShaderCode = code;
-                        passData.vertexMetaData = result.second;
-                    } else {
-                        passData.fragmentShaderCode = code;
-                        passData.fragmentMetaData = result.second;
+                    for (int i : { QSSGRenderCustomMaterial::RegularShaderPathKeyIndex, QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex }) {
+                        if (type == QSSGShaderCache::ShaderType::Vertex) {
+                            // qt_customMain() has an argument list which gets injected here
+                            insertVertexMainArgs(result[i].first);
+                            passData.vertexShaderCode[i] = result[i].first;
+                            passData.vertexMetaData[i] = result[i].second;
+                        } else {
+                            passData.fragmentShaderCode[i] = result[i].first;
+                            passData.fragmentMetaData[i] = result[i].second;
+                        }
                     }
                 }
 

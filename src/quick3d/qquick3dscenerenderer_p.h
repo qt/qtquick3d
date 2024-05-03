@@ -98,12 +98,14 @@ private:
     QRhiTextureRenderTarget *m_ssaaTextureToTextureRenderTarget = nullptr;
     QRhiRenderPassDescriptor *m_ssaaTextureToTextureRenderPassDescriptor = nullptr;
     QRhiRenderBuffer *m_msaaRenderBuffer = nullptr;
+    QRhiTexture *m_msaaMultiViewRenderBuffer = nullptr;
     QRhiTexture *m_ssaaTexture = nullptr;
     QRhiTexture *m_temporalAATexture = nullptr;
     QRhiTexture *m_prevTempAATexture = nullptr;
     QRhiTextureRenderTarget *m_temporalAARenderTarget = nullptr;
     QRhiRenderPassDescriptor *m_temporalAARenderPassDescriptor = nullptr;
     QRhiRenderBuffer *m_depthStencilBuffer = nullptr;
+    QRhiTexture *m_multiViewDepthStencilBuffer = nullptr;
     bool m_textureNeedsFlip = true;
     QSSGRenderLayer::Background m_backgroundMode;
     QColor m_userBackgroundColor = Qt::black;
@@ -198,6 +200,8 @@ public:
 
     void requestRender();
     void setVisibility(bool visible);
+
+    void preSynchronize();
 
 private Q_SLOTS:
     void prepare();

@@ -11,5 +11,9 @@ void MAIN()
         mat2 rotation = mat2(cos(r), sin(r), -sin(r), cos(r));
         texcoord = vec2(0.5, 0.5) + rotation * (INPUT_UV - vec2(0.5, 0.5));
     }
+#if QSHADER_VIEW_COUNT >= 2
+    FRAGCOLOR = texture(INPUT, vec3(texcoord, VIEW_INDEX));
+#else
     FRAGCOLOR = texture(INPUT, texcoord);
+#endif
 }

@@ -1498,7 +1498,7 @@ The most important special keywords for \l Effect fragment shaders are the follo
 \li Description
 \row
 \li INPUT
-\li sampler2D
+\li sampler2D or sampler2DArray
 \li The sampler for the input texture. An effect will typically sample this using \c INPUT_UV.
 \row
 \li INPUT_UV
@@ -1519,6 +1519,19 @@ may have passes that output to intermediate textures with different sizes.
 \li Depth texture with the depth buffer contents with the opaque objects in the scene. Like with CustomMaterial,
 the presence of this keyword in the shader triggers generating the depth texture automatically.
 \endtable
+
+\note When multiview rendering is enabled, the input texture is a 2D texture
+array. GLSL functions such as texture() and textureSize() take/return a
+vec3/ivec3, respectively, then. Use \c VIEW_INDEX for the layer. In VR/AR
+applications that wish to function both with and without multiview rendering, the
+portable approach is to write the shader code like this:
+\badcode
+  #if QSHADER_VIEW_COUNT >= 2
+      vec4 c = texture(INPUT, vec3(INPUT_UV, VIEW_INDEX));
+  #else
+      vec4 c = texture(INPUT, INPUT_UV);
+  #endif
+\endcode
 
 \section2 A post-processing effect
 

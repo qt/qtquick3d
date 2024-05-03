@@ -742,7 +742,7 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "VAR_COLOR", "qt_varColor", false },
 
     // effects
-    { "INPUT", "qt_inputTexture", false },
+    { "INPUT", "qt_inputTexture", true },
     { "INPUT_UV", "qt_inputUV", false },
     { "TEXTURE_UV", "qt_textureUV", false },
     { "INPUT_SIZE", "qt_inputSize", false },
@@ -987,6 +987,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesLightmap;
                 else if (trimmedId == QByteArrayLiteral("VIEW_INDEX"))
                     md.flags |= QSSGCustomShaderMetaData::UsesViewIndex;
+                else if (trimmedId == QByteArrayLiteral("INPUT"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesInputTexture;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
@@ -1115,6 +1117,14 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
             allUniforms.append({ "sampler2DArray", "qt_aoTextureArray" });
         else
             allUniforms.append({ "sampler2D", "qt_aoTexture" });
+    }
+
+    // Input texture for post-processing effects.
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesInputTexture)) {
+        if (multiViewCompatible)
+            allUniforms.append({ "sampler2DArray", "qt_inputTextureArray" });
+        else
+            allUniforms.append({ "sampler2D", "qt_inputTexture" });
     }
 
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesLightmap))

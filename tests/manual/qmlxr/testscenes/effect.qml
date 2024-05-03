@@ -12,7 +12,10 @@ Node {
         clearColor: "skyblue"
         backgroundMode: SceneEnvironment.Color
 
-        effects: [ spiralEffect ]
+        effects: [ spiralEffect, redEffect ]
+
+        //antialiasingMode: SceneEnvironment.SSAA
+        //antialiasingQuality: SceneEnvironment.High
     }
 
     Effect {
@@ -28,6 +31,18 @@ Node {
                     shader: "spiral.frag"
                 }
             ]
+        }
+    }
+
+    Effect {
+        id: redEffect
+        property real uRed: 1.0
+        NumberAnimation on uRed { from: 1; to: 0; duration: 5000; loops: -1 }
+        passes: Pass {
+            shaders: Shader {
+                stage: Shader.Fragment
+                shader: "red.frag"
+            }
         }
     }
 
