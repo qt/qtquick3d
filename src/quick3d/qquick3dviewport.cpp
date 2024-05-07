@@ -1309,10 +1309,12 @@ void QQuick3DViewport::setTouchpoint(QQuickItem *target, const QPointF &position
 
         QTouchEvent ev(type, m_syntheticTouchDevice, {}, points);
 
-        // Actually send event:
-        auto da = QQuickItemPrivate::get(t)->deliveryAgent();
-        bool handled = da->event(&ev);
-        Q_UNUSED(handled);
+        if (t) {
+            // Actually send event:
+            auto da = QQuickItemPrivate::get(t)->deliveryAgent();
+            bool handled = da->event(&ev);
+            Q_UNUSED(handled);
+        }
 
         // Duplicate logic from QQuickWindowPrivate::clearGrabbers
         if (ev.isEndEvent()) {
