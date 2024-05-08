@@ -790,7 +790,6 @@ struct Tokenizer {
         Token_CloseParen,
         Token_SemiColon,
         Token_Identifier,
-        Token_Macro,
         Token_OpenBraket,
         Token_CloseBraket,
         Token_Unspecified,
@@ -832,24 +831,6 @@ Tokenizer::Token Tokenizer::next()
                 return Token_Comment;
             }
             return Token_Unspecified;
-
-        case '#': {
-            while (*pos) {
-                if (*pos == '\n') {
-                    ++pos;
-                    break;
-                } else if (*pos == '\\') {
-                    ++pos;
-                    while (*pos && (*pos == ' ' || *pos == '\t'))
-                        ++pos;
-                    if (*pos && (*pos == '\n' || (*pos == '\r' && pos[1] == '\n')))
-                        pos += 2;
-                } else {
-                    ++pos;
-                }
-            }
-            return Token_Unspecified;
-        }
 
         case ';': return Token_SemiColon;
         case '\0': return Token_EOF;
@@ -1041,6 +1022,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
             funcFinderState = 0;
             break;
         case Tokenizer::Token_OpenBraket:
+            // copy everything as-is up to the [
+            result += QByteArray::fromRawData(lastPos, tok.pos - lastPos - 1);
             if (useJointTexState == 0) {
                 result += QByteArrayLiteral("(2 * (");
                 ++useJointTexState;
@@ -1058,6 +1041,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
             result += QByteArrayLiteral("[");
             break;
         case Tokenizer::Token_CloseBraket:
+            // copy everything as-is up to the ]
+            result += QByteArray::fromRawData(lastPos, tok.pos - lastPos - 1);
             // This implementation will not allow mixed usages of BONE_TRANSFORMS and
             // BONE_NORMAL_TRANSFORMS.
             // For example, BONE_TRANSFORM[int(BONE_NORMAL_TRANFORMS[i][0].x)]
