@@ -105,7 +105,8 @@ void QOpenXRItemPrivate::updateContent()
     \qmltype XrItem
     \inqmlmodule QtQuick3D.Xr
     \inherits Node
-    \brief A virtual surface in 3D space that can hold 2D user interface content
+    \brief A virtual surface in 3D space that can hold 2D user interface content.
+    \since 6.8
 
     The XrItem type is a Qt Quick 3D \l Node that represents a rectangle with \l width and \l height.
     It holds one Qt Quick \l Item, specified by \l contentItem, and scales it to fit.

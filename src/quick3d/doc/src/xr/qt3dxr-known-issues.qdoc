@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 /*!
-    \page qt3dxr-known-issues.html
     \title \qxr Known Issues and Limitations
-
+    \group qtxr-has-known-issues
     \section1 Known limitations
     \qxr at the current stage has the following limitations:
 

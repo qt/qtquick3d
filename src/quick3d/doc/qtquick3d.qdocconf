@@ -50,7 +50,8 @@ headers += ../../helpers/gridgeometry_p.h \
 sourcedirs  += .. \
                src \
                ../../quick3dparticles \
-               ../../runtimerender/extensionapi
+               ../../runtimerender/extensionapi \
+               ../../xr
 
 sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/randominstancing.cpp \

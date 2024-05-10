@@ -54,6 +54,16 @@ import QtQuick3D.Particles3D
 
 \generatelist qmltypesbymodule QtQuick3D.Particles3D
 
+\section1 QtQuick3D.Xr QML Types
+
+Import the QtQuick3D.Xr module with the following statement:
+
+\qml
+import QtQuick3D.Xr
+\endqml
+
+\generatelist qmltypesbymodule QtQuick3D.Xr
+
 \section1 Obsolete QML Types
 
 The following QML types are now obsolete. Obsolete types are no longer
