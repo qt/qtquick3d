@@ -119,6 +119,24 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick}
 \endlist
 
+\section1 Qt Academy Courses
+
+\list
+    \li \l {https://www.qt.io/academy/course-catalog#qt-quick-3d:-animations}
+           {Qt Quick 3D: Animations}
+    \li \l {https://www.qt.io/academy/course-catalog#qt-quick-3d:-assets-&-resources}
+           {Qt Quick 3D: Assets & Resources}
+    \li \l {https://www.qt.io/academy/course-catalog#qt-quick-3d:-custom-materials,-render-settings-&-post-processing-}
+           {Qt Quick 3D: Custom Materials, Render Settings & Post-Processing}
+    \li \l {https://www.qt.io/academy/course-catalog#qt-quick-3d:-interaction-and-managing-performance-}
+           {Qt Quick 3D: Interaction and Managing Performance}
+    \li \l {https://www.qt.io/academy/course-catalog#qt-quick-3d:-lighting-&-cameras}
+           {Qt Quick 3D: Lighting & Cameras}
+    \li \l {https://www.qt.io/academy/course-catalog#qt-quick-3d:-views,-scenes-&-nodes}
+           {Qt Quick 3D: Views, Scenes & Nodes}
+\endlist
+
+
 \section1 Licenses and Attributions
 
 Qt Quick 3D is available under the commercial license from \l {The Qt Company}.
