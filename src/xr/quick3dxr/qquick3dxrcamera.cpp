@@ -10,6 +10,12 @@
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
+/*!
+    \qmltype XrCamera
+    \inherits Node
+    \inqmlmodule QtQuick3D.Xr
+    \brief The camera for an XrView.
+*/
 
 QQuick3DXrEyeCamera::QQuick3DXrEyeCamera(QQuick3DNode *parent)
     : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera)), parent)
@@ -196,10 +202,20 @@ QQuick3DXrCamera::~QQuick3DXrCamera()
 
 }
 
+/*!
+    \qmlproperty float QtQuick3D.Xr::XrCamera::clipNear
+    \brief The start of the distance range, with reference to the camera position, in which objects will appear.
+*/
+
 float QQuick3DXrCamera::clipNear() const
 {
     return m_clipNear;
 }
+
+/*!
+    \qmlproperty float QtQuick3D.Xr::XrCamera::clipFar
+    \brief The end of the distance range, with reference to the camera position, in which objects will appear.
+*/
 
 float QQuick3DXrCamera::clipFar() const
 {
@@ -222,5 +238,15 @@ void QQuick3DXrCamera::setClipFar(float clipFar)
     m_clipFar = clipFar;
     emit clipFarChanged(m_clipFar);
 }
+
+/*!
+    \qmlsignal XrCamera::clipNearChanged
+    Emitted when the clipNear property changes.
+*/
+
+/*!
+    \qmlsignal XrCamera::clipFarChanged
+    Emitted when the clipFar property changes.
+*/
 
 QT_END_NAMESPACE

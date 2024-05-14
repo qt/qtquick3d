@@ -438,4 +438,44 @@ void QQuick3DXrItem::setColor(const QColor &newColor)
     d->updateContent();
 }
 
+/*!
+    \qmlsignal XrItem::contentItemChanged()
+    \brief Emitted when the content item changes.
+ */
+
+/*!
+    \qmlsignal XrItem::pixelsPerUnitChanged()
+    \brief Emitted when the pixels per unit value changes.
+ */
+
+/*!
+    \qmlsignal XrItem::uiScaleChanged()
+    \brief Emitted when the UI scale changes.
+ */
+
+/*!
+    \qmlsignal XrItem::flagsChanged()
+    \brief Emitted when the flags property changes.
+ */
+
+/*!
+    \qmlsignal XrItem::manualPixelsPerUnitChanged()
+    \brief Emitted when the manual pixels per unit value changes.
+ */
+
+/*!
+    \qmlsignal XrItem::widthChanged()
+    \brief Emitted when the width property changes.
+ */
+
+/*!
+    \qmlsignal XrItem::heightChanged()
+    \brief Emitted when the height property changes.
+ */
+
+/*!
+    \qmlsignal XrItem::colorChanged()
+    \brief Emitted when the color property changes.
+ */
+
 QT_END_NAMESPACE

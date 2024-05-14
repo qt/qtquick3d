@@ -10,16 +10,41 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype XrHandTrackerInput
+    \inqmlmodule QtQuick3D.Xr
+    \brief Represents hand tracking input for XR (extended reality) applications.
+
+    The XrHandTrackerInput type provides information about hand poses, joint positions,
+    and other relevant data for hand tracking.
+*/
+
 QOpenXRHandTrackerInput::QOpenXRHandTrackerInput(QObject *parent)
     : QObject(parent)
 {
 
 }
 
+/*!
+    \qmlproperty bool XrHandTrackerInput::isActive
+    \brief  Indicates whether hand tracking is active.
+*/
+
 bool QOpenXRHandTrackerInput::isActive() const
 {
     return m_isActive;
 }
+
+/*!
+    \qmlproperty enumeration XrHandTrackerInput::poseSpace
+    \brief Specifies the space in which hand poses are defined.
+
+    It can be one of:
+    \value XrHandTrackerInput.GripPose
+    \value XrHandTrackerInput.AimPose
+    \value XrHandTrackerInput.PinchPose
+    \value XrHandTrackerInput.PokePose
+*/
 
 QOpenXRHandTrackerInput::HandPoseSpace QOpenXRHandTrackerInput::poseSpace() const
 {
@@ -44,6 +69,11 @@ void QOpenXRHandTrackerInput::setPoseSpace(QOpenXRHandTrackerInput::HandPoseSpac
     emit poseSpaceChanged();
 }
 
+/*!
+    \qmlproperty vector3d XrHandTrackerInput::posePosition
+    \brief The position of the hand pose.
+*/
+
 const QVector3D &QOpenXRHandTrackerInput::posePosition() const
 {
     return m_posePosition;
@@ -53,6 +83,11 @@ const QQuaternion &QOpenXRHandTrackerInput::poseRotation() const
 {
     return m_poseRotation;
 }
+
+/*!
+    \qmlproperty list<vector3d> XrHandTrackerInput::jointPositions
+    \brief List of joint positions for the hand.
+*/
 
 QList<QVector3D> QOpenXRHandTrackerInput::jointPositions() const
 {
@@ -70,6 +105,11 @@ void QOpenXRHandTrackerInput::setJointPositionsAndRotations(const QList<QVector3
     setPokePosition(m_jointPositions[XR_HAND_JOINT_INDEX_TIP_EXT]);
 #endif
 }
+
+/*!
+    \qmlproperty list<quaternion> XrHandTrackerInput::jointRotations
+    \brief List of joint rotations for the hand.
+*/
 
 QList<QQuaternion> QOpenXRHandTrackerInput::jointRotations() const
 {
@@ -101,6 +141,50 @@ static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuate
     return transform;
 }
 #endif
+
+ /*!
+    \qmlsignal XrHandTrackerInput::isActiveChanged()
+    Emitted when the isActive property changes.
+*/
+
+ /*!
+    \qmlsignal XrHandTrackerInput::poseSpaceChanged()
+    Emitted when the poseSpace property changes.
+*/
+
+ /*!
+    \qmlsignal XrHandTrackerInput::posePositionChanged()
+    Emitted when the posePosition property changes.
+*/
+
+ /*!
+    \qmlsignal XrHandTrackerInput::jointPositionsChanged()
+    Emitted when the jointPositions property changes.
+*/
+
+ /*!
+    \qmlsignal XrHandTrackerInput::jointDataUpdated()
+    Emitted when joint data (positions or rotations) is updated.
+*/
+
+ /*!
+    \qmlsignal XrHandTrackerInput::jointRotationsChanged()
+    Emitted when the jointRotations property changes.
+*/
+
+ /*!
+    \qmlsignal XrHandTrackerInput::pokePositionChanged()
+    Emitted when the pokePosition property changes.
+*/
+
+/*!
+    \qmltype XrHandModel
+    \inherits Model
+    \inqmlmodule QtQuick3D.Xr
+    \brief Represents a 3D model for a hand.
+
+    Contains a 3D model that is animated by a XrHandTrackerInput.
+*/
 
 QOpenXrHandModel::QOpenXrHandModel(QQuick3DNode *parent)
     : QQuick3DModel(parent)
@@ -179,10 +263,27 @@ void QOpenXrHandModel::componentComplete()
     QQuick3DModel::componentComplete();
 }
 
+/*!
+    \qmlproperty XrHandTrackerInput XrHandModel::handTracker
+    \brief Contains the XrHandTrackerInput that animates this model.
+
+    \warning Changing hand trackers is not supported.
+*/
+
 QOpenXRHandTrackerInput *QOpenXrHandModel::handTracker() const
 {
     return m_handTracker;
 }
+
+/*!
+    \qmlsignal XrHandModel::handChanged()
+    Emitted when the associated hand changes.
+*/
+
+/*!
+    \qmlsignal XrHandModel::handTrackerChanged()
+    Emitted when the handTracker property changes.
+*/
 
 void QOpenXrHandModel::setHandTracker(QOpenXRHandTrackerInput *newHandTracker)
 {

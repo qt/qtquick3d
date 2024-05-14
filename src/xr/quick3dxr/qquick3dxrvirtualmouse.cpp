@@ -9,35 +9,82 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype XrVirtualMouse
+    \inherits Item
+    \inqmlmodule QtQuick3D.Xr
+    \brief Represents a virtual mouse for interacting with UIs in XR.
+*/
+
 QQuick3DXrVirtualMouse::QQuick3DXrVirtualMouse(QObject *parent) : QObject(parent)
 {
 
 }
+
+
+/*!
+    \qmlproperty bool XrVirtualMouse::rightMouseButton
+    \brief Indicates whether the right mouse button is pressed.
+
+    When set to true, the right mouse button is considered pressed.
+*/
 
 bool QQuick3DXrVirtualMouse::rightMouseButton() const
 {
     return m_rightMouseButton;
 }
 
+/*!
+    \qmlproperty bool XrVirtualMouse::leftMouseButton
+    \brief Indicates whether the left mouse button is pressed.
+
+    When set to true, the left mouse button is considered pressed.
+*/
+
 bool QQuick3DXrVirtualMouse::leftMouseButton() const
 {
     return m_leftMouseButton;
 }
+
+/*!
+    \qmlproperty bool XrVirtualMouse::middleMouseButton
+    \brief Indicates whether the middle mouse button is pressed.
+
+    When set to true, the middle mouse button is considered pressed.
+*/
 
 bool QQuick3DXrVirtualMouse::middleMouseButton() const
 {
     return m_middleMouseButton;
 }
 
+/*!
+    \qmlproperty Node XrVirtualMouse::source
+    \brief The 3D node associated with the virtual mouse.
+    Holds a node representing the position of the virtual cursor in the 3D scene.
+*/
+
 QQuick3DNode *QQuick3DXrVirtualMouse::source() const
 {
     return m_source;
 }
 
+/*!
+    \qmlproperty XrView XrVirtualMouse::view
+    \brief The OpenXR view associated with the virtual mouse.
+    Holds the view in which the virtual mouse operates.
+*/
+
 QQuick3DXrView *QQuick3DXrVirtualMouse::view() const
 {
     return m_view;
 }
+
+/*!
+    \qmlproperty bool XrVirtualMouse::enabled
+    \brief Indicates whether the virtual mouse is enabled.
+    When true, the virtual mouse can interact with 3D objects in the scene.
+*/
 
 bool QQuick3DXrVirtualMouse::enabled() const
 {
@@ -165,5 +212,34 @@ void QQuick3DXrVirtualMouse::generateEvent(QEvent::Type type, Qt::MouseButton bu
     // Cleanup
     delete event;
 }
+
+
+/*! \qmlsignal XrVirtualMouse::rightMouseButtonChanged(bool rightMouseButton)
+    \brief Emitted when the state of the right mouse button changes.
+    \a rightMouseButton has new state of the right mouse button
+    (true if pressed, false if released).
+*/
+    /*! \qmlsignal XrVirtualMouse::leftMouseButtonChanged(bool leftMouseButton)
+    \brief Emitted when the state of the left mouse button changes.
+    \a leftMouseButton has new state of the left mouse button
+    (true if pressed, false if released).
+*/
+/*! \qmlsignal XrVirtualMouse::middleMouseButtonChanged(bool middleMouseButton)
+    \brief Emitted when the state of the middle mouse button changes.
+    \a middleMouseButton has new state of the middle mouse button
+    (true if pressed, false if released).
+*/
+/*! \qmlsignal XrVirtualMouse::sourceChanged(Node source);
+    \brief Emitted when the source property changes.
+    \a source has the new Node held in the source property.
+*/
+/*! \qmlsignal XrVirtualMouse::viewChanged(XrView view);
+    \brief Emitted when the view property changes.
+    \a view has the new XrView held in the view property.
+*/
+/*! \qmlsignal XrVirtualMouse::enabledChanged(bool enabled);
+    \brief Emitted when the enabled property changes.
+    \a enabled has the new value of the enabled property.
+*/
 
 QT_END_NAMESPACE

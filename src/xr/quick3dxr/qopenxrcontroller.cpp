@@ -10,12 +10,32 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype XrController
+    \inherits Node
+    \inqmlmodule QtQuick3D.Xr
+    \brief A type enabling the use of different controller inputs.
+
+*/
+
 QOpenXRController::QOpenXRController()
 {
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     m_inputManager = QOpenXRInputManager::instance();
 #endif
 }
+
+/*!
+    \qmlproperty enumeration QtQuick3D.Xr::XrController::controller
+
+    Holds the controller.
+
+    It can be one of:
+    \value XrController.ControllerNone
+    \value XrController.ControllerLeft
+    \value XrController.ControllerRight
+    \value XrController.ControllerGamepad
+*/
 
 QOpenXRController::Controller QOpenXRController::controller() const
 {
@@ -61,6 +81,11 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
     }
 }
 
+/*!
+    \qmlproperty XrHandInput XrController::handInput
+    The hand input associated with this controller.
+*/
+
 QOpenXRHandInput *QOpenXRController::handInput() const
 {
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
@@ -72,6 +97,11 @@ QOpenXRHandInput *QOpenXRController::handInput() const
     return nullptr;
 }
 
+/*!
+    \qmlproperty XrGamepadInput XrController::gamepadInput
+    The gamepad input associated with this controller.
+*/
+
 QOpenXRGamepadInput *QOpenXRController::gamepadInput() const
 {
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
@@ -80,6 +110,11 @@ QOpenXRGamepadInput *QOpenXRController::gamepadInput() const
     return nullptr;
 #endif
 }
+
+/*!
+    \qmlproperty XrActionMapper XrController::actionMapper
+    The action mapper associated with this controller.
+*/
 
 QOpenXRActionMapper *QOpenXRController::actionMapper() const
 {
@@ -108,4 +143,18 @@ void QOpenXRController::setActionMapper(QOpenXRActionMapper *newActionMapper)
     emit actionMapperChanged();
 }
 
+/*!
+    \qmlsignal XrController::controllerChanged()
+    Emitted when the controller property changes.
+*/
+
+/*!
+    \qmlsignal XrController::handInputChanged()
+    Emitted when the handInput property changes.
+*/
+
+/*!
+    \qmlsignal XrController::actionMapperChanged()
+    Emitted when the actionMapper property changes.
+*/
 QT_END_NAMESPACE

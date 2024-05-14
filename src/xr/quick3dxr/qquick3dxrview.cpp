@@ -18,7 +18,11 @@ QT_BEGIN_NAMESPACE
     \inherits Node
     \inqmlmodule QtQuick3D.Xr
     \brief Sets up the view for an Xr application.
- */
+
+    An XrView sets up the view for an XR application.
+    \quotefromfile xr_simple/main.qml
+    \printto XrOrigin
+*/
 
 QQuick3DXrView::QQuick3DXrView()
     : m_openXRRuntimeInfo(&m_openXRManager)
@@ -30,16 +34,31 @@ QQuick3DXrView::~QQuick3DXrView()
 {
     m_inDestructor = true;
 }
+/*!
+    \qmlproperty XrOrigin QtQuick3D.Xr::XrView::xrOrigin
+    \brief Holds the XR origin.
+*/
+
 
 QQuick3DXrOrigin *QQuick3DXrView::xrOrigin() const
 {
     return m_openXRManager.m_xrOrigin;
 }
 
+/*!
+    \qmlproperty SceneEnvironment QtQuick3D.Xr::XrView::environment
+    \brief Holds the SceneEnvironment for the XR view.
+*/
+
 QQuick3DSceneEnvironment *QQuick3DXrView::environment() const
 {
     return m_openXRManager.m_vrViewport ? m_openXRManager.m_vrViewport->environment() : nullptr;
 }
+
+/*!
+    \qmlproperty XrHandInput QtQuick3D.Xr::XrView::leftHandInput
+    \brief Provides access to the left hand input for the XR view.
+*/
 
 QOpenXRHandInput *QQuick3DXrView::leftHandInput() const
 {
@@ -51,6 +70,11 @@ QOpenXRHandInput *QQuick3DXrView::leftHandInput() const
 #endif
 }
 
+/*!
+    \qmlproperty XrHandInput QtQuick3D.Xr::XrView::rightHandInput
+    \brief Provides access to the right hand input for the XR view.
+*/
+
 QOpenXRHandInput *QQuick3DXrView::rightHandInput() const
 {
 #if USE_OPENXR
@@ -60,6 +84,11 @@ QOpenXRHandInput *QQuick3DXrView::rightHandInput() const
     return nullptr;
 #endif
 }
+
+/*!
+    \qmlproperty XrHandTrackerInput QtQuick3D.Xr::XrView::leftHandTrackerInput
+    \brief Provides access to the left hand tracker input for the XR view.
+*/
 
 QOpenXRHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
 {
@@ -71,6 +100,11 @@ QOpenXRHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
 #endif
 }
 
+/*!
+    \qmlproperty XrHandTrackerInput QtQuick3D.Xr::XrView::rightHandTrackerInput
+    \brief Provides access to the right hand tracker input for the XR view.
+*/
+
 QOpenXRHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
 {
 #if USE_OPENXR
@@ -80,6 +114,11 @@ QOpenXRHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
     return nullptr;
 #endif
 }
+
+/*!
+    \qmlproperty XrGamepadInput QtQuick3D.Xr::XrView::gamepadInput
+    \brief Provides access to the gamepad input for the XR view.
+*/
 
 QOpenXRGamepadInput *QQuick3DXrView::gamepadInput() const
 {
@@ -96,10 +135,19 @@ QQuick3DViewport *QQuick3DXrView::view3d() const
     return m_openXRManager.m_vrViewport;
 }
 
+/*!
+    \qmlproperty bool QtQuick3D.Xr::XrView::isPassthroughEnabled
+    \brief Holds whether passthrough is enabled for the XR view.
+*/
 bool QQuick3DXrView::isPassthroughEnabled() const
 {
     return m_openXRManager.isPassthroughEnabled();
 }
+
+/*!
+    \qmlproperty QOpenXRRuntimeInfo QtQuick3D.Xr::XrView::runtimeInfo
+    \brief Provides information about the XR runtime for the XR view.
+*/
 
 QOpenXRRuntimeInfo *QQuick3DXrView::runtimeInfo() const
 {
@@ -139,6 +187,11 @@ void QQuick3DXrView::setEnvironment(QQuick3DSceneEnvironment *environment)
     emit environmentChanged(m_openXRManager.m_vrViewport->environment());
 }
 
+/*!
+    \qmlproperty bool QtQuick3D.Xr::XrView::isPassthroughSupported
+    \brief Indicates whether passthrough is supported for the XR view.
+*/
+
 bool QQuick3DXrView::isPassthroughSupported() const
 {
     if (!m_openXRManager.isValid())
@@ -167,6 +220,19 @@ void QQuick3DXrView::setEnablePassthrough(bool enable)
         emit enablePassthroughChanged(enable);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick3D.Xr::XrView::fixedFoveation
+    \brief Holds a fixed foveation level for the XrView.
+
+    It can be one of:
+    \value XrView.NoFoveation 0, no foveation.
+    \value XrView.LowFoveation 1, low foveation.
+    \value XrView.MediumFoveation 2, medium foveation.
+    \value XrView.HighFoveation 3, high foveation.
+
+    If not a valid OpenXR session, this defaults to XrView.NoFoveation.
+*/
+
 QQuick3DXrView::FoveationLevel QQuick3DXrView::fixedFoveation() const
 {
     return FoveationLevel(m_openXRManager.getFixedFoveationLevel());
@@ -179,6 +245,11 @@ void QQuick3DXrView::setFixedFoveation(FoveationLevel level)
     if (orgFoviationLevel != m_openXRManager.getFixedFoveationLevel())
         emit fixedFoveationChanged();
 }
+
+/*!
+    \qmlproperty bool QtQuick3D.Xr::XrView::isQuitOnSessionEndEnabled
+    \brief Holds whether the application should quit when the XR session ends.
+*/
 
 bool QQuick3DXrView::isQuitOnSessionEndEnabled() const
 {
@@ -193,6 +264,10 @@ void QQuick3DXrView::setQuitOnSessionEnd(bool enable)
     m_quitOnSessionEnd = enable;
     emit quitOnSessionEndChanged();
 }
+/*!
+    \qmlproperty RenderStats QtQuick3D.Xr::XrView::renderStats
+    \brief Holds rendering statistics for the XR view.
+*/
 
 QQuick3DRenderStats *QQuick3DXrView::renderStats() const
 {
@@ -460,6 +535,17 @@ QVariantMap QQuick3DXrView::touchpointState(int pointId) const
 }
 #undef Q_TOUCHPOINT_STATE
 
+/*!
+    \qmlproperty enumeration QtQuick3D.Xr::XrView::referenceSpace
+    \brief Gets or sets the reference space for the XR view.
+
+     It can be one of:
+     \value XrView.ReferenceSpaceUnknown
+     \value XrView.ReferenceSpaceLocal
+     \value XrView.ReferenceSpaceStage
+     \value XrView.ReferenceSpaceLocalFloor
+*/
+
 QQuick3DXrView::ReferenceSpace QQuick3DXrView::referenceSpace() const
 {
     return ReferenceSpace(m_openXRManager.getReferenceSpace());
@@ -530,6 +616,13 @@ void QQuick3DXrView::unregisterXrItem(QQuick3DXrItem *xrItem)
     m_xrItems.removeAll(xrItem);
 }
 
+/*!
+    \qmlproperty bool QtQuick3D.Xr::XrView::enableDepthSubmission
+
+    \brief Gets or sets whether Depth Submission is enabled for the XR view.
+
+*/
+
 void QQuick3DXrView::setEnableDepthSubmission(bool enable)
 {
     if (!m_openXRManager.isValid()) {
@@ -558,5 +651,82 @@ void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
     if (orgMultiView != m_openXRManager.isMultiViewRenderingEnabled())
         emit enableMultiViewRenderingChanged();
 }
+
+/*!
+    \qmlsignal XrView::initializeFailed(const QString &errorString)
+
+    Emitted when initialization fails and there is new \a errorString
+    describing the failure.
+ */
+
+
+/*!
+    \qmlsignal XrView::sessionEnded()
+
+    Emitted when the session ends.
+ */
+
+
+/*!
+    \qmlsignal XrView::xrOriginChanged(QQuick3DXrOrigin* xrOrigin)
+
+    Emitted when the XR origin changes to \a xrOrigin .
+ */
+
+
+/*!
+    \qmlsignal XrView::environmentChanged(QQuick3DSceneEnvironment* environment)
+
+    Emitted when the scene environment changes to \a environment .
+ */
+
+
+/*!
+    \qmlsignal XrView::enablePassthroughChanged(bool enable)
+
+    Emitted when passthrough mode is changed to the value of \a enable .
+ */
+
+
+/*!
+    \qmlsignal XrView::quitOnSessionEndChanged()
+
+    Emitted when the behavior of quitting on session end changes.
+ */
+
+
+/*!
+    \qmlsignal XrView::fixedFoveationChanged()
+
+    Emitted when fixed foveation settings change.
+ */
+
+
+/*!
+    \qmlsignal XrView::frameReady(QRhiTexture* colorBuffer)
+
+    Emitted when a new frame is ready to provide \a colorBuffer.
+ */
+
+
+/*!
+    \qmlsignal XrView::referenceSpaceChanged()
+
+    Emitted when the reference space changes.
+ */
+
+
+/*!
+    \qmlsignal XrView::enableDepthSubmissionChanged()
+
+    Emitted when depth submission settings change.
+ */
+
+
+/*!
+    \qmlsignal XrView::enableMultiViewRenderingChanged()
+
+    Emitted when multi-view rendering settings change.
+ */
 
 QT_END_NAMESPACE

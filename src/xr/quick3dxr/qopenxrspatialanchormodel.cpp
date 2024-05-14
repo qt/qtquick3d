@@ -7,6 +7,26 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype XrSpatialAnchorModel
+    \inherits ListModel
+    \inqmlmodule QtQuick3D.Xr
+    \brief Provides a model for managing spatial anchors.
+
+    This type provides a way to manage spatial anchors, which are points in
+    the physical world that can be tracked and associated with virtual content.
+
+    You can use it like so:
+    \qml
+    XrSpatialAnchorModel {
+        id: anchorModel
+        filterMode: XrSpatialAnchorModel.Labels
+        labels: XrSpatialAnchorModel.Ceiling | XrSpatialAnchorModel.Floor
+        // ... other properties and methods ...
+    \endqml
+    }
+*/
+
 QOpenXRSpatialAnchorModel::QOpenXRSpatialAnchorModel(QObject *parent)
     : QAbstractListModel{parent}
 {
@@ -75,6 +95,17 @@ void QOpenXRSpatialAnchorModel::handleAnchorAdded(QOpenXRSpatialAnchor *anchor)
     endResetModel();
 }
 
+/*!
+    \qmlproperty enumeration XrSpatialAnchorModel::filterMode
+    \brief Specifies the filter mode for spatial anchors.
+
+    Holds the filter mode.
+    The filter mode can be one of the following:
+    \value All Show all spatial anchors.
+    \value Label Show spatial anchors based on semantic labels.
+    \value UUID  Show spatial anchors based on UUIDs.
+ */
+
 QOpenXRSpatialAnchorModel::FilterMode QOpenXRSpatialAnchorModel::filterMode() const
 {
     return m_filterMode;
@@ -87,6 +118,11 @@ void QOpenXRSpatialAnchorModel::setFilterMode(FilterMode newFilterMode)
     m_filterMode = newFilterMode;
     emit filterModeChanged();
 }
+
+/*!
+    \qmlproperty list XrSpatialAnchorModel::uuids
+    \brief Holds the list of UUIDs for filtering spatial anchors.
+ */
 
 QList<QUuid> QOpenXRSpatialAnchorModel::uuids() const
 {
@@ -101,6 +137,28 @@ void QOpenXRSpatialAnchorModel::setUuids(const QList<QUuid> &newUuids)
     emit uuidsChanged();
 }
 
+/*!
+    \qmlproperty enumeration XrSpatialAnchorModel::labels
+    \brief  Holds the semantic labels used for filtering spatial anchors.
+
+    The semantic labels are represented as a combination of flags:
+
+    \value Ceiling
+    \value DoorFrame
+    \value Floor
+    \value WallArt
+    \value WallFace
+    \value WindowFrame
+    \value Couch
+    \value Table
+    \value Bed
+    \value Lamp
+    \value Plant
+    \value Screen
+    \value Storage
+    \value Other
+ */
+
 QOpenXRSpatialAnchorModel::SemanticLabels QOpenXRSpatialAnchorModel::labels() const
 {
     return m_labels;
@@ -113,5 +171,20 @@ void QOpenXRSpatialAnchorModel::setLabels(const SemanticLabels &newLabels)
     m_labels = newLabels;
     emit labelsChanged();
 }
+
+/*!
+    \qmlsignal XrSpatialAnchorModel::filterModeChanged()
+    \brief Emitted when the filter mode changes.
+ */
+
+/*!
+    \qmlsignal XrSpatialAnchorModel::uuidsChanged()
+    \brief Emitted when the list of UUIDs changes.
+ */
+
+/*!
+    \qmlsignal XrSpatialAnchorModel::labelsChanged()
+    \brief Emitted when the semantic labels changes.
+*/
 
 QT_END_NAMESPACE

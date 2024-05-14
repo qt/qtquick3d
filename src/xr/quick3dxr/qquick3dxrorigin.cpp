@@ -5,6 +5,13 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype XrOrigin
+    \inherits Node
+    \inqmlmodule QtQuick3D.Xr
+    \brief An origin location for the XrView.
+*/
+
 QQuick3DXrOrigin::QQuick3DXrOrigin()
     : m_builtInCamera(new QQuick3DXrCamera(this))
 {
@@ -23,6 +30,10 @@ QQuick3DXrOrigin::QQuick3DXrOrigin()
     setCamera(m_builtInCamera);
 }
 
+/*!
+    \qmlproperty XrCamera QtQuick3D.Xr::XrOrigin::camera
+    \brief Holds the camera for the XrOrigin
+*/
 
 QQuick3DXrCamera *QQuick3DXrOrigin::camera() const
 {
@@ -65,6 +76,11 @@ QQuick3DXrEyeCamera *QQuick3DXrOrigin::eyeCamera(int index) const
 {
     return m_eyeCameras[index];
 }
+
+/*!
+    \qmlsignal XrOrigin::cameraChanged()
+    Emitted when the camera changes.
+*/
 
 QT_END_NAMESPACE
 

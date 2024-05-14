@@ -4,6 +4,9 @@
 /*!
     \qmlmodule QtQuick3D.Xr
     \title \qxr QML Types
+    \since 6.8
+    \modulestate Technical Preview
+
     \brief Types for leveraging XR device features.
 
     This module provides QML types that enable you to use the features

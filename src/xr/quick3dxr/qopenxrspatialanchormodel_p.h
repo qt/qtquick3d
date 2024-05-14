@@ -40,7 +40,7 @@ public:
     Q_ENUM(FilterMode)
 
     enum SemanticLabel {
-        Celing = 0x01,
+        Ceiling = 0x01,
         DoorFrame = 0x02,
         Floor = 0x04,
         WallArt = 0x08,
