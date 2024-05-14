@@ -5,6 +5,10 @@
 #include "qopenxrhelpers_p.h"
 #include "qopenxrspatialanchor_p.h"
 
+#if defined(Q_OS_ANDROID)
+# include <QtCore/private/qandroidextras_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 //<uses-permission android:name="com.oculus.permission.USE_ANCHOR_API" />
@@ -29,6 +33,11 @@ QOpenXRSpaceExtension *QOpenXRSpaceExtension::instance()
 
 void QOpenXRSpaceExtension::initialize(XrInstance instance, XrSession session)
 {
+#if defined(Q_OS_ANDROID)
+    auto res = QtAndroidPrivate::requestPermission(QLatin1StringView("com.oculus.permission.USE_SCENE"));
+    res.waitForFinished();
+#endif
+
     m_instance = instance;
     m_session = session;
 
