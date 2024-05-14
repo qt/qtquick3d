@@ -24,6 +24,12 @@
     \l[QML]{MultiEffect} on the \l View3D (or a parent of it).
     If none of these are suitable, applications can provide their own
     post-processing effects via the \l Effect type.
+
+    \warning All pre-made, standalone effects in QtQuick3D.Effects are
+    incompatible with the multiview rendering mode of Qt Quick 3D XR that is
+    often used in VR/AR applications. New application should always use
+    \l ExtendedSceneEnvironment or application-provided custom effects via the \l
+    Effect type, which are fully compatible with multiview rendering as well.
  */
 
 /*!

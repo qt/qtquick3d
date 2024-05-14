@@ -1,8 +1,17 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#include "texturesample.glsllib"
+
+#if QSHADER_VIEW_COUNT >= 2
+vec3 textureDistorted(in sampler2DArray tex, in vec2 texcoord, in vec2 direction, vec3 distortion)
+#else
 vec3 textureDistorted(in sampler2D tex, in vec2 texcoord, in vec2 direction, vec3 distortion)
+#endif
 {
-    return vec3(texture(tex, texcoord + direction * distortion.r).r,
-                texture(tex, texcoord + direction * distortion.g).g,
-                texture(tex, texcoord + direction * distortion.b).b);
+    return vec3(SAMPLE(tex, texcoord + direction * distortion.r).r,
+                SAMPLE(tex, texcoord + direction * distortion.g).g,
+                SAMPLE(tex, texcoord + direction * distortion.b).b);
 }
 
 void MAIN()

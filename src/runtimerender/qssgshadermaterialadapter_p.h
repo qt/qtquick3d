@@ -245,7 +245,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
                                                      const StringPairList &baseUniforms,
                                                      const StringPairList &baseInputs = StringPairList(),
                                                      const StringPairList &baseOutputs = StringPairList(),
-                                                     bool multiViewCompatible = false);
+                                                     bool multiViewCompatible = false,
+                                                     const StringPairList &multiViewDependentSamplers = {});
 
 private:
     const QSSGRenderCustomMaterial &m_material;

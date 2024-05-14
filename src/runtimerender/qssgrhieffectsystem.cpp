@@ -590,7 +590,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     QSSGRhiGraphicsPipelineState ps;
     ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));
-    ps.samples = rhiContext->mainPassSampleCount();
+    ps.samples = target->renderTarget->sampleCount();
     ps.viewCount = rhiContext->mainPassViewCount();
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, m_currentShaderPipeline);
 

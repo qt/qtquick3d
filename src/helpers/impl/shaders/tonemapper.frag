@@ -1,3 +1,8 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#include "texturesample.glsllib"
+
 vec3 tonemap_filmic(vec3 color, float white) {
     // exposure bias: input scale (color *= bias, white *= bias) to make the brightness consistent with other tonemappers
     // also useful to scale the input to the range that the tonemapper is designed for (some require very high input values)
@@ -44,10 +49,10 @@ vec3 apply_fxaa(vec3 color, float exposure, vec2 pixelSize) {
     const float FXAA_REDUCE_MUL = (1.0 / 8.0);
     const float FXAA_SPAN_MAX = 8.0;
 
-    vec3 rgbNW = textureLod(INPUT, INPUT_UV + vec2(-1.0, -1.0) * pixelSize, 0.0).xyz * exposure;
-    vec3 rgbNE = textureLod(INPUT, INPUT_UV + vec2(1.0, -1.0) * pixelSize, 0.0).xyz * exposure;
-    vec3 rgbSW = textureLod(INPUT, INPUT_UV + vec2(-1.0, 1.0) * pixelSize, 0.0).xyz * exposure;
-    vec3 rgbSE = textureLod(INPUT, INPUT_UV + vec2(1.0, 1.0) * pixelSize, 0.0).xyz * exposure;
+    vec3 rgbNW = SAMPLE_LOD(INPUT, INPUT_UV + vec2(-1.0, -1.0) * pixelSize, 0.0).xyz * exposure;
+    vec3 rgbNE = SAMPLE_LOD(INPUT, INPUT_UV + vec2(1.0, -1.0) * pixelSize, 0.0).xyz * exposure;
+    vec3 rgbSW = SAMPLE_LOD(INPUT, INPUT_UV + vec2(-1.0, 1.0) * pixelSize, 0.0).xyz * exposure;
+    vec3 rgbSE = SAMPLE_LOD(INPUT, INPUT_UV + vec2(1.0, 1.0) * pixelSize, 0.0).xyz * exposure;
     vec3 rgbM = color;
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float lumaNW = dot(rgbNW, luma);
@@ -72,8 +77,8 @@ vec3 apply_fxaa(vec3 color, float exposure, vec2 pixelSize) {
                   dir * rcpDirMin)) *
             pixelSize;
 
-    vec3 rgbA = 0.5 * exposure * (textureLod(INPUT, INPUT_UV + dir * (1.0 / 3.0 - 0.5), 0.0).xyz + textureLod(INPUT, INPUT_UV + dir * (2.0 / 3.0 - 0.5), 0.0).xyz);
-    vec3 rgbB = rgbA * 0.5 + 0.25 * exposure * (textureLod(INPUT, INPUT_UV + dir * -0.5, 0.0).xyz + textureLod(INPUT, INPUT_UV + dir * 0.5, 0.0).xyz);
+    vec3 rgbA = 0.5 * exposure * (SAMPLE_LOD(INPUT, INPUT_UV + dir * (1.0 / 3.0 - 0.5), 0.0).xyz + SAMPLE_LOD(INPUT, INPUT_UV + dir * (2.0 / 3.0 - 0.5), 0.0).xyz);
+    vec3 rgbB = rgbA * 0.5 + 0.25 * exposure * (SAMPLE_LOD(INPUT, INPUT_UV + dir * -0.5, 0.0).xyz + SAMPLE_LOD(INPUT, INPUT_UV + dir * 0.5, 0.0).xyz);
 
     float lumaB = dot(rgbB, luma);
     if ((lumaB < lumaMin) || (lumaB > lumaMax)) {
@@ -102,15 +107,15 @@ vec3 apply_cas(vec3 color, float exposure, float sharpen_intensity) {
     //  a b c
     //  d(e)f
     //  g h i
-    vec3 a = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(-1, -1)).rgb * exposure;
-    vec3 b = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(0, -1)).rgb * exposure;
-    vec3 c = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(1, -1)).rgb * exposure;
-    vec3 d = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(-1, 0)).rgb * exposure;
+    vec3 a = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(-1, -1)).rgb * exposure;
+    vec3 b = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(0, -1)).rgb * exposure;
+    vec3 c = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(1, -1)).rgb * exposure;
+    vec3 d = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(-1, 0)).rgb * exposure;
     vec3 e = color.rgb;
-    vec3 f = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(1, 0)).rgb * exposure;
-    vec3 g = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(-1, 1)).rgb * exposure;
-    vec3 h = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(0, 1)).rgb * exposure;
-    vec3 i = textureLodOffset(INPUT, INPUT_UV, 0.0, ivec2(1, 1)).rgb * exposure;
+    vec3 f = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(1, 0)).rgb * exposure;
+    vec3 g = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(-1, 1)).rgb * exposure;
+    vec3 h = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(0, 1)).rgb * exposure;
+    vec3 i = SAMPLE_LOD_OFFSET(INPUT, INPUT_UV, 0.0, ivec2(1, 1)).rgb * exposure;
 
     // Soft min and max.
     //  a b c             b
@@ -212,7 +217,11 @@ float h1(float a) {
     return 1.0f + w3(a) / (w2(a) + w3(a));
 }
 
+#if QSHADER_VIEW_COUNT >= 2
+vec3 sampleGlowBuffer(sampler2DArray glowBuffer, int level)
+#else
 vec3 sampleGlowBuffer(sampler2D glowBuffer, int level)
+#endif
 {
     if (glowUseBicubicUpscale) {
         vec2 tex_size = vec2(ivec2(INPUT_SIZE) >> level);
@@ -235,10 +244,10 @@ vec3 sampleGlowBuffer(sampler2D glowBuffer, int level)
         vec2 p2 = (vec2(iuv.x + h0x, iuv.y + h1y) - vec2(0.5f)) * texel_size;
         vec2 p3 = (vec2(iuv.x + h1x, iuv.y + h1y) - vec2(0.5f)) * texel_size;
 
-        return ((g0(fuv.y) * (g0x * textureLod(glowBuffer, p0, 0) + g1x * textureLod(glowBuffer, p1, 0))) +
-                (g1(fuv.y) * (g0x * textureLod(glowBuffer, p2, 0) + g1x * textureLod(glowBuffer, p3, 0)))).rgb;
+        return ((g0(fuv.y) * (g0x * SAMPLE_LOD(glowBuffer, p0, 0) + g1x * SAMPLE_LOD(glowBuffer, p1, 0))) +
+                (g1(fuv.y) * (g0x * SAMPLE_LOD(glowBuffer, p2, 0) + g1x * SAMPLE_LOD(glowBuffer, p3, 0)))).rgb;
     } else {
-        return textureLod(glowBuffer, INPUT_UV, 0.0).rgb;
+        return SAMPLE_LOD(glowBuffer, INPUT_UV, 0.0).rgb;
     }
 }
 
@@ -321,7 +330,7 @@ vec3 get_lut_mapping_trilinear(vec3 old_color){
 
 void MAIN()
 {
-    vec4 sourceColor = texture(INPUT, INPUT_UV);
+    vec4 sourceColor = SAMPLE(INPUT, INPUT_UV);
     vec3 color = sourceColor.rgb;
     // Exposure
     float fullExposure = exposure;
@@ -348,7 +357,7 @@ void MAIN()
             lensMod = texture(lensDirtTexture, INPUT_UV).rgb;
         }
 
-        vec3 lensFlare = texture(lensFlareTexture, INPUT_UV).rgb * lensMod;
+        vec3 lensFlare = SAMPLE(lensFlareTexture, INPUT_UV).rgb * lensMod;
 
         if (lensFlareApplyStarburstTexture) {
             vec2 centerVec = INPUT_UV - vec2(0.5);

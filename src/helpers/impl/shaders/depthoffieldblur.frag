@@ -1,3 +1,8 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#include "texturesample.glsllib"
+
 VARYING vec2 TexCoord0;
 VARYING vec2 TexCoord1;
 VARYING vec2 TexCoord2;
@@ -26,16 +31,23 @@ float depthValueToLinearDistance( float depth_value, vec2 cameraProperties )
     return linearDepth;
 }
 
+#if QSHADER_VIEW_COUNT >= 2
+float getDepthMultiplier(vec2 inTexCoord, sampler2DArray inDepthSampler, float inFocusDistance, float inFocusWidth, float inFocusPenumbra)
+#else
 float getDepthMultiplier(vec2 inTexCoord, sampler2D inDepthSampler, float inFocusDistance, float inFocusWidth, float inFocusPenumbra)
+#endif
 {
-    float depthTap = getDepthValue( texture(inDepthSampler, inTexCoord), CAMERA_PROPERTIES );
+    float depthTap = getDepthValue( SAMPLE(inDepthSampler, inTexCoord), CAMERA_PROPERTIES );
     float linearDepth = depthValueToLinearDistance( depthTap, CAMERA_PROPERTIES );
     float depthDiff = max( 0.0, abs( linearDepth - inFocusDistance ) - (inFocusWidth/2.0) ) / inFocusPenumbra;
     return clamp( depthDiff, 0.0, 1.0 );
 }
 
-vec4 poissonDepthBlur(sampler2D inSampler,sampler2D inDepthSampler,
-                      float inFocusDistance, float inFocusWidth, float inFocusPenumbra )
+#if QSHADER_VIEW_COUNT >= 2
+vec4 poissonDepthBlur(sampler2DArray inSampler, sampler2DArray inDepthSampler, float inFocusDistance, float inFocusWidth, float inFocusPenumbra)
+#else
+vec4 poissonDepthBlur(sampler2D inSampler, sampler2D inDepthSampler, float inFocusDistance, float inFocusWidth, float inFocusPenumbra)
+#endif
 {
     float mult0 = (1.0 - poisson0.z) * getDepthMultiplier(TexCoord0, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra);
     float mult1 = (1.0 - poisson1.z) * getDepthMultiplier(TexCoord1, inDepthSampler, inFocusDistance, inFocusWidth, inFocusPenumbra);
@@ -44,9 +56,9 @@ vec4 poissonDepthBlur(sampler2D inSampler,sampler2D inDepthSampler,
     float multTotal = mult0 + mult1 + mult2;
     float multMultiplier = multTotal > 0.0 ? 1.0 / multTotal : 0.0;
 
-    vec4 outColor = texture( inSampler, TexCoord0 ) * (mult0 * multMultiplier);
-    outColor += texture( inSampler, TexCoord1 ) * (mult1 * multMultiplier);
-    outColor += texture( inSampler, TexCoord2 ) * (mult2 * multMultiplier);
+    vec4 outColor = SAMPLE( inSampler, TexCoord0 ) * (mult0 * multMultiplier);
+    outColor += SAMPLE( inSampler, TexCoord1 ) * (mult1 * multMultiplier);
+    outColor += SAMPLE( inSampler, TexCoord2 ) * (mult2 * multMultiplier);
     return outColor;
 }
 
@@ -54,5 +66,5 @@ void MAIN()
 {
     float centerMultiplier = getDepthMultiplier(INPUT_UV, DEPTH_TEXTURE, focusDistance, focusRange, focusRange);
     vec4 blurColor = poissonDepthBlur(INPUT, DEPTH_TEXTURE, focusDistance, focusRange, focusRange);
-    FRAGCOLOR = mix(texture(sourceSampler, INPUT_UV), blurColor, centerMultiplier);
+    FRAGCOLOR = mix(SAMPLE(sourceSampler, INPUT_UV), blurColor, centerMultiplier);
 }

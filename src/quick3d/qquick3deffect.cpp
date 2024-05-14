@@ -649,6 +649,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         // Properties -> uniforms
         QSSGShaderCustomMaterialAdapter::StringPairList uniforms;
+        QSSGShaderCustomMaterialAdapter::StringPairList multiViewDependentSamplers;
         const int propCount = metaObject()->propertyCount();
         int propOffset = metaObject()->propertyOffset();
 
@@ -732,12 +733,43 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                                                                            : QSSGRenderTextureCoordOp::MirroredRepeat;
             }
 
-            if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube)
-                uniforms.append({ QByteArrayLiteral("samplerCube"), name });
-            else if (tex && tex->textureData() && tex->textureData()->depth() > 0)
-                uniforms.append({ QByteArrayLiteral("sampler3D"), name });
-            else
-                uniforms.append({ QByteArrayLiteral("sampler2D"), name });
+            // Knowing upfront that a sampler2D needs to be a sampler2DArray in
+            // the multiview-compatible version of the shader is not trivial.
+            // Consider: we know the list of TextureInputs, without any
+            // knowledge about the usage of those textures. Intermediate buffers
+            // (textures) also have a default constructed (no source, no source
+            // item, no texture data) Texture set. What indicates that these are
+            // used as intermediate buffers, is the 'output' property of a Pass,
+            // referencing a Buffer object (which objects we otherwise do not
+            // track), the 'name' of which matches TextureInput property name.
+            // The list of passes may vary dynamically, and some Passes may not
+            // be listed at any point in time if the effect has an
+            // ubershader-ish design. Thus one can have TextureInputs that are
+            // not associated with a Buffer (when scanning through the Passes),
+            // and so we cannot just check the 'output'-referenced Buffers to
+            // decide if a TextureInput's Texture needs to be treated specially
+            // in the generated shader code. (and the type must be correct even
+            // for, from our perspective, "unused" samplers since they are still
+            // in the shader code, and will get a dummy texture bound)
+            //
+            // Therefore, in the absence of more sophisticated options, we just
+            // look at the TextureInput's texture, and if it is something along
+            // the lines of
+            //    property TextureInput intermediateColorBuffer1: TextureInput { texture: Texture { } }
+            // then it is added to the special list, indicating the the type is
+            // sampler2D or sampler2DArray, depending on the rendering mode the
+            // shader is targeting.
+
+            if (tex && !tex->hasSourceData()) {
+                multiViewDependentSamplers.append({ QByteArrayLiteral("sampler2D"), name }); // the type may get adjusted later
+            } else {
+                if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube)
+                    uniforms.append({ QByteArrayLiteral("samplerCube"), name });
+                else if (tex && tex->textureData() && tex->textureData()->depth() > 0)
+                    uniforms.append({ QByteArrayLiteral("sampler3D"), name });
+                else
+                    uniforms.append({ QByteArrayLiteral("sampler2D"), name });
+            }
 
             effectNode->textureProperties.push_back(texProp);
         };
@@ -868,23 +900,27 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                         QByteArray buf;
                         result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
                             QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs, false);
+                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs,
+                                                                                 false, multiViewDependentSamplers);
                         result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].first += buf;
                         buf.clear();
                         result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
                             QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs, true);
+                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs,
+                                                                                 true, multiViewDependentSamplers);
                         result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex].first += buf;
                     } else {
                         QByteArray buf;
                         result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
                             QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexOutputs, {}, false);
+                                                                                 uniforms, builtinVertexOutputs, {},
+                                                                                 false, multiViewDependentSamplers);
                         result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].first += buf;
                         buf.clear();
                         result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
                             QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexOutputs, {}, true);
+                                                                                 uniforms, builtinVertexOutputs, {},
+                                                                                 true, multiViewDependentSamplers);
                         result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex].first += buf;
                     }
 

@@ -872,7 +872,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                                                      const StringPairList &baseUniforms,
                                                      const StringPairList &baseInputs,
                                                      const StringPairList &baseOutputs,
-                                                     bool multiViewCompatible)
+                                                     bool multiViewCompatible,
+                                                     const StringPairList &multiViewDependentSamplers)
 {
     QByteArrayList inputs;
     QByteArrayList outputs;
@@ -1081,6 +1082,13 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     result += '\n';
 
     StringPairList allUniforms = baseUniforms;
+
+    for (const StringPair &samplerTypeAndName : multiViewDependentSamplers) {
+        if (multiViewCompatible)
+            allUniforms.append({ "sampler2DArray", samplerTypeAndName.second });
+        else
+            allUniforms.append(samplerTypeAndName);
+    }
 
     // We either have qt_depthTexture or qt_depthTextureArray (or none of them),
     // but never both. We do not generally support binding a 2D texture to a

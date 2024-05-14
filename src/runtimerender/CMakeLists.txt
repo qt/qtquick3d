@@ -151,6 +151,7 @@ set(res_resource_files
     "res/effectlib/parallaxMapping.glsllib"
     "res/effectlib/particles.glsllib"
     "res/effectlib/fog.glsllib"
+    "res/effectlib/texturesample.glsllib"
     "res/primitives/Cone.mesh"
     "res/primitives/Cube.mesh"
     "res/primitives/Cylinder.mesh"
