@@ -43,6 +43,7 @@ struct InputOutput
     QByteArray type;
     QSSGShaderGeneratorStage stage = QSSGShaderGeneratorStage::Vertex;
     QByteArray name;
+    bool flat = false;
 
     static QSSGShaderGeneratorStage stageFromString(const QString &stage);
 };

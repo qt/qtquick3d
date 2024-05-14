@@ -449,12 +449,12 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
 
     for (const QSSGRenderShaderMetadata::InputOutput &inputVar : std::as_const(meta.inputs)) {
         if (inputVar.stage == stage)
-            mergeContext->registerInput(stage, inputVar.type, inputVar.name);
+            mergeContext->registerInput(stage, inputVar.type, inputVar.name, inputVar.flat);
     }
 
     for (const QSSGRenderShaderMetadata::InputOutput &outputVar : std::as_const(meta.outputs)) {
         if (outputVar.stage == stage)
-            mergeContext->registerOutput(stage, outputVar.type, outputVar.name);
+            mergeContext->registerOutput(stage, outputVar.type, outputVar.name, outputVar.flat);
     }
 
     for (auto it = mergeContext->m_inOutVars.cbegin(), end = mergeContext->m_inOutVars.cend(); it != end; ++it) {

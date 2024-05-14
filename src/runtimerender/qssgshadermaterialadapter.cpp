@@ -909,15 +909,21 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
             if (id.trimmed() == QByteArrayLiteral("VARYING")) {
                 QByteArray vtype;
                 QByteArray vname;
+                bool vflat = false;
                 lastPos = tok.pos;
                 t = tok.next();
                 while (t != Tokenizer::Token_EOF) {
                     QByteArray data = QByteArray::fromRawData(lastPos, tok.pos - lastPos);
                     if (t == Tokenizer::Token_Identifier) {
-                        if (vtype.isEmpty())
+                        if (vtype.isEmpty()) {
                             vtype = data.trimmed();
-                        else if (vname.isEmpty())
+                            if (vtype == QByteArrayLiteral("flat")) {
+                                vflat = true;
+                                vtype.clear();
+                            }
+                        } else if (vname.isEmpty()) {
                             vname = data.trimmed();
+                        }
                     }
                     if (t == Tokenizer::Token_SemiColon)
                         break;
@@ -925,9 +931,9 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     t = tok.next();
                 }
                 if (type == QSSGShaderCache::ShaderType::Vertex)
-                    outputs.append(vtype + " " + vname);
+                    outputs.append((vflat ? "flat " : "") + vtype + " " + vname);
                 else
-                    inputs.append(vtype + " " + vname);
+                    inputs.append((vflat ? "flat " : "") + vtype + " " + vname);
             } else {
                 const QByteArray trimmedId = id.trimmed();
                 if (funcFinderState == 0 && trimmedId == QByteArrayLiteral("void")) {
@@ -1129,10 +1135,16 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
 
     const char *stageStr = type == QSSGShaderCache::ShaderType::Vertex ? "vertex" : "fragment";
     StringPairList allInputs = baseInputs;
+    QVarLengthArray<bool, 16> inputIsFlat(allInputs.count(), false);
     for (const QByteArray &inputTypeAndName : inputs) {
         const QByteArrayList typeAndName = inputTypeAndName.split(' ');
-        if (typeAndName.size() == 2)
+        if (typeAndName.size() == 2) {
             allInputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
+            inputIsFlat.append(false);
+        } else if (typeAndName.size() == 3 && typeAndName[0].startsWith("flat")) {
+            allInputs.append({ typeAndName[1].trimmed(), typeAndName[2].trimmed() });
+            inputIsFlat.append(true);
+        }
     }
     if (!allInputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"inputs\": [\n";
@@ -1141,7 +1153,9 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         for (int i = 0, count = allInputs.size(); i < count; ++i) {
             dst.append("    { \"type\": \"" + allInputs[i].first
                     + "\", \"name\": \"" + allInputs[i].second
-                    + "\", \"stage\": \"" + stageStr + "\" }");
+                    + "\", \"stage\": \"" + stageStr
+                    + (inputIsFlat[i] ? "\", \"flat\": true" : "\"")
+                    + " }");
             if (i < count - 1)
                 dst.append(",");
             dst.append("\n");
@@ -1150,10 +1164,16 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     }
 
     StringPairList allOutputs = baseOutputs;
+    QVarLengthArray<bool, 16> outputIsFlat(allOutputs.count(), false);
     for (const QByteArray &outputTypeAndName : outputs) {
         const QByteArrayList typeAndName = outputTypeAndName.split(' ');
-        if (typeAndName.size() == 2)
+        if (typeAndName.size() == 2) {
             allOutputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
+            outputIsFlat.append(false);
+        } else if (typeAndName.size() == 3 && typeAndName[0].startsWith("flat")) {
+            allOutputs.append({ typeAndName[1].trimmed(), typeAndName[2].trimmed() });
+            outputIsFlat.append(true);
+        }
     }
     if (!allOutputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"outputs\": [\n";
@@ -1162,7 +1182,9 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         for (int i = 0, count = allOutputs.size(); i < count; ++i) {
             dst.append("    { \"type\": \"" + allOutputs[i].first
                     + "\", \"name\": \"" + allOutputs[i].second
-                    + "\", \"stage\": \"" + stageStr + "\" }");
+                    + "\", \"stage\": \"" + stageStr
+                    + (outputIsFlat[i] ? "\", \"flat\": true" : "\"")
+                    + " }");
             if (i < count - 1)
                 dst.append(",");
             dst.append("\n");

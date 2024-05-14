@@ -129,6 +129,8 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
                 inOutVar.name = (it != end) ? it->toString().toLatin1() : QByteArray();
                 it = uObj.constFind(QLatin1String("stage"));
                 inOutVar.stage = InputOutput::stageFromString((it != end) ? it->toString() : QString());
+                it = uObj.constFind(QLatin1String("flat"));
+                inOutVar.flat = (it != end) ? it->toBool() : false;
             }
             return inOutVar;
         };

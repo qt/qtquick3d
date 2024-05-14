@@ -433,6 +433,10 @@ QT_BEGIN_NAMESPACE
 
     \endlist
 
+    \note To pass data without interpolation from the vertex to the fragment
+    stage, add the \c flat keyword before the type in the \c VARYING
+    declarations.
+
     \section2 Fragment shader snippets in a shaded custom material
 
     The following functions can be implemented in a fragment shader snippet:

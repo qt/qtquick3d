@@ -944,6 +944,12 @@ void MAIN()
 \li \image quick3d-custom-varying1.jpg
 \endtable
 
+To disable interpolation for a variable, use the \c flat keyword in both the
+vertex and fragment shader snippet. For example:
+\badcode
+VARYING flat vec2 v;
+\endcode
+
 \section2 Textures
 
 A \l CustomMaterial has no built-in texture maps, meaning there is no equivalent of, for
