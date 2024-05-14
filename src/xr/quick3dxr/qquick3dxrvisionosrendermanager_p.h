@@ -68,6 +68,10 @@ private:
     QRhiTexture *m_rhiDepthTexture = nullptr;
     ar_session_t m_arSession;
     ar_world_tracking_provider_t m_worldTrackingProvider;
+    bool m_isHandTrackingSupported = false;
+    ar_hand_tracking_provider_t m_handTrackingProvider;
+    ar_hand_anchor_t m_leftHandAnchor;
+    ar_hand_anchor_t m_rightHandAnchor;
 };
 
 QT_END_NAMESPACE

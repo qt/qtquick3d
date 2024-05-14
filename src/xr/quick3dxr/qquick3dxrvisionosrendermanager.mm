@@ -181,13 +181,30 @@ ar_device_anchor_t QQuick3DXRVisionOSRenderManager::createPoseForTiming(cp_frame
 
 void QQuick3DXRVisionOSRenderManager::runWorldTrackingARSession()
 {
-        ar_world_tracking_configuration_t worldTrackingConfiguration = ar_world_tracking_configuration_create();
-        m_worldTrackingProvider = ar_world_tracking_provider_create(worldTrackingConfiguration);
+    ar_world_tracking_configuration_t worldTrackingConfiguration = ar_world_tracking_configuration_create();
+    m_worldTrackingProvider = ar_world_tracking_provider_create(worldTrackingConfiguration);
 
-        ar_data_providers_t dataProviders = ar_data_providers_create_with_data_providers(m_worldTrackingProvider, nil);
+    ar_data_providers_t dataProviders = ar_data_providers_create();
+    ar_data_providers_add_data_provider(dataProviders, m_worldTrackingProvider);
 
-        m_arSession = ar_session_create();
-        ar_session_run(m_arSession, dataProviders);
+    m_isHandTrackingSupported = ar_hand_tracking_provider_is_supported();
+    if (m_isHandTrackingSupported) {
+        ar_hand_tracking_configuration_t handTrackingConfiguration = ar_hand_tracking_configuration_create();
+        m_handTrackingProvider = ar_hand_tracking_provider_create(handTrackingConfiguration);
+        ar_data_providers_add_data_provider(dataProviders, m_handTrackingProvider);
+    } else {
+        qWarning("Hand tracking is not supported on this device.");
+    }
+
+
+    m_arSession = ar_session_create();
+    ar_session_run(m_arSession, dataProviders);
+
+    // Create hand anchors now
+    if (m_isHandTrackingSupported) {
+        m_leftHandAnchor = ar_hand_anchor_create();
+        m_rightHandAnchor = ar_hand_anchor_create();
+    }
 }
 
 void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQuickRenderControl *renderControl, QOpenXROrigin *xrOrigin, QQuick3DViewport *xrViewport)
@@ -221,6 +238,19 @@ void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQu
 
     // Get the pose transform from the anchor
     simd_float4x4 headTransform = ar_anchor_get_origin_from_anchor_transform(anchor);
+
+    // Update the hands
+    if (m_isHandTrackingSupported) {
+        ar_hand_tracking_provider_get_latest_anchors(m_handTrackingProvider, m_leftHandAnchor, m_rightHandAnchor);
+
+        if (ar_trackable_anchor_is_tracked(m_leftHandAnchor)) {
+
+        }
+
+        if (ar_trackable_anchor_is_tracked(m_rightHandAnchor)) {
+
+        }
+    }
 
     QRhi *rhi = renderControl->rhi();
 
