@@ -184,6 +184,9 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     }
 
     // If all else fails, try 2.0 but that's going to lose a bunch of features.
+#ifdef Q_OS_WASM
+    qCWarning(lcQuick3D, "OpenGL ES 3.0 / WebGL 2 is required on WebAssembly.");
+#endif
     fmt.setVersion(2, 0);
     fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);

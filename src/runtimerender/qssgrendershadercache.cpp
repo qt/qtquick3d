@@ -163,6 +163,8 @@ static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
     outputs.reserve(8);
+
+#ifndef Q_OS_WASM
     outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
     outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
     outputs.append({ QShader::HlslShader, QShaderVersion(61) }); // Shader Model 6.1 (for multiview on d3d12)
@@ -171,6 +173,7 @@ static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
     outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
     outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+
     outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
+#endif
     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
 
     // If one of the above cannot be generated due to failing at the

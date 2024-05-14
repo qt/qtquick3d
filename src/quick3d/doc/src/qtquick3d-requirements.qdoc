@@ -107,4 +107,7 @@ unavailable or disfunctional:
 \li Certain post-processing effects
 \li Custom materials that use shaders relying on GLSL features not present in GLSL ES 100
 \endlist
+
+\note Qt Quick 3D requires OpenGL ES 3.0 / WebGL 2 on the WebAssembly platform.
+OpenGL ES 2.0 / WebGL 1 is not supported.
 */
