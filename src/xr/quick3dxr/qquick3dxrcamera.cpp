@@ -1,7 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrcamera_p.h"
+#include "qquick3dxrcamera_p.h"
 #include "qopenxrorigin_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3D/private/qquick3dutils_p.h>
@@ -11,43 +11,43 @@
 
 QT_BEGIN_NAMESPACE
 
-QOpenXREyeCamera::QOpenXREyeCamera(QQuick3DNode *parent)
+QQuick3DXrEyeCamera::QQuick3DXrEyeCamera(QQuick3DNode *parent)
     : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera)), parent)
 {
 
 }
 
-float QOpenXREyeCamera::leftTangent() const
+float QQuick3DXrEyeCamera::leftTangent() const
 {
     return m_leftTangent;
 }
 
-float QOpenXREyeCamera::rightTangent() const
+float QQuick3DXrEyeCamera::rightTangent() const
 {
     return m_rightTangent;
 }
 
-float QOpenXREyeCamera::upTangent() const
+float QQuick3DXrEyeCamera::upTangent() const
 {
     return m_upTangent;
 }
 
-float QOpenXREyeCamera::downTangent() const
+float QQuick3DXrEyeCamera::downTangent() const
 {
     return m_downTangent;
 }
 
-float QOpenXREyeCamera::clipNear() const
+float QQuick3DXrEyeCamera::clipNear() const
 {
     return m_clipNear;
 }
 
-float QOpenXREyeCamera::clipFar() const
+float QQuick3DXrEyeCamera::clipFar() const
 {
     return m_clipFar;
 }
 
-void QOpenXREyeCamera::setLeftTangent(float leftTangent)
+void QQuick3DXrEyeCamera::setLeftTangent(float leftTangent)
 {
     if (qFuzzyCompare(m_leftTangent, leftTangent))
         return;
@@ -57,7 +57,7 @@ void QOpenXREyeCamera::setLeftTangent(float leftTangent)
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setRightTangent(float rightTangent)
+void QQuick3DXrEyeCamera::setRightTangent(float rightTangent)
 {
     if (qFuzzyCompare(m_rightTangent, rightTangent))
         return;
@@ -67,7 +67,7 @@ void QOpenXREyeCamera::setRightTangent(float rightTangent)
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setUpTangent(float upTangent)
+void QQuick3DXrEyeCamera::setUpTangent(float upTangent)
 {
     if (qFuzzyCompare(m_upTangent, upTangent))
         return;
@@ -77,7 +77,7 @@ void QOpenXREyeCamera::setUpTangent(float upTangent)
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setDownTangent(float downTangent)
+void QQuick3DXrEyeCamera::setDownTangent(float downTangent)
 {
     if (qFuzzyCompare(m_downTangent, downTangent))
         return;
@@ -87,7 +87,7 @@ void QOpenXREyeCamera::setDownTangent(float downTangent)
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setClipNear(float clipNear)
+void QQuick3DXrEyeCamera::setClipNear(float clipNear)
 {
     if (qFuzzyCompare(m_clipNear, clipNear))
         return;
@@ -97,7 +97,7 @@ void QOpenXREyeCamera::setClipNear(float clipNear)
     markProjectionDirty();
 }
 
-void QOpenXREyeCamera::setClipFar(float clipFar)
+void QQuick3DXrEyeCamera::setClipFar(float clipFar)
 {
     if (qFuzzyCompare(m_clipFar, clipFar))
         return;
@@ -107,7 +107,7 @@ void QOpenXREyeCamera::setClipFar(float clipFar)
     markProjectionDirty();
 }
 
-QSSGRenderGraphObject *QOpenXREyeCamera::updateSpatialNode(QSSGRenderGraphObject *node)
+QSSGRenderGraphObject *QQuick3DXrEyeCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
     if (camera) {
@@ -123,7 +123,7 @@ QSSGRenderGraphObject *QOpenXREyeCamera::updateSpatialNode(QSSGRenderGraphObject
     return camera;
 }
 
-void QOpenXREyeCamera::markProjectionDirty()
+void QQuick3DXrEyeCamera::markProjectionDirty()
 {
     if (!m_projectionDirty) {
         m_projectionDirty = true;
@@ -131,7 +131,7 @@ void QOpenXREyeCamera::markProjectionDirty()
     }
 }
 
-void QOpenXREyeCamera::maybeUpdateProjection()
+void QQuick3DXrEyeCamera::maybeUpdateProjection()
 {
     if (!m_projectionDirty)
         return;
@@ -186,28 +186,28 @@ void QOpenXREyeCamera::maybeUpdateProjection()
     }
 }
 
-QOpenXRCamera::QOpenXRCamera(QQuick3DNode *parent)
+QQuick3DXrCamera::QQuick3DXrCamera(QQuick3DNode *parent)
     : QQuick3DNode(parent)
 {
 }
 
-QOpenXRCamera::~QOpenXRCamera()
+QQuick3DXrCamera::~QQuick3DXrCamera()
 {
 
 }
 
-float QOpenXRCamera::clipNear() const
+float QQuick3DXrCamera::clipNear() const
 {
     return m_clipNear;
 }
 
-float QOpenXRCamera::clipFar() const
+float QQuick3DXrCamera::clipFar() const
 {
     return m_clipFar;
 }
 
 
-void QOpenXRCamera::setClipNear(float clipNear)
+void QQuick3DXrCamera::setClipNear(float clipNear)
 {
     if (qFuzzyCompare(m_clipNear, clipNear))
         return;
@@ -215,7 +215,7 @@ void QOpenXRCamera::setClipNear(float clipNear)
     emit clipNearChanged(m_clipNear);
 }
 
-void QOpenXRCamera::setClipFar(float clipFar)
+void QQuick3DXrCamera::setClipFar(float clipFar)
 {
     if (qFuzzyCompare(m_clipFar, clipFar))
         return;

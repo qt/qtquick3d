@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRCAMERA_H
-#define QOPENXRCAMERA_H
+#ifndef QQUICK3DXRCAMERA_P_H
+#define QQUICK3DXRCAMERA_P_H
 
 //
 //  W A R N I N G
@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DXR_EXPORT QOpenXREyeCamera : public QQuick3DCamera
+class Q_QUICK3DXR_EXPORT QQuick3DXrEyeCamera : public QQuick3DCamera
 {
     Q_OBJECT
     Q_PROPERTY(float leftTangent READ leftTangent WRITE setLeftTangent NOTIFY leftTangentChanged)
@@ -34,7 +34,7 @@ class Q_QUICK3DXR_EXPORT QOpenXREyeCamera : public QQuick3DCamera
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
 
 public:
-    QOpenXREyeCamera(QQuick3DNode *parent = nullptr);
+    QQuick3DXrEyeCamera(QQuick3DNode *parent = nullptr);
 
     float leftTangent() const;
     float rightTangent() const;
@@ -77,7 +77,7 @@ private:
     bool m_projectionDirty = true;
 };
 
-class Q_QUICK3DXR_EXPORT QOpenXRCamera : public QQuick3DNode
+class Q_QUICK3DXR_EXPORT QQuick3DXrCamera : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
@@ -85,8 +85,8 @@ class Q_QUICK3DXR_EXPORT QOpenXRCamera : public QQuick3DNode
     QML_NAMED_ELEMENT(XrCamera)
 
 public:
-    QOpenXRCamera(QQuick3DNode *parent = nullptr);
-    ~QOpenXRCamera();
+    QQuick3DXrCamera(QQuick3DNode *parent = nullptr);
+    ~QQuick3DXrCamera();
     float clipNear() const;
     float clipFar() const;
 
@@ -106,4 +106,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRCAMERA_H
+#endif // QQUICK3DXRCAMERA_P_H

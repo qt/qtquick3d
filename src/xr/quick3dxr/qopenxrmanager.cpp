@@ -20,7 +20,7 @@
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 
-#include "qopenxrcamera_p.h"
+#include "qquick3dxrcamera_p.h"
 
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 #ifdef XR_USE_GRAPHICS_API_VULKAN
@@ -1686,7 +1686,7 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
                 if (m_submitLayerDepth) {
                     m_layerDepthInfos[i].minDepth = 0;
                     m_layerDepthInfos[i].maxDepth = 1;
-                    QOpenXREyeCamera *cam = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
+                    QQuick3DXrEyeCamera *cam = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
                     m_layerDepthInfos[i].nearZ = cam ? cam->clipNear() : 1.0f;
                     m_layerDepthInfos[i].farZ = cam ? cam->clipFar() : 10000.0f;
                     m_projectionLayerViews[i].next = &m_layerDepthInfos[i];
@@ -1740,7 +1740,7 @@ bool QOpenXRManager::renderLayer(XrTime predictedDisplayTime,
                     m_layerDepthInfos[i].subImage.imageArrayIndex = 0;
                     m_layerDepthInfos[i].minDepth = 0;
                     m_layerDepthInfos[i].maxDepth = 1;
-                    QOpenXREyeCamera *cam = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
+                    QQuick3DXrEyeCamera *cam = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
                     m_layerDepthInfos[i].nearZ = cam ? cam->clipNear() : 1.0f;
                     m_layerDepthInfos[i].farZ = cam ? cam->clipFar() : 10000.0f;
                     m_projectionLayerViews[i].next = &m_layerDepthInfos[i];
@@ -1852,7 +1852,7 @@ bool QOpenXRManager::setupQuickScene()
 }
 
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-void QOpenXRManager::updateCameraHelper(QOpenXREyeCamera *camera, const XrCompositionLayerProjectionView &layerView)
+void QOpenXRManager::updateCameraHelper(QQuick3DXrEyeCamera *camera, const XrCompositionLayerProjectionView &layerView)
 {
     camera->setLeftTangent(qTan(layerView.fov.angleLeft));
     camera->setRightTangent(qTan(layerView.fov.angleRight));
@@ -1873,7 +1873,7 @@ void QOpenXRManager::updateCameraHelper(QOpenXREyeCamera *camera, const XrCompos
 // This is set right before updateing/rendering for that eye's view
 void QOpenXRManager::updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView)
 {
-    QOpenXREyeCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->eyeCamera(eye) : nullptr;
+    QQuick3DXrEyeCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->eyeCamera(eye) : nullptr;
 
     if (eyeCamera)
         updateCameraHelper(eyeCamera, layerView);
@@ -1886,7 +1886,7 @@ void QOpenXRManager::updateCameraMultiview(int projectionLayerViewStartIndex, in
 {
     QVarLengthArray<QQuick3DCamera *, 4> cameras;
     for (int i = projectionLayerViewStartIndex; i < projectionLayerViewStartIndex + count; ++i) {
-        QOpenXREyeCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
+        QQuick3DXrEyeCamera *eyeCamera = m_xrOrigin ? m_xrOrigin->eyeCamera(i) : nullptr;
         if (eyeCamera)
             updateCameraHelper(eyeCamera, m_projectionLayerViews[i]);
         cameras.append(eyeCamera);

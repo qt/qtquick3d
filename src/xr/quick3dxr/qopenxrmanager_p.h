@@ -44,7 +44,7 @@ class QQuickWindow;
 class QQuickRenderControl;
 class QQuick3DNode;
 class QQuick3DViewport;
-class QOpenXREyeCamera;
+class QQuick3DXrEyeCamera;
 class QOpenXRView;
 class QOpenXROrigin;
 class QOpenXRInputManager;
@@ -134,7 +134,7 @@ private:
     void preSetupQuickScene();
     bool setupQuickScene();
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-    void updateCameraHelper(QOpenXREyeCamera *camera, const XrCompositionLayerProjectionView &layerView);
+    void updateCameraHelper(QQuick3DXrEyeCamera *camera, const XrCompositionLayerProjectionView &layerView);
     void updateCameraNonMultiview(int eye, const XrCompositionLayerProjectionView &layerView);
     void updateCameraMultiview(int projectionLayerViewStartIndex, int count);
 #endif // Q_NO_TEMPORARY_DISABLE_XR_API

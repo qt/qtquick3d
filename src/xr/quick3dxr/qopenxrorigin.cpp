@@ -6,15 +6,15 @@
 QT_BEGIN_NAMESPACE
 
 QOpenXROrigin::QOpenXROrigin()
-    : m_builtInCamera(new QOpenXRCamera(this))
+    : m_builtInCamera(new QQuick3DXrCamera(this))
 {
     // These are the "real" cameras that are used for rendering.
-    auto *leftEyeCamera = new QOpenXREyeCamera;
+    auto *leftEyeCamera = new QQuick3DXrEyeCamera;
     leftEyeCamera->setParent(this);
     leftEyeCamera->setParentItem(this);
     m_eyeCameras.append(leftEyeCamera);
 
-    auto *rightEyeCamera = new QOpenXREyeCamera;
+    auto *rightEyeCamera = new QQuick3DXrEyeCamera;
     rightEyeCamera->setParent(this);
     rightEyeCamera->setParentItem(this);
     m_eyeCameras.append(rightEyeCamera);
@@ -24,12 +24,12 @@ QOpenXROrigin::QOpenXROrigin()
 }
 
 
-QOpenXRCamera *QOpenXROrigin::camera() const
+QQuick3DXrCamera *QOpenXROrigin::camera() const
 {
     return m_camera;
 }
 
-void QOpenXROrigin::setCamera(QOpenXRCamera *newCamera)
+void QOpenXROrigin::setCamera(QQuick3DXrCamera *newCamera)
 {
     if (m_camera == newCamera)
         return;
@@ -38,8 +38,8 @@ void QOpenXROrigin::setCamera(QOpenXRCamera *newCamera)
         // connect the near/far properties to the real eye camers
         for (auto eyeCamera : m_eyeCameras) {
             // disconnnect the old camera
-            disconnect(m_camera, &QOpenXRCamera::clipNearChanged, eyeCamera, &QOpenXREyeCamera::setClipNear);
-            disconnect(m_camera, &QOpenXRCamera::clipFarChanged, eyeCamera, &QOpenXREyeCamera::setClipFar);
+            disconnect(m_camera, &QQuick3DXrCamera::clipNearChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipNear);
+            disconnect(m_camera, &QQuick3DXrCamera::clipFarChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipFar);
         }
     }
 
@@ -54,14 +54,14 @@ void QOpenXROrigin::setCamera(QOpenXRCamera *newCamera)
             // Set the initial value, and connect the signals
             eyeCamera->setClipNear(m_camera->clipNear());
             eyeCamera->setClipFar(m_camera->clipFar());
-            connect(m_camera, &QOpenXRCamera::clipNearChanged, eyeCamera, &QOpenXREyeCamera::setClipNear);
-            connect(m_camera, &QOpenXRCamera::clipFarChanged, eyeCamera, &QOpenXREyeCamera::setClipFar);
+            connect(m_camera, &QQuick3DXrCamera::clipNearChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipNear);
+            connect(m_camera, &QQuick3DXrCamera::clipFarChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipFar);
         }
     }
     emit cameraChanged();
 }
 
-QOpenXREyeCamera *QOpenXROrigin::eyeCamera(int index) const
+QQuick3DXrEyeCamera *QOpenXROrigin::eyeCamera(int index) const
 {
     return m_eyeCameras[index];
 }
