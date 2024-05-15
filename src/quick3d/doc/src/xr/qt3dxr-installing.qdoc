@@ -5,17 +5,10 @@
     \title Installing \qxr
     \previouspage \qxr Quick Starter Guide
 
-    \brief Covers the steps required to install \qxr .
+    \brief Covers the steps and dependencies  for installing \qxr .
 
     Before starting, check if there are any instructions regarding the current
     \l{\qxr Known Issues and Limitations} that are relevant to installation.
-
-    \section1 Quick install with the Qt Online Installer
-
-    Go to \l{Get and Install Qt} and follow the instructions there, making sure
-    at \e{step 3} to select \uicontrol{Qt Quick 3d XR} under the relevant Qt Version.
-
-    Then move on to \l{Installing 3rd Party Dependencies}.
 
     \section1 Custom install with the Qt Online Installer
 
@@ -27,15 +20,12 @@
     \uicontrol{Custom Installation} and then select the following components:
 
     \list
-        \li \qxr
-        \li Under the same \c{Qt Version} that you selected for \qxr, select:
-        \list
-            \li Qt for Android. (If developing for the Meta Quest 3)
-            \li Qt Quick 3D
-        \endlist
+        \li (If developing for the Meta Quest 3) Under the \c{Qt Version} that
+        you wish to install select  Qt for Android.
+        \li Under Add-ons select Qt Quick 3D.
     \endlist
 
-    Then, select other Qt modules or tools that are available to you.
+    Then, select other Qt modules or tools that are available to you as you need.
 
     \section1 Installing 3rd Party Dependencies
 
@@ -51,6 +41,7 @@
     \endlist
 
     \section2 Apple devices
+    You will need xcode, see https://doc.qt.io/qt-6/macos.html#build-environment.
 
     \section3 Host Environment
 
