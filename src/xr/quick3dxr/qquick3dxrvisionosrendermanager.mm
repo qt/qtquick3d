@@ -4,7 +4,7 @@
 #import "qquick3dxrvisionosmanager_p.h"
 
 #include "qquick3dxrvisionosrendermanager_p.h"
-#include "qopenxrorigin_p.h"
+#include "qquick3dxrorigin_p.h"
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
 
@@ -207,7 +207,7 @@ void QQuick3DXRVisionOSRenderManager::runWorldTrackingARSession()
     }
 }
 
-void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQuickRenderControl *renderControl, QOpenXROrigin *xrOrigin, QQuick3DViewport *xrViewport)
+void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQuickRenderControl *renderControl, QQuick3DXrOrigin *xrOrigin, QQuick3DViewport *xrViewport)
 {
     auto layerRenderer = this->layerRenderer();
     cp_frame_t frame = cp_layer_renderer_query_next_frame(layerRenderer);

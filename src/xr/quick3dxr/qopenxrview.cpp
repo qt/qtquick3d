@@ -23,7 +23,7 @@ QOpenXRView::~QOpenXRView()
     m_inDestructor = true;
 }
 
-QOpenXROrigin *QOpenXRView::xrOrigin() const
+QQuick3DXrOrigin *QOpenXRView::xrOrigin() const
 {
     return m_openXRManager.m_xrOrigin;
 }

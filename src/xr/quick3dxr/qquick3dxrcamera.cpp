@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qquick3dxrcamera_p.h"
-#include "qopenxrorigin_p.h"
+#include "qquick3dxrorigin_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3D/private/qquick3dutils_p.h>
 #include <QtQuick3D/private/qquick3dnode_p_p.h>

@@ -46,7 +46,7 @@ class QQuick3DNode;
 class QQuick3DViewport;
 class QQuick3DXrEyeCamera;
 class QOpenXRView;
-class QOpenXROrigin;
+class QQuick3DXrOrigin;
 class QOpenXRInputManager;
 class QOpenXRSpaceExtension;
 class QRhiTexture;
@@ -186,7 +186,7 @@ private:
     QQuickWindow *m_quickWindow = nullptr;
     QQuickRenderControl *m_renderControl = nullptr;
     QQuick3DViewport *m_vrViewport = nullptr;
-    QOpenXROrigin *m_xrOrigin = nullptr;
+    QQuick3DXrOrigin *m_xrOrigin = nullptr;
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     QOpenXRInputManager *m_inputManager = nullptr;
 #endif // Q_NO_TEMPORARY_DISABLE_XR_API

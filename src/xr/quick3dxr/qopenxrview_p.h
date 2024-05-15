@@ -26,7 +26,7 @@
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
 
 #include <QtQuick3DXr/private/qopenxrmanager_p.h>
-#include <QtQuick3DXr/private/qopenxrorigin_p.h>
+#include <QtQuick3DXr/private/qquick3dxrorigin_p.h>
 #include <QtQuick3DXr/private/qopenxrruntimeinfo_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -43,7 +43,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
 {
     Q_OBJECT
 
-    Q_PROPERTY(QOpenXROrigin *xrOrigin READ xrOrigin NOTIFY xrOriginChanged)
+    Q_PROPERTY(QQuick3DXrOrigin *xrOrigin READ xrOrigin NOTIFY xrOriginChanged)
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged)
     Q_PROPERTY(QOpenXRHandInput *leftHandInput READ leftHandInput CONSTANT)
     Q_PROPERTY(QOpenXRHandInput *rightHandInput READ rightHandInput CONSTANT)
@@ -80,7 +80,7 @@ public:
     explicit QOpenXRView();
     ~QOpenXRView();
 
-    QOpenXROrigin *xrOrigin() const;
+    QQuick3DXrOrigin *xrOrigin() const;
     QQuick3DSceneEnvironment *environment() const;
     QOpenXRHandInput *leftHandInput() const;
     QOpenXRHandInput *rightHandInput() const;
@@ -131,7 +131,7 @@ private Q_SLOTS:
 Q_SIGNALS:
     void initializeFailed(const QString &errorString);
     void sessionEnded();
-    void xrOriginChanged(QOpenXROrigin* xrOrigin);
+    void xrOriginChanged(QQuick3DXrOrigin* xrOrigin);
     void environmentChanged(QQuick3DSceneEnvironment * environment);
     void enablePassthroughChanged(bool enable);
     void quitOnSessionEndChanged();

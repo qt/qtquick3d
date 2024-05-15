@@ -23,7 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
-class QOpenXROrigin;
+class QQuick3DXrOrigin;
 class QQuick3DViewport;
 
 class QQuick3DXRVisionOSRenderManager : public QObject
@@ -58,7 +58,7 @@ public:
 
     void renderFrame(QQuickWindow *quickWindow,
                      QQuickRenderControl *renderControl,
-                     QOpenXROrigin *xrOrigin,
+                     QQuick3DXrOrigin *xrOrigin,
                      QQuick3DViewport *xrViewport);
 
 Q_SIGNALS:

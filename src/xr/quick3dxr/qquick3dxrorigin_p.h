@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRORIGIN_H
-#define QOPENXRORIGIN_H
+#ifndef QQUICK3DXRORIGIN_H
+#define QQUICK3DXRORIGIN_H
 
 //
 //  W A R N I N G
@@ -25,14 +25,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DXR_EXPORT QOpenXROrigin : public QQuick3DNode
+class Q_QUICK3DXR_EXPORT QQuick3DXrOrigin : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DXrCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
     QML_NAMED_ELEMENT(XrOrigin)
 
 public:
-    QOpenXROrigin();
+    QQuick3DXrOrigin();
 
     QQuick3DXrCamera *camera() const;
     void setCamera(QQuick3DXrCamera *newCamera);
@@ -52,4 +52,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRORIGIN_H
+#endif // QQUICK3DXRORIGIN_H

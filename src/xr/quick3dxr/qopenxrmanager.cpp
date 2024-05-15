@@ -53,7 +53,7 @@
 
 #endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
-#include "qopenxrorigin_p.h"
+#include "qquick3dxrorigin_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -1899,11 +1899,11 @@ void QOpenXRManager::checkOrigin()
 {
     if (!m_xrOrigin) {
         // Check the scene for an XrOrigin
-        std::function<QOpenXROrigin*(QQuick3DObject *)> findOriginNode;
-        findOriginNode = [&findOriginNode](QQuick3DObject *node) -> QOpenXROrigin *{
+        std::function<QQuick3DXrOrigin*(QQuick3DObject *)> findOriginNode;
+        findOriginNode = [&findOriginNode](QQuick3DObject *node) -> QQuick3DXrOrigin *{
             if (!node)
                 return nullptr;
-            auto origin = qobject_cast<QOpenXROrigin *>(node);
+            auto origin = qobject_cast<QQuick3DXrOrigin *>(node);
             if (origin)
                 return origin;
             for (auto child : node->childItems()) {

@@ -1,11 +1,11 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrorigin_p.h"
+#include "qquick3dxrorigin_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QOpenXROrigin::QOpenXROrigin()
+QQuick3DXrOrigin::QQuick3DXrOrigin()
     : m_builtInCamera(new QQuick3DXrCamera(this))
 {
     // These are the "real" cameras that are used for rendering.
@@ -24,12 +24,12 @@ QOpenXROrigin::QOpenXROrigin()
 }
 
 
-QQuick3DXrCamera *QOpenXROrigin::camera() const
+QQuick3DXrCamera *QQuick3DXrOrigin::camera() const
 {
     return m_camera;
 }
 
-void QOpenXROrigin::setCamera(QQuick3DXrCamera *newCamera)
+void QQuick3DXrOrigin::setCamera(QQuick3DXrCamera *newCamera)
 {
     if (m_camera == newCamera)
         return;
@@ -61,7 +61,7 @@ void QOpenXROrigin::setCamera(QQuick3DXrCamera *newCamera)
     emit cameraChanged();
 }
 
-QQuick3DXrEyeCamera *QOpenXROrigin::eyeCamera(int index) const
+QQuick3DXrEyeCamera *QQuick3DXrOrigin::eyeCamera(int index) const
 {
     return m_eyeCameras[index];
 }
