@@ -45,7 +45,7 @@ class QQuickRenderControl;
 class QQuick3DNode;
 class QQuick3DViewport;
 class QQuick3DXrEyeCamera;
-class QOpenXRView;
+class QQuick3DXrView;
 class QQuick3DXrOrigin;
 class QOpenXRInputManager;
 class QOpenXRSpaceExtension;
@@ -263,7 +263,7 @@ private:
     QQuick3DXRVisionOSRenderManager *m_visionOSRenderManager = nullptr;
 #endif
 
-    friend class QOpenXRView;
+    friend class QQuick3DXrView;
     friend class QOpenXRRuntimeInfo;
 };
 

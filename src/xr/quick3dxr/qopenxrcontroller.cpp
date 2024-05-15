@@ -6,7 +6,7 @@
 # include "qopenxrinputmanager_p.h"
 #endif
 
-#include "qopenxrview_p.h"
+#include "qquick3dxrview_p.h"
 
 QT_BEGIN_NAMESPACE
 

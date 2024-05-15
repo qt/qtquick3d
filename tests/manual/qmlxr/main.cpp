@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
         exitAfter = qMax(0, cmdLineParser.value(exitOption).toInt());
 
     if (!rootObjects.isEmpty()) {
-        QOpenXRView *xrView = qobject_cast<QOpenXRView *>(rootObjects.first());
+        QQuick3DXrView *xrView = qobject_cast<QQuick3DXrView *>(rootObjects.first());
 
         component.reset(new QQmlComponent(&engine, QUrl::fromLocalFile(filename)));
         if (component->isError()) {

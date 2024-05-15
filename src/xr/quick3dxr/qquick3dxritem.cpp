@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qquick3dxritem_p.h"
-#include "qopenxrview_p.h"
+#include "qquick3dxrview_p.h"
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QColor>
@@ -57,7 +57,7 @@ public:
 
     QQuickItem *m_contentItem = nullptr;
     QQuickRectangle *m_containerItem = nullptr;
-    QPointer<QOpenXRView> m_XrView;
+    QPointer<QQuick3DXrView> m_XrView;
     QMetaObject::Connection m_contentItemDestroyedConnection;
     QColor m_color = Qt::white;
     qreal m_pixelsPerUnit { 1.0 };
@@ -148,10 +148,10 @@ void QQuick3DXrItem::componentComplete()
     Q_D(QQuick3DXrItem);
     QQuick3DNode::componentComplete(); // Sets d->componentComplete, so must be called first
 
-    auto findView = [this]() -> QOpenXRView * {
+    auto findView = [this]() -> QQuick3DXrView * {
         QQuick3DNode *parent = parentNode();
         while (parent) {
-            if (auto *xrView = qobject_cast<QOpenXRView*>(parent))
+            if (auto *xrView = qobject_cast<QQuick3DXrView*>(parent))
                 return xrView;
             parent = parent->parentNode();
         }
@@ -299,7 +299,7 @@ void QQuick3DXrItem::setHeight(qreal newHeight)
 // Updates the touchState and returns true if this item grabs the touch point.
 // touchState is input/output, and input contains the previous state if touchState->grabbed is true
 
-bool QQuick3DXrItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset)
+bool QQuick3DXrItem::handleVirtualTouch(QQuick3DXrView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset)
 {
     Q_D(QQuick3DXrItem);
 

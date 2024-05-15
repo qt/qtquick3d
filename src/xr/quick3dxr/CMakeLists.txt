@@ -11,7 +11,7 @@ qt_internal_add_qml_module(Quick3DXr
         qquick3dxranimationdriver.cpp qquick3dxranimationdriver_p.h
         qquick3dxrcamera.cpp qquick3dxrcamera_p.h
         qopenxrmanager.cpp qopenxrmanager_p.h
-        qopenxrview.cpp qopenxrview_p.h
+        qquick3dxrview.cpp qquick3dxrview_p.h
         qopenxrruntimeinfo_p.h qopenxrruntimeinfo.cpp
         qquick3dxritem_p.h qquick3dxritem.cpp
         qquick3dxrvirtualmouse.cpp qquick3dxrvirtualmouse_p.h

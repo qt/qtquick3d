@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRView;
+class QQuick3DXrView;
 class QQuick3DNode;
 
 class QQuick3DXrVirtualMouse : public QObject
@@ -31,7 +31,7 @@ class QQuick3DXrVirtualMouse : public QObject
     Q_PROPERTY(bool leftMouseButton READ leftMouseButton WRITE setLeftMouseButton NOTIFY leftMouseButtonChanged)
     Q_PROPERTY(bool middleMouseButton READ middleMouseButton WRITE setMiddleMouseButton NOTIFY middleMouseButtonChanged)
     Q_PROPERTY(QQuick3DNode* source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(QOpenXRView* view READ view WRITE setView NOTIFY viewChanged)
+    Q_PROPERTY(QQuick3DXrView* view READ view WRITE setView NOTIFY viewChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
 
     QML_NAMED_ELEMENT(XrVirtualMouse)
@@ -44,7 +44,7 @@ public:
     bool middleMouseButton() const;
 
     QQuick3DNode *source() const;
-    QOpenXRView* view() const;
+    QQuick3DXrView* view() const;
 
     bool enabled() const;
 
@@ -53,7 +53,7 @@ public Q_SLOTS:
     void setLeftMouseButton(bool leftMouseButton);
     void setMiddleMouseButton(bool middleMouseButton);
     void setSource(QQuick3DNode* source);
-    void setView(QOpenXRView* view);
+    void setView(QQuick3DXrView* view);
     void setEnabled(bool enabled);
 
 private Q_SLOTS:
@@ -64,7 +64,7 @@ Q_SIGNALS:
     void leftMouseButtonChanged(bool leftMouseButton);
     void middleMouseButtonChanged(bool middleMouseButton);
     void sourceChanged(QQuick3DNode* source);
-    void viewChanged(QOpenXRView* view);
+    void viewChanged(QQuick3DXrView* view);
     void enabledChanged(bool enabled);
 
 private:
@@ -74,7 +74,7 @@ private:
     bool m_leftMouseButton = false;
     bool m_middleMouseButton = false;
     QQuick3DNode* m_source = nullptr;
-    QOpenXRView* m_view = nullptr;
+    QQuick3DXrView* m_view = nullptr;
     bool m_enabled = true;
 };
 

@@ -23,7 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuick3DXrItemPrivate;
-class QOpenXRView;
+class QQuick3DXrView;
 
 class QQuick3DXrItem : public QQuick3DNode
 {
@@ -77,7 +77,7 @@ public:
 
     void componentComplete() override;
 
-    bool handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset);
+    bool handleVirtualTouch(QQuick3DXrView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset);
 
 signals:
     void contentItemChanged();

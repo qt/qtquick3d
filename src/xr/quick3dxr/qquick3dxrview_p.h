@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRVIEW_H
-#define QOPENXRVIEW_H
+#ifndef QQUICK3DXRVIEW_P_H
+#define QQUICK3DXRVIEW_P_H
 
 //
 //  W A R N I N G
@@ -39,7 +39,7 @@ class QRhiTexture;
 
 class QQuick3DXrItem;
 
-class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
+class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
 {
     Q_OBJECT
 
@@ -77,8 +77,8 @@ public:
     };
     Q_ENUM(ReferenceSpace)
 
-    explicit QOpenXRView();
-    ~QOpenXRView();
+    explicit QQuick3DXrView();
+    ~QQuick3DXrView();
 
     QQuick3DXrOrigin *xrOrigin() const;
     QQuick3DSceneEnvironment *environment() const;
@@ -159,4 +159,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRVIEW_H
+#endif // QQUICK3DXRVIEW_P_H

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qquick3dxrvirtualmouse_p.h"
-#include "qopenxrview_p.h"
+#include "qquick3dxrview_p.h"
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtGui/QMouseEvent>
@@ -34,7 +34,7 @@ QQuick3DNode *QQuick3DXrVirtualMouse::source() const
     return m_source;
 }
 
-QOpenXRView *QQuick3DXrVirtualMouse::view() const
+QQuick3DXrView *QQuick3DXrVirtualMouse::view() const
 {
     return m_view;
 }
@@ -108,7 +108,7 @@ void QQuick3DXrVirtualMouse::setSource(QQuick3DNode *source)
 
 }
 
-void QQuick3DXrVirtualMouse::setView(QOpenXRView *view)
+void QQuick3DXrVirtualMouse::setView(QQuick3DXrView *view)
 {
     if (m_view == view)
         return;
