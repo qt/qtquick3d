@@ -8,7 +8,7 @@ qt_internal_add_qml_module(Quick3DXr
     SOURCES
         qopenxractionmapper_p.h qopenxractionmapper.cpp
         qquick3dxrorigin.cpp qquick3dxrorigin_p.h
-        qopenxranimationdriver.cpp qopenxranimationdriver_p.h
+        qquick3dxranimationdriver.cpp qquick3dxranimationdriver_p.h
         qquick3dxrcamera.cpp qquick3dxrcamera_p.h
         qopenxrmanager.cpp qopenxrmanager_p.h
         qopenxrview.cpp qopenxrview_p.h

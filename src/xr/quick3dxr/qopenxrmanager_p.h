@@ -21,7 +21,7 @@
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
 #include <QtQuick3DXr/private/qabstractopenxrgraphics_p.h>
 #endif // Q_NO_TEMPORARY_DISABLE_XR_API
-#include <QtQuick3DXr/private/qopenxranimationdriver_p.h>
+#include <QtQuick3DXr/private/qquick3dxranimationdriver_p.h>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 
@@ -191,7 +191,7 @@ private:
     QOpenXRInputManager *m_inputManager = nullptr;
 #endif // Q_NO_TEMPORARY_DISABLE_XR_API
 
-    QOpenXRAnimationDriver *m_animationDriver = nullptr;
+    QQuick3DXrAnimationDriver *m_animationDriver = nullptr;
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     XrTime m_previousTime = 0;
 

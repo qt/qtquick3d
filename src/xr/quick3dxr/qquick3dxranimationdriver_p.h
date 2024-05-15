@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRANIMATIONDRIVER_H
-#define QOPENXRANIMATIONDRIVER_H
+#ifndef QQUICK3DXRANIMATIONDRIVER_P_H
+#define QQUICK3DXRANIMATIONDRIVER_P_H
 
 //
 //  W A R N I N G
@@ -20,10 +20,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRAnimationDriver : public QAnimationDriver
+class QQuick3DXrAnimationDriver : public QAnimationDriver
 {
 public:
-    QOpenXRAnimationDriver();
+    QQuick3DXrAnimationDriver();
     void advance() override;
     qint64 elapsed() const override;
 
@@ -36,4 +36,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRANIMATIONDRIVER_H
+#endif // QQUICK3DXRANIMATIONDRIVER_P_H

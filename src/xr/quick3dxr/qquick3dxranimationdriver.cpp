@@ -1,26 +1,26 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxranimationdriver_p.h"
+#include "qquick3dxranimationdriver_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QOpenXRAnimationDriver::QOpenXRAnimationDriver()
+QQuick3DXrAnimationDriver::QQuick3DXrAnimationDriver()
 {
 }
 
-void QOpenXRAnimationDriver::advance()
+void QQuick3DXrAnimationDriver::advance()
 {
     m_elapsed += m_step;
     advanceAnimation();
 }
 
-qint64 QOpenXRAnimationDriver::elapsed() const
+qint64 QQuick3DXrAnimationDriver::elapsed() const
 {
     return m_elapsed;
 }
 
-void QOpenXRAnimationDriver::setStep(int stepSize)
+void QQuick3DXrAnimationDriver::setStep(int stepSize)
 {
     m_step = stepSize;
 }

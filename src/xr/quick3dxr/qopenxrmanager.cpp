@@ -1822,7 +1822,7 @@ bool QOpenXRManager::setupQuickScene()
 #else
     m_visionOSRenderManager->setupWindow(m_quickWindow);
 #endif
-    m_animationDriver = new QOpenXRAnimationDriver;
+    m_animationDriver = new QQuick3DXrAnimationDriver;
     m_animationDriver->install();
 
 
