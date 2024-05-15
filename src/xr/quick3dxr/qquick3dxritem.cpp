@@ -1,7 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxritem_p.h"
+#include "qquick3dxritem_p.h"
 #include "qopenxrview_p.h"
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
@@ -10,17 +10,17 @@
 QT_BEGIN_NAMESPACE
 
 
-class QOpenXRItemPrivate : public QQuick3DNodePrivate
+class QQuick3DXrItemPrivate : public QQuick3DNodePrivate
 {
-    Q_DECLARE_PUBLIC(QOpenXRItem)
+    Q_DECLARE_PUBLIC(QQuick3DXrItem)
 public:
-    QOpenXRItemPrivate() : QQuick3DNodePrivate(QOpenXRItemPrivate::Type::Node)
+    QQuick3DXrItemPrivate() : QQuick3DNodePrivate(QQuick3DXrItemPrivate::Type::Node)
     {
     }
 
     void setContentItem(QQuickItem *newContentItem)
     {
-        Q_Q(QOpenXRItem);
+        Q_Q(QQuick3DXrItem);
         m_contentItem = newContentItem;
 
         initParentItem();
@@ -42,7 +42,7 @@ public:
 
     void initParentItem()
     {
-        Q_Q(QOpenXRItem);
+        Q_Q(QQuick3DXrItem);
         if (!m_containerItem) {
             m_containerItem = new QQuickRectangle;
             m_containerItem->setTransformOrigin(QQuickItem::TopLeft);
@@ -71,11 +71,11 @@ static inline qreal calculatePPU(qreal pxWidth, qreal pxHeight, qreal diagonal)
     return (diagonal > 0) ? std::sqrt((pxWidth * pxWidth) + (pxHeight * pxHeight)) / diagonal : 1.0;
 }
 
-void QOpenXRItemPrivate::updateContent()
+void QQuick3DXrItemPrivate::updateContent()
 {
     if (!componentComplete)
         return;
-    Q_Q(QOpenXRItem);
+    Q_Q(QQuick3DXrItem);
     initParentItem();
     m_containerItem->setColor(m_color);
     if (m_contentItem) {
@@ -131,21 +131,21 @@ void QOpenXRItemPrivate::updateContent()
     }
     \endcode
 */
-QOpenXRItem::QOpenXRItem(QQuick3DNode *parent)
-    : QQuick3DNode(*(new QOpenXRItemPrivate()), parent)
+QQuick3DXrItem::QQuick3DXrItem(QQuick3DNode *parent)
+    : QQuick3DNode(*(new QQuick3DXrItemPrivate()), parent)
 {
 }
 
-QOpenXRItem::~QOpenXRItem()
+QQuick3DXrItem::~QQuick3DXrItem()
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     if (d->m_XrView)
         d->m_XrView->unregisterXrItem(this);
 }
 
-void QOpenXRItem::componentComplete()
+void QQuick3DXrItem::componentComplete()
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     QQuick3DNode::componentComplete(); // Sets d->componentComplete, so must be called first
 
     auto findView = [this]() -> QOpenXRView * {
@@ -173,15 +173,15 @@ void QOpenXRItem::componentComplete()
 
     \sa pixelsPerUnit
  */
-QQuickItem *QOpenXRItem::contentItem() const
+QQuickItem *QQuick3DXrItem::contentItem() const
 {
-    Q_D(const QOpenXRItem);
+    Q_D(const QQuick3DXrItem);
     return d->m_contentItem;
 }
 
-void QOpenXRItem::setContentItem(QQuickItem *newContentItem)
+void QQuick3DXrItem::setContentItem(QQuickItem *newContentItem)
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     if (d->m_contentItem == newContentItem)
         return;
 
@@ -200,15 +200,15 @@ void QOpenXRItem::setContentItem(QQuickItem *newContentItem)
 
     \sa manualPixelsPerUnit
  */
-qreal QOpenXRItem::pixelsPerUnit() const
+qreal QQuick3DXrItem::pixelsPerUnit() const
 {
-    Q_D(const QOpenXRItem);
+    Q_D(const QQuick3DXrItem);
     return d->m_pixelsPerUnit;
 }
 
-void QOpenXRItem::setPixelsPerUnit(qreal newPixelsPerUnit)
+void QQuick3DXrItem::setPixelsPerUnit(qreal newPixelsPerUnit)
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     if (qFuzzyCompare(d->m_pixelsPerUnit, newPixelsPerUnit))
         return;
 
@@ -231,15 +231,15 @@ void QOpenXRItem::setPixelsPerUnit(qreal newPixelsPerUnit)
     \sa pixelsPerUnit
 */
 
-bool QOpenXRItem::manualPixelsPerUnit() const
+bool QQuick3DXrItem::manualPixelsPerUnit() const
 {
-    Q_D(const QOpenXRItem);
+    Q_D(const QQuick3DXrItem);
     return d->m_manualPixelsPerUnit;
 }
 
-void QOpenXRItem::setManualPixelsPerUnit(bool newManualPixelsPerUnit)
+void QQuick3DXrItem::setManualPixelsPerUnit(bool newManualPixelsPerUnit)
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     if (d->m_manualPixelsPerUnit == newManualPixelsPerUnit)
         return;
     d->m_manualPixelsPerUnit = newManualPixelsPerUnit;
@@ -254,15 +254,15 @@ void QOpenXRItem::setManualPixelsPerUnit(bool newManualPixelsPerUnit)
     \sa height
 */
 
-qreal QOpenXRItem::width() const
+qreal QQuick3DXrItem::width() const
 {
-    Q_D(const QOpenXRItem);
+    Q_D(const QQuick3DXrItem);
     return d->m_width;
 }
 
-void QOpenXRItem::setWidth(qreal newWidth)
+void QQuick3DXrItem::setWidth(qreal newWidth)
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     if (d->m_width == newWidth)
         return;
     d->m_width = newWidth;
@@ -278,15 +278,15 @@ void QOpenXRItem::setWidth(qreal newWidth)
     \sa width
 */
 
-qreal QOpenXRItem::height() const
+qreal QQuick3DXrItem::height() const
 {
-    Q_D(const QOpenXRItem);
+    Q_D(const QQuick3DXrItem);
     return d->m_height;
 }
 
-void QOpenXRItem::setHeight(qreal newHeight)
+void QQuick3DXrItem::setHeight(qreal newHeight)
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     if (d->m_height == newHeight)
         return;
     d->m_height = newHeight;
@@ -299,9 +299,9 @@ void QOpenXRItem::setHeight(qreal newHeight)
 // Updates the touchState and returns true if this item grabs the touch point.
 // touchState is input/output, and input contains the previous state if touchState->grabbed is true
 
-bool QOpenXRItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset)
+bool QQuick3DXrItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset)
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
 
     auto mappedPos = mapPositionFromScene(pos);
 
@@ -422,15 +422,15 @@ bool QOpenXRItem::handleVirtualTouch(QOpenXRView *view, const QVector3D &pos, To
     \default "white"
  */
 
-QColor QOpenXRItem::color() const
+QColor QQuick3DXrItem::color() const
 {
-    Q_D(const QOpenXRItem);
+    Q_D(const QQuick3DXrItem);
     return d->m_color;
 }
 
-void QOpenXRItem::setColor(const QColor &newColor)
+void QQuick3DXrItem::setColor(const QColor &newColor)
 {
-    Q_D(QOpenXRItem);
+    Q_D(QQuick3DXrItem);
     if (d->m_color == newColor)
         return;
     d->m_color = newColor;

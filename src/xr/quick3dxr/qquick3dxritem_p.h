@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRITEM_H
-#define QOPENXRITEM_H
+#ifndef QQUICK3DXRITEM_P_H
+#define QQUICK3DXRITEM_P_H
 
 #include <QQuickItem>
 #include <QtQuick3D/private/qquick3dnode_p.h>
@@ -22,13 +22,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRItemPrivate;
+class QQuick3DXrItemPrivate;
 class QOpenXRView;
 
-class QOpenXRItem : public QQuick3DNode
+class QQuick3DXrItem : public QQuick3DNode
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QOpenXRItem)
+    Q_DECLARE_PRIVATE(QQuick3DXrItem)
 
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(qreal pixelsPerUnit READ pixelsPerUnit WRITE setPixelsPerUnit NOTIFY pixelsPerUnitChanged FINAL)
@@ -42,7 +42,7 @@ public:
     struct TouchState
     {
         int pointId = -1;
-        QOpenXRItem *target = nullptr;
+        QQuick3DXrItem *target = nullptr;
         bool grabbed = false;
         bool pressed = false;
         qreal touchDistance = 1e6;
@@ -51,8 +51,8 @@ public:
         qint64 timestamp;
     };
 
-    explicit QOpenXRItem(QQuick3DNode *parent = nullptr);
-    ~QOpenXRItem() override;
+    explicit QQuick3DXrItem(QQuick3DNode *parent = nullptr);
+    ~QQuick3DXrItem() override;
 
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *newContentItem);
@@ -92,4 +92,4 @@ signals:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRITEM_H
+#endif // QQUICK3DXRITEM_P_H

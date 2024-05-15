@@ -1,7 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxritem_p.h"
+#include "qquick3dxritem_p.h"
 #include "qopenxrview_p.h"
 #include <QQuickWindow>
 #include <QQuickItem>
@@ -362,7 +362,7 @@ void QOpenXRView::setTouchpoint(QQuickItem *target, const QPointF &position, int
 // TODO: Maybe do a proper QOpenXRViewPrivate instead
 struct QOpenXRView::XrTouchState
 {
-    QHash<int, QOpenXRItem::TouchState> points;
+    QHash<int, QQuick3DXrItem::TouchState> points;
 };
 
 /*!
@@ -388,7 +388,7 @@ QVector3D QOpenXRView::processTouch(const QVector3D &pos, int pointId)
 
     if (!m_touchState)
         m_touchState = new XrTouchState;
-    QOpenXRItem::TouchState &state = m_touchState->points[pointId];
+    QQuick3DXrItem::TouchState &state = m_touchState->points[pointId];
     state.pointId = pointId; // in case it's a new point that was default-constructed
 
     auto *prevTarget = state.target;
@@ -444,7 +444,7 @@ QVector3D QOpenXRView::processTouch(const QVector3D &pos, int pointId)
 #define Q_TOUCHPOINT_STATE(prop) { QStringLiteral(#prop), QVariant::fromValue(it->prop) }
 QVariantMap QOpenXRView::touchpointState(int pointId) const
 {
-    auto constexpr end = QHash<int, QOpenXRItem::TouchState>::const_iterator();
+    auto constexpr end = QHash<int, QQuick3DXrItem::TouchState>::const_iterator();
     auto it = m_touchState ? m_touchState->points.constFind(pointId) : end;
 
     if (it == end)
@@ -534,12 +534,12 @@ bool QOpenXRView::isDepthSubmissionEnabled() const
 #endif
 }
 
-void QOpenXRView::registerXrItem(QOpenXRItem *newXrItem)
+void QOpenXRView::registerXrItem(QQuick3DXrItem *newXrItem)
 {
     m_xrItems.append(newXrItem);
 }
 
-void QOpenXRView::unregisterXrItem(QOpenXRItem *xrItem)
+void QOpenXRView::unregisterXrItem(QQuick3DXrItem *xrItem)
 {
     m_xrItems.removeAll(xrItem);
 }

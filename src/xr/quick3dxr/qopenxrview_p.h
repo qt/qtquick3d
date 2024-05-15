@@ -37,7 +37,7 @@ class QOpenXRHandTrackerInput;
 class QOpenXRGamepadInput;
 class QRhiTexture;
 
-class QOpenXRItem;
+class QQuick3DXrItem;
 
 class Q_QUICK3DXR_EXPORT QOpenXRView : public QQuick3DNode
 {
@@ -112,8 +112,8 @@ public:
 
     bool isDepthSubmissionEnabled() const;
 
-    void registerXrItem(QOpenXRItem *newXrItem);
-    void unregisterXrItem(QOpenXRItem *xrItem);
+    void registerXrItem(QQuick3DXrItem *newXrItem);
+    void unregisterXrItem(QQuick3DXrItem *xrItem);
 
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
@@ -152,7 +152,7 @@ private:
     bool m_isInitialized = false;
 
     friend class QOpenXRVirtualMouse;
-    QList<QOpenXRItem *> m_xrItems;
+    QList<QQuick3DXrItem *> m_xrItems;
     struct XrTouchState;
     XrTouchState *m_touchState = nullptr;
 };
