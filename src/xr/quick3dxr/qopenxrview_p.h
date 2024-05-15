@@ -151,7 +151,7 @@ private:
     bool m_inDestructor = false;
     bool m_isInitialized = false;
 
-    friend class QOpenXRVirtualMouse;
+    friend class QQuick3DXrVirtualMouse;
     QList<QQuick3DXrItem *> m_xrItems;
     struct XrTouchState;
     XrTouchState *m_touchState = nullptr;

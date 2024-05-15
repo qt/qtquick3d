@@ -14,7 +14,7 @@ qt_internal_add_qml_module(Quick3DXr
         qopenxrview.cpp qopenxrview_p.h
         qopenxrruntimeinfo_p.h qopenxrruntimeinfo.cpp
         qquick3dxritem_p.h qquick3dxritem.cpp
-        qopenxrvirtualmouse.cpp qopenxrvirtualmouse_p.h
+        qquick3dxrvirtualmouse.cpp qquick3dxrvirtualmouse_p.h
         qopenxrcontroller_p.h qopenxrcontroller.cpp
         qopenxrhandinput.cpp qopenxrhandinput_p.h
         qopenxrgamepadinput.cpp qopenxrgamepadinput_p.h

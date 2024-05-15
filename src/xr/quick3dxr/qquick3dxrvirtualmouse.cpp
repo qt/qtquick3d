@@ -1,7 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrvirtualmouse_p.h"
+#include "qquick3dxrvirtualmouse_p.h"
 #include "qopenxrview_p.h"
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
@@ -9,42 +9,42 @@
 
 QT_BEGIN_NAMESPACE
 
-QOpenXRVirtualMouse::QOpenXRVirtualMouse(QObject *parent) : QObject(parent)
+QQuick3DXrVirtualMouse::QQuick3DXrVirtualMouse(QObject *parent) : QObject(parent)
 {
 
 }
 
-bool QOpenXRVirtualMouse::rightMouseButton() const
+bool QQuick3DXrVirtualMouse::rightMouseButton() const
 {
     return m_rightMouseButton;
 }
 
-bool QOpenXRVirtualMouse::leftMouseButton() const
+bool QQuick3DXrVirtualMouse::leftMouseButton() const
 {
     return m_leftMouseButton;
 }
 
-bool QOpenXRVirtualMouse::middleMouseButton() const
+bool QQuick3DXrVirtualMouse::middleMouseButton() const
 {
     return m_middleMouseButton;
 }
 
-QQuick3DNode *QOpenXRVirtualMouse::source() const
+QQuick3DNode *QQuick3DXrVirtualMouse::source() const
 {
     return m_source;
 }
 
-QOpenXRView *QOpenXRVirtualMouse::view() const
+QOpenXRView *QQuick3DXrVirtualMouse::view() const
 {
     return m_view;
 }
 
-bool QOpenXRVirtualMouse::enabled() const
+bool QQuick3DXrVirtualMouse::enabled() const
 {
     return m_enabled;
 }
 
-void QOpenXRVirtualMouse::setRightMouseButton(bool rightMouseButton)
+void QQuick3DXrVirtualMouse::setRightMouseButton(bool rightMouseButton)
 {
     if (m_rightMouseButton == rightMouseButton)
         return;
@@ -60,7 +60,7 @@ void QOpenXRVirtualMouse::setRightMouseButton(bool rightMouseButton)
     }
 }
 
-void QOpenXRVirtualMouse::setLeftMouseButton(bool leftMouseButton)
+void QQuick3DXrVirtualMouse::setLeftMouseButton(bool leftMouseButton)
 {
     if (m_leftMouseButton == leftMouseButton)
         return;
@@ -76,7 +76,7 @@ void QOpenXRVirtualMouse::setLeftMouseButton(bool leftMouseButton)
     }
 }
 
-void QOpenXRVirtualMouse::setMiddleMouseButton(bool middleMouseButton)
+void QQuick3DXrVirtualMouse::setMiddleMouseButton(bool middleMouseButton)
 {
     if (m_middleMouseButton == middleMouseButton)
         return;
@@ -92,23 +92,23 @@ void QOpenXRVirtualMouse::setMiddleMouseButton(bool middleMouseButton)
     }
 }
 
-void QOpenXRVirtualMouse::setSource(QQuick3DNode *source)
+void QQuick3DXrVirtualMouse::setSource(QQuick3DNode *source)
 {
     if (m_source == source)
         return;
 
     if (!source)
-        disconnect(m_source, &QQuick3DNode::sceneTransformChanged, this, &QOpenXRVirtualMouse::moveEvent);
+        disconnect(m_source, &QQuick3DNode::sceneTransformChanged, this, &QQuick3DXrVirtualMouse::moveEvent);
 
     m_source = source;
     emit sourceChanged(m_source);
 
     if (m_source)
-        connect(m_source, &QQuick3DNode::sceneTransformChanged, this, &QOpenXRVirtualMouse::moveEvent);
+        connect(m_source, &QQuick3DNode::sceneTransformChanged, this, &QQuick3DXrVirtualMouse::moveEvent);
 
 }
 
-void QOpenXRVirtualMouse::setView(QOpenXRView *view)
+void QQuick3DXrVirtualMouse::setView(QOpenXRView *view)
 {
     if (m_view == view)
         return;
@@ -117,7 +117,7 @@ void QOpenXRVirtualMouse::setView(QOpenXRView *view)
     emit viewChanged(m_view);
 }
 
-void QOpenXRVirtualMouse::setEnabled(bool enabled)
+void QQuick3DXrVirtualMouse::setEnabled(bool enabled)
 {
     if (m_enabled == enabled)
         return;
@@ -132,12 +132,12 @@ void QOpenXRVirtualMouse::setEnabled(bool enabled)
     }
 }
 
-void QOpenXRVirtualMouse::moveEvent()
+void QQuick3DXrVirtualMouse::moveEvent()
 {
     generateEvent(QEvent::MouseMove, Qt::NoButton);
 }
 
-void QOpenXRVirtualMouse::generateEvent(QEvent::Type type, Qt::MouseButton button)
+void QQuick3DXrVirtualMouse::generateEvent(QEvent::Type type, Qt::MouseButton button)
 {
     if (!m_view || !m_source || m_view->m_inDestructor || !m_enabled)
         return;

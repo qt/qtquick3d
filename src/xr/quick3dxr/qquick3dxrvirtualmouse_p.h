@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRVIRTUALMOUSE_H
-#define QOPENXRVIRTUALMOUSE_H
+#ifndef QQUICK3DXRVIRTUALMOUSE_P_H
+#define QQUICK3DXRVIRTUALMOUSE_P_H
 
 //
 //  W A R N I N G
@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QOpenXRView;
 class QQuick3DNode;
 
-class QOpenXRVirtualMouse : public QObject
+class QQuick3DXrVirtualMouse : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool rightMouseButton READ rightMouseButton WRITE setRightMouseButton NOTIFY rightMouseButtonChanged)
@@ -37,7 +37,7 @@ class QOpenXRVirtualMouse : public QObject
     QML_NAMED_ELEMENT(XrVirtualMouse)
 
 public:
-    explicit QOpenXRVirtualMouse(QObject *parent = nullptr);
+    explicit QQuick3DXrVirtualMouse(QObject *parent = nullptr);
 
     bool rightMouseButton() const;
     bool leftMouseButton() const;
@@ -80,4 +80,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRVIRTUALMOUSE_H
+#endif // QQUICK3DXRVIRTUALMOUSE_P_H
