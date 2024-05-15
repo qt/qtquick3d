@@ -120,7 +120,7 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
         // QSSGRhiEffectSystem will vary the vertex shader code based on this
         // flag from the QRhi. It is therefore important to capture this in the
         // cache key as well.
-        shaderPathKey.append(':' + QByteArray::number(rhi->isYUpInFramebuffer() ? 1 : 0));
+        shaderPathKey.append(rhi->isYUpInFramebuffer() ? QByteArrayLiteral(":1") : QByteArrayLiteral(":0"));
 
         if (shouldTonemapIfEnabled) {
             // This does not always mean there will be tonemapping: if the mode
@@ -131,7 +131,7 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
             QSSGLayerRenderData::setTonemapFeatures(features, tonemapMode);
         }
 
-        shaderPathKey.append(':' + QByteArray::number(multiview ? 1 : 0));
+        shaderPathKey.append(multiview ? QByteArrayLiteral(":1") : QByteArrayLiteral(":0"));
 
         // Now that the final shaderPathKey is known, store the source and
         // related data; it will be retrieved later by the QSSGRhiEffectSystem.
