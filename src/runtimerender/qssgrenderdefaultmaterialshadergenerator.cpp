@@ -365,11 +365,13 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addUniform(names.shadowControlStem, "vec4");
         fragmentShader.addUniform(names.shadowMatrixStem, "mat4");
 
+        fragmentShader << "    if (" << names.shadowControlStem << ".y > 0.01) {\n";
         if (inType != QSSGRenderLight::Type::DirectionalLight) {
-            fragmentShader << "    qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCubeStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
+            fragmentShader << "        qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCubeStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
         } else {
-            fragmentShader << "    qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
+            fragmentShader << "        qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
         }
+        fragmentShader << "    }\n";
     } else {
         fragmentShader << "    qt_shadow_map_occl = 1.0;\n";
     }
