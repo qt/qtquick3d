@@ -594,7 +594,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, objectFeatureSet);
             if (!shaderPipeline)
                 continue;
-            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+            shaderPipeline->ensureCombinedUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             // calls updateUni with an alteredCamera and alteredModelViewProjection
             QSSGRenderCameraList cameras({ &inCamera });
@@ -612,7 +612,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, material, subsetRenderable, inData.getDefaultMaterialPropertyTable(), objectFeatureSet);
             if (!shaderPipeline)
                 continue;
-            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+            shaderPipeline->ensureCombinedUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             // inCamera is the shadow camera, not the same as inData.renderedCameras
             QSSGRenderCameraList cameras({ &inCamera });
@@ -766,7 +766,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
             QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, &modelNode, entryId, entryIdx });
 
-            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
+            shaderPipeline->ensureCombinedUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             if (alteredCamera) {
                 Q_ASSERT(alteredModelViewProjection);
@@ -843,6 +843,12 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 bindings.addUniformBuffer(1, RENDERER_VISIBILITY_ALL, dcd.ubuf,
                                           shaderPipeline->ub0LightDataOffset(),
                                           shaderPipeline->ub0LightDataSize());
+
+                if (shaderPipeline->shadowMapCount() > 0) {
+                    bindings.addUniformBuffer(2, RENDERER_VISIBILITY_ALL, dcd.ubuf,
+                                              shaderPipeline->ub0ShadowDataOffset(),
+                                              shaderPipeline->ub0ShadowDataSize());
+                }
             }
 
             // Texture maps
@@ -1945,7 +1951,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
 
             shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
             if (shaderPipeline) {
-                shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+                shaderPipeline->ensureCombinedUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
                 updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, subsetRenderable, inData.renderedCameras, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -1963,7 +1969,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, customMaterial, subsetRenderable, inData.getDefaultMaterialPropertyTable(), featureSet);
 
             if (shaderPipeline) {
-                shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+                shaderPipeline->ensureCombinedUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
                 customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, ps, customMaterial, subsetRenderable,
                                                                      inData.renderedCameras, nullptr, nullptr);

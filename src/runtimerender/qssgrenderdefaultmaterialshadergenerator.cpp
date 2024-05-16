@@ -251,6 +251,7 @@ static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNa
         q3ds_shadowMapVariableNames.resize(lightIdx + 1);
 
     QSSGMaterialShaderGenerator::ShadowVariableNames &names(q3ds_shadowMapVariableNames[lightIdx]);
+
     if (names.shadowMap.isEmpty()) {
         names.shadowMap = QByteArrayLiteral("qt_shadowmap");
         names.shadowCube = QByteArrayLiteral("qt_shadowcube");
@@ -258,12 +259,9 @@ static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNa
         qsnprintf(buf, 16, "%d", int(lightIdx));
         names.shadowCube.append(buf);
         names.shadowMap.append(buf);
-        names.shadowMatrix = names.shadowMap;
-        names.shadowMatrix.append("_matrix");
-        names.shadowCoord = names.shadowMap;
-        names.shadowCoord.append("_coord");
-        names.shadowControl = names.shadowMap;
-        names.shadowControl.append("_control");
+        names.shadowData = QByteArrayLiteral("ubShadows.shadowData");
+        qsnprintf(buf, 16, "[%d]", int(lightIdx));
+        names.shadowData.append(buf);
     }
 
     return names;
@@ -362,14 +360,12 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         } else {
             fragmentShader.addUniform(names.shadowCube, "samplerCube");
         }
-        fragmentShader.addUniform(names.shadowControl, "vec4");
-        fragmentShader.addUniform(names.shadowMatrix, "mat4");
 
-        fragmentShader << "    if (" << names.shadowControl << ".y > 0.01) {\n";
+        fragmentShader << "    if (" << names.shadowData << ".factor > 0.01) {\n";
         if (inType != QSSGRenderLight::Type::DirectionalLight) {
-            fragmentShader << "        qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCube << ", " << names.shadowControl << ", " << names.shadowMatrix << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, vec2(1.0, " << names.shadowControl << ".z));\n";
+            fragmentShader << "        qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
         } else {
-            fragmentShader << "        qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMap << ", " << names.shadowControl << ", " << names.shadowMatrix << ", qt_varWorldPos, vec2(1.0, " << names.shadowControl << ".z));\n";
+            fragmentShader << "        qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMap << ", " << names.shadowData << ", qt_varWorldPos);\n";
         }
         fragmentShader << "    }\n";
     } else {
@@ -2148,8 +2144,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     float lightColor[QSSG_MAX_NUM_LIGHTS][3];
     QSSGShaderLightsUniformData &lightsUniformData(shaders.lightsUniformData());
     lightsUniformData.count = 0;
+    QSSGShaderShadowsUniformData &shadowsUniformData(shaders.shadowsUniformData());
+    shadowsUniformData.count = 0;
 
-    for (quint32 lightIdx = 0, shadowMapCount = 0, lightEnd = inLights.size();
+    for (quint32 lightIdx = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
@@ -2180,22 +2178,21 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // get an all-zero value, which then ensures no shadow contribution
         // for the object in question.
 
-        if (lightShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
+        if (lightShadows && shadowsUniformData.count < QSSG_MAX_NUM_SHADOW_MAPS) {
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders.addShadowMap());
-            ++shadowMapCount;
+            ++shadowsUniformData.count;
 
             QSSGShadowMapEntry *pEntry = inRenderProperties.getShadowMapManager()->shadowMapEntry(lightIdx);
             Q_ASSERT(pEntry);
 
             const auto names = setupShadowMapVariableNames(lightIdx);
 
+            QSSGShaderShadowData &shadowData(shadowsUniformData.shadowData[lightIdx]);
+
             if (theLight->type != QSSGRenderLight::Type::DirectionalLight) {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowCube;
-                if (receivesShadows)
-                    shaders.setUniform(ubufData, names.shadowMatrix, pEntry->m_lightView.constData(), 16 * sizeof(float));
-                else
-                    shaders.setUniform(ubufData, names.shadowMatrix, ZERO_MATRIX, 16 * sizeof(float));
+                memcpy(&shadowData.matrix, receivesShadows ? pEntry->m_lightView.constData() : ZERO_MATRIX, 16 * sizeof(float));
             } else {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthMap;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowMap;
@@ -2207,20 +2204,19 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                         0.0, 0.0, 0.5, 0.5,
                         0.0, 0.0, 0.0, 1.0 };
                     const QMatrix4x4 m = bias * pEntry->m_lightVP;
-                    shaders.setUniform(ubufData, names.shadowMatrix, m.constData(), 16 * sizeof(float));
+                    memcpy(&shadowData.matrix, m.constData(), 16 * sizeof(float));
                 } else {
-                    shaders.setUniform(ubufData, names.shadowMatrix, ZERO_MATRIX, 16 * sizeof(float));
+                    memcpy(&shadowData.matrix, ZERO_MATRIX, 16 * sizeof(float));
                 }
             }
 
             if (receivesShadows) {
-                const QVector4D shadowControl(theLight->m_shadowBias,
-                                              theLight->m_shadowFactor,
-                                              theLight->m_shadowMapFar,
-                                              globalRenderData.isYUpInFramebuffer ? 0.0f : 1.0f);
-                shaders.setUniform(ubufData, names.shadowControl, &shadowControl, 4 * sizeof(float));
-            } else {
-                shaders.setUniform(ubufData, names.shadowControl, ZERO_MATRIX, 4 * sizeof(float));
+                shadowData.bias = theLight->m_shadowBias;
+                shadowData.factor = theLight->m_shadowFactor;
+                shadowData.clipNear = 1.0f;
+                shadowData.clipFar = inCameras[0]->clipFar;
+                shadowData.shadowMapFar = theLight->m_shadowMapFar;
+                shadowData.isYUp = globalRenderData.isYUpInFramebuffer ? 0.0f : 1.0f;
             }
         }
 
@@ -2331,6 +2327,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             lightData.diffuse[3] = 1.0f;
         }
         memcpy(ubufData + shaders.ub0LightDataOffset(), &lightsUniformData, shaders.ub0LightDataSize());
+
+        if (shadowsUniformData.count)
+            memcpy(ubufData + shaders.ub0ShadowDataOffset(), &shadowsUniformData, shaders.ub0ShadowDataSize());
     }
 
     shaders.setUniform(ubufData, "qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), &cui.light_ambient_totalIdx);

@@ -230,7 +230,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(rhiCtx)->drawCallData({ passKey, &modelNode, entryKey, entryIdx });
 
-        shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
+        shaderPipeline->ensureCombinedUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         if (!alteredCamera) {
             updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, layerData, ubufData, ps, material, renderable, layerData.renderedCameras, nullptr, nullptr);
@@ -288,6 +288,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         bindings.addUniformBuffer(1, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf,
                                   shaderPipeline->ub0LightDataOffset(),
                                   shaderPipeline->ub0LightDataSize());
+        bindings.addUniformBuffer(2, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf,
+                                  shaderPipeline->ub0ShadowDataOffset(),
+                                  shaderPipeline->ub0ShadowDataSize());
 
         QVector<QShaderDescription::InOutVariable> samplerVars =
                 shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();

@@ -7,34 +7,28 @@
 
 #include "depthpass.glsllib"
 
-float qt_sampleCubemap( in samplerCube shadowCube, in vec4 shadowControls, in mat4 shadowViewMat, in vec3 lightPos, in vec3 worldPos, in vec2 cameraProps )
+float qt_sampleCubemap( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos )
 {
     float dist = length(worldPos - lightPos);
-    float shadowMapNear = cameraProps.x;
-    float shadowMapFar = cameraProps.y;
-    float shadowBias = shadowControls.x;
-    float shadowFactor = shadowControls.y;
-    float currentDepth = clamp((dist - shadowMapNear) / (shadowMapFar - shadowMapNear), 0.0, 1.0);
+    float currentDepth = clamp((dist - shadowData.clipNear) / (shadowData.shadowMapFar - shadowData.clipNear), 0.0, 1.0);
     vec3 smpCoord = worldPos - lightPos;
 
-    // reverse Y if shadowControls.w == 1 (not enough on its own, also expects +Y and -Y swapped in shadowCube)
-    smpCoord.y = mix(smpCoord.y, -smpCoord.y, shadowControls.w);
+    // reverse Y if shadowData.isYUp == 1 (not enough on its own, also expects +Y and -Y swapped in shadowCube)
+    smpCoord.y = mix(smpCoord.y, -smpCoord.y, shadowData.isYUp);
 
-    float sampleDepth = texture( shadowCube, smpCoord ).x + shadowBias;
-    return min(1.0, exp(shadowFactor * sampleDepth) / exp(shadowFactor * currentDepth));
+    float sampleDepth = texture( shadowCube, smpCoord ).x + shadowData.bias;
+    return min(1.0, exp(shadowData.factor * sampleDepth) / exp(shadowData.factor * currentDepth));
 }
 
-float qt_sampleOrthographic( in sampler2D shadowMap, in vec4 shadowControls, in mat4 shadowMatrix, in vec3 worldPos, in vec2 cameraProps )
+float qt_sampleOrthographic( in sampler2D shadowMap, in ShadowData shadowData, in vec3 worldPos )
 {
-    vec4 projCoord = shadowMatrix * vec4( worldPos, 1.0 );
+    vec4 projCoord = shadowData.matrix * vec4( worldPos, 1.0 );
     vec3 smpCoord = projCoord.xyz / projCoord.w;
-    smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, shadowControls.w);
+    smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, shadowData.isYUp);
 
-    float shadowBias = shadowControls.x;
-    float shadowFactor = shadowControls.y;
-    float sampleDepth = texture( shadowMap, smpCoord.xy ).x + shadowBias;
+    float sampleDepth = texture( shadowMap, smpCoord.xy ).x + shadowData.bias;
 
-    return min(1.0, exp(shadowFactor * sampleDepth) / exp(shadowFactor * smpCoord.z));
+    return min(1.0, exp(shadowData.factor * sampleDepth) / exp(shadowData.factor * smpCoord.z));
 }
 
 #endif

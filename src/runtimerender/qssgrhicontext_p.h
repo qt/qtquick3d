@@ -295,6 +295,27 @@ struct QSSGShaderLightsUniformData
     qint32 count = -1;
     float padding[3]; // first element must start at a vec4-aligned offset
     QSSGShaderLightData lightData[QSSG_MAX_NUM_LIGHTS];
+
+};
+
+// note this struct must exactly match the memory layout of the uniform block in
+// funcSampleLightVars.glsllib
+struct QSSGShaderShadowData {
+    float matrix[16];
+    float bias;
+    float factor;
+    float isYUp;
+    float clipNear;
+    float clipFar;
+    float shadowMapFar; // Used by point lights for historical reasons will be removed later
+    float padding[2];
+};
+
+struct QSSGShaderShadowsUniformData
+{
+    qint32 count = -1;
+    float padding[3]; // first element must start at a vec4-aligned offset
+    QSSGShaderShadowData shadowData[QSSG_MAX_NUM_SHADOW_MAPS];
 };
 
 // Default materials work with a regular combined image sampler for each shadowmap.
@@ -346,6 +367,11 @@ public:
     int ub0LightDataSize() const
     {
         return int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
+    }
+    int ub0ShadowDataOffset() const;
+    int ub0ShadowDataSize() const
+    {
+        return int(4 * sizeof(qint32) + m_shadowsUniformData.count * sizeof(QSSGShaderShadowData));
     }
 
     const QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
@@ -433,7 +459,7 @@ public:
     const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
-    void ensureCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf);
+    void ensureCombinedUniformBuffer(QRhiBuffer **ubuf);
     void ensureUniformBuffer(QRhiBuffer **ubuf);
 
     void setLightProbeTexture(QRhiTexture *texture,
@@ -467,6 +493,7 @@ public:
     QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
+    QSSGShaderShadowsUniformData &shadowsUniformData() { return m_shadowsUniformData; }
     InstanceLocations instanceBufferLocations() const { return instanceLocations; }
 
     int offsetOfUniform(const QByteArray &name);
@@ -488,6 +515,7 @@ private:
     // transient (per-object) data; pointers are all non-owning
     bool m_lightsEnabled = false;
     QSSGShaderLightsUniformData m_lightsUniformData;
+    QSSGShaderShadowsUniformData m_shadowsUniformData;
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOW_MAPS> m_shadowMaps;
     QRhiTexture *m_lightProbeTexture = nullptr;
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;

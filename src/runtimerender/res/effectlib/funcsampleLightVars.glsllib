@@ -9,6 +9,8 @@
 #define MAX_NUM_LIGHTS 15
 #endif
 
+#define MAX_NUM_SHADOWS 8
+
 struct LightSource
 {
     vec4  position;
@@ -22,8 +24,24 @@ struct LightSource
     float quadraticAttenuation;   // Specifies the quadratic light attenuation factor.
 };
 
+struct ShadowData {
+    mat4 matrix;
+    float bias;
+    float factor;
+    float isYUp; // 1.0 = true, 0.0 = false
+    float clipNear;
+    float clipFar;
+    float shadowMapFar; // Used by point lights for historical reasons will be removed later
+};
+
 layout (std140, binding = 1) uniform cbLights
 {
     int uNumLights;
     LightSource lights[MAX_NUM_LIGHTS];
 } ubLights;
+
+layout (std140, binding = 2) uniform cbShadows
+{
+    int uNumShadows;
+    ShadowData shadowData[MAX_NUM_SHADOWS];
+} ubShadows;
