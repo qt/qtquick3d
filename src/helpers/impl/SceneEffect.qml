@@ -45,7 +45,7 @@ MainSceneEffect {
 
     property TextureInput lensDirtTexture: TextureInput {
         id: lensDirtTextureInput
-        texture: defaultLensColorTexture
+        texture: defaultLensDirtTexture
     }
     property alias lensDirtTextureAlias: lensDirtTextureInput.texture
     Texture {
