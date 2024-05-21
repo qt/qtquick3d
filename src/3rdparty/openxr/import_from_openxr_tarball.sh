@@ -42,7 +42,14 @@ copy_file_or_dir() {
 FILES="
     README.md
     LICENSE
-    include/openxr
+    include/openxr/CMakeLists.txt
+    include/openxr/openxr.h
+    include/openxr/openxr_loader_negotiation.h
+    include/openxr/openxr_platform.h
+    include/openxr/openxr_platform_defines.h
+    include/openxr/openxr_reflection.h
+    include/openxr/openxr_reflection_parent_structs.h
+    include/openxr/openxr_reflection_structs.h
     src/xr_generated_dispatch_table.h
     src/xr_generated_dispatch_table.c
     src/xr_generated_dispatch_table_core.h
@@ -87,8 +94,25 @@ FILES="
     src/external/jsoncpp/src/lib_json/json_writer.cpp
     src/external/jsoncpp/src/lib_json/json_tool.h
     src/external/jsoncpp/src/lib_json/json_valueiterator.inl
-    src/external/jsoncpp/include/json
-    src/external/android-jni-wrappers
+    src/external/jsoncpp/include/json/allocator.h
+    src/external/jsoncpp/include/json/assertions.h
+    src/external/jsoncpp/include/json/config.h
+    src/external/jsoncpp/include/json/forwards.h
+    src/external/jsoncpp/include/json/json.h
+    src/external/jsoncpp/include/json/json_features.h
+    src/external/jsoncpp/include/json/reader.h
+    src/external/jsoncpp/include/json/value.h
+    src/external/jsoncpp/include/json/version.h
+    src/external/jsoncpp/include/json/writer.h
+    src/external/android-jni-wrappers/wrap/ObjectWrapperBase.h
+    src/external/android-jni-wrappers/wrap/android.content.cpp
+    src/external/android-jni-wrappers/wrap/android.content.h
+    src/external/android-jni-wrappers/wrap/android.content.impl.h
+    src/external/android-jni-wrappers/wrap/android.database.cpp
+    src/external/android-jni-wrappers/wrap/android.database.h
+    src/external/android-jni-wrappers/wrap/android.database.impl.h
+    src/external/android-jni-wrappers/wrap/android.net.cpp
+    src/external/android-jni-wrappers/wrap/android.net.h
     src/external/jnipp/LICENSE
     src/external/jnipp/README.md
     src/external/jnipp/jnipp.h
