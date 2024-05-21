@@ -1,10 +1,9 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#import "qquick3dxrvisionosmanager_p.h"
-
-#include "qquick3dxrvisionosrendermanager_p.h"
+#include "qquick3dxrmanager_visionos_p.h"
 #include "qquick3dxrorigin_p.h"
+#include "qquick3dxrmanager_p.h"
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
 
@@ -59,33 +58,38 @@ private:
 
 Q_GLOBAL_STATIC(CompositorLayer, s_compositorLayer)
 
-QQuick3DXRVisionOSRenderManager::QQuick3DXRVisionOSRenderManager(QObject *parent)
-    : QObject(parent)
+QQuick3DXrManagerPrivate::QQuick3DXrManagerPrivate(QQuick3DXrManager &manager)
+    : q_ptr(&manager)
 {
-    runWorldTrackingARSession();
 }
 
-QQuick3DXRVisionOSRenderManager::~QQuick3DXRVisionOSRenderManager()
+QQuick3DXrManagerPrivate::~QQuick3DXrManagerPrivate()
 {
     ar_session_stop(m_arSession);
 }
 
-bool QQuick3DXRVisionOSRenderManager::initialize()
+bool QQuick3DXrManagerPrivate::initialize()
 {
+    Q_Q(QQuick3DXrManager);
+
+    if (!m_worldTrackingProvider)
+        runWorldTrackingARSession();
+
     // NOTE: Check if the compository layer proxy is already active.
     if (!s_compositorLayer->isActive()) {
         if (auto *visionOSApplicaton = qGuiApp->nativeInterface<QNativeInterface::QVisionOSApplication>()) {
             visionOSApplicaton->setImmersiveSpaceCompositorLayer(&(*s_compositorLayer));
             s_compositorLayer->setActive();
             // FIXME: We don't actually handle the case where the rendere changes or we get multiple calls should do something.
-            connect(s_compositorLayer, &CompositorLayer::renderingRequested, this, &QQuick3DXRVisionOSRenderManager::initialized, Qt::ConnectionType(Qt::SingleShotConnection | Qt::QueuedConnection));
+
+            QObject::connect(s_compositorLayer, &CompositorLayer::renderingRequested, q, &QQuick3DXrManager::initialized, Qt::ConnectionType(Qt::SingleShotConnection | Qt::QueuedConnection));
         }
         return s_compositorLayer->layerRenderer() == nullptr ? false : true;
     }
 
     cp_layer_renderer_t renderer = layerRenderer();
     if (!renderer) {
-        qWarning("QQuick3DXRVisionOSRenderManager: Layer renderer is not available.");
+        qWarning("QQuick3DXrManagerPrivate: Layer renderer is not available.");
         return false;
     }
 
@@ -96,16 +100,16 @@ bool QQuick3DXRVisionOSRenderManager::initialize()
     return true;
 }
 
-void QQuick3DXRVisionOSRenderManager::setupWindow(QQuickWindow *window)
+void QQuick3DXrManagerPrivate::setupWindow(QQuickWindow *window)
 {
     if (!window) {
-        qWarning("QQuick3DXRVisionOSRenderManager: Window is null!");
+        qWarning("QQuick3DXrManagerPrivate: Window is null!");
         return;
     }
 
     cp_layer_renderer_t renderer = layerRenderer();
     if (!renderer) {
-        qWarning("QQuick3DXRVisionOSRenderManager: Layer renderer is not available.");
+        qWarning("QQuick3DXrManagerPrivate: Layer renderer is not available.");
         return;
     }
 
@@ -117,22 +121,36 @@ void QQuick3DXRVisionOSRenderManager::setupWindow(QQuickWindow *window)
     window->setGraphicsDevice(qqGraphicsDevice);
 }
 
-bool QQuick3DXRVisionOSRenderManager::finalizeGraphics(QRhi *rhi)
+bool QQuick3DXrManagerPrivate::finalizeGraphics(QRhi *rhi)
 {
     Q_UNUSED(rhi);
-    return true;
+    m_isGraphicsInitialized = true;
+    return m_isGraphicsInitialized;
 }
 
-bool QQuick3DXRVisionOSRenderManager::isReady() const
+bool QQuick3DXrManagerPrivate::isReady() const
 {
     return (s_compositorLayer->layerRenderer() != nullptr);
 }
 
-void QQuick3DXRVisionOSRenderManager::createSwapchains()
+bool QQuick3DXrManagerPrivate::isGraphicsInitialized() const
+{
+    return m_isGraphicsInitialized;
+}
+
+bool QQuick3DXrManagerPrivate::setupGraphics(QQuickWindow *window)
+{
+    // FIXME:
+    Q_UNUSED(window);
+    Q_UNIMPLEMENTED();
+    return true;
+}
+
+void QQuick3DXrManagerPrivate::createSwapchains()
 {
     // cp_layer_renderer_t renderer = getLayerRenderer();
     // if (!renderer) {
-    //     qWarning("QQuick3DXRVisionOSRenderManager: Layer renderer is not available.");
+    //     qWarning("QQuick3DXrManagerPrivate: Layer renderer is not available.");
     //     return;
     // }
 
@@ -140,7 +158,7 @@ void QQuick3DXRVisionOSRenderManager::createSwapchains()
     //cp_layer_renderer_layout layout = cp_layer_renderer_configuration_get_layout(layerConfiguration);
 }
 
-QQuick3DXRVisionOSRenderManager::RenderState QQuick3DXRVisionOSRenderManager::getRenderState()
+QQuick3DXrManagerPrivate::RenderState QQuick3DXrManagerPrivate::getRenderState()
 {
     if (!isReady())
         return RenderState::Paused;
@@ -157,17 +175,49 @@ QQuick3DXRVisionOSRenderManager::RenderState QQuick3DXRVisionOSRenderManager::ge
     return RenderState::Invalidated;
 }
 
-void QQuick3DXRVisionOSRenderManager::teardown()
+void QQuick3DXrManagerPrivate::teardown()
 {
-
+    Q_UNIMPLEMENTED();
 }
 
-cp_layer_renderer_t QQuick3DXRVisionOSRenderManager::layerRenderer() const
+void QQuick3DXrManagerPrivate::requestMultiviewRendering(bool enable)
+{
+    Q_UNUSED(enable);
+    Q_UNIMPLEMENTED();
+}
+
+void QQuick3DXrManagerPrivate::requestPassthrough(bool enable)
+{
+    Q_UNUSED(enable);
+    Q_UNIMPLEMENTED();
+}
+
+QtQuick3DXr::ReferenceSpace QQuick3DXrManagerPrivate::getReferenceSpace() const
+{
+    // FIXME: Not sure exactly what reference space is default or what is supported etc.
+    return QtQuick3DXr::ReferenceSpace::ReferenceSpaceLocalFloor;
+}
+
+void QQuick3DXrManagerPrivate::setReferenceSpace(QtQuick3DXr::ReferenceSpace newReferenceSpace)
+{
+    // FIXME: Not sure if it's possible to set a reference space on VisionOS
+    Q_UNUSED(newReferenceSpace);
+    Q_UNIMPLEMENTED();
+}
+
+void QQuick3DXrManagerPrivate::setDepthSubmissionEnabled(bool enable)
+{
+    Q_UNUSED(enable);
+    if (!enable)
+        qWarning("Depth submission is required on VisionOS");
+}
+
+cp_layer_renderer_t QQuick3DXrManagerPrivate::layerRenderer() const
 {
     return s_compositorLayer->layerRenderer();
 }
 
-ar_device_anchor_t QQuick3DXRVisionOSRenderManager::createPoseForTiming(cp_frame_timing_t timing)
+ar_device_anchor_t QQuick3DXrManagerPrivate::createPoseForTiming(cp_frame_timing_t timing)
 {
     ar_device_anchor_t outAnchor = ar_device_anchor_create();
     cp_time_t presentationTime = cp_frame_timing_get_presentation_time(timing);
@@ -179,7 +229,47 @@ ar_device_anchor_t QQuick3DXRVisionOSRenderManager::createPoseForTiming(cp_frame
     return outAnchor;
 }
 
-void QQuick3DXRVisionOSRenderManager::runWorldTrackingARSession()
+void QQuick3DXrManagerPrivate::processXrEvents()
+{
+    Q_Q(QQuick3DXrManager);
+
+    enum RenderState : quint8 {
+        Paused,
+        Running,
+        Invalidated
+    };
+    static bool logOnce[3] = {false, false, false};
+    QQuick3DXrManagerPrivate::RenderState renderState = getRenderState();
+    if (renderState == QQuick3DXrManagerPrivate::RenderState::Paused) {
+        // Wait
+        if (!logOnce[RenderState::Paused]) {
+            qDebug() << "-- Wait --";
+            logOnce[RenderState::Paused] = true;
+            logOnce[RenderState::Running] = false;
+            logOnce[RenderState::Invalidated] = false;
+        }
+    } else if (renderState == QQuick3DXrManagerPrivate::RenderState::Running) {
+        //m_inputManager->pollActions();
+        q->renderFrame();
+        //m_visionOSRenderManager->renderFrame();
+        if (!logOnce[RenderState::Running]) {
+            qDebug() << "-- Running --";
+            logOnce[RenderState::Paused] = false;
+            logOnce[RenderState::Running] = true;
+            logOnce[RenderState::Invalidated] = false;
+        }
+    } else if (renderState == QQuick3DXrManagerPrivate::RenderState::Invalidated) {
+        if (!logOnce[RenderState::Invalidated]) {
+            qDebug() << "-- Invalidated --";
+            logOnce[RenderState::Paused] = false;
+            logOnce[RenderState::Running] = false;
+            logOnce[RenderState::Invalidated] = true;
+        }
+        emit q->sessionEnded();
+    }
+}
+
+void QQuick3DXrManagerPrivate::runWorldTrackingARSession()
 {
     ar_world_tracking_configuration_t worldTrackingConfiguration = ar_world_tracking_configuration_create();
     m_worldTrackingProvider = ar_world_tracking_provider_create(worldTrackingConfiguration);
@@ -207,17 +297,45 @@ void QQuick3DXRVisionOSRenderManager::runWorldTrackingARSession()
     }
 }
 
-void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQuickRenderControl *renderControl, QQuick3DXrOrigin *xrOrigin, QQuick3DViewport *xrViewport)
+void QQuick3DXrManagerPrivate::setSamples(int samples)
 {
+    Q_UNUSED(samples);
+    qWarning("Setting samples is not supported");
+}
+
+QString QQuick3DXrManagerPrivate::errorString() const
+{
+    return QString();
+}
+
+void QQuick3DXrManagerPrivate::doRenderFrame()
+{
+    Q_Q(QQuick3DXrManager);
+
+    QQuickWindow *quickWindow = q->m_quickWindow;
+    QQuickRenderControl *renderControl = q->m_renderControl;
+    QQuick3DXrOrigin *xrOrigin = q->m_xrOrigin;
+    QQuick3DViewport *xrViewport = q->m_vrViewport;
+
+    QSSG_ASSERT_X(quickWindow && renderControl && xrViewport, "Invalid state, rendering aborted", return);
+
+    if (!xrOrigin) {
+        qWarning("No XR origin, trying to recover...");
+        q->checkOrigin();
+    }
+
     auto layerRenderer = this->layerRenderer();
     cp_frame_t frame = cp_layer_renderer_query_next_frame(layerRenderer);
     if (frame == nullptr) {
+        qWarning("Failed to get next frame");
         return;
     }
 
     cp_frame_timing_t timing = cp_frame_predict_timing(frame);
-    if (timing == nullptr)
+    if (timing == nullptr) {
+        qWarning("Failed to get timing for frame");
         return;
+    }
 
     cp_frame_start_update(frame);
 
@@ -229,8 +347,10 @@ void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQu
 
     cp_frame_start_submission(frame);
     cp_drawable_t drawable = cp_frame_query_drawable(frame);
-    if (drawable == nullptr)
+    if (drawable == nullptr) {
+        qWarning("Failed to get drawable for frame");
         return;
+    }
 
     cp_frame_timing_t actualTiming = cp_drawable_get_frame_timing(drawable);
     ar_device_anchor_t anchor = createPoseForTiming(actualTiming);
@@ -300,7 +420,7 @@ void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQu
                                                     textureSize.height()));
 
         // Update the camera pose
-        if (xrOrigin) {
+        if (QSSG_GUARD(xrOrigin)) {
             cp_view_t view = cp_drawable_get_view(drawable, i);
             simd_float4 tangents = cp_view_get_tangents(view);
             const float tangentLeft = tangents[0];
@@ -347,4 +467,4 @@ void QQuick3DXRVisionOSRenderManager::renderFrame(QQuickWindow *quickWindow, QQu
 
 QT_END_NAMESPACE
 
-#include "qquick3dxrvisionosrendermanager.moc"
+#include "qquick3dxrmanager_visionos.moc"

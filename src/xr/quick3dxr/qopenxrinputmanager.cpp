@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrinputmanager_p.h"
-#include "qopenxrhelpers_p.h"
+#include "openxr/qopenxrhelpers_p.h"
 #include "qopenxrhandinput_p.h"
 #include "qopenxrhandtrackerinput_p.h"
 #include "qopenxrgamepadinput_p.h"

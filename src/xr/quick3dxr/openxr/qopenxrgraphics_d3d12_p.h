@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRGRAPHICSD3D11_H
-#define QOPENXRGRAPHICSD3D11_H
+#ifndef QOPENXRGRAPHICSD3D12_H
+#define QOPENXRGRAPHICSD3D12_H
 
 //
 //  W A R N I N G
@@ -22,10 +22,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRGraphicsD3D11 : public QAbstractOpenXRGraphics
+class QOpenXRGraphicsD3D12 : public QAbstractOpenXRGraphics
 {
 public:
-    QOpenXRGraphicsD3D11();
+    QOpenXRGraphicsD3D12();
 
     bool isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const override;
     const char *extensionName() const override;
@@ -38,14 +38,16 @@ public:
     QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
                                     quint64 swapchainFormat, int samples, int arraySize,
                                     const XrSwapchainImageBaseHeader *depthSwapchainImage, quint64 depthSwapchainFormat) const override;
+    QRhi *rhi() const override { return m_rhi; }
     void setupWindow(QQuickWindow *quickWindow) override;
 
 private:
-    XrGraphicsBindingD3D11KHR m_graphicsBinding = {};
-    QMap<XrSwapchain, QVector<XrSwapchainImageD3D11KHR>> m_swapchainImageBuffer;
-    XrGraphicsRequirementsD3D11KHR m_graphicsRequirements = {};
+    QRhi *m_rhi = nullptr;
+    XrGraphicsBindingD3D12KHR m_graphicsBinding = {};
+    QMap<XrSwapchain, QVector<XrSwapchainImageD3D12KHR>> m_swapchainImageBuffer;
+    XrGraphicsRequirementsD3D12KHR m_graphicsRequirements = {};
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRGRAPHICSD3D11_H
+#endif // QOPENXRGRAPHICSD3D12_H

@@ -2,13 +2,19 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrruntimeinfo_p.h"
-#include <QtQuick3DXr/private/qopenxrmanager_p.h>
+#include "qquick3dxrmanager_p.h"
 #include <QtQuick/QQuickWindow>
 #include <rhi/qrhi.h>
 
+#if defined(USE_OPENXR)
+#include "openxr/qquick3dxrmanager_openxr_p.h"
+#endif
+
+// FIXME: This whole class needs to be revisited.
+
 QT_BEGIN_NAMESPACE
 
-QOpenXRRuntimeInfo::QOpenXRRuntimeInfo(QOpenXRManager *manager, QObject *parent)
+QOpenXRRuntimeInfo::QOpenXRRuntimeInfo(QQuick3DXrManager *manager, QObject *parent)
     : QObject(parent),
       m_openXRManager(manager)
 {
@@ -16,17 +22,32 @@ QOpenXRRuntimeInfo::QOpenXRRuntimeInfo(QOpenXRManager *manager, QObject *parent)
 
 QStringList QOpenXRRuntimeInfo::enabledExtensions() const
 {
-    return m_openXRManager->m_enabledExtensions;
+#if USE_OPENXR
+    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
+    return manager ? manager->m_enabledExtensions : QStringList{};
+#else
+    return QStringList{};
+#endif
 }
 
 QString QOpenXRRuntimeInfo::runtimeName() const
 {
-    return m_openXRManager->m_runtimeName;
+#if USE_OPENXR
+    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
+    return manager ? manager->m_runtimeName : QString{};
+#else
+    return QString{};
+#endif
 }
 
 QString QOpenXRRuntimeInfo::runtimeVersion() const
 {
-    return m_openXRManager->m_runtimeVersion.toString();
+#if USE_OPENXR
+    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
+    return manager ? manager->m_runtimeVersion.toString() : QString{};
+#else
+    return QString{};
+#endif
 }
 
 QString QOpenXRRuntimeInfo::graphicsApiName() const
@@ -44,7 +65,12 @@ QString QOpenXRRuntimeInfo::graphicsApiName() const
 
 bool QOpenXRRuntimeInfo::multiViewRendering() const
 {
-    return m_openXRManager->m_multiviewRendering;
+#if USE_OPENXR
+    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
+    return manager ? manager->m_multiviewRendering : false;
+#else
+    return false;
+#endif
 }
 
 QT_END_NAMESPACE

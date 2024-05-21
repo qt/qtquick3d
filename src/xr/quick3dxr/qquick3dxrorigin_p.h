@@ -46,8 +46,8 @@ private:
     QQuick3DXrCamera *m_builtInCamera = nullptr;
     QVarLengthArray<QQuick3DXrEyeCamera *, 2> m_eyeCameras;
 
-    friend class QOpenXRManager;
-    friend class QQuick3DXRVisionOSRenderManager;
+    friend class QQuick3DXrManager;
+    friend class QQuick3DXrManagerPrivate;
 };
 
 QT_END_NAMESPACE

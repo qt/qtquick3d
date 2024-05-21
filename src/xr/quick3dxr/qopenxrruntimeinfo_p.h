@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRManager;
+class QQuick3DXrManager;
 
 class Q_QUICK3DXR_EXPORT QOpenXRRuntimeInfo : public QObject
 {
@@ -36,7 +36,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRRuntimeInfo : public QObject
     QML_UNCREATABLE("Created by XrView")
 
 public:
-    QOpenXRRuntimeInfo(QOpenXRManager *manager, QObject *parent = nullptr);
+    QOpenXRRuntimeInfo(QQuick3DXrManager *manager, QObject *parent = nullptr);
     QStringList enabledExtensions() const;
     QString runtimeName() const;
     QString runtimeVersion() const;
@@ -44,7 +44,7 @@ public:
     bool multiViewRendering() const;
 
 private:
-    QOpenXRManager *m_openXRManager;
+    QQuick3DXrManager *m_openXRManager;
 };
 
 QT_END_NAMESPACE

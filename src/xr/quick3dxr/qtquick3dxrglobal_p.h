@@ -16,6 +16,31 @@
 //
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
-#include <QtQuick3DXr/private/qtquick3dxrexports_p.h>
+#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
+
+QT_BEGIN_NAMESPACE
+
+// See, and match, QQuick3DXrView::FoveationLevel
+namespace QtQuick3DXr
+{
+
+enum FoveationLevel {
+    NoFoveation = 0,
+    LowFoveation = 1,
+    MediumFoveation = 2,
+    HighFoveation = 3
+};
+
+// See, and match, QQuick3DXrView::ReferenceSpace
+enum class ReferenceSpace {
+    ReferenceSpaceUnknown,
+    ReferenceSpaceLocal,
+    ReferenceSpaceStage,
+    ReferenceSpaceLocalFloor
+};
+
+} // namespace QtQuick3DXr
+
+QT_END_NAMESPACE
 
 #endif // QTQUICK3DXRGLOBAL_P_H

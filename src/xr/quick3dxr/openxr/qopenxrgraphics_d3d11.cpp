@@ -63,6 +63,8 @@ bool QOpenXRGraphicsD3D11::finializeGraphics(QRhi *rhi)
 {
     const QRhiD3D11NativeHandles *d3d11Rhi = static_cast<const QRhiD3D11NativeHandles *>(rhi->nativeHandles());
     m_graphicsBinding.device = reinterpret_cast<ID3D11Device*>(d3d11Rhi->dev);
+    m_rhi = rhi;
+
     return true;
 }
 

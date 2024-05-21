@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRGRAPHICSVULKAN_H
-#define QOPENXRGRAPHICSVULKAN_H
+#ifndef QOPENXRGRAPHICSOPENGLES_H
+#define QOPENXRGRAPHICSOPENGLES_H
 
 //
 //  W A R N I N G
@@ -18,20 +18,18 @@
 
 #include <QtQuick3DXr/private/qabstractopenxrgraphics_p.h>
 #include <QtQuick3DXr/private/qopenxrplatform_p.h>
-#include <QtGui/QVulkanInstance>
-#include <QtQuick/QQuickGraphicsConfiguration>
 
 QT_BEGIN_NAMESPACE
 
 class QRhiTexture;
 
-class QOpenXRGraphicsVulkan : public QAbstractOpenXRGraphics
+class QOpenXRGraphicsOpenGLES : public QAbstractOpenXRGraphics
 {
 public:
-    QOpenXRGraphicsVulkan();
+    QOpenXRGraphicsOpenGLES();
 
-    const char *extensionName() const override;
     bool isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const override;
+    const char *extensionName() const override;
     const XrBaseInStructure *handle() const override;
     bool setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig) override;
     bool finializeGraphics(QRhi *rhi) override;
@@ -41,22 +39,21 @@ public:
     QQuickRenderTarget renderTarget(const XrSwapchainSubImage &subImage, const XrSwapchainImageBaseHeader *swapchainImage,
                                     quint64 swapchainFormat, int samples, int arraySize,
                                     const XrSwapchainImageBaseHeader *depthSwapchainImage, quint64 depthSwapchainFormat) const override;
-    void setupWindow(QQuickWindow *quickWindow) override;
+    QRhi *rhi() const override { return m_rhi; }
     void releaseResources() override;
 
 private:
-    QVulkanInstance m_vulkanInstance;
-    VkDevice m_vulkanDevice;
-    VkPhysicalDevice m_vulkanPhysicalDevice;
-    VkQueue m_vulkanCommandQueue;
-    QQuickGraphicsConfiguration m_graphicsConfiguration;
-    int m_queueFamilyIndex = -1;
-    XrGraphicsBindingVulkanKHR m_graphicsBinding{};
-    QMap<XrSwapchain, QVector<XrSwapchainImageVulkanKHR>> m_swapchainImageBuffer;
+#ifdef XR_USE_PLATFORM_ANDROID
+    XrGraphicsBindingOpenGLESAndroidKHR m_graphicsBinding{};
+#endif
+    QMap<XrSwapchain, QVector<XrSwapchainImageOpenGLESKHR>> m_swapchainImageBuffer;
+
+    XrGraphicsRequirementsOpenGLESKHR m_graphicsRequirements{};
+
     QRhi *m_rhi = nullptr;
     mutable QRhiTexture *m_depthTexture = nullptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRGRAPHICSVULKAN_H
+#endif // QOPENXRGRAPHICSOPENGLES_H

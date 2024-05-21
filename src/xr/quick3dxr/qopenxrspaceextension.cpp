@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrspaceextension_p.h"
-#include "qopenxrhelpers_p.h"
+#include "openxr/qopenxrhelpers_p.h"
 #include "qopenxrspatialanchor_p.h"
 
 #if defined(Q_OS_ANDROID)

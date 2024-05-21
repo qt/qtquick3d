@@ -164,7 +164,8 @@ private:
     void setMultiViewCameras(QQuick3DCamera **firstCamera, int count);
 
     friend class QQuick3DExtensionListHelper;
-    friend class QOpenXRManager;
+    friend class QQuick3DXrManager;
+    friend class QQuick3DXrManagerPrivate;
     friend class QQuick3DRenderLayerHelpers;
 
     Q_DISABLE_COPY(QQuick3DViewport)

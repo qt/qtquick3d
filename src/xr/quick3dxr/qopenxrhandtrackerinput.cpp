@@ -4,7 +4,7 @@
 #include "qopenxrhandtrackerinput_p.h"
 
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-#include "qopenxrhelpers_p.h"
+#include "openxr/qopenxrhelpers_p.h"
 #include "qopenxrinputmanager_p.h"
 #endif
 

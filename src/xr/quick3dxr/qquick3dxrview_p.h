@@ -25,7 +25,7 @@
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
 
-#include <QtQuick3DXr/private/qopenxrmanager_p.h>
+#include <QtQuick3DXr/private/qquick3dxrmanager_p.h>
 #include <QtQuick3DXr/private/qquick3dxrorigin_p.h>
 #include <QtQuick3DXr/private/qopenxrruntimeinfo_p.h>
 
@@ -145,7 +145,7 @@ private:
     QQuick3DViewport *view3d() const;
 
     QPointer<QQuick3DSceneEnvironment> m_sceneEnvironment;
-    QOpenXRManager m_openXRManager;
+    QQuick3DXrManager m_openXRManager;
     mutable QOpenXRRuntimeInfo m_openXRRuntimeInfo;
     bool m_quitOnSessionEnd = true;
     bool m_inDestructor = false;

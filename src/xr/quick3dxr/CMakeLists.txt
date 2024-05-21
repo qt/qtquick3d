@@ -10,7 +10,7 @@ qt_internal_add_qml_module(Quick3DXr
         qquick3dxrorigin.cpp qquick3dxrorigin_p.h
         qquick3dxranimationdriver.cpp qquick3dxranimationdriver_p.h
         qquick3dxrcamera.cpp qquick3dxrcamera_p.h
-        qopenxrmanager.cpp qopenxrmanager_p.h
+        qquick3dxrmanager.cpp qquick3dxrmanager_p.h
         qquick3dxrview.cpp qquick3dxrview_p.h
         qopenxrruntimeinfo_p.h qopenxrruntimeinfo.cpp
         qquick3dxritem_p.h qquick3dxritem.cpp
@@ -46,87 +46,23 @@ qt_internal_add_qml_module(Quick3DXr
     GENERATE_CPP_EXPORTS
 )
 
-if (NOT VISIONOS)
-# OpenXR Dependency
-qt_find_package(WrapOpenXR PROVIDED_TARGETS WrapOpenXR::WrapOpenXR)
-target_link_libraries(Quick3DXr PUBLIC WrapOpenXR::WrapOpenXR)
-
-# Non-ported/not suitable for VisionOS
-qt_internal_extend_target(Quick3DXr
-    DEFINES
-        Q_NO_TEMPORARY_DISABLE_XR_API
-    SOURCES
-        qabstractopenxrgraphics.cpp qabstractopenxrgraphics_p.h
-        qopenxrhelpers.cpp qopenxrhelpers_p.h
-        qopenxrplatform_p.h
-        qopenxrinputmanager.cpp qopenxrinputmanager_p.h
-        qopenxrspatialanchor_p.h qopenxrspatialanchor.cpp
-        qopenxrspatialanchormodel_p.h qopenxrspatialanchormodel.cpp
-        qopenxrspaceextension_p.h qopenxrspaceextension.cpp
-    NO_UNITY_BUILD_SOURCES
-        # Clashing inline functions
-        qopenxrhandtrackerinput.cpp
-)
-
-# Backends
-
-# Win32 / DX11
-qt_internal_extend_target(Quick3DXr CONDITION WIN32
-    SOURCES
-        qopenxrgraphics_d3d11.cpp qopenxrgraphics_d3d11_p.h
-        qopenxrgraphics_d3d12.cpp qopenxrgraphics_d3d12_p.h
-    DEFINES
-        XR_USE_PLATFORM_WIN32
-        XR_USE_GRAPHICS_API_D3D11
-        XR_USE_GRAPHICS_API_D3D12
-    LIBRARIES
-        user32
-)
-
-# Linux / xcb
-qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_xcb AND QT_FEATURE_xcb_glx_plugin
-    DEFINES
-        XR_USE_PLATFORM_XCB
-)
-
-# OpenGL
-
-qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_opengl AND NOT QT_FEATURE_opengles2 AND NOT MACOS
-    SOURCES
-        qopenxrgraphics_opengl.cpp qopenxrgraphics_opengl_p.h
-    DEFINES
-        XR_USE_GRAPHICS_API_OPENGL
-)
-
-qt_internal_extend_target(Quick3DXr CONDITION ANDROID AND QT_FEATURE_opengles2
-    SOURCES
-        qopenxrgraphics_opengles.cpp qopenxrgraphics_opengles_p.h
-    DEFINES
-        XR_USE_GRAPHICS_API_OPENGL_ES
-)
-
-# Vulkan
-qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_vulkan
-    SOURCES
-        qopenxrgraphics_vulkan.cpp qopenxrgraphics_vulkan_p.h
-    DEFINES
-        XR_USE_GRAPHICS_API_VULKAN
-)
-
-qt_internal_extend_target(Quick3DXr CONDITION ANDROID
-     DEFINES
-        XR_USE_PLATFORM_ANDROID
-)
-endif () # NOT VISIONOS
-
 if (VISIONOS)
+    add_subdirectory(visionos)
+else ()
+    add_subdirectory(openxr)
 
-    enable_language(OBJCXX)
-
+    # Non-ported/not suitable for VisionOS
     qt_internal_extend_target(Quick3DXr
+        DEFINES
+            Q_NO_TEMPORARY_DISABLE_XR_API
         SOURCES
-            qquick3dxrvisionosmanager.mm qquick3dxrvisionosmanager_p.h
-            qquick3dxrvisionosrendermanager.mm qquick3dxrvisionosrendermanager_p.h
+            qopenxrinputmanager.cpp qopenxrinputmanager_p.h
+            qopenxrspatialanchor_p.h qopenxrspatialanchor.cpp
+            qopenxrspatialanchormodel_p.h qopenxrspatialanchormodel.cpp
+            qopenxrspaceextension_p.h qopenxrspaceextension.cpp
+        NO_UNITY_BUILD_SOURCES
+            # Clashing inline functions
+            qopenxrhandtrackerinput.cpp
     )
 
 endif () # VISIONOS

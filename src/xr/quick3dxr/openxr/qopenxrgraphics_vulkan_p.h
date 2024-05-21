@@ -1,8 +1,8 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRGRAPHICSD3D12_H
-#define QOPENXRGRAPHICSD3D12_H
+#ifndef QOPENXRGRAPHICSVULKAN_H
+#define QOPENXRGRAPHICSVULKAN_H
 
 //
 //  W A R N I N G
@@ -18,17 +18,20 @@
 
 #include <QtQuick3DXr/private/qabstractopenxrgraphics_p.h>
 #include <QtQuick3DXr/private/qopenxrplatform_p.h>
-#include <QtCore/QMap>
+#include <QtGui/QVulkanInstance>
+#include <QtQuick/QQuickGraphicsConfiguration>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRGraphicsD3D12 : public QAbstractOpenXRGraphics
+class QRhiTexture;
+
+class QOpenXRGraphicsVulkan : public QAbstractOpenXRGraphics
 {
 public:
-    QOpenXRGraphicsD3D12();
+    QOpenXRGraphicsVulkan();
 
-    bool isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const override;
     const char *extensionName() const override;
+    bool isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const override;
     const XrBaseInStructure *handle() const override;
     bool setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig) override;
     bool finializeGraphics(QRhi *rhi) override;
@@ -39,13 +42,22 @@ public:
                                     quint64 swapchainFormat, int samples, int arraySize,
                                     const XrSwapchainImageBaseHeader *depthSwapchainImage, quint64 depthSwapchainFormat) const override;
     void setupWindow(QQuickWindow *quickWindow) override;
+    QRhi *rhi() const override { return m_rhi; }
+    void releaseResources() override;
 
 private:
-    XrGraphicsBindingD3D12KHR m_graphicsBinding = {};
-    QMap<XrSwapchain, QVector<XrSwapchainImageD3D12KHR>> m_swapchainImageBuffer;
-    XrGraphicsRequirementsD3D12KHR m_graphicsRequirements = {};
+    QVulkanInstance m_vulkanInstance;
+    VkDevice m_vulkanDevice;
+    VkPhysicalDevice m_vulkanPhysicalDevice;
+    VkQueue m_vulkanCommandQueue;
+    QQuickGraphicsConfiguration m_graphicsConfiguration;
+    int m_queueFamilyIndex = -1;
+    XrGraphicsBindingVulkanKHR m_graphicsBinding{};
+    QMap<XrSwapchain, QVector<XrSwapchainImageVulkanKHR>> m_swapchainImageBuffer;
+    QRhi *m_rhi = nullptr;
+    mutable QRhiTexture *m_depthTexture = nullptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRGRAPHICSD3D12_H
+#endif // QOPENXRGRAPHICSVULKAN_H

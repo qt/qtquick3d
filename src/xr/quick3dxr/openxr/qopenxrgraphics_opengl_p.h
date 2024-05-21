@@ -40,6 +40,7 @@ public:
                                     quint64 swapchainFormat, int samples, int arraySize,
                                     const XrSwapchainImageBaseHeader *depthSwapchainImage, quint64 depthSwapchainFormat) const override;
     void setupWindow(QQuickWindow *window) override;
+    QRhi *rhi() const override { return m_rhi; }
     void releaseResources() override;
 
 private:

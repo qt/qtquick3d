@@ -55,6 +55,7 @@ public:
                                             const XrSwapchainImageBaseHeader *depthSwapchainImage,
                                             quint64 depthSwapchainFormat) const = 0;
 
+    virtual QRhi *rhi() const = 0;
     virtual void releaseResources() { }
 };
 
