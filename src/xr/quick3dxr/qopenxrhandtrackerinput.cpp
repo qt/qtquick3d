@@ -139,7 +139,8 @@ void QOpenXrHandModel::setupModel()
     const auto &handGeometryData = inputMan->m_handGeometryData[hand];
     const auto &handMeshData = inputMan->m_handMeshData[hand];
 
-    Q_ASSERT(handGeometryData.geometry);
+    if (!handGeometryData.geometry)
+        return;
 
     setGeometry(handGeometryData.geometry);
 
