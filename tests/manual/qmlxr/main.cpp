@@ -8,7 +8,7 @@
 #include <QVector3D>
 #include <QCommandLineParser>
 #include <QQuickWindow>
-#include <private/qopenxrview_p.h>
+#include <private/qquick3dxrview_p.h>
 #include <private/qquick3dsceneenvironment_p.h>
 #include <rhi/qrhi.h>
 
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        QObject::connect(xrView, &QOpenXRView::frameReady, xrView, [&](QRhiTexture *colorBuffer) {
+        QObject::connect(xrView, &QQuick3DXrView::frameReady, xrView, [&](QRhiTexture *colorBuffer) {
             const int viewCount = qMax(1, colorBuffer->arraySize());
 
             if (cmdLineParser.isSet(grabOption)) {
