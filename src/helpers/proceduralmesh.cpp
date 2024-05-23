@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
     \since 6.6
 
     ProceduralMesh is a helper type that allows creation of Geometry instances
-    from QML/  The Geometry component iself is Abstract, and is usually created
+    from QML. The Geometry component is Abstract, and is usually created
     from C++.
 
     \qml
@@ -77,36 +77,38 @@ QT_BEGIN_NAMESPACE
             return { verts: verts, normals: normals, uvs: uvs, indices: indices }
         }
     }
-    \qml
+    \endqml
 
     The above code defines a component TorusMesh that can be used as Geometry for use
     with a Model component. When the ring, segments, radius or tubeRadius properties
     are modified the geometry will be updated.
 
-    The ProceduralMesh component is not as fexible nor as performant as creating
-    Geometry in C++, but makes up for it in convience and simplitiy. The properties are
-    fixed attribute lists that when filled will automatically generate the necessary buffers.
+    The ProceduralMesh component is not as flexible nor as performant as creating
+    Geometry in C++, but makes up for it in convenience and simplicity. The
+    properties are fixed attribute lists that when filled will automatically
+    generate the necessary buffers.
 
 */
 
 /*!
     \qmlproperty List<QVector3D> ProceduralMesh::positions
-    The positions attribute list. If this list remains empty nothing no geometry will be generated.
+    The positions attribute list. If this list remains empty nothing no geometry
+    will be generated.
 */
 
 /*!
     \qmlproperty List<QVector3D> ProceduralMesh::normals
-    The normals attribute list.
+    Holds the normals attribute list.
 */
 
 /*!
     \qmlproperty List<QVector3D> ProceduralMesh::tangents
-    The tangents attribute list.
+    Holds the tangents attribute list.
 */
 
 /*!
     \qmlproperty List<QVector3D> ProceduralMesh::binormals
-    The binormals attribute list.
+    Holds the binormals attribute list.
 */
 
 /*!
@@ -144,7 +146,15 @@ QT_BEGIN_NAMESPACE
     \qmlproperty enumeration ProceduralMesh::primitiveMode
 
     This property defines the primitive mode to use when rendering the geometry.
-    The default value is /c ProceduralMesh.Triangles.
+
+    \value ProceduralMesh.Points The points primitive mode is used.
+    \value ProceduralMesh.LineStrip The line strip primitive mode is used.
+    \value ProceduralMesh.Lines The lines primitive mode is used.
+    \value ProceduralMesh.TriangleStrip The triangles strip primitive mode is
+    used.
+    \value ProceduralMesh.TriangleFan The triangle fan primitive mode is used.
+    \value ProceduralMesh.Triangles The triangles primitive mode is used.
+    \default ProceduralMesh.Triangles
 
     \note Not all modes are supported on all rendering backends.
 */
@@ -154,7 +164,7 @@ QT_BEGIN_NAMESPACE
 
     This property defines a list of subsets to split the geometry data into.
     Each subset can have it's own material.  The order of this array
-    corosponds to the materials list of Model when using this geometry.
+    corresponds to the materials list of Model when using this geometry.
 
     This property is optional and when empty results in a single subset.
 
@@ -166,7 +176,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ProceduralMeshSubset
     \inqmlmodule QtQuick3D.Helpers
     \inherits QtObject
-    \brief Defines a subset of a ProceduralMesh
+    \brief Defines a subset of a ProceduralMesh.
     \since 6.6
 
     This type defines a subset of a ProceduralMesh. Each subset can have it's own
@@ -178,13 +188,14 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty int ProceduralMeshSubset::offset
-    This property defines the starting index for this subset. The default value is 0.
+    This property defines the starting index for this subset. \default 0
 */
 
 /*!
     \qmlproperty int ProceduralMeshSubset::count
-    This property defines the number of indices to use for this subset. The default value is 0
-    so this property must be set for the subset to have content.
+    This property defines the number of indices to use for this subset. This property must be set for the subset to have content.
+
+    \default 0
 */
 
 /*!

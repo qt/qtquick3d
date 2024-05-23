@@ -10,11 +10,11 @@ QT_BEGIN_NAMESPACE
     \qmltype ProceduralTextureData
     \inqmlmodule QtQuick3D.Helpers
     \inherits TextureData
-    \brief Allows creation of TextureData from QML.
+    \brief Allows creation and population of TextureData from QML.
     \since 6.6
 
     ProceduralTextureData is a helper type that allows creation of TextureData from QML.
-    The TextureData component iself is Abstract, and is usually created from C++. With
+    The TextureData component is Abstract, and is usually created from C++. With
     ProceduralTextureData, it is possible to populate a TextureData from QML.
 
     \qml
@@ -56,20 +56,23 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int ProceduralTextureData::width
 
-    This property holds the width of the texture data in pixels. The value defaults to 0.
+    This property holds the width of the texture data in pixels.
+    \default 0
 
 */
 
 /*!
     \qmlproperty int ProceduralTextureData::height
 
-    This property holds the height of the texture data in pixels. The value defaults to 0.
+    This property holds the height of the texture data in pixels.
+    \default 0
 */
 
 /*!
     \qmlproperty int ProceduralTextureData::depth
 
-    This property holds the depth of the texture data in pixels. The value defaults to 0.
+    This property holds the depth of the texture data in pixels.
+    \default 0
     Setting the depth above 0 means that the texture is handled as a 3D texture.
 */
 
@@ -82,8 +85,9 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty enumeration ProceduralTextureData::format
 
-    This property holds the format of the texture data. The default format is
-    /c TexureData.RGBA8
+    This property holds the format of the texture data.
+
+    \default TextureData.RGBA8
 
     \value TexureData.None The color format is not defined
     \value TexureData.RGBA8 The color format is considered as 8-bit integer in R, G, B and alpha channels.
@@ -94,13 +98,13 @@ QT_BEGIN_NAMESPACE
     \value TexureData.R16 The color format is considered as 16-bit integer in R channel.
     \value TexureData.R16F The color format is considered as 16-bit float in R channel.
     \value TexureData.R32F The color format is considered as 32-bit float R channel.
-    \value TexureData.BC1 The color format is considred as BC1 compressed format with R, G, B, and alpha channels.
-    \value TexureData.BC2 The color format is considred as BC2 compressed format with R, G, B, and alpha channels.
-    \value TexureData.BC3 The color format is considred as BC3 compressed format with R, G, B, and alpha channels.
-    \value TexureData.BC4 The color format is considred as BC4 compressed format with one color channel.
-    \value TexureData.BC5 The color format is considred as BC5 compressed format with two color channels.
-    \value TexureData.BC6H The color format is considred as BC6H compressed format with three high dynamic range color channels.
-    \value TexureData.BC7 The color format is considred as BC7 compressed format with R, G, B, and alpha channels.
+    \value TexureData.BC1 The color format is considered as BC1 compressed format with R, G, B, and alpha channels.
+    \value TexureData.BC2 The color format is considered as BC2 compressed format with R, G, B, and alpha channels.
+    \value TexureData.BC3 The color format is considered as BC3 compressed format with R, G, B, and alpha channels.
+    \value TexureData.BC4 The color format is considered as BC4 compressed format with one color channel.
+    \value TexureData.BC5 The color format is considered as BC5 compressed format with two color channels.
+    \value TexureData.BC6H The color format is considered as BC6H compressed format with three high dynamic range color channels.
+    \value TexureData.BC7 The color format is considered as BC7 compressed format with R, G, B, and alpha channels.
     \value TexureData.DXT1_RGBA The color format is considered as DXT1 compressed format with R, G, B and alpha channels.
     \value TexureData.DXT1_RGB The color format is considered as DXT1 compressed format with R, G and B channels.
     \value TexureData.DXT3_RGBA The color format is considered as DXT3 compressed format with R, G, B and alpha channels.
@@ -126,7 +130,7 @@ QT_BEGIN_NAMESPACE
     \note With the exception of \c TexureData.RGBA8, not every format is supported at runtime as this
     depends on which backend is being used as well which hardware is being used.
 
-    \note \c TexureData.RGBE is internally represented as an \c TexureData.RGBA8 but is intepreted as described when used
+    \note \c TexureData.RGBE is internally represented as an \c TexureData.RGBA8 but is interpreted as described when used
     as a lightProbe or skybox texture.
 
     \note Using the value \c TexureData.None will assume the default value of \c TexureData.RGBA8
