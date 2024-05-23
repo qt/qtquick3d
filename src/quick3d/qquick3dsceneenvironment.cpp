@@ -207,6 +207,9 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     Expensive due to having to accumulate and blend. Increases video memory
     usage.
 
+    \note Progressing antialiasing is not currently supported with multiview
+    rendering, and should not be used in VR/AR applications.
+
     See \l{Anti-Aliasing Best Practices} for further discussion on
     anti-aliasing methods.
 */
@@ -787,6 +790,9 @@ QVector3D QQuick3DSceneEnvironment::probeOrientation() const
     \b Cons: Fast-moving objects cause one-frame ghosting.
 
     \default false
+
+    \note Temporal antialiasing is not currently supported with multiview
+    rendering, and should not be used in VR/AR applications.
 */
 bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 {
