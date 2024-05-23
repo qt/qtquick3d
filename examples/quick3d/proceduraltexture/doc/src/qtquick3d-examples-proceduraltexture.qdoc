@@ -15,7 +15,7 @@
     this example generates two gradient textures in C++ and QML respectively.
 
     First we define a C++ class for our texture data. We make it a subclass
-    of QQuick3DTextureData. This is not stricly necessary, since there are no
+    of QQuick3DTextureData. This is not strictly necessary, since there are no
     virtual functions, but it is much more convenient to have everything in
     one class. We define the properties we are going to use, and add
     \l QML_NAMED_ELEMENT to make it available from QML:
@@ -23,9 +23,9 @@
     \snippet proceduraltexture/gradienttexture.h class definition
     \dots
 
-    We add a function to update the texture. It uses \l QQuick3DTextureData::setSize,
-    and \l QQuick3DTextureData::setFormat to configure the texture, and
-    \l QQuick3DTextureData::setTextureData to set the image data:
+    We add a function to update the texture. It uses setSize,
+    and setFormat to configure the texture, and
+    setTextureData to set the image data:
     \snippet proceduraltexture/gradienttexture.cpp updateTexture
 
     The function \c generateTexture creates a QByteArray of the correct size, and
