@@ -41,6 +41,7 @@ headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/lookatnode_p.h \
            ../../helpers/heightfieldgeometry_p.h \
            ../../helpers/proceduralskytexturedata_p.h \
+           ../../helpers/proceduralmesh_p.h \
            ../../assetutils/qquick3druntimeloader_p.h \
            ../../runtimerender/qssgrendercontextcore.h \
            ../../runtimerender/qssgrhicontext.h \
@@ -58,6 +59,7 @@ sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/lookatnode.cpp \
            ../../helpers/heightfieldgeometry.cpp \
            ../../helpers/proceduralskytexturedata.cpp \
+           ../../helpers/proceduralmesh.cpp \
            ../../assetutils/qquick3druntimeloader.cpp \
            ../../runtimerender/qssgrendercontextcore.cpp \
            ../../runtimerender/qssgrhicontext.cpp
