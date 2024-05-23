@@ -403,14 +403,12 @@ bool QSSGShaderCustomMaterialAdapter::isEmissiveSingleChannelEnabled()
 
 bool QSSGShaderCustomMaterialAdapter::isClearcoatEnabled()
 {
-    // TODO: Expose Clearcoat properties to custom material
-    return false;
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Clearcoat);
 }
 
 bool QSSGShaderCustomMaterialAdapter::isTransmissionEnabled()
 {
-    // TODO: Expose Transmission to custom material
-    return false;
+   return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Transmission);
 }
 
 bool QSSGShaderCustomMaterialAdapter::hasLighting()
@@ -492,7 +490,7 @@ float QSSGShaderCustomMaterialAdapter::ior()
 
 bool QSSGShaderCustomMaterialAdapter::isFresnelScaleBiasEnabled()
 {
-    return false;
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::FresnelScaleBias);
 }
 
 float QSSGShaderCustomMaterialAdapter::fresnelScale()
@@ -512,7 +510,7 @@ float QSSGShaderCustomMaterialAdapter::fresnelPower()
 
 bool QSSGShaderCustomMaterialAdapter::isClearcoatFresnelScaleBiasEnabled()
 {
-    return false;
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias);
 }
 
 float QSSGShaderCustomMaterialAdapter::clearcoatFresnelScale()
@@ -977,6 +975,19 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesViewIndex;
                 else if (trimmedId == QByteArrayLiteral("INPUT"))
                     md.flags |= QSSGCustomShaderMetaData::UsesInputTexture;
+                else if (trimmedId == QByteArrayLiteral("CLEARCOAT_AMOUNT"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesClearcoat;
+                else if (trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_SCALE") ||
+                            trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_BIAS"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias;
+                else if (trimmedId == QByteArrayLiteral("FRESNEL_SCALE") ||
+                            trimmedId == QByteArrayLiteral("FRESNEL_BIAS"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesFresnelScaleBias;
+                else if (trimmedId == QByteArrayLiteral("TRANSMISSION_FACTOR")) {
+                    md.flags |= QSSGCustomShaderMetaData::UsesTransmission;
+                    md.flags |= QSSGCustomShaderMetaData::UsesScreenTexture;
+                    md.flags |= QSSGCustomShaderMetaData::UsesScreenMipTexture;
+                }
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {

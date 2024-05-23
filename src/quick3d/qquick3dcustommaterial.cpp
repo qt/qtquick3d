@@ -445,7 +445,10 @@ QT_BEGIN_NAMESPACE
 
     \li \c{void MAIN()} When present, this function is called to set the values
     of the special writable variables \c BASE_COLOR, \c METALNESS, \c ROUGHNESS, \c
-    SPECULAR_AMOUNT, NORMAL, and \c FRESNEL_POWER.
+    SPECULAR_AMOUNT, NORMAL, CLEARCOAT_FRESNEL_POWER, CLEARCOAT_FRESNEL_SCALE,
+    CLEARCOAT_FRESNEL_BIAS, CLEARCOAT_AMOUNT, CLEARCOAT_ROUGHNESS, CLEARCOAT_NORMAL,
+    FRESNEL_BIAS, FRESNEL_SCALE, FRESNEL_POWER, IOR, \c TRANSMISSION_FACTOR,
+    THICKNESS_FACTOR, ATTENUATION_COLOR and \c ATTENUATION_DISTANCE.
 
     One common use case is to set the value of \c BASE_COLOR based on sampling
     a texture, be it a base color map, \c SCREEN_TEXTURE, or some other kind of
@@ -496,13 +499,54 @@ QT_BEGIN_NAMESPACE
     properties in QML, be aware that it is up to the shader to perform the sRGB
     to linear conversion, if needed.
 
+    \li float \c IOR Specifies the index of refraction of the material. A typical value,
+    and also the default, is \c{1.5} as that is what a PrincipledMaterial would use.
+
+    \li float \c TRANSMISSION_FACTOR Specifies the amount of the translucency. A typical value,
+    would be \c{1.0} and also the default, is \c{0.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c THICKNESS_FACTOR Specifies the amount of the translucent material thickness. A typical value,
+    would be \c{10.0} and also the default, is \c{0.0} as that is what a PrincipledMaterial would use.
+
+    \li vec3 \c ATTENUATION_COLOR Specifies the color shift of the translucent material by distance. A typical value,
+    would be \c{vec3(1.0, 0.0, 0.0)} and also the default, is \c{vec3(1.0)} as that is what a PrincipledMaterial would use.
+
+    \li float \c ATTENUATION_DISTANCE Specifies the distance attenuation of color shift of the translucent material. A typical value,
+    would be \c{100.0} and also the default, is \c{0.0} as that is what a PrincipledMaterial would use.
+
     \li float \c METALNESS Metalness amount in range 0.0 - 1.0. The default
     value is 0. Must be set to a non-zero value to have effect.
 
     \li float \c ROUGHNESS Roughness value in range 0.0 - 1.0. The default value is 0.
 
+    \li float \c CLEARCOAT_FRESNEL_POWER Specifies the fresnel power of the clearcoat layer. A typical value,
+    and also the default, is \c{5.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c CLEARCOAT_FRESNEL_SCALE Specifies the fresnel scale of the clearcoat layer. A typical value,
+    and also the default, is \c{1.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c CLEARCOAT_FRESNEL_BIAS Specifies the fresnel bias of the clearcoat layer. A typical value,
+    and also the default, is \c{0.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c CLEARCOAT_AMOUNT Specifies the amount of the clearcoat layer on top of the material. A typical value,
+    would be \c{1.0} and also the default, is \c{0.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c CLEARCOAT_ROUGHNESS Specifies the roughness of the clearcoat layer. A typical value,
+    would be \c{1.0} for fully blurred clearcoat layer and also the default, is \c{0.0} as that is
+    what a PrincipledMaterial would use.
+
+    \li vec3 \c CLEARCOAT_NORMAL - The clearcoat layer normal that comes from the vertex shader in world
+    space. While this property has the same initial value as \c VAR_WORLD_NORMAL,
+    only changing the value of \c CLEARCOAT_NORMAL will have an effect on clearcoat layer normal.
+
     \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value,
     and also the default, is \c{5.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c FRESNEL_SCALE Specifies the fresnel scale. A typical value,
+    and also the default, is \c{1.0} as that is what a PrincipledMaterial would use.
+
+    \li float \c FRESNEL_BIAS Specifies the fresnel bias. A typical value,
+    and also the default, is \c{0.0} as that is what a PrincipledMaterial would use.
 
     \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. The
     default value is \c{0.5}, matching \l{PrincipledMaterial::specularAmount}. Must
@@ -1632,6 +1676,17 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Morphing, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesViewIndex))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ViewIndex, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesClearcoat))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Clearcoat, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesFresnelScaleBias))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::FresnelScaleBias, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesTransmission)) {
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Transmission, true);
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture, true);
+    }
 
     // vertex only
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))

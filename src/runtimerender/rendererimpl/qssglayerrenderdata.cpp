@@ -1354,6 +1354,18 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     const bool usesVarColor = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::VarColor);
     defaultMaterialShaderKeyProperties.m_usesVarColor.setValue(theGeneratedKey, usesVarColor);
 
+    const bool usesClearcoat = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Clearcoat);
+    defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey, usesClearcoat);
+
+    const bool usesClearcoatFresnelScaleBias = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias);
+    defaultMaterialShaderKeyProperties.m_clearcoatFresnelScaleBiasEnabled.setValue(theGeneratedKey, usesClearcoatFresnelScaleBias);
+
+    const bool usesFresnelScaleBias = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::FresnelScaleBias);
+    defaultMaterialShaderKeyProperties.m_fresnelScaleBiasEnabled.setValue(theGeneratedKey, usesFresnelScaleBias);
+
+    const bool usesTransmission = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Transmission);
+    defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey, usesTransmission);
+
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending))
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 

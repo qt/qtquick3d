@@ -105,7 +105,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         Lightmap = 1 << 10,
         Skinning = 1 << 11,
         Morphing = 1 << 12,
-        ViewIndex = 1 << 13
+        ViewIndex = 1 << 13,
+        Clearcoat = 1 << 14,
+        ClearcoatFresnelScaleBias = 1 << 15,
+        FresnelScaleBias = 1 << 16,
+        Transmission = 1 << 17,
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 
