@@ -63,14 +63,4 @@ QString QOpenXRRuntimeInfo::graphicsApiName() const
     return QLatin1String("Unknown");
 }
 
-bool QOpenXRRuntimeInfo::multiViewRendering() const
-{
-#if USE_OPENXR
-    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
-    return manager ? manager->m_multiviewRendering : false;
-#else
-    return false;
-#endif
-}
-
 QT_END_NAMESPACE

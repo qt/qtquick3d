@@ -1103,9 +1103,10 @@ QT_BEGIN_NAMESPACE
             BASE_COLOR = vec4(vec3(c), alpha);
         }
     \endcode
-    With multiview rendering, \c SCREEN_TEXTURE is a \c sampler2DArray. Use
-    \c VIEW_INDEX to select the layer to use. For VR/AR applications that wish to
-    support both types of rendering, the portable approach is the following:
+    With \l{Multiview Rendering}{multiview rendering}, \c SCREEN_TEXTURE is a \c
+    sampler2DArray. Use \c VIEW_INDEX to select the layer to use. For VR/AR
+    applications that wish to support both types of rendering, the portable
+    approach is the following:
     \badcode
         #if QSHADER_VIEW_COUNT >= 2
             vec4 c = texture(SCREEN_TEXTURE, vec3(uv, VIEW_INDEX));
@@ -1136,9 +1137,10 @@ QT_BEGIN_NAMESPACE
         float d = 2.0 * zNear * zFar / (zFar + zNear - z_n * zRange);
         d /= zFar;
     \endcode
-    With multiview rendering, \c DEPTH_TEXTURE is a \c sampler2DArray. Use
-    \c VIEW_INDEX to select the layer to use. For VR/AR applications that wish to
-    support both types of rendering, the portable approach is the following:
+    With \l{Multiview Rendering}{multiview rendering}, \c DEPTH_TEXTURE is a \c
+    sampler2DArray. Use \c VIEW_INDEX to select the layer to use. For VR/AR
+    applications that wish to support both types of rendering, the portable
+    approach is the following:
     \badcode
         #if QSHADER_VIEW_COUNT >= 2
             vec4 depthSample = texture(DEPTH_TEXTURE, vec3(uv, VIEW_INDEX));
@@ -1159,9 +1161,10 @@ QT_BEGIN_NAMESPACE
         vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
         float aoFactor = texture(AO_TEXTURE, aoUV).x;
     \endcode
-    With multiview rendering, \c AO_TEXTURE is a \c sampler2DArray. Use
-    \c VIEW_INDEX to select the layer to use. For VR/AR applications that wish to
-    support both types of rendering, the portable approach is the following:
+    With \l{Multiview Rendering}{multiview rendering}, \c AO_TEXTURE is a \c
+    sampler2DArray. Use \c VIEW_INDEX to select the layer to use. For VR/AR
+    applications that wish to support both types of rendering, the portable
+    approach is the following:
     \badcode
         #if QSHADER_VIEW_COUNT >= 2
             ivec2 aoSize = textureSize(AO_TEXTURE, 0).xy;
@@ -1186,10 +1189,11 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     \li \c VIEW_INDEX - When used in the custom shader code, this is a
-    (non-interpolated) uint variable. When multiview rendering is not used, the
-    value is always 0. With multiview rendering, the value is the current view
-    index (e.g., gl_ViewIndex). Useful in particular in combination with
-    \c DEPTH_TEXTURE and similar when multiview rendering is enabled.
+    (non-interpolated) uint variable. When \l{Multiview Rendering}{multiview
+    rendering} is not used, the value is always 0. With multiview rendering, the
+    value is the current view index (e.g., gl_ViewIndex). Useful in particular
+    in combination with \c DEPTH_TEXTURE and similar when multiview rendering is
+    enabled.
 
     \endlist
 

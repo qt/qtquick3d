@@ -68,9 +68,11 @@ public:
 
     void setSamples(int samples);
 
-    void requestMultiviewRendering(bool enable);
+    void setMultiviewRenderingEnabled(bool enable);
+    bool isMultiViewRenderingEnabled() const { return m_multiviewRendering; }
+    bool isMultiViewRenderingSupported() const;
 
-    void requestPassthrough(bool enable);
+    void setPassthroughEnabled(bool enable);
     bool isPassthroughEnabled() const { return m_enablePassthrough; }
 
     void setDepthSubmissionEnabled(bool enable);

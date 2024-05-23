@@ -26,10 +26,11 @@
     post-processing effects via the \l Effect type.
 
     \warning All pre-made, standalone effects in QtQuick3D.Effects are
-    incompatible with the multiview rendering mode of Qt Quick 3D XR that is
-    often used in VR/AR applications. New application should always use
-    \l ExtendedSceneEnvironment or application-provided custom effects via the \l
-    Effect type, which are fully compatible with multiview rendering as well.
+    incompatible with the \l{Multiview Rendering}{multiview rendering mode} of
+    Qt Quick 3D XR that is often used in VR/AR applications. New application
+    should always use \l ExtendedSceneEnvironment or application-provided custom
+    effects via the \l Effect type, which are fully compatible with multiview
+    rendering as well.
  */
 
 /*!

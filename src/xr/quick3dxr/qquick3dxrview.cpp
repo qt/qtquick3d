@@ -13,6 +13,13 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype XrView
+    \inherits Node
+    \inqmlmodule QtQuick3D.Xr
+    \brief Sets up the view for an Xr application.
+ */
+
 QQuick3DXrView::QQuick3DXrView()
     : m_openXRRuntimeInfo(&m_openXRManager)
 {
@@ -89,7 +96,7 @@ QQuick3DViewport *QQuick3DXrView::view3d() const
     return m_openXRManager.m_vrViewport;
 }
 
-bool QQuick3DXrView::enablePassthrough() const
+bool QQuick3DXrView::isPassthroughEnabled() const
 {
     return m_openXRManager.isPassthroughEnabled();
 }
@@ -473,6 +480,46 @@ bool QQuick3DXrView::isDepthSubmissionEnabled() const
     return m_openXRManager.isDepthSubmissionEnabled();
 }
 
+/*!
+    \qmlproperty bool QtQuick3D.Xr::XrView::multiViewRenderingSupported
+
+    \brief This read-only property reports the availability of \l{Multiview Rendering}.
+
+    \sa enableMultiViewRendering
+ */
+bool QQuick3DXrView::isMultiViewRenderingSupported() const
+{
+    if (!m_openXRManager.isValid())
+        return false;
+
+    return m_openXRManager.isMultiViewRenderingSupported();
+}
+
+/*!
+    \qmlproperty bool QtQuick3D.Xr::XrView::enableMultiViewRendering
+
+    \brief Gets or sets whether \l{Multiview Rendering} is enabled for the XR view.
+    The default value is \c false. Changing the value to \c true has an effect
+    only when \l multiViewRenderingSupported is \c true. See \l{Multiview
+    Rendering} for details.
+
+    \note Changing the value dynamically, while the scene is already up and
+    running, is possible, but not recommended, because enabling or disabling
+    multiview mode involves releasing and recreating certain graphics and XR
+    resources. Depending on the platform and headset, this then may cause visual
+    effects that are undesirable, for example the scene may disappear and
+    reappear.
+
+    \sa multiViewRenderingSupported
+*/
+bool QQuick3DXrView::isMultiViewRenderingEnabled() const
+{
+    if (!m_openXRManager.isValid())
+        return false;
+
+    return m_openXRManager.isMultiViewRenderingEnabled();
+}
+
 void QQuick3DXrView::registerXrItem(QQuick3DXrItem *newXrItem)
 {
     m_xrItems.append(newXrItem);
@@ -494,8 +541,22 @@ void QQuick3DXrView::setEnableDepthSubmission(bool enable)
 
     m_openXRManager.setDepthSubmissionEnabled(enable);
 
-    if (orgDepthSubmission == m_openXRManager.isDepthSubmissionEnabled())
+    if (orgDepthSubmission != m_openXRManager.isDepthSubmissionEnabled())
         emit enableDepthSubmissionChanged();
+}
+
+void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
+{
+    if (!m_openXRManager.isValid()) {
+        qWarning("Attempted to set multiview rendering mode without having m_openXRManager initialized");
+        return;
+    }
+
+    const bool orgMultiView = m_openXRManager.isMultiViewRenderingEnabled();
+    m_openXRManager.setMultiviewRenderingEnabled(enable);
+
+    if (orgMultiView != m_openXRManager.isMultiViewRenderingEnabled())
+        emit enableMultiViewRenderingChanged();
 }
 
 QT_END_NAMESPACE

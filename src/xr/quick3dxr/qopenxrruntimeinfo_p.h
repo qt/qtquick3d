@@ -30,7 +30,6 @@ class Q_QUICK3DXR_EXPORT QOpenXRRuntimeInfo : public QObject
     Q_PROPERTY(QString runtimeName READ runtimeName CONSTANT)
     Q_PROPERTY(QString runtimeVersion READ runtimeVersion CONSTANT)
     Q_PROPERTY(QString graphicsApiName READ graphicsApiName CONSTANT)
-    Q_PROPERTY(bool multiViewRendering READ multiViewRendering CONSTANT)
 
     QML_NAMED_ELEMENT(XrRuntimeInfo)
     QML_UNCREATABLE("Created by XrView")
@@ -41,7 +40,6 @@ public:
     QString runtimeName() const;
     QString runtimeVersion() const;
     QString graphicsApiName() const;
-    bool multiViewRendering() const;
 
 private:
     QQuick3DXrManager *m_openXRManager;

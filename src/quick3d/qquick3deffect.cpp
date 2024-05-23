@@ -339,9 +339,10 @@ QT_BEGIN_NAMESPACE
     \li \c INPUT - \c sampler2D or \c sampler2DArray - The sampler for the input
     texture with the scene rendered into it, unless a pass redirects its input
     via a BufferInput object, in which case \c INPUT refers to the additional
-    color buffer's texture referenced by the BufferInput. With multiview
-    rendering enabled, which can be relevant for VR/AR applications, this is
-    a sampler2DArray, while the input texture becomes a 2D texture array.
+    color buffer's texture referenced by the BufferInput. With \l{Multiview
+    Rendering}{multiview rendering} enabled, which can be relevant for VR/AR
+    applications, this is a sampler2DArray, while the input texture becomes a 2D
+    texture array.
 
     \li \c INPUT_UV - \c vec2 - UV coordinates for sampling \c INPUT.
 
@@ -361,9 +362,9 @@ QT_BEGIN_NAMESPACE
     presence of this keyword in the shader triggers generating the depth texture
     automatically.
 
-    \li \c VIEW_INDEX - \c uint - With multiview rendering enabled, this is the
-    current view index, available in both vertex and fragment shaders. Always 0
-    when multiview rendering is not used.
+    \li \c VIEW_INDEX - \c uint - With \l{Multiview Rendering}{multiview
+    rendering} enabled, this is the current view index, available in both vertex
+    and fragment shaders. Always 0 when multiview rendering is not used.
 
     \endlist
 
@@ -539,20 +540,20 @@ QT_BEGIN_NAMESPACE
     good visual experience in a VR environment, possibly affecting the user
     physically even (causing, for example, motion sickness or dizziness).
 
-    When the more efficient multiview rendering mode is enabled in a VR/AR
-    application, there is no separate render pass for the left and right eye
-    contents. Instead, it all happens in one pass, using a 2D texture array with
-    two layers instead of two independent 2D textures. This also means that many
-    intermediate buffers, meaning color or depth textures, will need to become
-    texture arrays in this mode. This then has implications for custom materials
-    and postprocessing effects. Textures such as the input texture (\c INPUT),
-    the depth texture (\c DEPTH_TEXTURE), the screen texture (\c
-    SCREEN_TEXTURE), and some others becomes 2D texture arrays, exposed in the
-    shader as a \c sampler2DArray instead of \c sampler2D. This has implications
-    for GLSL functions such as texture(), textureLod(), or textureSize(). The UV
-    coordinate is then a vec3, not a vec2. Whereas textureSize() returns a vec3,
-    not a vec2. Effects intended to function regardless of the rendering mode,
-    can be written with an appropriate ifdef:
+    When the more efficient \l{Multiview Rendering}{multiview rendering mode} is
+    enabled in a VR/AR application, there is no separate render pass for the
+    left and right eye contents. Instead, it all happens in one pass, using a 2D
+    texture array with two layers instead of two independent 2D textures. This
+    also means that many intermediate buffers, meaning color or depth textures,
+    will need to become texture arrays in this mode. This then has implications
+    for custom materials and postprocessing effects. Textures such as the input
+    texture (\c INPUT), the depth texture (\c DEPTH_TEXTURE), the screen texture
+    (\c SCREEN_TEXTURE), and some others becomes 2D texture arrays, exposed in
+    the shader as a \c sampler2DArray instead of \c sampler2D. This has
+    implications for GLSL functions such as texture(), textureLod(), or
+    textureSize(). The UV coordinate is then a vec3, not a vec2. Whereas
+    textureSize() returns a vec3, not a vec2. Effects intended to function
+    regardless of the rendering mode, can be written with an appropriate ifdef:
     \badcode
     #if QSHADER_VIEW_COUNT >= 2
         vec4 c = texture(INPUT, vec3(INPUT_UV, VIEW_INDEX));

@@ -180,13 +180,13 @@ void QQuick3DXrManagerPrivate::teardown()
     Q_UNIMPLEMENTED();
 }
 
-void QQuick3DXrManagerPrivate::requestMultiviewRendering(bool enable)
+void QQuick3DXrManagerPrivate::setMultiviewRenderingEnabled(bool enable)
 {
     Q_UNUSED(enable);
     Q_UNIMPLEMENTED();
 }
 
-void QQuick3DXrManagerPrivate::requestPassthrough(bool enable)
+void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
     Q_UNUSED(enable);
     Q_UNIMPLEMENTED();

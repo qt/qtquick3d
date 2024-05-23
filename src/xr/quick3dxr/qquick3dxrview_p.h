@@ -51,13 +51,15 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(QOpenXRHandTrackerInput *rightHandTrackerInput READ rightHandTrackerInput CONSTANT)
     Q_PROPERTY(QOpenXRGamepadInput *gamepadInput READ gamepadInput CONSTANT)
     Q_PROPERTY(bool passthroughSupported READ isPassthroughSupported CONSTANT)
-    Q_PROPERTY(bool enablePassthrough READ enablePassthrough WRITE setEnablePassthrough NOTIFY enablePassthroughChanged FINAL)
+    Q_PROPERTY(bool enablePassthrough READ isPassthroughEnabled WRITE setEnablePassthrough NOTIFY enablePassthroughChanged FINAL)
     Q_PROPERTY(QOpenXRRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
     Q_PROPERTY(bool quitOnSessionEnd READ isQuitOnSessionEndEnabled WRITE setQuitOnSessionEnd NOTIFY quitOnSessionEndChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(FoveationLevel fixedFoveation READ fixedFoveation WRITE setFixedFoveation NOTIFY fixedFoveationChanged FINAL)
     Q_PROPERTY(ReferenceSpace referenceSpace READ referenceSpace WRITE setReferenceSpace NOTIFY referenceSpaceChanged FINAL)
     Q_PROPERTY(bool enableDepthSubmission READ isDepthSubmissionEnabled WRITE setEnableDepthSubmission NOTIFY enableDepthSubmissionChanged FINAL)
+    Q_PROPERTY(bool multiViewRenderingSupported READ isMultiViewRenderingSupported CONSTANT)
+    Q_PROPERTY(bool enableMultiViewRendering READ isMultiViewRenderingEnabled WRITE setEnableMultiViewRendering NOTIFY enableMultiViewRenderingChanged FINAL)
     QML_NAMED_ELEMENT(XrView)
 
 public:
@@ -89,7 +91,7 @@ public:
     QOpenXRGamepadInput *gamepadInput() const;
 
     bool isPassthroughSupported() const;
-    bool enablePassthrough() const;
+    bool isPassthroughEnabled() const;
 
     FoveationLevel fixedFoveation() const;
     void setFixedFoveation(FoveationLevel level);
@@ -115,11 +117,15 @@ public:
     void registerXrItem(QQuick3DXrItem *newXrItem);
     void unregisterXrItem(QQuick3DXrItem *xrItem);
 
+    bool isMultiViewRenderingSupported() const;
+    bool isMultiViewRenderingEnabled() const;
+
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setEnablePassthrough(bool enable);
     void setQuitOnSessionEnd(bool enable);
     void setEnableDepthSubmission(bool enable);
+    void setEnableMultiViewRendering(bool enable);
 
 private Q_SLOTS:
     void updateViewportGeometry();
@@ -139,6 +145,7 @@ Q_SIGNALS:
     void frameReady(QRhiTexture *colorBuffer); // tooling
     void referenceSpaceChanged();
     void enableDepthSubmissionChanged();
+    void enableMultiViewRenderingChanged();
 
 private:
     // The XrView does not expose the View3D in its public interface. This is intentional.

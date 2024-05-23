@@ -54,9 +54,11 @@ public:
 
     void teardown();
 
-    void requestMultiviewRendering(bool enable);
+    void setMultiviewRenderingEnabled(bool enable);
+    bool isMultiViewRenderingEnabled() const { return false; }
+    bool isMultiViewRenderingSupported() const { return false; }
 
-    void requestPassthrough(bool enable);
+    void setPassthroughEnabled(bool enable);
     bool isPassthroughEnabled() const { return false; }
     bool supportsPassthrough() const { return false; }
 

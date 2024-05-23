@@ -50,7 +50,7 @@ XrView {
                             color: "black"
                         }
                         Text {
-                            visible: xrView.runtimeInfo.multiViewRendering
+                            visible: xrView.enableMultiViewRendering
                             text: "Multiview rendering enabled"
                             font.pixelSize: 2
                             color: "green"

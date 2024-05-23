@@ -89,13 +89,31 @@ bool QQuick3DXrManager::isValid() const
 void QQuick3DXrManager::setPassthroughEnabled(bool enabled)
 {
     Q_D(QQuick3DXrManager);
-    d->requestPassthrough(enabled);
+    d->setPassthroughEnabled(enabled);
 }
 
 bool QQuick3DXrManager::isPassthroughEnabled() const
 {
     Q_D(const QQuick3DXrManager);
     return d->isPassthroughEnabled();
+}
+
+void QQuick3DXrManager::setMultiviewRenderingEnabled(bool enable)
+{
+    Q_D(QQuick3DXrManager);
+    d->setMultiviewRenderingEnabled(enable);
+}
+
+bool QQuick3DXrManager::isMultiViewRenderingEnabled() const
+{
+    Q_D(const QQuick3DXrManager);
+    return d->isMultiViewRenderingEnabled();
+}
+
+bool QQuick3DXrManager::isMultiViewRenderingSupported() const
+{
+    Q_D(const QQuick3DXrManager);
+    return d->isMultiViewRenderingSupported();
 }
 
 QtQuick3DXr::FoveationLevel QQuick3DXrManager::getFixedFoveationLevel() const
@@ -254,18 +272,10 @@ bool QQuick3DXrManager::setupQuickScene()
 
     qDebug("Quick 3D XR: QRhi initialized with backend %s", rhi->backendName());
 
-           // Decide if we do multiview rendering.
-    bool multiviewRendering = qEnvironmentVariableIntValue("QT_QUICK3D_XR_MULTIVIEW");
-    qDebug("Quick3D XR: multiview rendering requested = %s", multiviewRendering ? "yes" : "no");
-
-    if (multiviewRendering && !rhi->isFeatureSupported(QRhi::MultiView)) {
-        qWarning("Quick 3D XR: Multiview rendering was enabled, but is reported as unsupported from the current QRhi backend (%s)",
-                 rhi->backendName());
-        multiviewRendering = false;
+    if (qEnvironmentVariableIntValue("QT_QUICK3D_XR_MULTIVIEW")) {
+        qDebug("Quick3D XR: multiview rendering requested via the environment");
+        setMultiviewRenderingEnabled(true);
     }
-
-    qDebug("Quick3D XR: multiview rendering %s", multiviewRendering ? "enabled" : "disabled");
-    d->requestMultiviewRendering(multiviewRendering);
 
     return true;
 }

@@ -1022,12 +1022,34 @@ void QQuick3DXrManagerPrivate::setSamples(int samples)
     // XrSwapchain) since we do not do MSAA through the swapchain.
 }
 
-void QQuick3DXrManagerPrivate::requestMultiviewRendering(bool enable)
+void QQuick3DXrManagerPrivate::setMultiviewRenderingEnabled(bool enable)
 {
+    Q_Q(QQuick3DXrManager);
+    QRhi *rhi = q->m_renderControl->rhi();
+    if (m_multiviewRendering == enable || !rhi)
+        return;
+    if (enable && !rhi->isFeatureSupported(QRhi::MultiView)) {
+        qWarning("Quick 3D XR: Multiview rendering was enabled, but is reported as unsupported from the current QRhi backend (%s)",
+                 rhi->backendName());
+        return;
+    }
     m_multiviewRendering = enable;
+    qDebug("Quick3D XR: multiview rendering %s", m_multiviewRendering ? "enabled" : "disabled");
+    if (!m_swapchains.isEmpty()) {
+        qDebug("Quick3D XR: OpenXR swapchain already exists, creating new one due to change in multiview mode");
+        destroySwapchain();
+        createSwapchains();
+    }
 }
 
-void QQuick3DXrManagerPrivate::requestPassthrough(bool enable)
+bool QQuick3DXrManagerPrivate::isMultiViewRenderingSupported() const
+{
+    Q_Q(const QQuick3DXrManager);
+    QRhi *rhi = q->m_renderControl->rhi();
+    return rhi ? rhi->isFeatureSupported(QRhi::MultiView) : false;
+}
+
+void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
     m_enablePassthrough = enable;
 }

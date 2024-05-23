@@ -76,6 +76,10 @@ public:
 
     void setSamples(int samples);
 
+    void setMultiviewRenderingEnabled(bool enable);
+    bool isMultiViewRenderingEnabled() const;
+    bool isMultiViewRenderingSupported() const;
+
 private Q_SLOTS:
     void update();
 
