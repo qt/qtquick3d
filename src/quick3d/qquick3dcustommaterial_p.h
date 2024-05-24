@@ -30,6 +30,8 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(ShadingMode shadingMode READ shadingMode WRITE setShadingMode NOTIFY shadingModeChanged)
     Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
+    Q_PROPERTY(QString __fragmentShaderCode READ fragmentShaderCode WRITE setFragmentShaderCode NOTIFY fragmentShaderCodeChanged REVISION(6, 8))
+    Q_PROPERTY(QString __vertexShaderCode READ vertexShaderCode WRITE setVertexShaderCode NOTIFY vertexShaderCodeChanged REVISION(6, 8))
     Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
     Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
     Q_PROPERTY(BlendMode sourceAlphaBlend READ srcAlphaBlend WRITE setSrcAlphaBlend NOTIFY srcAlphaBlendChanged REVISION(6, 7))
@@ -74,6 +76,8 @@ public:
     ShadingMode shadingMode() const;
     QUrl vertexShader() const;
     QUrl fragmentShader() const;
+    Q_REVISION(6, 8) QString vertexShaderCode() const;
+    Q_REVISION(6, 8) QString fragmentShaderCode() const;
     BlendMode srcBlend() const;
     BlendMode dstBlend() const;
     Q_REVISION(6, 7) BlendMode srcAlphaBlend() const;
@@ -85,6 +89,8 @@ public Q_SLOTS:
     void setShadingMode(QQuick3DCustomMaterial::ShadingMode mode);
     void setVertexShader(const QUrl &url);
     void setFragmentShader(const QUrl &url);
+    Q_REVISION(6, 8) void setVertexShaderCode(const QString &code);
+    Q_REVISION(6, 8) void setFragmentShaderCode(const QString &code);
     void setSrcBlend(QQuick3DCustomMaterial::BlendMode mode);
     void setDstBlend(QQuick3DCustomMaterial::BlendMode mode);
     Q_REVISION(6, 7) void setSrcAlphaBlend(QQuick3DCustomMaterial::BlendMode mode);
@@ -96,6 +102,8 @@ Q_SIGNALS:
     void shadingModeChanged();
     void vertexShaderChanged();
     void fragmentShaderChanged();
+    Q_REVISION(6, 8) void vertexShaderCodeChanged();
+    Q_REVISION(6, 8) void fragmentShaderCodeChanged();
     void srcBlendChanged();
     void dstBlendChanged();
     Q_REVISION(6, 7) void srcAlphaBlendChanged();
@@ -136,6 +144,8 @@ private:
     ShadingMode m_shadingMode = ShadingMode::Shaded;
     QUrl m_vertexShader;
     QUrl m_fragmentShader;
+    QString m_vertexShaderCode;
+    QString m_fragmentShaderCode;
     bool m_alwaysDirty = false;
     float m_lineWidth = 1.0f;
 };

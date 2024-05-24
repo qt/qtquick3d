@@ -1532,6 +1532,37 @@ void QQuick3DCustomMaterial::setFragmentShader(const QUrl &url)
     emit fragmentShaderChanged();
 }
 
+
+QString QQuick3DCustomMaterial::vertexShaderCode() const
+{
+    return m_vertexShaderCode;
+}
+
+void QQuick3DCustomMaterial::setVertexShaderCode(const QString &code)
+{
+    if (m_vertexShaderCode == code)
+        return;
+
+    m_vertexShaderCode = code;
+    markDirty(*this, Dirty::ShaderSettingsDirty);
+    emit vertexShaderCodeChanged();
+}
+
+QString QQuick3DCustomMaterial::fragmentShaderCode() const
+{
+    return m_fragmentShaderCode;
+}
+
+void QQuick3DCustomMaterial::setFragmentShaderCode(const QString &code)
+{
+    if (m_fragmentShaderCode == code)
+        return;
+
+    m_fragmentShaderCode = code;
+    markDirty(*this, Dirty::ShaderSettingsDirty);
+    emit fragmentShaderCodeChanged();
+}
+
 float QQuick3DCustomMaterial::lineWidth() const
 {
     return m_lineWidth;
@@ -1796,9 +1827,13 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         if (!m_vertexShader.isEmpty())
             vertex = QSSGShaderUtils::resolveShader(m_vertexShader, context, shaderPathKey);
+        else if (!m_vertexShaderCode.isEmpty())
+            vertex = m_vertexShaderCode.toLatin1();
 
         if (!m_fragmentShader.isEmpty())
             fragment = QSSGShaderUtils::resolveShader(m_fragmentShader, context, shaderPathKey);
+        else if (!m_fragmentShaderCode.isEmpty())
+            fragment = m_fragmentShaderCode.toLatin1();
 
         // Multiview is a problem, because we will get a dedicated snippet after
         // preparation (the one that has [qt_viewIndex] added where it matters).
