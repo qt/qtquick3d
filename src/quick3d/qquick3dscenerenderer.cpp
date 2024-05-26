@@ -1229,6 +1229,9 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     if (auto debugSettings = view3D.environment()->debugSettings()) {
         layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode(debugSettings->materialOverride());
         layerNode.wireframeMode = debugSettings->wireframeEnabled();
+        layerNode.drawDirectionalLightShadowBoxes = debugSettings->drawDirectionalLightShadowBoxes();
+        layerNode.drawShadowCastingBounds = debugSettings->drawShadowCastingBounds();
+        layerNode.drawShadowReceivingBounds = debugSettings->drawShadowReceivingBounds();
     } else {
         layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode::None;
         layerNode.wireframeMode = false;

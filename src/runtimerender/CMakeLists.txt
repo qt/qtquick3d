@@ -74,6 +74,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         rendererimpl/qssgvertexpipelineimpl.cpp rendererimpl/qssgvertexpipelineimpl_p.h
         rendererimpl/qssgrenderpass_p.h rendererimpl/qssgrenderpass.cpp
         rendererimpl/qssgrenderhelpers_p.h rendererimpl/qssgrenderhelpers.cpp
+        rendererimpl/qssgshadowmaphelpers_p.h rendererimpl/qssgshadowmaphelpers.cpp
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
         resourcemanager/qssgrendershaderlibrarymanager.cpp resourcemanager/qssgrendershaderlibrarymanager_p.h

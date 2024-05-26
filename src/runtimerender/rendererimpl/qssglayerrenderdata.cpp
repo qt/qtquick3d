@@ -2587,7 +2587,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (layer.gridEnabled)
         activePasses.push_back(&infiniteGridPass);
 
-    if (const auto &dbgDrawSystem = renderer->contextInterface()->debugDrawSystem(); dbgDrawSystem && dbgDrawSystem->isEnabled() && dbgDrawSystem->hasContent())
+    if (const auto &dbgDrawSystem = renderer->contextInterface()->debugDrawSystem(); dbgDrawSystem && dbgDrawSystem->isEnabled())
         activePasses.push_back(&debugDrawPass);
 }
 

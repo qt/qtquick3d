@@ -101,6 +101,9 @@ Pane {
                 TabButton {
                     text: "Tools"
                 }
+                TabButton {
+                    text: "Shadows"
+                }
             }
 
             StackLayout {
@@ -465,6 +468,28 @@ Pane {
                                 onValueChanged: explicitTextureSizeCheckBox.updateSize()
                                 Layout.maximumWidth: 120
                             }
+                        }
+                    }
+                }
+
+                Pane {
+                    id: shadowsPane
+                    ColumnLayout {
+                        width: parent.width
+                        CheckBox {
+                            text: "Draw directional light shadow bounding boxes"
+                            checked: root.source.environment.debugSettings.drawDirectionalLightShadowBoxes
+                            onCheckedChanged: root.source.environment.debugSettings.drawDirectionalLightShadowBoxes = checked
+                        }
+                        CheckBox {
+                            text: "Draw shadow casting bounding box"
+                            checked: root.source.environment.debugSettings.drawShadowCastingBounds
+                            onCheckedChanged: root.source.environment.debugSettings.drawShadowCastingBounds = checked
+                        }
+                        CheckBox {
+                            text: "Draw shadow receiving bounding box"
+                            checked: root.source.environment.debugSettings.drawShadowReceivingBounds
+                            onCheckedChanged: root.source.environment.debugSettings.drawShadowReceivingBounds = checked
                         }
                     }
                 }

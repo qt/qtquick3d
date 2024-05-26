@@ -1,6 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "qssgdebugdrawsystem_p.h"
 #include "qssgrenderhelpers_p.h"
 
 #include "qssgrenderer_p.h"
@@ -11,6 +12,7 @@
 #include "../qssgrhicustommaterialsystem_p.h"
 #include "../resourcemanager/qssgrenderbuffermanager_p.h"
 #include "../qssgrenderdefaultmaterialshadergenerator_p.h"
+#include "rendererimpl/qssgshadowmaphelpers_p.h"
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <QtCore/qbitarray.h>
@@ -1318,6 +1320,14 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         depthAdjust[1] = 0.5f;
     }
 
+    const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
+    QSSGDebugDrawSystem *debugDrawSystem = renderer.contextInterface()->debugDrawSystem().get();
+
+    if (layerData.layer.drawShadowCastingBounds)
+        ShadowmapHelpers::addDebugBox(castingObjectsBox, QColorConstants::Red, debugDrawSystem);
+    if (layerData.layer.drawShadowReceivingBounds)
+        ShadowmapHelpers::addDebugBox(receivingObjectsBox, QColorConstants::Blue, debugDrawSystem);
+
     // Create shadow map for each light in the scene
     for (int i = 0, ie = globalLights.size(); i != ie; ++i) {
         if (!globalLights[i].shadows || globalLights[i].light->m_fullyBaked)
@@ -1339,6 +1349,10 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             setupCameraForShadowMap(camera, light, theCamera, castingObjectsBox, receivingObjectsBox);
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
+
+            if (drawDirectionalLightShadowBoxes) {
+                ShadowmapHelpers::addDirectionalLightDebugBox(computeFrustumBounds(theCamera), debugDrawSystem);
+            }
 
             rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust,
                                             sortedOpaqueObjects, theCamera, true, QSSGRenderTextureCubeFaceNone);

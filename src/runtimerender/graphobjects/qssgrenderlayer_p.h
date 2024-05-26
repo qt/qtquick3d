@@ -220,6 +220,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     MaterialDebugMode debugMode = MaterialDebugMode::None;
 
     bool wireframeMode = false;
+    bool drawDirectionalLightShadowBoxes = false;
+    bool drawShadowCastingBounds = false;
+    bool drawShadowReceivingBounds = false;
 
     QSSGRenderLayer();
     ~QSSGRenderLayer();

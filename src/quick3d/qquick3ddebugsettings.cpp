@@ -151,5 +151,47 @@ void QQuick3DDebugSettings::setWireframeEnabled(bool newWireframeEnabled)
     update();
 }
 
+bool QQuick3DDebugSettings::drawDirectionalLightShadowBoxes() const
+{
+    return m_drawDirectionalLightShadowBoxes;
+}
+
+void QQuick3DDebugSettings::setDrawDirectionalLightShadowBoxes(bool newDrawDirectionalLightShadowBoxes)
+{
+    if (m_drawDirectionalLightShadowBoxes == newDrawDirectionalLightShadowBoxes)
+        return;
+    m_drawDirectionalLightShadowBoxes = newDrawDirectionalLightShadowBoxes;
+    emit drawDirectionalLightShadowBoxesChanged();
+    update();
+}
+
+bool QQuick3DDebugSettings::drawShadowCastingBounds() const
+{
+    return m_drawShadowCastingBounds;
+}
+
+void QQuick3DDebugSettings::setDrawShadowCastingBounds(bool newDrawShadowCastingBounds)
+{
+    if (m_drawShadowCastingBounds == newDrawShadowCastingBounds)
+        return;
+    m_drawShadowCastingBounds = newDrawShadowCastingBounds;
+    emit drawShadowCastingBoundsChanged();
+    update();
+}
+
+bool QQuick3DDebugSettings::drawShadowReceivingBounds() const
+{
+    return m_drawShadowReceivingBounds;
+}
+
+void QQuick3DDebugSettings::setDrawShadowReceivingBounds(bool newDrawShadowReceivingBounds)
+{
+    if (m_drawShadowReceivingBounds == newDrawShadowReceivingBounds)
+        return;
+    m_drawShadowReceivingBounds = newDrawShadowReceivingBounds;
+    emit drawShadowReceivingBoundsChanged();
+    update();
+}
+
 QT_END_NAMESPACE
 

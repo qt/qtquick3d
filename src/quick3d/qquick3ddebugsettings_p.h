@@ -24,6 +24,10 @@ class Q_QUICK3D_EXPORT QQuick3DDebugSettings : public QObject
     Q_OBJECT
     Q_PROPERTY(QQuick3DMaterialOverrides materialOverride READ materialOverride WRITE setMaterialOverride NOTIFY materialOverrideChanged)
     Q_PROPERTY(bool wireframeEnabled READ wireframeEnabled WRITE setWireframeEnabled NOTIFY wireframeEnabledChanged)
+    Q_PROPERTY(bool drawDirectionalLightShadowBoxes READ drawDirectionalLightShadowBoxes WRITE
+                       setDrawDirectionalLightShadowBoxes NOTIFY drawDirectionalLightShadowBoxesChanged FINAL)
+    Q_PROPERTY(bool drawShadowCastingBounds READ drawShadowCastingBounds WRITE setDrawShadowCastingBounds NOTIFY drawShadowCastingBoundsChanged FINAL)
+    Q_PROPERTY(bool drawShadowReceivingBounds READ drawShadowReceivingBounds WRITE setDrawShadowReceivingBounds NOTIFY drawShadowReceivingBoundsChanged FINAL)
     QML_NAMED_ELEMENT(DebugSettings)
 public:
     enum QQuick3DMaterialOverrides {
@@ -51,9 +55,21 @@ public:
     bool wireframeEnabled() const;
     void setWireframeEnabled(bool newWireframeEnabled);
 
+    bool drawDirectionalLightShadowBoxes() const;
+    void setDrawDirectionalLightShadowBoxes(bool newDrawDirectionalLightShadowBoxes);
+
+    bool drawShadowCastingBounds() const;
+    void setDrawShadowCastingBounds(bool newDrawShadowCastingBounds);
+
+    bool drawShadowReceivingBounds() const;
+    void setDrawShadowReceivingBounds(bool newDrawShadowReceivingBounds);
+
 Q_SIGNALS:
     void materialOverrideChanged();
     void wireframeEnabledChanged();
+    void drawDirectionalLightShadowBoxesChanged();
+    void drawShadowCastingBoundsChanged();
+    void drawShadowReceivingBoundsChanged();
     void changed();
 
 private:
@@ -61,6 +77,9 @@ private:
     QQuick3DMaterialOverrides m_materialOverride = None;
 
     bool m_wireframeEnabled = false;
+    bool m_drawDirectionalLightShadowBoxes = false;
+    bool m_drawShadowCastingBounds = false;
+    bool m_drawShadowReceivingBounds = false;
 };
 
 QT_END_NAMESPACE
