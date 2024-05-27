@@ -39,6 +39,11 @@ public:
         emit renderingRequested();
     }
 
+    void handleSpatialEvents(const QJsonObject &events) override
+    {
+        emit handleSpatialEventsRequested(events);
+    }
+
     void setActive() { m_active = true; };
     bool isActive() const { return m_active; }
 
@@ -50,6 +55,7 @@ public:
 Q_SIGNALS:
     void renderingRequested();
     void layerRendererChanged();
+    void handleSpatialEventsRequested(const QJsonObject &jsonString);
 
 private:
     cp_layer_renderer_t m_layerRenderer = nullptr;
@@ -83,6 +89,9 @@ bool QQuick3DXrManagerPrivate::initialize()
             // FIXME: We don't actually handle the case where the rendere changes or we get multiple calls should do something.
 
             QObject::connect(s_compositorLayer, &CompositorLayer::renderingRequested, q, &QQuick3DXrManager::initialized, Qt::ConnectionType(Qt::SingleShotConnection | Qt::QueuedConnection));
+
+            // Listen for spatial events (these are native gestures like pinch click/drag coming from SwiftUI)
+            QObject::connect(s_compositorLayer, &CompositorLayer::handleSpatialEventsRequested, q, &QQuick3DXrManager::processSpatialEvents);
         }
         return s_compositorLayer->layerRenderer() == nullptr ? false : true;
     }
