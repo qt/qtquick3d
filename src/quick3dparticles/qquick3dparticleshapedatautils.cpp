@@ -174,6 +174,7 @@ int QQuick3DParticleShapeDataUtils::readShapeHeader(QCborStreamReader &reader)
     return version;
 }
 
+#if QT_CONFIG(cborstreamwriter)
 void QQuick3DParticleShapeDataUtils::writeShapeHeader(QCborStreamWriter &writer, int version)
 {
     // Root array
@@ -261,5 +262,6 @@ void QQuick3DParticleShapeDataUtils::writeValue(QCborStreamWriter &writer, const
     }
     }
 }
+#endif
 
 QT_END_NAMESPACE

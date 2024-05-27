@@ -18,6 +18,7 @@
 #include <QtQuick3D/qquick3dobject.h>
 #include <QtQuick3D/QQuick3DTextureData>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuick/private/qsgadaptationlayer_p.h>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QSGNode>
 #include <QtCore/QUrl>

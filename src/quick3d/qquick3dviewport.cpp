@@ -492,10 +492,12 @@ QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 
     \sa QtQuick::ShaderEffectSource::format, QtQuick::Item::layer.format
  */
+#if QT_CONFIG(quick_shadereffect)
 QQuickShaderEffectSource::Format QQuick3DViewport::renderFormat() const
 {
     return m_renderFormat;
 }
+#endif
 
 /*!
     \qmlproperty QtQuick3D::RenderStats QtQuick3D::View3D::renderStats
@@ -794,6 +796,7 @@ void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
     update();
 }
 
+#if QT_CONFIG(quick_shadereffect)
 void QQuick3DViewport::setRenderFormat(QQuickShaderEffectSource::Format format)
 {
     if (m_renderFormat == format)
@@ -804,6 +807,7 @@ void QQuick3DViewport::setRenderFormat(QQuickShaderEffectSource::Format format)
     emit renderFormatChanged();
     update();
 }
+#endif
 
 /*!
     \qmlproperty int QtQuick3D::View3D::explicitTextureWidth

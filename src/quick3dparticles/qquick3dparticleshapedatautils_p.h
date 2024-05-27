@@ -17,7 +17,9 @@
 
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 #include <QtCore/QCborStreamReader>
+#if QT_CONFIG(cborstreamwriter)
 #include <QtCore/QCborStreamWriter>
+#endif
 #include <QtCore/QVariant>
 #include <QtCore/QMetaType>
 #include <private/qglobal_p.h>
@@ -31,8 +33,10 @@ public:
     static QString readString(QCborStreamReader &reader);
     static double readReal(QCborStreamReader &reader);
     static int readShapeHeader(QCborStreamReader &reader);
+#if QT_CONFIG(cborstreamwriter)
     static void writeShapeHeader(QCborStreamWriter &writer, int version = 1);
     static void writeValue(QCborStreamWriter &writer, const QVariant &value);
+#endif
 };
 
 QT_END_NAMESPACE
