@@ -2,7 +2,7 @@
     {
         "Id": "OpenXR",
         "Name": "OpenXR SDK",
-        "QDocModule": "qtquick3dxr",
+        "QDocModule": "qtquick3d",
         "Description": "OpenXR SDK for developing XR applications",
         "QtUsage": "Use by QtQuick3DXr module to interact with an OpenXR runtime.",
 
@@ -16,7 +16,7 @@
     {
         "Id": "JsonCpp",
         "Name": "JsonCpp",
-        "QDocModule": "qtquick3dxr",
+        "QDocModule": "qtquick3d",
         "Description": "JsonCpp is a C++ library that allows manipulating JSON values, including serialization and deserialization to and from strings.",
         "QtUsage": "Used by the bundled OpenXR Loader inside of QtQuick3DXr to read JSON configuration files.",
 
@@ -30,7 +30,7 @@
     {
         "Id": "JNIPP",
         "Name": "Java Native Interface for C++",
-        "QDocModule": "qtquick3dxr",
+        "QDocModule": "qtquick3d",
         "Description": "JJNIPP is just a C++ wrapper for the standard Java Native Interface (JNI).",
         "QtUsage": "Used the bundled OpenXR Loader inside of QtQuick3DXr on Android.",
 
