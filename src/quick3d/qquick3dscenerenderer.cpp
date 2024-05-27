@@ -549,6 +549,7 @@ void QQuick3DSceneRenderer::rhiRender()
     m_prepared = false;
 }
 
+#if QT_CONFIG(quick_shadereffect)
 static QRhiTexture::Format toRhiTextureFormat(QQuickShaderEffectSource::Format format)
 {
     switch (format) {
@@ -562,6 +563,7 @@ static QRhiTexture::Format toRhiTextureFormat(QQuickShaderEffectSource::Format f
         return QRhiTexture::RGBA8;
     }
 }
+#endif
 
 static QVector3D tonemapRgb(const QVector3D &c, QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes tonemapMode)
 {
@@ -711,9 +713,11 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         if (postProc && rhi->isTextureFormatSupported(preferredPostProcFormat))
             return preferredPostProcFormat;
 
+#if QT_CONFIG(quick_shadereffect)
         const QRhiTexture::Format preferredView3DFormat = toRhiTextureFormat(view3D->renderFormat());
         if (rhi->isTextureFormatSupported(preferredView3DFormat))
             return preferredView3DFormat;
+#endif
 
         return QRhiTexture::RGBA8;
     };

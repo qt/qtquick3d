@@ -8,7 +8,9 @@
 #include <QtQuick3DAssetUtils/private/qssgrtutilities_p.h>
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
+#if QT_CONFIG(mimetype)
 #include <QtCore/qmimedatabase.h>
+#endif
 
 /*!
     \qmltype RuntimeLoader
@@ -135,6 +137,7 @@ QStringList QQuick3DRuntimeLoader::supportedExtensions()
     return extensions;
 }
 
+#if QT_CONFIG(mimetype)
 QList<QMimeType> QQuick3DRuntimeLoader::supportedMimeTypes()
 {
     static QList<QMimeType> mimeTypes;
@@ -152,6 +155,7 @@ QList<QMimeType> QQuick3DRuntimeLoader::supportedMimeTypes()
 
     return mimeTypes;
 }
+#endif
 
 static void boxBoundsRecursive(const QQuick3DNode *baseNode, const QQuick3DNode *node, QQuick3DBounds3 &accBounds)
 {

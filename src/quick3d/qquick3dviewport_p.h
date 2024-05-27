@@ -20,7 +20,9 @@
 
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
+#if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
+#endif
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderpickresult_p.h>
 
@@ -52,7 +54,9 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(QQuick3DNode *scene READ scene NOTIFY sceneChanged)
     Q_PROPERTY(QQuick3DNode *importScene READ importScene WRITE setImportScene NOTIFY importSceneChanged FINAL)
     Q_PROPERTY(RenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
+#if QT_CONFIG(quick_shadereffect)
     Q_PROPERTY(QQuickShaderEffectSource::Format renderFormat READ renderFormat WRITE setRenderFormat NOTIFY renderFormatChanged FINAL REVISION(6, 4))
+#endif
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(QQmlListProperty<QQuick3DObject> extensions READ extensions FINAL REVISION(6, 6))
     Q_PROPERTY(int explicitTextureWidth READ explicitTextureWidth WRITE setExplicitTextureWidth NOTIFY explicitTextureWidthChanged FINAL REVISION(6, 7))
@@ -81,7 +85,9 @@ public:
     QQuick3DNode *scene() const;
     QQuick3DNode *importScene() const;
     RenderMode renderMode() const;
+#if QT_CONFIG(quick_shadereffect)
     Q_REVISION(6, 4) QQuickShaderEffectSource::Format renderFormat() const;
+#endif
     QQuick3DRenderStats *renderStats() const;
 
     QQuick3DSceneRenderer *createRenderer() const;
@@ -135,7 +141,9 @@ public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setImportScene(QQuick3DNode *inScene);
     void setRenderMode(QQuick3DViewport::RenderMode renderMode);
+#if QT_CONFIG(quick_shadereffect)
     Q_REVISION(6, 4) void setRenderFormat(QQuickShaderEffectSource::Format format);
+#endif
     Q_REVISION(6, 7) void setExplicitTextureWidth(int width);
     Q_REVISION(6, 7) void setExplicitTextureHeight(int height);
     void cleanupDirectRenderer();
@@ -207,7 +215,9 @@ private:
     mutable QQuick3DSGDirectRenderer *m_directRenderer = nullptr;
     bool m_renderModeDirty = false;
     RenderMode m_renderMode = Offscreen;
+#if QT_CONFIG(quick_shadereffect)
     QQuickShaderEffectSource::Format m_renderFormat = QQuickShaderEffectSource::RGBA8;
+#endif
     int m_explicitTextureWidth = 0;
     int m_explicitTextureHeight = 0;
     QSize m_effectiveTextureSize;
