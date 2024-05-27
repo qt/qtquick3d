@@ -1,7 +1,7 @@
 {
 "Id": "virtualassistantexample-skyboxes",
 "Name": "HDRI Images",
-"QDocModule": "qtdoc",
+"QDocModule": "qtquick3d",
 "QtUsage": "Used in the Virtual Assistant example.",
 "QtParts": [ "examples" ],
 
