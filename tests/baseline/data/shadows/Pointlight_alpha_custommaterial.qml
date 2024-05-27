@@ -84,6 +84,7 @@ Rectangle {
             shadowMapQuality: Light.ShadowMapQualityVeryHigh
             shadowMapFar: 200
             shadowFilter: 0
+            softShadowQuality: Light.Hard
         }
     }
 }

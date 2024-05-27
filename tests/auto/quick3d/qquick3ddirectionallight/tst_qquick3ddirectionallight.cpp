@@ -84,6 +84,35 @@ void tst_QQuick3DDirectionalLight::testProperties()
         QCOMPARE(light.shadowMapQuality(), shadowMapQuality);
     }
 
+    const QQuick3DAbstractLight::QSSGSoftShadowQuality ssq = QQuick3DAbstractLight::QSSGSoftShadowQuality::PCF16;
+    light.setSoftShadowQuality(ssq);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(light.softShadowQuality(), ssq);
+
+    const float pcfFactor = 5.0f;
+    light.setPcfFactor(pcfFactor);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(light.pcfFactor(), pcfFactor);
+
+    const float ratio = 0.5f;
+    light.setCsmBlendRatio(ratio);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(light.csmBlendRatio(), ratio);
+
+    const int numSplits = 3;
+    light.setCsmNumSplits(3);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(light.csmNumSplits(), numSplits);
+
+    const float splits[] = { 0.1f, 0.2f, 0.3f };
+    light.setCsmSplit1(splits[0]);
+    light.setCsmSplit2(splits[1]);
+    light.setCsmSplit3(splits[2]);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(light.csmSplit1(), splits[0]);
+    QCOMPARE(light.csmSplit2(), splits[1]);
+    QCOMPARE(light.csmSplit3(), splits[2]);
+
     light.setCastsShadow(true);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QVERIFY(node->m_castShadow);

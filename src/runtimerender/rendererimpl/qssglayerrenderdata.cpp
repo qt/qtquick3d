@@ -873,6 +873,8 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
             defaultMaterialShaderKeyProperties.m_lightSpotFlags[lightIdx].setValue(theGeneratedKey, isSpot);
             defaultMaterialShaderKeyProperties.m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castsShadows);
             defaultMaterialShaderKeyProperties.m_lightShadowMapSize[lightIdx].setValue(theGeneratedKey, theLight->m_shadowMapRes);
+            defaultMaterialShaderKeyProperties.m_lightSoftShadowQuality[lightIdx].setValue(theGeneratedKey,
+                                                                                           quint32(theLight->m_softShadowQuality));
         }
     }
     return theGeneratedKey;

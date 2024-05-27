@@ -35,6 +35,8 @@ class Q_QUICK3D_EXPORT QQuick3DAbstractLight : public QQuick3DNode
     Q_PROPERTY(float shadowMapFar READ shadowMapFar WRITE setShadowMapFar NOTIFY shadowMapFarChanged)
     Q_PROPERTY(float shadowFilter READ shadowFilter WRITE setShadowFilter NOTIFY shadowFilterChanged)
     Q_PROPERTY(QSSGBakeMode bakeMode READ bakeMode WRITE setBakeMode NOTIFY bakeModeChanged)
+    Q_PROPERTY(QSSGSoftShadowQuality softShadowQuality READ softShadowQuality WRITE setSoftShadowQuality NOTIFY softShadowQualityChanged FINAL REVISION(6, 8))
+    Q_PROPERTY(float pcfFactor READ pcfFactor WRITE setPcfFactor NOTIFY pcfFactorChanged FINAL REVISION(6, 8))
 
     QML_NAMED_ELEMENT(Light)
     QML_UNCREATABLE("Light is Abstract")
@@ -48,6 +50,16 @@ public:
         ShadowMapQualityVeryHigh,
     };
     Q_ENUM(QSSGShadowMapQuality)
+
+    enum class QSSGSoftShadowQuality {
+        Hard,
+        PCF4,
+        PCF8,
+        PCF16,
+        PCF32,
+        PCF64,
+    };
+    Q_ENUM(QSSGSoftShadowQuality)
 
     enum class QSSGBakeMode {
         BakeModeDisabled,
@@ -67,6 +79,8 @@ public:
     float shadowMapFar() const;
     float shadowFilter() const;
     QSSGBakeMode bakeMode() const;
+    Q_REVISION(6, 8) QSSGSoftShadowQuality softShadowQuality() const;
+    Q_REVISION(6, 8) float pcfFactor() const;
 
 public Q_SLOTS:
     void setColor(const QColor &color);
@@ -80,6 +94,8 @@ public Q_SLOTS:
     void setShadowMapFar(float shadowMapFar);
     void setShadowFilter(float shadowFilter);
     void setBakeMode(QQuick3DAbstractLight::QSSGBakeMode bakeMode);
+    Q_REVISION(6, 8) void setSoftShadowQuality(QQuick3DAbstractLight::QSSGSoftShadowQuality softShadowQuality);
+    Q_REVISION(6, 8) void setPcfFactor(float pcfFactor);
 
 Q_SIGNALS:
     void colorChanged();
@@ -93,6 +109,8 @@ Q_SIGNALS:
     void shadowMapFarChanged();
     void shadowFilterChanged();
     void bakeModeChanged();
+    Q_REVISION(6, 8) void softShadowQualityChanged();
+    Q_REVISION(6, 8) void pcfFactorChanged();
 
 protected:
     explicit QQuick3DAbstractLight(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
@@ -123,11 +141,13 @@ private:
     float m_brightness = 1.0f;
     QQuick3DNode *m_scope = nullptr;
     bool m_castsShadow = false;
-    float m_shadowBias = 0.0f;
-    float m_shadowFactor = 5.0f;
+    float m_shadowBias = 10.0f;
+    float m_shadowFactor = 75.0f;
     QSSGShadowMapQuality m_shadowMapQuality = QSSGShadowMapQuality::ShadowMapQualityLow;
+    QSSGSoftShadowQuality m_softShadowQuality = QSSGSoftShadowQuality::PCF4;
     float m_shadowMapFar = 5000.0f;
     float m_shadowFilter = 5.0f;
+    float m_pcfFactor = 1.0f;
     QSSGBakeMode m_bakeMode = QSSGBakeMode::BakeModeDisabled;
 };
 

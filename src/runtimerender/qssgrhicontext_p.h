@@ -302,6 +302,7 @@ struct QSSGShaderLightsUniformData
 // funcSampleLightVars.glsllib
 struct QSSGShaderShadowData {
     float matrices[4][16];
+    float dimensionsInverted[4][4];
     float csmSplits[4];
     float csmActive[4];
 
@@ -310,12 +311,12 @@ struct QSSGShaderShadowData {
     float isYUp;
     float clipNear;
 
-    float clipFar;
-    float shadowMapFar; // Used by point lights for historical reasons will be removed later
+    float shadowMapFar;
     qint32 layerIndex;
     qint32 csmNumSplits;
-
     float csmBlendRatio;
+
+    float pcfFactor;
     float padding[3];
 };
 

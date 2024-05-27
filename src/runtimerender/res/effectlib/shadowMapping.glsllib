@@ -7,20 +7,333 @@
 
 #include "depthpass.glsllib"
 
+// https://github.com/bartwronski/PoissonSamplingGenerator
+const vec2 POISSON_SAMPLES[124 /*4+8+16+32+64*/] = {
+    // 4
+    vec2( 0.23640461642415603f, -0.7455790794965167f ),
+    vec2( -0.524523693183717f, 0.8360051250157925f ),
+    vec2( -0.8303867012956179f, -0.22100142699203368f ),
+    vec2( 0.8316259303685443f, 0.3983087509528287f ),
+    // 8
+    vec2( -0.0874674259750227f, -0.7211290298533339f ),
+    vec2( 0.12554010991848777f, 0.969408902746625f ),
+    vec2( 0.9267513490906857f, -0.24897870637254021f ),
+    vec2( -0.9054894676343846f, 0.34600599115357455f ),
+    vec2( -0.8178505628144991f, -0.40138762250327864f ),
+    vec2( 0.10942236848429054f, 0.07217625956749806f ),
+    vec2( 0.861975194360118f, 0.4425266420410188f ),
+    vec2( -0.33944946656315295f, 0.5509253616181038f ),
+    // 16
+    vec2( -0.8706486263306604f, 0.29306121613135f ),
+    vec2( 0.9133375480173374f, 0.15086697583928435f ),
+    vec2( 0.02197503960070916f, -0.9340974876813268f ),
+    vec2( -0.026143912634373823f, 0.2642260889014032f ),
+    vec2( -0.5793670131538275f, -0.5167505662963623f ),
+    vec2( -0.23053981430283804f, 0.8077614627936293f ),
+    vec2( 0.39960043495074177f, -0.2045760409607943f ),
+    vec2( 0.5809502755699385f, 0.7696930884669377f ),
+    vec2( 0.6096170857392385f, -0.791637809856054f ),
+    vec2( -0.4788580330837991f, 0.3668196169738974f ),
+    vec2( -0.5400324102392389f, -0.1135665329722174f ),
+    vec2( -0.032606987036329485f, -0.30546143641964013f ),
+    vec2( 0.41507180983866865f, 0.23290979538051837f ),
+    vec2( -0.39037522026642774f, -0.8645330401408355f ),
+    vec2( 0.2285381977385323f, 0.7940269386679456f ),
+    vec2( 0.8696012264365776f, -0.33202273416645656f ),
+    // 32
+    vec2( -0.1119962878026457f, -0.5925237363556031f ),
+    vec2( 0.47571682749031224f, -0.20934024818626265f ),
+    vec2( -0.0497337873197139f, 0.9821551594584884f ),
+    vec2( -0.758932140284425f, 0.46354995755196127f ),
+    vec2( 0.4325966870184971f, -0.6388677670720698f ),
+    vec2( 0.7366824377575745f, 0.5081297060337813f ),
+    vec2( -0.13145265154415242f, 0.24953275365571043f ),
+    vec2( 0.2007480179521731f, 0.5804136111059729f ),
+    vec2( -0.594194121061706f, -0.4430036959643385f ),
+    vec2( -0.3220635244610025f, 0.5286773727816093f ),
+    vec2( 0.9680248209906945f, -0.22449924910011218f ),
+    vec2( -0.6564942867812043f, 0.0327877994091015f ),
+    vec2( -0.26549345548708136f, -0.13651797315206687f ),
+    vec2( 0.4719899406491344f, 0.8768113130384265f ),
+    vec2( 0.18581597399488906f, -0.04419664810096702f ),
+    vec2( 0.44596551134789697f, 0.20712921746074858f ),
+    vec2( -0.22817457383344453f, 0.7334279998629781f ),
+    vec2( 0.1427691568311827f, 0.22421627059021498f ),
+    vec2( -0.3279828303935567f, -0.8698684535365524f ),
+    vec2( -0.9423049500696031f, -0.1457340275179852f ),
+    vec2( 0.06207958411346048f, -0.9358457962896854f ),
+    vec2( 0.7185162827437339f, 0.2085484829657599f ),
+    vec2( 0.7512563698363448f, -0.5191738312189818f ),
+    vec2( 0.17733175603860138f, -0.6673744413513492f ),
+    vec2( -0.9426131847313582f, 0.17968743552714408f ),
+    vec2( -0.7151303324675325f, -0.6705279521154474f ),
+    vec2( -0.00904793792378128f, 0.4735870990940633f ),
+    vec2( 0.8122560702060787f, -0.01955271921761288f ),
+    vec2( -0.03078416899123267f, -0.2570883354754169f ),
+    vec2( -0.4018134376544835f, 0.15614420626520636f ),
+    vec2( -0.3738722572700239f, -0.5947955856212755f ),
+    vec2( 0.15852305329831748f, 0.9011261825254757f ),
+    // 64
+    vec2( -0.7399826935513734f, 0.2152938831212798f ),
+    vec2( 0.34437990853843525f, -0.7932083303628226f ),
+    vec2( 0.7243032872336335f, 0.5098872220424266f ),
+    vec2( 0.769505703690554f, -0.2508251489390572f ),
+    vec2( -0.26075298451631035f, 0.9045055487383383f ),
+    vec2( -0.3934154071036747f, 0.32968264287509236f ),
+    vec2( -0.15642665286955218f, -0.30452037407933846f ),
+    vec2( -0.6712612799401013f, -0.7212906474979998f ),
+    vec2( 0.2318989089430838f, 0.5682132607853351f ),
+    vec2( 0.3812030213794879f, 0.9126259946547066f ),
+    vec2( -0.7072386006642044f, -0.29476255675495483f ),
+    vec2( -0.30846609278740056f, -0.8774001568523211f ),
+    vec2( 0.3549362710781743f, -0.3984172672957127f ),
+    vec2( -0.035206681299566674f, -0.6971563322470683f ),
+    vec2( 0.9573755029686247f, 0.18611474624023477f ),
+    vec2( -0.9222399024595912f, -0.02324330286047885f ),
+    vec2( 0.1105214413816167f, 0.33702355684333724f ),
+    vec2( -0.5779033283277037f, 0.7044148231099682f ),
+    vec2( 0.28201314105292297f, -0.03852890427854218f ),
+    vec2( 0.0014749550907479146f, -0.0013031709796645218f ),
+    vec2( 0.4030275009776176f, 0.42661659787834955f ),
+    vec2( 0.748809880116374f, 0.011286053587297815f ),
+    vec2( -0.8304540460336253f, -0.529810943767509f ),
+    vec2( 0.12842548152877592f, -0.47541572682133015f ),
+    vec2( -0.16290552256348545f, 0.5027495898061879f ),
+    vec2( 0.4622565205733403f, 0.6681454303000667f ),
+    vec2( -0.3172026040724947f, 0.13254119656035013f ),
+    vec2( 0.7958019376147858f, -0.5406112374667381f ),
+    vec2( 0.10427264538501442f, -0.8082489949983173f ),
+    vec2( 0.27482257176538333f, 0.18498734987810514f ),
+    vec2( 0.2373347921583017f, -0.5842495326272807f ),
+    vec2( -0.9276222569420903f, -0.33405260225577876f ),
+    vec2( 0.5730919654394195f, -0.6010672444825778f ),
+    vec2( 0.10964923428873828f, 0.7153263403767308f ),
+    vec2( 0.5032238159620449f, 0.018451247521665468f ),
+    vec2( -0.4188410110227276f, -0.24418102772454264f ),
+    vec2( -0.038737840812325036f, 0.2143811997743573f ),
+    vec2( -0.07939854894246146f, 0.8963890732170482f ),
+    vec2( -0.6026795264710081f, -0.059999679418307354f ),
+    vec2( 0.19597724904768493f, -0.9791400680775438f ),
+    vec2( 0.5374866426787607f, -0.28636649300616956f ),
+    vec2( -0.32531620462001704f, 0.5967983504280451f ),
+    vec2( 0.14978599900778694f, 0.9214996545609654f ),
+    vec2( 0.5713147466478504f, 0.24520634473806158f ),
+    vec2( 0.9520976984765883f, -0.08363259251554482f ),
+    vec2( -0.12086180998953151f, 0.715884215195216f ),
+    vec2( -0.4055595769367884f, -0.039997226386994135f ),
+    vec2( 0.6248294486436189f, -0.7743352989133929f ),
+    vec2( 0.1246472844548065f, 0.09016787227316245f ),
+    vec2( -0.3541479829800732f, -0.41533491005757284f ),
+    vec2( 0.6135165665992666f, -0.08413359326954067f ),
+    vec2( -0.48092653976673916f, -0.8399075959778608f ),
+    vec2( -0.4995379433683242f, -0.4794062627623045f ),
+    vec2( 0.3641672373550888f, -0.23946093499564322f ),
+    vec2( 0.9165490661933687f, -0.2980264303499448f ),
+    vec2( 0.013660818565102553f, -0.9377291251500764f ),
+    vec2( -0.5567254232166509f, 0.14827130149768358f ),
+    vec2( -0.013230486748802058f, 0.5490561267442035f ),
+    vec2( -0.6452500652885336f, -0.4305298013597207f ),
+    vec2( 0.25718749821872966f, 0.4072287132599995f ),
+    vec2( -0.6107480885910956f, 0.36928034931290354f ),
+    vec2( 0.10778972290853645f, -0.6434978101573962f ),
+    vec2( -0.17425112716408775f, -0.48134457129954794f ),
+    vec2( 0.016665876823853197f, -0.20591567591862048f ),
+};
 
-float qt_sampleCubemap( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos )
-{
-    float dist = length(worldPos - lightPos);
-    float currentDepth = clamp((dist - shadowData.clipNear) / (shadowData.shadowMapFar - shadowData.clipNear), 0.0, 1.0);
-    vec3 smpCoord = worldPos - lightPos;
+// https://github.com/matt77hias/fibpy
+const vec3 CUBEMAP_SAMPLE_DIRECTIONS[124 /*4+8+16+32+64*/] = {
+    // 4
+    vec3(-0.4877236689784852, 0.44679483291345823, -0.75),
+    vec3(0.08464959396472493, -0.9645384628108966, -0.25),
+    vec3(0.5891183939391361, 0.7684006233226082, 0.25),
+    vec3(0.6614378277661477, 0.0, 0.75),
+    // 8
+    vec3(-0.3569771731011225, 0.32702033252495366, -0.875),
+    vec3(0.06824668448324298, -0.7776357695329124, -0.625),
+    vec3(0.5640379200352061, 0.7356875863859321, -0.375),
+    vec3(-0.9769901230486042, -0.17281579634244423, -0.125),
+    vec3(0.8371375040503463, -0.5325183558454643, 0.125),
+    vec3(-0.2406596316567426, 0.8952418341938904, 0.375),
+    vec3(-0.359795430847844, -0.6927642080398022, 0.625),
+    vec3(0.4841229182759271, 0.0, 0.875),
+    // 16
+    vec3(-0.2565935101015265, 0.2350606742391798, -0.9375),
+    vec3(0.05096580458913004, -0.5807290562410173, -0.8125),
+    vec3(0.44183879545435206, 0.5763004674919561, -0.6875),
+    vec3(-0.8141584358738368, -0.1440131636187035, -0.5625),
+    vec3(0.758720295154371, -0.4826357464184188, -0.4375),
+    vec3(-0.24660273969406132, 0.9173498998612161, -0.3125),
+    vec3(-0.45273265557802134, -0.8717091788969947, -0.1875),
+    vec3(0.9374848892962336, 0.3423679779728655, -0.0625),
+    vec3(-0.9225384272223549, 0.3808104519286515, 0.0625),
+    vec3(0.4163289179926954, -0.8896707155139094, 0.1875),
+    vec3(0.28429505799735505, 0.9063774434518329, 0.3125),
+    vec3(-0.7780138488858889, -0.4508749282692101, 0.4375),
+    vec3(0.8075128776755531, -0.17752944090529632, 0.5625),
+    vec3(-0.4176500064322479, 0.5940641565749807, 0.6875),
+    vec3(-0.07491674475807025, -0.5781273487345623, 0.8125),
+    vec3(0.34798527267687634, 0.0, 0.9375),
+    // 32
+    vec3(-0.18289637586693194, 0.16754806234254682, -0.96875),
+    vec3(0.03695854008471691, -0.42112350185522346, -0.90625),
+    vec3(0.3265712693604711, 0.42595439137106045, -0.84375),
+    vec3(-0.6146761394926465, -0.10872755418207684, -0.78125),
+    vec3(0.5866365694562489, -0.3731701661127315, -0.71875),
+    vec3(-0.19588274842317752, 0.7286740604482791, -0.65625),
+    vec3(-0.37086864125006885, -0.714085000848868, -0.59375),
+    vec3(0.7958071925565281, 0.2906275103552604, -0.53125),
+    vec3(-0.8165029703557842, 0.3370405567586508, -0.46875),
+    vec3(0.38729435133777224, -0.8276255330291921, -0.40625),
+    vec3(0.28104586491086925, 0.896018503891801, -0.34375),
+    vec3(-0.8302865554766088, -0.48116803020856275, -0.28125),
+    vec3(0.9530216017800259, -0.20951912571560968, -0.21875),
+    vec3(-0.5680654245461388, 0.8080146105951395, -0.15625),
+    vec3(-0.12794469918031795, -0.9873404131563024, -0.09375),
+    vec3(0.7642755404909315, 0.6441322346438614, -0.03125),
+    vec3(-0.9986580705574145, 0.04129764654967721, 0.03125),
+    vec3(0.7057075666239392, -0.7022732857725106, 0.09375),
+    vec3(-0.045624101322307785, 0.9866632550564207, 0.15625),
+    vec3(-0.625191769977158, -0.7491886866823526, 0.21875),
+    vec3(0.951064433355107, 0.12796437436618524, 0.28125),
+    vec3(-0.7708362150087417, 0.5363277609177033, 0.34375),
+    vec3(0.20055372830264656, -0.8914814297358684, 0.40625),
+    vec3(0.4391752180963922, 0.766419314285585, 0.46875),
+    vec3(-0.807135713154504, -0.25749830688874437, 0.53125),
+    vec3(0.7304537492364624, -0.33748815938695576, 0.59375),
+    vec3(-0.2912998914641671, 0.6960461987059225, 0.65625),
+    vec3(-0.23531524528078632, -0.65423632797212, 0.71875),
+    vec3(0.5525514113665125, 0.290405535926702, 0.78125),
+    vec3(-0.5190079764603671, 0.13680883696061083, 0.84375),
+    vec3(0.2286349160632575, -0.35557982599797083, 0.90625),
+    vec3(0.24803918541230538, 0.0, 0.96875),
+    // 64
+    vec3(-0.12983945683291254, 0.11894357832322953, -0.984375),
+    vec3(0.026452998113976542, -0.3014182696284052, -0.953125),
+    vec3(0.23576239168432472, 0.3075102909534688, -0.921875),
+    vec3(-0.44778713973061024, -0.07920723999028692, -0.890625),
+    vec3(0.4314507940456887, -0.2744536785913876, -0.859375),
+    vec3(-0.1455194985020436, 0.5413252810748024, -0.828125),
+    vec3(-0.27845431334181786, -0.536146836003288, -0.796875),
+    vec3(0.6042533211213496, 0.22067234373346195, -0.765625),
+    vec3(-0.627393960552002, 0.2589791065662885, -0.734375),
+    vec3(0.30138258897784437, -0.6440370870035449, -0.703125),
+    vec3(0.22166895054880598, 0.7067155444290093, -0.671875),
+    vec3(-0.6643558003973694, -0.38500776596501346, -0.640625),
+    vec3(0.7743887906878839, -0.1702472033014249, -0.609375),
+    vec3(-0.4692758292725949, 0.667496577096481, -0.578125),
+    vec3(-0.10759098338435852, -0.8302721931206577, -0.546875),
+    vec3(0.6551622449641447, 0.5521714336585534, -0.515625),
+    vec3(-0.8741133963470501, 0.0361473332574475, -0.484375),
+    vec3(0.6318838471661148, -0.628808824735746, -0.453125),
+    vec3(-0.04187965944818988, 0.9056862472730297, -0.421875),
+    vec3(-0.5898047361881581, -0.7067831934511581, -0.390625),
+    vec3(0.9248592690018653, 0.12443850656583447, -0.359375),
+    vec3(-0.7754109508095051, 0.5395107429326125, -0.328125),
+    vec3(0.20958634788477798, -0.9316323293849998, -0.296875),
+    vec3(0.47932036209664347, 0.8364779434357743, -0.265625),
+    vec3(-0.9261567244668057, -0.29546925576092875, -0.234375),
+    vec3(0.8888662435347233, -0.41067874972960294, -0.203125),
+    vec3(-0.3803160171467355, 0.9087456803070064, -0.171875),
+    vec3(-0.33508905616822526, -0.9316329394194303, -0.140625),
+    vec3(0.87987879474598, 0.46243963490531564, -0.109375),
+    vec3(-0.9640145303478175, 0.254111136421206, -0.078125),
+    vec3(0.5402432295193479, -0.840202349040697, -0.046875),
+    vec3(0.16935549543945927, 0.9854311622530797, -0.015625),
+    vec3(-0.790526657433399, -0.6122282770847631, 0.015625),
+    vec3(0.9954901906560397, -0.08247432741527275, 0.046875),
+    vec3(-0.6770037888550495, 0.731821258403244, 0.078125),
+    vec3(0.004849010222716528, -0.9939887305572734, 0.109375),
+    vec3(0.6652085983613412, 0.7332953907131421, 0.140625),
+    vec3(-0.980914969955694, -0.0909109789399485, 0.171875),
+    vec3(0.7799534193949288, -0.5919568379106356, 0.203125),
+    vec3(-0.1739982217177348, 0.9564481053429224, 0.234375),
+    vec3(-0.5134724986790146, -0.8159591610340123, 0.265625),
+    vec3(0.9209568136982018, 0.25239608094789356, 0.296875),
+    vec3(-0.840428208080025, 0.431293880594657, 0.328125),
+    vec3(0.32439366278023923, -0.8749962062335016, 0.359375),
+    vec3(0.3470865761131722, 0.8526095343456083, 0.390625),
+    vec3(-0.8193032017850962, -0.3882830770452015, 0.421875),
+    vec3(0.8518781145087908, -0.26264312744853496, 0.453125),
+    vec3(-0.44234901628806483, 0.7547901742630077, 0.484375),
+    vec3(-0.17989021469904729, -0.8377173568874712, 0.515625),
+    vec3(0.6825364686297848, 0.48484193647557233, 0.546875),
+    vec3(-0.8096843685433692, 0.10090940348414251, 0.578125),
+    vec3(0.5139220166617468, -0.6037766724255942, 0.609375),
+    vec3(0.027983070994103954, 0.7673438323937574, 0.640625),
+    vec3(-0.5198825852769636, -0.5275472319145847, 0.671875),
+    vec3(0.7101385978501072, 0.03630986392819048, 0.703125),
+    vec3(-0.5232437905790681, 0.4323300764409624, 0.734375),
+    vec3(0.08888949088758348, -0.6371161729109897, 0.765625),
+    vec3(0.3426226790094996, 0.49759414607022195, 0.796875),
+    vec3(-0.5462688918455557, -0.12569519552006989, 0.828125),
+    vec3(0.4449026101500658, -0.2520640332468291, 0.859375),
+    vec3(-0.14032269145405407, 0.4325467045743041, 0.890625),
+    vec3(-0.16080303981293154, -0.35254626187483645, 0.921875),
+    vec3(0.2785458488746204, 0.11817336607593573, 0.953125),
+    vec3(0.17608480733726006, 0.0, 0.984375)
+};
 
-    // reverse Y if shadowData.isYUp == 1 (not enough on its own, also expects +Y and -Y swapped in shadowCube)
-    smpCoord.y = mix(smpCoord.y, -smpCoord.y, shadowData.isYUp);
-
-    float sampleDepth = texture( shadowCube, smpCoord ).x + shadowData.bias;
-    return min(1.0, exp(shadowData.factor * sampleDepth) / exp(shadowData.factor * currentDepth));
+float normalizedShadowFactor(float shadow, float factor) {
+    float normalized = clamp(factor, 0, 100) * 0.01;
+    return min(1.0, 1.0 - normalized*(1.0 - shadow));
 }
 
+// Point + Spot Light
+float qt_sampleCubemap_hard( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    float dist = length(worldPos - lightPos);
+    float mapSizeInv = 1.0f / (shadowData.shadowMapFar - shadowData.clipNear);
+    float currentDepth = clamp((dist - shadowData.clipNear) / (shadowData.shadowMapFar - shadowData.clipNear), 0.0, 1.0);
+    vec3 smpCoord = worldPos - lightPos;
+    // reverse Y if shadowData.isYUp == 1 (not enough on its own, also expects +Y and -Y swapped in shadowCube)
+    smpCoord.y = mix(smpCoord.y, -smpCoord.y, shadowData.isYUp);
+    float depth = texture( shadowCube, smpCoord ).x + shadowData.bias * mapSizeInv;
+    float shadow = currentDepth < depth ? 1.0 : 0.0;
+    return normalizedShadowFactor(shadow, shadowData.factor);
+}
+
+float qt_sampleCubemap_pcf( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in int numSamples )
+{
+    vec3 cubePos = (worldPos - lightPos);
+    float dist = length(worldPos - lightPos);
+    float mapSizeInv = 1.0f / (shadowData.shadowMapFar - shadowData.clipNear);
+    float currentDepth = clamp((dist - shadowData.clipNear) / (shadowData.shadowMapFar - shadowData.clipNear), 0.0, 1.0);
+    float shadow = 0.0f;
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        vec3 smpCoord = cubePos + CUBEMAP_SAMPLE_DIRECTIONS[i + numSamples - 4] * shadowData.pcfFactor;
+        // reverse Y if shadowData.yUp == 1 (not enough on its own, also expects +Y and -Y swapped in shadowCube)
+        smpCoord.y = mix(smpCoord.y, -smpCoord.y, shadowData.isYUp);
+
+        float sampleDepth = texture(shadowCube, smpCoord).x + shadowData.bias * mapSizeInv;
+        if(currentDepth < sampleDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(numSamples);
+    return normalizedShadowFactor(shadow, shadowData.factor);
+}
+
+float qt_sampleCubemap_pcf_4( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 4);
+}
+
+float qt_sampleCubemap_pcf_8( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 8);
+}
+
+float qt_sampleCubemap_pcf_16( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 16);
+}
+
+float qt_sampleCubemap_pcf_32( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 32);
+}
+
+float qt_sampleCubemap_pcf_64( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 64);
+}
+
+// Directional
 int findSplitIndex(in float depth, in vec4 splits, in vec4 splitActive, in int numSplits) {
     for (int i = 0; i < min(numSplits + 1, 4); i++) {
         if (depth < splits[i]) {
@@ -32,20 +345,33 @@ int findSplitIndex(in float depth, in vec4 splits, in vec4 splitActive, in int n
 }
 
 float qt_sampleOrthographic_splitIndex(in sampler2DArray shadowMap,
-                                               in float shadowBias,
-                                               in float shadowFactor,
-                                               in float flipY,
-                                               in vec4 projCoord,
-                                               in float layerIndex)
+                                       in int splitIndex,
+                                       in float shadowBias,
+                                       in float shadowFactor,
+                                       in vec3 dimensionsInverted,
+                                       in float flipY,
+                                       in float pcfFactor,
+                                       in int numSamples,
+                                       in vec4 projCoord,
+                                       in vec3 worldPos,
+                                       in float layerIndex)
 {
     vec3 smpCoord = projCoord.xyz / projCoord.w;
     smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, flipY);
-    float sampleDepth = texture(shadowMap, vec3(smpCoord.xy, layerIndex)).r + shadowBias;
-    return min(1.0, exp(shadowFactor * sampleDepth) / exp(shadowFactor * smpCoord.z));
 
+    float shadow = 0.0;
+    vec2 texelSize = pcfFactor * dimensionsInverted.xy;
+
+    for(int i = 0; i < numSamples; ++i) {
+        float pcfDepth = texture(shadowMap, vec3(smpCoord.xy + POISSON_SAMPLES[i + numSamples - 4] * texelSize, float(layerIndex))).r + shadowBias * dimensionsInverted.z;
+        shadow += smpCoord.z < pcfDepth ? 1.0 : 0.0;
+    }
+    shadow /= numSamples;
+
+    return normalizedShadowFactor(shadow, shadowFactor);
 }
 
-float qt_sampleOrthographic( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos )
+float qt_sampleOrthographic_pcf( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos, in int numSamples )
 {
     int splitIndex = findSplitIndex(zDepthViewSpace, shadowData.csmSplits, shadowData.csmActive, shadowData.csmNumSplits);
 
@@ -53,7 +379,8 @@ float qt_sampleOrthographic( in sampler2DArray shadowMap, in ShadowData shadowDa
         return 1.0f;
 
     vec4 projCoord = shadowData.matrices[splitIndex] * vec4( worldPos, 1.0 );
-    float shadow = qt_sampleOrthographic_splitIndex(shadowMap, shadowData.bias, shadowData.factor, float(shadowData.isYUp), projCoord, float(shadowData.layerIndex + splitIndex));
+    vec3 dimensions = shadowData.dimensionsInverted[splitIndex].xyz;
+    float shadow = qt_sampleOrthographic_splitIndex(shadowMap, splitIndex, shadowData.bias, shadowData.factor, dimensions, float(shadowData.isYUp), shadowData.pcfFactor, numSamples, projCoord, worldPos, float(shadowData.layerIndex + splitIndex));
 
     if (splitIndex == 0) {
         return shadow;
@@ -62,15 +389,49 @@ float qt_sampleOrthographic( in sampler2DArray shadowMap, in ShadowData shadowDa
     float splitPrev = shadowData.csmSplits[splitIndex - 1];
     float split = shadowData.csmSplits[splitIndex];
 
-    float bandLength = shadowData.clipFar * shadowData.csmBlendRatio;
+    float bandLength = shadowData.shadowMapFar * shadowData.csmBlendRatio;
     if (zDepthViewSpace < splitPrev + bandLength && shadowData.csmActive[splitIndex - 1] > 0.0) {
         vec4 projCoordPrev = shadowData.matrices[splitIndex - 1] * vec4(worldPos, 1.0 );
-        float shadowPrev = qt_sampleOrthographic_splitIndex(shadowMap, shadowData.bias, shadowData.factor, float(shadowData.isYUp), projCoordPrev, float(shadowData.layerIndex + splitIndex - 1));
+        vec3 dimensionsPrev = shadowData.dimensionsInverted[splitIndex - 1].xyz;
+        float shadowPrev = qt_sampleOrthographic_splitIndex(shadowMap, splitIndex, shadowData.bias, shadowData.factor, dimensionsPrev, float(shadowData.isYUp), shadowData.pcfFactor, numSamples, projCoordPrev, worldPos, float(shadowData.layerIndex + splitIndex - 1));
         float t = (splitPrev + bandLength - zDepthViewSpace) / bandLength;
         shadow = mix(shadow, shadowPrev, t);
     }
-
     return shadow;
+}
+
+float qt_sampleOrthographic_hard(in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos ) {
+    if (zDepthViewSpace >= shadowData.csmSplits[3])
+        return 1.0;
+    int splitIndex = findSplitIndex(zDepthViewSpace, shadowData.csmSplits, shadowData.csmActive, shadowData.csmNumSplits);
+    if (splitIndex == -1)
+        return 1.0f;
+    vec4 projCoord = shadowData.matrices[splitIndex] * vec4( worldPos, 1.0 );
+    vec3 smpCoord = projCoord.xyz / projCoord.w;
+    smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, shadowData.isYUp);
+    float depth = texture(shadowMap, vec3(smpCoord.xy, float(shadowData.layerIndex + splitIndex))).x + shadowData.bias * shadowData.dimensionsInverted[splitIndex].z;
+    float shadow = smpCoord.z < depth ? 1.0 : 0.0;
+    return normalizedShadowFactor(shadow, shadowData.factor);
+}
+
+float qt_sampleOrthographic_pcf_4( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 4);
+}
+
+float qt_sampleOrthographic_pcf_8( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 8);
+}
+
+float qt_sampleOrthographic_pcf_16( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 16);
+}
+
+float qt_sampleOrthographic_pcf_32( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 32);
+}
+
+float qt_sampleOrthographic_pcf_64( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 64);
 }
 
 #endif

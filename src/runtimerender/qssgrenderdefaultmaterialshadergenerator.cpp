@@ -345,6 +345,7 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
                                        QSSGMaterialVertexPipeline &vertexShader,
                                        quint32 lightIdx,
                                        quint32 shadowMapRes,
+                                       QSSGRenderLight::SoftShadowQuality softShadowQuality,
                                        bool inShadowEnabled,
                                        QSSGRenderLight::Type inType,
                                        const QSSGMaterialShaderGenerator::LightVariableNames &lightVarNames,
@@ -354,19 +355,40 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldPosition(inKey);
         const auto& names = setupShadowMapVariableNames(lightIdx, shadowMapRes);
         fragmentShader.addInclude("shadowMapping.glsllib");
+
+        QByteArray sampleFunctionSuffix;
+        switch (softShadowQuality) {
+            case QSSGRenderLight::SoftShadowQuality::Hard:
+                sampleFunctionSuffix += "hard";
+                break;
+            case QSSGRenderLight::SoftShadowQuality::PCF4:
+                sampleFunctionSuffix += "pcf_4";
+                break;
+            case QSSGRenderLight::SoftShadowQuality::PCF8:
+                sampleFunctionSuffix += "pcf_8";
+                break;
+            case QSSGRenderLight::SoftShadowQuality::PCF16:
+                sampleFunctionSuffix += "pcf_16";
+                break;
+            case QSSGRenderLight::SoftShadowQuality::PCF32:
+                sampleFunctionSuffix += "pcf_32";
+                break;
+            case QSSGRenderLight::SoftShadowQuality::PCF64:
+                sampleFunctionSuffix += "pcf_64";
+                break;
+            default:
+                Q_UNREACHABLE();
+        };
+
+        fragmentShader << "    if (" << names.shadowData << ".factor > 0.01) {\n";
         if (inType == QSSGRenderLight::Type::DirectionalLight) {
             if (!fragmentShader.m_uniforms.contains(names.shadowMapTexture)) {
                 fragmentShader.addUniform(names.shadowMapTexture, "sampler2DArray");
             }
+            fragmentShader << "      qt_shadow_map_occl = qt_sampleOrthographic_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_zDepthViewSpace, qt_varWorldPos);\n";
         } else {
             fragmentShader.addUniform(names.shadowCube, "samplerCube");
-        }
-
-        fragmentShader << "    if (" << names.shadowData << ".factor > 0.01) {\n";
-        if (inType != QSSGRenderLight::Type::DirectionalLight) {
-            fragmentShader << "        qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
-        } else {
-            fragmentShader << "        qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_zDepthViewSpace, qt_varWorldPos);\n";
+            fragmentShader << "      qt_shadow_map_occl = qt_sampleCubemap_" << sampleFunctionSuffix << "(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
         }
         fragmentShader << "    }\n";
     } else {
@@ -790,7 +812,7 @@ static void generateMainLightCalculation(QSSGStageGeneratorBase &fragmentShader,
 
         lightVarPrefix.append("_");
 
-        generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, lightNode->m_shadowMapRes, castsShadow, lightNode->type, lightVarNames, inKey);
+        generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, lightNode->m_shadowMapRes, lightNode->m_softShadowQuality, castsShadow, lightNode->type, lightVarNames, inKey);
 
         generateTempLightColor(fragmentShader, lightVarNames, materialAdapter);
 
@@ -2226,7 +2248,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 shadowData.bias = theLight->m_shadowBias;
                 shadowData.factor = theLight->m_shadowFactor;
                 shadowData.clipNear = 1.0f;
-                shadowData.clipFar = inCameras[0]->clipFar;
                 shadowData.shadowMapFar = theLight->m_shadowMapFar;
                 shadowData.isYUp = globalRenderData.isYUpInFramebuffer ? 0.0f : 1.0f;
                 shadowData.layerIndex = pEntry->m_depthArrayIndex;
@@ -2234,6 +2255,15 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 memcpy(shadowData.csmSplits, pEntry->m_csmSplits, 4 * sizeof(float));
                 memcpy(shadowData.csmActive, pEntry->m_csmActive, 4 * sizeof(float));
                 shadowData.csmBlendRatio = theLight->m_csmBlendRatio;
+                for (int i = 0; i < 4; i++) {
+                    QMatrix4x4 inv = pEntry->m_lightViewProjection[i].inverted();
+                    const float x = 1.0f / (inv * QVector4D(1, 0, 0, 0)).length();
+                    const float y = 1.0f / (inv * QVector4D(0, 1, 0, 0)).length();
+                    const float z = 1.0f / (inv * QVector4D(0, 0, 1, 0)).length();
+                    QVector4D dimensionsInverted = QVector4D(x, y, z, 0);
+                    memcpy(shadowData.dimensionsInverted[i], &dimensionsInverted, 4 * sizeof(float));
+                }
+                shadowData.pcfFactor = theLight->m_pcfFactor;
             }
         }
 

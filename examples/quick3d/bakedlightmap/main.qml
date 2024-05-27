@@ -38,6 +38,7 @@ Window {
             brightness: brightnessSlider.value
             castsShadow: true
             shadowFactor: 75
+            shadowBias: 20
         }
         //! [light]
 

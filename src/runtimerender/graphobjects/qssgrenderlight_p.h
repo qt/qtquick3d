@@ -30,6 +30,16 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     };
     using FlagT = std::underlying_type_t<DirtyFlag>;
 
+    // Must match QQuick3DAbstractLight::QSSGSoftShadowQuality
+    enum class SoftShadowQuality {
+        Hard = 0,
+        PCF4,
+        PCF8,
+        PCF16,
+        PCF32,
+        PCF64,
+    };
+
     static constexpr DirtyFlag DirtyMask { std::numeric_limits<FlagT>::max() };
 
     QSSGRenderNode *m_scope;
@@ -54,6 +64,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     quint32 m_shadowMapRes; // Resolution of shadow map
     float m_shadowMapFar; // Far clip plane for the shadow map
     float m_shadowFilter; // Shadow map filter step size
+    SoftShadowQuality m_softShadowQuality = SoftShadowQuality::PCF4;
+
+    float m_pcfFactor = 1.0f;
 
     bool m_bakingEnabled;
     bool m_fullyBaked; // direct+indirect

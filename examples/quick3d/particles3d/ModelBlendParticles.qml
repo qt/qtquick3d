@@ -77,15 +77,11 @@ Item {
             brightness: 50
             eulerRotation: Qt.vector3d(-90, -90, 0)
             castsShadow: true
-            shadowFactor: 25
+            shadowFactor: 100
             shadowMapQuality: Light.ShadowMapQualityHigh
-        }
-        DirectionalLight {
-            eulerRotation: Qt.vector3d(180, 0, 0)
-            brightness: 25
-        }
-        DirectionalLight {
-            brightness: 25
+            softShadowQuality: Light.PCF8
+            pcfFactor: 0.25
+            shadowBias: 2
         }
 
         Model {

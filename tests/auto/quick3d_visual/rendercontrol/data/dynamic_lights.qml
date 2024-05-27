@@ -46,7 +46,7 @@ View3D {
         return comp.createObject(lightContainer, {
             "castsShadow": true,
             "eulerRotation.x": -90,
-            "shadowFactor": 80
+            "shadowFactor": 100
         });
     }
 

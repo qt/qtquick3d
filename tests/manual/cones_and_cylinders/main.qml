@@ -38,8 +38,29 @@ Window {
             csmNumSplits: sliderNumSplits.currentIndex
             shadowMapQuality: Light.ShadowMapQualityHigh
             csmBlendRatio: sliderBlendRatio.value
-            shadowBias: sliderShadowBias.value
+            shadowBias: sliderShadowBiasDirLight.value
+            pcfFactor: sliderPCFFactor.value
+            softShadowQuality: softshadowquality_combobox.currentIndex
             shadowMapFar: sliderShadowMapFar.value
+        }
+
+        SpotLight {
+            position: Qt.vector3d(sliderSpotLightPosX.value,
+                                  sliderSpotLightPosY.value,
+                                  sliderSpotLightPosZ.value)
+            eulerRotation: Qt.vector3d(sliderSpotLightRotX.value,
+                                       sliderSpotLightRotY.value,
+                                       0)
+            visible: checkBoxSpotLight.checked
+            shadowFactor: 100
+            castsShadow: true
+            brightness: 100
+            shadowBias: sliderShadowBiasSpotLight.value
+            softShadowQuality: softshadowquality_combobox.currentIndex
+            pcfFactor: sliderPCFFactorSpot.value
+            shadowMapQuality:  Light.ShadowMapQualityVeryHigh
+            shadowMapFar: sliderShadowMapFar.value
+            coneAngle: sliderConeAngle.value
         }
 
         Model {
@@ -184,7 +205,7 @@ Window {
             }
             SliderWithValue {
                 id: sliderDirectionaLightShadowFactor
-                value: 100
+                value: 75
                 from: 0
                 to: 100
                 enabled: checkBoxDirectionalLight.checked
@@ -203,6 +224,7 @@ Window {
                     ListElement { text: "3" }
                 }
                 enabled: checkBoxDirectionalLight.checked
+                currentIndex: 2
             }
             Label {
                 text: "CSM Split 1"
@@ -210,7 +232,7 @@ Window {
             }
             SliderWithValue {
                 id: sliderCSMSplit1
-                value: 0.25
+                value: 0.15
                 from: 0.01
                 to: 0.99
                 enabled: checkBoxDirectionalLight.checked
@@ -249,16 +271,132 @@ Window {
                 enabled: checkBoxDirectionalLight.checked
             }
             Label {
+                text: "PCF factor"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderPCFFactor
+                value: 10
+                from: 1
+                to: 30
+                enabled: checkBoxDirectionalLight.checked
+            }
+            Label {
                 text: "Shadow bias"
                 font.pointSize: 12
             }
             SliderWithValue {
-                id: sliderShadowBias
-                value: 0.001
-                from: -0.01
-                to: 0.01
-                stepSize: 0.001
-                enabled: checkBoxDirectionalLight.checked
+                id: sliderShadowBiasDirLight
+                value: 10
+                from: 0
+                to: 30
+                stepSize: 1
+                enabled: true
+            }
+            Label { text: "SoftShadowQuality"}
+            ComboBox {
+                id: softshadowquality_combobox
+                editable: false
+                model: ListModel {
+                    ListElement { text: "Light.Hard" }
+                    ListElement { text: "Light.PCF4" }
+                    ListElement { text: "Light.PCF8" }
+                    ListElement { text: "Light.PCF16" }
+                    ListElement { text: "Light.PCF32" }
+                    ListElement { text: "Light.PCF64" }
+                }
+                currentIndex: 3
+            }
+            Label {
+                // spacer
+            }
+
+            Label {
+                text: "Spot light"
+                font.pointSize: 15
+            }
+
+            CheckBox {
+                id: checkBoxSpotLight
+                text: "Visible"
+                checked: false
+            }
+            Label {
+                text: "Position XYZ"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderSpotLightPosX
+                value: 647
+                from: -2000
+                to: 2000
+                enabled: checkBoxSpotLight.checked
+            }
+            SliderWithValue {
+                id: sliderSpotLightPosY
+                value: 469
+                from: -2000
+                to: 2000
+                enabled: checkBoxSpotLight.checked
+            }
+            SliderWithValue {
+                id: sliderSpotLightPosZ
+                value: 652
+                from: -2000
+                to: 2000
+                enabled: checkBoxSpotLight.checked
+            }
+            Label {
+                text: "EulerRotation XY"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderSpotLightRotX
+                value: -14
+                from: -180
+                to: 180
+                enabled: checkBoxSpotLight.checked
+            }
+            SliderWithValue {
+                id: sliderSpotLightRotY
+                value: 45
+                from: -180
+                to: 180
+                enabled: checkBoxSpotLight.checked
+            }
+            Label {
+                text: "Shadow bias"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderShadowBiasSpotLight
+                value: 10
+                from: 0
+                to: 30
+                stepSize: 1
+                enabled: true
+            }
+            Label {
+                text: "PCF factor"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderPCFFactorSpot
+                value: 1.67
+                from: 0
+                to: 30
+                enabled: checkBoxSpotLight.checked
+            }
+            Label {
+                text: "Cone Angle"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderConeAngle
+                value: 60
+                from: 0
+                to: 180
+                enabled: checkBoxSpotLight.checked
             }
         }
     }

@@ -556,6 +556,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_lightAreaFlags[LightCount];
     QSSGShaderKeyBoolean m_lightShadowFlags[LightCount];
     QSSGShaderKeyUnsigned<16> m_lightShadowMapSize[LightCount];
+    QSSGShaderKeyUnsigned<4> m_lightSoftShadowQuality[LightCount];
     QSSGShaderKeyBoolean m_specularEnabled;
     QSSGShaderKeyBoolean m_fresnelScaleBiasEnabled;
     QSSGShaderKeyBoolean m_clearcoatFresnelScaleBiasEnabled;
@@ -731,6 +732,22 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_lightShadowMapSize[13].name = "light13ShadowMapSize";
         m_lightShadowMapSize[14].name = "light14ShadowMapSize";
 
+        m_lightSoftShadowQuality[0].name = "light0SoftShadowQuality";
+        m_lightSoftShadowQuality[1].name = "light1SoftShadowQuality";
+        m_lightSoftShadowQuality[2].name = "light2SoftShadowQuality";
+        m_lightSoftShadowQuality[3].name = "light3SoftShadowQuality";
+        m_lightSoftShadowQuality[4].name = "light4SoftShadowQuality";
+        m_lightSoftShadowQuality[5].name = "light5SoftShadowQuality";
+        m_lightSoftShadowQuality[6].name = "light6SoftShadowQuality";
+        m_lightSoftShadowQuality[7].name = "light7SoftShadowQuality";
+        m_lightSoftShadowQuality[8].name = "light8SoftShadowQuality";
+        m_lightSoftShadowQuality[9].name = "light9SoftShadowQuality";
+        m_lightSoftShadowQuality[10].name = "light10SoftShadowQuality";
+        m_lightSoftShadowQuality[11].name = "light11SoftShadowQuality";
+        m_lightSoftShadowQuality[12].name = "light12SoftShadowQuality";
+        m_lightSoftShadowQuality[13].name = "light13SoftShadowQuality";
+        m_lightSoftShadowQuality[14].name = "light14SoftShadowQuality";
+
         m_imageMaps[0].name = "diffuseMap";
         m_imageMaps[1].name = "emissiveMap";
         m_imageMaps[2].name = "specularMap";
@@ -787,6 +804,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
 
         for (auto &lightShadowMapSize : m_lightShadowMapSize)
             inVisitor.visit(lightShadowMapSize);
+
+        for (auto &softShadowQuality : m_lightSoftShadowQuality)
+            inVisitor.visit(softShadowQuality);
 
         inVisitor.visit(m_specularEnabled);
         inVisitor.visit(m_fresnelEnabled);
@@ -891,7 +911,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         visitProperties(visitor);
 
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.offsetVisitor.m_offset < 672);
+        Q_ASSERT(visitor.offsetVisitor.m_offset < 736);
         // This is so we can do some guestimate of how big the string buffer needs
         // to be to avoid doing a lot of allocations when concatenating the strings.
         m_stringBufferSizeHint = visitor.stringSizeVisitor.size;
@@ -901,9 +921,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
 struct QSSGShaderDefaultMaterialKey
 {
     enum {
-        DataBufferSize = 21,
+        DataBufferSize = 23,
     };
-    quint32 m_dataBuffer[DataBufferSize]; // 21 * 4 * 8 = 672 bits
+    quint32 m_dataBuffer[DataBufferSize]; // 23 * 4 * 8 = 736 bits
     size_t m_featureSetHash;
 
     explicit QSSGShaderDefaultMaterialKey(size_t inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)

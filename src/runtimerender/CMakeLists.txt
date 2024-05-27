@@ -214,10 +214,6 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
     PREFIX
         "/"
     FILES
-        res/rhishaders/orthoshadowblurx.vert
-        res/rhishaders/orthoshadowblurx.frag
-        res/rhishaders/orthoshadowblury.vert
-        res/rhishaders/orthoshadowblury.frag
         res/rhishaders/environmentmap.vert
         res/rhishaders/environmentmap.frag
         res/rhishaders/debugobject.vert
@@ -238,20 +234,6 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_pertarget"
         res/rhishaders/progressiveaa.frag
         res/rhishaders/simplequad.vert
         res/rhishaders/simplequad.frag
-)
-qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3"
-    SILENT
-    PRECOMPILE
-    OPTIMIZED
-    MULTIVIEW
-    GLSL "300es,120,330"
-    PREFIX
-        "/"
-    FILES
-        res/rhishaders/cubeshadowblurx.vert
-        res/rhishaders/cubeshadowblurx.frag
-        res/rhishaders/cubeshadowblury.vert
-        res/rhishaders/cubeshadowblury.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_pertarget"
     SILENT

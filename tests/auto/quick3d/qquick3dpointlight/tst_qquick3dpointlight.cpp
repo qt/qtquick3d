@@ -102,6 +102,16 @@ void tst_QQuick3DPointLight::testProperties()
         QCOMPARE(light.shadowMapQuality(), shadowMapQuality);
     }
 
+    const QQuick3DAbstractLight::QSSGSoftShadowQuality ssq = QQuick3DAbstractLight::QSSGSoftShadowQuality::PCF16;
+    light.setSoftShadowQuality(ssq);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(light.softShadowQuality(), ssq);
+
+    const float pcfFactor = 5.0f;
+    light.setPcfFactor(pcfFactor);
+    node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
+    QCOMPARE(light.pcfFactor(), pcfFactor);
+
     light.setCastsShadow(true);
     node = static_cast<QSSGRenderLight *>(light.updateSpatialNode(node));
     QVERIFY(node->m_castShadow);

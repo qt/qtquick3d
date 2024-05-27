@@ -1283,94 +1283,6 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         }
     };
 
-    static const auto rhiBlurShadowMap = [](QSSGRhiContext *rhiCtx,
-                                            QSSGShadowMapEntry *pEntry,
-                                            QSSGRenderer &renderer,
-                                            float shadowFilter,
-                                            float shadowMapFar,
-                                            bool orthographic,
-                                            int cascadeIndex) {
-        // may not be able to do the blur pass if the number of max color
-        // attachments is the gl/vk spec mandated minimum of 4, and we need 6.
-        // (applicable only to !orthographic, whereas orthographic always works)
-        if (!pEntry->m_rhiBlurRenderTarget0[cascadeIndex] || !pEntry->m_rhiBlurRenderTarget1[cascadeIndex])
-            return;
-
-        QRhi *rhi = rhiCtx->rhi();
-        QSSGRhiGraphicsPipelineState ps;
-        QRhiTexture *map = orthographic ? pEntry->m_rhiDepthTextureArray : pEntry->m_rhiDepthCube;
-        QRhiTexture *workMap = orthographic ? pEntry->m_rhiDepthCopy[cascadeIndex] : pEntry->m_rhiCubeCopy;
-        const QSize size = map->pixelSize();
-        ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
-
-        const auto &shaderCache = renderer.contextInterface()->shaderCache();
-
-        const auto &blurXPipeline = orthographic ? shaderCache->getBuiltInRhiShaders().getRhiOrthographicShadowBlurXShader()
-                                                  : shaderCache->getBuiltInRhiShaders().getRhiCubemapShadowBlurXShader();
-        if (!blurXPipeline)
-            return;
-        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, blurXPipeline.get());
-
-        ps.colorAttachmentCount = orthographic ? 1 : 6;
-
-        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-
-        // construct a key that is unique for this frame (we use a dynamic buffer
-        // so even if the same key gets used in the next frame, just updating the
-        // contents on the same QRhiBuffer is ok due to QRhi's internal double buffering)
-        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ map, &pEntry->m_depthArrayIndex, nullptr, quintptr(cascadeIndex) });
-        if (!dcd.ubuf) {
-            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 4 * sizeof(float));
-            dcd.ubuf->create();
-        }
-
-        // the blur also needs Y reversed in order to get correct results (while
-        // the second blur step would end up with the correct orientation without
-        // this too, but we need to blur the correct fragments in the second step
-        // hence the flip is important)
-        QMatrix4x4 flipY;
-        // correct for D3D and Metal but not for Vulkan because there the Y is down
-        // in NDC so that kind of self-corrects...
-        if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
-            flipY.data()[5] = -1.0f;
-        float cameraProperties[4] = { shadowFilter, shadowMapFar, float(pEntry->m_depthArrayIndex + cascadeIndex), 0.0f };
-        char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-        memcpy(ubufData, flipY.constData(), 64);
-        memcpy(ubufData + 64, cameraProperties, 4 * sizeof(float));
-        dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-
-        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                 QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-        Q_ASSERT(sampler);
-
-        QSSGRhiShaderResourceBindingList bindings;
-        bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
-        bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, map, sampler);
-        QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
-
-        QSSGRhiQuadRenderer::Flags quadFlags;
-        if (orthographic) // orthoshadowshadowblurx and y have attr_uv as well
-            quadFlags |= QSSGRhiQuadRenderer::UvCoords;
-        renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0[cascadeIndex], quadFlags);
-
-        // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
-
-        const auto &blurYPipeline = orthographic ? shaderCache->getBuiltInRhiShaders().getRhiOrthographicShadowBlurYShader()
-                                                 : shaderCache->getBuiltInRhiShaders().getRhiCubemapShadowBlurYShader();
-        if (!blurYPipeline)
-            return;
-        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, blurYPipeline.get());
-
-        bindings.clear();
-        bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
-        bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, workMap, sampler);
-        srb = rhiCtxD->srb(bindings);
-
-        renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1[cascadeIndex], quadFlags);
-    };
-
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
@@ -1461,13 +1373,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 if (drawDirectionalLightShadowBoxes)
                     ShadowmapHelpers::addDirectionalLightDebugBox(computeFrustumBounds(*cascadeCamera), debugDrawSystem);
             }
-
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map"));
-            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-            for (int blurIndex = 0; blurIndex < light->m_csmNumSplits + 1; blurIndex++) {
-                rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, true, blurIndex);
-            }
-            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map_blur"));
         } else {
             Q_ASSERT(pEntry->m_rhiDepthCube && pEntry->m_rhiCubeCopy);
             const QSize size = pEntry->m_rhiDepthCube->pixelSize();
@@ -1536,10 +1442,6 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("shadow_cube", 0, outFace));
             }
-
-            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, false, 0);
-            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_cube_blur"));
         }
     }
 }
