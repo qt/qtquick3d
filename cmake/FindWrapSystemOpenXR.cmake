@@ -10,7 +10,6 @@ set(WrapSystemOpenXR_REQUIRED_VARS __openxr_found)
 if (ANDROID)
     # When using the Oculus OpenXR Mobile SDK, we need to use the loader provided by the SDK (for now)
     if (NOT "$ENV{OCULUS_OPENXR_MOBILE_SDK}" STREQUAL "")
-        add_library(openxr_loader SHARED IMPORTED)
         set(XR_LOADER_TYPE "Debug")
         if(DEFINED CMAKE_BUILD_TYPE)
             if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -23,37 +22,42 @@ if (ANDROID)
         endif()
         file(TO_CMAKE_PATH $ENV{OCULUS_OPENXR_MOBILE_SDK} OCULUS_OPENXR_MOBILE_SDK)
         set(XR_LOADER_SO ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Libs/Android/${ANDROID_ABI}/${XR_LOADER_TYPE}/libopenxr_loader.so)
-        message("Using OpenXR loader ${XR_LOADER_SO}")
-        set_property(
-            TARGET
-                openxr_loader
-            PROPERTY
-                IMPORTED_LOCATION
-            ${XR_LOADER_SO}
-        )
+        if(EXISTS ${XR_LOADER_SO})
+            message("Using OpenXR loader ${XR_LOADER_SO}")
+            add_library(openxr_loader SHARED IMPORTED)
+            set_property(
+                TARGET
+                    openxr_loader
+                PROPERTY
+                    IMPORTED_LOCATION
+                ${XR_LOADER_SO}
+            )
 
-        add_library(WrapSystemOpenXR::WrapSystemOpenXR INTERFACE IMPORTED)
-        target_link_libraries(WrapSystemOpenXR::WrapSystemOpenXR INTERFACE openxr_loader)
+            add_library(WrapSystemOpenXR::WrapSystemOpenXR INTERFACE IMPORTED)
+            target_link_libraries(WrapSystemOpenXR::WrapSystemOpenXR INTERFACE openxr_loader)
 
-        # Oculus OpenXR Mobile SDK pre-v64
-        if((EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Include) AND (EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/3rdParty/khronos/openxr/OpenXR-SDK/include))
-            set(META_PREVIEW ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Include)
-            set(OPENXR_HEADERS ${OCULUS_OPENXR_MOBILE_SDK}/3rdParty/khronos/openxr/OpenXR-SDK/include)
-        # Oculus OpenXR Mobile SDK v64 and newer
-        elseif((EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/meta_openxr_preview) AND (EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/Samples/3rdParty/khronos/openxr/OpenXR-SDK/include))
-            set(META_PREVIEW ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/meta_openxr_preview)
-            set(OPENXR_HEADERS ${OCULUS_OPENXR_MOBILE_SDK}/Samples/3rdParty/khronos/openxr/OpenXR-SDK/include)
+            # Oculus OpenXR Mobile SDK pre-v64
+            if((EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Include) AND (EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/3rdParty/khronos/openxr/OpenXR-SDK/include))
+                set(META_PREVIEW ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/Include)
+                set(OPENXR_HEADERS ${OCULUS_OPENXR_MOBILE_SDK}/3rdParty/khronos/openxr/OpenXR-SDK/include)
+            # Oculus OpenXR Mobile SDK v64 and newer
+            elseif((EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/meta_openxr_preview) AND (EXISTS ${OCULUS_OPENXR_MOBILE_SDK}/Samples/3rdParty/khronos/openxr/OpenXR-SDK/include))
+                set(META_PREVIEW ${OCULUS_OPENXR_MOBILE_SDK}/OpenXR/meta_openxr_preview)
+                set(OPENXR_HEADERS ${OCULUS_OPENXR_MOBILE_SDK}/Samples/3rdParty/khronos/openxr/OpenXR-SDK/include)
+            endif()
+
+            target_include_directories(
+                WrapSystemOpenXR::WrapSystemOpenXR INTERFACE
+                ${META_PREVIEW}
+                ${OPENXR_HEADERS}
+            )
+            set(WrapSystemOpenXR_FOUND TRUE)
+            include(FindPackageHandleStandardArgs)
+            find_package_handle_standard_args(WrapSystemOpenXR DEFAULT_MSG WrapSystemOpenXR_FOUND)
+            return()
+        else()
+            message("OCULUS_OPENXR_MOBILE_SDK is set, but the proprietary loader library is not present; probably a >= v65 SDK, ignoring in favor of the bundled loader")
         endif()
-
-        target_include_directories(
-            WrapSystemOpenXR::WrapSystemOpenXR INTERFACE
-            ${META_PREVIEW}
-            ${OPENXR_HEADERS}
-        )
-        set(WrapSystemOpenXR_FOUND TRUE)
-        include(FindPackageHandleStandardArgs)
-        find_package_handle_standard_args(WrapSystemOpenXR DEFAULT_MSG WrapSystemOpenXR_FOUND)
-        return()
     else()
         message("OCULUS_OPENXR_MOBILE_SDK is not set")
     endif()
