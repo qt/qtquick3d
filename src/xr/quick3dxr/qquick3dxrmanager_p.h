@@ -41,7 +41,7 @@ class QQuick3DXrManagerPrivate;
 // the input for AVP in place.
 #if defined(Q_OS_VISIONOS)
 class QQuick3DXrInputManager {};
-#elif defined(USE_OPENXR)
+#else
 using QQuick3DXrInputManager = QOpenXRInputManager;
 #endif
 
