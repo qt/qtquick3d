@@ -4,7 +4,7 @@
 #include "qopenxrinputmanager_p.h"
 #include "openxr/qopenxrhelpers_p.h"
 #include "qquick3dxrhandinput_p.h"
-#include "qopenxrhandtrackerinput_p.h"
+#include "qquick3dxrhandtrackerinput_p.h"
 #include "qquick3dxrgamepadinput_p.h"
 
 #include "qopenxrcontroller_p.h" //### InputAction enum
@@ -19,8 +19,8 @@ QOpenXRInputManager::QOpenXRInputManager()
 {
     m_handInputState[QOpenXRInputManager::LeftHand] = new QQuick3DXrHandInput(this);
     m_handInputState[QOpenXRInputManager::RightHand] = new QQuick3DXrHandInput(this);
-    m_handTrackerInputState[QOpenXRInputManager::LeftHand] = new QOpenXRHandTrackerInput(this);
-    m_handTrackerInputState[QOpenXRInputManager::RightHand] = new QOpenXRHandTrackerInput(this);
+    m_handTrackerInputState[QOpenXRInputManager::LeftHand] = new QQuick3DXrHandTrackerInput(this);
+    m_handTrackerInputState[QOpenXRInputManager::RightHand] = new QQuick3DXrHandTrackerInput(this);
     m_gamepadInputState = new QQuick3DXrGamepadInput(this);
 }
 
@@ -1098,7 +1098,7 @@ XrSpace QOpenXRInputManager::handSpace(QOpenXRInputManager::Hand hand)
 
 XrSpace QOpenXRInputManager::handTrackerSpace(Hand handtracker)
 {
-    if (m_handTrackerInputState[handtracker]->poseSpace() == QOpenXRHandTrackerInput::HandPoseSpace::GripPose)
+    if (m_handTrackerInputState[handtracker]->poseSpace() == QQuick3DXrHandTrackerInput::HandPoseSpace::GripPose)
         return m_handGripSpace[handtracker];
     else
         return m_handAimSpace[handtracker];
@@ -1134,12 +1134,12 @@ QQuick3DXrHandInput *QOpenXRInputManager::rightHandInput() const
     return m_handInputState[QOpenXRInputManager::RightHand];
 }
 
-QOpenXRHandTrackerInput *QOpenXRInputManager::rightHandTrackerInput() const
+QQuick3DXrHandTrackerInput *QOpenXRInputManager::rightHandTrackerInput() const
 {
     return m_handTrackerInputState[QOpenXRInputManager::RightHand];
 }
 
-QOpenXRHandTrackerInput *QOpenXRInputManager::leftHandTrackerInput() const
+QQuick3DXrHandTrackerInput *QOpenXRInputManager::leftHandTrackerInput() const
 {
     return m_handTrackerInputState[QOpenXRInputManager::LeftHand];
 }

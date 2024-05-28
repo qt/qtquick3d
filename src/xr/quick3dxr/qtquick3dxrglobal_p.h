@@ -39,6 +39,13 @@ enum class ReferenceSpace {
     ReferenceSpaceLocalFloor
 };
 
+enum class HandPoseSpace {
+    GripPose,
+    AimPose,
+    PinchPose,
+    PokePose
+};
+
 } // namespace QtQuick3DXr
 
 QT_END_NAMESPACE

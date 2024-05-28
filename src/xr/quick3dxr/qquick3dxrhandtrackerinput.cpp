@@ -1,14 +1,103 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrhandtrackerinput_p.h"
+#include "qquick3dxrhandtrackerinput_p.h"
+#include "qquick3dxrhandtrackerinput_p_p.h"
 
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-#include "openxr/qopenxrhelpers_p.h"
+#if !defined(Q_VISIONOS)
 #include "qopenxrinputmanager_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
+
+QQuick3DXrHandTrackerInputPrivate::QQuick3DXrHandTrackerInputPrivate(QQuick3DXrHandTrackerInput &handTrackerInput)
+    : q_ptr(&handTrackerInput)
+{
+
+}
+
+bool QQuick3DXrHandTrackerInputPrivate::isActive() const
+{
+    return m_isActive;
+}
+
+QQuick3DXrHandTrackerInputPrivate::HandPoseSpace QQuick3DXrHandTrackerInputPrivate::poseSpace() const
+{
+    return m_poseSpace;
+}
+
+void QQuick3DXrHandTrackerInputPrivate::setIsActive(bool isActive)
+{
+    Q_Q(QQuick3DXrHandTrackerInput);
+
+    if (m_isActive == isActive)
+        return;
+
+    m_isActive = isActive;
+    emit q->isActiveChanged();
+}
+
+void QQuick3DXrHandTrackerInputPrivate::setPoseSpace(QQuick3DXrHandTrackerInputPrivate::HandPoseSpace poseSpace)
+{
+    Q_Q(QQuick3DXrHandTrackerInput);
+
+    if (poseSpace == m_poseSpace)
+        return;
+
+    m_poseSpace = poseSpace;
+    emit q->poseSpaceChanged();
+}
+
+const QVector3D &QQuick3DXrHandTrackerInputPrivate::posePosition() const
+{
+    return m_posePosition;
+}
+
+const QQuaternion &QQuick3DXrHandTrackerInputPrivate::poseRotation() const
+{
+    return m_poseRotation;
+}
+
+QList<QVector3D> QQuick3DXrHandTrackerInputPrivate::jointPositions() const
+{
+    return m_jointPositions;
+}
+
+void QQuick3DXrHandTrackerInputPrivate::setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations)
+{
+    Q_Q(QQuick3DXrHandTrackerInput);
+
+    m_jointPositions = newJointPositions;
+    emit q->jointPositionsChanged();
+    m_jointRotations = newJointRotations;
+    emit q->jointRotationsChanged();
+    emit q->jointDataUpdated();
+#if defined(Q_VISIONOS)
+    Q_UNIMPLEMENTED();
+#else
+    setPokePosition(m_jointPositions[XR_HAND_JOINT_INDEX_TIP_EXT]);
+#endif
+}
+
+QList<QQuaternion> QQuick3DXrHandTrackerInputPrivate::jointRotations() const
+{
+    return m_jointRotations;
+}
+
+QVector3D QQuick3DXrHandTrackerInputPrivate::pokePosition() const
+{
+    return m_pokePosition;
+}
+
+void QQuick3DXrHandTrackerInputPrivate::setPokePosition(const QVector3D &newPokePosition)
+{
+    Q_Q(QQuick3DXrHandTrackerInput);
+
+    if (m_pokePosition == newPokePosition)
+        return;
+    m_pokePosition = newPokePosition;
+    emit q->pokePositionChanged();
+}
 
 /*!
     \qmltype XrHandTrackerInput
@@ -19,8 +108,14 @@ QT_BEGIN_NAMESPACE
     and other relevant data for hand tracking.
 */
 
-QOpenXRHandTrackerInput::QOpenXRHandTrackerInput(QObject *parent)
+QQuick3DXrHandTrackerInput::QQuick3DXrHandTrackerInput(QObject *parent)
     : QObject(parent)
+    , d_ptr(new QQuick3DXrHandTrackerInputPrivate(*this))
+{
+
+}
+
+QQuick3DXrHandTrackerInput::~QQuick3DXrHandTrackerInput()
 {
 
 }
@@ -30,9 +125,10 @@ QOpenXRHandTrackerInput::QOpenXRHandTrackerInput(QObject *parent)
     \brief  Indicates whether hand tracking is active.
 */
 
-bool QOpenXRHandTrackerInput::isActive() const
+bool QQuick3DXrHandTrackerInput::isActive() const
 {
-    return m_isActive;
+    Q_D(const QQuick3DXrHandTrackerInput);
+    return d->isActive();
 }
 
 /*!
@@ -46,27 +142,17 @@ bool QOpenXRHandTrackerInput::isActive() const
     \value XrHandTrackerInput.PokePose
 */
 
-QOpenXRHandTrackerInput::HandPoseSpace QOpenXRHandTrackerInput::poseSpace() const
+QQuick3DXrHandTrackerInput::HandPoseSpace QQuick3DXrHandTrackerInput::poseSpace() const
 {
-    return m_poseSpace;
+    Q_D(const QQuick3DXrHandTrackerInput);
+
+    return d->poseSpace();
 }
 
-void QOpenXRHandTrackerInput::setIsActive(bool isActive)
+void QQuick3DXrHandTrackerInput::setIsActive(bool isActive)
 {
-    if (m_isActive == isActive)
-        return;
-
-    m_isActive = isActive;
-    emit isActiveChanged();
-}
-
-void QOpenXRHandTrackerInput::setPoseSpace(QOpenXRHandTrackerInput::HandPoseSpace poseSpace)
-{
-    if (poseSpace == m_poseSpace)
-        return;
-
-    m_poseSpace = poseSpace;
-    emit poseSpaceChanged();
+    Q_D(QQuick3DXrHandTrackerInput);
+    d->setIsActive(isActive);
 }
 
 /*!
@@ -74,14 +160,16 @@ void QOpenXRHandTrackerInput::setPoseSpace(QOpenXRHandTrackerInput::HandPoseSpac
     \brief The position of the hand pose.
 */
 
-const QVector3D &QOpenXRHandTrackerInput::posePosition() const
+void QQuick3DXrHandTrackerInput::setPoseSpace(QQuick3DXrHandTrackerInput::HandPoseSpace poseSpace)
 {
-    return m_posePosition;
+    Q_D(QQuick3DXrHandTrackerInput);
+    d->setPoseSpace(poseSpace);
 }
 
-const QQuaternion &QOpenXRHandTrackerInput::poseRotation() const
+const QVector3D &QQuick3DXrHandTrackerInput::posePosition() const
 {
-    return m_poseRotation;
+    Q_D(const QQuick3DXrHandTrackerInput);
+    return d->posePosition();
 }
 
 /*!
@@ -89,21 +177,16 @@ const QQuaternion &QOpenXRHandTrackerInput::poseRotation() const
     \brief List of joint positions for the hand.
 */
 
-QList<QVector3D> QOpenXRHandTrackerInput::jointPositions() const
+QList<QVector3D> QQuick3DXrHandTrackerInput::jointPositions() const
 {
-    return m_jointPositions;
+    Q_D(const QQuick3DXrHandTrackerInput);
+    return d->jointPositions();
 }
 
-void QOpenXRHandTrackerInput::setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations)
+const QQuaternion &QQuick3DXrHandTrackerInput::poseRotation() const
 {
-    m_jointPositions = newJointPositions;
-    emit jointPositionsChanged();
-    m_jointRotations = newJointRotations;
-    emit jointRotationsChanged();
-    emit jointDataUpdated();
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-    setPokePosition(m_jointPositions[XR_HAND_JOINT_INDEX_TIP_EXT]);
-#endif
+    Q_D(const QQuick3DXrHandTrackerInput);
+    return d->poseRotation();
 }
 
 /*!
@@ -111,36 +194,29 @@ void QOpenXRHandTrackerInput::setJointPositionsAndRotations(const QList<QVector3
     \brief List of joint rotations for the hand.
 */
 
-QList<QQuaternion> QOpenXRHandTrackerInput::jointRotations() const
+QList<QQuaternion> QQuick3DXrHandTrackerInput::jointRotations() const
 {
-    return m_jointRotations;
+    Q_D(const QQuick3DXrHandTrackerInput);
+    return d->jointRotations();
 }
 
-QVector3D QOpenXRHandTrackerInput::pokePosition() const
+void QQuick3DXrHandTrackerInput::setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations)
 {
-    return m_pokePosition;
+    Q_D(QQuick3DXrHandTrackerInput);
+    d->setJointPositionsAndRotations(newJointPositions, newJointRotations);
 }
 
-void QOpenXRHandTrackerInput::setPokePosition(const QVector3D &newPokePosition)
+QVector3D QQuick3DXrHandTrackerInput::pokePosition() const
 {
-    if (m_pokePosition == newPokePosition)
-        return;
-    m_pokePosition = newPokePosition;
-    emit pokePositionChanged();
+    Q_D(const QQuick3DXrHandTrackerInput);
+    return d->pokePosition();
 }
 
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuaternion &rotation)
+void QQuick3DXrHandTrackerInput::setPokePosition(const QVector3D &newPokePosition)
 {
-    QMatrix4x4 transform = QMatrix4x4{rotation.toRotationMatrix()};
-
-    transform(0, 3) += position[0];
-    transform(1, 3) += position[1];
-    transform(2, 3) += position[2];
-
-    return transform;
+    Q_D(QQuick3DXrHandTrackerInput);
+    d->setPokePosition(newPokePosition);
 }
-#endif
 
  /*!
     \qmlsignal XrHandTrackerInput::isActiveChanged()
@@ -186,13 +262,13 @@ static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuate
     Contains a 3D model that is animated by a XrHandTrackerInput.
 */
 
-QOpenXrHandModel::QOpenXrHandModel(QQuick3DNode *parent)
+QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)
     : QQuick3DModel(parent)
 {
 
 }
 
-void QOpenXrHandModel::updatePose()
+void QQuick3DXrHandModel::updatePose()
 {
     auto *skin = QQuick3DModel::skin();
     auto jointListProp = skin->joints();
@@ -206,7 +282,7 @@ void QOpenXrHandModel::updatePose()
     }
 }
 
-void QOpenXrHandModel::setupModel()
+void QQuick3DXrHandModel::setupModel()
 {
     if (!m_handTracker) {
         return;
@@ -248,8 +324,8 @@ void QOpenXrHandModel::setupModel()
     skin->setInverseBindPoses(inverseBindPoses);
     setSkin(skin);
 
-    connect(m_handTracker, &QOpenXRHandTrackerInput::jointDataUpdated, this, &QOpenXrHandModel::updatePose);
-    connect(m_handTracker, &QOpenXRHandTrackerInput::isActiveChanged, this, [this](){
+    connect(m_handTracker, &QQuick3DXrHandTrackerInput::jointDataUpdated, this, &QQuick3DXrHandModel::updatePose);
+    connect(m_handTracker, &QQuick3DXrHandTrackerInput::isActiveChanged, this, [this](){
         setVisible(m_handTracker->isActive());
     });
     setVisible(m_handTracker->isActive());
@@ -257,7 +333,7 @@ void QOpenXrHandModel::setupModel()
 #endif
 }
 
-void QOpenXrHandModel::componentComplete()
+void QQuick3DXrHandModel::componentComplete()
 {
     setupModel();
     QQuick3DModel::componentComplete();
@@ -270,9 +346,18 @@ void QOpenXrHandModel::componentComplete()
     \warning Changing hand trackers is not supported.
 */
 
-QOpenXRHandTrackerInput *QOpenXrHandModel::handTracker() const
+QQuick3DXrHandTrackerInput *QQuick3DXrHandModel::handTracker() const
 {
     return m_handTracker;
+}
+
+void QQuick3DXrHandModel::setHandTracker(QQuick3DXrHandTrackerInput *newHandTracker)
+{
+    if (m_handTracker == newHandTracker)
+        return;
+    m_handTracker = newHandTracker;
+    //TODO: setupModel()
+    emit handTrackerChanged();
 }
 
 /*!
@@ -285,13 +370,5 @@ QOpenXRHandTrackerInput *QOpenXrHandModel::handTracker() const
     Emitted when the handTracker property changes.
 */
 
-void QOpenXrHandModel::setHandTracker(QOpenXRHandTrackerInput *newHandTracker)
-{
-    if (m_handTracker == newHandTracker)
-        return;
-    m_handTracker = newHandTracker;
-    //TODO: setupModel()
-    emit handTrackerChanged();
-}
 
 QT_END_NAMESPACE

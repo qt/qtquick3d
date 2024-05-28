@@ -90,7 +90,7 @@ QQuick3DXrHandInput *QQuick3DXrView::rightHandInput() const
     \brief Provides access to the left hand tracker input for the XR view.
 */
 
-QOpenXRHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
+QQuick3DXrHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
 {
 #if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
@@ -105,7 +105,7 @@ QOpenXRHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
     \brief Provides access to the right hand tracker input for the XR view.
 */
 
-QOpenXRHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
+QQuick3DXrHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
 {
 #if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();

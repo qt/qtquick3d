@@ -19,7 +19,6 @@
 #include "qquick3dxrgamepadinput_p.h"
 #include "qquick3dxrhandinput_p.h"
 #include "qopenxractionmapper_p.h"
-#include "qopenxrhandtrackerinput_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQml/QQmlEngine>
 

@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRHANDTRACKERINPUT_H
-#define QOPENXRHANDTRACKERINPUT_H
+#ifndef QQUICK3DXRHANDTRACKERINPUT_H
+#define QQUICK3DXRHANDTRACKERINPUT_H
 
 //
 //  W A R N I N G
@@ -23,35 +23,33 @@
 #include <private/qquick3dmodel_p.h>
 
 #include <QQuick3DGeometry>
+#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRHandTrackerInput : public QObject
+class QQuick3DXrHandTrackerInputPrivate;
+
+class QQuick3DXrHandTrackerInput : public QObject
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QQuick3DXrHandTrackerInput)
+
     Q_PROPERTY(bool isActive READ isActive NOTIFY isActiveChanged)
     Q_PROPERTY(HandPoseSpace poseSpace READ poseSpace WRITE setPoseSpace NOTIFY poseSpaceChanged)
-
     Q_PROPERTY(QVector3D posePosition READ posePosition NOTIFY posePositionChanged)
-
     Q_PROPERTY(QList<QVector3D> jointPositions READ jointPositions NOTIFY jointPositionsChanged FINAL)
     Q_PROPERTY(QList<QQuaternion> jointRotations READ jointRotations NOTIFY jointRotationsChanged FINAL)
-
     Q_PROPERTY(QVector3D pokePosition READ pokePosition NOTIFY pokePositionChanged FINAL)
 
     QML_NAMED_ELEMENT(XrHandTrackerInput)
     QML_UNCREATABLE("Created by XrView")
 
 public:
-    enum class HandPoseSpace {
-        GripPose,
-        AimPose,
-        PinchPose,
-        PokePose
-    };
+    using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
     Q_ENUM(HandPoseSpace)
 
-    explicit QOpenXRHandTrackerInput(QObject *parent = nullptr);
+    explicit QQuick3DXrHandTrackerInput(QObject *parent = nullptr);
+    ~QQuick3DXrHandTrackerInput() override;
 
     bool isActive() const;
     HandPoseSpace poseSpace() const;
@@ -95,23 +93,25 @@ private:
     QList<QVector3D> m_jointPositions;
     QList<QQuaternion> m_jointRotations;
     QVector3D m_pokePosition;
+
+    std::unique_ptr<QQuick3DXrHandTrackerInputPrivate> d_ptr;
 };
 
-class QOpenXrHandModel : public QQuick3DModel
+class QQuick3DXrHandModel : public QQuick3DModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QOpenXRHandTrackerInput *handTracker READ handTracker WRITE setHandTracker NOTIFY handTrackerChanged FINAL)
+    Q_PROPERTY(QQuick3DXrHandTrackerInput *handTracker READ handTracker WRITE setHandTracker NOTIFY handTrackerChanged FINAL)
 
     QML_NAMED_ELEMENT(XrHandModel)
 
 public:
-    QOpenXrHandModel(QQuick3DNode *parent = nullptr);
+    QQuick3DXrHandModel(QQuick3DNode *parent = nullptr);
 
     void componentComplete() override;
 
-    QOpenXRHandTrackerInput *handTracker() const;
-    void setHandTracker(QOpenXRHandTrackerInput *newHandTracker);
+    QQuick3DXrHandTrackerInput *handTracker() const;
+    void setHandTracker(QQuick3DXrHandTrackerInput *newHandTracker);
 
 Q_SIGNALS:
     void handChanged();
@@ -122,10 +122,10 @@ private Q_SLOTS:
 
 private:
     void setupModel();
-    QOpenXRHandTrackerInput *m_handTracker = nullptr;
+    QQuick3DXrHandTrackerInput *m_handTracker = nullptr;
     bool m_initialized = false;
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRHANDTRACKERINPUT_H
+#endif // QQUICK3DXRHANDTRACKERINPUT_H
