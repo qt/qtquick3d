@@ -97,8 +97,8 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                                           lightmapTexture);
 }
 
-std::pair<QSSGBoxPoints, QSSGBoxPoints> RenderHelpers::calculateSortedObjectBounds(const QSSGRenderableObjectList &sortedOpaqueObjects,
-                                                                                   const QSSGRenderableObjectList &sortedTransparentObjects)
+std::pair<QSSGBounds3, QSSGBounds3> RenderHelpers::calculateSortedObjectBounds(const QSSGRenderableObjectList &sortedOpaqueObjects,
+                                                                               const QSSGRenderableObjectList &sortedTransparentObjects)
 {
     QSSGBounds3 boundsCasting;
     QSSGBounds3 boundsReceiving;
@@ -115,28 +115,7 @@ std::pair<QSSGBoxPoints, QSSGBoxPoints> RenderHelpers::calculateSortedObjectBoun
                 boundsReceiving.include(obj.globalBounds);
         }
     }
-    return { boundsCasting.toQSSGBoxPointsNoEmptyCheck(), boundsReceiving.toQSSGBoxPointsNoEmptyCheck() };
-}
-
-static QVector3D calcCenter(const QSSGBoxPoints &vertices)
-{
-    QVector3D center = vertices[0];
-    for (int i = 1; i < 8; ++i) {
-        center += vertices[i];
-    }
-    return center * 0.125f;
-}
-
-static QSSGBounds3 calculateShadowCameraBoundingBox(const QSSGBoxPoints &points, const QVector3D &forward, const QVector3D &up, const QVector3D &right)
-{
-    QSSGBounds3 bounds;
-    for (int i = 0; i < 8; ++i) {
-        const float distanceZ = QVector3D::dotProduct(points[i], forward);
-        const float distanceY = QVector3D::dotProduct(points[i], up);
-        const float distanceX = QVector3D::dotProduct(points[i], right);
-        bounds.include(QVector3D(distanceX, distanceY, distanceZ));
-    }
-    return bounds;
+    return { boundsCasting, boundsReceiving };
 }
 
 static QSSGBoxPoints computeFrustumBounds(const QSSGRenderCamera &inCamera)
@@ -151,6 +130,197 @@ static QSSGBoxPoints computeFrustumBounds(const QSSGRenderCamera &inCamera)
     return { inv.map(QVector3D(-1, -1, -1)), inv.map(QVector3D(+1, -1, -1)), inv.map(QVector3D(+1, +1, -1)),
              inv.map(QVector3D(-1, +1, -1)), inv.map(QVector3D(-1, -1, +1)), inv.map(QVector3D(+1, -1, +1)),
              inv.map(QVector3D(+1, +1, +1)), inv.map(QVector3D(-1, +1, +1)) };
+}
+
+static QSSGBoxPoints computeFrustumBoundsWithNearFar(const QSSGRenderCamera &inCamera, float clipNear, float clipFar)
+{
+    QMatrix4x4 viewProjection;
+    inCamera.calculateViewProjectionMatrix(viewProjection, clipNear, clipFar);
+
+    bool invertible = false;
+    QMatrix4x4 inv = viewProjection.inverted(&invertible);
+    Q_ASSERT(invertible);
+
+    QSSGBoxPoints pts = { inv.map(QVector3D(-1, -1, -1)), inv.map(QVector3D(+1, -1, -1)),
+                          inv.map(QVector3D(+1, +1, -1)), inv.map(QVector3D(-1, +1, -1)),
+                          inv.map(QVector3D(-1, -1, +1)), inv.map(QVector3D(+1, -1, +1)),
+                          inv.map(QVector3D(+1, +1, +1)), inv.map(QVector3D(-1, +1, +1)) };
+    return pts;
+}
+
+static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QSSGRenderCamera &inCamera,
+                                                                        const QMatrix4x4 &lightMatrix,
+                                                                        const QMatrix4x4 &lightMatrixInverted,
+                                                                        const QVector3D &lightPivot,
+                                                                        const QVector3D &lightForward,
+                                                                        const QVector3D &lightUp,
+                                                                        float clipRange,
+                                                                        float frustumStartT,
+                                                                        float frustumEndT,
+                                                                        const QSSGBounds3 &castingBox,
+                                                                        const QSSGBounds3 &receivingBox,
+                                                                        QSSGDebugDrawSystem *debugDrawSystem,
+                                                                        const bool drawCascades,
+                                                                        const bool drawSceneCascadeIntersection)
+{
+    if (!castingBox.isFinite() || castingBox.isEmpty() || !receivingBox.isFinite() || receivingBox.isEmpty())
+        return nullptr; // Return early, no casting or receiving objects means no shadows
+
+    Q_ASSERT(frustumStartT <= frustumEndT);
+    Q_ASSERT(frustumStartT >= 0.f);
+    Q_ASSERT(frustumEndT <= 1.0f);
+
+    auto transformPoints = [&](const QSSGBoxPoints &points) {
+        QSSGBoxPoints result;
+        for (int i = 0; i < int(points.size()); ++i) {
+            result[i] = lightMatrix.map(points[i]);
+        }
+        return result;
+    };
+
+    const float clipNear = 1.0f + clipRange * frustumStartT;
+    const float clipFar = 1.0f + clipRange * frustumEndT;
+
+    QSSGBoxPoints frustumPoints = computeFrustumBoundsWithNearFar(inCamera, clipNear, clipFar);
+    if (drawCascades)
+        ShadowmapHelpers::addDebugFrustum(frustumPoints, QColorConstants::Black, debugDrawSystem);
+
+    QList<QVector3D> receivingSliced = ShadowmapHelpers::intersectBoxByFrustum(frustumPoints,
+                                                                               receivingBox.toQSSGBoxPoints(),
+                                                                               drawSceneCascadeIntersection ? debugDrawSystem : nullptr,
+                                                                               QColorConstants::DarkGray);
+    if (receivingSliced.isEmpty())
+        return nullptr;
+
+    QSSGBounds3 receivingFrustumSlicedLightSpace;
+    for (const QVector3D &point : receivingSliced)
+        receivingFrustumSlicedLightSpace.include(lightMatrix.map(point));
+
+    // Slice casting box by frustumBounds' left, right, up, down planes
+    QList<QVector3D> castingPointsLightSpace = ShadowmapHelpers::intersectBoxByBox(receivingFrustumSlicedLightSpace,
+                                                                                   transformPoints(castingBox.toQSSGBoxPointsNoEmptyCheck()));
+    if (castingPointsLightSpace.isEmpty())
+        return nullptr;
+
+    // Create box containing casting and receiving from light space:
+    QSSGBounds3 castReceiveBounds;
+    for (const QVector3D &p : castingPointsLightSpace) {
+        castReceiveBounds.include(p);
+    }
+
+    for (const QVector3D &p : receivingFrustumSlicedLightSpace.toQSSGBoxPointsNoEmptyCheck()) {
+        float zMax = qMax(p.z(), castReceiveBounds.maximum.z());
+        float zMin = qMin(p.z(), castReceiveBounds.minimum.z());
+        castReceiveBounds.maximum.setZ(zMax);
+        castReceiveBounds.minimum.setZ(zMin);
+    }
+
+    // Expand a bit to avoid precision issues.
+    castReceiveBounds.scale(1.05f);
+
+    QVector3D boundsCenterWorld = lightMatrixInverted.map(castReceiveBounds.center());
+    QVector3D boundsDims = castReceiveBounds.dimensions();
+    QRectF theViewport(0.0f, 0.0f, boundsDims.x(), boundsDims.y());
+
+    auto camera = std::make_unique<QSSGRenderCamera>(QSSGRenderGraphObject::Type::OrthographicCamera);
+    camera->clipNear = -0.5f * boundsDims.z();
+    camera->clipFar = 0.5f * boundsDims.z();
+    camera->fov = qDegreesToRadians(90.f);
+    camera->parent = nullptr;
+    camera->localTransform = QSSGRenderNode::calculateTransformMatrix(boundsCenterWorld,
+                                                                      QSSGRenderNode::initScale,
+                                                                      lightPivot,
+                                                                      QQuaternion::fromDirection(lightForward, lightUp));
+    camera->calculateGlobalVariables(theViewport);
+
+    return camera;
+}
+
+static QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> setupCascadingCamerasForShadowMap(const QSSGRenderCamera &inCamera,
+                                                                                               const QSSGRenderLight *inLight,
+                                                                                               const QSSGBounds3 &castingObjectsBox,
+                                                                                               const QSSGBounds3 &receivingObjectsBox,
+                                                                                               QSSGDebugDrawSystem *debugDrawSystem,
+                                                                                               bool drawCascades,
+                                                                                               bool drawSceneCascadeIntersection)
+{
+    Q_ASSERT(inLight->type == QSSGRenderLight::Type::DirectionalLight);
+    QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> result;
+
+    const QVector3D lightDir = inLight->getDirection();
+    const QVector3D lightPivot = inLight->pivot;
+
+    const QVector3D forward = lightDir.normalized();
+    const QVector3D right = qFuzzyCompare(qAbs(forward.y()), 1.0f)
+            ? QVector3D::crossProduct(forward, QVector3D(1, 0, 0)).normalized()
+            : QVector3D::crossProduct(forward, QVector3D(0, 1, 0)).normalized();
+    const QVector3D up = QVector3D::crossProduct(right, forward).normalized();
+
+    QMatrix4x4 lightMatrix;
+    lightMatrix.setRow(0, QVector4D(right, 0.0f));
+    lightMatrix.setRow(1, QVector4D(up, 0.0f));
+    lightMatrix.setRow(2, QVector4D(forward, 0.0f));
+    lightMatrix.setRow(3, QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
+    QMatrix4x4 lightMatrixInverted = lightMatrix.inverted();
+
+    const float clipRange = qMax(2.0f, qMin(inLight->m_shadowMapFar, inCamera.clipFar)) - 1.0f;
+
+    const auto computeSplitRanges = [inLight](const QVarLengthArray<float, 3> &splits) -> QVarLengthArray<QPair<float, float>, 4> {
+        QVarLengthArray<QPair<float, float>, 4> ranges;
+        const float csmBlendRatio = inLight->m_csmBlendRatio;
+        float t0 = 0.f;
+        for (qsizetype i = 0; i < splits.length(); i++) {
+            const float tI = qBound(qMin(t0 + 0.01f, 1.0f), splits[i], 1.0f);
+            ranges.emplace_back(t0, qMin(1.0f, tI + csmBlendRatio));
+            t0 = tI;
+        }
+        ranges.emplace_back(t0, 1.0f);
+        return ranges;
+    };
+
+    const auto computeFrustums = [&](const QVarLengthArray<float, 3> &splits) {
+        for (const auto &range : computeSplitRanges(splits)) {
+            auto camera = computeShadowCameraFromFrustum(inCamera,
+                                                         lightMatrix,
+                                                         lightMatrixInverted,
+                                                         lightPivot,
+                                                         forward,
+                                                         up,
+                                                         clipRange,
+                                                         range.first,
+                                                         range.second,
+                                                         castingObjectsBox,
+                                                         receivingObjectsBox,
+                                                         debugDrawSystem,
+                                                         drawCascades,
+                                                         drawSceneCascadeIntersection);
+            result.emplace_back(std::move(camera));
+        }
+    };
+
+    switch (inLight->m_csmNumSplits) {
+    case 0: {
+        computeFrustums({});
+        break;
+    }
+    case 1: {
+        computeFrustums({ inLight->m_csmSplit1 });
+        break;
+    }
+    case 2: {
+        computeFrustums({ inLight->m_csmSplit1, inLight->m_csmSplit2 });
+        break;
+    }
+    case 3: {
+        computeFrustums({ inLight->m_csmSplit1, inLight->m_csmSplit2, inLight->m_csmSplit3 });
+        break;
+    }
+    default:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    return result;
 }
 
 static void setupCubeReflectionCameras(const QSSGRenderReflectionProbe *inProbe, QSSGRenderCamera inCameras[6])
@@ -181,109 +351,6 @@ static void setupCubeReflectionCameras(const QSSGRenderReflectionProbe *inProbe,
         inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inProbePos, QSSGRenderNode::initScale, inProbePivot, rotOfs[i]);
         inCameras[i].calculateGlobalVariables(theViewport);
     }
-}
-
-static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
-                                    const QSSGRenderLight *inLight,
-                                    QSSGRenderCamera &theCamera,
-                                    const QSSGBoxPoints &castingBox,
-                                    const QSSGBoxPoints &receivingBox)
-{
-    using namespace RenderHelpers;
-
-    // setup light matrix
-    quint32 mapRes = inLight->m_shadowMapRes;
-    QRectF theViewport(0.0f, 0.0f, (float)mapRes, (float)mapRes);
-    theCamera.clipNear = 1.0f;
-    theCamera.clipFar = inLight->m_shadowMapFar;
-    // Setup camera projection
-    QVector3D inLightPos = inLight->getGlobalPos();
-    QVector3D inLightDir = inLight->getDirection();
-    QVector3D inLightPivot = inLight->pivot;
-
-    inLightPos -= inLightDir * inCamera.clipNear;
-    theCamera.fov = qDegreesToRadians(90.f);
-    theCamera.parent = nullptr;
-
-    if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
-        Q_ASSERT(theCamera.type == QSSGRenderCamera::Type::OrthographicCamera);
-        const QVector3D forward = inLightDir.normalized();
-        const QVector3D right = qFuzzyCompare(qAbs(forward.y()), 1.0f)
-                ? QVector3D::crossProduct(forward, QVector3D(1, 0, 0)).normalized()
-                : QVector3D::crossProduct(forward, QVector3D(0, 1, 0)).normalized();
-        const QVector3D up = QVector3D::crossProduct(right, forward).normalized();
-
-        // Calculate bounding box of the scene camera frustum
-        const QSSGBoxPoints frustumPoints = computeFrustumBounds(inCamera);
-        const QSSGBounds3 frustumBounds = calculateShadowCameraBoundingBox(frustumPoints, forward, up, right);
-        const QSSGBounds3 sceneCastingBounds = calculateShadowCameraBoundingBox(castingBox, forward, up, right);
-        const QSSGBounds3 boundsReceiving = calculateShadowCameraBoundingBox(receivingBox, forward, up, right);
-
-        QVector3D finalDims;
-        QVector3D center;
-        // Select smallest bounds from either scene or camera frustum
-        if (sceneCastingBounds.isFinite() && boundsReceiving.isFinite() // handle empty scene
-            && sceneCastingBounds.extents().lengthSquared() < frustumBounds.extents().lengthSquared()) {
-            center = calcCenter(castingBox);
-            const QVector3D centerReceiving = calcCenter(receivingBox);
-
-            // Since we need to make sure every rendered geometry can get a valid depth value from the shadow map
-            // we need to expand the scene bounding box along its z-axis so that it covers also receiving objects in the scene.
-            //
-            // We take the z dimensions of the casting bounds and expand it to include the z dimensions of the receiving objects.
-            // We call the casting bounding box 'a' and the receiving bounding box 'b'.
-
-            // length of boxes
-            const float aLength = sceneCastingBounds.dimensions().z();
-            const float bLength = boundsReceiving.dimensions().z();
-
-            // center position of boxes
-            const float aCenter = QVector3D::dotProduct(center, forward);
-            const float bCenter = QVector3D::dotProduct(centerReceiving, forward);
-
-            // distance between boxes
-            const float d = bCenter - aCenter;
-
-            // start/end positions
-            const float a0 = 0.f;
-            const float a1 = aLength;
-            const float b0 = (aLength * 0.5f) + d - (bLength * 0.5f);
-            const float b1 = (aLength * 0.5f) + d + (bLength * 0.5f);
-
-            // goal start/end position
-            const float ap0 = qMin(a0, b0);
-            const float ap1 = qMax(a1, b1);
-            // goal length
-            const float length = ap1 - ap0;
-            // goal center postion
-            const float c = (ap1 + ap0) * 0.5f;
-
-            // how much to move in forward direction
-            const float move = c - aLength * 0.5f;
-
-            center = center + forward * move;
-            finalDims = sceneCastingBounds.dimensions();
-            finalDims.setZ(length);
-        } else {
-            center = calcCenter(frustumPoints);
-            finalDims = frustumBounds.dimensions();
-        }
-
-        // Expand dimensions a little bit to avoid precision problems
-        finalDims *= 1.05f;
-
-        // Apply bounding box parameters to shadow map camera projection matrix
-        // so that the whole scene is fit inside the shadow map
-        theViewport.setHeight(finalDims.y());
-        theViewport.setWidth(finalDims.x());
-        theCamera.clipNear = -0.5f * finalDims.z();
-        theCamera.clipFar = 0.5f * finalDims.z();
-        theCamera.localTransform = QSSGRenderNode::calculateTransformMatrix(center, QSSGRenderNode::initScale, inLightPivot, QQuaternion::fromDirection(forward, up));
-    } else if (inLight->type == QSSGRenderLight::Type::PointLight) {
-        theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), QVector3D(0, 0, 0), inLightPivot);
-    }
-
-    theCamera.calculateGlobalVariables(theViewport);
 }
 
 static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
@@ -546,7 +613,8 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             const QSSGRenderableObjectList &sortedOpaqueObjects,
                                             QSSGRenderCamera &inCamera,
                                             bool orthographic,
-                                            QSSGRenderTextureCubeFace cubeFace)
+                                            QSSGRenderTextureCubeFace cubeFace,
+                                            quint32 cascadeIndex)
 {
     QSSGShaderFeatures featureSet;
     if (orthographic)
@@ -578,11 +646,10 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         QSSGSubsetRenderable &renderable(static_cast<QSSGSubsetRenderable &>(*theObject));
         if (theObject->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || theObject->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             const bool hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(renderable.shaderDescription) > 0;
-            modelViewProjection = hasSkinning ? pEntry->m_lightVP
-                                              : pEntry->m_lightVP * renderable.globalTransform;
+            modelViewProjection = hasSkinning ? pEntry->m_lightViewProjection[cascadeIndex]
+                                              : pEntry->m_lightViewProjection[cascadeIndex] * renderable.globalTransform;
             const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(renderable.subset.offset) << 3));
-            dcd = &rhiCtxD->drawCallData({ passKey, &renderable.modelContext.model,
-                                           pEntry, entryIdx });
+            dcd = &rhiCtxD->drawCallData({ passKey, &renderable.modelContext.model, pEntry, entryIdx + cascadeIndex });
         }
 
         QSSGRhiShaderResourceBindingList bindings;
@@ -674,9 +741,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             }
 
             QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
-            subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtxD->pipeline(*ps,
-                                                                                   pEntry->m_rhiRenderPassDesc,
-                                                                                   srb);
+            subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtxD->pipeline(*ps, pEntry->m_rhiRenderPassDesc[cascadeIndex], srb);
             subsetRenderable.rhiRenderData.shadowPass.srb[cubeFaceIdx] = srb;
         }
     }
@@ -1150,11 +1215,12 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                        QSSGRhiGraphicsPipelineState &ps,
                                        QSSGRenderShadowMap &shadowMapManager,
                                        const QSSGRenderCamera &camera,
+                                       QSSGRenderCamera *debugCamera,
                                        const QSSGShaderLightList &globalLights,
                                        const QSSGRenderableObjectList &sortedOpaqueObjects,
                                        QSSGRenderer &renderer,
-                                       const QSSGBoxPoints &castingObjectsBox,
-                                       const QSSGBoxPoints &receivingObjectsBox)
+                                       const QSSGBounds3 &castingObjectsBox,
+                                       const QSSGBounds3 &receivingObjectsBox)
 {
     const QSSGLayerRenderData &layerData = *QSSGLayerRenderData::getCurrent(renderer);
 
@@ -1222,17 +1288,18 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                             QSSGRenderer &renderer,
                                             float shadowFilter,
                                             float shadowMapFar,
-                                            bool orthographic) {
+                                            bool orthographic,
+                                            int cascadeIndex) {
         // may not be able to do the blur pass if the number of max color
         // attachments is the gl/vk spec mandated minimum of 4, and we need 6.
         // (applicable only to !orthographic, whereas orthographic always works)
-        if (!pEntry->m_rhiBlurRenderTarget0 || !pEntry->m_rhiBlurRenderTarget1)
+        if (!pEntry->m_rhiBlurRenderTarget0[cascadeIndex] || !pEntry->m_rhiBlurRenderTarget1[cascadeIndex])
             return;
 
         QRhi *rhi = rhiCtx->rhi();
         QSSGRhiGraphicsPipelineState ps;
         QRhiTexture *map = orthographic ? pEntry->m_rhiDepthTextureArray : pEntry->m_rhiDepthCube;
-        QRhiTexture *workMap = orthographic ? pEntry->m_rhiDepthCopy : pEntry->m_rhiCubeCopy;
+        QRhiTexture *workMap = orthographic ? pEntry->m_rhiDepthCopy[cascadeIndex] : pEntry->m_rhiCubeCopy;
         const QSize size = map->pixelSize();
         ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
@@ -1251,7 +1318,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         // construct a key that is unique for this frame (we use a dynamic buffer
         // so even if the same key gets used in the next frame, just updating the
         // contents on the same QRhiBuffer is ok due to QRhi's internal double buffering)
-        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ map, &pEntry->m_depthArrayIndex, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ map, &pEntry->m_depthArrayIndex, nullptr, quintptr(cascadeIndex) });
         if (!dcd.ubuf) {
             dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 4 * sizeof(float));
             dcd.ubuf->create();
@@ -1266,7 +1333,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         // in NDC so that kind of self-corrects...
         if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
             flipY.data()[5] = -1.0f;
-        float cameraProperties[4] = { shadowFilter, shadowMapFar, (float)pEntry->m_depthArrayIndex, 0.0f };
+        float cameraProperties[4] = { shadowFilter, shadowMapFar, float(pEntry->m_depthArrayIndex + cascadeIndex), 0.0f };
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         memcpy(ubufData, flipY.constData(), 64);
         memcpy(ubufData + 64, cameraProperties, 4 * sizeof(float));
@@ -1285,7 +1352,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         if (orthographic) // orthoshadowshadowblurx and y have attr_uv as well
             quadFlags |= QSSGRhiQuadRenderer::UvCoords;
         renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0, quadFlags);
+        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0[cascadeIndex], quadFlags);
 
         // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
 
@@ -1301,7 +1368,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         srb = rhiCtxD->srb(bindings);
 
         renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1, quadFlags);
+        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1[cascadeIndex], quadFlags);
     };
 
     QRhi *rhi = rhiCtx->rhi();
@@ -1320,14 +1387,6 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         depthAdjust[1] = 0.5f;
     }
 
-    const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
-    QSSGDebugDrawSystem *debugDrawSystem = renderer.contextInterface()->debugDrawSystem().get();
-
-    if (layerData.layer.drawShadowCastingBounds)
-        ShadowmapHelpers::addDebugBox(castingObjectsBox, QColorConstants::Red, debugDrawSystem);
-    if (layerData.layer.drawShadowReceivingBounds)
-        ShadowmapHelpers::addDebugBox(receivingObjectsBox, QColorConstants::Blue, debugDrawSystem);
-
     // Create shadow map for each light in the scene
     for (int i = 0, ie = globalLights.size(); i != ie; ++i) {
         if (!globalLights[i].shadows || globalLights[i].light->m_fullyBaked)
@@ -1337,39 +1396,77 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         if (!pEntry)
             continue;
 
-        Q_ASSERT(pEntry->m_rhiDepthStencil);
-        const bool orthographic = pEntry->m_rhiDepthTextureArray && pEntry->m_rhiDepthCopy;
-        if (orthographic) {
+        Q_ASSERT(pEntry->m_rhiDepthStencil[0]);
+        if (pEntry->m_rhiDepthTextureArray) {
             const QSize size = pEntry->m_rhiDepthTextureArray->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             const auto &light = globalLights[i].light;
-            const auto cameraType = (light->type == QSSGRenderLight::Type::DirectionalLight) ? QSSGRenderCamera::Type::OrthographicCamera : QSSGRenderCamera::Type::CustomCamera;
-            QSSGRenderCamera theCamera(cameraType);
-            setupCameraForShadowMap(camera, light, theCamera, castingObjectsBox, receivingObjectsBox);
-            theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
-            pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
+            Q_ASSERT(light->type == QSSGRenderLight::Type::DirectionalLight);
+            const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
+            const bool drawShadowCastingBounds = layerData.layer.drawShadowCastingBounds;
+            const bool drawShadowReceivingBounds = layerData.layer.drawShadowReceivingBounds;
+            const bool drawCascades = layerData.layer.drawCascades;
+            const bool drawSceneCascadeIntersection = layerData.layer.drawSceneCascadeIntersection;
+            const bool disableShadowCameraUpdate = layerData.layer.disableShadowCameraUpdate;
+            QSSGDebugDrawSystem *debugDrawSystem = renderer.contextInterface()->debugDrawSystem().get();
 
-            if (drawDirectionalLightShadowBoxes) {
-                ShadowmapHelpers::addDirectionalLightDebugBox(computeFrustumBounds(theCamera), debugDrawSystem);
+            if (drawShadowCastingBounds)
+                ShadowmapHelpers::addDebugBox(castingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Red, debugDrawSystem);
+            if (drawShadowReceivingBounds)
+                ShadowmapHelpers::addDebugBox(receivingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Green, debugDrawSystem);
+
+            // This is just a way to store the old camera so we can use it for debug
+            // drawing. There are probably cleaner ways to do this
+            if (!disableShadowCameraUpdate && debugCamera) {
+                memcpy((void *)debugCamera, (void *)&camera, sizeof(QSSGRenderCamera));
             }
 
-            rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust,
-                                            sortedOpaqueObjects, theCamera, true, QSSGRenderTextureCubeFaceNone);
+            // Cascading Shadow Maps
+            auto cascades = setupCascadingCamerasForShadowMap(disableShadowCameraUpdate ? *debugCamera : camera,
+                                                              light,
+                                                              castingObjectsBox,
+                                                              receivingObjectsBox,
+                                                              debugDrawSystem,
+                                                              drawCascades,
+                                                              drawSceneCascadeIntersection);
 
-            // Render into the 2D texture pEntry->m_rhiDepthMap, using
-            // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
-            QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[0];
-            cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
-            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-            QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
-            rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0);
-            cb->endPass();
-            QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+            const float clipFar = qMax(2.0f, qMin(light->m_shadowMapFar, camera.clipFar));
+
+            // Write the split distances from value 0 in the z-axis of the eye view-space
+            pEntry->m_csmSplits[0] = clipFar * (light->m_csmNumSplits > 0 ? light->m_csmSplit1 : 1.0f);
+            pEntry->m_csmSplits[1] = clipFar * (light->m_csmNumSplits > 1 ? light->m_csmSplit2 : 1.0f);
+            pEntry->m_csmSplits[2] = clipFar * (light->m_csmNumSplits > 2 ? light->m_csmSplit3 : 1.0f);
+            pEntry->m_csmSplits[3] = clipFar * 1.0f;
+
+            for (int cascadeIndex = 0; cascadeIndex < cascades.length(); cascadeIndex++) {
+                const auto &cascadeCamera = cascades[cascadeIndex];
+                pEntry->m_csmActive[cascadeIndex] = cascadeCamera == nullptr ? 0.f : 1.f;
+                if (!cascadeCamera)
+                    continue;
+
+                cascadeCamera->calculateViewProjectionMatrix(pEntry->m_lightViewProjection[cascadeIndex]);
+                pEntry->m_lightView = cascadeCamera->globalTransform.inverted(); // pre-calculate this for the material
+                rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust, sortedOpaqueObjects, *cascadeCamera, true, QSSGRenderTextureCubeFaceNone, cascadeIndex);
+                // Render into the 2D texture pEntry->m_rhiDepthMap, using
+                // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
+                QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[cascadeIndex];
+                cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
+                Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+                QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
+                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0);
+                cb->endPass();
+                QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+
+                if (drawDirectionalLightShadowBoxes)
+                    ShadowmapHelpers::addDirectionalLightDebugBox(computeFrustumBounds(*cascadeCamera), debugDrawSystem);
+            }
+
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map"));
-
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, true);
+            for (int blurIndex = 0; blurIndex < light->m_csmNumSplits + 1; blurIndex++) {
+                rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, true, blurIndex);
+            }
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map_blur"));
         } else {
             Q_ASSERT(pEntry->m_rhiDepthCube && pEntry->m_rhiCubeCopy);
@@ -1387,11 +1484,20 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
             const bool swapYFaces = !rhi->isYUpInFramebuffer();
             for (const auto face : QSSGRenderTextureCubeFaces) {
-                theCameras[quint8(face)].calculateViewProjectionMatrix(pEntry->m_lightVP);
+                theCameras[quint8(face)].calculateViewProjectionMatrix(pEntry->m_lightViewProjection[0]);
                 pEntry->m_lightCubeView[quint8(face)] = theCameras[quint8(face)].globalTransform.inverted(); // pre-calculate this for the material
 
-                rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust,
-                                                sortedOpaqueObjects, theCameras[quint8(face)], false, face);
+                rhiPrepareResourcesForShadowMap(rhiCtx,
+                                                layerData,
+                                                passKey,
+                                                pEntry,
+                                                &ps,
+                                                &depthAdjust,
+                                                sortedOpaqueObjects,
+                                                theCameras[quint8(face)],
+                                                false,
+                                                face,
+                                                0);
             }
 
             for (const auto face : QSSGRenderTextureCubeFaces) {
@@ -1432,7 +1538,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             }
 
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, false);
+            rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, false, 0);
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_cube_blur"));
         }
     }

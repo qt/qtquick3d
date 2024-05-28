@@ -28,6 +28,10 @@ class Q_QUICK3D_EXPORT QQuick3DDebugSettings : public QObject
                        setDrawDirectionalLightShadowBoxes NOTIFY drawDirectionalLightShadowBoxesChanged FINAL)
     Q_PROPERTY(bool drawShadowCastingBounds READ drawShadowCastingBounds WRITE setDrawShadowCastingBounds NOTIFY drawShadowCastingBoundsChanged FINAL)
     Q_PROPERTY(bool drawShadowReceivingBounds READ drawShadowReceivingBounds WRITE setDrawShadowReceivingBounds NOTIFY drawShadowReceivingBoundsChanged FINAL)
+    Q_PROPERTY(bool drawCascades READ drawCascades WRITE setDrawCascades NOTIFY drawCascadesChanged FINAL)
+    Q_PROPERTY(bool drawSceneCascadeIntersection READ drawSceneCascadeIntersection WRITE setDrawSceneCascadeIntersection NOTIFY drawSceneCascadeIntersectionChanged FINAL)
+    Q_PROPERTY(bool disableShadowCameraUpdate READ disableShadowCameraUpdate WRITE setDisableShadowCameraUpdate NOTIFY disableShadowCameraUpdateChanged FINAL)
+
     QML_NAMED_ELEMENT(DebugSettings)
 public:
     enum QQuick3DMaterialOverrides {
@@ -64,12 +68,24 @@ public:
     bool drawShadowReceivingBounds() const;
     void setDrawShadowReceivingBounds(bool newDrawShadowReceivingBounds);
 
+    bool drawCascades() const;
+    void setDrawCascades(bool newDrawCascades);
+
+    bool drawSceneCascadeIntersection() const;
+    void setDrawSceneCascadeIntersection(bool newDrawSceneCascadeIntersection);
+
+    bool disableShadowCameraUpdate() const;
+    void setDisableShadowCameraUpdate(bool newDisableShadowCameraUpdate);
+
 Q_SIGNALS:
     void materialOverrideChanged();
     void wireframeEnabledChanged();
     void drawDirectionalLightShadowBoxesChanged();
     void drawShadowCastingBoundsChanged();
     void drawShadowReceivingBoundsChanged();
+    void drawCascadesChanged();
+    void drawSceneCascadeIntersectionChanged();
+    void disableShadowCameraUpdateChanged();
     void changed();
 
 private:
@@ -80,6 +96,9 @@ private:
     bool m_drawDirectionalLightShadowBoxes = false;
     bool m_drawShadowCastingBounds = false;
     bool m_drawShadowReceivingBounds = false;
+    bool m_drawCascades = false;
+    bool m_drawSceneCascadeIntersection = false;
+    bool m_disableShadowCameraUpdate = false;
 };
 
 QT_END_NAMESPACE

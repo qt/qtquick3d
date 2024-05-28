@@ -82,14 +82,165 @@ QT_BEGIN_NAMESPACE
     \sa PointLight, SpotLight
 */
 
+/*!
+    \qmlproperty float DirectionalLight::csmSplit1
+    This property defines where the first cascade of the shadow map split will occur when
+    CSM is active.
+
+    Range: \c{[0.0, 1.0]}
+    Default value: \c{0}
+
+    \sa csmSplit2, csmSplit3
+    \note This property is only used when DirectionalLight::csmNumSplits is greater than \c{0}.
+*/
+
+/*!
+    \qmlproperty float DirectionalLight::csmSplit2
+    This property defines where the second cascade of the shadow map split will occur when
+    CSM is active.
+
+    Range: \c{[0.0, 1.0]}
+    Default value: \c{0.25}
+
+    \sa csmSplit1, csmSplit3
+    \note This property is only used when DirectionalLight::csmNumSplits is greater than \c{1}.
+*/
+
+/*!
+    \qmlproperty float DirectionalLight::csmSplit3
+    This property defines where the third cascade of the shadow map split will occur when
+    CSM is active.
+
+    Range: \c{[0.0, 1.0]}
+    Default value: \c{0.5}
+
+    \sa csmSplit1, csmSplit2
+    \note This property is only used when DirectionalLight::csmNumSplits is greater than \c{2}.
+*/
+
+/*!
+    \qmlproperty int DirectionalLight::csmNumSplits
+    This property defines the number of splits the frustum should be split by when
+    rendering the shadowmap. No splits means that the shadowmap will be rendered
+    so that it covers the bounding box of all shadow casting and receiving objects.
+
+    Range: \c{[0, 3]}
+    Default value: \c{0}
+
+    \sa csmSplit1, csmSplit2, csmSplit3
+*/
+
+/*!
+    \qmlproperty float DirectionalLight::csmBlendRatio
+    This property defines how much of the shadow of any cascade should be blended
+    together with the previous one.
+
+    Range: \c{[0.0, 1.0]}
+    Default value: \c{0.05}
+*/
+
 QQuick3DDirectionalLight::QQuick3DDirectionalLight(QQuick3DNode *parent)
     : QQuick3DAbstractLight(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::DirectionalLight)), parent) {}
+
+float QQuick3DDirectionalLight::csmSplit1() const
+{
+    return m_csmSplit1;
+}
+
+float QQuick3DDirectionalLight::csmSplit2() const
+{
+    return m_csmSplit2;
+}
+
+float QQuick3DDirectionalLight::csmSplit3() const
+{
+    return m_csmSplit3;
+}
+
+int QQuick3DDirectionalLight::csmNumSplits() const
+{
+    return m_csmNumSplits;
+}
+
+float QQuick3DDirectionalLight::csmBlendRatio() const
+{
+    return m_csmBlendRatio;
+}
+
+void QQuick3DDirectionalLight::setCsmSplit1(float newcsmSplit1)
+{
+    newcsmSplit1 = qBound(0.0f, newcsmSplit1, 1.0f);
+    if (qFuzzyCompare(m_csmSplit1, newcsmSplit1))
+        return;
+
+    m_csmSplit1 = newcsmSplit1;
+    emit csmSplit1Changed();
+    m_dirtyFlags.setFlag(QQuick3DAbstractLight::DirtyFlag::ShadowDirty);
+    update();
+}
+
+void QQuick3DDirectionalLight::setCsmSplit2(float newcsmSplit2)
+{
+    newcsmSplit2 = qBound(0.0f, newcsmSplit2, 1.0f);
+    if (qFuzzyCompare(m_csmSplit2, newcsmSplit2))
+        return;
+
+    m_csmSplit2 = newcsmSplit2;
+    emit csmSplit2Changed();
+    m_dirtyFlags.setFlag(QQuick3DAbstractLight::DirtyFlag::ShadowDirty);
+    update();
+}
+
+void QQuick3DDirectionalLight::setCsmSplit3(float newcsmSplit3)
+{
+    newcsmSplit3 = qBound(0.0f, newcsmSplit3, 1.0f);
+    if (qFuzzyCompare(m_csmSplit3, newcsmSplit3))
+        return;
+
+    m_csmSplit3 = newcsmSplit3;
+    emit csmSplit3Changed();
+    m_dirtyFlags.setFlag(QQuick3DAbstractLight::DirtyFlag::ShadowDirty);
+    update();
+}
+
+void QQuick3DDirectionalLight::setCsmNumSplits(int newcsmNumSplits)
+{
+    newcsmNumSplits = qBound(0, newcsmNumSplits, 3);
+    if (m_csmNumSplits == newcsmNumSplits)
+        return;
+
+    m_csmNumSplits = newcsmNumSplits;
+    emit csmNumSplitsChanged();
+    m_dirtyFlags.setFlag(QQuick3DAbstractLight::DirtyFlag::ShadowDirty);
+    update();
+}
+
+void QQuick3DDirectionalLight::setCsmBlendRatio(float newcsmBlendRatio)
+{
+    newcsmBlendRatio = qBound(0.0, newcsmBlendRatio, 1.0);
+    if (m_csmBlendRatio == newcsmBlendRatio)
+        return;
+
+    m_csmBlendRatio = newcsmBlendRatio;
+    emit csmBlendRatioChanged();
+    m_dirtyFlags.setFlag(QQuick3DAbstractLight::DirtyFlag::ShadowDirty);
+    update();
+}
 
 QSSGRenderGraphObject *QQuick3DDirectionalLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
         markAllDirty();
         node = new QSSGRenderLight(/* defaults to directional */);
+    }
+
+    if (m_dirtyFlags.testFlag(DirtyFlag::ShadowDirty)) {
+        QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
+        light->m_csmSplit1 = m_csmSplit1;
+        light->m_csmSplit2 = m_csmSplit2;
+        light->m_csmSplit3 = m_csmSplit3;
+        light->m_csmNumSplits = m_csmNumSplits;
+        light->m_csmBlendRatio = m_csmBlendRatio;
     }
 
     QQuick3DAbstractLight::updateSpatialNode(node); // Marks the light node dirty if m_dirtyFlags != 0

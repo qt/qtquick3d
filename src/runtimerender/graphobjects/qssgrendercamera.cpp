@@ -110,6 +110,24 @@ void QSSGRenderCamera::calculateViewProjectionMatrix(const QMatrix4x4 &globalTra
     outMatrix = projection * nonScaledGlobal.inverted();
 }
 
+void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix, float clipNear, float clipFar) const
+{
+    if (qFuzzyIsNull(clipFar - clipNear)) {
+        qWarning() << "QSSGRenderCamera::calculateViewProjection: far == near";
+        return;
+    }
+
+    QMatrix4x4 proj = projection;
+    proj(2, 2) = -(clipFar + clipNear) / (clipFar - clipNear);
+    proj(2, 3) = -2 * clipFar * clipNear / (clipFar - clipNear);
+    QMatrix4x4 nonScaledGlobal(Qt::Uninitialized);
+    nonScaledGlobal.setColumn(0, 0.5f * globalTransform.column(0).normalized());
+    nonScaledGlobal.setColumn(1, 0.5f * globalTransform.column(1).normalized());
+    nonScaledGlobal.setColumn(2, 0.5f * globalTransform.column(2).normalized());
+    nonScaledGlobal.setColumn(3, 0.5f * globalTransform.column(3));
+    outMatrix = proj * nonScaledGlobal.inverted();
+}
+
 //==============================================================================
 /**
  *	Compute the projection matrix for a orthographic camera

@@ -33,19 +33,20 @@ class QSSGRhiShaderPipeline;
 namespace RenderHelpers
 {
 
-std::pair<QSSGBoxPoints, QSSGBoxPoints> calculateSortedObjectBounds(const QSSGRenderableObjectList &sortedOpaqueObjects,
-                                                                    const QSSGRenderableObjectList &sortedTransparentObjects);
+std::pair<QSSGBounds3, QSSGBounds3> calculateSortedObjectBounds(const QSSGRenderableObjectList &sortedOpaqueObjects,
+                                                                const QSSGRenderableObjectList &sortedTransparentObjects);
 
 void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                         QSSGPassKey passKey,
                         QSSGRhiGraphicsPipelineState &ps,
                         QSSGRenderShadowMap &shadowMapManager,
                         const QSSGRenderCamera &camera,
+                        QSSGRenderCamera *debugCamera,
                         const QSSGShaderLightList &globalLights,
                         const QSSGRenderableObjectList &sortedOpaqueObjects,
                         QSSGRenderer &renderer,
-                        const QSSGBoxPoints &castingObjectsBox,
-                        const QSSGBoxPoints &receivingObjectsBox);
+                        const QSSGBounds3 &castingObjectsBox,
+                        const QSSGBounds3 &receivingObjectsBox);
 
 void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                             QSSGPassKey passKey,

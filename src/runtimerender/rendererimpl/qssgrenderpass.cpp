@@ -78,6 +78,10 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
                                                                       sortedTransparentObjects);
         castingObjectsBox = casting;
         receivingObjectsBox = receiving;
+
+        if (!debugCamera) {
+            debugCamera = std::make_unique<QSSGRenderCamera>(QSSGRenderGraphObject::Type::OrthographicCamera);
+        }
     }
 }
 
@@ -107,6 +111,7 @@ void ShadowMapPass::renderPass(QSSGRenderer &renderer)
                            ps,
                            *shadowMapManager,
                            *camera,
+                           debugCamera.get(),
                            globalLights, // scoped lights are not relevant here
                            shadowPassObjects,
                            renderer,

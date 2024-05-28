@@ -80,11 +80,12 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
     if (!rhi)
         return;
 
+    constexpr quint32 MAX_SPLITS = 4;
     const quint32 numLights = renderableLights.size();
     qsizetype numShadows = 0;
     std::array<quint8, 4> textureSizeLayerCount = {};
-    QVarLengthArray<quint8, 16> lightIndexToLayerIndex;
-    lightIndexToLayerIndex.resize(numLights);
+    QVarLengthArray<quint8, 16> lightIndexToLayerStartIndex;
+    lightIndexToLayerStartIndex.resize(numLights * MAX_SPLITS);
 
     for (quint32 lightIndex = 0; lightIndex < numLights; ++lightIndex) {
         const QSSGShaderLight &shaderLight = renderableLights.at(lightIndex);
@@ -97,8 +98,10 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
             continue;
 
         quint32 mapSize = shaderLight.light->m_shadowMapRes;
-        quint8 layerIndex = textureSizeLayerCount[mapSizeToIndex(mapSize)]++;
-        lightIndexToLayerIndex[lightIndex] = layerIndex;
+        quint8 &layerCount = textureSizeLayerCount[mapSizeToIndex(mapSize)];
+        quint8 layerIndex = layerCount;
+        layerCount += shaderLight.light->m_csmNumSplits + 1;
+        lightIndexToLayerStartIndex[lightIndex] = layerIndex;
     }
 
     // Only recreate shadow assets if something has changed
@@ -120,8 +123,9 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
                     ? ShadowMapModes::CUBE
                     : ShadowMapModes::VSM;
             quint32 mapSize = shaderLight.light->m_shadowMapRes;
-            quint32 layerIndex = mapMode == ShadowMapModes::VSM ? lightIndexToLayerIndex[lightIndex] : 0;
-            if (!pEntry->isCompatible(QSize(mapSize, mapSize), layerIndex, mapMode)) {
+            quint32 csmNumSplits = shaderLight.light->m_csmNumSplits;
+            quint32 layerIndex = mapMode == ShadowMapModes::VSM ? lightIndexToLayerStartIndex[lightIndex] : 0;
+            if (!pEntry->isCompatible(QSize(mapSize, mapSize), layerIndex, csmNumSplits, mapMode)) {
                 needsRebuild = true;
                 break;
             }
@@ -157,8 +161,9 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
                                                                                                       : ShadowMapModes::VSM;
         switch (mapMode) {
         case ShadowMapModes::VSM: {
-            quint32 layerIndex = lightIndexToLayerIndex.value(lightIdx);
-            addDirectionalShadowMap(lightIdx, mapSize, layerIndex, shaderLight.light->debugObjectName);
+            quint32 layerStartIndex = lightIndexToLayerStartIndex.value(lightIdx);
+            quint32 csmNumSplits = shaderLight.light->m_csmNumSplits;
+            addDirectionalShadowMap(lightIdx, mapSize, layerStartIndex, csmNumSplits, shaderLight.light->debugObjectName);
             break;
         }
         case ShadowMapModes::CUBE: {
@@ -172,7 +177,11 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
     }
 }
 
-QSSGShadowMapEntry *QSSGRenderShadowMap::addDirectionalShadowMap(qint32 lightIdx, QSize size, quint32 layerIndex, const QString &renderNodeObjName)
+QSSGShadowMapEntry *QSSGRenderShadowMap::addDirectionalShadowMap(qint32 lightIdx,
+                                                                 QSize size,
+                                                                 quint32 layerStartIndex,
+                                                                 quint32 csmNumSplits,
+                                                                 const QString &renderNodeObjName)
 {
     QRhi *rhi = m_context.rhiContext()->rhi();
     QSSGShadowMapEntry *pEntry = shadowMapEntry(lightIdx);
@@ -183,53 +192,57 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::addDirectionalShadowMap(qint32 lightIdx
     QRhiTexture::Format rhiFormat = getShadowMapTextureFormat(rhi);
     auto texture = m_depthTextureArrays.value(size);
     Q_ASSERT(texture);
-    QRhiTexture *depthCopy = allocateRhiShadowTexture(rhi, rhiFormat, size, 0, QRhiTexture::RenderTarget);
-    QRhiRenderBuffer *depthStencil = allocateRhiShadowRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, size);
-    m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthMap(lightIdx, ShadowMapModes::VSM, texture, depthCopy, depthStencil));
+    m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthMap(lightIdx, ShadowMapModes::VSM, texture));
 
     pEntry = &m_shadowMapList.back();
+    pEntry->m_csmNumSplits = csmNumSplits;
 
     // Additional graphics resources: samplers, render targets.
-    QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[0]);
-    Q_ASSERT(!rt);
+    for (quint32 splitIndex = 0; splitIndex < csmNumSplits + 1; splitIndex++) {
+        QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[splitIndex]);
+        Q_ASSERT(!rt);
 
-    {
+        pEntry->m_rhiDepthStencil[splitIndex] = allocateRhiShadowRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, size);
+
         QRhiTextureRenderTargetDescription rtDesc;
         QRhiColorAttachment attachment(pEntry->m_rhiDepthTextureArray);
-        attachment.setLayer(layerIndex);
+        attachment.setLayer(layerStartIndex + splitIndex);
         rtDesc.setColorAttachments({ attachment });
-        rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
+        rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil[splitIndex]);
         rt = rhi->newTextureRenderTarget(rtDesc);
         rt->setDescription(rtDesc);
         // The same renderpass descriptor can be reused since the
         // format, load/store ops are the same regardless of the shadow mode.
-        if (!pEntry->m_rhiRenderPassDesc)
-            pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
-        rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
+        if (!pEntry->m_rhiRenderPassDesc[splitIndex])
+            pEntry->m_rhiRenderPassDesc[splitIndex] = rt->newCompatibleRenderPassDescriptor();
+        rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc[splitIndex]);
         if (!rt->create())
             qWarning("Failed to build shadow map render target");
+
+        const QByteArray rtName = renderNodeObjName.toLatin1();
+        rt->setName(rtName + QByteArrayLiteral(" shadow map"));
+
+        pEntry->m_rhiDepthCopy[splitIndex] = allocateRhiShadowTexture(rhi, rhiFormat, size, 0, QRhiTexture::RenderTarget);
+
+        // blur X: depthMap -> depthCopy
+        pEntry->m_rhiBlurRenderTarget0[splitIndex] = rhi->newTextureRenderTarget({ pEntry->m_rhiDepthCopy[splitIndex] });
+        pEntry->m_rhiBlurRenderPassDesc[splitIndex] = pEntry->m_rhiBlurRenderTarget0[splitIndex]->newCompatibleRenderPassDescriptor();
+        pEntry->m_rhiBlurRenderTarget0[splitIndex]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[splitIndex]);
+        pEntry->m_rhiBlurRenderTarget0[splitIndex]->create();
+        pEntry->m_rhiBlurRenderTarget0[splitIndex]->setName(rtName + QByteArrayLiteral(" shadow blur X"));
+
+        // blur Y: depthCopy -> depthMap
+        auto attachment1 = QRhiColorAttachment(pEntry->m_rhiDepthTextureArray);
+        attachment1.setLayer(layerStartIndex + splitIndex);
+        pEntry->m_rhiBlurRenderTarget1[splitIndex] = rhi->newTextureRenderTarget({ attachment1 });
+        pEntry->m_rhiBlurRenderTarget1[splitIndex]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[splitIndex]);
+        pEntry->m_rhiBlurRenderTarget1[splitIndex]->create();
+
+        pEntry->m_rhiBlurRenderTarget1[splitIndex]->setName(rtName + QByteArrayLiteral(" shadow blur Y"));
     }
 
-    const QByteArray rtName = renderNodeObjName.toLatin1();
-    rt->setName(rtName + QByteArrayLiteral(" shadow map"));
-
-    // blur X: depthMap -> depthCopy
-    pEntry->m_rhiBlurRenderTarget0 = rhi->newTextureRenderTarget({ pEntry->m_rhiDepthCopy });
-    pEntry->m_rhiBlurRenderPassDesc = pEntry->m_rhiBlurRenderTarget0->newCompatibleRenderPassDescriptor();
-    pEntry->m_rhiBlurRenderTarget0->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-    pEntry->m_rhiBlurRenderTarget0->create();
-    pEntry->m_rhiBlurRenderTarget0->setName(rtName + QByteArrayLiteral(" shadow blur X"));
-
-    // blur Y: depthCopy -> depthMap
-    QRhiColorAttachment attachment(pEntry->m_rhiDepthTextureArray);
-    attachment.setLayer(layerIndex);
-    pEntry->m_rhiBlurRenderTarget1 = rhi->newTextureRenderTarget({ attachment });
-    pEntry->m_rhiBlurRenderTarget1->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-    pEntry->m_rhiBlurRenderTarget1->create();
-
-    pEntry->m_rhiBlurRenderTarget1->setName(rtName + QByteArrayLiteral(" shadow blur Y"));
     pEntry->m_lightIndex = lightIdx;
-    pEntry->m_depthArrayIndex = layerIndex;
+    pEntry->m_depthArrayIndex = layerStartIndex;
 
     return pEntry;
 }
@@ -258,12 +271,12 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::addCubeShadowMap(qint32 lightIdx, QSize
         att.setLayer(quint8(face)); // 6 render targets, each referencing one face of the cubemap
         QRhiTextureRenderTargetDescription rtDesc;
         rtDesc.setColorAttachments({ att });
-        rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
+        rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil[0]);
         rt = rhi->newTextureRenderTarget(rtDesc);
         rt->setDescription(rtDesc);
-        if (!pEntry->m_rhiRenderPassDesc)
-            pEntry->m_rhiRenderPassDesc = rt->newCompatibleRenderPassDescriptor();
-        rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc);
+        if (!pEntry->m_rhiRenderPassDesc[0])
+            pEntry->m_rhiRenderPassDesc[0] = rt->newCompatibleRenderPassDescriptor();
+        rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc[0]);
         if (!rt->create())
             qWarning("Failed to build shadow map render target");
         rt->setName(rtName + QByteArrayLiteral(" shadow cube face: ") + QSSGBaseTypeHelpers::displayName(face));
@@ -280,13 +293,13 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::addCubeShadowMap(qint32 lightIdx, QSize
             }
             QRhiTextureRenderTargetDescription rtDesc;
             rtDesc.setColorAttachments(att, att + 6);
-            pEntry->m_rhiBlurRenderTarget0 = rhi->newTextureRenderTarget(rtDesc);
-            if (!pEntry->m_rhiBlurRenderPassDesc)
-                pEntry->m_rhiBlurRenderPassDesc = pEntry->m_rhiBlurRenderTarget0->newCompatibleRenderPassDescriptor();
-            pEntry->m_rhiBlurRenderTarget0->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-            pEntry->m_rhiBlurRenderTarget0->create();
+            pEntry->m_rhiBlurRenderTarget0[0] = rhi->newTextureRenderTarget(rtDesc);
+            if (!pEntry->m_rhiBlurRenderPassDesc[0])
+                pEntry->m_rhiBlurRenderPassDesc[0] = pEntry->m_rhiBlurRenderTarget0[0]->newCompatibleRenderPassDescriptor();
+            pEntry->m_rhiBlurRenderTarget0[0]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[0]);
+            pEntry->m_rhiBlurRenderTarget0[0]->create();
         }
-        pEntry->m_rhiBlurRenderTarget0->setName(rtName + QByteArrayLiteral(" shadow cube blur X"));
+        pEntry->m_rhiBlurRenderTarget0[0]->setName(rtName + QByteArrayLiteral(" shadow cube blur X"));
 
         // blur Y: cubeCopy -> depthCube
         {
@@ -297,11 +310,11 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::addCubeShadowMap(qint32 lightIdx, QSize
             }
             QRhiTextureRenderTargetDescription rtDesc;
             rtDesc.setColorAttachments(att, att + 6);
-            pEntry->m_rhiBlurRenderTarget1 = rhi->newTextureRenderTarget(rtDesc);
-            pEntry->m_rhiBlurRenderTarget1->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc);
-            pEntry->m_rhiBlurRenderTarget1->create();
+            pEntry->m_rhiBlurRenderTarget1[0] = rhi->newTextureRenderTarget(rtDesc);
+            pEntry->m_rhiBlurRenderTarget1[0]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[0]);
+            pEntry->m_rhiBlurRenderTarget1[0]->create();
         }
-        pEntry->m_rhiBlurRenderTarget1->setName(rtName + QByteArrayLiteral(" shadow cube blur Y"));
+        pEntry->m_rhiBlurRenderTarget1[0]->setName(rtName + QByteArrayLiteral(" shadow cube blur Y"));
     } else {
         static bool warned = false;
         if (!warned) {
@@ -332,18 +345,12 @@ QSSGShadowMapEntry::QSSGShadowMapEntry()
 {
 }
 
-QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthMap(quint32 lightIdx,
-                                                       ShadowMapModes mode,
-                                                       QRhiTexture *textureArray,
-                                                       QRhiTexture *depthCopy,
-                                                       QRhiRenderBuffer *depthStencil)
+QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthMap(quint32 lightIdx, ShadowMapModes mode, QRhiTexture *textureArray)
 {
     QSSGShadowMapEntry e;
     e.m_lightIndex = lightIdx;
     e.m_shadowMapMode = mode;
     e.m_rhiDepthTextureArray = textureArray;
-    e.m_rhiDepthCopy = depthCopy;
-    e.m_rhiDepthStencil = depthStencil;
     return e;
 }
 
@@ -358,12 +365,15 @@ QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthCubeMap(quint32 lightIdx,
     e.m_shadowMapMode = mode;
     e.m_rhiDepthCube = depthCube;
     e.m_rhiCubeCopy = cubeCopy;
-    e.m_rhiDepthStencil = depthStencil;
+    e.m_rhiDepthStencil[0] = depthStencil;
     return e;
 }
 
-bool QSSGShadowMapEntry::isCompatible(QSize mapSize, quint32 layerIndex, ShadowMapModes mapMode)
+bool QSSGShadowMapEntry::isCompatible(QSize mapSize, quint32 layerIndex, quint32 csmNumSplits, ShadowMapModes mapMode)
 {
+    if (csmNumSplits != m_csmNumSplits)
+        return false;
+
     if (mapMode != m_shadowMapMode)
         return false;
 
@@ -392,25 +402,24 @@ void QSSGShadowMapEntry::destroyRhiResources()
 {
     m_rhiDepthTextureArray = nullptr;
 
-    delete m_rhiDepthCopy;
-    m_rhiDepthCopy = nullptr;
+    qDeleteAll(m_rhiDepthCopy);
+    m_rhiDepthCopy.fill(nullptr);
     delete m_rhiDepthCube;
     m_rhiDepthCube = nullptr;
     delete m_rhiCubeCopy;
     m_rhiCubeCopy = nullptr;
-    delete m_rhiDepthStencil;
-    m_rhiDepthStencil = nullptr;
-
+    qDeleteAll(m_rhiDepthStencil);
+    m_rhiDepthStencil.fill(nullptr);
     qDeleteAll(m_rhiRenderTargets);
     m_rhiRenderTargets.fill(nullptr);
-    delete m_rhiRenderPassDesc;
-    m_rhiRenderPassDesc = nullptr;
-    delete m_rhiBlurRenderTarget0;
-    m_rhiBlurRenderTarget0 = nullptr;
-    delete m_rhiBlurRenderTarget1;
-    m_rhiBlurRenderTarget1 = nullptr;
-    delete m_rhiBlurRenderPassDesc;
-    m_rhiBlurRenderPassDesc = nullptr;
+    qDeleteAll(m_rhiRenderPassDesc);
+    m_rhiRenderPassDesc.fill(nullptr);
+    qDeleteAll(m_rhiBlurRenderTarget0);
+    m_rhiBlurRenderTarget0.fill(nullptr);
+    qDeleteAll(m_rhiBlurRenderTarget1);
+    m_rhiBlurRenderTarget1.fill(nullptr);
+    qDeleteAll(m_rhiBlurRenderPassDesc);
+    m_rhiBlurRenderPassDesc.fill(nullptr);
 }
 
 QT_END_NAMESPACE

@@ -25,14 +25,21 @@ struct LightSource
 };
 
 struct ShadowData {
-    mat4 matrix;
+    mat4 matrices[4];
+    vec4 csmSplits;
+    vec4 csmActive;
+
     float bias;
     float factor;
     float isYUp; // 1.0 = true, 0.0 = false
     float clipNear;
+
     float clipFar;
     float shadowMapFar; // Used by point lights for historical reasons will be removed later
     int layerIndex;
+    int csmNumSplits;
+
+    float csmBlendRatio;
 };
 
 layout (std140, binding = 1) uniform cbLights

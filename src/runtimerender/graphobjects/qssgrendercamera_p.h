@@ -95,6 +95,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
                                               QMatrix4x4 &outMatrix);
 
     void calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const;
+    void calculateViewProjectionMatrix(QMatrix4x4 &outMatrix, float clipNear, float clipFar) const;
 
     void calculateViewProjectionWithoutTranslation(float near, float far, QMatrix4x4 &outMatrix) const;
 

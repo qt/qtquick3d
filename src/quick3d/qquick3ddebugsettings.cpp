@@ -193,5 +193,47 @@ void QQuick3DDebugSettings::setDrawShadowReceivingBounds(bool newDrawShadowRecei
     update();
 }
 
+bool QQuick3DDebugSettings::drawCascades() const
+{
+    return m_drawCascades;
+}
+
+void QQuick3DDebugSettings::setDrawCascades(bool newDrawCascades)
+{
+    if (m_drawCascades == newDrawCascades)
+        return;
+    m_drawCascades = newDrawCascades;
+    emit drawCascadesChanged();
+    update();
+}
+
+bool QQuick3DDebugSettings::drawSceneCascadeIntersection() const
+{
+    return m_drawSceneCascadeIntersection;
+}
+
+void QQuick3DDebugSettings::setDrawSceneCascadeIntersection(bool newDrawSceneCascadeIntersection)
+{
+    if (m_drawSceneCascadeIntersection == newDrawSceneCascadeIntersection)
+        return;
+    m_drawSceneCascadeIntersection = newDrawSceneCascadeIntersection;
+    emit drawSceneCascadeIntersectionChanged();
+    update();
+}
+
+bool QQuick3DDebugSettings::disableShadowCameraUpdate() const
+{
+    return m_disableShadowCameraUpdate;
+}
+
+void QQuick3DDebugSettings::setDisableShadowCameraUpdate(bool newDisableShadowCameraUpdate)
+{
+    if (m_disableShadowCameraUpdate == newDisableShadowCameraUpdate)
+        return;
+    m_disableShadowCameraUpdate = newDisableShadowCameraUpdate;
+    emit disableShadowCameraUpdateChanged();
+    update();
+}
+
 QT_END_NAMESPACE
 

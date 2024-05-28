@@ -366,7 +366,7 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         if (inType != QSSGRenderLight::Type::DirectionalLight) {
             fragmentShader << "        qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
         } else {
-            fragmentShader << "        qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_varWorldPos);\n";
+            fragmentShader << "        qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_zDepthViewSpace, qt_varWorldPos);\n";
         }
         fragmentShader << "    }\n";
     } else {
@@ -753,6 +753,7 @@ static void generateMainLightCalculation(QSSGStageGeneratorBase &fragmentShader,
     Q_ASSERT(lights.size() < INT32_MAX);
 
     int shadowMapCount = 0;
+    bool hasAddedZDepthViewSpaceVariable = false;
 
     for (qint32 lightIdx = 0; lightIdx < lights.size(); ++lightIdx) {
         auto &shaderLight = lights[lightIdx];
@@ -775,6 +776,15 @@ static void generateMainLightCalculation(QSSGStageGeneratorBase &fragmentShader,
 
         QByteArray lightVarPrefix = "light";
         lightVarPrefix.append(lightIdxStr);
+
+        if (isDirectional && !hasAddedZDepthViewSpaceVariable) {
+            fragmentShader.append("#if QSHADER_VIEW_COUNT >= 2");
+            fragmentShader.append("    float qt_zDepthViewSpace = abs((qt_viewMatrix[0] * vec4(qt_varWorldPos, 1.0)).z);");
+            fragmentShader.append("#else");
+            fragmentShader.append("    float qt_zDepthViewSpace = abs((qt_viewMatrix * vec4(qt_varWorldPos, 1.0)).z);");
+            fragmentShader.append("#endif");
+            hasAddedZDepthViewSpaceVariable = true;
+        }
 
         fragmentShader << "    //Light " << lightIdxStr << (isDirectional ? " [directional]" : isSpot ? " [spot]" : " [point]") << "\n";
 
@@ -1964,7 +1974,7 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                         perTargetCompilation);
 }
 
-static float ZERO_MATRIX[16] = {};
+static float ZERO_BUFFER_64[64] = {};
 
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
                                                            QSSGRhiShaderPipeline &shaders,
@@ -2025,7 +2035,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     // Only calculate and update Matrix uniforms if they are needed
     bool usesProjectionMatrix = false;
     bool usesInvProjectionMatrix = false;
-    bool usesViewMatrix = false;
     bool usesViewProjectionMatrix = false;
     bool usesModelViewProjectionMatrix = false;
     bool usesNormalMatrix = false;
@@ -2036,9 +2045,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         usesProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix);
         usesInvProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix);
         // ### these should use flags like the above two
-        usesViewMatrix = true;
         usesViewProjectionMatrix = true;
     }
+
     const bool usesInstancing = inProperties.m_usesInstancing.getValue(inKey);
     if (usesInstancing) {
         // Instanced calls have to calculate MVP and normalMatrix in the vertex shader
@@ -2074,17 +2083,17 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 shaders.setUniformArray(ubufData, "qt_inverseProjectionMatrix", invertedProjections.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.inverseProjectionMatrixIdx);
         }
     }
-    if (usesViewMatrix) {
-        if (viewCount < 2) {
-            const QMatrix4x4 viewMatrix = inCameras[0]->globalTransform.inverted();
-            shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
-        } else {
-            QVarLengthArray<QMatrix4x4, 2> viewMatrices(viewCount);
-            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
-                viewMatrices[viewIndex] = inCameras[viewIndex]->globalTransform.inverted();
-            shaders.setUniformArray(ubufData, "qt_viewMatrix", viewMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewMatrixIdx);
-        }
+
+    if (viewCount < 2) {
+        const QMatrix4x4 viewMatrix = inCameras[0]->globalTransform.inverted();
+        shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
+    } else {
+        QVarLengthArray<QMatrix4x4, 2> viewMatrices(viewCount);
+        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+            viewMatrices[viewIndex] = inCameras[viewIndex]->globalTransform.inverted();
+        shaders.setUniformArray(ubufData, "qt_viewMatrix", viewMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewMatrixIdx);
     }
+
     if (usesViewProjectionMatrix) {
         if (viewCount < 2) {
             QMatrix4x4 viewProj(Qt::Uninitialized);
@@ -2189,25 +2198,27 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             const auto& names = setupShadowMapVariableNames(lightIdx, theLight->m_shadowMapRes);
 
             QSSGShaderShadowData &shadowData(shadowsUniformData.shadowData[lightIdx]);
+            memcpy(shadowData.matrices, ZERO_BUFFER_64, 16 * 4 * sizeof(float));
 
             if (theLight->type != QSSGRenderLight::Type::DirectionalLight) {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowCube;
-                memcpy(&shadowData.matrix, receivesShadows ? pEntry->m_lightView.constData() : ZERO_MATRIX, 16 * sizeof(float));
+                memcpy(&shadowData.matrices[0], receivesShadows ? pEntry->m_lightView.constData() : ZERO_BUFFER_64, 16 * sizeof(float));
             } else {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthTextureArray;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowMapTexture;
                 if (receivesShadows) {
                     // add fixed scale bias matrix
-                    const QMatrix4x4 bias = {
+                    static const QMatrix4x4 bias = {
                         0.5, 0.0, 0.0, 0.5,
                         0.0, 0.5, 0.0, 0.5,
                         0.0, 0.0, 0.5, 0.5,
                         0.0, 0.0, 0.0, 1.0 };
-                    const QMatrix4x4 m = bias * pEntry->m_lightVP;
-                    memcpy(&shadowData.matrix, m.constData(), 16 * sizeof(float));
-                } else {
-                    memcpy(&shadowData.matrix, ZERO_MATRIX, 16 * sizeof(float));
+
+                    for (int i = 0; i < 4; i++) {
+                        const QMatrix4x4 m = bias * pEntry->m_lightViewProjection[i];
+                        memcpy(shadowData.matrices[i], m.constData(), 16 * sizeof(float));
+                    }
                 }
             }
 
@@ -2219,6 +2230,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 shadowData.shadowMapFar = theLight->m_shadowMapFar;
                 shadowData.isYUp = globalRenderData.isYUpInFramebuffer ? 0.0f : 1.0f;
                 shadowData.layerIndex = pEntry->m_depthArrayIndex;
+                shadowData.csmNumSplits = pEntry->m_csmNumSplits;
+                memcpy(shadowData.csmSplits, pEntry->m_csmSplits, 4 * sizeof(float));
+                memcpy(shadowData.csmActive, pEntry->m_csmActive, 4 * sizeof(float));
+                shadowData.csmBlendRatio = theLight->m_csmBlendRatio;
             }
         }
 

@@ -301,15 +301,22 @@ struct QSSGShaderLightsUniformData
 // note this struct must exactly match the memory layout of the uniform block in
 // funcSampleLightVars.glsllib
 struct QSSGShaderShadowData {
-    float matrix[16];
+    float matrices[4][16];
+    float csmSplits[4];
+    float csmActive[4];
+
     float bias;
     float factor;
     float isYUp;
     float clipNear;
+
     float clipFar;
     float shadowMapFar; // Used by point lights for historical reasons will be removed later
     qint32 layerIndex;
-    float padding[1];
+    qint32 csmNumSplits;
+
+    float csmBlendRatio;
+    float padding[3];
 };
 
 struct QSSGShaderShadowsUniformData

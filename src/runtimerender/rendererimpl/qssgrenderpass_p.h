@@ -68,9 +68,10 @@ public:
     QSSGRenderableObjectList shadowPassObjects;
     QSSGShaderLightList globalLights;
     QSSGRenderCamera *camera = nullptr;
+    std::unique_ptr<QSSGRenderCamera> debugCamera;
     QSSGRhiGraphicsPipelineState ps;
-    QSSGBoxPoints castingObjectsBox;
-    QSSGBoxPoints receivingObjectsBox;
+    QSSGBounds3 castingObjectsBox;
+    QSSGBounds3 receivingObjectsBox;
     bool enabled = false;
 };
 

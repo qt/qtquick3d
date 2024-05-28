@@ -1232,6 +1232,9 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
         layerNode.drawDirectionalLightShadowBoxes = debugSettings->drawDirectionalLightShadowBoxes();
         layerNode.drawShadowCastingBounds = debugSettings->drawShadowCastingBounds();
         layerNode.drawShadowReceivingBounds = debugSettings->drawShadowReceivingBounds();
+        layerNode.drawCascades = debugSettings->drawCascades();
+        layerNode.drawSceneCascadeIntersection = debugSettings->drawSceneCascadeIntersection();
+        layerNode.disableShadowCameraUpdate = debugSettings->disableShadowCameraUpdate();
     } else {
         layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode::None;
         layerNode.wireframeMode = false;

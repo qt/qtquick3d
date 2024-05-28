@@ -31,6 +31,13 @@ namespace ShadowmapHelpers {
 void addDebugFrustum(const QSSGBoxPoints &frustumPoints, const QColor &color, QSSGDebugDrawSystem *debugDrawSystem);
 void addDebugBox(const QSSGBoxPoints &boxUnsorted, const QColor &color, QSSGDebugDrawSystem *debugDrawSystem, bool sort = true);
 void addDirectionalLightDebugBox(const QSSGBoxPoints &box, QSSGDebugDrawSystem *debugDrawSystem);
+
+QList<QVector3D> intersectBoxByFrustum(const QSSGBoxPoints &frustumPoints,
+                                       const QSSGBoxPoints &box,
+                                       QSSGDebugDrawSystem *debugDrawSystem,
+                                       const QColor &color);
+
+QList<QVector3D> intersectBoxByBox(const QSSGBounds3 &boxBounds, const QSSGBoxPoints &box);
 }
 
 QT_END_NAMESPACE

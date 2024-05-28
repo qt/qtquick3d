@@ -58,6 +58,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     bool m_bakingEnabled;
     bool m_fullyBaked; // direct+indirect
 
+    // Cascading shadow map options
+    float m_csmSplit1 = 0.0f;
+    float m_csmSplit2 = 0.25f;
+    float m_csmSplit3 = 0.5f;
+    int m_csmNumSplits = 0;
+    float m_csmBlendRatio = 0.05f;
+
     // Defaults to directional light
     explicit QSSGRenderLight(Type type = Type::DirectionalLight);
 

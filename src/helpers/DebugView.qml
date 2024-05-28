@@ -491,6 +491,21 @@ Pane {
                             checked: root.source.environment.debugSettings.drawShadowReceivingBounds
                             onCheckedChanged: root.source.environment.debugSettings.drawShadowReceivingBounds = checked
                         }
+                        CheckBox {
+                            text: "Draw cascades"
+                            checked: root.source.environment.debugSettings.drawCascades
+                            onCheckedChanged: root.source.environment.debugSettings.drawCascades = checked
+                        }
+                        CheckBox {
+                            text: "Draw scene cascade intersection"
+                            checked: root.source.environment.debugSettings.drawSceneCascadeIntersection
+                            onCheckedChanged: root.source.environment.debugSettings.drawSceneCascadeIntersection = checked
+                        }
+                        CheckBox {
+                            text: "Disable Shadow Camera Update"
+                            checked: root.source.environment.debugSettings.disableShadowCameraUpdate
+                            onCheckedChanged: root.source.environment.debugSettings.disableShadowCameraUpdate = checked
+                        }
                     }
                 }
             }

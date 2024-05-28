@@ -32,6 +32,14 @@ Window {
             eulerRotation: Qt.vector3d(sliderDirectionalLightRotX.value,
                                        sliderDirectionalLightRotY.value,
                                        0)
+            csmSplit1: sliderCSMSplit1.value
+            csmSplit2: sliderCSMSplit2.value
+            csmSplit3: sliderCSMSplit3.value
+            csmNumSplits: sliderNumSplits.currentIndex
+            shadowMapQuality: Light.ShadowMapQualityHigh
+            csmBlendRatio: sliderBlendRatio.value
+            shadowBias: sliderShadowBias.value
+            shadowMapFar: sliderShadowMapFar.value
         }
 
         Model {
@@ -72,6 +80,8 @@ Window {
 
     WasdController {
         controlledObject: view.camera
+        speed: 5
+        shiftSpeed: 10
     }
 
     ScrollView {
@@ -82,6 +92,7 @@ Window {
             property alias value: slider.value
             property alias from: slider.from
             property alias to: slider.to
+            property alias stepSize: slider.stepSize
             readonly property bool highlight: slider.hovered || slider.pressed
             Slider {
                 id: slider
@@ -91,7 +102,7 @@ Window {
             }
             Label {
                 id: valueText
-                text: slider.value.toFixed(2)
+                text: slider.value.toFixed(3)
                 Layout.minimumWidth: 80
                 Layout.maximumWidth: 80
             }
@@ -120,6 +131,17 @@ Window {
             SliderWithValue {
                 id: sliderCameraClipFar
                 value: 15000
+                from: 0
+                to: 30000
+            }
+
+            Label {
+                text: "Shadowmap far"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderShadowMapFar
+                value: 5000
                 from: 0
                 to: 30000
             }
@@ -165,6 +187,77 @@ Window {
                 value: 100
                 from: 0
                 to: 100
+                enabled: checkBoxDirectionalLight.checked
+            }
+            Label {
+                text: "Num Splits"
+                font.pointSize: 12
+            }
+            ComboBox {
+                id: sliderNumSplits
+                model: ListModel {
+                    id: model
+                    ListElement { text: "0" }
+                    ListElement { text: "1" }
+                    ListElement { text: "2" }
+                    ListElement { text: "3" }
+                }
+                enabled: checkBoxDirectionalLight.checked
+            }
+            Label {
+                text: "CSM Split 1"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderCSMSplit1
+                value: 0.25
+                from: 0.01
+                to: 0.99
+                enabled: checkBoxDirectionalLight.checked
+            }
+            Label {
+                text: "CSM Split 2"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderCSMSplit2
+                value: 0.5
+                from: 0.01
+                to: 0.99
+                enabled: checkBoxDirectionalLight.checked
+            }
+            Label {
+                text: "CSM Split 3"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderCSMSplit3
+                value: 0.75
+                from: 0.01
+                to: 0.99
+                enabled: checkBoxDirectionalLight.checked
+            }
+            Label {
+                text: "Blend ratio"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderBlendRatio
+                value: 0.05
+                from: 0
+                to: 1
+                enabled: checkBoxDirectionalLight.checked
+            }
+            Label {
+                text: "Shadow bias"
+                font.pointSize: 12
+            }
+            SliderWithValue {
+                id: sliderShadowBias
+                value: 0.001
+                from: -0.01
+                to: 0.01
+                stepSize: 0.001
                 enabled: checkBoxDirectionalLight.checked
             }
         }
