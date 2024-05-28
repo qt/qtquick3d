@@ -60,7 +60,7 @@ QQuick3DSceneEnvironment *QQuick3DXrView::environment() const
     \brief Provides access to the left hand input for the XR view.
 */
 
-QOpenXRHandInput *QQuick3DXrView::leftHandInput() const
+QQuick3DXrHandInput *QQuick3DXrView::leftHandInput() const
 {
 #if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
@@ -75,7 +75,7 @@ QOpenXRHandInput *QQuick3DXrView::leftHandInput() const
     \brief Provides access to the right hand input for the XR view.
 */
 
-QOpenXRHandInput *QQuick3DXrView::rightHandInput() const
+QQuick3DXrHandInput *QQuick3DXrView::rightHandInput() const
 {
 #if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();

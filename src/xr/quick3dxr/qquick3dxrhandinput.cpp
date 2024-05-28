@@ -1,7 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrhandinput_p.h"
+#include "qquick3dxrhandinput_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
     This type provides information about hand poses, position, and rotation.
  */
 
-QOpenXRHandInput::QOpenXRHandInput(QObject *parent)
+QQuick3DXrHandInput::QQuick3DXrHandInput(QObject *parent)
     : QObject(parent)
 {
 
@@ -25,7 +25,7 @@ QOpenXRHandInput::QOpenXRHandInput(QObject *parent)
     Indicates whether the hand input is active.
 */
 
-bool QOpenXRHandInput::isActive() const
+bool QQuick3DXrHandInput::isActive() const
 {
     return m_isActive;
 }
@@ -39,12 +39,12 @@ bool QOpenXRHandInput::isActive() const
      \value XrHandINput.AimPose
 */
 
-QOpenXRHandInput::HandPoseSpace QOpenXRHandInput::poseSpace() const
+QQuick3DXrHandInput::HandPoseSpace QQuick3DXrHandInput::poseSpace() const
 {
     return m_poseSpace;
 }
 
-void QOpenXRHandInput::setIsActive(bool isActive)
+void QQuick3DXrHandInput::setIsActive(bool isActive)
 {
     if (m_isActive == isActive)
         return;
@@ -53,7 +53,7 @@ void QOpenXRHandInput::setIsActive(bool isActive)
     emit isActiveChanged();
 }
 
-void QOpenXRHandInput::setPosePosition(const QVector3D &position)
+void QQuick3DXrHandInput::setPosePosition(const QVector3D &position)
 {
     if (m_posePosition == position)
         return;
@@ -62,7 +62,7 @@ void QOpenXRHandInput::setPosePosition(const QVector3D &position)
     emit posePositionChanged();
 }
 
-void QOpenXRHandInput::setPoseRotation(const QQuaternion &rotation)
+void QQuick3DXrHandInput::setPoseRotation(const QQuaternion &rotation)
 {
     if (m_poseRotation == rotation)
         return;
@@ -71,7 +71,7 @@ void QOpenXRHandInput::setPoseRotation(const QQuaternion &rotation)
     emit poseRotationChanged();
 }
 
-void QOpenXRHandInput::setPoseSpace(QOpenXRHandInput::HandPoseSpace poseSpace)
+void QQuick3DXrHandInput::setPoseSpace(QQuick3DXrHandInput::HandPoseSpace poseSpace)
 {
     if (poseSpace == m_poseSpace)
         return;
@@ -85,7 +85,7 @@ void QOpenXRHandInput::setPoseSpace(QOpenXRHandInput::HandPoseSpace poseSpace)
     The position of the hand pose in 3D space.
 */
 
-const QVector3D &QOpenXRHandInput::posePosition() const
+const QVector3D &QQuick3DXrHandInput::posePosition() const
 {
     return m_posePosition;
 }
@@ -95,7 +95,7 @@ const QVector3D &QOpenXRHandInput::posePosition() const
     The rotation of the hand pose.
  */
 
-const QQuaternion &QOpenXRHandInput::poseRotation() const
+const QQuaternion &QQuick3DXrHandInput::poseRotation() const
 {
     return m_poseRotation;
 }
