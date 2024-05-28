@@ -17,7 +17,7 @@
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
 #include "qquick3dxrgamepadinput_p.h"
-#include "qopenxrhandinput_p.h"
+#include "qquick3dxrhandinput_p.h"
 #include "qopenxractionmapper_p.h"
 #include "qopenxrhandtrackerinput_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
@@ -31,7 +31,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRController : public QQuick3DNode
     Q_OBJECT
     Q_PROPERTY(Controller controller READ controller WRITE setController NOTIFY controllerChanged)
     Q_PROPERTY(QOpenXRActionMapper* actionMapper READ actionMapper WRITE setActionMapper NOTIFY actionMapperChanged FINAL)
-    Q_PROPERTY(QOpenXRHandInput* handInput READ handInput NOTIFY handInputChanged)
+    Q_PROPERTY(QQuick3DXrHandInput* handInput READ handInput NOTIFY handInputChanged)
     QML_NAMED_ELEMENT(XrController)
 public:
     enum Controller {
@@ -47,7 +47,7 @@ public:
     QOpenXRController::Controller controller() const;
     void setController(QOpenXRController::Controller newController);
 
-    QOpenXRHandInput *handInput() const;
+    QQuick3DXrHandInput *handInput() const;
     Q_INVOKABLE QQuick3DXrGamepadInput *gamepadInput() const;
 
     QOpenXRActionMapper *actionMapper() const;

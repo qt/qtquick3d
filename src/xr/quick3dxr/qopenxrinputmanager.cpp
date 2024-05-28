@@ -3,7 +3,7 @@
 
 #include "qopenxrinputmanager_p.h"
 #include "openxr/qopenxrhelpers_p.h"
-#include "qopenxrhandinput_p.h"
+#include "qquick3dxrhandinput_p.h"
 #include "qopenxrhandtrackerinput_p.h"
 #include "qquick3dxrgamepadinput_p.h"
 
@@ -17,8 +17,8 @@ QT_BEGIN_NAMESPACE
 
 QOpenXRInputManager::QOpenXRInputManager()
 {
-    m_handInputState[QOpenXRInputManager::LeftHand] = new QOpenXRHandInput(this);
-    m_handInputState[QOpenXRInputManager::RightHand] = new QOpenXRHandInput(this);
+    m_handInputState[QOpenXRInputManager::LeftHand] = new QQuick3DXrHandInput(this);
+    m_handInputState[QOpenXRInputManager::RightHand] = new QQuick3DXrHandInput(this);
     m_handTrackerInputState[QOpenXRInputManager::LeftHand] = new QOpenXRHandTrackerInput(this);
     m_handTrackerInputState[QOpenXRInputManager::RightHand] = new QOpenXRHandTrackerInput(this);
     m_gamepadInputState = new QQuick3DXrGamepadInput(this);
@@ -685,7 +685,7 @@ void QOpenXRInputManager::updatePoses(XrTime predictedDisplayTime, XrSpace appSp
         // qDebug() << "LOCATE SPACE hand:" << hand << "res" << res << "flags" << spaceLocation.locationFlags
         //          << "active" << m_handInputState[hand]->isActive()
         //          << "Pos" << spaceLocation.pose.position.x << spaceLocation.pose.position.y << spaceLocation.pose.position.z;
-        m_validAimStateFromUpdatePoses[hand] = m_handInputState[hand]->poseSpace() == QOpenXRHandInput::HandPoseSpace::AimPose
+        m_validAimStateFromUpdatePoses[hand] = m_handInputState[hand]->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::AimPose
                 && XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT)
                 && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT); // ### Workaround for Quest issue with hand interaction aim pose
 
@@ -778,7 +778,7 @@ void QOpenXRInputManager::updateHandtracking(XrTime predictedDisplayTime, XrSpac
             // ### Workaround for Quest issue with hand interaction aim pose
             for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
                 if (!m_validAimStateFromUpdatePoses[hand]) {
-                    if ((aimState[hand].status & XR_HAND_TRACKING_AIM_VALID_BIT_FB) && m_handInputState[hand]->poseSpace() == QOpenXRHandInput::HandPoseSpace::AimPose) {
+                    if ((aimState[hand].status & XR_HAND_TRACKING_AIM_VALID_BIT_FB) && m_handInputState[hand]->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::AimPose) {
                         setPosePosition(hand, QVector3D(aimState[hand].aimPose.position.x,
                                                         aimState[hand].aimPose.position.y,
                                                         aimState[hand].aimPose.position.z) * 100.0f);
@@ -1090,7 +1090,7 @@ void QOpenXRInputManager::getFloatInputState(XrActionStateGetInfo &getInfo, cons
 
 XrSpace QOpenXRInputManager::handSpace(QOpenXRInputManager::Hand hand)
 {
-    if (m_handInputState[hand]->poseSpace() == QOpenXRHandInput::HandPoseSpace::GripPose)
+    if (m_handInputState[hand]->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::GripPose)
         return m_handGripSpace[hand];
     else
         return m_handAimSpace[hand];
@@ -1124,12 +1124,12 @@ void QOpenXRInputManager::setPoseRotation(Hand hand, const QQuaternion &rotation
     m_handInputState[hand]->setPoseRotation(rotation);
 }
 
-QOpenXRHandInput *QOpenXRInputManager::leftHandInput() const
+QQuick3DXrHandInput *QOpenXRInputManager::leftHandInput() const
 {
     return m_handInputState[QOpenXRInputManager::LeftHand];
 }
 
-QOpenXRHandInput *QOpenXRInputManager::rightHandInput() const
+QQuick3DXrHandInput *QOpenXRInputManager::rightHandInput() const
 {
     return m_handInputState[QOpenXRInputManager::RightHand];
 }

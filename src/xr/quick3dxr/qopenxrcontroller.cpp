@@ -61,16 +61,16 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
         setRotation(input->poseRotation());
         setVisible(input->isActive());
 
-        m_posePositionConnection = connect(input, &QOpenXRHandInput::posePositionChanged, this, [this, input]{
+        m_posePositionConnection = connect(input, &QQuick3DXrHandInput::posePositionChanged, this, [this, input]{
             setPosition(input->posePosition());
         });
-        m_poseRotationConnection = connect(input, &QOpenXRHandInput::poseRotationChanged, this, [this, input]{
+        m_poseRotationConnection = connect(input, &QQuick3DXrHandInput::poseRotationChanged, this, [this, input]{
             setRotation(input->poseRotation());
         });
-        m_isActiveConnection = connect(input, &QOpenXRHandInput::isActiveChanged, this, [this, input]{
+        m_isActiveConnection = connect(input, &QQuick3DXrHandInput::isActiveChanged, this, [this, input]{
             setVisible(input->isActive());
         });
-        m_inputActionConnection = connect(input, &QOpenXRHandInput::inputValueChange,
+        m_inputActionConnection = connect(input, &QQuick3DXrHandInput::inputValueChange,
                                           this, [this](int id, const char *shortName, float value) {
                                               if (m_actionMapper)
                                                   m_actionMapper->handleInput(QOpenXRActionMapper::InputAction(id), shortName, value);
@@ -86,7 +86,7 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
     The hand input associated with this controller.
 */
 
-QOpenXRHandInput *QOpenXRController::handInput() const
+QQuick3DXrHandInput *QOpenXRController::handInput() const
 {
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     if (m_controller == ControllerRight)

@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRHANDINPUT_H
-#define QOPENXRHANDINPUT_H
+#ifndef QQUICK3DXRHANDINPUT_P_H
+#define QQUICK3DXRHANDINPUT_P_H
 
 //
 //  W A R N I N G
@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRHandInput : public QObject
+class QQuick3DXrHandInput : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isActive READ isActive NOTIFY isActiveChanged)
@@ -42,7 +42,7 @@ public:
     Q_ENUM(HandPoseSpace)
 
 
-    explicit QOpenXRHandInput(QObject *parent = nullptr);
+    explicit QQuick3DXrHandInput(QObject *parent = nullptr);
 
     bool isActive() const;
     HandPoseSpace poseSpace() const;
@@ -77,4 +77,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRHANDINPUT_H
+#endif // QQUICK3DXRHANDINPUT_P_H

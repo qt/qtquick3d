@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRHandInput;
+class QQuick3DXrHandInput;
 class QOpenXRHandTrackerInput;
 class QQuick3DXrGamepadInput;
 class QQuick3DGeometry;
@@ -57,8 +57,8 @@ public:
     void setPosePosition(Hand hand, const QVector3D &position);
     void setPoseRotation(Hand hand, const QQuaternion &rotation);
 
-    QOpenXRHandInput *leftHandInput() const;
-    QOpenXRHandInput *rightHandInput() const;
+    QQuick3DXrHandInput *leftHandInput() const;
+    QQuick3DXrHandInput *rightHandInput() const;
     QOpenXRHandTrackerInput *leftHandTrackerInput() const;
     QOpenXRHandTrackerInput *rightHandTrackerInput() const;
     QQuick3DXrGamepadInput *gamepadInput() const;
@@ -137,7 +137,7 @@ private:
     XrSpace m_handGripSpace[2];
     XrSpace m_handAimSpace[2];
 
-    QOpenXRHandInput *m_handInputState[2];
+    QQuick3DXrHandInput *m_handInputState[2];
     QOpenXRHandTrackerInput *m_handTrackerInputState[2];
     QQuick3DXrGamepadInput *m_gamepadInputState;
     XrPath m_gamepadSubactionPath;
