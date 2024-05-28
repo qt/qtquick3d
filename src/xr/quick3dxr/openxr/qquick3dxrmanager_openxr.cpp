@@ -396,14 +396,14 @@ bool QQuick3DXrManagerPrivate::initialize()
     xrGetInstanceProcAddr(
         XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction*)&xrInitializeLoaderKHR);
     if (xrInitializeLoaderKHR != NULL) {
-        JavaVM *javaVM = QJniEnvironment::javaVM();
+        m_javaVM = QJniEnvironment::javaVM();
         m_androidActivity = QNativeInterface::QAndroidApplication::context();
 
         XrLoaderInitInfoAndroidKHR loaderInitializeInfoAndroid;
         memset(&loaderInitializeInfoAndroid, 0, sizeof(loaderInitializeInfoAndroid));
         loaderInitializeInfoAndroid.type = XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR;
         loaderInitializeInfoAndroid.next = NULL;
-        loaderInitializeInfoAndroid.applicationVM = javaVM;
+        loaderInitializeInfoAndroid.applicationVM = m_javaVM;
         loaderInitializeInfoAndroid.applicationContext = m_androidActivity.object();
         XrResult xrResult = xrInitializeLoaderKHR((XrLoaderInitInfoBaseHeaderKHR*)&loaderInitializeInfoAndroid);
         if (xrResult != XR_SUCCESS) {
@@ -1904,6 +1904,10 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     if (isExtensionSupported(XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME, extensionProperties))
         enabledExtensions.append(XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME);
 
+    m_androidCreateInstanceExtensionSupported = isExtensionSupported(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME, extensionProperties);
+    if (m_androidCreateInstanceExtensionSupported)
+        enabledExtensions.append(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME);
+
     auto graphicsAPI = QQuickWindow::graphicsApi();
     if (graphicsAPI == QSGRendererInterface::Vulkan) {
         if (isExtensionSupported(XR_FB_SWAPCHAIN_UPDATE_STATE_VULKAN_EXTENSION_NAME, extensionProperties))
@@ -1923,7 +1927,19 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     // Create Instance
     XrInstanceCreateInfo xrInstanceInfo{};
     xrInstanceInfo.type = XR_TYPE_INSTANCE_CREATE_INFO;
-    xrInstanceInfo.next = nullptr;
+
+#ifdef Q_OS_ANDROID
+    XrInstanceCreateInfoAndroidKHR xrInstanceCreateInfoAndroid {};
+    if (m_androidCreateInstanceExtensionSupported) {
+        xrInstanceCreateInfoAndroid.type = XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR;
+        xrInstanceCreateInfoAndroid.applicationVM = m_javaVM;
+        xrInstanceCreateInfoAndroid.applicationActivity = m_androidActivity.object();
+
+        xrInstanceInfo.next = &xrInstanceCreateInfoAndroid;
+    }
+#endif
+
+
     xrInstanceInfo.createFlags = 0;
     xrInstanceInfo.applicationInfo = appInfo;
     xrInstanceInfo.enabledApiLayerCount = enabledApiLayers.count();

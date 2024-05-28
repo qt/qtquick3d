@@ -205,6 +205,9 @@ private:
     bool m_colorspaceExtensionSupported = false;
     bool m_displayRefreshRateExtensionSupported = false;
     bool m_foveationExtensionSupported = false;
+#ifdef Q_OS_ANDROID
+    bool m_androidCreateInstanceExtensionSupported = false;
+#endif
     XrFoveationLevelFB m_foveationLevel = XR_FOVEATION_LEVEL_HIGH_FB;
     bool m_compositionLayerDepthSupported = false;
     bool m_submitLayerDepth = false;
@@ -217,6 +220,7 @@ private:
     QQuick3DXrManager *q_ptr = nullptr;
 #ifdef XR_USE_PLATFORM_ANDROID
     QJniObject m_androidActivity;
+    JavaVM* m_javaVM = nullptr;
 #endif // XR_USE_PLATFORM_ANDROID
 
 #ifdef XR_EXT_debug_utils
