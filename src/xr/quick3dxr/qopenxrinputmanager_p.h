@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 
 class QOpenXRHandInput;
 class QOpenXRHandTrackerInput;
-class QOpenXRGamepadInput;
+class QQuick3DXrGamepadInput;
 class QQuick3DGeometry;
 
 class QOpenXRInputManager : public QObject
@@ -61,7 +61,7 @@ public:
     QOpenXRHandInput *rightHandInput() const;
     QOpenXRHandTrackerInput *leftHandTrackerInput() const;
     QOpenXRHandTrackerInput *rightHandTrackerInput() const;
-    QOpenXRGamepadInput *gamepadInput() const;
+    QQuick3DXrGamepadInput *gamepadInput() const;
 
     PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT_;
     PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_;
@@ -139,7 +139,7 @@ private:
 
     QOpenXRHandInput *m_handInputState[2];
     QOpenXRHandTrackerInput *m_handTrackerInputState[2];
-    QOpenXRGamepadInput *m_gamepadInputState;
+    QQuick3DXrGamepadInput *m_gamepadInputState;
     XrPath m_gamepadSubactionPath;
     HandActions m_handActions;
     GamepadActions m_gamepadActions;

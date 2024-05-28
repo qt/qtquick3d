@@ -16,7 +16,7 @@
 //
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
-#include "qopenxrgamepadinput_p.h"
+#include "qquick3dxrgamepadinput_p.h"
 #include "qopenxrhandinput_p.h"
 #include "qopenxractionmapper_p.h"
 #include "qopenxrhandtrackerinput_p.h"
@@ -48,7 +48,7 @@ public:
     void setController(QOpenXRController::Controller newController);
 
     QOpenXRHandInput *handInput() const;
-    Q_INVOKABLE QOpenXRGamepadInput *gamepadInput() const;
+    Q_INVOKABLE QQuick3DXrGamepadInput *gamepadInput() const;
 
     QOpenXRActionMapper *actionMapper() const;
     void setActionMapper(QOpenXRActionMapper *newActionMapper);

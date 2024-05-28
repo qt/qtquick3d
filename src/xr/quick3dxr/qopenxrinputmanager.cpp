@@ -5,7 +5,7 @@
 #include "openxr/qopenxrhelpers_p.h"
 #include "qopenxrhandinput_p.h"
 #include "qopenxrhandtrackerinput_p.h"
-#include "qopenxrgamepadinput_p.h"
+#include "qquick3dxrgamepadinput_p.h"
 
 #include "qopenxrcontroller_p.h" //### InputAction enum
 
@@ -21,7 +21,7 @@ QOpenXRInputManager::QOpenXRInputManager()
     m_handInputState[QOpenXRInputManager::RightHand] = new QOpenXRHandInput(this);
     m_handTrackerInputState[QOpenXRInputManager::LeftHand] = new QOpenXRHandTrackerInput(this);
     m_handTrackerInputState[QOpenXRInputManager::RightHand] = new QOpenXRHandTrackerInput(this);
-    m_gamepadInputState = new QOpenXRGamepadInput(this);
+    m_gamepadInputState = new QQuick3DXrGamepadInput(this);
 }
 
 QOpenXRInputManager::~QOpenXRInputManager()
@@ -1144,7 +1144,7 @@ QOpenXRHandTrackerInput *QOpenXRInputManager::leftHandTrackerInput() const
     return m_handTrackerInputState[QOpenXRInputManager::LeftHand];
 }
 
-QOpenXRGamepadInput *QOpenXRInputManager::gamepadInput() const
+QQuick3DXrGamepadInput *QOpenXRInputManager::gamepadInput() const
 {
     return m_gamepadInputState;
 }

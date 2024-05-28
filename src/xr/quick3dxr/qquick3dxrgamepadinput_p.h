@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRGAMEPADINPUT_H
-#define QOPENXRGAMEPADINPUT_H
+#ifndef QQUICK3DXRGAMEPADINPUT_P_H
+#define QQUICK3DXRGAMEPADINPUT_P_H
 
 //
 //  W A R N I N G
@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRGamepadInput : public QObject
+class QQuick3DXrGamepadInput : public QObject
 {
     Q_OBJECT
 
@@ -29,7 +29,7 @@ class QOpenXRGamepadInput : public QObject
     QML_UNCREATABLE("Created by XrView")
 
 public:
-    explicit QOpenXRGamepadInput(QObject *parent = nullptr);
+    explicit QQuick3DXrGamepadInput(QObject *parent = nullptr);
     void setInputValue(int id, const char *shortName, float value) { emit inputValueChange(id, shortName, value); }
 
 Q_SIGNALS:
@@ -41,4 +41,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRGAMEPADINPUT_H
+#endif // QQUICK3DXRGAMEPADINPUT_P_H

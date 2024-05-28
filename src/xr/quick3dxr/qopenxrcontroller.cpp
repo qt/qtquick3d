@@ -102,7 +102,7 @@ QOpenXRHandInput *QOpenXRController::handInput() const
     The gamepad input associated with this controller.
 */
 
-QOpenXRGamepadInput *QOpenXRController::gamepadInput() const
+QQuick3DXrGamepadInput *QOpenXRController::gamepadInput() const
 {
 #if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
     return m_inputManager->gamepadInput();
