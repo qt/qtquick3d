@@ -1331,7 +1331,10 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             // This is just a way to store the old camera so we can use it for debug
             // drawing. There are probably cleaner ways to do this
             if (!disableShadowCameraUpdate && debugCamera) {
-                memcpy((void *)debugCamera, (void *)&camera, sizeof(QSSGRenderCamera));
+                debugCamera->clipNear = camera.clipNear;
+                debugCamera->clipFar = camera.clipFar;
+                debugCamera->projection = camera.projection;
+                debugCamera->globalTransform = camera.globalTransform;
             }
 
             // Cascading Shadow Maps
