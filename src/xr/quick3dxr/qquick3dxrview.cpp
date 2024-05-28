@@ -120,7 +120,7 @@ QOpenXRHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
     \brief Provides access to the gamepad input for the XR view.
 */
 
-QOpenXRGamepadInput *QQuick3DXrView::gamepadInput() const
+QQuick3DXrGamepadInput *QQuick3DXrView::gamepadInput() const
 {
 #if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
