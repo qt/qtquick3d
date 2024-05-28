@@ -1052,6 +1052,27 @@ bool QQuick3DXrManagerPrivate::isMultiViewRenderingSupported() const
 void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
     m_enablePassthrough = enable;
+
+    if (m_passthroughSupported) {
+        if (m_enablePassthrough) {
+            if (m_passthroughFeature == XR_NULL_HANDLE)
+                createMetaQuestPassthrough(); // Create and start
+            else
+                startMetaQuestPassthrough(); // Existed, but not started
+
+            if (m_passthroughLayer == XR_NULL_HANDLE)
+                createMetaQuestPassthroughLayer(); // Create
+            else
+                resumeMetaQuestPassthroughLayer(); // Exist, but not started
+        } else {
+            // Don't destroy, just pause
+            if (m_passthroughLayer)
+                pauseMetaQuestPassthroughLayer();
+
+            if (m_passthroughFeature)
+                pauseMetaQuestPassthrough();
+        }
+    }
 }
 
 void QQuick3DXrManagerPrivate::setDepthSubmissionEnabled(bool enable)
