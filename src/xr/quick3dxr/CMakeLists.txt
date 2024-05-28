@@ -16,9 +16,9 @@ qt_internal_add_qml_module(Quick3DXr
         qquick3dxritem_p.h qquick3dxritem.cpp
         qquick3dxrvirtualmouse.cpp qquick3dxrvirtualmouse_p.h
         qopenxrcontroller_p.h qopenxrcontroller.cpp
-        qquick3dxrhandinput.cpp qquick3dxrhandinput_p.h
+        qquick3dxrhandinput.cpp qquick3dxrhandinput_p.h qquick3dxrhandtrackerinput_p_p.h
         qquick3dxrgamepadinput.cpp qquick3dxrgamepadinput_p.h
-        qopenxrhandtrackerinput_p.h qopenxrhandtrackerinput.cpp
+        qquick3dxrhandtrackerinput_p.h qquick3dxrhandtrackerinput.cpp
         qtquick3dxrglobal_p.h
         qtquick3dxrglobal.h
     QML_FILES
@@ -62,7 +62,7 @@ else ()
             qopenxrspaceextension_p.h qopenxrspaceextension.cpp
         NO_UNITY_BUILD_SOURCES
             # Clashing inline functions
-            qopenxrhandtrackerinput.cpp
+            qquick3dxrhandtrackerinput.cpp
     )
 
 endif () # VISIONOS

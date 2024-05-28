@@ -33,7 +33,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DSceneEnvironment;
 class QQuick3DXrHandInput;
-class QOpenXRHandTrackerInput;
+class QQuick3DXrHandTrackerInput;
 class QQuick3DXrGamepadInput;
 class QRhiTexture;
 
@@ -47,8 +47,8 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged)
     Q_PROPERTY(QQuick3DXrHandInput *leftHandInput READ leftHandInput CONSTANT)
     Q_PROPERTY(QQuick3DXrHandInput *rightHandInput READ rightHandInput CONSTANT)
-    Q_PROPERTY(QOpenXRHandTrackerInput *leftHandTrackerInput READ leftHandTrackerInput CONSTANT)
-    Q_PROPERTY(QOpenXRHandTrackerInput *rightHandTrackerInput READ rightHandTrackerInput CONSTANT)
+    Q_PROPERTY(QQuick3DXrHandTrackerInput *leftHandTrackerInput READ leftHandTrackerInput CONSTANT)
+    Q_PROPERTY(QQuick3DXrHandTrackerInput *rightHandTrackerInput READ rightHandTrackerInput CONSTANT)
     Q_PROPERTY(QQuick3DXrGamepadInput *gamepadInput READ gamepadInput CONSTANT)
     Q_PROPERTY(bool passthroughSupported READ isPassthroughSupported CONSTANT)
     Q_PROPERTY(bool enablePassthrough READ isPassthroughEnabled WRITE setEnablePassthrough NOTIFY enablePassthroughChanged FINAL)
@@ -86,8 +86,8 @@ public:
     QQuick3DSceneEnvironment *environment() const;
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
-    QOpenXRHandTrackerInput *leftHandTrackerInput() const;
-    QOpenXRHandTrackerInput *rightHandTrackerInput() const;
+    QQuick3DXrHandTrackerInput *leftHandTrackerInput() const;
+    QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
     QQuick3DXrGamepadInput *gamepadInput() const;
 
     bool isPassthroughSupported() const;
