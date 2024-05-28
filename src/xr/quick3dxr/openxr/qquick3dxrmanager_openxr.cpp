@@ -1370,7 +1370,7 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
                 // Render view to the appropriate part of the swapchain image.
                 XrSwapchainImageAcquireInfo acquireInfo{};
                 acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
-                uint32_t swapchainImageIndex;
+                uint32_t swapchainImageIndex = 0;
                 checkXrResult(xrAcquireSwapchainImage(viewSwapchain.handle, &acquireInfo, &swapchainImageIndex));
                 XrSwapchainImageWaitInfo waitInfo{};
                 waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
