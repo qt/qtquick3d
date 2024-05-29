@@ -2248,7 +2248,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 shadowData.bias = theLight->m_shadowBias;
                 shadowData.factor = theLight->m_shadowFactor;
                 shadowData.clipNear = 1.0f;
-                shadowData.shadowMapFar = theLight->m_shadowMapFar;
+                shadowData.shadowMapFar = pEntry->m_shadowMapFar;
                 shadowData.isYUp = globalRenderData.isYUpInFramebuffer ? 0.0f : 1.0f;
                 shadowData.layerIndex = pEntry->m_depthArrayIndex;
                 shadowData.csmNumSplits = pEntry->m_csmNumSplits;

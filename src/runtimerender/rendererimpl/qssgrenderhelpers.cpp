@@ -447,7 +447,7 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
     }
 }
 
-static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inCameras[6])
+static void setupCubeShadowCameras(const QSSGRenderLight *inLight, float shadowMapFar, QSSGRenderCamera inCameras[6])
 {
     Q_ASSERT(inLight != nullptr);
     Q_ASSERT(inLight->type != QSSGRenderLight::Type::DirectionalLight);
@@ -470,7 +470,7 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
     for (int i = 0; i < 6; ++i) {
         inCameras[i].parent = nullptr;
         inCameras[i].clipNear = 1.0f;
-        inCameras[i].clipFar = qMax<float>(2.0f, inLight->m_shadowMapFar);
+        inCameras[i].clipFar = shadowMapFar;
         inCameras[i].fov = qDegreesToRadians(90.f);
         inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inLightPos, QSSGRenderNode::initScale, inLightPivot, rotOfs[i]);
         inCameras[i].calculateGlobalVariables(theViewport);
@@ -1308,12 +1308,12 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         if (!pEntry)
             continue;
 
+        const auto &light = globalLights[i].light;
         Q_ASSERT(pEntry->m_rhiDepthStencil[0]);
         if (pEntry->m_rhiDepthTextureArray) {
             const QSize size = pEntry->m_rhiDepthTextureArray->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-            const auto &light = globalLights[i].light;
             Q_ASSERT(light->type == QSSGRenderLight::Type::DirectionalLight);
             const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
             const bool drawShadowCastingBounds = layerData.layer.drawShadowCastingBounds;
@@ -1346,13 +1346,14 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                                               drawCascades,
                                                               drawSceneCascadeIntersection);
 
-            const float clipFar = qMax(2.0f, qMin(light->m_shadowMapFar, camera.clipFar));
+            const float shadowMapFar = qMax(2.0f, qMin(light->m_shadowMapFar, camera.clipFar));
+            pEntry->m_shadowMapFar = shadowMapFar;
 
             // Write the split distances from value 0 in the z-axis of the eye view-space
-            pEntry->m_csmSplits[0] = clipFar * (light->m_csmNumSplits > 0 ? light->m_csmSplit1 : 1.0f);
-            pEntry->m_csmSplits[1] = clipFar * (light->m_csmNumSplits > 1 ? light->m_csmSplit2 : 1.0f);
-            pEntry->m_csmSplits[2] = clipFar * (light->m_csmNumSplits > 2 ? light->m_csmSplit3 : 1.0f);
-            pEntry->m_csmSplits[3] = clipFar * 1.0f;
+            pEntry->m_csmSplits[0] = shadowMapFar * (light->m_csmNumSplits > 0 ? light->m_csmSplit1 : 1.0f);
+            pEntry->m_csmSplits[1] = shadowMapFar * (light->m_csmNumSplits > 1 ? light->m_csmSplit2 : 1.0f);
+            pEntry->m_csmSplits[2] = shadowMapFar * (light->m_csmNumSplits > 2 ? light->m_csmSplit3 : 1.0f);
+            pEntry->m_csmSplits[3] = shadowMapFar * 1.0f;
 
             for (int cascadeIndex = 0; cascadeIndex < cascades.length(); cascadeIndex++) {
                 const auto &cascadeCamera = cascades[cascadeIndex];
@@ -1388,8 +1389,10 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                              QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
                                              QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
                                              QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera} };
-            setupCubeShadowCameras(globalLights[i].light, theCameras);
+            const float shadowMapFar = qMax<float>(2.0f, light->m_shadowMapFar);
+            setupCubeShadowCameras(light, shadowMapFar, theCameras);
             pEntry->m_lightView = QMatrix4x4();
+            pEntry->m_shadowMapFar = shadowMapFar;
 
             const bool swapYFaces = !rhi->isYUpInFramebuffer();
             for (const auto face : QSSGRenderTextureCubeFaces) {

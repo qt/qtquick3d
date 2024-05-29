@@ -71,6 +71,7 @@ struct QSSGShadowMapEntry
     quint32 m_csmNumSplits = 0;
     float m_csmSplits[4] = {};
     float m_csmActive[4] = {};
+    float m_shadowMapFar = 0.f;
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderShadowMap
