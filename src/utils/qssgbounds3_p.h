@@ -319,13 +319,13 @@ Q_ALWAYS_INLINE QSSGBoxPoints QSSGBounds3::toQSSGBoxPointsNoEmptyCheck() const
     return { // Min corner of box
              QVector3D(minimum[0], minimum[1], minimum[2]),
              QVector3D(maximum[0], minimum[1], minimum[2]),
+             QVector3D(maximum[0], maximum[1], minimum[2]),
              QVector3D(minimum[0], maximum[1], minimum[2]),
-             QVector3D(minimum[0], minimum[1], maximum[2]),
              // Max corner of box
-             QVector3D(maximum[0], maximum[1], maximum[2]),
-             QVector3D(minimum[0], maximum[1], maximum[2]),
+             QVector3D(minimum[0], minimum[1], maximum[2]),
              QVector3D(maximum[0], minimum[1], maximum[2]),
-             QVector3D(maximum[0], maximum[1], minimum[2])
+             QVector3D(maximum[0], maximum[1], maximum[2]),
+             QVector3D(minimum[0], maximum[1], maximum[2])
     };
 }
 

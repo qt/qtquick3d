@@ -6,75 +6,20 @@
 #include "qssgdebugdrawsystem_p.h"
 #include "qssgrenderray_p.h"
 
-#include <cfloat>
-
 QT_BEGIN_NAMESPACE
 
+// These indices need to match the order in QSSGBounds3::toQSSGBoxPointsNoEmptyCheck()
 static constexpr std::array<std::array<int, 2>, 12> BOX_LINE_INDICES = {
     std::array<int, 2> { 0, 1 }, std::array<int, 2> { 1, 2 }, std::array<int, 2> { 2, 3 }, std::array<int, 2> { 3, 0 },
     std::array<int, 2> { 4, 5 }, std::array<int, 2> { 5, 6 }, std::array<int, 2> { 6, 7 }, std::array<int, 2> { 7, 4 },
     std::array<int, 2> { 0, 4 }, std::array<int, 2> { 1, 5 }, std::array<int, 2> { 2, 6 }, std::array<int, 2> { 3, 7 },
 };
 
-static std::array<QVector3D, 8> sortBox(const QSSGBoxPoints &box)
-{
-    // Very scuffed but finds one side of the box by getting the first
-    // 4 closest points. Then the other side is found by finding the closest
-    // point for each point on the first side.
-    std::array<int, 8> sortedIdx = { 0, -1, -1, -1, -1, -1, -1, -1 };
-    QVector3D current = box[0];
-    QSSGBoxPoints boxSorted;
-    boxSorted[0] = box[0];
-    for (int i = 1; i < 4; i++) {
-        int idxFound = -1;
-        float bestDist = FLT_MAX;
-
-        for (int j = 0; j < 8; j++) {
-            if (sortedIdx[j] != -1)
-                continue;
-
-            float dist = box[j].distanceToPoint(current);
-            // Should not happen unless the box contains NaN or inf values
-            if (!(dist < FLT_MAX))
-                return box;
-
-            if (dist < bestDist) {
-                idxFound = j;
-                bestDist = dist;
-            }
-        }
-
-        sortedIdx[idxFound] = i;
-        current = box[idxFound];
-        boxSorted[i] = current;
-    }
-
-    // First 4 found
-    for (int i = 0; i < 4; i++) {
-        float bestDist = FLT_MAX;
-        QVector3D current = boxSorted[i];
-
-        for (int j = 0; j < 8; j++) {
-            float dist = box[j].distanceToPoint(current);
-            // Should not happen unless the box contains NaN or inf values
-            if (!(dist < FLT_MAX))
-                return box;
-            if (dist < bestDist && dist != 0.f && sortedIdx[j] == -1) {
-                boxSorted[i + 4] = box[j];
-                bestDist = dist;
-            }
-        }
-    }
-
-    return boxSorted;
-}
-
-void ShadowmapHelpers::addDebugBox(const QSSGBoxPoints &boxUnsorted, const QColor &color, QSSGDebugDrawSystem *debugDrawSystem, bool sort)
+void ShadowmapHelpers::addDebugBox(const QSSGBoxPoints &box, const QColor &color, QSSGDebugDrawSystem *debugDrawSystem)
 {
     if (!debugDrawSystem)
         return;
 
-    const auto box = sort ? sortBox(boxUnsorted) : boxUnsorted;
     for (const auto line : BOX_LINE_INDICES)
         debugDrawSystem->drawLine(box[line[0]], box[line[1]], color);
 
@@ -83,7 +28,7 @@ void ShadowmapHelpers::addDebugBox(const QSSGBoxPoints &boxUnsorted, const QColo
 
 void ShadowmapHelpers::addDebugFrustum(const QSSGBoxPoints &frustumPoints, const QColor &color, QSSGDebugDrawSystem *debugDrawSystem)
 {
-    ShadowmapHelpers::addDebugBox(frustumPoints, color, debugDrawSystem, false);
+    ShadowmapHelpers::addDebugBox(frustumPoints, color, debugDrawSystem);
 }
 
 void ShadowmapHelpers::addDirectionalLightDebugBox(const QSSGBoxPoints &box, QSSGDebugDrawSystem *debugDrawSystem)
@@ -212,7 +157,7 @@ static QList<QVector3D> sliceBoxByPlanes(const QList<std::array<QVector3D, 2>> &
 
     QList<Vertex> vertices;
     vertices.reserve(castingBox.size());
-    for (const auto &p : sortBox(castingBox)) {
+    for (const auto &p : castingBox) {
         Vertex point;
         point.position = p;
         vertices.push_back(point);
