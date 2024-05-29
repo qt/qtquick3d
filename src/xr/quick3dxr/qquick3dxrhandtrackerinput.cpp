@@ -1,11 +1,14 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "qquick3dxrinputmanager_p.h"
 #include "qquick3dxrhandtrackerinput_p.h"
 #include "qquick3dxrhandtrackerinput_p_p.h"
 
-#if !defined(Q_VISIONOS)
-#include "qopenxrinputmanager_p.h"
+#if defined(Q_OS_VISIONOS)
+# include "visionos/qquick3dxrinputmanager_visionos_p.h"
+#else
+# include "openxr/qopenxrinputmanager_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -72,11 +75,12 @@ void QQuick3DXrHandTrackerInputPrivate::setJointPositionsAndRotations(const QLis
     m_jointRotations = newJointRotations;
     emit q->jointRotationsChanged();
     emit q->jointDataUpdated();
-#if defined(Q_VISIONOS)
-    Q_UNIMPLEMENTED();
-#else
-    setPokePosition(m_jointPositions[XR_HAND_JOINT_INDEX_TIP_EXT]);
-#endif
+
+    QQuick3DXrInputManager *inputMan = QQuick3DXrInputManager::instance();
+    const auto pokeIndex = QQuick3DXrInputManagerPrivate::get(inputMan)->getPokeJointIndex();
+
+    if (pokeIndex >= 0 && pokeIndex < m_jointPositions.size())
+        setPokePosition(m_jointPositions[pokeIndex]);
 }
 
 QList<QQuaternion> QQuick3DXrHandTrackerInputPrivate::jointRotations() const
@@ -270,15 +274,22 @@ QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)
 
 void QQuick3DXrHandModel::updatePose()
 {
-    auto *skin = QQuick3DModel::skin();
-    auto jointListProp = skin->joints();
-    int count = jointListProp.count(&jointListProp);
-    const auto positions = m_handTracker->jointPositions();
-    const auto rotations = m_handTracker->jointRotations();
-    for (int i = 0; i < count; ++i) {
-        auto *joint = jointListProp.at(&jointListProp, i);
-        joint->setPosition(positions.at(i));
-        joint->setRotation(rotations.at(i));
+    if (auto *skin = QQuick3DModel::skin()) {
+        auto jointListProp = skin->joints();
+        int count = jointListProp.count(&jointListProp);
+        const auto positions = m_handTracker->jointPositions();
+        const auto rotations = m_handTracker->jointRotations();
+        for (int i = 0; i < count; ++i) {
+            auto *joint = jointListProp.at(&jointListProp, i);
+            joint->setPosition(positions.at(i));
+            joint->setRotation(rotations.at(i));
+        }
+    } else {
+        static bool warned = false;
+        if (!warned) {
+            qWarning() << "No skin available for hand model";
+            warned = true;
+        }
     }
 }
 
@@ -291,38 +302,9 @@ void QQuick3DXrHandModel::setupModel()
         qWarning() << "XrHandModel does not support changing hand tracker";
         return;
     }
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-    Q_ASSERT(QOpenXRInputManager::instance());
-    auto *inputMan = QOpenXRInputManager::instance();
-    QOpenXRInputManager::Hand hand = m_handTracker == inputMan->leftHandTrackerInput()
-            ? QOpenXRInputManager::Hand::LeftHand : QOpenXRInputManager::Hand::RightHand;
-    const auto &handGeometryData = inputMan->m_handGeometryData[hand];
-    const auto &handMeshData = inputMan->m_handMeshData[hand];
+    QQuick3DXrInputManager *inputMan = QQuick3DXrInputManager::instance();
 
-    if (!handGeometryData.geometry)
-        return;
-
-    setGeometry(handGeometryData.geometry);
-
-    //TODO: support changing hands
-
-    auto *skin = new QQuick3DSkin(this);
-    auto jointListProp = skin->joints();
-    QList<QMatrix4x4> inverseBindPoses;
-    inverseBindPoses.reserve(XR_HAND_JOINT_COUNT_EXT);
-
-    for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; ++i) {
-        const auto &pose = handMeshData.jointBindPoses[i];
-        const QVector3D pos = OpenXRHelpers::toQVector(pose.position);
-        const QQuaternion rot = OpenXRHelpers::toQQuaternion(pose.orientation);
-        inverseBindPoses.append(transformMatrix(pos, rot).inverted());
-        auto *joint = new QQuick3DNode(this);
-        joint->setPosition(pos);
-        joint->setRotation(rot);
-        jointListProp.append(&jointListProp, joint);
-    }
-    skin->setInverseBindPoses(inverseBindPoses);
-    setSkin(skin);
+    QQuick3DXrInputManagerPrivate::get(inputMan)->setupHandModel(this);
 
     connect(m_handTracker, &QQuick3DXrHandTrackerInput::jointDataUpdated, this, &QQuick3DXrHandModel::updatePose);
     connect(m_handTracker, &QQuick3DXrHandTrackerInput::isActiveChanged, this, [this](){
@@ -330,7 +312,6 @@ void QQuick3DXrHandModel::setupModel()
     });
     setVisible(m_handTracker->isActive());
     m_initialized = true;
-#endif
 }
 
 void QQuick3DXrHandModel::componentComplete()

@@ -30,6 +30,11 @@ QQuick3DXrOrigin::QQuick3DXrOrigin()
     setCamera(m_builtInCamera);
 }
 
+QQuick3DXrOrigin::~QQuick3DXrOrigin()
+{
+
+}
+
 /*!
     \qmlproperty XrCamera QtQuick3D.Xr::XrOrigin::camera
     \brief Holds the camera for the XrOrigin

@@ -31,19 +31,12 @@ class QQuick3DViewport;
 class QQuick3DXrEyeCamera;
 class QQuick3DXrView;
 class QQuick3DXrOrigin;
-class QOpenXRInputManager;
+class QQuick3DXrInputManagerPrivate;
 class QRhiTexture;
 class QQuick3DXrAnimationDriver;
 
 class QQuick3DXrManagerPrivate;
-
-// FIXME: Follow the same pattern as of the XrManager once we have
-// the input for AVP in place.
-#if defined(Q_OS_VISIONOS)
-class QQuick3DXrInputManager {};
-#else
-using QQuick3DXrInputManager = QOpenXRInputManager;
-#endif
+class QQuick3DXrInputManager;
 
 class QQuick3DXrManager : public QObject
 {

@@ -6,6 +6,7 @@
 #include "qquick3dxrorigin_p.h"
 #include "qquick3dxranimationdriver_p.h"
 #include "qquick3dxrmanager_p.h"
+#include "qquick3dxrinputmanager_p.h"
 
 #include "qopenxrhelpers_p.h"
 #include "qopenxrinputmanager_p.h"
@@ -278,8 +279,8 @@ void QQuick3DXrManagerPrivate::processXrEvents()
     if (exitRenderLoop)
         emit q->sessionEnded();
 
-    if (m_sessionRunning) {
-        m_inputManager->pollActions();
+    if (m_sessionRunning && m_inputManager) {
+        QQuick3DXrInputManagerPrivate::get(m_inputManager)->pollActions();
         q->renderFrame();
     }
 }
@@ -512,8 +513,9 @@ bool QQuick3DXrManagerPrivate::initialize()
     checkReferenceSpaces();
 
     // Setup Input
-    m_inputManager = QOpenXRInputManager::instance();
-    m_inputManager->init(m_instance, m_session);
+    m_inputManager = QQuick3DXrInputManager::instance();
+    if (QSSG_GUARD(m_inputManager != nullptr))
+        QQuick3DXrInputManagerPrivate::get(m_inputManager)->init(m_instance, m_session);
 
     if (!setupAppSpace())
         return false;
@@ -529,7 +531,7 @@ bool QQuick3DXrManagerPrivate::initialize()
 void QQuick3DXrManagerPrivate::teardown()
 {
     if (m_inputManager) {
-        m_inputManager->teardown();
+        QQuick3DXrInputManagerPrivate::get(m_inputManager)->teardown();
         m_inputManager = nullptr;
     }
 
@@ -1322,14 +1324,15 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
         }
 
         // Set the hand positions
-        m_inputManager->updatePoses(predictedDisplayTime, m_appSpace);
+        if (QSSG_GUARD(m_inputManager != nullptr))
+            QQuick3DXrInputManagerPrivate::get(m_inputManager)->updatePoses(predictedDisplayTime, m_appSpace);
 
         // Spatial Anchors
         if (m_spaceExtension)
             m_spaceExtension->updateAnchors(predictedDisplayTime, m_appSpace);
 
-        if (m_handtrackingExtensionSupported)
-            m_inputManager->updateHandtracking(predictedDisplayTime, m_appSpace, m_handtrackingAimExtensionSupported);
+        if (m_handtrackingExtensionSupported && m_inputManager)
+            QQuick3DXrInputManagerPrivate::get(m_inputManager)->updateHandtracking(predictedDisplayTime, m_appSpace, m_handtrackingAimExtensionSupported);
 
         // Before rendering individual views, advance the animation driver once according
         // to the expected display time

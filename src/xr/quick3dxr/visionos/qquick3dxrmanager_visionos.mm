@@ -4,8 +4,13 @@
 #include "qquick3dxrmanager_visionos_p.h"
 #include "qquick3dxrorigin_p.h"
 #include "qquick3dxrmanager_p.h"
+#include "qquick3dxrinputmanager_visionos_p.h"
+#include "../qquick3dxrinputmanager_p.h"
+
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
+
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <QQuickGraphicsDevice>
 #include <rhi/qrhi.h>
@@ -106,6 +111,7 @@ bool QQuick3DXrManagerPrivate::initialize()
 
     // Setup Graphics
 
+
     return true;
 }
 
@@ -151,7 +157,7 @@ bool QQuick3DXrManagerPrivate::setupGraphics(QQuickWindow *window)
 {
     // FIXME:
     Q_UNUSED(window);
-    Q_UNIMPLEMENTED();
+    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
     return true;
 }
 
@@ -186,19 +192,19 @@ QQuick3DXrManagerPrivate::RenderState QQuick3DXrManagerPrivate::getRenderState()
 
 void QQuick3DXrManagerPrivate::teardown()
 {
-    Q_UNIMPLEMENTED();
+    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
 void QQuick3DXrManagerPrivate::setMultiviewRenderingEnabled(bool enable)
 {
     Q_UNUSED(enable);
-    Q_UNIMPLEMENTED();
+    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
 void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
     Q_UNUSED(enable);
-    Q_UNIMPLEMENTED();
+    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
 QtQuick3DXr::ReferenceSpace QQuick3DXrManagerPrivate::getReferenceSpace() const
@@ -211,7 +217,7 @@ void QQuick3DXrManagerPrivate::setReferenceSpace(QtQuick3DXr::ReferenceSpace new
 {
     // FIXME: Not sure if it's possible to set a reference space on VisionOS
     Q_UNUSED(newReferenceSpace);
-    Q_UNIMPLEMENTED();
+    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
 void QQuick3DXrManagerPrivate::setDepthSubmissionEnabled(bool enable)
@@ -258,9 +264,7 @@ void QQuick3DXrManagerPrivate::processXrEvents()
             logOnce[RenderState::Invalidated] = false;
         }
     } else if (renderState == QQuick3DXrManagerPrivate::RenderState::Running) {
-        //m_inputManager->pollActions();
         q->renderFrame();
-        //m_visionOSRenderManager->renderFrame();
         if (!logOnce[RenderState::Running]) {
             qDebug() << "-- Running --";
             logOnce[RenderState::Paused] = false;
@@ -286,24 +290,23 @@ void QQuick3DXrManagerPrivate::runWorldTrackingARSession()
     ar_data_providers_t dataProviders = ar_data_providers_create();
     ar_data_providers_add_data_provider(dataProviders, m_worldTrackingProvider);
 
-    m_isHandTrackingSupported = ar_hand_tracking_provider_is_supported();
-    if (m_isHandTrackingSupported) {
-        ar_hand_tracking_configuration_t handTrackingConfiguration = ar_hand_tracking_configuration_create();
-        m_handTrackingProvider = ar_hand_tracking_provider_create(handTrackingConfiguration);
-        ar_data_providers_add_data_provider(dataProviders, m_handTrackingProvider);
-    } else {
-        qWarning("Hand tracking is not supported on this device.");
-    }
+    if (!m_inputManager)
+        m_inputManager = QQuick3DXrInputManager::instance();
 
+    // Call 1 prepareHandracking
+    QQuick3DXrInputManagerPrivate *pim = nullptr;
+    if (QSSG_GUARD_X(m_inputManager != nullptr, "No InputManager available!")) {
+        pim = QQuick3DXrInputManagerPrivate::get(m_inputManager);
+        if (QSSG_GUARD(pim != nullptr))
+            pim->prepareHandtracking(dataProviders);
+    }
 
     m_arSession = ar_session_create();
     ar_session_run(m_arSession, dataProviders);
 
-    // Create hand anchors now
-    if (m_isHandTrackingSupported) {
-        m_leftHandAnchor = ar_hand_anchor_create();
-        m_rightHandAnchor = ar_hand_anchor_create();
-    }
+    // Call 2 initHandtracking
+    if (pim)
+        pim->initHandtracking();
 }
 
 void QQuick3DXrManagerPrivate::setSamples(int samples)
@@ -348,8 +351,6 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 
     cp_frame_start_update(frame);
 
-    // TODO do input update here
-
     cp_frame_end_update(frame);
 
     cp_time_wait_until(cp_frame_timing_get_optimal_input_time(timing));
@@ -369,17 +370,8 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
     simd_float4x4 headTransform = ar_anchor_get_origin_from_anchor_transform(anchor);
 
     // Update the hands
-    if (m_isHandTrackingSupported) {
-        ar_hand_tracking_provider_get_latest_anchors(m_handTrackingProvider, m_leftHandAnchor, m_rightHandAnchor);
-
-        if (ar_trackable_anchor_is_tracked(m_leftHandAnchor)) {
-
-        }
-
-        if (ar_trackable_anchor_is_tracked(m_rightHandAnchor)) {
-
-        }
-    }
+    if (QSSG_GUARD(m_inputManager != nullptr))
+        QQuick3DXrInputManagerPrivate::get(m_inputManager)->updateHandtracking();
 
     QRhi *rhi = renderControl->rhi();
 

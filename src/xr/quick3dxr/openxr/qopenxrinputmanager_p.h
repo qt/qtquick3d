@@ -1,14 +1,15 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRINPUTMANAGER_H
-#define QOPENXRINPUTMANAGER_H
+#ifndef QQUICK3DXINPUTMANAGER_OPENXR_P_H
+#define QQUICK3DXINPUTMANAGER_OPENXR_P_H
 
 #include <QObject>
 
 #include <openxr/openxr.h>
 #include <functional>
 #include "qopenxractionmapper_p.h"
+#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
 
 #include <private/qquick3dmodel_p.h>
 
@@ -28,21 +29,25 @@ QT_BEGIN_NAMESPACE
 class QQuick3DXrHandInput;
 class QQuick3DXrHandTrackerInput;
 class QQuick3DXrGamepadInput;
-class QQuick3DGeometry;
+class QQuick3DXrInputManager;
+class QQuick3DXrHandModel;
 
-class QOpenXRInputManager : public QObject
+class QQuick3DXrInputManagerPrivate : public QObject
 {
     Q_OBJECT
+    Q_DECLARE_PUBLIC(QQuick3DXrInputManager)
 public:
-    static QOpenXRInputManager* instance();
+    explicit QQuick3DXrInputManagerPrivate(QQuick3DXrInputManager &manager);
+    ~QQuick3DXrInputManagerPrivate();
 
     void init(XrInstance instance, XrSession session);
     void teardown();
 
-    enum Hand {
-        LeftHand = 0,
-        RightHand = 1,
-    };
+    bool isValid() const { return m_initialized; }
+
+    static QQuick3DXrInputManagerPrivate *get(QQuick3DXrInputManager *inputManager);
+
+    using Hand = QtQuick3DXr::Hand;
 
     void pollActions();
     void updatePoses(XrTime predictedDisplayTime, XrSpace appSpace);
@@ -64,6 +69,11 @@ public:
     QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
     QQuick3DXrGamepadInput *gamepadInput() const;
 
+    void setupHandModel(QQuick3DXrHandModel *model);
+
+    // NOTE: Static for now...
+    qsizetype getPokeJointIndex() const { return qsizetype(XR_HAND_JOINT_INDEX_TIP_EXT); }
+
     PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT_;
     PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_;
     PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT_;
@@ -76,8 +86,7 @@ public:
     XrHandJointVelocityEXT jointVelocities[2][XR_HAND_JOINT_COUNT_EXT];
 
 private:
-    QOpenXRInputManager();
-    ~QOpenXRInputManager();
+    void setupHandModelInternal(QQuick3DXrHandModel *model, Hand hand);
 
     void setupHandTracking();
     bool queryHandMesh(Hand hand);
@@ -95,6 +104,8 @@ private:
                       XrAction &action);
     void getBoolInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(bool)> setter);
     void getFloatInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(float)> setter);
+
+    QQuick3DXrInputManager *q_ptr = nullptr;
 
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
@@ -176,4 +187,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRINPUTMANAGER_H
+#endif // QQUICK3DXINPUTMANAGER_OPENXR_P_H
