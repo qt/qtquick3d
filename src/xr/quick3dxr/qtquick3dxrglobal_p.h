@@ -39,6 +39,11 @@ enum class ReferenceSpace {
     ReferenceSpaceLocalFloor
 };
 
+enum Hand {
+    LeftHand = 0,
+    RightHand = 1,
+};
+
 enum class HandPoseSpace {
     GripPose,
     AimPose,

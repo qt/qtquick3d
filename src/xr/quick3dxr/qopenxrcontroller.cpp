@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qopenxrcontroller_p.h"
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-# include "qopenxrinputmanager_p.h"
+
+#include "qquick3dxrinputmanager_p.h"
+
+#if !defined(Q_OS_VISIONOS)
+# include "openxr/qopenxrinputmanager_p.h"
 #endif
 
 #include "qquick3dxrview_p.h"
@@ -20,9 +23,7 @@ QT_BEGIN_NAMESPACE
 
 QOpenXRController::QOpenXRController()
 {
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-    m_inputManager = QOpenXRInputManager::instance();
-#endif
+    m_inputManager = QQuick3DXrInputManager::instance();
 }
 
 /*!
@@ -88,12 +89,13 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
 
 QQuick3DXrHandInput *QOpenXRController::handInput() const
 {
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-    if (m_controller == ControllerRight)
-        return m_inputManager->rightHandInput();
-    else if (m_controller == ControllerLeft)
-        return m_inputManager->leftHandInput();
-#endif
+    if (m_inputManager && m_inputManager->isValid()) {
+        if (m_controller == ControllerRight)
+            return m_inputManager->rightHandInput();
+        else if (m_controller == ControllerLeft)
+            return m_inputManager->leftHandInput();
+    }
+
     return nullptr;
 }
 
@@ -104,11 +106,10 @@ QQuick3DXrHandInput *QOpenXRController::handInput() const
 
 QQuick3DXrGamepadInput *QOpenXRController::gamepadInput() const
 {
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-    return m_inputManager->gamepadInput();
-#else
+    if (m_inputManager && m_inputManager->isValid())
+        return m_inputManager->gamepadInput();
+
     return nullptr;
-#endif
 }
 
 /*!

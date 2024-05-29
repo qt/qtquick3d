@@ -8,6 +8,7 @@ qt_internal_extend_target(Quick3DXr
         qopenxrplatform_p.h
         qquick3dxrmanager_openxr.cpp qquick3dxrmanager_openxr_p.h
         qabstractopenxrgraphics.cpp qabstractopenxrgraphics_p.h
+        qopenxrinputmanager.cpp qopenxrinputmanager_p.h
         qopenxrhelpers.cpp qopenxrhelpers_p.h
 )
 

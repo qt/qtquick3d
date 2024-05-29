@@ -24,7 +24,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRInputManager;
+class QQuick3DXrInputManager;
+
 class Q_QUICK3DXR_EXPORT QOpenXRController : public QQuick3DNode
 {
     Q_OBJECT
@@ -58,9 +59,7 @@ Q_SIGNALS:
     void actionMapperChanged();
 
 private:
-#if defined(Q_NO_TEMPORARY_DISABLE_XR_API)
-    QOpenXRInputManager *m_inputManager = nullptr;
-#endif // Q_NO_TEMPORARY_DISABLE_XR_API
+    QPointer<QQuick3DXrInputManager> m_inputManager;
     QOpenXRActionMapper *m_actionMapper = nullptr;
     Controller m_controller = ControllerNone;
     QMetaObject::Connection m_posePositionConnection;

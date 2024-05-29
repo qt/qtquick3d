@@ -21,6 +21,7 @@
 #include <QtCore/qmap.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qversionnumber.h>
+#include <QtCore/qpointer.h>
 
 #include <QtGui/private/qtgui-config_p.h>
 #if QT_CONFIG(graphicsframecapture)
@@ -38,7 +39,7 @@ class QQuick3DXrOrigin;
 class QQuick3DViewport;
 class QOpenXRSpaceExtension;
 class QQuick3DXrManager;
-class QOpenXRInputManager;
+class QQuick3DXrInputManager;
 
 class QQuick3DXrManagerPrivate
 {
@@ -191,7 +192,7 @@ private:
 
     QVector<XrReferenceSpaceType> m_availableReferenceSpace;
 
-    QOpenXRInputManager *m_inputManager = nullptr;
+    QPointer<QQuick3DXrInputManager> m_inputManager;
 
     int64_t m_colorSwapchainFormat = -1;
     int64_t m_depthSwapchainFormat = -1;

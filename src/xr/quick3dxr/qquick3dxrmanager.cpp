@@ -29,6 +29,7 @@
 #endif
 
 #include "qquick3dxrorigin_p.h"
+#include "qquick3dxrinputmanager_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -301,12 +302,8 @@ bool QQuick3DXrManager::event(QEvent *e)
 
 QQuick3DXrInputManager *QQuick3DXrManager::getInputManager() const
 {
-#if !defined(Q_OS_VISIONOS)
     Q_D(const QQuick3DXrManager);
-    return d->m_inputManager;
-#else
-    return nullptr;
-#endif
+    return d->m_inputManager.data();
 }
 
 bool QQuick3DXrManager::setupGraphics()

@@ -27,6 +27,7 @@ class QQuickWindow;
 class QQuick3DXrOrigin;
 class QQuick3DXrManager;
 class QQuick3DViewport;
+class QQuick3DXrInputManager;
 
 class QQuick3DXrManagerPrivate
 {
@@ -91,13 +92,10 @@ Q_SIGNALS:
 private:
     QQuick3DXrManager *q_ptr = nullptr;
     QRhiTexture *m_rhiDepthTexture = nullptr;
+    QPointer<QQuick3DXrInputManager> m_inputManager;
     ar_session_t m_arSession;
     ar_world_tracking_provider_t m_worldTrackingProvider = nullptr;
-    ar_hand_tracking_provider_t m_handTrackingProvider = nullptr;
-    ar_hand_anchor_t m_leftHandAnchor = nullptr;
-    ar_hand_anchor_t m_rightHandAnchor = nullptr;
     bool m_isGraphicsInitialized = false;
-    bool m_isHandTrackingSupported = false;
 };
 
 QT_END_NAMESPACE

@@ -33,6 +33,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrOrigin : public QQuick3DNode
 
 public:
     QQuick3DXrOrigin();
+    ~QQuick3DXrOrigin() override;
 
     QQuick3DXrCamera *camera() const;
     void setCamera(QQuick3DXrCamera *newCamera);

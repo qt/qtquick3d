@@ -7,9 +7,7 @@
 #include <QQuickWindow>
 #include <QQuickItem>
 
-#if defined(USE_OPENXR)
-#include "qopenxrinputmanager_p.h"
-#endif // USE_OPENXR
+#include "qquick3dxrinputmanager_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -62,12 +60,11 @@ QQuick3DSceneEnvironment *QQuick3DXrView::environment() const
 
 QQuick3DXrHandInput *QQuick3DXrView::leftHandInput() const
 {
-#if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    return inputManager ? inputManager->leftHandInput() : nullptr;
-#else
+    if (inputManager && inputManager->isValid())
+        return inputManager->leftHandInput();
+
     return nullptr;
-#endif
 }
 
 /*!
@@ -77,12 +74,11 @@ QQuick3DXrHandInput *QQuick3DXrView::leftHandInput() const
 
 QQuick3DXrHandInput *QQuick3DXrView::rightHandInput() const
 {
-#if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    return inputManager ? inputManager->rightHandInput() : nullptr;
-#else
+    if (inputManager && inputManager->isValid())
+        return inputManager->rightHandInput();
+
     return nullptr;
-#endif
 }
 
 /*!
@@ -92,12 +88,11 @@ QQuick3DXrHandInput *QQuick3DXrView::rightHandInput() const
 
 QQuick3DXrHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
 {
-#if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    return inputManager ? inputManager->leftHandTrackerInput() : nullptr;
-#else
+    if (inputManager && inputManager->isValid())
+        return inputManager->leftHandTrackerInput();
+
     return nullptr;
-#endif
 }
 
 /*!
@@ -107,12 +102,11 @@ QQuick3DXrHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
 
 QQuick3DXrHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
 {
-#if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    return inputManager ? inputManager->rightHandTrackerInput() : nullptr;
-#else
+    if (inputManager && inputManager->isValid())
+        return inputManager->rightHandTrackerInput();
+
     return nullptr;
-#endif
 }
 
 /*!
@@ -122,12 +116,11 @@ QQuick3DXrHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
 
 QQuick3DXrGamepadInput *QQuick3DXrView::gamepadInput() const
 {
-#if USE_OPENXR
     QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    return inputManager ? inputManager->gamepadInput() : nullptr;
-#else
+    if (inputManager && inputManager->isValid())
+        return inputManager->gamepadInput();
+
     return nullptr;
-#endif
 }
 
 QQuick3DViewport *QQuick3DXrView::view3d() const
