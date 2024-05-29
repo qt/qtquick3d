@@ -307,11 +307,17 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
     frameWaitInfo.type = XR_TYPE_FRAME_WAIT_INFO;
     XrFrameState frameState{};
     frameState.type = XR_TYPE_FRAME_STATE;
-    checkXrResult(xrWaitFrame(m_session, &frameWaitInfo, &frameState));
+    if (!checkXrResult(xrWaitFrame(m_session, &frameWaitInfo, &frameState))) {
+        qWarning("xrWaitFrame failed");
+        return;
+    }
 
     XrFrameBeginInfo frameBeginInfo{};
     frameBeginInfo.type = XR_TYPE_FRAME_BEGIN_INFO;
-    checkXrResult(xrBeginFrame(m_session, &frameBeginInfo));
+    if (!checkXrResult(xrBeginFrame(m_session, &frameBeginInfo))) {
+        qWarning("xrBeginFrame failed");
+        return;
+    }
 
     QVector<XrCompositionLayerBaseHeader*> layers;
 
@@ -349,7 +355,8 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
         frameEndInfo.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE;
     frameEndInfo.layerCount = (uint32_t)layers.size();
     frameEndInfo.layers = layers.data();
-    checkXrResult(xrEndFrame(m_session, &frameEndInfo));
+    if (!checkXrResult(xrEndFrame(m_session, &frameEndInfo)))
+        qWarning("xrEndFrame failed");
 }
 
 bool QQuick3DXrManagerPrivate::finalizeGraphics(QRhi *rhi)
@@ -513,7 +520,8 @@ bool QQuick3DXrManagerPrivate::initialize()
     if (!setupViewSpace())
         return false;
 
-    createSwapchains();
+    if (!createSwapchains())
+        return false;
 
     return true;
 }
@@ -566,9 +574,15 @@ void QQuick3DXrManagerPrivate::checkReferenceSpaces()
     Q_ASSERT(m_session != XR_NULL_HANDLE);
 
     uint32_t spaceCount;
-    checkXrResult(xrEnumerateReferenceSpaces(m_session, 0, &spaceCount, nullptr));
+    if (!checkXrResult(xrEnumerateReferenceSpaces(m_session, 0, &spaceCount, nullptr))) {
+        qWarning("Failed to enumerate reference spaces");
+        return;
+    }
     m_availableReferenceSpace.resize(spaceCount);
-    checkXrResult(xrEnumerateReferenceSpaces(m_session, spaceCount, &spaceCount, m_availableReferenceSpace.data()));
+    if (!checkXrResult(xrEnumerateReferenceSpaces(m_session, spaceCount, &spaceCount, m_availableReferenceSpace.data()))) {
+        qWarning("Failed to enumerate reference spaces");
+        return;
+    }
 
     qDebug("Available reference spaces: %d", spaceCount);
     for (XrReferenceSpaceType space : m_availableReferenceSpace) {
@@ -766,7 +780,7 @@ bool QQuick3DXrManagerPrivate::resetEmulatedFloorHeight(XrTime predictedDisplayT
     return true;
 }
 
-void QQuick3DXrManagerPrivate::createSwapchains()
+bool QQuick3DXrManagerPrivate::createSwapchains()
 {
     Q_ASSERT(m_session != XR_NULL_HANDLE);
     Q_ASSERT(m_configViews.isEmpty());
@@ -779,7 +793,10 @@ void QQuick3DXrManagerPrivate::createSwapchains()
     handTrackingSystemProperties.type = XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT;
     systemProperties.next = &handTrackingSystemProperties;
 
-    checkXrResult(xrGetSystemProperties(m_instance, m_systemId, &systemProperties));
+    if (!checkXrResult(xrGetSystemProperties(m_instance, m_systemId, &systemProperties))) {
+        qWarning("Failed to get OpenXR system properties");
+        return false;
+    }
     qDebug("System Properties: Name=%s VendorId=%d", systemProperties.systemName, systemProperties.vendorId);
     qDebug("System Graphics Properties: MaxWidth=%d MaxHeight=%d MaxLayers=%d",
            systemProperties.graphicsProperties.maxSwapchainImageWidth,
@@ -793,19 +810,27 @@ void QQuick3DXrManagerPrivate::createSwapchains()
 
            // View Config type has to be Stereo, because OpenXR doesn't support any other mode yet.
     quint32 viewCount;
-    checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
-                                                    m_systemId,
-                                                    m_viewConfigType,
-                                                    0,
-                                                    &viewCount,
-                                                    nullptr));
+    if (!checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
+                                                         m_systemId,
+                                                         m_viewConfigType,
+                                                         0,
+                                                         &viewCount,
+                                                         nullptr)))
+    {
+        qWarning("Failed to enumerate view configurations");
+        return false;
+    }
     m_configViews.resize(viewCount, {XR_TYPE_VIEW_CONFIGURATION_VIEW, nullptr, 0, 0, 0, 0, 0, 0});
-    checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
-                                                    m_systemId,
-                                                    m_viewConfigType,
-                                                    viewCount,
-                                                    &viewCount,
-                                                    m_configViews.data()));
+    if (!checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
+                                                         m_systemId,
+                                                         m_viewConfigType,
+                                                         viewCount,
+                                                         &viewCount,
+                                                         m_configViews.data())))
+    {
+        qWarning("Failed to enumerate view configurations");
+        return false;
+    }
     m_views.resize(viewCount, {XR_TYPE_VIEW, nullptr, {}, {}});
     m_projectionLayerViews.resize(viewCount, {});
     m_layerDepthInfos.resize(viewCount, {});
@@ -814,12 +839,20 @@ void QQuick3DXrManagerPrivate::createSwapchains()
     if (viewCount > 0) {
         // Select a swapchain format.
         uint32_t swapchainFormatCount;
-        checkXrResult(xrEnumerateSwapchainFormats(m_session, 0, &swapchainFormatCount, nullptr));
+        if (!checkXrResult(xrEnumerateSwapchainFormats(m_session, 0, &swapchainFormatCount, nullptr))) {
+            qWarning("Failed to enumerate swapchain formats");
+            return false;
+        }
         QVector<int64_t> swapchainFormats(swapchainFormatCount);
-        checkXrResult(xrEnumerateSwapchainFormats(m_session,
-                                                  swapchainFormats.size(),
-                                                  &swapchainFormatCount,
-                                                  swapchainFormats.data()));
+        if (!checkXrResult(xrEnumerateSwapchainFormats(m_session,
+                                                       swapchainFormats.size(),
+                                                       &swapchainFormatCount,
+                                                       swapchainFormats.data())))
+        {
+            qWarning("Failed to enumerate swapchain formats");
+            return false;
+        }
+
         Q_ASSERT(swapchainFormatCount == swapchainFormats.size());
         m_colorSwapchainFormat = m_graphics->colorSwapchainFormat(swapchainFormats);
         if (m_compositionLayerDepthSupported)
@@ -881,17 +914,23 @@ void QQuick3DXrManagerPrivate::createSwapchains()
             swapchain.height = swapchainCreateInfo.height;
             swapchain.arraySize = swapchainCreateInfo.arraySize;
             if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
-                m_swapchains.append(swapchain);
-
                 uint32_t imageCount = 0;
-                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+                if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr))) {
+                    qWarning("Failed to enumerate swapchain images");
+                    return false;
+                }
 
                 auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
-                checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+                if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]))) {
+                    qWarning("Failed to enumerate swapchain images");
+                    return false;
+                }
 
+                m_swapchains.append(swapchain);
                 m_swapchainImages.insert(swapchain.handle, swapchainImages);
             } else {
                 qWarning("xrCreateSwapchain failed (multiview)");
+                return false;
             }
 
             // Create the depth swapchain always when
@@ -902,17 +941,23 @@ void QQuick3DXrManagerPrivate::createSwapchains()
                 swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
                 swapchainCreateInfo.format = m_depthSwapchainFormat;
                 if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
-                    m_depthSwapchains.append(swapchain);
-
                     uint32_t imageCount = 0;
-                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+                    if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr))) {
+                        qWarning("Failed to enumerate depth swapchain images");
+                        return false;
+                    }
 
                     auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
-                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+                    if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]))) {
+                        qWarning("Failed to enumerate depth swapchain images");
+                        return false;
+                    }
 
+                    m_depthSwapchains.append(swapchain);
                     m_depthSwapchainImages.insert(swapchain.handle, swapchainImages);
                 } else {
                     qWarning("xrCreateSwapchain failed for depth swapchain (multiview)");
+                    return false;
                 }
             }
         } else {
@@ -940,34 +985,46 @@ void QQuick3DXrManagerPrivate::createSwapchains()
                 swapchain.width = swapchainCreateInfo.width;
                 swapchain.height = swapchainCreateInfo.height;
                 if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
-                    m_swapchains.append(swapchain);
-
                     uint32_t imageCount = 0;
-                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+                    if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr))) {
+                        qWarning("Failed to enumerate swapchain images");
+                        return false;
+                    }
 
                     auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
-                    checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+                    if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]))) {
+                        qWarning("Failed to enumerate swapchain images");
+                        return false;
+                    }
 
+                    m_swapchains.append(swapchain);
                     m_swapchainImages.insert(swapchain.handle, swapchainImages);
                 } else {
                     qWarning("xrCreateSwapchain failed (view %u)", viewCount);
+                    return false;
                 }
 
                 if (m_compositionLayerDepthSupported && m_depthSwapchainFormat > 0) {
                     swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
                     swapchainCreateInfo.format = m_depthSwapchainFormat;
                     if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
-                        m_depthSwapchains.append(swapchain);
-
                         uint32_t imageCount = 0;
-                        checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr));
+                        if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, 0, &imageCount, nullptr))) {
+                            qWarning("Failed to enumerate depth swapchain images");
+                            return false;
+                        }
 
                         auto swapchainImages = m_graphics->allocateSwapchainImages(imageCount, swapchain.handle);
-                        checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]));
+                        if (!checkXrResult(xrEnumerateSwapchainImages(swapchain.handle, imageCount, &imageCount, swapchainImages[0]))) {
+                            qWarning("Failed to enumerate depth swapchain images");
+                            return false;
+                        }
 
+                        m_depthSwapchains.append(swapchain);
                         m_depthSwapchainImages.insert(swapchain.handle, swapchainImages);
                     } else {
                         qWarning("xrCreateSwapchain failed for depth swapchain (view %u)", viewCount);
+                        return false;
                     }
                 }
             }
@@ -975,14 +1032,14 @@ void QQuick3DXrManagerPrivate::createSwapchains()
 
         if (m_multiviewRendering) {
             if (m_swapchains.isEmpty())
-                return;
+                return false;
             if (m_compositionLayerDepthSupported && m_depthSwapchains.isEmpty())
-                return;
+                return false;
         } else {
             if (m_swapchains.count() != qsizetype(viewCount))
-                return;
+                return false;
             if (m_compositionLayerDepthSupported && m_depthSwapchains.count() != qsizetype(viewCount))
-                return;
+                return false;
         }
 
                // Setup the projection layer views.
@@ -1009,6 +1066,8 @@ void QQuick3DXrManagerPrivate::createSwapchains()
 
     if (m_foveationExtensionSupported)
         setupMetaQuestFoveation();
+
+    return true;
 }
 
 void QQuick3DXrManagerPrivate::setSamples(int samples)
@@ -1149,14 +1208,18 @@ void QQuick3DXrManagerPrivate::pollEvents(bool *exitRenderLoop, bool *requestRes
             XrSessionBeginInfo sessionBeginInfo{};
             sessionBeginInfo.type = XR_TYPE_SESSION_BEGIN_INFO;
             sessionBeginInfo.primaryViewConfigurationType = m_viewConfigType;
-            checkXrResult(xrBeginSession(m_session, &sessionBeginInfo));
+            if (!checkXrResult(xrBeginSession(m_session, &sessionBeginInfo))) {
+                qWarning("xrBeginSession failed");
+                break;
+            }
             m_sessionRunning = true;
             break;
         }
         case XR_SESSION_STATE_STOPPING: {
             Q_ASSERT(m_session != XR_NULL_HANDLE);
             m_sessionRunning = false;
-            checkXrResult(xrEndSession(m_session));
+            if (!checkXrResult(xrEndSession(m_session)))
+                qWarning("xrEndSession failed");
             break;
         }
         case XR_SESSION_STATE_EXITING: {
@@ -1236,7 +1299,6 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
     viewLocateInfo.space = m_appSpace;
 
     res = xrLocateViews(m_session, &viewLocateInfo, &viewState, viewCapacityInput, &viewCountOutput, m_views.data());
-    checkXrResult(res);
     if (XR_UNQUALIFIED_SUCCESS(res)) {
         Q_ASSERT(viewCountOutput == viewCapacityInput);
         Q_ASSERT(viewCountOutput == m_configViews.size());
@@ -1310,19 +1372,30 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
             // Acquire the swapchain image array
             XrSwapchainImageAcquireInfo acquireInfo{};
             acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
-            uint32_t swapchainImageIndex;
-            checkXrResult(xrAcquireSwapchainImage(swapchain.handle, &acquireInfo, &swapchainImageIndex));
+            uint32_t swapchainImageIndex = 0;
+            if (!checkXrResult(xrAcquireSwapchainImage(swapchain.handle, &acquireInfo, &swapchainImageIndex))) {
+                qWarning("Failed to acquire swapchain image (multiview)");
+                return false;
+            }
             XrSwapchainImageWaitInfo waitInfo{};
             waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
             waitInfo.timeout = XR_INFINITE_DURATION;
-            checkXrResult(xrWaitSwapchainImage(swapchain.handle, &waitInfo));
+            if (!checkXrResult(xrWaitSwapchainImage(swapchain.handle, &waitInfo))) {
+                qWarning("Failed to wait for swapchain image (multiview)");
+                return false;
+            }
             XrSwapchainImageBaseHeader *swapchainImage = m_swapchainImages[swapchain.handle][swapchainImageIndex];
 
             XrSwapchainImageBaseHeader *depthSwapchainImage = nullptr;
             if (m_submitLayerDepth) {
-                checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[0].handle, &acquireInfo, &swapchainImageIndex));
-                checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[0].handle, &waitInfo));
-                depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[0].handle][swapchainImageIndex];
+                if (checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[0].handle, &acquireInfo, &swapchainImageIndex))) {
+                    if (checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[0].handle, &waitInfo)))
+                        depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[0].handle][swapchainImageIndex];
+                    else
+                        qWarning("Failed to wait for depth swapchain image (multiview)");
+                } else {
+                    qWarning("Failed to acquire depth swapchain image (multiview)");
+                }
             }
 
             // First update both cameras with the latest view information and
@@ -1359,9 +1432,12 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
             // release the swapchain image array
             XrSwapchainImageReleaseInfo releaseInfo{};
             releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
-            checkXrResult(xrReleaseSwapchainImage(swapchain.handle, &releaseInfo));
-            if (depthSwapchainImage)
-                checkXrResult(xrReleaseSwapchainImage(m_depthSwapchains[0].handle, &releaseInfo));
+            if (!checkXrResult(xrReleaseSwapchainImage(swapchain.handle, &releaseInfo)))
+                qWarning("Failed to release swapchain image");
+            if (depthSwapchainImage) {
+                if (!checkXrResult(xrReleaseSwapchainImage(m_depthSwapchains[0].handle, &releaseInfo)))
+                    qWarning("Failed to release depth swapchain image");
+            }
         } else {
             for (uint32_t i = 0; i < viewCountOutput; i++) {
                 // Each view has a separate swapchain which is acquired, rendered to, and released.
@@ -1371,18 +1447,29 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
                 XrSwapchainImageAcquireInfo acquireInfo{};
                 acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
                 uint32_t swapchainImageIndex = 0;
-                checkXrResult(xrAcquireSwapchainImage(viewSwapchain.handle, &acquireInfo, &swapchainImageIndex));
+                if (!checkXrResult(xrAcquireSwapchainImage(viewSwapchain.handle, &acquireInfo, &swapchainImageIndex))) {
+                    qWarning("Failed to acquire swapchain image");
+                    return false;
+                }
                 XrSwapchainImageWaitInfo waitInfo{};
                 waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
                 waitInfo.timeout = XR_INFINITE_DURATION;
-                checkXrResult(xrWaitSwapchainImage(viewSwapchain.handle, &waitInfo));
+                if (!checkXrResult(xrWaitSwapchainImage(viewSwapchain.handle, &waitInfo))) {
+                    qWarning("Failed to wait for swapchain image");
+                    return false;
+                }
                 XrSwapchainImageBaseHeader *swapchainImage = m_swapchainImages[viewSwapchain.handle][swapchainImageIndex];
 
                 XrSwapchainImageBaseHeader *depthSwapchainImage = nullptr;
                 if (m_submitLayerDepth) {
-                    checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[i].handle, &acquireInfo, &swapchainImageIndex));
-                    checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[i].handle, &waitInfo));
-                    depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[i].handle][swapchainImageIndex];
+                    if (checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[i].handle, &acquireInfo, &swapchainImageIndex))) {
+                        if (checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[i].handle, &waitInfo)))
+                            depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[i].handle][swapchainImageIndex];
+                        else
+                            qWarning("Failed to wait for depth swapchain image");
+                    } else {
+                        qWarning("Failed to acquire depth swapchain image");
+                    }
                 }
 
                 m_projectionLayerViews[i].subImage.swapchain = viewSwapchain.handle;
@@ -1411,9 +1498,12 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
 
                 XrSwapchainImageReleaseInfo releaseInfo{};
                 releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
-                checkXrResult(xrReleaseSwapchainImage(viewSwapchain.handle, &releaseInfo));
-                if (depthSwapchainImage)
-                    checkXrResult(xrReleaseSwapchainImage(m_depthSwapchains[i].handle, &releaseInfo));
+                if (!checkXrResult(xrReleaseSwapchainImage(viewSwapchain.handle, &releaseInfo)))
+                    qWarning("Failed to release swapchain image");
+                if (depthSwapchainImage) {
+                    if (!checkXrResult(xrReleaseSwapchainImage(m_depthSwapchains[i].handle, &releaseInfo)))
+                        qWarning("Failed to release depth swapchain image");
+                }
             }
         }
 
@@ -1476,24 +1566,25 @@ void QQuick3DXrManagerPrivate::doRender(const XrSwapchainSubImage &subImage,
 void QQuick3DXrManagerPrivate::setupMetaQuestColorSpaces()
 {
     PFN_xrEnumerateColorSpacesFB pfnxrEnumerateColorSpacesFB = NULL;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance,
-            "xrEnumerateColorSpacesFB",
-            (PFN_xrVoidFunction*)(&pfnxrEnumerateColorSpacesFB)));
-
+    resolveXrFunction("xrEnumerateColorSpacesFB", (PFN_xrVoidFunction*)(&pfnxrEnumerateColorSpacesFB));
     if (!pfnxrEnumerateColorSpacesFB) // simulator
         return;
 
     uint32_t colorSpaceCountOutput = 0;
-    checkXrResult(pfnxrEnumerateColorSpacesFB(m_session, 0, &colorSpaceCountOutput, NULL));
+    if (!checkXrResult(pfnxrEnumerateColorSpacesFB(m_session, 0, &colorSpaceCountOutput, nullptr))) {
+        qWarning("Failed to enumerate color spaces");
+        return;
+    }
 
     XrColorSpaceFB* colorSpaces =
             (XrColorSpaceFB*)malloc(colorSpaceCountOutput * sizeof(XrColorSpaceFB));
 
-    checkXrResult(pfnxrEnumerateColorSpacesFB(
-            m_session, colorSpaceCountOutput, &colorSpaceCountOutput, colorSpaces));
-    qDebug("Supported ColorSpaces:");
+    if (!checkXrResult(pfnxrEnumerateColorSpacesFB(m_session, colorSpaceCountOutput, &colorSpaceCountOutput, colorSpaces))) {
+        qWarning("Failed to enumerate color spaces");
+        return;
+    }
 
+    qDebug("Supported ColorSpaces:");
     for (uint32_t i = 0; i < colorSpaceCountOutput; i++) {
         qDebug("%d:%d", i, colorSpaces[i]);
     }
@@ -1501,10 +1592,10 @@ void QQuick3DXrManagerPrivate::setupMetaQuestColorSpaces()
     const XrColorSpaceFB requestColorSpace = XR_COLOR_SPACE_QUEST_FB;
 
     PFN_xrSetColorSpaceFB pfnxrSetColorSpaceFB = NULL;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance, "xrSetColorSpaceFB", (PFN_xrVoidFunction*)(&pfnxrSetColorSpaceFB)));
+    resolveXrFunction("xrSetColorSpaceFB", (PFN_xrVoidFunction*)(&pfnxrSetColorSpaceFB));
 
-    checkXrResult(pfnxrSetColorSpaceFB(m_session, requestColorSpace));
+    if (!checkXrResult(pfnxrSetColorSpaceFB(m_session, requestColorSpace)))
+        qWarning("Failed to set color space");
 
     free(colorSpaces);
 }
@@ -1512,73 +1603,66 @@ void QQuick3DXrManagerPrivate::setupMetaQuestColorSpaces()
 void QQuick3DXrManagerPrivate::setupMetaQuestRefreshRates()
 {
     PFN_xrEnumerateDisplayRefreshRatesFB pfnxrEnumerateDisplayRefreshRatesFB = NULL;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance,
-            "xrEnumerateDisplayRefreshRatesFB",
-            (PFN_xrVoidFunction*)(&pfnxrEnumerateDisplayRefreshRatesFB)));
-
+    resolveXrFunction("xrEnumerateDisplayRefreshRatesFB", (PFN_xrVoidFunction*)(&pfnxrEnumerateDisplayRefreshRatesFB));
     if (!pfnxrEnumerateDisplayRefreshRatesFB)
         return;
 
     uint32_t numSupportedDisplayRefreshRates;
     QVector<float> supportedDisplayRefreshRates;
 
-    checkXrResult(pfnxrEnumerateDisplayRefreshRatesFB(
-            m_session, 0, &numSupportedDisplayRefreshRates, NULL));
+    if (!checkXrResult(pfnxrEnumerateDisplayRefreshRatesFB(m_session, 0, &numSupportedDisplayRefreshRates, nullptr))) {
+        qWarning("Failed to enumerate display refresh rates");
+        return;
+    }
 
     supportedDisplayRefreshRates.resize(numSupportedDisplayRefreshRates);
 
-    checkXrResult(pfnxrEnumerateDisplayRefreshRatesFB(
+    if (!checkXrResult(pfnxrEnumerateDisplayRefreshRatesFB(
             m_session,
             numSupportedDisplayRefreshRates,
             &numSupportedDisplayRefreshRates,
-            supportedDisplayRefreshRates.data()));
+            supportedDisplayRefreshRates.data())))
+    {
+        qWarning("Failed to enumerate display refresh rates");
+        return;
+    }
+
     qDebug("Supported Refresh Rates:");
     for (uint32_t i = 0; i < numSupportedDisplayRefreshRates; i++) {
         qDebug("%d:%f", i, supportedDisplayRefreshRates[i]);
     }
 
     PFN_xrGetDisplayRefreshRateFB pfnGetDisplayRefreshRate;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance,
-            "xrGetDisplayRefreshRateFB",
-            (PFN_xrVoidFunction*)(&pfnGetDisplayRefreshRate)));
+    resolveXrFunction("xrGetDisplayRefreshRateFB", (PFN_xrVoidFunction*)(&pfnGetDisplayRefreshRate));
 
     float currentDisplayRefreshRate = 0.0f;
-    checkXrResult(pfnGetDisplayRefreshRate(m_session, &currentDisplayRefreshRate));
+    if (!checkXrResult(pfnGetDisplayRefreshRate(m_session, &currentDisplayRefreshRate)))
+        qWarning("Failed to get display refresh rate");
+
     qDebug("Current System Display Refresh Rate: %f", currentDisplayRefreshRate);
 
     PFN_xrRequestDisplayRefreshRateFB pfnRequestDisplayRefreshRate;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance,
-            "xrRequestDisplayRefreshRateFB",
-            (PFN_xrVoidFunction*)(&pfnRequestDisplayRefreshRate)));
+    resolveXrFunction("xrRequestDisplayRefreshRateFB", (PFN_xrVoidFunction*)(&pfnRequestDisplayRefreshRate));
 
-           // Test requesting the system default.
-    checkXrResult(pfnRequestDisplayRefreshRate(m_session, 0.0f));
+    // Test requesting the system default.
+    if (!checkXrResult(pfnRequestDisplayRefreshRate(m_session, 0.0f)))
+        qWarning("Failed to request display refresh rate");
+
     qDebug("Requesting system default display refresh rate");
 }
 
 void QQuick3DXrManagerPrivate::setupMetaQuestFoveation()
 {
     PFN_xrCreateFoveationProfileFB pfnCreateFoveationProfileFB;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance,
-            "xrCreateFoveationProfileFB",
-            (PFN_xrVoidFunction*)(&pfnCreateFoveationProfileFB)));
-
+    resolveXrFunction("xrCreateFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnCreateFoveationProfileFB));
     if (!pfnCreateFoveationProfileFB) // simulator
         return;
 
     PFN_xrDestroyFoveationProfileFB pfnDestroyFoveationProfileFB;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance,
-            "xrDestroyFoveationProfileFB",
-            (PFN_xrVoidFunction*)(&pfnDestroyFoveationProfileFB)));
+    resolveXrFunction("xrDestroyFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnDestroyFoveationProfileFB));
 
     PFN_xrUpdateSwapchainFB pfnUpdateSwapchainFB;
-    checkXrResult(xrGetInstanceProcAddr(
-            m_instance, "xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB)));
+    resolveXrFunction("xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB));
 
     for (auto swapchain : m_swapchains) {
         XrFoveationLevelProfileCreateInfoFB levelProfileCreateInfo = {};
@@ -1616,57 +1700,50 @@ void QQuick3DXrManagerPrivate::createMetaQuestPassthrough()
     // enabled by the app.
     Q_ASSERT(m_passthroughSupported && m_enablePassthrough);
 
-    qDebug() << Q_FUNC_INFO;
     PFN_xrCreatePassthroughFB pfnXrCreatePassthroughFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrCreatePassthroughFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughFBX)));
+    resolveXrFunction("xrCreatePassthroughFB", (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughFBX));
 
     XrPassthroughCreateInfoFB passthroughCreateInfo{};
     passthroughCreateInfo.type = XR_TYPE_PASSTHROUGH_CREATE_INFO_FB;
     passthroughCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
 
-    checkXrResult(pfnXrCreatePassthroughFBX(m_session, &passthroughCreateInfo, &m_passthroughFeature));
+    if (!checkXrResult(pfnXrCreatePassthroughFBX(m_session, &passthroughCreateInfo, &m_passthroughFeature)))
+        qWarning("Failed to create passthrough object");
 }
 
 void QQuick3DXrManagerPrivate::destroyMetaQuestPassthrough()
 {
-    qDebug() << Q_FUNC_INFO;
     PFN_xrDestroyPassthroughFB pfnXrDestroyPassthroughFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrDestroyPassthroughFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughFBX)));
-    checkXrResult(pfnXrDestroyPassthroughFBX(m_passthroughFeature));
+    resolveXrFunction("xrDestroyPassthroughFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughFBX));
+
+    if (!checkXrResult(pfnXrDestroyPassthroughFBX(m_passthroughFeature)))
+        qWarning("Failed to destroy passthrough object");
+
     m_passthroughFeature = XR_NULL_HANDLE;
 }
 
 void QQuick3DXrManagerPrivate::startMetaQuestPassthrough()
 {
-    qDebug() << Q_FUNC_INFO;
     PFN_xrPassthroughStartFB pfnXrPassthroughStartFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrPassthroughStartFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrPassthroughStartFBX)));
-    checkXrResult(pfnXrPassthroughStartFBX(m_passthroughFeature));
+    resolveXrFunction("xrPassthroughStartFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughStartFBX));
+
+    if (!checkXrResult(pfnXrPassthroughStartFBX(m_passthroughFeature)))
+        qWarning("Failed to start passthrough");
 }
 
 void QQuick3DXrManagerPrivate::pauseMetaQuestPassthrough()
 {
-    qDebug() << Q_FUNC_INFO;
     PFN_xrPassthroughPauseFB pfnXrPassthroughPauseFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrPassthroughPauseFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrPassthroughPauseFBX)));
-    checkXrResult(pfnXrPassthroughPauseFBX(m_passthroughFeature));
+    resolveXrFunction("xrPassthroughPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughPauseFBX));
+
+    if (!checkXrResult(pfnXrPassthroughPauseFBX(m_passthroughFeature)))
+        qWarning("Failed to pause passthrough");
 }
 
 void QQuick3DXrManagerPrivate::createMetaQuestPassthroughLayer()
 {
-    qDebug() << Q_FUNC_INFO;
     PFN_xrCreatePassthroughLayerFB pfnXrCreatePassthroughLayerFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrCreatePassthroughLayerFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughLayerFBX)));
+    resolveXrFunction("xrCreatePassthroughLayerFB", (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughLayerFBX));
 
     XrPassthroughLayerCreateInfoFB layerCreateInfo{};
     layerCreateInfo.type = XR_TYPE_PASSTHROUGH_LAYER_CREATE_INFO_FB;
@@ -1675,44 +1752,46 @@ void QQuick3DXrManagerPrivate::createMetaQuestPassthroughLayer()
     if (m_enablePassthrough)
         layerCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
 
-    checkXrResult(pfnXrCreatePassthroughLayerFBX(m_session, &layerCreateInfo, &m_passthroughLayer));
+    if (!checkXrResult(pfnXrCreatePassthroughLayerFBX(m_session, &layerCreateInfo, &m_passthroughLayer)))
+        qWarning("Failed to create passthrough layer");
 }
 
 void QQuick3DXrManagerPrivate::destroyMetaQuestPassthroughLayer()
 {
-    qDebug() << Q_FUNC_INFO;
     PFN_xrDestroyPassthroughLayerFB pfnXrDestroyPassthroughLayerFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrDestroyPassthroughLayerFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughLayerFBX)));
-    checkXrResult(pfnXrDestroyPassthroughLayerFBX(m_passthroughLayer));
+    resolveXrFunction("xrDestroyPassthroughLayerFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughLayerFBX));
+
+    if (!checkXrResult(pfnXrDestroyPassthroughLayerFBX(m_passthroughLayer)))
+        qWarning("Failed to destroy passthrough layer");
+
     m_passthroughLayer = XR_NULL_HANDLE;
 }
 
 void QQuick3DXrManagerPrivate::pauseMetaQuestPassthroughLayer()
 {
-    qDebug() << Q_FUNC_INFO;
     PFN_xrPassthroughLayerPauseFB pfnXrPassthroughLayerPauseFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrPassthroughLayerPauseFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerPauseFBX)));
-    checkXrResult(pfnXrPassthroughLayerPauseFBX(m_passthroughLayer));
+    resolveXrFunction("xrPassthroughLayerPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerPauseFBX));
+
+    if (!checkXrResult(pfnXrPassthroughLayerPauseFBX(m_passthroughLayer)))
+    qWarning("Failed to pause passthrough layer");
 }
 
 void QQuick3DXrManagerPrivate::resumeMetaQuestPassthroughLayer()
 {
-    qDebug() << Q_FUNC_INFO;
     PFN_xrPassthroughLayerResumeFB pfnXrPassthroughLayerResumeFBX = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrPassthroughLayerResumeFB",
-                                        (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerResumeFBX)));
-    checkXrResult(pfnXrPassthroughLayerResumeFBX(m_passthroughLayer));
+    resolveXrFunction("xrPassthroughLayerResumeFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerResumeFBX));
+
+    if (!checkXrResult(pfnXrPassthroughLayerResumeFBX(m_passthroughLayer)))
+        qWarning("Failed to resume passthrough layer");
 }
 
 void QQuick3DXrManagerPrivate::checkXrExtensions(const char *layerName, int indent)
 {
     quint32 instanceExtensionCount;
-    checkXrResult(xrEnumerateInstanceExtensionProperties(layerName, 0, &instanceExtensionCount, nullptr));
+    if (!checkXrResult(xrEnumerateInstanceExtensionProperties(layerName, 0, &instanceExtensionCount, nullptr))) {
+        qWarning("Failed to enumerate instance extension properties");
+        return;
+    }
 
     QVector<XrExtensionProperties> extensions(instanceExtensionCount);
     for (XrExtensionProperties& extension : extensions) {
@@ -1720,10 +1799,13 @@ void QQuick3DXrManagerPrivate::checkXrExtensions(const char *layerName, int inde
         extension.next = nullptr;
     }
 
-    checkXrResult(xrEnumerateInstanceExtensionProperties(layerName,
-                                                         quint32(extensions.size()),
-                                                         &instanceExtensionCount,
-                                                         extensions.data()));
+    if (!checkXrResult(xrEnumerateInstanceExtensionProperties(layerName,
+                                                              quint32(extensions.size()),
+                                                              &instanceExtensionCount,
+                                                              extensions.data())))
+    {
+        qWarning("Failed to enumerate instance extension properties");
+    }
 
     const QByteArray indentStr(indent, ' ');
     qDebug("%sAvailable Extensions: (%d)", indentStr.data(), instanceExtensionCount);
@@ -1740,7 +1822,10 @@ void QQuick3DXrManagerPrivate::checkXrExtensions(const char *layerName, int inde
 void QQuick3DXrManagerPrivate::checkXrLayers()
 {
     quint32 layerCount;
-    checkXrResult(xrEnumerateApiLayerProperties(0, &layerCount, nullptr));
+    if (!checkXrResult(xrEnumerateApiLayerProperties(0, &layerCount, nullptr))) {
+        qWarning("Failed to enumerate API layer properties");
+        return;
+    }
 
     QVector<XrApiLayerProperties> layers(layerCount);
     for (XrApiLayerProperties& layer : layers) {
@@ -1748,7 +1833,10 @@ void QQuick3DXrManagerPrivate::checkXrLayers()
         layer.next = nullptr;
     }
 
-    checkXrResult(xrEnumerateApiLayerProperties(quint32(layers.size()), &layerCount, layers.data()));
+    if (!checkXrResult(xrEnumerateApiLayerProperties(quint32(layers.size()), &layerCount, layers.data()))) {
+        qWarning("Failed to enumerate API layer properties");
+        return;
+    }
 
     qDebug("Available Layers: (%d)", layerCount);
     for (const XrApiLayerProperties& layer : layers) {
@@ -1955,7 +2043,10 @@ void QQuick3DXrManagerPrivate::checkXrInstance()
     Q_ASSERT(m_instance != XR_NULL_HANDLE);
     XrInstanceProperties instanceProperties{};
     instanceProperties.type = XR_TYPE_INSTANCE_PROPERTIES;
-    checkXrResult(xrGetInstanceProperties(m_instance, &instanceProperties));
+    if (!checkXrResult(xrGetInstanceProperties(m_instance, &instanceProperties))) {
+        qWarning("Failed to get instance properties");
+        return;
+    }
 
     m_runtimeName = QString::fromUtf8(instanceProperties.runtimeName);
     m_runtimeVersion = QVersionNumber(XR_VERSION_MAJOR(instanceProperties.runtimeVersion),
@@ -1978,15 +2069,11 @@ void QQuick3DXrManagerPrivate::setupDebugMessenger()
 
 #ifdef XR_EXT_debug_utils
     PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT = nullptr;
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrCreateDebugUtilsMessengerEXT",
-                                        reinterpret_cast<PFN_xrVoidFunction *>(&xrCreateDebugUtilsMessengerEXT)));
+    resolveXrFunction("xrCreateDebugUtilsMessengerEXT", reinterpret_cast<PFN_xrVoidFunction *>(&xrCreateDebugUtilsMessengerEXT));
     if (!xrCreateDebugUtilsMessengerEXT)
         return;
 
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrDestroyDebugUtilsMessengerEXT",
-                                        reinterpret_cast<PFN_xrVoidFunction *>(&m_xrDestroyDebugUtilsMessengerEXT)));
+    resolveXrFunction("xrDestroyDebugUtilsMessengerEXT", reinterpret_cast<PFN_xrVoidFunction *>(&m_xrDestroyDebugUtilsMessengerEXT));
 
     XrDebugUtilsMessengerCreateInfoEXT messengerInfo = {};
     messengerInfo.type = XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -2030,45 +2117,67 @@ XrResult QQuick3DXrManagerPrivate::initializeSystem()
 void QQuick3DXrManagerPrivate::checkViewConfiguration()
 {
     quint32 viewConfigTypeCount;
-    checkXrResult(xrEnumerateViewConfigurations(m_instance,
-                                                m_systemId,
-                                                0,
-                                                &viewConfigTypeCount,
-                                                nullptr));
+    if (!checkXrResult(xrEnumerateViewConfigurations(m_instance,
+                                                     m_systemId,
+                                                     0,
+                                                     &viewConfigTypeCount,
+                                                     nullptr)))
+    {
+        qWarning("Failed to enumerate view configurations");
+        return;
+    }
     QVector<XrViewConfigurationType> viewConfigTypes(viewConfigTypeCount);
-    checkXrResult(xrEnumerateViewConfigurations(m_instance,
-                                                m_systemId,
-                                                viewConfigTypeCount,
-                                                &viewConfigTypeCount,
-                                                viewConfigTypes.data()));
+    if (!checkXrResult(xrEnumerateViewConfigurations(m_instance,
+                                                     m_systemId,
+                                                     viewConfigTypeCount,
+                                                     &viewConfigTypeCount,
+                                                     viewConfigTypes.data())))
+    {
+        qWarning("Failed to enumerate view configurations");
+        return;
+    }
 
     qDebug("Available View Configuration Types: (%d)", viewConfigTypeCount);
     for (XrViewConfigurationType viewConfigType : viewConfigTypes) {
         qDebug("  View Configuration Type: %s %s", to_string(viewConfigType), viewConfigType == m_viewConfigType ? "(Selected)" : "");
         XrViewConfigurationProperties viewConfigProperties{};
         viewConfigProperties.type = XR_TYPE_VIEW_CONFIGURATION_PROPERTIES;
-        checkXrResult(xrGetViewConfigurationProperties(m_instance,
-                                                       m_systemId,
-                                                       viewConfigType,
-                                                       &viewConfigProperties));
+        if (!checkXrResult(xrGetViewConfigurationProperties(m_instance,
+                                                            m_systemId,
+                                                            viewConfigType,
+                                                            &viewConfigProperties)))
+        {
+            qWarning("Failed to get view configuration properties");
+            return;
+        }
 
         qDebug("  View configuration FovMutable=%s", viewConfigProperties.fovMutable == XR_TRUE ? "True" : "False");
 
         uint32_t viewCount;
-        checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
-                                                        m_systemId,
-                                                        viewConfigType,
-                                                        0,
-                                                        &viewCount,
-                                                        nullptr));
+        if (!checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
+                                                             m_systemId,
+                                                             viewConfigType,
+                                                             0,
+                                                             &viewCount,
+                                                             nullptr)))
+        {
+            qWarning("Failed to enumerate configuration views");
+            return;
+        }
+
         if (viewCount > 0) {
             QVector<XrViewConfigurationView> views(viewCount, {XR_TYPE_VIEW_CONFIGURATION_VIEW, nullptr, 0, 0, 0, 0, 0, 0});
-            checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
-                                                            m_systemId,
-                                                            viewConfigType,
-                                                            viewCount,
-                                                            &viewCount,
-                                                            views.data()));
+            if (!checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
+                                                                 m_systemId,
+                                                                 viewConfigType,
+                                                                 viewCount,
+                                                                 &viewCount,
+                                                                 views.data())))
+            {
+                qWarning("Failed to enumerate configuration views");
+                return;
+            }
+
             for (int i = 0; i < views.size(); ++i) {
                 const XrViewConfigurationView& view = views[i];
                 qDebug("    View [%d]: Recommended Width=%d Height=%d SampleCount=%d",
@@ -2088,30 +2197,50 @@ void QQuick3DXrManagerPrivate::checkViewConfiguration()
         checkEnvironmentBlendMode(viewConfigType);
     }
 }
+
 bool QQuick3DXrManagerPrivate::checkXrResult(const XrResult &result)
 {
     return OpenXRHelpers::checkXrResult(result, m_instance);
 }
 
+bool QQuick3DXrManagerPrivate::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
+{
+    XrResult result = xrGetInstanceProcAddr(m_instance, name, function);
+    if (!OpenXRHelpers::checkXrResult(result, m_instance)) {
+        qWarning("Failed to resolve OpenXR function %s", name);
+        *function = nullptr;
+        return false;
+    }
+    return true;
+}
+
 void QQuick3DXrManagerPrivate::checkEnvironmentBlendMode(XrViewConfigurationType type)
 {
     uint32_t count;
-    checkXrResult(xrEnumerateEnvironmentBlendModes(m_instance,
-                                                   m_systemId,
-                                                   type,
-                                                   0,
-                                                   &count,
-                                                   nullptr));
+    if (!checkXrResult(xrEnumerateEnvironmentBlendModes(m_instance,
+                                                        m_systemId,
+                                                        type,
+                                                        0,
+                                                        &count,
+                                                        nullptr)))
+    {
+        qWarning("Failed to enumerate blend modes");
+        return;
+    }
 
     qDebug("Available Environment Blend Mode count : (%d)", count);
 
     QVector<XrEnvironmentBlendMode> blendModes(count);
-    checkXrResult(xrEnumerateEnvironmentBlendModes(m_instance,
-                                                   m_systemId,
-                                                   type,
-                                                   count,
-                                                   &count,
-                                                   blendModes.data()));
+    if (!checkXrResult(xrEnumerateEnvironmentBlendModes(m_instance,
+                                                        m_systemId,
+                                                        type,
+                                                        count,
+                                                        &count,
+                                                        blendModes.data())))
+    {
+        qWarning("Failed to enumerate blend modes");
+        return;
+    }
 
     bool blendModeFound = false;
     for (XrEnvironmentBlendMode mode : blendModes) {

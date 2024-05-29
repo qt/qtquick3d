@@ -17,7 +17,7 @@ QString OpenXRHelpers::getXrResultAsString(XrResult result, XrInstance instance)
 bool OpenXRHelpers::checkXrResult(XrResult result, XrInstance instance)
 {
     if (result != XrResult::XR_SUCCESS) {
-        qWarning().noquote().nospace() << "\n" << getXrResultAsString(result, instance);
+        qWarning().noquote().nospace() << "OpenXR call failed (" << result << "): " << getXrResultAsString(result, instance);
         return false;
     }
     return true;

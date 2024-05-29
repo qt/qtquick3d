@@ -82,7 +82,8 @@ private:
     bool queryHandMesh(Hand hand);
     void setupActions();
     void destroyActions();
-    bool checkXrResult(const XrResult &result, const char *debugText = nullptr);
+    [[nodiscard]] bool checkXrResult(const XrResult &result);
+    bool resolveXrFunction(const char *name, PFN_xrVoidFunction *function);
     void setPath(XrPath &path, const QByteArray &pathString);
 
     void createAction(XrActionType type,

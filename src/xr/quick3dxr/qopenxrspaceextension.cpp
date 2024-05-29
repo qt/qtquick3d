@@ -42,45 +42,45 @@ void QOpenXRSpaceExtension::initialize(XrInstance instance, XrSession session)
     m_session = session;
 
     // Get the function pointers
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrEnumerateSpaceSupportedComponentsFB",
-                                        (PFN_xrVoidFunction*)(&xrEnumerateSpaceSupportedComponentsFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceComponentStatusFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceComponentStatusFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrSetSpaceComponentStatusFB",
-                                        (PFN_xrVoidFunction*)(&xrSetSpaceComponentStatusFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceUuidFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceUuidFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrQuerySpacesFB",
-                                        (PFN_xrVoidFunction*)(&xrQuerySpacesFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrRetrieveSpaceQueryResultsFB",
-                                        (PFN_xrVoidFunction*)(&xrRetrieveSpaceQueryResultsFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceBoundingBox2DFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceBoundingBox2DFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceBoundingBox3DFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceBoundingBox3DFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceSemanticLabelsFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceSemanticLabelsFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceBoundary2DFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceBoundary2DFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceRoomLayoutFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceRoomLayoutFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrGetSpaceContainerFB",
-                                        (PFN_xrVoidFunction*)(&xrGetSpaceContainerFB)));
-    checkXrResult(xrGetInstanceProcAddr(m_instance,
-                                        "xrRequestSceneCaptureFB",
-                                        (PFN_xrVoidFunction*)(&xrRequestSceneCaptureFB)));
+    resolveXrFunction(
+                    "xrEnumerateSpaceSupportedComponentsFB",
+                    (PFN_xrVoidFunction*)(&xrEnumerateSpaceSupportedComponentsFB));
+    resolveXrFunction(
+                    "xrGetSpaceComponentStatusFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceComponentStatusFB));
+    resolveXrFunction(
+                    "xrSetSpaceComponentStatusFB",
+                    (PFN_xrVoidFunction*)(&xrSetSpaceComponentStatusFB));
+    resolveXrFunction(
+                    "xrGetSpaceUuidFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceUuidFB));
+    resolveXrFunction(
+                    "xrQuerySpacesFB",
+                    (PFN_xrVoidFunction*)(&xrQuerySpacesFB));
+    resolveXrFunction(
+                    "xrRetrieveSpaceQueryResultsFB",
+                    (PFN_xrVoidFunction*)(&xrRetrieveSpaceQueryResultsFB));
+    resolveXrFunction(
+                    "xrGetSpaceBoundingBox2DFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceBoundingBox2DFB));
+    resolveXrFunction(
+                    "xrGetSpaceBoundingBox3DFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceBoundingBox3DFB));
+    resolveXrFunction(
+                    "xrGetSpaceSemanticLabelsFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceSemanticLabelsFB));
+    resolveXrFunction(
+                    "xrGetSpaceBoundary2DFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceBoundary2DFB));
+    resolveXrFunction(
+                    "xrGetSpaceRoomLayoutFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceRoomLayoutFB));
+    resolveXrFunction(
+                    "xrGetSpaceContainerFB",
+                    (PFN_xrVoidFunction*)(&xrGetSpaceContainerFB));
+    resolveXrFunction(
+                    "xrRequestSceneCaptureFB",
+                    (PFN_xrVoidFunction*)(&xrRequestSceneCaptureFB));
 }
 
 void QOpenXRSpaceExtension::teardown()
@@ -138,14 +138,20 @@ void QOpenXRSpaceExtension::handleEvent(const XrEventDataBaseHeader *event)
         queryResults.resultCountOutput = 0;
         queryResults.results = nullptr;
 
-        checkXrResult(retrieveSpaceQueryResults(resultsAvailable->requestId, &queryResults));
+        if (!checkXrResult(retrieveSpaceQueryResults(resultsAvailable->requestId, &queryResults))) {
+            qWarning("Failed to retrieve space query results");
+            return;
+        }
 
         QVector<XrSpaceQueryResultFB> results(queryResults.resultCountOutput);
         queryResults.resultCapacityInput = results.size();
         queryResults.resultCountOutput = 0;
         queryResults.results = results.data();
 
-        checkXrResult(retrieveSpaceQueryResults(resultsAvailable->requestId, &queryResults));
+        if (!checkXrResult(retrieveSpaceQueryResults(resultsAvailable->requestId, &queryResults))) {
+            qWarning("Failed to retrieve space query results");
+            return;
+        }
 
         qDebug("retrieveSpaceQueryResults: num of results received: %d", queryResults.resultCountOutput);
         for (const auto &result : results) {
@@ -176,14 +182,23 @@ void QOpenXRSpaceExtension::requestSceneCapture()
     request.type = XR_TYPE_SCENE_CAPTURE_REQUEST_INFO_FB;
     request.requestByteCount = 0;
     request.request = nullptr;
-    checkXrResult(requestSceneCapture(&request, &requestId));
+    if (!checkXrResult(requestSceneCapture(&request, &requestId)))
+        qWarning("Failed to request scene capture");
 }
 
-bool QOpenXRSpaceExtension::isComponentSupported(XrSpace space, XrSpaceComponentTypeFB type) {
+bool QOpenXRSpaceExtension::isComponentSupported(XrSpace space, XrSpaceComponentTypeFB type)
+{
     uint32_t numComponents = 0;
-    checkXrResult(enumerateSpaceSupportedComponents(space, 0, &numComponents, nullptr));
+    if (!checkXrResult(enumerateSpaceSupportedComponents(space, 0, &numComponents, nullptr))) {
+        qWarning("Failed to enumerate supported space components");
+        return false;
+    }
+
     QVector<XrSpaceComponentTypeFB> components(numComponents);
-    checkXrResult(enumerateSpaceSupportedComponents(space, numComponents, &numComponents, components.data()));
+    if (!checkXrResult(enumerateSpaceSupportedComponents(space, numComponents, &numComponents, components.data()))) {
+        qWarning("Failed to enumerate supported space components");
+        return false;
+    }
 
     bool supported = false;
     for (const auto &component : components) {
@@ -199,7 +214,10 @@ bool QOpenXRSpaceExtension::isComponentSupported(XrSpace space, XrSpaceComponent
 bool QOpenXRSpaceExtension::isComponentEnabled(XrSpace space, XrSpaceComponentTypeFB type)
 {
     XrSpaceComponentStatusFB status = {XR_TYPE_SPACE_COMPONENT_STATUS_FB, nullptr, 0, 0};
-    checkXrResult(getSpaceComponentStatus(space, type, &status));
+    if (!checkXrResult(getSpaceComponentStatus(space, type, &status))) {
+        qWarning("Failed to get space component status");
+        return false;
+    }
     return (status.enabled && !status.changePending);
 }
 
@@ -208,7 +226,10 @@ bool QOpenXRSpaceExtension::getBoundingBox2D(XrSpace space, QVector2D &offset, Q
     if (isComponentEnabled(space, XR_SPACE_COMPONENT_TYPE_BOUNDED_2D_FB)) {
         // Get the 2D bounds
         XrRect2Df boundingBox2D;
-        checkXrResult(getSpaceBoundingBox2D(space, &boundingBox2D));
+        if (!checkXrResult(getSpaceBoundingBox2D(space, &boundingBox2D))) {
+            qWarning("Failed to get bounding box 2D for space");
+            return false;
+        }
         offset = QVector2D(boundingBox2D.offset.x, boundingBox2D.offset.y);
         extent = QVector2D(boundingBox2D.extent.width, boundingBox2D.extent.height);
         return true;
@@ -221,7 +242,10 @@ bool QOpenXRSpaceExtension::getBoundingBox3D(XrSpace space, QVector3D &offset, Q
     if (isComponentEnabled(space, XR_SPACE_COMPONENT_TYPE_BOUNDED_3D_FB)) {
         // Get the 3D bounds
         XrRect3DfFB boundingBox3D;
-        checkXrResult(getSpaceBoundingBox3D(space, &boundingBox3D));
+        if (!checkXrResult(getSpaceBoundingBox3D(space, &boundingBox3D))) {
+            qWarning("Failed to get bounding box 3D for space");
+            return false;
+        }
         offset = QVector3D(boundingBox3D.offset.x, boundingBox3D.offset.y, boundingBox3D.offset.z);
         extent = QVector3D(boundingBox3D.extent.width, boundingBox3D.extent.height, boundingBox3D.extent.depth);
         return true;
@@ -253,14 +277,19 @@ XrUuidEXT fromQUuid(QUuid uuid) {
 
 }
 
-QSet<QUuid> QOpenXRSpaceExtension::collectRoomLayoutUuids(XrSpace space) {
+QSet<QUuid> QOpenXRSpaceExtension::collectRoomLayoutUuids(XrSpace space)
+{
     XrRoomLayoutFB roomLayout{};
     roomLayout.type = XR_TYPE_ROOM_LAYOUT_FB;
     QVector<XrUuidEXT> wallUuids;
     QSet<QUuid> uuidSet;
 
     // First call
-    checkXrResult(getSpaceRoomLayout(space, &roomLayout));
+    if (!checkXrResult(getSpaceRoomLayout(space, &roomLayout))) {
+        qWarning("Failed to get room layout");
+        return uuidSet;
+    }
+
     // If wallUuidCountOutput == 0, no walls in the component. The UUIDs of the ceiling and floor
     // has been returned if available
     if (roomLayout.wallUuidCountOutput != 0) {
@@ -268,7 +297,10 @@ QSet<QUuid> QOpenXRSpaceExtension::collectRoomLayoutUuids(XrSpace space) {
         wallUuids.resize(roomLayout.wallUuidCountOutput);
         roomLayout.wallUuidCapacityInput = wallUuids.size();
         roomLayout.wallUuids = wallUuids.data();
-        checkXrResult(getSpaceRoomLayout(space, &roomLayout));
+        if (!checkXrResult(getSpaceRoomLayout(space, &roomLayout))) {
+            qWarning("Failed to get room layout");
+            return uuidSet;
+        }
     }
     if (isValidUuid(roomLayout.floorUuid))
         uuidSet.insert(fromXrUuidExt(roomLayout.floorUuid));
@@ -279,18 +311,25 @@ QSet<QUuid> QOpenXRSpaceExtension::collectRoomLayoutUuids(XrSpace space) {
     return uuidSet;
 }
 
-QSet<QUuid> QOpenXRSpaceExtension::collectSpaceContainerUuids(XrSpace space) {
+QSet<QUuid> QOpenXRSpaceExtension::collectSpaceContainerUuids(XrSpace space)
+{
     XrSpaceContainerFB spaceContainer{};
     spaceContainer.type = XR_TYPE_SPACE_CONTAINER_FB;
     QSet<QUuid> uuidSet;
     // First call
-    checkXrResult(getSpaceContainer(space, &spaceContainer));
+    if (!checkXrResult(getSpaceContainer(space, &spaceContainer))) {
+        qWarning("Failed to get container");
+        return uuidSet;
+    }
     if (spaceContainer.uuidCountOutput != 0) {
         // Second call
         QVector<XrUuidEXT> uuids(spaceContainer.uuidCountOutput);
         spaceContainer.uuidCapacityInput = uuids.size();
         spaceContainer.uuids = uuids.data();
-        checkXrResult(getSpaceContainer(space, &spaceContainer));
+        if (!checkXrResult(getSpaceContainer(space, &spaceContainer))) {
+            qWarning("Failed to get container");
+            return uuidSet;
+        }
 
         for (uint32_t i = 0; i < spaceContainer.uuidCountOutput; i++)
             uuidSet.insert(fromXrUuidExt(spaceContainer.uuids[i]));
@@ -316,12 +355,18 @@ QString QOpenXRSpaceExtension::getSemanticLabels(const XrSpace space) {
         return QString();
 
     // First call.
-    checkXrResult(getSpaceSemanticLabels(space, &labels));
+    if (!checkXrResult(getSpaceSemanticLabels(space, &labels))) {
+        qWarning("Failed to get semantic labels");
+        return {};
+    }
     // Second call
     QByteArray labelData(labels.bufferCountOutput, Qt::Uninitialized);
     labels.bufferCapacityInput = labelData.size();
     labels.buffer = labelData.data();
-    checkXrResult(getSpaceSemanticLabels(space, &labels));
+    if (!checkXrResult(getSpaceSemanticLabels(space, &labels))) {
+        qWarning("Failed to get semantic labels");
+        return {};
+    }
 
     return QString::fromLocal8Bit(labelData);
 }
@@ -352,7 +397,6 @@ void QOpenXRSpaceExtension::updateAnchors(XrTime predictedDisplayTime, XrSpace a
         XrSpaceLocation spaceLocation{};
         spaceLocation.type = XR_TYPE_SPACE_LOCATION;
         XrResult res = xrLocateSpace(anchor->space(), appSpace, predictedDisplayTime, &spaceLocation);
-        checkXrResult(res);
         if (XR_UNQUALIFIED_SUCCESS(res)) {
             if ((spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
                 (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
@@ -394,7 +438,10 @@ bool QOpenXRSpaceExtension::queryAllAnchorsWithSpecificComponentEnabled(const Xr
                                     };
 
     XrAsyncRequestIdFB requestId;
-    checkXrResult(querySpaces((XrSpaceQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
+    if (!checkXrResult(querySpaces((XrSpaceQueryInfoBaseHeaderFB*)&queryInfo, &requestId))) {
+        qWarning("Failed to query spaces");
+        return false;
+    }
     return true;
 }
 
@@ -433,7 +480,10 @@ bool QOpenXRSpaceExtension::queryAnchorsByUuids(const QSet<QUuid>& uuidSet) {
                                     };
 
     XrAsyncRequestIdFB requestId;
-    checkXrResult(querySpaces((XrSpaceQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
+    if (!checkXrResult(querySpaces((XrSpaceQueryInfoBaseHeaderFB*)&queryInfo, &requestId))) {
+        qWarning("Failed to query spaces");
+        return false;
+    }
     return true;
 }
 
@@ -522,6 +572,17 @@ XrResult QOpenXRSpaceExtension::requestSceneCapture(const XrSceneCaptureRequestI
 bool QOpenXRSpaceExtension::checkXrResult(const XrResult &result)
 {
     return OpenXRHelpers::checkXrResult(result, m_instance);
+}
+
+bool QOpenXRSpaceExtension::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
+{
+    XrResult result = xrGetInstanceProcAddr(m_instance, name, function);
+    if (!OpenXRHelpers::checkXrResult(result, m_instance)) {
+        qWarning("Failed to resolve OpenXR function %s", name);
+        *function = nullptr;
+        return false;
+    }
+    return true;
 }
 
 QT_END_NAMESPACE

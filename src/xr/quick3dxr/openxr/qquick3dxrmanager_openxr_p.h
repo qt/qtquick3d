@@ -102,7 +102,8 @@ private:
     XrResult initializeSystem();
 
     void checkViewConfiguration();
-    bool checkXrResult(const XrResult &result);
+    [[nodiscard]] bool checkXrResult(const XrResult &result);
+    bool resolveXrFunction(const char *name, PFN_xrVoidFunction *function);
     void checkEnvironmentBlendMode(XrViewConfigurationType type);
 
     void pollEvents(bool *exitRenderLoop, bool *requestRestart);
@@ -116,7 +117,7 @@ private:
     bool setupViewSpace();
     bool resetEmulatedFloorHeight(XrTime predictedDisplayTime);
 
-    void createSwapchains();
+    bool createSwapchains();
 
     bool renderLayer(XrTime predictedDisplayTime,
                      XrDuration predictedDisplayPeriod,

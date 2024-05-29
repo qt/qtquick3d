@@ -82,7 +82,8 @@ private:
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
 
-    bool checkXrResult(const XrResult &result);
+    [[nodiscard]] bool checkXrResult(const XrResult &result);
+    bool resolveXrFunction(const char *name, PFN_xrVoidFunction *function);
 
     bool queryAllAnchorsWithSpecificComponentEnabled(const XrSpaceComponentTypeFB componentType);
     bool queryAnchorsByUuids(const QSet<QUuid>& uuidSet);

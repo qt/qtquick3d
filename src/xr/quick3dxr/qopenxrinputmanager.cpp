@@ -354,7 +354,8 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
         suggestedBindings.interactionProfile = oculusTouchProfile;
         suggestedBindings.suggestedBindings = bindings.data();
         suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: Oculus touch");
+        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
+            qWarning("Failed to get suggested interaction profile bindings for Oculus touch");
     }
 
     // Microsoft hand interaction extension as supported by Quest 3
@@ -381,7 +382,8 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
         suggestedBindings.suggestedBindings = bindings.data();
         suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
 
-        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: MSFT hand interaction");
+        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
+            qWarning("Failed to get suggested interaction profile bindings for MSFT hand interaction");
     }
 
     {
@@ -417,7 +419,8 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
         suggestedBindings.interactionProfile = htcViveProfile;
         suggestedBindings.suggestedBindings = bindings.data();
         suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: Vive controller");
+        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
+            qWarning("Failed to get suggested interaction profile bindings for Vive controller");
     }
 
     // Microsoft MRM ### TODO
@@ -476,7 +479,8 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
         suggestedBindings.interactionProfile = xboxControllerProfile;
         suggestedBindings.suggestedBindings = bindings.data();
         suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings), "suggested bindings: XBox controller");
+        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
+            qWarning("Failed to get suggested interaction profile bindings for XBox controller");
     }
 
     // Setup Action Spaces
@@ -487,15 +491,19 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     actionSpaceInfo.poseInActionSpace.orientation.w = 1.0f;
     //actionSpaceInfo.poseInActionSpace.orientation.y = 1.0f;
     actionSpaceInfo.subactionPath = m_handSubactionPath[0];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[0]), "action space: handGripSpace[0]");
+    if (!checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[0])))
+        qWarning("Failed to create action space for handGripSpace[0]");
     actionSpaceInfo.subactionPath = m_handSubactionPath[1];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[1]), "action space: handGripSpace[1]");
+    if (!checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handGripSpace[1])))
+        qWarning("Failed to create action space for handGripSpace[1]");
 
     actionSpaceInfo.action = m_handActions.aimPoseAction;
     actionSpaceInfo.subactionPath = m_handSubactionPath[0];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[0]), "action space: handAimSpace[0]");
+    if (!checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[0])))
+        qWarning("Failed to create action space for handAimSpace[0]");
     actionSpaceInfo.subactionPath = m_handSubactionPath[1];
-    checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[1]), "action space: handAimSpace[1]");
+    if (!checkXrResult(xrCreateActionSpace(m_session, &actionSpaceInfo, &m_handAimSpace[1])))
+        qWarning("Failed to create action space for handAimSpace[1]");
 
     // Attach Action set to session
 
@@ -503,7 +511,8 @@ void QOpenXRInputManager::init(XrInstance instance, XrSession session)
     attachInfo.type = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO;
     attachInfo.countActionSets = 1;
     attachInfo.actionSets = &m_actionSet;
-    checkXrResult(xrAttachSessionActionSets(m_session, &attachInfo), "attach action set");
+    if (!checkXrResult(xrAttachSessionActionSets(m_session, &attachInfo)))
+        qWarning("Failed to attach action sets to session");
 
     m_initialized = true;
 }
@@ -545,9 +554,12 @@ void QOpenXRInputManager::pollActions()
     XrResult result = xrSyncActions(m_session, &syncInfo);
     if (!(result == XR_SUCCESS ||
           result == XR_SESSION_LOSS_PENDING ||
-          result == XR_SESSION_NOT_FOCUSED)) {
-        checkXrResult(result, "xrSyncActions");
-        return;
+          result == XR_SESSION_NOT_FOCUSED))
+    {
+        if (!checkXrResult(result)) {
+            qWarning("xrSyncActions failed");
+            return;
+        }
     }
 
     // Hands
@@ -564,20 +576,26 @@ void QOpenXRInputManager::pollActions()
             case XR_ACTION_TYPE_BOOLEAN_INPUT: {
                 XrActionStateBoolean boolValue{};
                 boolValue.type = XR_TYPE_ACTION_STATE_BOOLEAN;
-                checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue), "bool hand input");
-                if (boolValue.isActive && boolValue.changedSinceLastSync) {
-                    //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
-                    m_handInputState[i]->setInputValue(def.id, def.shortName, float(boolValue.currentState));
+                if (checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue))) {
+                    if (boolValue.isActive && boolValue.changedSinceLastSync) {
+                        //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
+                        m_handInputState[i]->setInputValue(def.id, def.shortName, float(boolValue.currentState));
+                    }
+                } else {
+                    qWarning("Failed to get action state for bool hand input");
                 }
                 break;
             }
             case XR_ACTION_TYPE_FLOAT_INPUT: {
                 XrActionStateFloat floatValue{};
                 floatValue.type = XR_TYPE_ACTION_STATE_FLOAT;
-                checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue), "float hand input");
-                if (floatValue.isActive && floatValue.changedSinceLastSync) {
-                    //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
-                    m_handInputState[i]->setInputValue(def.id, def.shortName, float(floatValue.currentState));
+                if (checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue))) {
+                    if (floatValue.isActive && floatValue.changedSinceLastSync) {
+                        //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
+                        m_handInputState[i]->setInputValue(def.id, def.shortName, float(floatValue.currentState));
+                    }
+                } else {
+                    qWarning("Failed to get action state for float hand input");
                 }
                 break;
             }
@@ -593,8 +611,10 @@ void QOpenXRInputManager::pollActions()
         getInfo.action = m_handActions.gripPoseAction;
         XrActionStatePose poseState{};
         poseState.type = XR_TYPE_ACTION_STATE_POSE;
-        checkXrResult(xrGetActionStatePose(m_session, &getInfo, &poseState), "xrGetActionStatePose XR_TYPE_ACTION_STATE_POSE");
-        inputState->setIsActive(poseState.isActive);
+        if (checkXrResult(xrGetActionStatePose(m_session, &getInfo, &poseState)))
+            inputState->setIsActive(poseState.isActive);
+        else
+            qWarning("Failed to get action state pose");
 
         // TODO handle any output as well here (haptics)
     //    XrAction gripPoseAction{XR_NULL_HANDLE};
@@ -614,20 +634,26 @@ void QOpenXRInputManager::pollActions()
             case XR_ACTION_TYPE_BOOLEAN_INPUT: {
                 XrActionStateBoolean boolValue{};
                 boolValue.type = XR_TYPE_ACTION_STATE_BOOLEAN;
-                checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue), "bool hand input");
-                if (boolValue.isActive && boolValue.changedSinceLastSync) {
-                    //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
-                    m_gamepadInputState->setInputValue(def.id, def.shortName, float(boolValue.currentState));
+                if (checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue))) {
+                    if (boolValue.isActive && boolValue.changedSinceLastSync) {
+                        //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
+                        m_gamepadInputState->setInputValue(def.id, def.shortName, float(boolValue.currentState));
+                    }
+                } else {
+                    qWarning("Failed to get action state for bool hand input");
                 }
                 break;
             }
             case XR_ACTION_TYPE_FLOAT_INPUT: {
                 XrActionStateFloat floatValue{};
                 floatValue.type = XR_TYPE_ACTION_STATE_FLOAT;
-                checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue), "float hand input");
-                if (floatValue.isActive && floatValue.changedSinceLastSync) {
-                    //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
-                    m_gamepadInputState->setInputValue(def.id, def.shortName, float(floatValue.currentState));
+                if (checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue))) {
+                    if (floatValue.isActive && floatValue.changedSinceLastSync) {
+                        //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
+                        m_gamepadInputState->setInputValue(def.id, def.shortName, float(floatValue.currentState));
+                    }
+                } else {
+                    qWarning("Failed to get action state for float hand input");
                 }
                 break;
             }
@@ -659,7 +685,6 @@ void QOpenXRInputManager::updatePoses(XrTime predictedDisplayTime, XrSpace appSp
         // qDebug() << "LOCATE SPACE hand:" << hand << "res" << res << "flags" << spaceLocation.locationFlags
         //          << "active" << m_handInputState[hand]->isActive()
         //          << "Pos" << spaceLocation.pose.position.x << spaceLocation.pose.position.y << spaceLocation.pose.position.z;
-        checkXrResult(res, "xrLocateSpace");
         m_validAimStateFromUpdatePoses[hand] = m_handInputState[hand]->poseSpace() == QOpenXRHandInput::HandPoseSpace::AimPose
                 && XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT)
                 && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT); // ### Workaround for Quest issue with hand interaction aim pose
@@ -716,7 +741,8 @@ void QOpenXRInputManager::updateHandtracking(XrTime predictedDisplayTime, XrSpac
             locateInfo[hand].type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT;
             locateInfo[hand].baseSpace = appSpace;
             locateInfo[hand].time = predictedDisplayTime;
-            checkXrResult(xrLocateHandJointsEXT_(handTracker[hand], &locateInfo[hand], &locations[hand]), "handTracker");
+            if (!checkXrResult(xrLocateHandJointsEXT_(handTracker[hand], &locateInfo[hand], &locations[hand])))
+                qWarning("Failed to locate hand joints for hand tracker");
 
             QList<QVector3D> jp;
             jp.reserve(XR_HAND_JOINT_COUNT_EXT);
@@ -770,31 +796,29 @@ void QOpenXRInputManager::updateHandtracking(XrTime predictedDisplayTime, XrSpac
 
 void QOpenXRInputManager::setupHandTracking()
 {
-    checkXrResult(xrGetInstanceProcAddr(
-        m_instance,
+    resolveXrFunction(
         "xrCreateHandTrackerEXT",
-        (PFN_xrVoidFunction*)(&xrCreateHandTrackerEXT_)), "xrCreateHandTrackerEXT");
-    checkXrResult(xrGetInstanceProcAddr(
-        m_instance,
+        (PFN_xrVoidFunction*)(&xrCreateHandTrackerEXT_));
+    resolveXrFunction(
         "xrDestroyHandTrackerEXT",
-        (PFN_xrVoidFunction*)(&xrDestroyHandTrackerEXT_)), "xrDestroyHandTrackerEXT");
-    checkXrResult(xrGetInstanceProcAddr(
-        m_instance,
+        (PFN_xrVoidFunction*)(&xrDestroyHandTrackerEXT_));
+    resolveXrFunction(
         "xrLocateHandJointsEXT",
-        (PFN_xrVoidFunction*)(&xrLocateHandJointsEXT_)), "xrLocateHandJointsEXT");
-    checkXrResult(xrGetInstanceProcAddr(
-        m_instance,
+        (PFN_xrVoidFunction*)(&xrLocateHandJointsEXT_));
+    resolveXrFunction(
         "xrGetHandMeshFB",
-        (PFN_xrVoidFunction*)(&xrGetHandMeshFB_)), "xrGetHandMeshFB");
+        (PFN_xrVoidFunction*)(&xrGetHandMeshFB_));
 
     if (xrCreateHandTrackerEXT_) {
         XrHandTrackerCreateInfoEXT createInfo{};
         createInfo.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT;
         createInfo.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT;
         createInfo.hand = XR_HAND_LEFT_EXT;
-        checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[LeftHand]), "xrCreateHandTrackerEXT handTrackerLeft");
+        if (!checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[LeftHand])))
+            qWarning("Failed to create left hand tracker");
         createInfo.hand = XR_HAND_RIGHT_EXT;
-        checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[RightHand]), "xrCreateHandTrackerEXT handTrackerRight");
+        if (!checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[RightHand])))
+            qWarning("Failed to create right hand tracker");
     }
     if (xrGetHandMeshFB_) {
         for (auto hand : {QOpenXRInputManager::LeftHand, QOpenXRInputManager::RightHand}) {
@@ -877,7 +901,8 @@ void QOpenXRInputManager::setupActions()
         strcpy(actionSetInfo.actionSetName, "gameplay");
         strcpy(actionSetInfo.localizedActionSetName, "Gameplay");
         actionSetInfo.priority = 0;
-        checkXrResult(xrCreateActionSet(m_instance, &actionSetInfo, &m_actionSet), "xrCreateActionSet gameplay");
+        if (!checkXrResult(xrCreateActionSet(m_instance, &actionSetInfo, &m_actionSet)))
+            qWarning("Failed to create gameplay action set");
     }
 
     // Create Hand Actions
@@ -997,19 +1022,26 @@ void QOpenXRInputManager::destroyActions()
     xrDestroyActionSet(m_actionSet);
 }
 
-bool QOpenXRInputManager::checkXrResult(const XrResult &result, const char *debugText)
+bool QOpenXRInputManager::checkXrResult(const XrResult &result)
 {
-    bool checkResult = OpenXRHelpers::checkXrResult(result, m_instance);
-    if (!checkResult) {
-        qDebug() << "checkXrResult failed" << result << (debugText ? debugText : "");
-    }
-    return checkResult;
+    return OpenXRHelpers::checkXrResult(result, m_instance);
+}
 
+bool QOpenXRInputManager::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
+{
+    XrResult result = xrGetInstanceProcAddr(m_instance, name, function);
+    if (!OpenXRHelpers::checkXrResult(result, m_instance)) {
+        qWarning("Failed to resolve OpenXR function %s", name);
+        *function = nullptr;
+        return false;
+    }
+    return true;
 }
 
 void QOpenXRInputManager::setPath(XrPath &path, const QByteArray &pathString)
 {
-    checkXrResult(xrStringToPath(m_instance, pathString.constData(), &path), "xrStringToPath");
+    if (!checkXrResult(xrStringToPath(m_instance, pathString.constData(), &path)))
+        qWarning("xrStringToPath failed");
 }
 
 void QOpenXRInputManager::createAction(XrActionType type,
@@ -1026,8 +1058,7 @@ void QOpenXRInputManager::createAction(XrActionType type,
     strcpy(actionInfo.localizedActionName, localizedName);
     actionInfo.countSubactionPaths = quint32(numSubactions);
     actionInfo.subactionPaths = subactionPath;
-    bool res = checkXrResult(xrCreateAction(m_actionSet, &actionInfo, &action), "xrCreateAction");
-    if (!res)
+    if (!checkXrResult(xrCreateAction(m_actionSet, &actionInfo, &action)))
         qDebug() << "xrCreateAction failed. Name:" << name << "localizedName:" << localizedName;
 }
 
@@ -1036,9 +1067,12 @@ void QOpenXRInputManager::getBoolInputState(XrActionStateGetInfo &getInfo, const
     getInfo.action = action;
     XrActionStateBoolean boolValue{};
     boolValue.type = XR_TYPE_ACTION_STATE_BOOLEAN;
-    checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue), "getBoolInputState");
-    if (boolValue.isActive == XR_TRUE)
-        setter(bool(boolValue.currentState));
+    if (checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue))) {
+        if (boolValue.isActive == XR_TRUE)
+            setter(bool(boolValue.currentState));
+    } else {
+        qWarning("Failed to get action state: bool");
+    }
 }
 
 void QOpenXRInputManager::getFloatInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(float)> setter)
@@ -1046,9 +1080,12 @@ void QOpenXRInputManager::getFloatInputState(XrActionStateGetInfo &getInfo, cons
     getInfo.action = action;
     XrActionStateFloat floatValue{};
     floatValue.type = XR_TYPE_ACTION_STATE_FLOAT;
-    checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue), "getFloatInputState");
-    if (floatValue.isActive == XR_TRUE)
-        setter(float(floatValue.currentState));
+    if (checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue))) {
+        if (floatValue.isActive == XR_TRUE)
+            setter(float(floatValue.currentState));
+    } else {
+        qWarning("Failed to get action state: float");
+    }
 }
 
 XrSpace QOpenXRInputManager::handSpace(QOpenXRInputManager::Hand hand)
