@@ -64,9 +64,6 @@ struct QSSGShadowMapEntry
     std::array<QRhiRenderBuffer *, 4> m_rhiDepthStencil = {}; // depth/stencil
     std::array<QRhiTextureRenderTarget *, 6> m_rhiRenderTargets = {}; // texture RT
     std::array<QRhiRenderPassDescriptor *, 4> m_rhiRenderPassDesc = {}; // texture RT renderpass descriptor
-    std::array<QRhiTextureRenderTarget *, 4> m_rhiBlurRenderTarget0 = {}; // texture RT for blur X (targets depthCopy or cubeCopy)
-    std::array<QRhiTextureRenderTarget *, 4> m_rhiBlurRenderTarget1 = {}; // texture RT for blur Y (targets depthMap or depthCube)
-    std::array<QRhiRenderPassDescriptor *, 4> m_rhiBlurRenderPassDesc = {}; // blur needs its own because no depth/stencil
 
     QMatrix4x4 m_lightViewProjection[4]; ///< light view projection matrix
     QMatrix4x4 m_lightCubeView[6]; ///< light cubemap view matrices

@@ -225,22 +225,6 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::addDirectionalShadowMap(qint32 lightIdx
         rt->setName(rtName + QByteArrayLiteral(" shadow map"));
 
         pEntry->m_rhiDepthCopy[splitIndex] = allocateRhiShadowTexture(rhi, rhiFormat, size, 0, QRhiTexture::RenderTarget);
-
-        // blur X: depthMap -> depthCopy
-        pEntry->m_rhiBlurRenderTarget0[splitIndex] = rhi->newTextureRenderTarget({ pEntry->m_rhiDepthCopy[splitIndex] });
-        pEntry->m_rhiBlurRenderPassDesc[splitIndex] = pEntry->m_rhiBlurRenderTarget0[splitIndex]->newCompatibleRenderPassDescriptor();
-        pEntry->m_rhiBlurRenderTarget0[splitIndex]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[splitIndex]);
-        pEntry->m_rhiBlurRenderTarget0[splitIndex]->create();
-        pEntry->m_rhiBlurRenderTarget0[splitIndex]->setName(rtName + QByteArrayLiteral(" shadow blur X"));
-
-        // blur Y: depthCopy -> depthMap
-        auto attachment1 = QRhiColorAttachment(pEntry->m_rhiDepthTextureArray);
-        attachment1.setLayer(layerStartIndex + splitIndex);
-        pEntry->m_rhiBlurRenderTarget1[splitIndex] = rhi->newTextureRenderTarget({ attachment1 });
-        pEntry->m_rhiBlurRenderTarget1[splitIndex]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[splitIndex]);
-        pEntry->m_rhiBlurRenderTarget1[splitIndex]->create();
-
-        pEntry->m_rhiBlurRenderTarget1[splitIndex]->setName(rtName + QByteArrayLiteral(" shadow blur Y"));
     }
 
     pEntry->m_lightIndex = lightIdx;
@@ -282,47 +266,6 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::addCubeShadowMap(qint32 lightIdx, QSize
         if (!rt->create())
             qWarning("Failed to build shadow map render target");
         rt->setName(rtName + QByteArrayLiteral(" shadow cube face: ") + QSSGBaseTypeHelpers::displayName(face));
-    }
-
-    // blurring cubemap happens via multiple render targets (all faces attached to COLOR0..5)
-    if (rhi->resourceLimit(QRhi::MaxColorAttachments) >= 6) {
-        // blur X: depthCube -> cubeCopy
-        {
-            QRhiColorAttachment att[6];
-            for (const auto face : QSSGRenderTextureCubeFaces) {
-                att[quint8(face)].setTexture(pEntry->m_rhiCubeCopy);
-                att[quint8(face)].setLayer(quint8(face));
-            }
-            QRhiTextureRenderTargetDescription rtDesc;
-            rtDesc.setColorAttachments(att, att + 6);
-            pEntry->m_rhiBlurRenderTarget0[0] = rhi->newTextureRenderTarget(rtDesc);
-            if (!pEntry->m_rhiBlurRenderPassDesc[0])
-                pEntry->m_rhiBlurRenderPassDesc[0] = pEntry->m_rhiBlurRenderTarget0[0]->newCompatibleRenderPassDescriptor();
-            pEntry->m_rhiBlurRenderTarget0[0]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[0]);
-            pEntry->m_rhiBlurRenderTarget0[0]->create();
-        }
-        pEntry->m_rhiBlurRenderTarget0[0]->setName(rtName + QByteArrayLiteral(" shadow cube blur X"));
-
-        // blur Y: cubeCopy -> depthCube
-        {
-            QRhiColorAttachment att[6];
-            for (const auto face : QSSGRenderTextureCubeFaces) {
-                att[quint8(face)].setTexture(pEntry->m_rhiDepthCube);
-                att[quint8(face)].setLayer(quint8(face));
-            }
-            QRhiTextureRenderTargetDescription rtDesc;
-            rtDesc.setColorAttachments(att, att + 6);
-            pEntry->m_rhiBlurRenderTarget1[0] = rhi->newTextureRenderTarget(rtDesc);
-            pEntry->m_rhiBlurRenderTarget1[0]->setRenderPassDescriptor(pEntry->m_rhiBlurRenderPassDesc[0]);
-            pEntry->m_rhiBlurRenderTarget1[0]->create();
-        }
-        pEntry->m_rhiBlurRenderTarget1[0]->setName(rtName + QByteArrayLiteral(" shadow cube blur Y"));
-    } else {
-        static bool warned = false;
-        if (!warned) {
-            warned = true;
-            qWarning("Cubemap-based shadow maps will not be blurred because MaxColorAttachments is less than 6");
-        }
     }
 
     return pEntry;
@@ -416,12 +359,6 @@ void QSSGShadowMapEntry::destroyRhiResources()
     m_rhiRenderTargets.fill(nullptr);
     qDeleteAll(m_rhiRenderPassDesc);
     m_rhiRenderPassDesc.fill(nullptr);
-    qDeleteAll(m_rhiBlurRenderTarget0);
-    m_rhiBlurRenderTarget0.fill(nullptr);
-    qDeleteAll(m_rhiBlurRenderTarget1);
-    m_rhiBlurRenderTarget1.fill(nullptr);
-    qDeleteAll(m_rhiBlurRenderPassDesc);
-    m_rhiBlurRenderPassDesc.fill(nullptr);
 }
 
 QT_END_NAMESPACE
