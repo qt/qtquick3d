@@ -38,4 +38,5 @@ qt_internal_add_example(extensions/stenciloutline)
 
 if(QT_FEATURE_quick3dxr_openxr)
     qt_internal_add_example(xr_simple)
+    qt_internal_add_example(xr_anchors)
 endif()
