@@ -2079,8 +2079,6 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                         perTargetCompilation);
 }
 
-static float ZERO_BUFFER_64[64] = {};
-
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
                                                            QSSGRhiShaderPipeline &shaders,
                                                            char *ubufData,
@@ -2303,31 +2301,31 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             const auto& names = setupShadowMapVariableNames(lightIdx, theLight->m_shadowMapRes);
 
             QSSGShaderShadowData &shadowData(shadowsUniformData.shadowData[lightIdx]);
-            memcpy(shadowData.matrices, ZERO_BUFFER_64, 16 * 4 * sizeof(float));
 
-            if (theLight->type != QSSGRenderLight::Type::DirectionalLight) {
-                theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
-                theShadowMapProperties.shadowMapTextureUniformName = names.shadowCube;
-                memcpy(&shadowData.matrices[0], receivesShadows ? pEntry->m_lightView.constData() : ZERO_BUFFER_64, 16 * sizeof(float));
-            } else {
+            if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthTextureArray;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowMapTexture;
-                if (receivesShadows) {
+            } else {
+                theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
+                theShadowMapProperties.shadowMapTextureUniformName = names.shadowCube;
+            }
+
+            if (receivesShadows) {
+                if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
                     // add fixed scale bias matrix
                     static const QMatrix4x4 bias = {
                         0.5, 0.0, 0.0, 0.5,
                         0.0, 0.5, 0.0, 0.5,
                         0.0, 0.0, 0.5, 0.5,
                         0.0, 0.0, 0.0, 1.0 };
-
                     for (int i = 0; i < 4; i++) {
                         const QMatrix4x4 m = bias * pEntry->m_lightViewProjection[i];
                         memcpy(shadowData.matrices[i], m.constData(), 16 * sizeof(float));
                     }
+                } else {
+                    memcpy(&shadowData.matrices[0], pEntry->m_lightView.constData(), 16 * sizeof(float));
                 }
-            }
 
-            if (receivesShadows) {
                 shadowData.bias = theLight->m_shadowBias;
                 shadowData.factor = theLight->m_shadowFactor;
                 shadowData.clipNear = 1.0f;
@@ -2347,6 +2345,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                     memcpy(shadowData.dimensionsInverted[i], &dimensionsInverted, 4 * sizeof(float));
                 }
                 shadowData.pcfFactor = theLight->m_pcfFactor;
+            } else {
+                memset(&shadowData, '\0', sizeof(shadowData));
             }
         }
 
