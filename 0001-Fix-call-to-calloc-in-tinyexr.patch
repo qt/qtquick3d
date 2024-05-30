@@ -1,0 +1,37 @@
+From 6a143dfc2704b6680a5a98b66d2e52d995b07871 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Robert=20L=C3=B6hning?= <robert.loehning@qt.io>
+Date: Thu, 30 May 2024 13:33:53 +0200
+Subject: [PATCH] Fix call to calloc() in tinyexr
+
+developer-build with g++ 14 fails:
+
+error: 'void* calloc(size_t, size_t)' sizes specified with 'sizeof'
+in the earlier argument and not in the later argument
+[-Werror=calloc-transposed-args]
+ 4926 |     calloc(sizeof(EXRTile), static_cast<size_t>(num_tiles)));
+      |            ^~~~~~~~~~~~~~~
+note: earlier argument should specify number of elements, later size
+of each element
+
+Pick-to: 6.7
+Change-Id: Iba159b7b62ab09ca9dab63ccfcedad684fce078f
+---
+ src/3rdparty/tinyexr/tinyexr.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/3rdparty/tinyexr/tinyexr.h b/src/3rdparty/tinyexr/tinyexr.h
+index d4001575..1ccf0fdc 100644
+--- a/src/3rdparty/tinyexr/tinyexr.h
++++ b/src/3rdparty/tinyexr/tinyexr.h
+@@ -4923,7 +4923,7 @@ static int DecodeTiledLevel(EXRImage* exr_image, const EXRHeader* exr_header,
+   }
+ #endif
+   exr_image->tiles = static_cast<EXRTile*>(
+-    calloc(sizeof(EXRTile), static_cast<size_t>(num_tiles)));
++    calloc(static_cast<size_t>(num_tiles), sizeof(EXRTile)));
+ 
+ #if TINYEXR_HAS_CXX11 && (TINYEXR_USE_THREAD > 0)
+   std::vector<std::thread> workers;
+-- 
+2.45.1
+
