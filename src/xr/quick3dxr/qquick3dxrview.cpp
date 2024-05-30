@@ -222,15 +222,26 @@ void QQuick3DXrView::setEnablePassthrough(bool enable)
 
 /*!
     \qmlproperty enumeration QtQuick3D.Xr::XrView::fixedFoveation
-    \brief Holds a fixed foveation level for the XrView.
+    \brief Controls the level of fixed foveated rendering for the XrView.
 
-    It can be one of:
+    Foveated rendering reduces GPU load by reducing image quality (resolution)
+    in areas where the difference is less perceptible to the eye. With fixed
+    foveated rendering the areas with reduced visual fidelity are fixed and do
+    not change. On some platforms there is no concept of, or there is no control
+    over, fixed foveated rendering. For example, VisionOS-based devices perform
+    dynamic, eye-tracked foveation, and thus the value of this property is
+    ignored in practice. Whereas other devices, such as the Meta Quest 3, only
+    have support for fixed foveation, in which case this property becomes
+    relevant.
+
+    The value can be one of:
     \value XrView.NoFoveation 0, no foveation.
     \value XrView.LowFoveation 1, low foveation.
     \value XrView.MediumFoveation 2, medium foveation.
     \value XrView.HighFoveation 3, high foveation.
 
-    If not a valid OpenXR session, this defaults to XrView.NoFoveation.
+    Where supported, the default is \c HighFoveation. Therefore, changing this
+    value in applications should be rarely needed in practice.
 */
 
 QQuick3DXrView::FoveationLevel QQuick3DXrView::fixedFoveation() const
@@ -585,9 +596,14 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
     \qmlproperty bool QtQuick3D.Xr::XrView::enableMultiViewRendering
 
     \brief Gets or sets whether \l{Multiview Rendering} is enabled for the XR view.
+
     The default value is \c false. Changing the value to \c true has an effect
     only when \l multiViewRenderingSupported is \c true. See \l{Multiview
     Rendering} for details.
+
+    This property can also be used to query whether multiview rendering is
+    really in use at run time. When not supported, the value will flip back to
+    \c false.
 
     \note Changing the value dynamically, while the scene is already up and
     running, is possible, but not recommended, because enabling or disabling
@@ -596,7 +612,20 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
     effects that are undesirable, for example the scene may disappear and
     reappear.
 
-    \sa multiViewRenderingSupported
+    \note Enabling multiview rendering is recommended, in general. It can
+    improve performance, reduce CPU and GPU load, as well as reduce power
+    consumption. It defaults to disabled in order to ensure maximum
+    compatibility. Developers are encouraged to verify that their application
+    renders as expected with enableMultiViewRendering set to \c true, and then
+    leave it set afterwards.
+
+    Certain Qt Quick and Quick 3D features that involve application-provided
+    shader code, in particular custom 2D and 3D materials and postprocessing
+    effects, require awareness from the developers in order to make the
+    application-provided shader assets multiview-compatible. See \l{Multiview
+    Rendering} for details.
+
+     \sa multiViewRenderingSupported
 */
 bool QQuick3DXrView::isMultiViewRenderingEnabled() const
 {
@@ -619,8 +648,54 @@ void QQuick3DXrView::unregisterXrItem(QQuick3DXrItem *xrItem)
 /*!
     \qmlproperty bool QtQuick3D.Xr::XrView::enableDepthSubmission
 
-    \brief Gets or sets whether Depth Submission is enabled for the XR view.
+    \brief Gets or sets whether submitting the depth buffer to the XR compositor
+    is enabled.
 
+    By default the value is \c false and the depth buffer used by the 3D scene
+    in the XrView is not exposed to the XR compositor. However, in some
+    platforms depth submission is implicit and cannot be disabled or controlled
+    by the application. An example of this is VisionOS. Changing this property
+    has no effect on those platforms. Elsewhere, with OpenXR in particular,
+    support depends on the OpenXR implementation used at run time.
+
+    It is always safe to set enableDepthSubmission to \c true. It will just have
+    no effect when not support by the underlying stack. Inspect the debug output
+    to see if depth submission is in use.
+
+    Submitting the depth buffer may improve reprojections that may be performed
+    by the XR compositor. This could happen for example when the system cannot
+    maintain the target frame rate, and thus has to resort to predicting frame
+    contents, in order to improve and stabilize the user's perception of the
+    scene and reduce possibly nauseating effects. However, the application and
+    Qt has no control over the usage of the data. It could also happen that
+    submitting depth data has no practical effects and is simply ignored by the
+    underlying XR runtime and compositor.
+
+    In practice submitting the depth buffer implies rendering into a depth
+    texture provided by the XR runtime, instead of the intermediate
+    texture/renderbuffer created and managed by Qt. This has certain lower-level
+    consequences that can have a performance impact:
+
+    When \l{QtQuick3D::SceneEnvironment::antialiasingMode}{multisample
+    antialiasing} (MSAA) is used, enabling depth submission implies rendering
+    into a multisample depth texture and resolving the samples into the XR
+    runtime provided non-multisample depth texture. Without depth submission,
+    the resolve step would not be necessary at all. In addition, some 3D APIs
+    have no support at all for resolving multisample depth-stencil data. (see
+    the \l{QRhi::ResolveDepthStencil} flag for details) Attempts to enable depth
+    submission in combination with MSAA will be gracefully ignored if this is
+    the case.
+
+    Even when MSAA is not used, enabling depth submission triggers writing out
+    depth data with 3D APIs that have control over this. The store operation for
+    depth/stencil data is normally indicated by Qt as not necessary, which can
+    have positive effects for performance on tiled GPU architectures in
+    particular. With depth submission this is not done, because depth data has
+    to then be written out always from Qt's perspective.
+
+    \note It is recommended that developers test their applications with depth
+    submission enabled, evaluate the advantages and disadvantages, and make a
+    conscious choice based on their testing if they wish to enable it or not.
 */
 
 void QQuick3DXrView::setEnableDepthSubmission(bool enable)
@@ -698,7 +773,7 @@ void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
 /*!
     \qmlsignal XrView::fixedFoveationChanged()
 
-    Emitted when fixed foveation settings change.
+    Emitted when the fixedFoveation property value changes.
  */
 
 
@@ -712,21 +787,21 @@ void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
 /*!
     \qmlsignal XrView::referenceSpaceChanged()
 
-    Emitted when the reference space changes.
+    Emitted when the referenceSpace property value changes.
  */
 
 
 /*!
     \qmlsignal XrView::enableDepthSubmissionChanged()
 
-    Emitted when depth submission settings change.
+    Emitted when the enableDepthSubmission property value changes.
  */
 
 
 /*!
     \qmlsignal XrView::enableMultiViewRenderingChanged()
 
-    Emitted when multi-view rendering settings change.
+    Emitted when the enableMultiViewRendering property value changes.
  */
 
 QT_END_NAMESPACE
