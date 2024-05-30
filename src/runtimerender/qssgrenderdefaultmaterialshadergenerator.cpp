@@ -451,6 +451,7 @@ static constexpr QByteArrayView qssg_shader_arg_names[] {
     { "THICKNESS_FACTOR" },
     { "ATTENUATION_COLOR" },
     { "ATTENUATION_DISTANCE" },
+    { "OCCLUSION_AMOUNT" },
 };
 
 const char *QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList()
@@ -480,7 +481,7 @@ const char *QSSGMaterialShaderGenerator::specularLightProcessorArgumentList()
 
 const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
 {
-    return "inout vec4 BASE_COLOR, inout vec3 EMISSIVE_COLOR, inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER, inout vec3 NORMAL, inout vec3 TANGENT, inout vec3 BINORMAL, in vec2 UV0, in vec2 UV1, in vec3 VIEW_VECTOR, inout float IOR";
+    return "inout vec4 BASE_COLOR, inout vec3 EMISSIVE_COLOR, inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER, inout vec3 NORMAL, inout vec3 TANGENT, inout vec3 BINORMAL, in vec2 UV0, in vec2 UV1, in vec3 VIEW_VECTOR, inout float IOR, inout float OCCLUSION_AMOUNT";
 }
 
 const char *QSSGMaterialShaderGenerator::postProcessorArgumentList()
@@ -1199,6 +1200,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // PrincipledMaterial however, since this is more sensible here.
         // (because the shader has to state it to get things)
         // These should match the defaults of PrincipledMaterial.
+        fragmentShader << "    float qt_customOcclusionAmount = 1.0;\n";
         fragmentShader << "    float qt_customIOR = 1.5;\n";
         fragmentShader << "    float qt_customSpecularAmount = 0.5;\n"; // overrides qt_material_properties.x
         fragmentShader << "    float qt_customSpecularRoughness = 0.0;\n"; // overrides qt_material_properties.y
@@ -1236,7 +1238,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (includeCustomFragmentMain && hasCustomFunction(QByteArrayLiteral("qt_customMain"))) {
             fragmentShader << "    qt_customMain(qt_customBaseColor, qt_customEmissiveColor, qt_customMetalnessAmount, qt_customSpecularRoughness,"
                               " qt_customSpecularAmount, qt_customFresnelPower, qt_world_normal, qt_tangent, qt_binormal,"
-                              " qt_texCoord0, qt_texCoord1, qt_view_vector, qt_customIOR";
+                              " qt_texCoord0, qt_texCoord1, qt_view_vector, qt_customIOR, qt_customOcclusionAmount";
             if (enableClearcoat) {
                 fragmentShader << ", qt_customClearcoatAmount, qt_customClearcoatFresnelPower, qt_customClearcoatRoughness, qt_customClearcoatNormal";
                 if (enableClearcoatFresnelScaleBias) {
@@ -1548,10 +1550,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         else
             fragmentShader.append("    qt_aoFactor = 1.0;");
 
-        if (hasCustomFrag)
+        if (hasCustomFrag) {
             fragmentShader << "    float qt_roughnessAmount = qt_customSpecularRoughness;\n";
-        else
+            fragmentShader << "    qt_aoFactor *= qt_customOcclusionAmount;\n";
+        }
+        else {
             fragmentShader << "    float qt_roughnessAmount = qt_material_properties.y;\n";
+        }
 
         maskVariableByVertexColorChannel( "qt_roughnessAmount", QSSGRenderDefaultMaterial::RoughnessMask );
 

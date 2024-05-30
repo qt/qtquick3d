@@ -448,7 +448,7 @@ QT_BEGIN_NAMESPACE
     SPECULAR_AMOUNT, NORMAL, CLEARCOAT_FRESNEL_POWER, CLEARCOAT_FRESNEL_SCALE,
     CLEARCOAT_FRESNEL_BIAS, CLEARCOAT_AMOUNT, CLEARCOAT_ROUGHNESS, CLEARCOAT_NORMAL,
     FRESNEL_BIAS, FRESNEL_SCALE, FRESNEL_POWER, IOR, \c TRANSMISSION_FACTOR,
-    THICKNESS_FACTOR, ATTENUATION_COLOR and \c ATTENUATION_DISTANCE.
+    THICKNESS_FACTOR, ATTENUATION_COLOR, ATTENUATION_DISTANCE and \c OCCLUSION_AMOUNT.
 
     One common use case is to set the value of \c BASE_COLOR based on sampling
     a texture, be it a base color map, \c SCREEN_TEXTURE, or some other kind of
@@ -551,6 +551,9 @@ QT_BEGIN_NAMESPACE
     \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. The
     default value is \c{0.5}, matching \l{PrincipledMaterial::specularAmount}. Must
     be set to a non-zero value to have effect.
+
+    \li float \c OCCLUSION_AMOUNT Specifies the AO factor. A typical value,
+    and also the default, is \c{1.0} as that is what a PrincipledMaterial would use.
 
     \li vec3 \c NORMAL - The normal that comes from the vertex shader in world
     space. While this property has the same initial value as \c VAR_WORLD_NORMAL,
