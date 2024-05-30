@@ -100,6 +100,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D - Procedural Texture Example}{Adding Custom Texture Data from C++}
     \li \l{Qt Quick 3D - Baked Lightmap Example}{Using baked lightmaps}
     \li \l{Qt Quick 3D - XR Simple Example}{Demonstrates setting up a simple VR scene}
+    \li \l{Qt Quick 3D - XR Simple Input Example}{Demonstrates controller input in VR}
     \li \l{Qt Quick 3D - XR Spatial Anchors Example}{Demonstrates spatial anchors in VR}
     \li \l{Qt Quick 3D Examples and Tutorials}{All examples}
 \endlist
