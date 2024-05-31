@@ -24,6 +24,23 @@
 QT_BEGIN_NAMESPACE
 class QQuick3DModel;
 
+namespace QQuick3DPickResultEnums
+{
+Q_NAMESPACE_EXPORT(Q_QUICK3D_EXPORT)
+
+QML_NAMED_ELEMENT(PickResult)
+QML_ADDED_IN_VERSION(6, 8)
+
+enum HitType {
+    Null,
+    Model,
+    Item,
+};
+Q_ENUM_NS(HitType)
+
+};
+
+
 class Q_QUICK3D_EXPORT QQuick3DPickResult
 {
     Q_GADGET
@@ -36,16 +53,9 @@ class Q_QUICK3D_EXPORT QQuick3DPickResult
     Q_PROPERTY(QVector3D sceneNormal READ sceneNormal CONSTANT)
     Q_PROPERTY(int instanceIndex READ instanceIndex CONSTANT)
     Q_PROPERTY(QQuickItem *itemHit READ itemHit CONSTANT REVISION(6, 8))
-    Q_PROPERTY(HitType hitType READ hitType CONSTANT REVISION(6, 8))
+    Q_PROPERTY(QQuick3DPickResultEnums::HitType hitType READ hitType CONSTANT REVISION(6, 8))
     QML_VALUE_TYPE(pickResult)
 public:
-
-    enum class HitType {
-        Null,
-        Model,
-        Item,
-    };
-    Q_ENUM(HitType)
 
     QQuick3DPickResult();
     explicit QQuick3DPickResult(QQuick3DModel *hitObject,
@@ -70,7 +80,7 @@ public:
     QVector3D sceneNormal() const;
     int instanceIndex() const;
     Q_REVISION(6, 8) QQuickItem *itemHit() const;
-    Q_REVISION(6, 8) HitType hitType() const;
+    Q_REVISION(6, 8) QQuick3DPickResultEnums::HitType hitType() const;
 
 private:
     QQuick3DModel *m_objectHit;
@@ -81,7 +91,7 @@ private:
     QVector3D m_normal;
     int m_instanceIndex;
     QQuickItem *m_itemHit;
-    HitType m_hitType;
+    QQuick3DPickResultEnums::HitType m_hitType;
 };
 
 QT_END_NAMESPACE

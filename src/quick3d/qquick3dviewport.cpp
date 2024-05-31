@@ -1202,7 +1202,7 @@ QList<QQuick3DPickResult> QQuick3DViewport::rayPickAll(const QVector3D &origin, 
     processedResultList.reserve(resultList.size());
     for (const auto &result : resultList) {
         auto processedResult = processPickResult(result);
-        if (processedResult.hitType() != QQuick3DPickResult::HitType::Null)
+        if (processedResult.hitType() != QQuick3DPickResultEnums::HitType::Null)
             processedResultList.append(processedResult);
     }
 
@@ -1686,7 +1686,7 @@ QQuick3DPickResult QQuick3DViewport::getNearestPickResult(const QVarLengthArray<
 {
     for (const auto &result : pickResults) {
         auto pickResult = processPickResult(result);
-        if (pickResult.hitType() != QQuick3DPickResult::HitType::Null)
+        if (pickResult.hitType() != QQuick3DPickResultEnums::HitType::Null)
             return pickResult;
     }
 
