@@ -19,7 +19,7 @@ QQuick3DPickResult::QQuick3DPickResult()
     , m_distance(0.0f)
     , m_instanceIndex(-1)
     , m_itemHit(nullptr)
-    , m_hitType(HitType::Null)
+    , m_hitType(QQuick3DPickResultEnums::HitType::Null)
 {
 
 }
@@ -39,7 +39,7 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
     , m_normal(normal)
     , m_instanceIndex(instanceIndex)
     , m_itemHit(nullptr)
-    , m_hitType(HitType::Model)
+    , m_hitType(QQuick3DPickResultEnums::HitType::Model)
 {
 }
 
@@ -60,7 +60,7 @@ QQuick3DPickResult::QQuick3DPickResult(QQuickItem *itemHit,
     , m_normal(sceneNormal)
     , m_instanceIndex(-1)
     , m_itemHit(itemHit)
-    , m_hitType(HitType::Item)
+    , m_hitType(QQuick3DPickResultEnums::HitType::Item)
 {
 
 }
@@ -201,12 +201,12 @@ QQuickItem *QQuick3DPickResult::itemHit() const
 
     This property holds the hit type of the pick result.
 
-    \value pickResult.Null The pick did not hit anything.
-    \value pickResult.Model The pick hit a Model.
-    \value pickResult.Item The pick hit a QQuickItem.
+    \value PickResult.Null The pick did not hit anything.
+    \value PickResult.Model The pick hit a Model.
+    \value PickResult.Item The pick hit a QQuickItem.
 */
 
-QQuick3DPickResult::HitType QQuick3DPickResult::hitType() const
+QQuick3DPickResultEnums::HitType QQuick3DPickResult::hitType() const
 {
     return m_hitType;
 }
