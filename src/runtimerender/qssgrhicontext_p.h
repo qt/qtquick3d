@@ -444,6 +444,9 @@ public:
         int fogHeightPropertiesIdx = -1;
         int fogTransmitPropertiesIdx = -1;
         int lightAndShadowCountsIdx = -1;
+        int abufImageWidth = -1;
+        int listNodeCount = -1;
+        int viewSize = -1;
 
         struct ImageIndices
         {
@@ -508,6 +511,14 @@ public:
     void setShadowMapAtlasTexture(QRhiTexture *texture) { m_shadowMapAtlasTexture = texture; }
     QRhiTexture *shadowMapAtlasTexture() const { return m_shadowMapAtlasTexture; }
 
+    void setOITImages(QRhiTexture *accumulator, QRhiTexture *auxiliary, QRhiTexture *counter)
+    {
+        m_oitImages[0] = accumulator;
+        m_oitImages[1] = auxiliary;
+        m_oitImages[2] = counter;
+    }
+    QRhiTexture **oitImages() { return m_oitImages; }
+
     void resetExtraTextures() { m_extraTextures.clear(); }
     void addExtraTexture(const QSSGRhiTexture &t) { m_extraTextures.append(t); }
     int extraTextureCount() const { return m_extraTextures.size(); }
@@ -548,6 +559,7 @@ private:
     QRhiTexture *m_normalTexture = nullptr;
     QRhiTexture *m_ssaoTexture = nullptr;
     QRhiTexture *m_lightmapTexture = nullptr;
+    QRhiTexture *m_oitImages[3] = {nullptr};
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures;
 };
 

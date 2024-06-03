@@ -37,7 +37,10 @@ public:
         ScreenTexture,
         AccumTexture,
         RevealageTexture,
-        NormalTexture
+        NormalTexture,
+        ABufferImage = AccumTexture,
+        AuxiliaryImage = RevealageTexture,
+        CounterImage
     };
     Q_DECLARE_FLAGS(RenderResults, RenderResult)
 

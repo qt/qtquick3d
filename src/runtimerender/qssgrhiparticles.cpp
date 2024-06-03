@@ -11,6 +11,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
+
 #include <ssg/qssgrendercontextcore.h>
 #include "qssgrendershadercodegenerator_p.h"
 
@@ -170,6 +172,19 @@ void QSSGParticleRenderer::updateUniformsForParticles(const QSSGLayerRenderData 
         shaders.setUniform(ubufData, "qt_alphaFade", &alphaFade, sizeof(float));
         shaders.setUniform(ubufData, "qt_sizeModifier", &sizeModifier, sizeof(float));
         shaders.setUniform(ubufData, "qt_texcoordScale", &texcoordScale, sizeof(float));
+    }
+
+    const QSSGRhiRenderableTexture *abuf = inData.getRenderResult(QSSGFrameData::RenderResult::ABufferImage);
+    const QSSGRhiRenderableTexture *aux = inData.getRenderResult(QSSGFrameData::RenderResult::AuxiliaryImage);
+    const QSSGRhiRenderableTexture *counter = inData.getRenderResult(QSSGFrameData::RenderResult::CounterImage);
+    shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
+    if (abuf->texture) {
+        int abufWidth = RenderHelpers::rhiCalculateABufferSize(inData.layer.oitNodeCount);
+        int listNodeCount = abufWidth * abufWidth;
+        shaders.setUniform(ubufData, "qt_ABufImageWidth", &abufWidth, sizeof(int), &cui.abufImageWidth);
+        shaders.setUniform(ubufData, "qt_listNodeCount", &listNodeCount, sizeof(int), &cui.listNodeCount);
+        int viewSize[2] = {inData.layerPrepResult.textureDimensions().width(), inData.layerPrepResult.textureDimensions().height()};
+        shaders.setUniform(ubufData, "qt_viewSize", viewSize, sizeof(int) * 2, &cui.viewSize);
     }
 }
 
@@ -365,7 +380,8 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
                                                 int viewCount,
                                                 QSSGRenderCamera *alteredCamera,
                                                 QSSGRenderTextureCubeFace cubeFace,
-                                                QSSGReflectionMapEntry *entry)
+                                                QSSGReflectionMapEntry *entry,
+                                                bool oit)
 {
     const void *node = &renderable.particles;
     const bool needsConversion = !rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
@@ -525,6 +541,9 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
         }
     }
+
+    if (oit && inData.layer.oitMethod == QSSGRenderLayer::OITMethod::LinkedList)
+        RenderHelpers::addAccumulatorImageBindings(&shaderPipeline, bindings);
 
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
 
@@ -812,8 +831,13 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
         common.addUniform("qt_pointLights", "bool");
         common.addUniform("qt_spotLights", "bool");
     }
-    if (oit == (int)QSSGRenderLayer::OITMethod::WeightedBlended)
+    if (oit == (int)QSSGRenderLayer::OITMethod::WeightedBlended) {
         common.addUniform("qt_cameraProperties", "vec2");
+    } else if (oit == (int)QSSGRenderLayer::OITMethod::LinkedList) {
+        common.addUniform("qt_viewSize", "ivec2");
+        common.addUniform("qt_ABufImageWidth", "uint");
+        common.addUniform("qt_listNodeCount", "uint");
+    }
 
     if (lighting)
         vertex.addInclude("particleLighting.glsllib");
@@ -826,6 +850,8 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     common.addInterpolant("spriteData", "vec2");
     common.addInterpolant("texcoord", "vec2");
     common.addFlatInterpolant("instanceIndex", "uint");
+    if (oit == (int)QSSGRenderLayer::OITMethod::LinkedList && viewCount >= 2)
+        common.addFlatInterpolant("v_viewIndex", "uint");
 
     AutoFormatGenerator vg(vertex);
     if (!isLineParticle)
@@ -885,10 +911,13 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     }
     if (lighting)
         vg << "color.rgb *= qt_calcLightColor(worldPos.xyz);";
-    if (viewCount >= 2)
+    if (viewCount >= 2) {
+        if (oit == int(QSSGRenderLayer::OITMethod::LinkedList))
+            vg << "v_viewIndex = gl_ViewIndex;";
         vg << "gl_Position = qt_projectionMatrix[gl_ViewIndex] * viewPos;";
-    else
+    } else {
         vg << "gl_Position = qt_projectionMatrix * viewPos;";
+    }
     if (isMapped)
         vg << "spriteData.x = qt_ageToSpriteFactor(p.age);";
     if (isAnimated)
@@ -903,9 +932,11 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
 
     AutoFormatGenerator fg(fragment);
 
-    if (oit) {
+    if (oit == int(QSSGRenderLayer::OITMethod::WeightedBlended)) {
         fragment.addInclude("orderindependenttransparency.glsllib");
         fg << "layout(location = 1) out vec4 revealageOutput;";
+    } else if (oit == int(QSSGRenderLayer::OITMethod::LinkedList)) {
+        fragment.addInclude("orderindependenttransparency.glsllib");
     }
     if (isSpriteLinear)
         fg << "#define spriteFunc";
@@ -942,10 +973,17 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     fg.incIndent();
     fg << "vec4 ret = qt_readColor() * qt_readSprite();";
     if (oit) {
-        fg << "float z = abs(gl_FragCoord.z);"
-           << "float distWeight = qt_transparencyWeight(z, ret.a, qt_cameraProperties.y);"
-           << "fragOutput = distWeight * qt_tonemap(ret);"
-           << "revealageOutput = vec4(ret.a);";
+        if (oit == int(QSSGRenderLayer::OITMethod::WeightedBlended)) {
+            fg << "float z = abs(gl_FragCoord.z);"
+               << "float distWeight = qt_transparencyWeight(z, ret.a, qt_cameraProperties.y);"
+               << "fragOutput = distWeight * qt_tonemap(ret);"
+               << "revealageOutput = vec4(ret.a);";
+        } else if (oit == int(QSSGRenderLayer::OITMethod::LinkedList)) {
+            if (viewCount >= 2)
+                fg << "fragOutput = qt_oitLinkedList(ret, qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, v_viewIndex);";
+            else
+                fg << "fragOutput = qt_oitLinkedList(ret, qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, 0);";
+        }
     } else {
         fg << "fragOutput = qt_tonemap(ret);";
     }

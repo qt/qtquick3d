@@ -184,6 +184,13 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
     }
 }
 
+QRhiResourceUpdateBatch *QSSGRenderer::postResourceUpdates(QSSGRenderLayer &inLayer)
+{
+    auto *ret = inLayer.renderData->oitRenderPass.rub;
+    inLayer.renderData->oitRenderPass.rub = nullptr;
+    return ret;
+}
+
 template<typename Container>
 static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Container &resources)
 {

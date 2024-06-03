@@ -130,7 +130,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     enum class OITMethod : quint8
     {
         None = 0,
-        WeightedBlended
+        WeightedBlended,
+        LinkedList
     };
 
     enum class DirtyFlag : quint8
@@ -202,6 +203,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     bool specularAAEnabled;
     OITMethod oitMethod;
     bool oitMethodDirty;
+    int oitNodeCount;
 
     //TODO: move render state somewhere more suitable
     bool temporalAAIsActive;

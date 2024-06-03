@@ -692,6 +692,25 @@ static inline void addNormalTextureBindings(QSSGRhiContext *rhiCtx,
     }
 }
 
+void RenderHelpers::addAccumulatorImageBindings(QSSGRhiShaderPipeline *shaderPipeline,
+                                                QSSGRhiShaderResourceBindingList &bindings)
+{
+    const auto images = shaderPipeline->oitImages();
+    if (!images[0])
+        return;
+    int abuf = shaderPipeline->bindingForImage("qt_imgAbuffer");
+    int aux = shaderPipeline->bindingForImage("qt_imgAux");
+    int counter = shaderPipeline->bindingForImage("qt_imgCounter");
+    if (abuf == -1 || aux == -1 || counter == -1) {
+        qWarning()<<"Shader is missing image binding points;";
+        return;
+    }
+    bindings.addImageStore(abuf, QRhiShaderResourceBinding::FragmentStage, images[0], 0);
+    // atomic operations require loadstore
+    bindings.addImageLoadStore(aux, QRhiShaderResourceBinding::FragmentStage, images[1], 0);
+    bindings.addImageLoadStore(counter, QRhiShaderResourceBinding::FragmentStage, images[2], 0);
+}
+
 static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             const QSSGLayerRenderData &inData,
                                             QSSGPassKey passKey,
@@ -1017,7 +1036,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
             ps->cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
-            if (!oit)
+            if (!oit || (oit && inData.layer.oitMethod == QSSGRenderLayer::OITMethod::None))
                 fillTargetBlend(&ps->targetBlend[0], material.blendMode);
 
             auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
@@ -1151,6 +1170,9 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // Normal texture
             addNormalTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
 
+            if (oit && inData.layer.oitMethod == QSSGRenderLayer::OITMethod::LinkedList)
+                RenderHelpers::addAccumulatorImageBindings(shaderPipeline.get(), bindings);
+
             // Instead of always doing a QHash find in srb(), store the binding
             // list and the srb object in the per-model+material
             // QSSGRhiUniformBufferSet. While this still needs comparing the
@@ -1232,7 +1254,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         const auto &shaderPipeline = shadersForParticleMaterial(ps, particleRenderable, featureSet);
         if (shaderPipeline) {
             QSSGParticleRenderer::rhiPrepareRenderable(*shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples, viewCount,
-                                                       alteredCamera, cubeFace, entry);
+                                                       alteredCamera, cubeFace, entry, oit);
         }
         break;
     }

@@ -122,6 +122,7 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
 #endif
         if (format.profile() == QSurfaceFormat::CoreProfile && format.version() >= qMakePair(3, 3)) {
             outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
+            outputs.append({ QShader::GlslShader, QShaderVersion(420) }); // OpenGL 4.2+
         } else {
             bool isGLESModule = false;
 #if QT_CONFIG(opengl)
@@ -178,6 +179,8 @@ static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
 #else
     outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
 #endif // Q_OS_VISIONOS
+
+    outputs.append({ QShader::GlslShader, QShaderVersion(420) }); // OpenGL 4.2+
     outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
     outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
     outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+

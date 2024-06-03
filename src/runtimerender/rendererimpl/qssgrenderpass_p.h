@@ -334,10 +334,22 @@ public:
     QSSGRenderableObjectList sortedTransparentObjects;
     QSSGRhiGraphicsPipelineState ps;
     QSSGShaderFeatures shaderFeatures;
-    QSSGRhiRenderableTexture *rhiAccumTexture = nullptr;
-    QSSGRhiRenderableTexture *rhiRevealageTexture = nullptr;
+    union {
+        QSSGRhiRenderableTexture *rhiAccumTexture = nullptr;
+        QSSGRhiRenderableTexture *rhiABufferImage;
+    };
+    union {
+        QSSGRhiRenderableTexture *rhiRevealageTexture = nullptr;
+        QSSGRhiRenderableTexture *rhiAuxiliaryImage;
+    };
+    QSSGRhiRenderableTexture *rhiCounterImage = nullptr;
+    QRhiTexture *readbackImage = nullptr;
     QSSGRhiRenderableTexture *rhiDepthTexture = nullptr;
     QRhiTextureRenderTarget *renderTarget = nullptr;
+    quint32 reportedNodeCount = 0;
+    quint32 currentNodeCount = 0;
+    QList<QRhiReadbackResult* > results;
+    QRhiResourceUpdateBatch *rub = nullptr;
 };
 
 class OITCompositePass : public QSSGRenderPass
@@ -353,8 +365,14 @@ public:
     QSSGRhiGraphicsPipelineState ps;
     QSSGShaderFeatures shaderFeatures;
     QSSGRhiShaderPipelinePtr compositeShaderPipeline;
-    QSSGRhiRenderableTexture *rhiAccumTexture = nullptr;
-    QSSGRhiRenderableTexture *rhiRevealageTexture = nullptr;
+    union {
+        QSSGRhiRenderableTexture *rhiAccumTexture = nullptr;
+        QSSGRhiRenderableTexture *rhiABufferImage;
+    };
+    union {
+        QSSGRhiRenderableTexture *rhiRevealageTexture = nullptr;
+        QSSGRhiRenderableTexture *rhiAuxiliaryImage;
+    };
 };
 
 QT_END_NAMESPACE

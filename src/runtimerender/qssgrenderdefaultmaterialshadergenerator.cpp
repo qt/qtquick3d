@@ -20,6 +20,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderpass_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
 
 #include <QtCore/QByteArray>
 
@@ -1710,6 +1712,16 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    qt_color_sum.rgb = qt_tonemap(qt_color_sum.rgb) * qt_color_sum.a;");
             fragmentShader.append("    fragOutput = qt_color_sum * qt_transparencyWeight(z, qt_color_sum.a, qt_cameraProperties.y);");
             fragmentShader.append("    revealageOutput = vec4(qt_color_sum.a);");
+        } else if (passRequirmentState.oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
+            fragmentShader.addInclude("tonemapping.glsllib");
+            fragmentShader.addInclude("orderindependenttransparency.glsllib");
+            fragmentShader.addUniform("qt_listNodeCount", "uint");
+            fragmentShader.addUniform("qt_ABufImageWidth", "uint");
+            fragmentShader.addUniform("qt_viewSize", "ivec2");
+            if (viewCount >= 2)
+                fragmentShader.append("    fragOutput = qt_oitLinkedList(qt_tonemap(qt_color_sum), qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, qt_viewIndex);");
+            else
+                fragmentShader.append("    fragOutput = qt_oitLinkedList(qt_tonemap(qt_color_sum), qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, 0);");
         } else {
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_color_sum));");
@@ -2240,6 +2252,19 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders.setSsaoTexture(ssaoTexture->texture);
     shaders.setScreenTexture(screenTexture->texture);
     shaders.setLightmapTexture(lightmapTexture);
+
+    const QSSGRhiRenderableTexture *abuf = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::ABufferImage);
+    const QSSGRhiRenderableTexture *aux = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::AuxiliaryImage);
+    const QSSGRhiRenderableTexture *counter = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::CounterImage);
+    shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
+    if (abuf->texture) {
+        int abufWidth = RenderHelpers::rhiCalculateABufferSize(inRenderProperties.layer.oitNodeCount);
+        int listNodeCount = abufWidth * abufWidth;
+        shaders.setUniform(ubufData, "qt_ABufImageWidth", &abufWidth, sizeof(int), &cui.abufImageWidth);
+        shaders.setUniform(ubufData, "qt_listNodeCount", &listNodeCount, sizeof(int), &cui.listNodeCount);
+        int viewSize[2] = {inRenderProperties.layerPrepResult.textureDimensions().width(), inRenderProperties.layerPrepResult.textureDimensions().height()};
+        shaders.setUniform(ubufData, "qt_viewSize", viewSize, sizeof(int) * 2, &cui.viewSize);
+    }
 
     const QSSGRenderLayer &layer = QSSGLayerRenderData::getCurrent(*renderContext.renderer())->layer;
     QSSGRenderImage *theLightProbe = layer.lightProbe;

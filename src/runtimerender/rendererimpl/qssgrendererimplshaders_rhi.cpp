@@ -171,6 +171,11 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOitCompositeShader(QSS
             return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended_ms"), m_cache.oitCompositeShader[1]);
         else
             return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended"), m_cache.oitCompositeShader[0]);
+    } else if (method == QSSGRenderLayer::OITMethod::LinkedList) {
+        if (multisample)
+            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist_ms"), m_cache.oitCompositeShader[3]);
+        else
+            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist"), m_cache.oitCompositeShader[2]);
     }
     Q_UNREACHABLE_RETURN(getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended"), m_cache.oitCompositeShader[0]));
 }

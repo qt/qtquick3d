@@ -63,7 +63,8 @@ public:
                                      int viewCount,
                                      QSSGRenderCamera *alteredCamera = nullptr,
                                      QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
-                                     QSSGReflectionMapEntry *entry = nullptr);
+                                     QSSGReflectionMapEntry *entry = nullptr,
+                                     bool oit = false);
     static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                     QSSGParticlesRenderable &renderable,
                                     bool *needsSetViewport,

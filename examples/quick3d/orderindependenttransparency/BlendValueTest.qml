@@ -100,7 +100,7 @@ Item {
         CustomSelectionBox {
             id: method
             text: "OIT Method"
-            values: ["None", "WeightedBlended"]
+            values: ["None", "WeightedBlended", "LinkedList"]
             parentWidth: settingsView.width
         }
         CustomLabel {
@@ -131,11 +131,13 @@ Item {
 
         titles: [
             "OIT Disabled",
-            "Weighted blended"
+            "Weighted blended",
+            "Linked List"
         ]
         contents: [
             "When order independent transparency\nis disabled, the drawing order is deter-\nmined by the center or the object.\nWhen rotating the camera, drawing\norder will change.",
-            "When order independent transparency\nis enabled, the drawing order doesn't\naffect the render result anymore.\nInstead it is only affected by the\nz-coordinate of the pixel. Weighted\nblended method doesn't use the porter-\nduff source over blending so the\nblending results are different."
+            "When order independent transparency\nis enabled, the drawing order doesn't\naffect the render result anymore.\nInstead it is only affected by the\nz-coordinate of the pixel. Weighted\nblended method doesn't use the porter-\nduff source over blending so the\nblending results are different.",
+            "When using Linked list method, the\nrendered fragments are placed in\na linked list. In the second pass\nthey are sorted and rendered in the correct order."
         ]
     }
 }

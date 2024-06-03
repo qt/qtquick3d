@@ -104,6 +104,9 @@ bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx,
                              QSSGRhiRenderableTexture *renderableTex,
                              quint8 viewCount);
 
+void addAccumulatorImageBindings(QSSGRhiShaderPipeline *shaderPipeline,
+                                 QSSGRhiShaderResourceBindingList &bindings);
+
 void rhiPrepareGrid(QSSGRhiContext *rhiCtx,
                     QSSGPassKey passKey,
                     QSSGRenderLayer &layer,
@@ -157,6 +160,25 @@ inline QRect correctViewportCoordinates(const QRectF &layerViewport, const QRect
     const int y = deviceRect.bottom() - layerViewport.bottom() + 1;
     return QRect(layerViewport.x(), y, layerViewport.width(), layerViewport.height());
 }
+
+inline quint32 rhiCalculateABufferSize(int nodeCount)
+{
+    quint32 s = nodeCount;
+    quint32 s_sqrt = qSqrt(s);
+    quint32 s2 = s_sqrt * s_sqrt;
+    while (s2 < s) {
+        s_sqrt += 1;
+        s2 = s_sqrt * s_sqrt;
+    }
+    return s_sqrt;
+}
+
+inline quint32 rhiCalculateABufferSize(const QSize &size, int levels)
+{
+    quint32 s = size.width() * size.height() * levels;
+    return rhiCalculateABufferSize(s);
+}
+
 }
 
 QT_END_NAMESPACE

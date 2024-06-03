@@ -25,7 +25,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
             antialiasingMode: AppSettings.antialiasingMode
             antialiasingQuality: AppSettings.antialiasingQuality
-            oitMethod: SceneEnvironment.OITWeightedBlended
+            oitMethod: SceneEnvironment.OITLinkedList
         }
 
         Node {

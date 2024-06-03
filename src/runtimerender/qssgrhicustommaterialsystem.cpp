@@ -18,6 +18,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
 #include <qtquick3d_tracepoints_p.h>
 
 #include <QtCore/qbitarray.h>
@@ -547,6 +548,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+
+        if (oit && layerData.layer.oitMethod == QSSGRenderLayer::OITMethod::LinkedList)
+            RenderHelpers::addAccumulatorImageBindings(shaderPipeline.get(), bindings);
 
         // do the same srb lookup acceleration as default materials
         QRhiShaderResourceBindings *&srb = dcd.srb;

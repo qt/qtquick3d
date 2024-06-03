@@ -221,12 +221,15 @@ struct QSSGOITRenderContext
 {
     QRhiTextureRenderTarget *oitRenderTarget = nullptr;
     QRhiRenderPassDescriptor *renderPassDescriptor = nullptr;
+    QRhiTexture *copyTexture = nullptr;
     void reset()
     {
         delete oitRenderTarget;
         delete renderPassDescriptor;
+        delete copyTexture;
         oitRenderTarget = nullptr;
         renderPassDescriptor = nullptr;
+        copyTexture = nullptr;
     }
 };
 

@@ -74,7 +74,7 @@ private:
                                                 BuiltinShader &storage,
                                                 int viewCount = 1);
     static constexpr int particleShaderCount = 2;
-    static constexpr int compositeShaderCount = 2;
+    static constexpr int compositeShaderCount = 4;
     struct {
         BuiltinShader gridShader;
         BuiltinShader ssaoRhiShader;

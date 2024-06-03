@@ -117,7 +117,8 @@ public:
     enum QQuick3DEnvironmentOITMethod
     {
         OITNone = 0,
-        OITWeightedBlended
+        OITWeightedBlended,
+        OITLinkedList
     };
     Q_ENUM(QQuick3DEnvironmentOITMethod)
 

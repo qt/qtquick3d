@@ -457,10 +457,20 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration(QSSGShaderLibraryManage
         }
         fragment() << snippet;
     }
+
     if (oitMethod != QSSGRenderLayer::OITMethod::None) {
+        if (oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
+            // Early tests are required since we can't undo modifications to
+            // the image data structures after running the fragment shader.
+            // Modifying depth in fragment shader is not possible then.
+            fragment() << "layout(early_fragment_tests) in;" << "\n";
+        }
         if (oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
             fragment().addDefinition("QSSG_OIT_METHOD", "QSSG_OIT_WEIGHTED_BLENDED");
             fragment() << "layout(location = 1) out vec4 revealageOutput;" << "\n";
+        } else if (oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
+            fragment() << "#extension GL_ARB_shading_language_packing : enable" << "\n";
+            fragment().addDefinition("QSSG_OIT_METHOD", "QSSG_OIT_LINKED_LIST");
         }
     }
     fragment() << "void main()"

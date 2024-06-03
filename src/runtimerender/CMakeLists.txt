@@ -167,6 +167,7 @@ set(res_resource_files
     "res/effectlib/particleLighting.glsllib"
     "res/effectlib/particleLoading.glsllib"
     "res/effectlib/particleSprite.glsllib"
+    "res/effectlib/sorting.glsllib"
     "res/primitives/Cone.mesh"
     "res/primitives/Cube.mesh"
     "res/primitives/Cylinder.mesh"
@@ -649,6 +650,43 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_weightedblen
         res/rhishaders/oitcomposite_weightedblended_ms.frag.qsb
     DEFINES
         QSSG_OIT_METHOD=1
+        QSSG_MULTISAMPLE
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_linkedlist"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "320es,430"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/oitcomposite.vert
+        res/rhishaders/oitcomposite.frag
+    OUTPUTS
+        res/rhishaders/oitcomposite_linkedlist.vert.qsb
+        res/rhishaders/oitcomposite_linkedlist.frag.qsb
+    DEFINES
+        QSSG_OIT_METHOD=2
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_linkedlist_ms"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "320es,430"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/oitcomposite.vert
+        res/rhishaders/oitcomposite.frag
+    OUTPUTS
+        res/rhishaders/oitcomposite_linkedlist_ms.vert.qsb
+        res/rhishaders/oitcomposite_linkedlist_ms.frag.qsb
+    DEFINES
+        QSSG_OIT_METHOD=2
         QSSG_MULTISAMPLE
 )
 
