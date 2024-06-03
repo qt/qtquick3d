@@ -1299,6 +1299,19 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         depthAdjust[1] = 0.5f;
     }
 
+    QSSGDebugDrawSystem *debugDrawSystem = renderer.contextInterface()->debugDrawSystem().get();
+    const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
+    const bool drawShadowCastingBounds = layerData.layer.drawShadowCastingBounds;
+    const bool drawShadowReceivingBounds = layerData.layer.drawShadowReceivingBounds;
+    const bool drawCascades = layerData.layer.drawCascades;
+    const bool drawSceneCascadeIntersection = layerData.layer.drawSceneCascadeIntersection;
+    const bool disableShadowCameraUpdate = layerData.layer.disableShadowCameraUpdate;
+
+    if (drawShadowCastingBounds)
+        ShadowmapHelpers::addDebugBox(castingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Red, debugDrawSystem);
+    if (drawShadowReceivingBounds)
+        ShadowmapHelpers::addDebugBox(receivingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Green, debugDrawSystem);
+
     // Create shadow map for each light in the scene
     for (int i = 0, ie = globalLights.size(); i != ie; ++i) {
         if (!globalLights[i].shadows || globalLights[i].light->m_fullyBaked)
@@ -1315,18 +1328,6 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             Q_ASSERT(light->type == QSSGRenderLight::Type::DirectionalLight);
-            const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
-            const bool drawShadowCastingBounds = layerData.layer.drawShadowCastingBounds;
-            const bool drawShadowReceivingBounds = layerData.layer.drawShadowReceivingBounds;
-            const bool drawCascades = layerData.layer.drawCascades;
-            const bool drawSceneCascadeIntersection = layerData.layer.drawSceneCascadeIntersection;
-            const bool disableShadowCameraUpdate = layerData.layer.disableShadowCameraUpdate;
-            QSSGDebugDrawSystem *debugDrawSystem = renderer.contextInterface()->debugDrawSystem().get();
-
-            if (drawShadowCastingBounds)
-                ShadowmapHelpers::addDebugBox(castingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Red, debugDrawSystem);
-            if (drawShadowReceivingBounds)
-                ShadowmapHelpers::addDebugBox(receivingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Green, debugDrawSystem);
 
             // This is just a way to store the old camera so we can use it for debug
             // drawing. There are probably cleaner ways to do this
