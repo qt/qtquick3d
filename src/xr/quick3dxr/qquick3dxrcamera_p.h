@@ -83,6 +83,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrCamera : public QQuick3DNode
     Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
     QML_NAMED_ELEMENT(XrCamera)
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     QQuick3DXrCamera(QQuick3DNode *parent = nullptr);

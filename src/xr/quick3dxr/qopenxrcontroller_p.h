@@ -33,6 +33,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRController : public QQuick3DNode
     Q_PROPERTY(QOpenXRActionMapper* actionMapper READ actionMapper WRITE setActionMapper NOTIFY actionMapperChanged FINAL)
     Q_PROPERTY(QQuick3DXrHandInput* handInput READ handInput NOTIFY handInputChanged)
     QML_NAMED_ELEMENT(XrController)
+    QML_ADDED_IN_VERSION(6, 8)
 public:
     enum Controller {
         ControllerNone = 0,

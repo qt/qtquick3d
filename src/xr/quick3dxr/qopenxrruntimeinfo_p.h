@@ -33,6 +33,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRRuntimeInfo : public QObject
 
     QML_NAMED_ELEMENT(XrRuntimeInfo)
     QML_UNCREATABLE("Created by XrView")
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     QOpenXRRuntimeInfo(QQuick3DXrManager *manager, QObject *parent = nullptr);

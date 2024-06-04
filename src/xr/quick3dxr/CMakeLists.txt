@@ -1,6 +1,10 @@
 # Copyright (C) 2024 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
+set_source_files_properties(XrErrorDialog.qml PROPERTIES
+    QT_QML_SOURCE_VERSIONS "6.8"
+)
+
 qt_internal_add_qml_module(Quick3DXr
     URI "QtQuick3D.Xr"
     VERSION "${PROJECT_VERSION}"

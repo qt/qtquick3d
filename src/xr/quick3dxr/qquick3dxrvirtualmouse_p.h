@@ -35,6 +35,7 @@ class QQuick3DXrVirtualMouse : public QObject
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
 
     QML_NAMED_ELEMENT(XrVirtualMouse)
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     explicit QQuick3DXrVirtualMouse(QObject *parent = nullptr);

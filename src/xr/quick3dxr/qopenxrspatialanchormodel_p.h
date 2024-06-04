@@ -31,6 +31,7 @@ class QOpenXRSpatialAnchorModel : public QAbstractListModel
     Q_PROPERTY(SemanticLabels labels READ labels WRITE setLabels NOTIFY labelsChanged FINAL)
     Q_PROPERTY(QList<QUuid> uuids READ uuids WRITE setUuids NOTIFY uuidsChanged FINAL)
     QML_NAMED_ELEMENT(XrSpatialAnchorModel)
+    QML_ADDED_IN_VERSION(6, 8)
 public:
     enum FilterMode {
         All,

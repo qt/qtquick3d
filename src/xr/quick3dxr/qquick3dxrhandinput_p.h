@@ -33,6 +33,7 @@ class QQuick3DXrHandInput : public QObject
 
     QML_NAMED_ELEMENT(XrHandInput)
     QML_UNCREATABLE("Created by XrView")
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     enum class HandPoseSpace {

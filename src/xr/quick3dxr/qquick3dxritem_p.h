@@ -38,6 +38,7 @@ class QQuick3DXrItem : public QQuick3DNode
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 
     QML_NAMED_ELEMENT(XrItem)
+    QML_ADDED_IN_VERSION(6, 8)
 public:
     struct TouchState
     {
