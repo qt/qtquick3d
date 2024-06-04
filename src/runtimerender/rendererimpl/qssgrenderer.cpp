@@ -202,6 +202,7 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
             rhi->cleanupDrawCallData(model);
+            delete model->particleBuffer;
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData) {
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
             bufferManager->releaseTextureData(textureData);
