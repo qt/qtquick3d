@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRRUNTIMEINFO_H
-#define QOPENXRRUNTIMEINFO_H
+#ifndef QQUICK3DXRRUNTIMEINFO_P_H
+#define QQUICK3DXRRUNTIMEINFO_P_H
 
 //
 //  W A R N I N G
@@ -43,9 +43,9 @@ public:
     QString graphicsApiName() const;
 
 private:
-    QQuick3DXrManager *m_openXRManager;
+    QPointer<QQuick3DXrManager> m_xrmanager;
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRRUNTIMEINFO_H
+#endif // QQUICK3DXRRUNTIMEINFO_P_H

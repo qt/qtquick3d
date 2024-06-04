@@ -42,6 +42,8 @@ public:
     explicit QQuick3DXrManagerPrivate(QQuick3DXrManager &manager);
     ~QQuick3DXrManagerPrivate();
 
+    static QQuick3DXrManagerPrivate *get(QQuick3DXrManager *manager);
+
     bool initialize();
     bool finalizeGraphics(QRhi *rhi);
     bool isReady() const;
@@ -81,6 +83,10 @@ public:
     void processXrEvents();
 
     void setSamples(int samples);
+
+    QStringList enabledExtensions() const { return {}; }
+    QString runtimeName() const;
+    QVersionNumber runtimeVersion() const;
 
     QString errorString() const;
 

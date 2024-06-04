@@ -69,6 +69,10 @@ public:
 
     void setSamples(int samples);
 
+    QStringList enabledExtensions() const;
+    QString runtimeName() const;
+    QVersionNumber runtimeVersion() const;
+
     void setMultiviewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const { return m_multiviewRendering; }
     bool isMultiViewRenderingSupported() const;

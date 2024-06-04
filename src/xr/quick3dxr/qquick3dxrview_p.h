@@ -27,7 +27,7 @@
 
 #include <QtQuick3DXr/private/qquick3dxrmanager_p.h>
 #include <QtQuick3DXr/private/qquick3dxrorigin_p.h>
-#include <QtQuick3DXr/private/qopenxrruntimeinfo_p.h>
+#include <QtQuick3DXr/private/qquick3dxrruntimeinfo_p.h>
 
 QT_BEGIN_NAMESPACE
 

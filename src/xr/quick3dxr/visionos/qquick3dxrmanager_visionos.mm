@@ -18,6 +18,8 @@
 #include <CompositorServices/CompositorServices.h>
 #include <QtGui/qguiapplication_platform.h>
 
+#include <QtCore/qoperatingsystemversion.h>
+
 QT_BEGIN_NAMESPACE
 
 class CompositorLayer : public QObject, public QNativeInterface::QVisionOSApplication::ImmersiveSpaceCompositorLayer
@@ -77,6 +79,12 @@ QQuick3DXrManagerPrivate::QQuick3DXrManagerPrivate(QQuick3DXrManager &manager)
 QQuick3DXrManagerPrivate::~QQuick3DXrManagerPrivate()
 {
     ar_session_stop(m_arSession);
+}
+
+QQuick3DXrManagerPrivate *QQuick3DXrManagerPrivate::get(QQuick3DXrManager *manager)
+{
+    QSSG_ASSERT(manager != nullptr, return nullptr);
+    return manager->d_func();
 }
 
 bool QQuick3DXrManagerPrivate::initialize()
@@ -313,6 +321,17 @@ void QQuick3DXrManagerPrivate::setSamples(int samples)
 {
     Q_UNUSED(samples);
     qWarning("Setting samples is not supported");
+}
+
+QString QQuick3DXrManagerPrivate::runtimeName() const
+{
+    return QStringLiteral("VisionOS");
+}
+
+QVersionNumber QQuick3DXrManagerPrivate::runtimeVersion() const
+{
+    static const auto versionNumber = QOperatingSystemVersion::current().version();
+    return versionNumber;
 }
 
 QString QQuick3DXrManagerPrivate::errorString() const
