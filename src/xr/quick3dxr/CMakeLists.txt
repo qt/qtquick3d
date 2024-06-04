@@ -58,15 +58,10 @@ else ()
 
     # Non-ported/not suitable for VisionOS
     qt_internal_extend_target(Quick3DXr
-        DEFINES
-            Q_NO_TEMPORARY_DISABLE_XR_API
         SOURCES
             qopenxrspatialanchor_p.h qopenxrspatialanchor.cpp
             qopenxrspatialanchormodel_p.h qopenxrspatialanchormodel.cpp
             qopenxrspaceextension_p.h qopenxrspaceextension.cpp
-        NO_UNITY_BUILD_SOURCES
-            # Clashing inline functions
-            qquick3dxrhandtrackerinput.cpp
     )
 
 endif () # VISIONOS
