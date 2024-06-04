@@ -192,11 +192,12 @@ private:
         Texture3D = 0x04
     };
     Q_DECLARE_FLAGS(CreateRhiTextureFlags, CreateRhiTextureFlag)
-    bool createRhiTexture(QSSGRenderImageTexture &texture,
-                          const QSSGLoadedTexture *inTexture,
-                          MipMode inMipMode,
-                          CreateRhiTextureFlags inFlags,
-                          const QString &debugObjectName);
+    bool setRhiTexture(QSSGRenderImageTexture &texture,
+                       const QSSGLoadedTexture *inTexture,
+                       MipMode inMipMode,
+                       CreateRhiTextureFlags inFlags,
+                       const QString &debugObjectName,
+                       bool *wasTextureCreated = nullptr);
 
     QSSGRenderMesh *loadRenderMesh(const QSSGRenderPath &inSourcePath, QSSGMeshProcessingOptions options);
     QSSGRenderMesh *loadRenderMesh(QSSGRenderGeometry *geometry, QSSGMeshProcessingOptions options);

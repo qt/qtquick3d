@@ -65,6 +65,7 @@ Window {
             property var spotLights: []
             property var cameras: []
             property var models: []
+            property var riggedModels: []
             property var dynamicModels: []
             property var dynamicGeometries: []
             property var textures: []
@@ -78,6 +79,7 @@ Window {
             property int spotLightsCount: 0
             property int camerasCount: 0
             property int modelsCount: 0
+            property int riggedModelsCount: 0
             property int dynamicModelsCount: 0
             property int texturesCount: 0
             property int dynamicTexturesCount: 0
@@ -122,6 +124,13 @@ Window {
                         id: material
                         diffuseColor: "red"
                     }
+                }
+            }
+
+            Component {
+                id: riggedModel
+                RiggedFigure {
+
                 }
             }
 
@@ -253,6 +262,15 @@ Window {
                 return sources[index]
             }
 
+            function getRiggedMeshSource() {
+                let sources = [
+                        "riggedfigure.mesh",
+                        "riggedsimple.mesh"
+                    ]
+                let index = Math.floor(Math.random() * sources.length);
+                return sources[index]
+            }
+
             function getImageSource() {
                 let sources = [
                         "noise1.jpg",
@@ -338,6 +356,22 @@ Window {
                     let instance = models.pop();
                     instance.destroy();
                     modelsCount--
+                }
+            }
+
+            function addRiggedModel() {
+                let position = getRandomVector3d(objectSpawner.range)
+                let rotation = getRandomVector3d(360)
+                let instance = riggedModel.createObject(objectSpawner, { "position": position, "eulerRotation": rotation})
+                riggedModels.push(instance);
+                riggedModelsCount++
+            }
+
+            function removeRiggedModel() {
+                if (riggedModels.length > 0) {
+                    let instance = riggedModels.pop();
+                    instance.destroy();
+                    riggedModelsCount--
                 }
             }
 
@@ -459,6 +493,7 @@ Window {
                 // reset the model sources
                 models.forEach(model => model.source = getMeshSource())
             }
+
             function changeDynamicModels() {
                 // reset the dynamic model sources
                 if (dynamicModels.length == 0)
@@ -707,6 +742,30 @@ Window {
                     text: "<->"
                     onClicked: {
                         objectSpawner.changeModels()
+                    }
+                }
+            }
+            RowLayout {
+                Label {
+                    text: "Rigged Model"
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: objectSpawner.riggedModelsCount
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                ToolButton {
+                    text: "+"
+                    onClicked: {
+                        objectSpawner.addRiggedModel()
+                    }
+                }
+                ToolButton {
+                    text: "-"
+                    onClicked: {
+                        objectSpawner.removeRiggedModel()
                     }
                 }
             }
