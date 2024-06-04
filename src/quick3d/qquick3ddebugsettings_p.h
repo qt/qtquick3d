@@ -25,12 +25,12 @@ class Q_QUICK3D_EXPORT QQuick3DDebugSettings : public QObject
     Q_PROPERTY(QQuick3DMaterialOverrides materialOverride READ materialOverride WRITE setMaterialOverride NOTIFY materialOverrideChanged)
     Q_PROPERTY(bool wireframeEnabled READ wireframeEnabled WRITE setWireframeEnabled NOTIFY wireframeEnabledChanged)
     Q_PROPERTY(bool drawDirectionalLightShadowBoxes READ drawDirectionalLightShadowBoxes WRITE
-                       setDrawDirectionalLightShadowBoxes NOTIFY drawDirectionalLightShadowBoxesChanged FINAL)
-    Q_PROPERTY(bool drawShadowCastingBounds READ drawShadowCastingBounds WRITE setDrawShadowCastingBounds NOTIFY drawShadowCastingBoundsChanged FINAL)
-    Q_PROPERTY(bool drawShadowReceivingBounds READ drawShadowReceivingBounds WRITE setDrawShadowReceivingBounds NOTIFY drawShadowReceivingBoundsChanged FINAL)
-    Q_PROPERTY(bool drawCascades READ drawCascades WRITE setDrawCascades NOTIFY drawCascadesChanged FINAL)
-    Q_PROPERTY(bool drawSceneCascadeIntersection READ drawSceneCascadeIntersection WRITE setDrawSceneCascadeIntersection NOTIFY drawSceneCascadeIntersectionChanged FINAL)
-    Q_PROPERTY(bool disableShadowCameraUpdate READ disableShadowCameraUpdate WRITE setDisableShadowCameraUpdate NOTIFY disableShadowCameraUpdateChanged FINAL)
+                       setDrawDirectionalLightShadowBoxes NOTIFY drawDirectionalLightShadowBoxesChanged FINAL REVISION(6, 8))
+    Q_PROPERTY(bool drawShadowCastingBounds READ drawShadowCastingBounds WRITE setDrawShadowCastingBounds NOTIFY drawShadowCastingBoundsChanged FINAL REVISION(6, 8))
+    Q_PROPERTY(bool drawShadowReceivingBounds READ drawShadowReceivingBounds WRITE setDrawShadowReceivingBounds NOTIFY drawShadowReceivingBoundsChanged FINAL REVISION(6, 8))
+    Q_PROPERTY(bool drawCascades READ drawCascades WRITE setDrawCascades NOTIFY drawCascadesChanged FINAL REVISION(6, 8))
+    Q_PROPERTY(bool drawSceneCascadeIntersection READ drawSceneCascadeIntersection WRITE setDrawSceneCascadeIntersection NOTIFY drawSceneCascadeIntersectionChanged FINAL REVISION(6, 8))
+    Q_PROPERTY(bool disableShadowCameraUpdate READ disableShadowCameraUpdate WRITE setDisableShadowCameraUpdate NOTIFY disableShadowCameraUpdateChanged FINAL REVISION(6, 8))
 
     QML_NAMED_ELEMENT(DebugSettings)
 public:
@@ -59,33 +59,33 @@ public:
     bool wireframeEnabled() const;
     void setWireframeEnabled(bool newWireframeEnabled);
 
-    bool drawDirectionalLightShadowBoxes() const;
-    void setDrawDirectionalLightShadowBoxes(bool newDrawDirectionalLightShadowBoxes);
+    Q_REVISION(6, 8) bool drawDirectionalLightShadowBoxes() const;
+    Q_REVISION(6, 8) void setDrawDirectionalLightShadowBoxes(bool newDrawDirectionalLightShadowBoxes);
 
-    bool drawShadowCastingBounds() const;
-    void setDrawShadowCastingBounds(bool newDrawShadowCastingBounds);
+    Q_REVISION(6, 8) bool drawShadowCastingBounds() const;
+    Q_REVISION(6, 8) void setDrawShadowCastingBounds(bool newDrawShadowCastingBounds);
 
-    bool drawShadowReceivingBounds() const;
-    void setDrawShadowReceivingBounds(bool newDrawShadowReceivingBounds);
+    Q_REVISION(6, 8) bool drawShadowReceivingBounds() const;
+    Q_REVISION(6, 8) void setDrawShadowReceivingBounds(bool newDrawShadowReceivingBounds);
 
-    bool drawCascades() const;
-    void setDrawCascades(bool newDrawCascades);
+    Q_REVISION(6, 8) bool drawCascades() const;
+    Q_REVISION(6, 8) void setDrawCascades(bool newDrawCascades);
 
-    bool drawSceneCascadeIntersection() const;
-    void setDrawSceneCascadeIntersection(bool newDrawSceneCascadeIntersection);
+    Q_REVISION(6, 8) bool drawSceneCascadeIntersection() const;
+    Q_REVISION(6, 8) void setDrawSceneCascadeIntersection(bool newDrawSceneCascadeIntersection);
 
-    bool disableShadowCameraUpdate() const;
-    void setDisableShadowCameraUpdate(bool newDisableShadowCameraUpdate);
+    Q_REVISION(6, 8) bool disableShadowCameraUpdate() const;
+    Q_REVISION(6, 8) void setDisableShadowCameraUpdate(bool newDisableShadowCameraUpdate);
 
 Q_SIGNALS:
     void materialOverrideChanged();
     void wireframeEnabledChanged();
-    void drawDirectionalLightShadowBoxesChanged();
-    void drawShadowCastingBoundsChanged();
-    void drawShadowReceivingBoundsChanged();
-    void drawCascadesChanged();
-    void drawSceneCascadeIntersectionChanged();
-    void disableShadowCameraUpdateChanged();
+    Q_REVISION(6, 8) void drawDirectionalLightShadowBoxesChanged();
+    Q_REVISION(6, 8) void drawShadowCastingBoundsChanged();
+    Q_REVISION(6, 8) void drawShadowReceivingBoundsChanged();
+    Q_REVISION(6, 8) void drawCascadesChanged();
+    Q_REVISION(6, 8) void drawSceneCascadeIntersectionChanged();
+    Q_REVISION(6, 8) void disableShadowCameraUpdateChanged();
     void changed();
 
 private:
