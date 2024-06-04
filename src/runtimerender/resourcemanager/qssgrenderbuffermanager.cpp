@@ -227,7 +227,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                 CreateRhiTextureFlags rhiTexFlags = ScanForTransparency;
                 if (image->type == QSSGRenderGraphObject::Type::ImageCube)
                     rhiTexFlags |= CubeMap;
-                if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags, QFileInfo(path).fileName())) {
+                if (!setRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags, QFileInfo(path).fileName())) {
                     foundIt.value() = ImageData();
                 } else if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug)) {
                     qDebug() << "+ uploadTexture: " << image->m_imagePath.path() << currentLayer;
@@ -259,13 +259,20 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
 {
     const CustomImageCacheKey imageKey = { data, inMipMode };
     auto theImageData = customTextureMap.find(imageKey);
+    int depth = (data->depth() > 1) ? data->depth() : 1;
     if (theImageData == customTextureMap.end()) {
         theImageData = customTextureMap.insert(imageKey, ImageData());
     } else if (data->generationId() != theImageData->generationId) {
-        // release first
-        releaseTextureData(imageKey);
-        // reinsert the placeholder since releaseTextureData removed from map
-        theImageData = customTextureMap.insert(imageKey, ImageData());
+        auto &renderImageTexture = theImageData.value().renderImageTexture;
+        if (toRhiFormat(data->format()) != renderImageTexture.m_texture->format()
+                || data->size() != renderImageTexture.m_texture->pixelSize()
+                || depth != renderImageTexture.m_texture->depth()) {
+            // release first
+            releaseTextureData(imageKey);
+            // reinsert the placeholder since releaseTextureData removed from map
+            theImageData = customTextureMap.insert(imageKey, ImageData());
+        }
+        theImageData->generationId = data->generationId();
     } else {
         // Return the currently loaded texture
         theImageData.value().usageCounts[currentLayer]++;
@@ -280,11 +287,16 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
         CreateRhiTextureFlags rhiTexFlags = {};
         if (theLoadedTexture->depth > 0)
             rhiTexFlags |= Texture3D;
-        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags, data->debugObjectName)) {
-            if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
-                qDebug() << "+ uploadTexture: " << data << currentLayer;
-            theImageData.value().generationId = data->generationId();
-            increaseMemoryStat(theImageData.value().renderImageTexture.m_texture);
+
+        bool wasTextureCreated = false;
+
+        if (setRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags, data->debugObjectName, &wasTextureCreated)) {
+            if (wasTextureCreated) {
+                if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
+                    qDebug() << "+ uploadTexture: " << data << theImageData.value().renderImageTexture.m_texture << currentLayer;
+                theImageData.value().generationId = data->generationId();
+                increaseMemoryStat(theImageData.value().renderImageTexture.m_texture);
+            }
         } else {
             theImageData.value() = ImageData();
         }
@@ -313,8 +325,10 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
             qCWarning(WARNING, "Failed to load lightmap image: %s", qPrintable(imagePath));
         foundIt = imageMap.insert(imageKey, ImageData());
         if (theLoadedTexture) {
-            if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), MipModeDisable, {}, imagePath))
+            if (!setRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), MipModeDisable, {}, imagePath))
                 foundIt.value() = ImageData();
+            else if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
+                qDebug() << "+ uploadTexture: " << imagePath << currentLayer;
             result = foundIt.value().renderImageTexture;
         }
         increaseMemoryStat(result.m_texture);
@@ -910,97 +924,127 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     return true;
 }
 
-bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
-                                         const QSSGLoadedTexture *inTexture,
-                                         MipMode inMipMode,
-                                         CreateRhiTextureFlags inFlags,
-                                         const QString &debugObjectName)
+bool QSSGBufferManager::setRhiTexture(QSSGRenderImageTexture &texture,
+                                      const QSSGLoadedTexture *inTexture,
+                                      MipMode inMipMode,
+                                      CreateRhiTextureFlags inFlags,
+                                      const QString &debugObjectName,
+                                      bool *wasTextureCreated)
 {
     Q_ASSERT(inMipMode != MipModeFollowRenderImage);
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
     QRhiTexture::Flags textureFlags;
-    int mipmapCount = 1;
     const bool checkTransp = inFlags.testFlag(ScanForTransparency);
     bool hasTransp = false;
 
     const auto &context = m_contextInterface->rhiContext();
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(context.get());
     auto *rhi = context->rhi();
-    QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
-    QSize size;
-    int depth = 0;
-    if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
-        texture.m_flags.setRgbe8(true);
-    if (!inTexture->isSRGB)
-        texture.m_flags.setLinear(true);
-    if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->textureFileData.isValid())) {
-        // Before creating an environment map, check if the provided texture is a
-        // pre-baked environment map
-        if (inTexture->textureFileData.isValid() && inTexture->textureFileData.keyValueMetadata().contains("QT_IBL_BAKER_VERSION")) {
-            Q_ASSERT(inTexture->textureFileData.numFaces() == 6);
-            Q_ASSERT(inTexture->textureFileData.numLevels() >= 5);
+    QRhiTexture::Format rhiFormat = toRhiFormat(inTexture->format.format);
+    const QTextureFileData &texFileData = inTexture->textureFileData;
+    QSize size = texFileData.isValid() ? texFileData.size() : QSize(inTexture->width, inTexture->height);
+    int mipmapCount = texFileData.isValid() ? texFileData.numLevels() : 1;
+    int depth = inFlags.testFlag(Texture3D) ? inTexture->depth : 0;
+    bool generateMipmaps = false;
 
-            const QTextureFileData &tex = inTexture->textureFileData;
-            rhiFormat = toRhiFormat(inTexture->format.format);
-            size = tex.size();
-            mipmapCount = tex.numLevels();
-            const int faceCount = tex.numFaces();
-            QRhiTexture *environmentCubeMap = rhi->newTexture(rhiFormat, size, 1, QRhiTexture::CubeMap | QRhiTexture::MipMapped);
-            environmentCubeMap->setName(debugObjectName.toLatin1());
-            environmentCubeMap->create();
+    if (wasTextureCreated)
+        *wasTextureCreated = false;
+
+    if (texture.m_texture == nullptr) {
+        if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
+            texture.m_flags.setRgbe8(true);
+        if (!inTexture->isSRGB)
+            texture.m_flags.setLinear(true);
+        if (inMipMode == MipModeBsdf && (inTexture->data || texFileData.isValid())) {
+            // Before creating an environment map, check if the provided texture is a
+            // pre-baked environment map
+            if (texFileData.isValid() && texFileData.keyValueMetadata().contains("QT_IBL_BAKER_VERSION")) {
+                Q_ASSERT(texFileData.numFaces() == 6);
+                Q_ASSERT(texFileData.numLevels() >= 5);
+
+                QRhiTexture *environmentCubeMap = rhi->newTexture(rhiFormat, size, 1, QRhiTexture::CubeMap | QRhiTexture::MipMapped);
+                environmentCubeMap->setName(debugObjectName.toLatin1());
+                environmentCubeMap->create();
+                texture.m_texture = environmentCubeMap;
+                rhiCtxD->registerTexture(texture.m_texture);
+                if (wasTextureCreated)
+                    *wasTextureCreated = true;
+            // If we get this far then we need to create an environment map at runtime.
+            } else if (createEnvironmentMap(inTexture, &texture, debugObjectName)) {
+                rhiCtxD->registerTexture(texture.m_texture);
+                if (wasTextureCreated)
+                    *wasTextureCreated = true;
+                return true;
+            } else {
+                qWarning() << "Failed to create environment map";
+                return false;
+            }
+        } else {
+            if (inMipMode == MipModeEnable && mipmapCount == 1) {
+                textureFlags |= QRhiTexture::Flag::UsedWithGenerateMips;
+                generateMipmaps = true;
+                mipmapCount = rhi->mipLevelsForSize(size);
+            }
+
+            if (mipmapCount > 1)
+                textureFlags |= QRhiTexture::Flag::MipMapped;
+
+            if (inFlags.testFlag(CubeMap))
+                textureFlags |= QRhiTexture::CubeMap;
+
+            if (inFlags.testFlag(Texture3D) && depth > 0)
+                texture.m_texture = rhi->newTexture(rhiFormat, size.width(), size.height(), depth, textureSampleCount, textureFlags);
+            else
+                texture.m_texture = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
+
+            texture.m_texture->setName(debugObjectName.toLatin1());
+            texture.m_texture->create();
+            rhiCtxD->registerTexture(texture.m_texture);
+            if (wasTextureCreated)
+                *wasTextureCreated = true;
+        }
+    }
+
+    // Update resources
+    if (inMipMode == MipModeBsdf && (inTexture->data || texFileData.isValid())) {
+        if (texFileData.isValid() && texFileData.keyValueMetadata().contains("QT_IBL_BAKER_VERSION")) {
+            const int faceCount = texFileData.numFaces();
             for (int layer = 0; layer < faceCount; ++layer) {
                 for (int level = 0; level < mipmapCount; ++level) {
                     QRhiTextureSubresourceUploadDescription subDesc;
                     subDesc.setSourceSize(sizeForMipLevel(level, size));
-                    subDesc.setData(tex.getDataView(level, layer).toByteArray());
+                    subDesc.setData(texFileData.getDataView(level, layer).toByteArray());
                     textureUploads << QRhiTextureUploadEntry { layer, level, subDesc };
                 }
             }
-            texture.m_texture = environmentCubeMap;
 
             QRhiTextureUploadDescription uploadDescription;
             uploadDescription.setEntries(textureUploads.cbegin(), textureUploads.cend());
             auto *rub = rhi->nextResourceUpdateBatch();
-            rub->uploadTexture(environmentCubeMap, uploadDescription);
+            rub->uploadTexture(texture.m_texture, uploadDescription);
             context->commandBuffer()->resourceUpdate(rub);
             texture.m_mipmapCount = mipmapCount;
-            rhiCtxD->registerTexture(texture.m_texture);
             return true;
         }
-
-        // If we get this far then we need to create an environment map at runtime.
-        if (createEnvironmentMap(inTexture, &texture, debugObjectName)) {
-            rhiCtxD->registerTexture(texture.m_texture);
-            return true;
-        } else {
-            qWarning() << "Failed to create environment map";
-            return false;
-        }
-    } else if (inTexture->textureFileData.isValid()) {
-        const QTextureFileData &tex = inTexture->textureFileData;
-        size = tex.size();
-        mipmapCount = tex.numLevels();
-
+    } else if (texFileData.isValid()) {
         int numFaces = 1;
         // Just having a container with 6 faces is not enough, we only treat it
         // as a cubemap if it was requested to be treated as such. Otherwise
         // only face 0 is used.
-        if (tex.numFaces() == 6 && inFlags.testFlag(CubeMap))
+        if (texFileData.numFaces() == 6 && inFlags.testFlag(CubeMap))
             numFaces = 6;
 
-        for (int level = 0; level < tex.numLevels(); ++level) {
+        for (int level = 0; level < texFileData.numLevels(); ++level) {
             QRhiTextureSubresourceUploadDescription subDesc;
             subDesc.setSourceSize(sizeForMipLevel(level, size));
             for (int face = 0; face < numFaces; ++face) {
-                subDesc.setData(tex.getDataView(level, face).toByteArray());
+                subDesc.setData(texFileData.getDataView(level, face).toByteArray());
                 textureUploads << QRhiTextureUploadEntry{ face, level, subDesc };
             }
         }
-
-        rhiFormat = toRhiFormat(inTexture->format.format);
         if (checkTransp) {
-            auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
+            auto glFormat = texFileData.glInternalFormat() ? texFileData.glInternalFormat() : texFileData.glFormat();
             hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
         }
     } else if (inFlags.testFlag(Texture3D)) {
@@ -1008,9 +1052,6 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
         quint32 formatSize = (quint32)inTexture->format.getSizeofFormat();
         quint32 size2D = inTexture->width * inTexture->height * formatSize;
         if (inTexture->dataSizeInBytes >= (quint32)(size2D * inTexture->depth)) {
-            size = QSize(inTexture->width, inTexture->height);
-            depth = inTexture->depth;
-            rhiFormat = toRhiFormat(inTexture->format.format);
             for (int slice = 0; slice < inTexture->depth; ++slice) {
                 QRhiTextureSubresourceUploadDescription sliceUpload((char *)inTexture->data + slice * size2D, size2D);
                 textureUploads << QRhiTextureUploadEntry(slice, 0, sliceUpload);
@@ -1021,19 +1062,14 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     } else {
         QRhiTextureSubresourceUploadDescription subDesc;
         if (!inTexture->image.isNull()) {
-            rhiFormat = toRhiFormat(inTexture->format.format);
-            size = inTexture->image.size();
             subDesc.setImage(inTexture->image);
             if (checkTransp)
                 hasTransp = QImageData::get(inTexture->image)->checkForAlphaPixels();
         } else if (inTexture->data) {
-            rhiFormat = toRhiFormat(inTexture->format.format);
-            size = QSize(inTexture->width, inTexture->height);
             QByteArray buf(static_cast<const char *>(inTexture->data), qMax(0, int(inTexture->dataSizeInBytes)));
             subDesc.setData(buf);
             if (checkTransp)
                 hasTransp = inTexture->scanForTransparency();
-
         }
         subDesc.setSourceSize(size);
         if (!subDesc.data().isEmpty() || !subDesc.image().isNull())
@@ -1048,19 +1084,6 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     const auto validTexSize = size.width() <= maxTextureSize && size.height() <= maxTextureSize;
     QSSG_ASSERT_X(validTexSize, qPrintable(textureSizeWarning(size, maxTextureSize)), return false);
 
-    bool generateMipmaps = false;
-    if (inMipMode == MipModeEnable && mipmapCount == 1) {
-        textureFlags |= QRhiTexture::Flag::UsedWithGenerateMips;
-        generateMipmaps = true;
-        mipmapCount = rhi->mipLevelsForSize(size);
-    }
-
-    if (mipmapCount > 1)
-        textureFlags |= QRhiTexture::Flag::MipMapped;
-
-    if (inFlags.testFlag(CubeMap))
-        textureFlags |= QRhiTexture::CubeMap;
-
     if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
         qWarning() << "Could not load texture";
         return false;
@@ -1069,32 +1092,20 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
         return false;
     }
 
-    QRhiTexture *tex = nullptr;
-    if (inFlags.testFlag(Texture3D) && depth > 0)
-        tex = rhi->newTexture(rhiFormat, size.width(), size.height(), depth, textureSampleCount, textureFlags);
-    else
-        tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
-
-    QSSG_ASSERT(tex != nullptr, return false);
-
-    tex->setName(debugObjectName.toLatin1());
-    tex->create();
+    QSSG_ASSERT(texture.m_texture != nullptr, return false);
 
     if (checkTransp)
         texture.m_flags.setHasTransparency(hasTransp);
-    texture.m_texture = tex;
 
     QRhiTextureUploadDescription uploadDescription;
     uploadDescription.setEntries(textureUploads.cbegin(), textureUploads.cend());
     auto *rub = rhi->nextResourceUpdateBatch(); // TODO: optimize
-    rub->uploadTexture(tex, uploadDescription);
+    rub->uploadTexture(texture.m_texture, uploadDescription);
     if (generateMipmaps)
-        rub->generateMips(tex);
+        rub->generateMips(texture.m_texture);
     context->commandBuffer()->resourceUpdate(rub);
 
     texture.m_mipmapCount = mipmapCount;
-
-    rhiCtxD->registerTexture(texture.m_texture); // owned by the QSSGRhiContext from here on
     return true;
 }
 
