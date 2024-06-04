@@ -1,16 +1,16 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrruntimeinfo_p.h"
+#include "qquick3dxrruntimeinfo_p.h"
 #include "qquick3dxrmanager_p.h"
 #include <QtQuick/QQuickWindow>
 #include <rhi/qrhi.h>
 
-#if defined(USE_OPENXR)
+#if defined(Q_OS_VISIONOS)
+#include "visionos/qquick3dxrmanager_visionos_p.h"
+#else
 #include "openxr/qquick3dxrmanager_openxr_p.h"
 #endif
-
-// FIXME: This whole class needs to be revisited.
 
 QT_BEGIN_NAMESPACE
 
@@ -18,9 +18,9 @@ QT_BEGIN_NAMESPACE
     \qmltype XrRuntimeInfo
     \inherits Item
     \inqmlmodule QtQuick3D.Xr
-    \brief Displays information about the OpenXR runtime.
+    \brief Displays information about the XR runtime.
 
-    This type provides information about the OpenXR runtime, including enabled
+    This type provides information about the XR runtime, including enabled
     extensions, runtime name, version, graphics API name, and whether multi-view
     rendering is supported.
 
@@ -30,69 +30,60 @@ QT_BEGIN_NAMESPACE
 
 QOpenXRRuntimeInfo::QOpenXRRuntimeInfo(QQuick3DXrManager *manager, QObject *parent)
     : QObject(parent),
-      m_openXRManager(manager)
+      m_xrmanager(manager)
 {
 }
 
 /*!
     \qmlproperty QStringList XrRuntimeInfo::enabledExtensions
-    \brief A list of enabled OpenXR extensions.
+    \brief A list of enabled XR extensions.
 
     This property holds a QStringList containing the names of the
-    OpenXR extensions that are currently enabled for the runtime.
+    XR extensions that are currently enabled for the runtime.
+
+    \note This list may vary depending on the runtime implementation and can be
+    empty.
 */
 
 QStringList QOpenXRRuntimeInfo::enabledExtensions() const
 {
-#if USE_OPENXR
-    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
-    return manager ? manager->m_enabledExtensions : QStringList{};
-#else
-    return QStringList{};
-#endif
+    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_xrmanager);
+    return manager ? manager->enabledExtensions() : QStringList{};
 }
 
 /*!
     \qmlproperty QString XrRuntimeInfo::runtimeName
-    \brief The name of the OpenXR runtime.
+    \brief The name of the XR runtime.
 
-    This property provides the human-readable name of the OpenXR runtime being
+    This property provides the human-readable name of the XR runtime being
     used.
 */
 
 QString QOpenXRRuntimeInfo::runtimeName() const
 {
-#if USE_OPENXR
-    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
-    return manager ? manager->m_runtimeName : QString{};
-#else
-    return QString{};
-#endif
+    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_xrmanager);
+    return manager ? manager->runtimeName() : QString{};
 }
 
 /*!
     \qmlproperty QString XrRuntimeInfo::runtimeVersion
-    \brief The version of the OpenXR runtime.
+    \brief The version of the XR runtime.
 
-    This property returns the version string of the OpenXR runtime
+    This property returns the version string of the XR runtime
     (for example, "1.0.0").
 */
 
 QString QOpenXRRuntimeInfo::runtimeVersion() const
 {
-#if USE_OPENXR
-    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_openXRManager);
-    return manager ? manager->m_runtimeVersion.toString() : QString{};
-#else
-    return QString{};
-#endif
+    QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_xrmanager);
+    return manager ? manager->runtimeVersion().toString() : QString{};
 }
 
 /*!
     \qmlproperty QString XrRuntimeInfo::graphicsApiName
-    \brief The name of the graphics API used by the OpenXR runtime.
+    \brief The name of the graphics API used by the XR runtime.
     This property specifies the name of the graphics API (for example, "Vulkan") that the
-    OpenXR runtime is utilizing.
+    XR runtime is utilizing.
 */
 
 QString QOpenXRRuntimeInfo::graphicsApiName() const
@@ -100,8 +91,8 @@ QString QOpenXRRuntimeInfo::graphicsApiName() const
     // This matches what Qt Quick's GraphicsInfo would expose to QML, but that
     // does not provide a string. We have seen way too many switch statements
     // in JS for this. So have a string property here and call it a day.
-    if (m_openXRManager->isValid() && m_openXRManager->m_quickWindow) {
-        QRhi *rhi = m_openXRManager->m_quickWindow->rhi();
+    if (m_xrmanager->isValid() && m_xrmanager->m_quickWindow) {
+        QRhi *rhi = m_xrmanager->m_quickWindow->rhi();
         if (rhi)
             return QString::fromLatin1(rhi->backendName());
     }

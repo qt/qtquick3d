@@ -1083,6 +1083,21 @@ void QQuick3DXrManagerPrivate::setSamples(int samples)
     // XrSwapchain) since we do not do MSAA through the swapchain.
 }
 
+QStringList QQuick3DXrManagerPrivate::enabledExtensions() const
+{
+    return m_enabledExtensions;
+}
+
+QString QQuick3DXrManagerPrivate::runtimeName() const
+{
+    return m_runtimeName;
+}
+
+QVersionNumber QQuick3DXrManagerPrivate::runtimeVersion() const
+{
+    return m_runtimeVersion;
+}
+
 void QQuick3DXrManagerPrivate::setMultiviewRenderingEnabled(bool enable)
 {
     Q_Q(QQuick3DXrManager);
