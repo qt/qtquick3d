@@ -2332,7 +2332,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 }
 
                 shadowData.bias = theLight->m_shadowBias;
-                shadowData.factor = theLight->m_shadowFactor;
+                // Optimization: if directional light with no cascades then set shadowFactor to 0 to disable shadow map sampling
+                const bool noCascades = !(pEntry->m_csmActive[0] || pEntry->m_csmActive[1] || pEntry->m_csmActive[2] || pEntry->m_csmActive[3]);
+                shadowData.factor = theLight->type == QSSGRenderLight::Type::DirectionalLight && noCascades ? 0.0f : theLight->m_shadowFactor;
                 shadowData.clipNear = 1.0f;
                 shadowData.shadowMapFar = pEntry->m_shadowMapFar;
                 shadowData.isYUp = globalRenderData.isYUpInFramebuffer ? 0.0f : 1.0f;
