@@ -30,6 +30,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrOrigin : public QQuick3DNode
     Q_OBJECT
     Q_PROPERTY(QQuick3DXrCamera *camera READ camera WRITE setCamera NOTIFY cameraChanged)
     QML_NAMED_ELEMENT(XrOrigin)
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     QQuick3DXrOrigin();

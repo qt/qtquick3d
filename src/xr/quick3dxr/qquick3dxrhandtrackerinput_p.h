@@ -43,6 +43,7 @@ class QQuick3DXrHandTrackerInput : public QObject
 
     QML_NAMED_ELEMENT(XrHandTrackerInput)
     QML_UNCREATABLE("Created by XrView")
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
@@ -104,6 +105,7 @@ class QQuick3DXrHandModel : public QQuick3DModel
     Q_PROPERTY(QQuick3DXrHandTrackerInput *handTracker READ handTracker WRITE setHandTracker NOTIFY handTrackerChanged FINAL)
 
     QML_NAMED_ELEMENT(XrHandModel)
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     QQuick3DXrHandModel(QQuick3DNode *parent = nullptr);

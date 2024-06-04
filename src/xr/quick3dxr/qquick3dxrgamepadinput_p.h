@@ -27,6 +27,7 @@ class QQuick3DXrGamepadInput : public QObject
 
     QML_NAMED_ELEMENT(XrGamepadInput)
     QML_UNCREATABLE("Created by XrView")
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     explicit QQuick3DXrGamepadInput(QObject *parent = nullptr);

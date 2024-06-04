@@ -41,6 +41,7 @@ class QOpenXRSpatialAnchor : public QObject
     Q_PROPERTY(QUuid uuid READ uuid CONSTANT)
     QML_NAMED_ELEMENT(XrSpatialAnchor)
     QML_UNCREATABLE("Spatial anchor objects cannot be created in QML");
+    QML_ADDED_IN_VERSION(6, 8)
 public:
     QOpenXRSpatialAnchor(XrSpace space, QUuid &uuid, QObject *parent = nullptr);
     ~QOpenXRSpatialAnchor();

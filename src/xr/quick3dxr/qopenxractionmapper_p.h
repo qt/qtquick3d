@@ -31,6 +31,7 @@ class QOpenXRActionMapper : public QQuick3DObject
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     QML_NAMED_ELEMENT(XrActionMapper)
+    QML_ADDED_IN_VERSION(6, 8)
 public:
     explicit QOpenXRActionMapper(QQuick3DObject *parent = nullptr);
 
@@ -119,6 +120,7 @@ class QOpenXrInputAction : public QObject, public QQmlParserStatus
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     QML_NAMED_ELEMENT(XrInputAction)
+    QML_ADDED_IN_VERSION(6, 8)
 
     Q_PROPERTY(float value READ value NOTIFY valueChanged FINAL)
     Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged FINAL)

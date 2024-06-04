@@ -61,6 +61,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(bool multiViewRenderingSupported READ isMultiViewRenderingSupported CONSTANT)
     Q_PROPERTY(bool enableMultiViewRendering READ isMultiViewRenderingEnabled WRITE setEnableMultiViewRendering NOTIFY enableMultiViewRenderingChanged FINAL)
     QML_NAMED_ELEMENT(XrView)
+    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     enum FoveationLevel {
