@@ -24,7 +24,7 @@
 
 #if defined(Q_OS_VISIONOS)
 # include <QtQuick3DXr/private/qquick3dxrmanager_visionos_p.h>
-#elif defined(USE_OPENXR)
+#else
 # include "openxr/qquick3dxrmanager_openxr_p.h"
 #endif
 
