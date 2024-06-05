@@ -47,6 +47,10 @@ public:
             m_containerItem = new QQuickRectangle;
             m_containerItem->setTransformOrigin(QQuickItem::TopLeft);
             m_containerItem->setParent(q);
+            m_containerItem->setVisible(q->visible());
+            QObject::connect(q, &QQuick3DNode::visibleChanged, m_containerItem, [this, q](){
+                m_containerItem->setVisible(q->visible());
+            });
 
             auto dataProp = data();
             dataProp.append(&dataProp, m_containerItem);
