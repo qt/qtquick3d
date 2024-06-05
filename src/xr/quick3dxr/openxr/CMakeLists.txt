@@ -2,8 +2,6 @@ qt_find_package(WrapOpenXR PROVIDED_TARGETS WrapOpenXR::WrapOpenXR)
 target_link_libraries(Quick3DXr PUBLIC WrapOpenXR::WrapOpenXR)
 
 qt_internal_extend_target(Quick3DXr
-    DEFINES
-      USE_OPENXR
     SOURCES
         qopenxrplatform_p.h
         qquick3dxrmanager_openxr.cpp qquick3dxrmanager_openxr_p.h
