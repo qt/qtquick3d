@@ -53,8 +53,12 @@ void tst_Input::initTestCase()
 
     // Move the system cursor out of the way of test
     // If this isn't possible, don't bother running the test
-    QCursor::setPos(0, 0);
-    if (QCursor::pos() != QPoint(0, 0))
+
+    const auto *screen = QGuiApplication::primaryScreen();
+    const QPoint topLeft = screen ? screen->geometry().topLeft() : QPoint();
+
+    QCursor::setPos(topLeft);
+    if (QCursor::pos() != topLeft)
         QSKIP("It's not possible to move the system cursor, possible test instability");
 }
 
