@@ -642,7 +642,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
                         m_gamepadInputState->setInputValue(def.id, def.shortName, float(boolValue.currentState));
                     }
                 } else {
-                    qWarning("Failed to get action state for bool hand input");
+                    qWarning("Failed to get action state for bool gamepad input");
                 }
                 break;
             }
@@ -655,7 +655,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
                         m_gamepadInputState->setInputValue(def.id, def.shortName, float(floatValue.currentState));
                     }
                 } else {
-                    qWarning("Failed to get action state for float hand input");
+                    qWarning("Failed to get action state for float gamepad input");
                 }
                 break;
             }
