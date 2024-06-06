@@ -207,7 +207,7 @@ void QQuick3DXrVirtualMouse::generateEvent(QEvent::Type type, Qt::MouseButton bu
 
     // Send to View with Ray
     if (m_view->view3d()) // no internal view3D if XrView init failed but the object is still alive, handle this gracefully
-        m_view->view3d()->processPointerEventFromRay(origin, direction, event);
+        m_view->view3d()->singlePointPick(event, origin, direction);
 
     // Cleanup
     delete event;

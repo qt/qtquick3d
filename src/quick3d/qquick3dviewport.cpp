@@ -1551,14 +1551,14 @@ bool QQuick3DViewport::checkIsVisible() const
     to the correct cordinate system, and added to the visitedSubscenes map for later
     event delivery.
 */
-void QQuick3DViewport::processPickedObject(const QSSGRenderGraphObject *backendObject,
-                                           const QSSGRenderPickResult &pickResult,
+void QQuick3DViewport::processPickedObject(const QSSGRenderPickResult &pickResult,
                                            int pointIndex,
                                            QPointerEvent *event,
                                            QFlatMap<QQuickItem *, SubsceneInfo> &visitedSubscenes) const
 {
     QQuickItem *subsceneRootItem = nullptr;
     QPointF subscenePosition;
+    const auto backendObject = pickResult.m_hitObject;
     const auto frontendObject = findFrontendNode(backendObject);
     if (!frontendObject)
         return;
@@ -1806,12 +1806,104 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
 
         if (!pickResults.isEmpty())
             for (const auto &pickResult : pickResults)
-                processPickedObject(pickResult.m_hitObject, pickResult, pointIndex, event, visitedSubscenes);
+                processPickedObject(pickResult, pointIndex, event, visitedSubscenes);
         else
             eventPoint.setAccepted(false); // let it fall through the viewport to Items underneath
     }
 
     return forwardEventToSubscenes(event, useRayPicking, renderer, visitedSubscenes);
+}
+
+bool QQuick3DViewport::singlePointPick(QSinglePointEvent *event, const QVector3D &origin, const QVector3D &direction)
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer || !event)
+        return false;
+
+    QSSGRenderRay ray(origin, direction);
+
+    Q_ASSERT(event->pointCount() == 1);
+    QPointF originalPosition = event->point(0).scenePosition();
+
+    auto pickResults = renderer->syncPickAll(ray);
+
+    bool delivered = false;
+
+    for (const auto &pickResult : pickResults) {
+        auto [item, position] = getItemAndPosition(pickResult);
+        if (!item)
+            continue;
+        auto da = QQuickItemPrivate::get(item)->deliveryAgent();
+        QEventPoint &ep = event->point(0);
+        QMutableEventPoint::setPosition(ep, position);
+        QMutableEventPoint::setScenePosition(ep, position);
+        if (da->event(event)) {
+            delivered = true;
+            break;
+        }
+    }
+
+    QMutableEventPoint::setScenePosition(event->point(0), originalPosition);
+
+    // Normally this would occur in QQuickWindowPrivate::clearGrabbers(...) but
+    // for ray based input, input never goes through QQuickWindow (since events
+    // are generated from within scene space and not window/screen space).
+    if (event->isEndEvent()) {
+        if (event->buttons() == Qt::NoButton) {
+            auto &firstPt = event->point(0);
+            event->setExclusiveGrabber(firstPt, nullptr);
+            event->clearPassiveGrabbers(firstPt);
+        }
+    }
+
+    return delivered;
+}
+
+QPair<QQuickItem *, QPointF> QQuick3DViewport::getItemAndPosition(const QSSGRenderPickResult &pickResult)
+{
+    QQuickItem *subsceneRootItem = nullptr;
+    QPointF subscenePosition;
+    const auto backendObject = pickResult.m_hitObject;
+    const auto frontendObject = findFrontendNode(backendObject);
+    if (!frontendObject)
+        return {};
+    auto frontendObjectPrivate = QQuick3DObjectPrivate::get(frontendObject);
+    if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Item2D) {
+        // Item2D, this is the case where there is just an embedded Qt Quick 2D Item
+        // rendered directly to the scene.
+        auto item2D = qobject_cast<QQuick3DItem2D *>(frontendObject);
+        if (item2D)
+            subsceneRootItem = item2D->contentItem();
+        if (!subsceneRootItem || subsceneRootItem->childItems().isEmpty())
+            return {}; // ignore empty 2D subscenes
+
+        // In this case the "UV" coordinates are in pixels in the subscene root item's coordinate system.
+        subscenePosition = pickResult.m_localUVCoords.toPointF();
+
+        // The following code will account for custom input masking, as well any
+        // transformations that might have been applied to the Item
+        if (!subsceneRootItem->childAt(subscenePosition.x(), subscenePosition.y()))
+            return {};
+    } else if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Model) {
+        // Model
+        int materialSubset = pickResult.m_subset;
+        const auto backendModel = static_cast<const QSSGRenderModel *>(backendObject);
+        // Get material
+        if (backendModel->materials.size() < (pickResult.m_subset + 1))
+            materialSubset = backendModel->materials.size() - 1;
+        if (materialSubset < 0)
+            return {};
+        const auto backendMaterial = backendModel->materials.at(materialSubset);
+        const auto frontendMaterial = static_cast<QQuick3DMaterial *>(findFrontendNode(backendMaterial));
+        subsceneRootItem = getSubSceneRootItem(frontendMaterial);
+
+        if (subsceneRootItem) {
+            // In this case the pick result really is using UV coordinates.
+            subscenePosition = QPointF(subsceneRootItem->x() + pickResult.m_localUVCoords.x() * subsceneRootItem->width(),
+                                       subsceneRootItem->y() - pickResult.m_localUVCoords.y() * subsceneRootItem->height() + subsceneRootItem->height());
+        }
+    }
+    return {subsceneRootItem, subscenePosition};
 }
 
 QVarLengthArray<QSSGRenderPickResult, 20> QQuick3DViewport::getPickResults(QQuick3DSceneRenderer *renderer,
