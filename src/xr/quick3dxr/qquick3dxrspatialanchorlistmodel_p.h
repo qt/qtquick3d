@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRSPATIALANCHORMODEL_H
-#define QOPENXRSPATIALANCHORMODEL_H
+#ifndef QQUICK3DXRSPATIALANCHORLISTMODEL_P_H
+#define QQUICK3DXRSPATIALANCHORLISTMODEL_P_H
 
 //
 //  W A R N I N G
@@ -16,15 +16,16 @@
 //
 
 #include <QAbstractListModel>
-#include <QQmlEngine>
+#include <QtQmlIntegration/qqmlintegration.h>
+#include <QtCore/qpointer.h>
 #include <QUuid>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRSpaceExtension;
-class QOpenXRSpatialAnchor;
+class QQuick3DXrAnchorManager;
+class QQuick3DXrSpatialAnchor;
 
-class QOpenXRSpatialAnchorModel : public QAbstractListModel
+class QQuick3DXrSpatialAnchorListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(FilterMode filterMode READ filterMode WRITE setFilterMode NOTIFY filterModeChanged FINAL)
@@ -64,7 +65,7 @@ public:
         Anchor = Qt::UserRole + 21
     };
 
-    explicit QOpenXRSpatialAnchorModel(QObject *parent = nullptr);
+    explicit QQuick3DXrSpatialAnchorListModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role) const override;
@@ -88,10 +89,10 @@ signals:
     void labelsChanged();
 
 private Q_SLOTS:
-    void handleAnchorAdded(QOpenXRSpatialAnchor* anchor);
+    void handleAnchorAdded(QQuick3DXrSpatialAnchor* anchor);
 
 private:
-    QOpenXRSpaceExtension *m_spaceExtension = nullptr;
+    QPointer<QQuick3DXrAnchorManager> m_anchorManager;
     FilterMode m_filterMode = FilterMode::All;
     QList<QUuid> m_uuids;
     SemanticLabels m_labels;
@@ -99,4 +100,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRSPATIALANCHORMODEL_H
+#endif // QQUICK3DXRSPATIALANCHORLISTMODEL_P_H

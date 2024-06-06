@@ -3,7 +3,11 @@
 
 #include "qopenxrspatialanchor_p.h"
 
-#include "qopenxrspaceextension_p.h"
+#if defined(Q_OS_VISIONOS)
+#include "visionos/qquick3dxranchormanager_visionos_p.h"
+#else
+#include "openxr/qopenxrspaceextension_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -11,7 +15,7 @@ QT_BEGIN_NAMESPACE
     \qmltype XrSpatialAnchor
     \inherits Item
     \inqmlmodule QtQuick3D.Xr
-    \brief Represents a spatial anchor in an OpenXR session.
+    \brief Represents a spatial anchor in an XR session.
 
     This type represents a spatial anchor that can be used to track
     a specific location or object in real space. It provides information about
@@ -22,34 +26,18 @@ QT_BEGIN_NAMESPACE
     \note You can not create these in QML.
  */
 
-QOpenXRSpatialAnchor::QOpenXRSpatialAnchor(XrSpace space, QUuid &uuid, QObject *parent)
+QQuick3DXrSpatialAnchor::QQuick3DXrSpatialAnchor(QtQuick3DXr::XrSpaceId space, QUuid &uuid, QObject *parent)
     : QObject(parent)
     , m_space(space)
     , m_uuid(uuid)
 {
-    auto spaceExt = QOpenXRSpaceExtension::instance();
-    m_has2DBounds = spaceExt->getBoundingBox2D(m_space, m_offset2D, m_extent2D);
-    m_has3DBounds = spaceExt->getBoundingBox3D(m_space, m_offset3D, m_extent3D);
-    if (spaceExt->isComponentSupported(m_space, XR_SPACE_COMPONENT_TYPE_SPACE_CONTAINER_FB) &&
-        spaceExt->isComponentEnabled(m_space, XR_SPACE_COMPONENT_TYPE_SPACE_CONTAINER_FB)) {
-        // Get the space container UUIDs
-        m_spaceContainerUuids = spaceExt->collectSpaceContainerUuids(m_space);
-    } else if (spaceExt->isComponentSupported(m_space, XR_SPACE_COMPONENT_TYPE_ROOM_LAYOUT_FB) &&
-               spaceExt->isComponentEnabled(m_space, XR_SPACE_COMPONENT_TYPE_ROOM_LAYOUT_FB)) {
-        m_roomLayoutUuids = spaceExt->collectRoomLayoutUuids(m_space);
-    }
-    m_semanticLabels = spaceExt->getSemanticLabels(m_space);
 }
 
-QOpenXRSpatialAnchor::~QOpenXRSpatialAnchor()
+QQuick3DXrSpatialAnchor::~QQuick3DXrSpatialAnchor()
 {
 
 }
 
-XrSpace QOpenXRSpatialAnchor::space() const
-{
-    return m_space;
-}
 
 /*!
     \qmlproperty vector3d XrSpatialAnchor::offset3D
@@ -59,12 +47,12 @@ XrSpace QOpenXRSpatialAnchor::space() const
     its position within the 3D space.
  */
 
-QVector3D QOpenXRSpatialAnchor::offset3D() const
+QVector3D QQuick3DXrSpatialAnchor::offset3D() const
 {
     return m_offset3D;
 }
 
-void QOpenXRSpatialAnchor::setOffset3D(const QVector3D &newOffset)
+void QQuick3DXrSpatialAnchor::setOffset3D(const QVector3D &newOffset)
 {
     if (m_offset3D == newOffset)
         return;
@@ -80,12 +68,12 @@ void QOpenXRSpatialAnchor::setOffset3D(const QVector3D &newOffset)
     within the 3D space.
  */
 
-QVector3D QOpenXRSpatialAnchor::extent3D() const
+QVector3D QQuick3DXrSpatialAnchor::extent3D() const
 {
     return m_extent3D;
 }
 
-void QOpenXRSpatialAnchor::setExtent3D(const QVector3D &newExtent)
+void QQuick3DXrSpatialAnchor::setExtent3D(const QVector3D &newExtent)
 {
     if (m_extent3D == newExtent)
         return;
@@ -101,12 +89,12 @@ void QOpenXRSpatialAnchor::setExtent3D(const QVector3D &newExtent)
     session's coordinate system. It emits the `positionChanged` signal when updated.
  */
 
-QVector3D QOpenXRSpatialAnchor::position() const
+QVector3D QQuick3DXrSpatialAnchor::position() const
 {
     return m_position;
 }
 
-void QOpenXRSpatialAnchor::setPosition(const QVector3D &newPosition)
+void QQuick3DXrSpatialAnchor::setPosition(const QVector3D &newPosition)
 {
     if (m_position == newPosition)
         return;
@@ -122,12 +110,12 @@ void QOpenXRSpatialAnchor::setPosition(const QVector3D &newPosition)
     It emits the `rotationChanged` signal when updated.
  */
 
-QQuaternion QOpenXRSpatialAnchor::rotation() const
+QQuaternion QQuick3DXrSpatialAnchor::rotation() const
 {
     return m_rotation;
 }
 
-void QOpenXRSpatialAnchor::setRotation(const QQuaternion &newRotation)
+void QQuick3DXrSpatialAnchor::setRotation(const QQuaternion &newRotation)
 {
     if (m_rotation == newRotation)
         return;
@@ -143,12 +131,12 @@ void QOpenXRSpatialAnchor::setRotation(const QQuaternion &newRotation)
     (for example,\c table or \c chair) describing the anchor's purpose or context.
  */
 
-QString QOpenXRSpatialAnchor::semanticLabels() const
+QString QQuick3DXrSpatialAnchor::semanticLabels() const
 {
     return m_semanticLabels;
 }
 
-void QOpenXRSpatialAnchor::setSemanticLabels(const QString &newSemanticLabels)
+void QQuick3DXrSpatialAnchor::setSemanticLabels(const QString &newSemanticLabels)
 {
     if (m_semanticLabels == newSemanticLabels)
         return;
@@ -166,9 +154,18 @@ void QOpenXRSpatialAnchor::setSemanticLabels(const QString &newSemanticLabels)
     Otherwise, it returns false.
  */
 
-bool QOpenXRSpatialAnchor::has2DBounds() const
+bool QQuick3DXrSpatialAnchor::has2DBounds() const
 {
     return m_has2DBounds;
+}
+
+void QQuick3DXrSpatialAnchor::setBounds2D(const QVector2D &offset, const QVector2D &extent)
+{
+    m_offset2D = offset;
+    m_extent2D = extent;
+
+    // FIXME: verify
+    m_has2DBounds = true;
 }
 
 /*!
@@ -182,12 +179,20 @@ bool QOpenXRSpatialAnchor::has2DBounds() const
  */
 
 
-bool QOpenXRSpatialAnchor::has3DBounds() const
+bool QQuick3DXrSpatialAnchor::has3DBounds() const
 {
     return m_has3DBounds;
 }
 
-QVector2D QOpenXRSpatialAnchor::offset2D() const
+void QQuick3DXrSpatialAnchor::setBounds3D(const QVector3D &offset, const QVector3D &extent)
+{
+    m_offset3D = offset;
+    m_extent3D = extent;
+    // FIXME: Store the 3D bounds and verify
+    m_has3DBounds = true;
+}
+
+QVector2D QQuick3DXrSpatialAnchor::offset2D() const
 {
     return m_offset2D;
 }
@@ -200,7 +205,7 @@ QVector2D QOpenXRSpatialAnchor::offset2D() const
     the 2D plane.
  */
 
-QVector2D QOpenXRSpatialAnchor::extent2D() const
+QVector2D QQuick3DXrSpatialAnchor::extent2D() const
 {
     return m_extent2D;
 }
@@ -213,9 +218,29 @@ QVector2D QOpenXRSpatialAnchor::extent2D() const
     spatial anchor. This is what is referenced by a \l XrSpatialAnchorModel.
  */
 
-QUuid QOpenXRSpatialAnchor::uuid() const
+QUuid QQuick3DXrSpatialAnchor::uuid() const
 {
     return m_uuid;
+}
+
+QSet<QUuid> QQuick3DXrSpatialAnchor::roomLayoutUuids() const
+{
+    return m_roomLayoutUuids;
+}
+
+void QQuick3DXrSpatialAnchor::setRoomLayoutUuids(const QSet<QUuid> &newRoomLayoutUuids)
+{
+    m_roomLayoutUuids = newRoomLayoutUuids;
+}
+
+QSet<QUuid> QQuick3DXrSpatialAnchor::spaceContainerUuids() const
+{
+    return m_spaceContainerUuids;
+}
+
+void QQuick3DXrSpatialAnchor::setSpaceContainerUuids(const QSet<QUuid> &newSpaceContainerUuids)
+{
+    m_spaceContainerUuids = newSpaceContainerUuids;
 }
 
 /*!

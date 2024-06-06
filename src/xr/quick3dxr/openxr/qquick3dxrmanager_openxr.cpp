@@ -455,7 +455,7 @@ bool QQuick3DXrManagerPrivate::initialize()
     checkXrExtensions(nullptr);
     checkXrLayers();
 
-    m_spaceExtension = QOpenXRSpaceExtension::instance();
+    m_spaceExtension = QQuick3DXrAnchorManager::instance();
 
     // Create Instance
     XrResult result = createXrInstance();

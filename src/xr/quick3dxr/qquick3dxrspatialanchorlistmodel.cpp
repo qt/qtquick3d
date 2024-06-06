@@ -1,9 +1,14 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrspatialanchormodel_p.h"
+#include "qquick3dxrspatialanchorlistmodel_p.h"
 #include "qopenxrspatialanchor_p.h"
-#include "qopenxrspaceextension_p.h"
+
+#if defined(Q_OS_VISIONOS)
+#include "visionos/qquick3dxranchormanager_visionos_p.h"
+#else
+#include "openxr/qopenxrspaceextension_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -27,28 +32,32 @@ QT_BEGIN_NAMESPACE
     }
 */
 
-QOpenXRSpatialAnchorModel::QOpenXRSpatialAnchorModel(QObject *parent)
+QQuick3DXrSpatialAnchorListModel::QQuick3DXrSpatialAnchorListModel(QObject *parent)
     : QAbstractListModel{parent}
 {
-    m_spaceExtension = QOpenXRSpaceExtension::instance();
-    queryAnchors();
-    connect(m_spaceExtension, &QOpenXRSpaceExtension::anchorAdded, this, &QOpenXRSpatialAnchorModel::handleAnchorAdded);
+    m_anchorManager = QQuick3DXrAnchorManager::instance();
+    if (m_anchorManager) {
+        connect(m_anchorManager, &QQuick3DXrAnchorManager::anchorAdded, this, &QQuick3DXrSpatialAnchorListModel::handleAnchorAdded);
+        queryAnchors();
+    } else {
+        qWarning("SpatialAnchorModel: Failed to get anchor manager instance");
+    }
 }
 
-int QOpenXRSpatialAnchorModel::rowCount(const QModelIndex &parent) const
+int QQuick3DXrSpatialAnchorListModel::rowCount(const QModelIndex &parent) const
 {
-    if (parent.isValid() || m_spaceExtension == nullptr)
+    if (parent.isValid() || m_anchorManager == nullptr)
         return 0;
 
-    return m_spaceExtension->anchors().count();
+    return m_anchorManager->anchorCount();
 }
 
-QVariant QOpenXRSpatialAnchorModel::data(const QModelIndex &index, int role) const
+QVariant QQuick3DXrSpatialAnchorListModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || m_spaceExtension == nullptr)
+    if (!index.isValid() || m_anchorManager == nullptr)
         return QVariant();
 
-    const auto &anchors = m_spaceExtension->anchors();
+    const auto &anchors = m_anchorManager->anchors();
 
     // check bounds
     if (index.row() < 0 || index.row() >= anchors.count())
@@ -63,31 +72,31 @@ QVariant QOpenXRSpatialAnchorModel::data(const QModelIndex &index, int role) con
     return QVariant();
 }
 
-QHash<int, QByteArray> QOpenXRSpatialAnchorModel::roleNames() const
+QHash<int, QByteArray> QQuick3DXrSpatialAnchorListModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[Anchor] = "anchor";
     return roles;
 }
 
-void QOpenXRSpatialAnchorModel::requestSceneCapture()
+void QQuick3DXrSpatialAnchorListModel::requestSceneCapture()
 {
-    if (m_spaceExtension == nullptr)
+    if (m_anchorManager == nullptr)
         return;
 
     // not supported on the Simulator, this will be a no-op there
-    m_spaceExtension->requestSceneCapture();
+    m_anchorManager->requestSceneCapture();
 }
 
-void QOpenXRSpatialAnchorModel::queryAnchors()
+void QQuick3DXrSpatialAnchorListModel::queryAnchors()
 {
-    if (m_spaceExtension == nullptr)
+    if (m_anchorManager == nullptr)
         return;
 
-    m_spaceExtension->queryAllAnchors();
+    m_anchorManager->queryAllAnchors();
 }
 
-void QOpenXRSpatialAnchorModel::handleAnchorAdded(QOpenXRSpatialAnchor *anchor)
+void QQuick3DXrSpatialAnchorListModel::handleAnchorAdded(QQuick3DXrSpatialAnchor *anchor)
 {
     Q_UNUSED(anchor)
     // Brute Force :-p
@@ -106,12 +115,12 @@ void QOpenXRSpatialAnchorModel::handleAnchorAdded(QOpenXRSpatialAnchor *anchor)
     \value UUID  Show spatial anchors based on UUIDs.
  */
 
-QOpenXRSpatialAnchorModel::FilterMode QOpenXRSpatialAnchorModel::filterMode() const
+QQuick3DXrSpatialAnchorListModel::FilterMode QQuick3DXrSpatialAnchorListModel::filterMode() const
 {
     return m_filterMode;
 }
 
-void QOpenXRSpatialAnchorModel::setFilterMode(FilterMode newFilterMode)
+void QQuick3DXrSpatialAnchorListModel::setFilterMode(FilterMode newFilterMode)
 {
     if (m_filterMode == newFilterMode)
         return;
@@ -124,12 +133,12 @@ void QOpenXRSpatialAnchorModel::setFilterMode(FilterMode newFilterMode)
     \brief Holds the list of UUIDs for filtering spatial anchors.
  */
 
-QList<QUuid> QOpenXRSpatialAnchorModel::uuids() const
+QList<QUuid> QQuick3DXrSpatialAnchorListModel::uuids() const
 {
     return m_uuids;
 }
 
-void QOpenXRSpatialAnchorModel::setUuids(const QList<QUuid> &newUuids)
+void QQuick3DXrSpatialAnchorListModel::setUuids(const QList<QUuid> &newUuids)
 {
     if (m_uuids == newUuids)
         return;
@@ -159,12 +168,12 @@ void QOpenXRSpatialAnchorModel::setUuids(const QList<QUuid> &newUuids)
     \value Other
  */
 
-QOpenXRSpatialAnchorModel::SemanticLabels QOpenXRSpatialAnchorModel::labels() const
+QQuick3DXrSpatialAnchorListModel::SemanticLabels QQuick3DXrSpatialAnchorListModel::labels() const
 {
     return m_labels;
 }
 
-void QOpenXRSpatialAnchorModel::setLabels(const SemanticLabels &newLabels)
+void QQuick3DXrSpatialAnchorListModel::setLabels(const SemanticLabels &newLabels)
 {
     if (m_labels == newLabels)
         return;

@@ -23,6 +23,8 @@ qt_internal_add_qml_module(Quick3DXr
         qquick3dxrhandinput.cpp qquick3dxrhandinput_p.h qquick3dxrhandtrackerinput_p_p.h
         qquick3dxrhandtrackerinput_p.h qquick3dxrhandtrackerinput.cpp
         qquick3dxrinputmanager.cpp qquick3dxrinputmanager_p.h
+        qopenxrspatialanchor_p.h qopenxrspatialanchor.cpp
+        qquick3dxrspatialanchorlistmodel_p.h qquick3dxrspatialanchorlistmodel.cpp
         qtquick3dxrglobal_p.h
         qtquick3dxrglobal.h
     QML_FILES
@@ -53,13 +55,4 @@ if (VISIONOS)
     add_subdirectory(visionos)
 else ()
     add_subdirectory(openxr)
-
-    # Non-ported/not suitable for VisionOS
-    qt_internal_extend_target(Quick3DXr
-        SOURCES
-            qopenxrspatialanchor_p.h qopenxrspatialanchor.cpp
-            qopenxrspatialanchormodel_p.h qopenxrspatialanchormodel.cpp
-            qopenxrspaceextension_p.h qopenxrspaceextension.cpp
-    )
-
-endif () # VISIONOS
+endif ()
