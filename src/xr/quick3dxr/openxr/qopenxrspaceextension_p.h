@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRSPACEEXTENSION_H
-#define QOPENXRSPACEEXTENSION_H
+#ifndef QQUICK3DXRANCHORMANAGER_OPENXR_P_H
+#define QQUICK3DXRANCHORMANAGER_OPENXR_P_H
 
 //
 //  W A R N I N G
@@ -39,15 +39,17 @@
 
 #include <QObject>
 
+#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
+
 QT_BEGIN_NAMESPACE
 
-class QOpenXRSpatialAnchor;
+class QQuick3DXrSpatialAnchor;
 
-class QOpenXRSpaceExtension : public QObject
+class QQuick3DXrAnchorManager : public QObject
 {
     Q_OBJECT
 public:
-    static QOpenXRSpaceExtension* instance();
+    static QQuick3DXrAnchorManager* instance();
 
     void initialize(XrInstance instance, XrSession session);
     void teardown();
@@ -58,7 +60,8 @@ public:
 
     void requestSceneCapture();
     bool queryAllAnchors();
-    const QList<QOpenXRSpatialAnchor *> &anchors() const;
+    const QList<QQuick3DXrSpatialAnchor *> &anchors() const;
+    qsizetype anchorCount() const;
 
     void updateAnchors(XrTime predictedDisplayTime, XrSpace appSpace);
     QString getSemanticLabels(const XrSpace space);
@@ -71,13 +74,15 @@ public:
     bool getBoundingBox3D(XrSpace space, QVector3D &offset, QVector3D &extent);
     bool getBoundingBox2D(XrSpace space, QVector2D &offset, QVector2D &extent);
 
+    bool setupSpatialAnchor(XrSpace space, QQuick3DXrSpatialAnchor &anchor);
+
 Q_SIGNALS:
-    void anchorAdded(QOpenXRSpatialAnchor* anchor);
+    void anchorAdded(QQuick3DXrSpatialAnchor* anchor);
     void sceneCaptureCompleted();
 
 private:
-    QOpenXRSpaceExtension();
-    ~QOpenXRSpaceExtension();
+    QQuick3DXrAnchorManager();
+    ~QQuick3DXrAnchorManager();
 
     XrInstance m_instance{XR_NULL_HANDLE};
     XrSession m_session{XR_NULL_HANDLE};
@@ -126,10 +131,10 @@ private:
     PFN_xrGetSpaceContainerFB xrGetSpaceContainerFB = nullptr;
     PFN_xrRequestSceneCaptureFB xrRequestSceneCaptureFB = nullptr;
 
-    QList<QOpenXRSpatialAnchor *> m_anchors;
-    QHash<QUuid,QOpenXRSpatialAnchor *> m_anchorsByUuid;
+    QList<QQuick3DXrSpatialAnchor *> m_anchors;
+    QHash<QUuid,QQuick3DXrSpatialAnchor *> m_anchorsByUuid;
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRSPACEEXTENSION_H
+#endif // QQUICK3DXRANCHORMANAGER_OPENXR_P_H

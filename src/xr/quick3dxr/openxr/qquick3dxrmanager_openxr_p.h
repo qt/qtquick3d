@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
 class QQuick3DXrEyeCamera;
 class QQuick3DXrOrigin;
 class QQuick3DViewport;
-class QOpenXRSpaceExtension;
+class QQuick3DXrAnchorManager;
 class QQuick3DXrManager;
 class QQuick3DXrInputManager;
 
@@ -207,7 +207,7 @@ private:
     bool m_enablePassthrough = false;
     bool m_multiviewRendering = false;
     bool m_spaceExtensionSupported = false;
-    QOpenXRSpaceExtension *m_spaceExtension = nullptr;
+    QQuick3DXrAnchorManager *m_spaceExtension = nullptr;
     bool m_colorspaceExtensionSupported = false;
     bool m_displayRefreshRateExtensionSupported = false;
     bool m_foveationExtensionSupported = false;

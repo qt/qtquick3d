@@ -16,7 +16,8 @@
 //
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
-#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
+
+#include <type_traits>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,6 +51,25 @@ enum class HandPoseSpace {
     PinchPose,
     PokePose
 };
+
+enum class XrSpaceId : quint64 { Invalid = 0 };
+
+template<typename XrSpaceT>
+XrSpaceT fromXrSpaceId(XrSpaceId space)
+{
+    static_assert(sizeof(XrSpaceT) <= sizeof(XrSpaceId), "XrSpaceT's size must equal or smaller than XrSpaceId");
+    if constexpr (std::is_pointer_v<XrSpaceT>)
+        return reinterpret_cast<XrSpaceT>(space);
+    else
+        return static_cast<XrSpaceT>(space);
+}
+
+template<typename XrSpaceT>
+XrSpaceId toXrSpaceId(XrSpaceT space)
+{
+    static_assert(sizeof(XrSpaceT) <= sizeof(XrSpaceId), "XrSpaceT's size must equal or smaller than XrSpaceId");
+    return static_cast<XrSpaceId>(quint64(space));
+}
 
 } // namespace QtQuick3DXr
 

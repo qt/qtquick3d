@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRSPATIALANCHOR_H
-#define QOPENXRSPATIALANCHOR_H
+#ifndef QQUICK3DXRSPATIALANCHOR_P_H
+#define QQUICK3DXRSPATIALANCHOR_P_H
 
 //
 //  W A R N I N G
@@ -16,17 +16,20 @@
 //
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
+#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
 
-#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtCore/qobject.h>
+#include <QtCore/quuid.h>
+#include <QtCore/qstring.h>
 
-#include <QQmlEngine>
-#include <QUuid>
+#include <QtGui/qvectornd.h>
+#include <QtGui/qquaternion.h>
 
-#include <openxr/openxr.h>
+#include <QtQmlIntegration/qqmlintegration.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRSpatialAnchor : public QObject
+class QQuick3DXrSpatialAnchor : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool has2DBounds READ has2DBounds CONSTANT)
@@ -43,10 +46,8 @@ class QOpenXRSpatialAnchor : public QObject
     QML_UNCREATABLE("Spatial anchor objects cannot be created in QML");
     QML_ADDED_IN_VERSION(6, 8)
 public:
-    QOpenXRSpatialAnchor(XrSpace space, QUuid &uuid, QObject *parent = nullptr);
-    ~QOpenXRSpatialAnchor();
-
-    XrSpace space() const;
+    QQuick3DXrSpatialAnchor(QtQuick3DXr::XrSpaceId space, QUuid &uuid, QObject *parent = nullptr);
+    ~QQuick3DXrSpatialAnchor() override;
 
     QVector3D offset3D() const;
     void setOffset3D(const QVector3D &newOffset);
@@ -64,12 +65,22 @@ public:
     void setSemanticLabels(const QString &newSemanticLabels);
 
     bool has2DBounds() const;
+    void setBounds2D(const QVector2D &offset, const QVector2D &extent);
     bool has3DBounds() const;
+    void setBounds3D(const QVector3D &offset, const QVector3D &extent);
 
     QVector2D offset2D() const;
     QVector2D extent2D() const;
 
     QUuid uuid() const;
+
+    QSet<QUuid> roomLayoutUuids() const;
+    void setRoomLayoutUuids(const QSet<QUuid> &newRoomLayoutUuids);
+
+    QSet<QUuid> spaceContainerUuids() const;
+    void setSpaceContainerUuids(const QSet<QUuid> &newSpaceContainerUuids);
+
+    QtQuick3DXr::XrSpaceId space() const { return m_space; }
 
 signals:
     void offset3DChanged();
@@ -83,7 +94,7 @@ signals:
     void extent2DChanged();
 
 private:
-    XrSpace m_space = XR_NULL_HANDLE;
+    QtQuick3DXr::XrSpaceId m_space { };
     QUuid m_uuid;
     QVector3D m_offset3D;
     QVector3D m_extent3D;
@@ -92,12 +103,12 @@ private:
     QString m_semanticLabels;
     QSet<QUuid> m_roomLayoutUuids;
     QSet<QUuid> m_spaceContainerUuids;
-    bool m_has2DBounds;
-    bool m_has3DBounds;
+    bool m_has2DBounds = false;
+    bool m_has3DBounds = false;
     QVector2D m_offset2D;
     QVector2D m_extent2D;
 };
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRSPATIALANCHOR_H
+#endif // QQUICK3DXRSPATIALANCHOR_P_H

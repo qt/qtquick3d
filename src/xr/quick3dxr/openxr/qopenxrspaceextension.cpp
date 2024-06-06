@@ -5,6 +5,8 @@
 #include "openxr/qopenxrhelpers_p.h"
 #include "qopenxrspatialanchor_p.h"
 
+#include <QtQuick3DUtils/private/qssgassert_p.h>
+
 #if defined(Q_OS_ANDROID)
 # include <QtCore/private/qandroidextras_p.h>
 #endif
@@ -15,23 +17,23 @@ QT_BEGIN_NAMESPACE
 
 static const uint32_t MAX_PERSISTENT_SPACES = 100;
 
-QOpenXRSpaceExtension::QOpenXRSpaceExtension()
+QQuick3DXrAnchorManager::QQuick3DXrAnchorManager()
 {
 
 }
 
-QOpenXRSpaceExtension::~QOpenXRSpaceExtension()
+QQuick3DXrAnchorManager::~QQuick3DXrAnchorManager()
 {
 
 }
 
-QOpenXRSpaceExtension *QOpenXRSpaceExtension::instance()
+QQuick3DXrAnchorManager *QQuick3DXrAnchorManager::instance()
 {
-    static QOpenXRSpaceExtension instance;
+    static QQuick3DXrAnchorManager instance;
     return &instance;
 }
 
-void QOpenXRSpaceExtension::initialize(XrInstance instance, XrSession session)
+void QQuick3DXrAnchorManager::initialize(XrInstance instance, XrSession session)
 {
 #if defined(Q_OS_ANDROID)
     auto res = QtAndroidPrivate::requestPermission(QLatin1StringView("com.oculus.permission.USE_SCENE"));
@@ -83,12 +85,12 @@ void QOpenXRSpaceExtension::initialize(XrInstance instance, XrSession session)
                     (PFN_xrVoidFunction*)(&xrRequestSceneCaptureFB));
 }
 
-void QOpenXRSpaceExtension::teardown()
+void QQuick3DXrAnchorManager::teardown()
 {
 
 }
 
-QList<const char *> QOpenXRSpaceExtension::requiredExtensions() const
+QList<const char *> QQuick3DXrAnchorManager::requiredExtensions() const
 {
     return {
         // XR_EXT_UUID_EXTENSION_NAME, // ### Crashes on Quest 3. Theoretically required for XR_FB_spatial_entity (would work anyway, but is a validation error)
@@ -103,10 +105,10 @@ QList<const char *> QOpenXRSpaceExtension::requiredExtensions() const
     };
 }
 
-void QOpenXRSpaceExtension::handleEvent(const XrEventDataBaseHeader *event)
+void QQuick3DXrAnchorManager::handleEvent(const XrEventDataBaseHeader *event)
 {
     if (event->type == XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB) {
-        qDebug("QOpenXRSpaceExtension::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB");
+        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB");
         const XrEventDataSpaceSetStatusCompleteFB* setStatusComplete = (const XrEventDataSpaceSetStatusCompleteFB*)(event);
         if (setStatusComplete->result == XR_SUCCESS) {
             if (setStatusComplete->componentType == XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB) {
@@ -114,22 +116,22 @@ void QOpenXRSpaceExtension::handleEvent(const XrEventDataBaseHeader *event)
             }
         }
     } else if (event->type == XR_TYPE_EVENT_DATA_SCENE_CAPTURE_COMPLETE_FB) {
-        qDebug("QOpenXRSpaceExtension::handleEvent: received XR_TYPE_EVENT_DATA_SCENE_CAPTURE_COMPLETE_FB");
+        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SCENE_CAPTURE_COMPLETE_FB");
         const XrEventDataSceneCaptureCompleteFB* captureResult = (const XrEventDataSceneCaptureCompleteFB*)(event);
         if (captureResult->result == XR_SUCCESS) {
             Q_EMIT sceneCaptureCompleted();
             qDebug(
-                "QOpenXRSpaceExtension::handleEvent: Scene capture (ID = %llu) succeeded",
+                "QQuick3DXrAnchorManager::handleEvent: Scene capture (ID = %llu) succeeded",
                 static_cast<long long unsigned int>(captureResult->requestId));
         } else {
             qDebug(
-                "QOpenXRSpaceExtension::handleEvent: Scene capture (ID = %llu) failed with an error %d",
+                "QQuick3DXrAnchorManager::handleEvent: Scene capture (ID = %llu) failed with an error %d",
                 static_cast<long long unsigned int>(captureResult->requestId),
                 captureResult->result);
         }
 
     } else if (event->type == XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB) {
-        qDebug("QOpenXRSpaceExtension::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB");
+        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB");
         const XrEventDataSpaceQueryResultsAvailableFB* resultsAvailable = (const XrEventDataSpaceQueryResultsAvailableFB*)(event);
 
         XrSpaceQueryResultsFB queryResults{};
@@ -171,11 +173,11 @@ void QOpenXRSpaceExtension::handleEvent(const XrEventDataBaseHeader *event)
             }
         }
     } else if (event->type == XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB) {
-        qDebug("QOpenXRSpaceExtension::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB");
+        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB");
     }
 }
 
-void QOpenXRSpaceExtension::requestSceneCapture()
+void QQuick3DXrAnchorManager::requestSceneCapture()
 {
     XrAsyncRequestIdFB requestId;
     XrSceneCaptureRequestInfoFB request{};
@@ -186,7 +188,7 @@ void QOpenXRSpaceExtension::requestSceneCapture()
         qWarning("Failed to request scene capture");
 }
 
-bool QOpenXRSpaceExtension::isComponentSupported(XrSpace space, XrSpaceComponentTypeFB type)
+bool QQuick3DXrAnchorManager::isComponentSupported(XrSpace space, XrSpaceComponentTypeFB type)
 {
     uint32_t numComponents = 0;
     if (!checkXrResult(enumerateSpaceSupportedComponents(space, 0, &numComponents, nullptr))) {
@@ -211,7 +213,7 @@ bool QOpenXRSpaceExtension::isComponentSupported(XrSpace space, XrSpaceComponent
     return supported;
 }
 
-bool QOpenXRSpaceExtension::isComponentEnabled(XrSpace space, XrSpaceComponentTypeFB type)
+bool QQuick3DXrAnchorManager::isComponentEnabled(XrSpace space, XrSpaceComponentTypeFB type)
 {
     XrSpaceComponentStatusFB status = {XR_TYPE_SPACE_COMPONENT_STATUS_FB, nullptr, 0, 0};
     if (!checkXrResult(getSpaceComponentStatus(space, type, &status))) {
@@ -221,7 +223,7 @@ bool QOpenXRSpaceExtension::isComponentEnabled(XrSpace space, XrSpaceComponentTy
     return (status.enabled && !status.changePending);
 }
 
-bool QOpenXRSpaceExtension::getBoundingBox2D(XrSpace space, QVector2D &offset, QVector2D &extent)
+bool QQuick3DXrAnchorManager::getBoundingBox2D(XrSpace space, QVector2D &offset, QVector2D &extent)
 {
     if (isComponentEnabled(space, XR_SPACE_COMPONENT_TYPE_BOUNDED_2D_FB)) {
         // Get the 2D bounds
@@ -237,7 +239,7 @@ bool QOpenXRSpaceExtension::getBoundingBox2D(XrSpace space, QVector2D &offset, Q
     return false;
 }
 
-bool QOpenXRSpaceExtension::getBoundingBox3D(XrSpace space, QVector3D &offset, QVector3D &extent)
+bool QQuick3DXrAnchorManager::getBoundingBox3D(XrSpace space, QVector3D &offset, QVector3D &extent)
 {
     if (isComponentEnabled(space, XR_SPACE_COMPONENT_TYPE_BOUNDED_3D_FB)) {
         // Get the 3D bounds
@@ -252,6 +254,37 @@ bool QOpenXRSpaceExtension::getBoundingBox3D(XrSpace space, QVector3D &offset, Q
     }
 
     return false;
+}
+
+bool QQuick3DXrAnchorManager::setupSpatialAnchor(XrSpace space, QQuick3DXrSpatialAnchor &anchor)
+{
+    QVector2D extent2D;
+    QVector2D offset2D;
+
+    QVector3D extent3D;
+    QVector3D offset3D;
+
+    QSSG_ASSERT(space != XR_NULL_HANDLE, return false);
+
+    const bool m_has2DBounds = getBoundingBox2D(space, offset2D, extent2D);
+    const bool m_has3DBounds = getBoundingBox3D(space, offset3D, extent3D);
+    if (isComponentSupported(space, XR_SPACE_COMPONENT_TYPE_SPACE_CONTAINER_FB) &&
+        isComponentEnabled(space, XR_SPACE_COMPONENT_TYPE_SPACE_CONTAINER_FB)) {
+        // Get the space container UUIDs
+        anchor.setSpaceContainerUuids(collectSpaceContainerUuids(space));
+    } else if (isComponentSupported(space, XR_SPACE_COMPONENT_TYPE_ROOM_LAYOUT_FB) &&
+               isComponentEnabled(space, XR_SPACE_COMPONENT_TYPE_ROOM_LAYOUT_FB)) {
+        anchor.setRoomLayoutUuids(collectRoomLayoutUuids(space));
+    }
+
+    if (m_has2DBounds)
+        anchor.setBounds2D(offset2D, extent2D);
+    if (m_has3DBounds)
+        anchor.setBounds3D(offset3D, extent3D);
+
+    anchor.setSemanticLabels(getSemanticLabels(space));
+
+    return true;
 }
 
 namespace {
@@ -277,7 +310,7 @@ XrUuidEXT fromQUuid(QUuid uuid) {
 
 }
 
-QSet<QUuid> QOpenXRSpaceExtension::collectRoomLayoutUuids(XrSpace space)
+QSet<QUuid> QQuick3DXrAnchorManager::collectRoomLayoutUuids(XrSpace space)
 {
     XrRoomLayoutFB roomLayout{};
     roomLayout.type = XR_TYPE_ROOM_LAYOUT_FB;
@@ -311,7 +344,7 @@ QSet<QUuid> QOpenXRSpaceExtension::collectRoomLayoutUuids(XrSpace space)
     return uuidSet;
 }
 
-QSet<QUuid> QOpenXRSpaceExtension::collectSpaceContainerUuids(XrSpace space)
+QSet<QUuid> QQuick3DXrAnchorManager::collectSpaceContainerUuids(XrSpace space)
 {
     XrSpaceContainerFB spaceContainer{};
     spaceContainer.type = XR_TYPE_SPACE_CONTAINER_FB;
@@ -338,7 +371,7 @@ QSet<QUuid> QOpenXRSpaceExtension::collectSpaceContainerUuids(XrSpace space)
     return uuidSet;
 }
 
-QString QOpenXRSpaceExtension::getSemanticLabels(const XrSpace space) {
+QString QQuick3DXrAnchorManager::getSemanticLabels(const XrSpace space) {
     static const std::string recognizedLabels = "TABLE,COUCH,FLOOR,CEILING,WALL_FACE,WINDOW_FRAME,DOOR_FRAME,STORAGE,BED,SCREEN,LAMP,PLANT,WALL_ART,OTHER";
     const XrSemanticLabelsSupportInfoFB semanticLabelsSupportInfo = {
                                                                      XR_TYPE_SEMANTIC_LABELS_SUPPORT_INFO_FB,
@@ -371,7 +404,7 @@ QString QOpenXRSpaceExtension::getSemanticLabels(const XrSpace space) {
     return QString::fromLocal8Bit(labelData);
 }
 
-bool QOpenXRSpaceExtension::queryAllAnchors() {
+bool QQuick3DXrAnchorManager::queryAllAnchors() {
     XrSpaceQueryInfoFB queryInfo = {
                                     XR_TYPE_SPACE_QUERY_INFO_FB,
                                     nullptr,
@@ -385,18 +418,23 @@ bool QOpenXRSpaceExtension::queryAllAnchors() {
     return checkXrResult(querySpaces((XrSpaceQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
 }
 
-const QList<QOpenXRSpatialAnchor *> &QOpenXRSpaceExtension::anchors() const
+const QList<QQuick3DXrSpatialAnchor *> &QQuick3DXrAnchorManager::anchors() const
 {
     return m_anchors;
 }
 
-void QOpenXRSpaceExtension::updateAnchors(XrTime predictedDisplayTime, XrSpace appSpace)
+qsizetype QQuick3DXrAnchorManager::anchorCount() const
+{
+    return m_anchors.count();
+}
+
+void QQuick3DXrAnchorManager::updateAnchors(XrTime predictedDisplayTime, XrSpace appSpace)
 {
     // basically for each anchor, we need to call xrLocateSpace
     for (auto &anchor : m_anchors) {
         XrSpaceLocation spaceLocation{};
         spaceLocation.type = XR_TYPE_SPACE_LOCATION;
-        XrResult res = xrLocateSpace(anchor->space(), appSpace, predictedDisplayTime, &spaceLocation);
+        XrResult res = xrLocateSpace(QtQuick3DXr::fromXrSpaceId<XrSpace>(anchor->space()), appSpace, predictedDisplayTime, &spaceLocation);
         if (XR_UNQUALIFIED_SUCCESS(res)) {
             if ((spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
                 (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
@@ -414,7 +452,7 @@ void QOpenXRSpaceExtension::updateAnchors(XrTime predictedDisplayTime, XrSpace a
     }
 }
 
-bool QOpenXRSpaceExtension::queryAllAnchorsWithSpecificComponentEnabled(const XrSpaceComponentTypeFB componentType) {
+bool QQuick3DXrAnchorManager::queryAllAnchorsWithSpecificComponentEnabled(const XrSpaceComponentTypeFB componentType) {
     XrSpaceStorageLocationFilterInfoFB storageLocationFilterInfo = {
                                                                         XR_TYPE_SPACE_STORAGE_LOCATION_FILTER_INFO_FB,
                                                                         nullptr,
@@ -445,7 +483,7 @@ bool QOpenXRSpaceExtension::queryAllAnchorsWithSpecificComponentEnabled(const Xr
     return true;
 }
 
-bool QOpenXRSpaceExtension::queryAnchorsByUuids(const QSet<QUuid>& uuidSet) {
+bool QQuick3DXrAnchorManager::queryAnchorsByUuids(const QSet<QUuid>& uuidSet) {
     if (uuidSet.isEmpty())
         return false;
 
@@ -487,81 +525,82 @@ bool QOpenXRSpaceExtension::queryAnchorsByUuids(const QSet<QUuid>& uuidSet) {
     return true;
 }
 
-void QOpenXRSpaceExtension::addAnchor(XrSpace space, XrUuidEXT uuid)
+void QQuick3DXrAnchorManager::addAnchor(XrSpace space, XrUuidEXT uuid)
 {
     auto quuid = fromXrUuidExt(uuid);
     // Check if we already have this anchor
     if (m_anchorsByUuid.contains(quuid))
         return;
 
-    auto anchor = new QOpenXRSpatialAnchor(space, quuid, this);
+    QQuick3DXrSpatialAnchor *anchor = new QQuick3DXrSpatialAnchor(QtQuick3DXr::toXrSpaceId(space), quuid, this);
+    setupSpatialAnchor(space, *anchor);
     m_anchorsByUuid.insert(quuid, anchor);
     m_anchors.append(anchor);
     Q_EMIT anchorAdded(anchor);
 }
 
 
-XrResult QOpenXRSpaceExtension::enumerateSpaceSupportedComponents(XrSpace space, uint32_t componentTypeCapacityInput, uint32_t *componentTypeCountOutput, XrSpaceComponentTypeFB *componentTypes)
+XrResult QQuick3DXrAnchorManager::enumerateSpaceSupportedComponents(XrSpace space, uint32_t componentTypeCapacityInput, uint32_t *componentTypeCountOutput, XrSpaceComponentTypeFB *componentTypes)
 {
     return xrEnumerateSpaceSupportedComponentsFB(space, componentTypeCapacityInput, componentTypeCountOutput, componentTypes);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceComponentStatus(XrSpace space, XrSpaceComponentTypeFB componentType, XrSpaceComponentStatusFB *status)
+XrResult QQuick3DXrAnchorManager::getSpaceComponentStatus(XrSpace space, XrSpaceComponentTypeFB componentType, XrSpaceComponentStatusFB *status)
 {
     return xrGetSpaceComponentStatusFB(space, componentType, status);
 }
 
-XrResult QOpenXRSpaceExtension::setSpaceComponentStatus(XrSpace space, const XrSpaceComponentStatusSetInfoFB *info, XrAsyncRequestIdFB *requestId)
+XrResult QQuick3DXrAnchorManager::setSpaceComponentStatus(XrSpace space, const XrSpaceComponentStatusSetInfoFB *info, XrAsyncRequestIdFB *requestId)
 {
     return xrSetSpaceComponentStatusFB(space, info, requestId);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceUuid(XrSpace space, XrUuidEXT *uuid)
+XrResult QQuick3DXrAnchorManager::getSpaceUuid(XrSpace space, XrUuidEXT *uuid)
 {
     return xrGetSpaceUuidFB(space, uuid);
 }
 
-XrResult QOpenXRSpaceExtension::querySpaces(const XrSpaceQueryInfoBaseHeaderFB *info, XrAsyncRequestIdFB *requestId)
+XrResult QQuick3DXrAnchorManager::querySpaces(const XrSpaceQueryInfoBaseHeaderFB *info, XrAsyncRequestIdFB *requestId)
 {
     return xrQuerySpacesFB(m_session, info, requestId);
 }
 
-XrResult QOpenXRSpaceExtension::retrieveSpaceQueryResults(XrAsyncRequestIdFB requestId, XrSpaceQueryResultsFB *results)
+XrResult QQuick3DXrAnchorManager::retrieveSpaceQueryResults(XrAsyncRequestIdFB requestId, XrSpaceQueryResultsFB *results)
 {
     return xrRetrieveSpaceQueryResultsFB(m_session, requestId, results);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceBoundingBox2D(XrSpace space, XrRect2Df *boundingBox2DOutput)
+XrResult QQuick3DXrAnchorManager::getSpaceBoundingBox2D(XrSpace space, XrRect2Df *boundingBox2DOutput)
 {
     return xrGetSpaceBoundingBox2DFB(m_session, space, boundingBox2DOutput);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceBoundingBox3D(XrSpace space, XrRect3DfFB *boundingBox3DOutput)
+XrResult QQuick3DXrAnchorManager::getSpaceBoundingBox3D(XrSpace space, XrRect3DfFB *boundingBox3DOutput)
 {
     return xrGetSpaceBoundingBox3DFB(m_session, space, boundingBox3DOutput);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceSemanticLabels(XrSpace space, XrSemanticLabelsFB *semanticLabelsOutput)
+XrResult QQuick3DXrAnchorManager::getSpaceSemanticLabels(XrSpace space, XrSemanticLabelsFB *semanticLabelsOutput)
 {
     return xrGetSpaceSemanticLabelsFB(m_session, space, semanticLabelsOutput);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceBoundary2D(XrSpace space, XrBoundary2DFB *boundary2DOutput)
+XrResult QQuick3DXrAnchorManager::getSpaceBoundary2D(XrSpace space, XrBoundary2DFB *boundary2DOutput)
 {
     return xrGetSpaceBoundary2DFB(m_session, space, boundary2DOutput);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceRoomLayout(XrSpace space, XrRoomLayoutFB *roomLayoutOutput)
+XrResult QQuick3DXrAnchorManager::getSpaceRoomLayout(XrSpace space, XrRoomLayoutFB *roomLayoutOutput)
 {
     return xrGetSpaceRoomLayoutFB(m_session, space, roomLayoutOutput);
 }
 
-XrResult QOpenXRSpaceExtension::getSpaceContainer(XrSpace space, XrSpaceContainerFB *spaceContainerOutput)
+XrResult QQuick3DXrAnchorManager::getSpaceContainer(XrSpace space, XrSpaceContainerFB *spaceContainerOutput)
 {
     return xrGetSpaceContainerFB(m_session, space, spaceContainerOutput);
 }
 
-XrResult QOpenXRSpaceExtension::requestSceneCapture(const XrSceneCaptureRequestInfoFB *info, XrAsyncRequestIdFB *requestId)
+XrResult QQuick3DXrAnchorManager::requestSceneCapture(const XrSceneCaptureRequestInfoFB *info, XrAsyncRequestIdFB *requestId)
 {
     if (xrRequestSceneCaptureFB)
         return xrRequestSceneCaptureFB(m_session, info, requestId);
@@ -569,12 +608,12 @@ XrResult QOpenXRSpaceExtension::requestSceneCapture(const XrSceneCaptureRequestI
         return XR_ERROR_FUNCTION_UNSUPPORTED;
 }
 
-bool QOpenXRSpaceExtension::checkXrResult(const XrResult &result)
+bool QQuick3DXrAnchorManager::checkXrResult(const XrResult &result)
 {
     return OpenXRHelpers::checkXrResult(result, m_instance);
 }
 
-bool QOpenXRSpaceExtension::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
+bool QQuick3DXrAnchorManager::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
 {
     XrResult result = xrGetInstanceProcAddr(m_instance, name, function);
     if (!OpenXRHelpers::checkXrResult(result, m_instance)) {
