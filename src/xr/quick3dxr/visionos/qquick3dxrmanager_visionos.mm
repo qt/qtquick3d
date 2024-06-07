@@ -5,6 +5,8 @@
 #include "qquick3dxrorigin_p.h"
 #include "qquick3dxrmanager_p.h"
 #include "qquick3dxrinputmanager_visionos_p.h"
+#include "qquick3dxranchormanager_visionos_p.h"
+
 #include "../qquick3dxrinputmanager_p.h"
 
 #include <QtQuick3D/private/qquick3dviewport_p.h>
@@ -114,11 +116,6 @@ bool QQuick3DXrManagerPrivate::initialize()
         qWarning("QQuick3DXrManagerPrivate: Layer renderer is not available.");
         return false;
     }
-
-    // Pre-setup Qt Quick
-
-    // Setup Graphics
-
 
     return true;
 }
@@ -301,7 +298,10 @@ void QQuick3DXrManagerPrivate::runWorldTrackingARSession()
     if (!m_inputManager)
         m_inputManager = QQuick3DXrInputManager::instance();
 
-    // Call 1 prepareHandracking
+    if (!m_anchorManager)
+        m_anchorManager = QQuick3DXrAnchorManager::instance();
+
+    // 1. prepare
     QQuick3DXrInputManagerPrivate *pim = nullptr;
     if (QSSG_GUARD_X(m_inputManager != nullptr, "No InputManager available!")) {
         pim = QQuick3DXrInputManagerPrivate::get(m_inputManager);
@@ -309,12 +309,18 @@ void QQuick3DXrManagerPrivate::runWorldTrackingARSession()
             pim->prepareHandtracking(dataProviders);
     }
 
+    if (QSSG_GUARD_X(m_anchorManager != nullptr, "No AnchorManager available!"))
+        m_anchorManager->prepareAnchorManager(dataProviders);
+
     m_arSession = ar_session_create();
     ar_session_run(m_arSession, dataProviders);
 
-    // Call 2 initHandtracking
+    // 2. initialize
     if (pim)
         pim->initHandtracking();
+
+    if (m_anchorManager != nullptr)
+        m_anchorManager->initAnchorManager();
 }
 
 void QQuick3DXrManagerPrivate::setSamples(int samples)

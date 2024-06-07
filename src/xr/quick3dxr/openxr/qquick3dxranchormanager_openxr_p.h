@@ -78,6 +78,8 @@ public:
 
 Q_SIGNALS:
     void anchorAdded(QQuick3DXrSpatialAnchor* anchor);
+    void anchorRemoved(QUuid uuid);
+    void anchorUpdated(QQuick3DXrSpatialAnchor *anchor);
     void sceneCaptureCompleted();
 
 private:

@@ -6,7 +6,7 @@
 #if defined(Q_OS_VISIONOS)
 #include "visionos/qquick3dxranchormanager_visionos_p.h"
 #else
-#include "openxr/qopenxrspaceextension_p.h"
+#include "openxr/qquick3dxranchormanager_openxr_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE

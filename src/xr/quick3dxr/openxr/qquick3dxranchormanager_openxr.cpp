@@ -1,7 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrspaceextension_p.h"
+#include "qquick3dxranchormanager_openxr_p.h"
 #include "openxr/qopenxrhelpers_p.h"
 #include "qopenxrspatialanchor_p.h"
 
@@ -289,12 +289,7 @@ bool QQuick3DXrAnchorManager::setupSpatialAnchor(XrSpace space, QQuick3DXrSpatia
 
 namespace {
 bool isValidUuid(const XrUuidEXT& uuid) {
-    for (int i = 0; i < XR_UUID_SIZE_EXT; ++i) {
-        if (uuid.data[i] > 0) {
-            return true;
-        }
-    }
-    return false;
+    return QtQuick3DXr::isValidUuid(uuid.data);
 }
 
 QUuid fromXrUuidExt(XrUuidEXT uuid) {

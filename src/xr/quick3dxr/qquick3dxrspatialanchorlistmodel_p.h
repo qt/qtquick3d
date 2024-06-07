@@ -90,6 +90,8 @@ signals:
 
 private Q_SLOTS:
     void handleAnchorAdded(QQuick3DXrSpatialAnchor* anchor);
+    void handleAnchorRemoved(QUuid uuid);
+    void handleAnchorUpdated(QQuick3DXrSpatialAnchor* anchor);
 
 private:
     QPointer<QQuick3DXrAnchorManager> m_anchorManager;

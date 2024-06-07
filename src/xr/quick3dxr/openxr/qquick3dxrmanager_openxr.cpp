@@ -10,7 +10,7 @@
 
 #include "qopenxrhelpers_p.h"
 #include "qopenxrinputmanager_p.h"
-#include "qopenxrspaceextension_p.h"
+#include "qquick3dxranchormanager_openxr_p.h"
 
 #include "qtquick3dxrglobal_p.h"
 
