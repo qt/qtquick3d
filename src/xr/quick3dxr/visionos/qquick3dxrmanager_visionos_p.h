@@ -28,6 +28,7 @@ class QQuick3DXrOrigin;
 class QQuick3DXrManager;
 class QQuick3DViewport;
 class QQuick3DXrInputManager;
+class QQuick3DXrAnchorManager;
 
 class QQuick3DXrManagerPrivate
 {
@@ -99,6 +100,7 @@ private:
     QQuick3DXrManager *q_ptr = nullptr;
     QRhiTexture *m_rhiDepthTexture = nullptr;
     QPointer<QQuick3DXrInputManager> m_inputManager;
+    QPointer<QQuick3DXrAnchorManager> m_anchorManager;
     ar_session_t m_arSession;
     ar_world_tracking_provider_t m_worldTrackingProvider = nullptr;
     bool m_isGraphicsInitialized = false;

@@ -71,6 +71,15 @@ XrSpaceId toXrSpaceId(XrSpaceT space)
     return static_cast<XrSpaceId>(quint64(space));
 }
 
+template <size_t N = 16>
+[[nodiscard]] bool isValidUuid(const quint8 (&uuid)[N]) {
+    size_t counter = 0;
+    for (size_t i = 0; i != N; ++i)
+        counter += (uuid[i] > 0);
+
+    return (counter == N);
+}
+
 } // namespace QtQuick3DXr
 
 QT_END_NAMESPACE

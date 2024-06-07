@@ -7,7 +7,7 @@
 #if defined(Q_OS_VISIONOS)
 #include "visionos/qquick3dxranchormanager_visionos_p.h"
 #else
-#include "openxr/qopenxrspaceextension_p.h"
+#include "openxr/qquick3dxranchormanager_openxr_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -38,6 +38,8 @@ QQuick3DXrSpatialAnchorListModel::QQuick3DXrSpatialAnchorListModel(QObject *pare
     m_anchorManager = QQuick3DXrAnchorManager::instance();
     if (m_anchorManager) {
         connect(m_anchorManager, &QQuick3DXrAnchorManager::anchorAdded, this, &QQuick3DXrSpatialAnchorListModel::handleAnchorAdded);
+        connect(m_anchorManager, &QQuick3DXrAnchorManager::anchorUpdated, this, &QQuick3DXrSpatialAnchorListModel::handleAnchorUpdated);
+        connect(m_anchorManager, &QQuick3DXrAnchorManager::anchorRemoved, this, &QQuick3DXrSpatialAnchorListModel::handleAnchorRemoved);
         queryAnchors();
     } else {
         qWarning("SpatialAnchorModel: Failed to get anchor manager instance");
@@ -97,6 +99,22 @@ void QQuick3DXrSpatialAnchorListModel::queryAnchors()
 }
 
 void QQuick3DXrSpatialAnchorListModel::handleAnchorAdded(QQuick3DXrSpatialAnchor *anchor)
+{
+    Q_UNUSED(anchor)
+    // Brute Force :-p
+    beginResetModel();
+    endResetModel();
+}
+
+void QQuick3DXrSpatialAnchorListModel::handleAnchorRemoved(QUuid uuid)
+{
+    Q_UNUSED(uuid)
+    // Brute Force :-p
+    beginResetModel();
+    endResetModel();
+}
+
+void QQuick3DXrSpatialAnchorListModel::handleAnchorUpdated(QQuick3DXrSpatialAnchor *anchor)
 {
     Q_UNUSED(anchor)
     // Brute Force :-p

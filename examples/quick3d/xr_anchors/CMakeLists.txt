@@ -4,6 +4,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(xr_anchors LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
@@ -41,6 +43,13 @@ if(ANDROID)
     set_property(TARGET xr_anchors APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/android)
 endif()
 
+if (APPLE AND CMAKE_SYSTEM_NAME STREQUAL "visionOS")
+    set_target_properties(xr_anchors PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER io.qt.xr_anchors
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/visionos/MacOSXBundleInfo.plist.in
+    )
+endif()
+
 qt_finalize_executable(xr_anchors)
 
 install(TARGETS xr_anchors
@@ -57,3 +66,4 @@ qt_generate_deploy_qml_app_script(
     DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
 )
 install(SCRIPT ${deploy_script})
+
