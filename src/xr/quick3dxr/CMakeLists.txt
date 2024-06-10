@@ -48,7 +48,6 @@ qt_internal_add_qml_module(Quick3DXr
         Qt::QmlPrivate
         Qt::Quick3D
         Qt::QuickPrivate
-    GENERATE_CPP_EXPORTS
 )
 
 if (VISIONOS)
