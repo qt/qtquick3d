@@ -7,6 +7,8 @@
 # The order of evaluation matters.
 qt_feature_evaluate_features("${CMAKE_CURRENT_SOURCE_DIR}/xr/configure.cmake")
 
+set(QT_SBOM_DEFAULT_QT_LICENSE_ID_LIBRARIES "QT_COMMERCIAL_OR_GPL3")
+
 add_subdirectory(3rdparty)
 add_subdirectory(utils)
 add_subdirectory(assetimport)

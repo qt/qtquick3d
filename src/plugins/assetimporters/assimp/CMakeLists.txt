@@ -382,6 +382,8 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/contrib/unzip/
         ../../../3rdparty/assimp/src/include
         ../../../3rdparty/assimp/src/include/assimp/Compiler
+    ATTRIBUTION_FILE_DIR_PATHS
+        ../../../3rdparty/assimp
 )
 
 qt_internal_extend_target(AssimpImporterPlugin CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
