@@ -29,7 +29,6 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DXrHandInput;
 class QQuick3DXrHandTrackerInput;
-class QQuick3DXrGamepadInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
 
@@ -62,7 +61,6 @@ public:
 
     QQuick3DXrHandTrackerInput *leftHandTrackerInput() const;
     QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
-    QQuick3DXrGamepadInput *gamepadInput() const;
 
     void setupHandModel(QQuick3DXrHandModel *model);
 
@@ -74,7 +72,6 @@ private:
     QQuick3DXrInputManager *q_ptr = nullptr;
     QQuick3DXrHandInput *m_handInputState[2] {};
     QQuick3DXrHandTrackerInput *m_handTrackerInputState[2] {};
-    QQuick3DXrGamepadInput *m_gamepadInputState = nullptr;
 
     ar_hand_tracking_provider_t m_handTrackingProvider;
     ar_hand_anchor_t m_handAnchors[2] {};

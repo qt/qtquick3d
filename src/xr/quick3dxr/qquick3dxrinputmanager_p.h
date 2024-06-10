@@ -25,7 +25,6 @@ class QQuick3DGeometry;
 
 class QQuick3DXrHandInput;
 class QQuick3DXrHandTrackerInput;
-class QQuick3DXrGamepadInput;
 
 class QQuick3DXrInputManagerPrivate;
 
@@ -44,7 +43,6 @@ public:
 
     QQuick3DXrHandTrackerInput *leftHandTrackerInput() const;
     QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
-    QQuick3DXrGamepadInput *gamepadInput() const;
 
     bool isValid() const;
 

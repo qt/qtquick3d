@@ -28,7 +28,6 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DXrHandInput;
 class QQuick3DXrHandTrackerInput;
-class QQuick3DXrGamepadInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
 
@@ -67,7 +66,6 @@ public:
 
     QQuick3DXrHandTrackerInput *leftHandTrackerInput() const;
     QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
-    QQuick3DXrGamepadInput *gamepadInput() const;
 
     void setupHandModel(QQuick3DXrHandModel *model);
 
@@ -128,19 +126,11 @@ private:
     };
 
     QList<InputActionInfo> m_handInputActionDefs;
-    QList<InputActionInfo> m_gamepadInputActionDefs;
 
     struct HandActions {
         XrAction gripPoseAction{XR_NULL_HANDLE};
         XrAction aimPoseAction{XR_NULL_HANDLE};
         XrAction hapticAction{XR_NULL_HANDLE};
-    };
-
-    struct GamepadActions {
-        XrAction hapticLeftAction{XR_NULL_HANDLE};
-        XrAction hapticRightAction{XR_NULL_HANDLE};
-        XrAction hapticLeftTriggerAction{XR_NULL_HANDLE};
-        XrAction hapticRightTriggerAction{XR_NULL_HANDLE};
     };
 
     // Input State
@@ -151,15 +141,11 @@ private:
 
     QQuick3DXrHandInput *m_handInputState[2];
     QQuick3DXrHandTrackerInput *m_handTrackerInputState[2];
-    QQuick3DXrGamepadInput *m_gamepadInputState;
-    XrPath m_gamepadSubactionPath;
     HandActions m_handActions;
-    GamepadActions m_gamepadActions;
     XrAction m_inputActions[QOpenXRActionMapper::NumActions] = {};
 
     uint m_aimStateFlags[2] = {};
     bool m_initialized = false;
-    bool m_disableGamepad = false;
     bool m_validAimStateFromUpdatePoses[2] = {false, false};
 
     // Hand Mesh Data
