@@ -184,6 +184,9 @@ qt_internal_extend_target(Quick3DRuntimeRender
         ../3rdparty/embree/include/embree3/rtcore_quaternion.h
         ../3rdparty/embree/include/embree3/rtcore_ray.h
         ../3rdparty/embree/include/embree3/rtcore_scene.h
+    ATTRIBUTION_FILE_DIR_PATHS
+        ../3rdparty/tinyexr
+        ../3rdparty/embree
 )
 
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_FEATURE_system_zlib
