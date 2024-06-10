@@ -1405,7 +1405,7 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
             XrSwapchainImageBaseHeader *swapchainImage = m_swapchainImages[swapchain.handle][swapchainImageIndex];
 
             XrSwapchainImageBaseHeader *depthSwapchainImage = nullptr;
-            if (m_submitLayerDepth) {
+            if (m_submitLayerDepth && !m_depthSwapchains.isEmpty()) {
                 if (checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[0].handle, &acquireInfo, &swapchainImageIndex))) {
                     if (checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[0].handle, &waitInfo)))
                         depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[0].handle][swapchainImageIndex];
@@ -1479,7 +1479,7 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
                 XrSwapchainImageBaseHeader *swapchainImage = m_swapchainImages[viewSwapchain.handle][swapchainImageIndex];
 
                 XrSwapchainImageBaseHeader *depthSwapchainImage = nullptr;
-                if (m_submitLayerDepth) {
+                if (m_submitLayerDepth && !m_depthSwapchains.isEmpty()) {
                     if (checkXrResult(xrAcquireSwapchainImage(m_depthSwapchains[i].handle, &acquireInfo, &swapchainImageIndex))) {
                         if (checkXrResult(xrWaitSwapchainImage(m_depthSwapchains[i].handle, &waitInfo)))
                             depthSwapchainImage = m_depthSwapchainImages[m_depthSwapchains[i].handle][swapchainImageIndex];

@@ -219,12 +219,20 @@ int64_t QOpenXRGraphicsVulkan::colorSwapchainFormat(const QVector<int64_t> &swap
 int64_t QOpenXRGraphicsVulkan::depthSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
 {
     // in order of preference
-    constexpr int64_t supportedDepthSwapchainFormats[] = {
-        VK_FORMAT_D24_UNORM_S8_UINT,
-        VK_FORMAT_D32_SFLOAT_S8_UINT,
-        VK_FORMAT_D32_SFLOAT,
-        VK_FORMAT_D16_UNORM
+    QVarLengthArray<int64_t, 4> supportedDepthSwapchainFormats;
+    constexpr std::pair<int64_t, QRhiTexture::Format> nativeDepthSwapchainFormats[] = {
+        { VK_FORMAT_D24_UNORM_S8_UINT, QRhiTexture::D24S8 },
+        { VK_FORMAT_D32_SFLOAT_S8_UINT, QRhiTexture::D32F },
+        { VK_FORMAT_D32_SFLOAT, QRhiTexture::D32F },
+        { VK_FORMAT_D16_UNORM, QRhiTexture::D16 }
     };
+    for (const auto &format : nativeDepthSwapchainFormats) {
+        if (m_rhi->isTextureFormatSupported(format.second))
+            supportedDepthSwapchainFormats.append(format.first);
+    }
+
+    if (supportedDepthSwapchainFormats.isEmpty())
+        return 0;
 
     // order matters, we prefer D24S8 above all the others
     return *std::find_first_of(std::begin(supportedDepthSwapchainFormats),
