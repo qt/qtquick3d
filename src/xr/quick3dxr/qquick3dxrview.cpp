@@ -109,20 +109,6 @@ QQuick3DXrHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
     return nullptr;
 }
 
-/*!
-    \qmlproperty XrGamepadInput QtQuick3D.Xr::XrView::gamepadInput
-    \brief Provides access to the gamepad input for the XR view.
-*/
-
-QQuick3DXrGamepadInput *QQuick3DXrView::gamepadInput() const
-{
-    QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    if (inputManager && inputManager->isValid())
-        return inputManager->gamepadInput();
-
-    return nullptr;
-}
-
 QQuick3DViewport *QQuick3DXrView::view3d() const
 {
     return m_openXRManager.m_vrViewport;

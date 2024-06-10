@@ -16,7 +16,6 @@
 //
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
-#include "qquick3dxrgamepadinput_p.h"
 #include "qquick3dxrhandinput_p.h"
 #include "qopenxractionmapper_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
@@ -39,7 +38,6 @@ public:
         ControllerNone = 0,
         ControllerLeft = 1,
         ControllerRight = 2,
-        ControllerGamepad = 3
     };
     Q_ENUM(Controller)
 
@@ -49,7 +47,6 @@ public:
     void setController(QOpenXRController::Controller newController);
 
     QQuick3DXrHandInput *handInput() const;
-    Q_INVOKABLE QQuick3DXrGamepadInput *gamepadInput() const;
 
     QOpenXRActionMapper *actionMapper() const;
     void setActionMapper(QOpenXRActionMapper *newActionMapper);

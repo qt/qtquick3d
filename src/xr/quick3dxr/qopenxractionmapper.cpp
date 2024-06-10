@@ -239,46 +239,6 @@ void QOpenXrInputAction::componentComplete()
     tracking.
     \value XrActionMapper.NumHandActions Represents the total number of hand
     actions.
-    \value XrActionMapper.GamepadButtonMenuPressed Indicates that a gamepad menu
-    button is pressed.
-    \value XrActionMapper.GamepadButtonViewPressed Indicates that a gamepad view
-    button is pressed.
-    \value XrActionMapper.GamepadButtonAPressed Indicates that the gamepad A
-    button is pressed.
-    \value XrActionMapper.GamepadButtonBPressed Indicates that the gamepad B
-    button is pressed.
-    \value XrActionMapper.GamepadButtonXPressed Indicates that the gamepad X
-    button is pressed.
-    \value XrActionMapper.GamepadButtonYPressed Indicates that the gamepad Y
-    button is pressed.
-    \value XrActionMapper.GamepadButtonDownPressed Indicates that the gamepad
-    down button is pressed.
-    \value XrActionMapper.GamepadButtonRightPressed Indicates that the gamepad
-    right button is pressed.
-    \value XrActionMapper.GamepadButtonUpPressed Indicates that the gamepad up
-    button is pressed.
-    \value XrActionMapper.GamepadButtonLeftPressed Indicates that the gamepad
-    left button is pressed.
-    \value XrActionMapper.GamepadShoulderLeftPressed Indicates that the left
-    shoulder button on the gamepad is pressed.
-    \value XrActionMapper.GamepadShoulderRightPressed Indicates that the right
-    shoulder button on the gamepad is pressed.
-    \value XrActionMapper.GamepadThumbstickLeftPressed Indicates that the left
-    thumbstick on the gamepad is pressed.
-    \value XrActionMapper.GamepadThumbstickRightPressed Indicates that the right
-    thumbstick on the gamepad is pressed.
-    \value XrActionMapper.GamepadTriggerLeft Represents the value of the left
-    trigger on the gamepad.
-    \value XrActionMapper.GamepadTriggerRight Represents the value of the right
-    trigger on the gamepad.
-    \value XrActionMapper.GamepadThumbstickLeftX Represents the X-axis value of
-    the left thumbstick on the gamepad.
-    \value XrActionMapper.GamepadThumbstickLeftY Represents the Y-axis value of
-    the left thumbstick on the gamepad.
-    \value XrActionMapper.GamepadThumbstickRightX Represents the X-axis value of
-    the right thumbstick on the gamepad.
-    \value XrActionMapper.GamepadThumbstickRightY Represents the Y-axis value of
-    the right  thumbstick on the gamepad.
     \value XrActionMapper.NumActions Number of actions.
  */
 

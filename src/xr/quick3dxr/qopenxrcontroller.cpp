@@ -35,7 +35,6 @@ QOpenXRController::QOpenXRController()
     \value XrController.ControllerNone
     \value XrController.ControllerLeft
     \value XrController.ControllerRight
-    \value XrController.ControllerGamepad
 */
 
 QOpenXRController::Controller QOpenXRController::controller() const
@@ -78,7 +77,6 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
                                           });
     } else {
         setVisible(false);
-        //TODO handle gamepad connections
     }
 }
 
@@ -95,19 +93,6 @@ QQuick3DXrHandInput *QOpenXRController::handInput() const
         else if (m_controller == ControllerLeft)
             return m_inputManager->leftHandInput();
     }
-
-    return nullptr;
-}
-
-/*!
-    \qmlproperty XrGamepadInput XrController::gamepadInput
-    The gamepad input associated with this controller.
-*/
-
-QQuick3DXrGamepadInput *QOpenXRController::gamepadInput() const
-{
-    if (m_inputManager && m_inputManager->isValid())
-        return m_inputManager->gamepadInput();
 
     return nullptr;
 }

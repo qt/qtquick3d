@@ -91,12 +91,6 @@ QQuick3DXrHandTrackerInput *QQuick3DXrInputManagerPrivate::leftHandTrackerInput(
     return m_handTrackerInputState[Hand::LeftHand];
 }
 
-QQuick3DXrGamepadInput *QQuick3DXrInputManagerPrivate::gamepadInput() const
-{
-    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
-    return nullptr;
-}
-
 QQuick3DXrInputManagerPrivate *QQuick3DXrInputManagerPrivate::get(QQuick3DXrInputManager *inputManager)
 {
     return inputManager->d_func();

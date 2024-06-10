@@ -6,7 +6,6 @@
 #include "openxr/qopenxrhelpers_p.h"
 #include "qquick3dxrhandinput_p.h"
 #include "qquick3dxrhandtrackerinput_p.h"
-#include "qquick3dxrgamepadinput_p.h"
 
 #include "qopenxrcontroller_p.h" //### InputAction enum
 
@@ -23,7 +22,6 @@ QQuick3DXrInputManagerPrivate::QQuick3DXrInputManagerPrivate(QQuick3DXrInputMana
     m_handInputState[Hand::RightHand] = new QQuick3DXrHandInput(this);
     m_handTrackerInputState[Hand::LeftHand] = new QQuick3DXrHandTrackerInput(this);
     m_handTrackerInputState[Hand::RightHand] = new QQuick3DXrHandTrackerInput(this);
-    m_gamepadInputState = new QQuick3DXrGamepadInput(this);
 }
 
 QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
@@ -33,13 +31,11 @@ QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
     delete m_handInputState[Hand::RightHand];
     delete m_handTrackerInputState[Hand::LeftHand];
     delete m_handTrackerInputState[Hand::RightHand];
-    delete m_gamepadInputState;
 
     m_handInputState[Hand::LeftHand] = nullptr;
     m_handInputState[Hand::RightHand] = nullptr;
     m_handTrackerInputState[Hand::LeftHand] = nullptr;
     m_handTrackerInputState[Hand::RightHand] = nullptr;
-    m_gamepadInputState = nullptr;
 }
 
 QQuick3DXrInputManagerPrivate::QXRHandComponentPath QQuick3DXrInputManagerPrivate::makeHandInputPaths(const QByteArrayView path)
@@ -191,29 +187,7 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
     m_instance = instance;
     m_session = session;
 
-    m_disableGamepad = false;
-
     setupHandTracking();
-
-    // Gamepad actions lead to endless XR_ERROR_RUNTIME_FAILURE in
-    // xrSyncActions with the Meta XR Simulator (v57 at least). The Simulator
-    // can use an XBox controller to simulate head/controller/hand input (and
-    // not as a gamepad), so it is not clear if it is supposed to have gamepad
-    // support to begin with. So just disable it all.
-    XrInstanceProperties instanceProperties = {};
-    instanceProperties.type = XR_TYPE_INSTANCE_PROPERTIES;
-    if (xrGetInstanceProperties(m_instance, &instanceProperties) == XR_SUCCESS) {
-        if (strstr(instanceProperties.runtimeName, "Meta XR Simulator")) {
-            qDebug("QQuick3DXrInputManager: Disabling gamepad actions due to running on the Simulator");
-            m_disableGamepad = true;
-        }
-    }
-
-    // Also on Android. ### Why?
-#ifdef XR_USE_PLATFORM_ANDROID
-    qDebug("QQuick3DXrInputManager: Disabling gamepad actions due to running on Android");
-    m_disableGamepad = true;
-#endif
 
     setupActions();
 
@@ -259,31 +233,6 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
     XrPath handRightAimPose;                  // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
     XrPath handRightHaptic;                   // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
 
-    XrPath gamepadMenuClick = makeInputPath("/user/gamepad/input/menu/click");
-    XrPath gamepadViewClick = makeInputPath("/user/gamepad/input/view/click");
-    XrPath gamepadAClick = makeInputPath("/user/gamepad/input/a/click");
-    XrPath gamepadBClick = makeInputPath("/user/gamepad/input/b/click");
-    XrPath gamepadXClick = makeInputPath("/user/gamepad/input/x/click");
-    XrPath gamepadYClick = makeInputPath("/user/gamepad/input/y/click");
-    XrPath gamepadDpadDownClick = makeInputPath("/user/gamepad/input/dpad_down/click");
-    XrPath gamepadDpadRightClick = makeInputPath("/user/gamepad/input/dpad_right/click");
-    XrPath gamepadDpadUpClick = makeInputPath("/user/gamepad/input/dpad_up/click");
-    XrPath gamepadDpadLeftClick = makeInputPath("/user/gamepad/input/dpad_left/click");
-    XrPath gamepadShoulderLeftClick = makeInputPath("/user/gamepad/input/shoulder_left/click");
-    XrPath gamepadShoulderRightClick = makeInputPath("/user/gamepad/input/shoulder_right/click");
-    XrPath gamepadThumbstickLeftClick = makeInputPath("/user/gamepad/input/thumbstick_left/click");
-    XrPath gamepadThumbstickRightClick = makeInputPath("/user/gamepad/input/thumbstick_right/click");
-    XrPath gamepadTriggerLeftValue = makeInputPath("/user/gamepad/input/trigger_left/value");
-    XrPath gamepadTriggerRightValue = makeInputPath("/user/gamepad/input/trigger_right/value");
-    XrPath gamepadThumbstickLeftX = makeInputPath("/user/gamepad/input/thumbstick_left/x");
-    XrPath gamepadThumbstickLeftY = makeInputPath("/user/gamepad/input/thumbstick_left/y");
-    XrPath gamepadThumbstickRightX = makeInputPath("/user/gamepad/input/thumbstick_right/x");
-    XrPath gamepadThumbstickRightY = makeInputPath("/user/gamepad/input/thumbstick_right/y");
-    XrPath gamepadHapticLeft = makeInputPath("/user/gamepad/output/haptic_left");
-    XrPath gamepadHapticRight = makeInputPath("/user/gamepad/output/haptic_right");
-    XrPath gamepadHapticLeftTrigger = makeInputPath("/user/gamepad/output/haptic_left_trigger");
-    XrPath gamepadHapticRightTrigger = makeInputPath("/user/gamepad/output/haptic_right_trigger");
-
     // Hand Left
 
     setPath(handLeftGripPose, "/user/hand/left/input/grip/pose");
@@ -298,7 +247,6 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
 
     using XrActionBindings = std::vector<XrActionSuggestedBinding>;
     using HandInputMapping = std::vector<std::tuple<QOpenXRActionMapper::InputAction, QXRHandComponentPath, SubPathSelector>>;
-    using GamepadInputMapping = std::vector<std::tuple<QOpenXRActionMapper::InputAction, XrPath>>;
     auto addToBindings = [this](XrActionBindings &bindings, const HandInputMapping &defs){
         for (const auto &[actionId, path, selector] : defs) {
             if (selector & LeftHandSubPath)
@@ -429,54 +377,6 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
     {
         XrPath valveIndexProfile;
         setPath(valveIndexProfile, "/interaction_profiles/valve/index_controller");
-    }
-
-    // XBox Controller
-    if (!m_disableGamepad) {
-        XrPath xboxControllerProfile;
-        setPath(xboxControllerProfile, "/interaction_profiles/microsoft/xbox_controller");
-
-        GamepadInputMapping mappingDefs {
-            {QOpenXRActionMapper::GamepadButtonMenuPressed, gamepadMenuClick},
-            {QOpenXRActionMapper::GamepadButtonViewPressed, gamepadViewClick},
-            {QOpenXRActionMapper::GamepadButtonAPressed, gamepadAClick},
-            {QOpenXRActionMapper::GamepadButtonBPressed, gamepadBClick},
-            {QOpenXRActionMapper::GamepadButtonXPressed, gamepadXClick},
-            {QOpenXRActionMapper::GamepadButtonYPressed, gamepadYClick},
-            {QOpenXRActionMapper::GamepadButtonDownPressed, gamepadDpadDownClick},
-            {QOpenXRActionMapper::GamepadButtonRightPressed, gamepadDpadRightClick},
-            {QOpenXRActionMapper::GamepadButtonUpPressed, gamepadDpadUpClick},
-            {QOpenXRActionMapper::GamepadButtonLeftPressed, gamepadDpadLeftClick},
-            {QOpenXRActionMapper::GamepadShoulderLeftPressed, gamepadShoulderLeftClick},
-            {QOpenXRActionMapper::GamepadShoulderRightPressed, gamepadShoulderRightClick},
-            {QOpenXRActionMapper::GamepadThumbstickLeftPressed, gamepadThumbstickLeftClick},
-            {QOpenXRActionMapper::GamepadThumbstickRightPressed, gamepadThumbstickRightClick},
-            {QOpenXRActionMapper::GamepadTriggerLeft, gamepadTriggerLeftValue},
-            {QOpenXRActionMapper::GamepadTriggerRight, gamepadTriggerRightValue},
-            {QOpenXRActionMapper::GamepadThumbstickLeftX, gamepadThumbstickLeftX},
-            {QOpenXRActionMapper::GamepadThumbstickLeftY, gamepadThumbstickLeftY},
-            {QOpenXRActionMapper::GamepadThumbstickRightX, gamepadThumbstickRightX},
-            {QOpenXRActionMapper::GamepadThumbstickRightY, gamepadThumbstickRightY},
-        };
-
-        std::vector<XrActionSuggestedBinding> bindings {{
-                {m_gamepadActions.hapticLeftAction, gamepadHapticLeft},
-                {m_gamepadActions.hapticRightAction, gamepadHapticRight},
-                {m_gamepadActions.hapticLeftTriggerAction, gamepadHapticLeftTrigger},
-                {m_gamepadActions.hapticRightTriggerAction, gamepadHapticRightTrigger},
-        }};
-
-        for (const auto &[actionId, path] : mappingDefs) {
-            bindings.push_back({ m_inputActions[actionId], path });
-        }
-
-        XrInteractionProfileSuggestedBinding suggestedBindings{};
-        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-        suggestedBindings.interactionProfile = xboxControllerProfile;
-        suggestedBindings.suggestedBindings = bindings.data();
-        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
-            qWarning("Failed to get suggested interaction profile bindings for XBox controller");
     }
 
     // Setup Action Spaces
@@ -625,54 +525,6 @@ void QQuick3DXrInputManagerPrivate::pollActions()
 
     }
 
-    // Gamepad
-    if (!m_disableGamepad) {
-        getInfo.subactionPath = m_gamepadSubactionPath;
-
-        // TODO: refactor duplicated logic
-        for (const auto &def : m_gamepadInputActionDefs) {
-            getInfo.action = m_inputActions[def.id];
-            switch (def.type) {
-            case XR_ACTION_TYPE_BOOLEAN_INPUT: {
-                XrActionStateBoolean boolValue{};
-                boolValue.type = XR_TYPE_ACTION_STATE_BOOLEAN;
-                if (checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue))) {
-                    if (boolValue.isActive && boolValue.changedSinceLastSync) {
-                        //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
-                        m_gamepadInputState->setInputValue(def.id, def.shortName, float(boolValue.currentState));
-                    }
-                } else {
-                    qWarning("Failed to get action state for bool gamepad input");
-                }
-                break;
-            }
-            case XR_ACTION_TYPE_FLOAT_INPUT: {
-                XrActionStateFloat floatValue{};
-                floatValue.type = XR_TYPE_ACTION_STATE_FLOAT;
-                if (checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue))) {
-                    if (floatValue.isActive && floatValue.changedSinceLastSync) {
-                        //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
-                        m_gamepadInputState->setInputValue(def.id, def.shortName, float(floatValue.currentState));
-                    }
-                } else {
-                    qWarning("Failed to get action state for float gamepad input");
-                }
-                break;
-            }
-            case XR_ACTION_TYPE_VECTOR2F_INPUT:
-            case XR_ACTION_TYPE_POSE_INPUT:
-            case XR_ACTION_TYPE_VIBRATION_OUTPUT:
-            case XR_ACTION_TYPE_MAX_ENUM:
-                break;
-            }
-        }
-
-        // TODO handle any outputs as well here (haptics)
-//        XrAction hapticLeftAction{XR_NULL_HANDLE};
-//        XrAction hapticRightAction{XR_NULL_HANDLE};
-//        XrAction hapticLeftTriggerAction{XR_NULL_HANDLE};
-//        XrAction hapticRightTriggerAction{XR_NULL_HANDLE};
-    }
 }
 
 void QQuick3DXrInputManagerPrivate::updatePoses(XrTime predictedDisplayTime, XrSpace appSpace)
@@ -939,68 +791,6 @@ void QQuick3DXrInputManagerPrivate::setupActions()
                  m_handSubactionPath,
                  m_handActions.aimPoseAction);
 
-    // Create Gamepad Actions
-    if (!m_disableGamepad) {
-
-        m_gamepadInputActionDefs = {
-            { QOpenXRActionMapper::GamepadButtonMenuPressed, "gp_bmenu_pressed", "Gamepad Button Menu Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonViewPressed, "gp_bview_pressed", "Gamepad Button View Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonAPressed, "gp_ba_pressed", "Gamepad Button A Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonBPressed, "gp_bb_pressed", "Gamepad Button B Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonXPressed, "gp_bx_pressed", "Gamepad Button Y Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonYPressed, "gp_by_pressed", "Gamepad Button X Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonDownPressed, "gp_bdown_pressed", "Gamepad Button Down Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonRightPressed, "gp_bright_pressed", "Gamepad Button Right Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonUpPressed, "gp_bup_pressed", "Gamepad Button Up Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadButtonLeftPressed, "gp_bleft_pressed", "Gamepad Button Left Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadShoulderLeftPressed, "gp_sleft_pressed", "Gamepad Shoulder Left Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadShoulderRightPressed, "gp_sright_pressed", "Gamepad Shoulder Right Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadThumbstickLeftPressed, "gp_tsleft_pressed", "Gamepad Thumbstick Left Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadThumbstickRightPressed, "gp_tsright_pressed", "Gamepad Thumbstick Right Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadTriggerLeft, "gp_tleft_value", "Gamepad Trigger Left", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadTriggerRight, "gp_tright_value", "Gamepad Trigger Right", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadThumbstickLeftX, "gp_tsleft_x_value", "Gamepad Thumbstick Left X", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadThumbstickLeftY, "gp_tsleft_y_value", "Gamepad Thumbstick Left Y", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadThumbstickRightX, "gp_tsright_x_value", "Gamepad Thumbstick Right X", XR_ACTION_TYPE_BOOLEAN_INPUT },
-            { QOpenXRActionMapper::GamepadThumbstickRightY, "gp_tsright_y_value", "Gamepad Thumbstick Right Y", XR_ACTION_TYPE_BOOLEAN_INPUT }
-        };
-
-        setPath(m_gamepadSubactionPath, "/user/gamepad");
-
-        for (const auto &def : m_gamepadInputActionDefs) {
-            createAction(def.type,
-                         def.shortName,
-                         def.localizedName,
-                         1,
-                         &m_gamepadSubactionPath,
-                         m_inputActions[def.id]);
-        }
-
-        createAction(XR_ACTION_TYPE_VIBRATION_OUTPUT,
-                     "gp_vibrate_left",
-                     "Gamepad Vibrate Left",
-                     1,
-                     &m_gamepadSubactionPath,
-                     m_gamepadActions.hapticLeftAction);
-        createAction(XR_ACTION_TYPE_VIBRATION_OUTPUT,
-                     "gp_vibrate_right",
-                     "Gamepad Vibrate Right",
-                     1,
-                     &m_gamepadSubactionPath,
-                     m_gamepadActions.hapticRightAction);
-        createAction(XR_ACTION_TYPE_VIBRATION_OUTPUT,
-                     "gp_vibrate_trigger_left",
-                     "Gamepad Vibrate Trigger Left",
-                     1,
-                     &m_gamepadSubactionPath,
-                     m_gamepadActions.hapticLeftTriggerAction);
-        createAction(XR_ACTION_TYPE_VIBRATION_OUTPUT,
-                     "gp_vibrate_trigger_right",
-                     "Gamepad Vibrate Trigger Right",
-                     1,
-                     &m_gamepadSubactionPath,
-                     m_gamepadActions.hapticRightTriggerAction);
-    }
 }
 
 void QQuick3DXrInputManagerPrivate::destroyActions()
@@ -1013,13 +803,6 @@ void QQuick3DXrInputManagerPrivate::destroyActions()
     xrDestroyAction(m_handActions.gripPoseAction);
     xrDestroyAction(m_handActions.aimPoseAction);
     xrDestroyAction(m_handActions.hapticAction);
-
-    if (!m_disableGamepad) {
-        xrDestroyAction(m_gamepadActions.hapticLeftAction);
-        xrDestroyAction(m_gamepadActions.hapticRightAction);
-        xrDestroyAction(m_gamepadActions.hapticLeftTriggerAction);
-        xrDestroyAction(m_gamepadActions.hapticRightTriggerAction);
-    }
 
     xrDestroyActionSet(m_actionSet);
 }
@@ -1144,11 +927,6 @@ QQuick3DXrHandTrackerInput *QQuick3DXrInputManagerPrivate::rightHandTrackerInput
 QQuick3DXrHandTrackerInput *QQuick3DXrInputManagerPrivate::leftHandTrackerInput() const
 {
     return m_handTrackerInputState[Hand::LeftHand];
-}
-
-QQuick3DXrGamepadInput *QQuick3DXrInputManagerPrivate::gamepadInput() const
-{
-    return m_gamepadInputState;
 }
 
 static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuaternion &rotation)

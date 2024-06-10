@@ -41,12 +41,6 @@ QQuick3DXrHandTrackerInput *QQuick3DXrInputManager::rightHandTrackerInput() cons
     return d->rightHandTrackerInput();
 }
 
-QQuick3DXrGamepadInput *QQuick3DXrInputManager::gamepadInput() const
-{
-    Q_D(const QQuick3DXrInputManager);
-    return d->gamepadInput();
-}
-
 bool QQuick3DXrInputManager::isValid() const
 {
     Q_D(const QQuick3DXrInputManager);
