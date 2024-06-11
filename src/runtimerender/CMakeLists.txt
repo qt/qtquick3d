@@ -112,6 +112,10 @@ qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools
         QT_QUICK3D_HAS_RUNTIME_SHADERS
 )
 
+if(QT_QUICK3D_HAS_EMBREE)
+    find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS Concurrent)
+endif()
+
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_QUICK3D_HAS_EMBREE
     PUBLIC_LIBRARIES
         Qt::Concurrent
