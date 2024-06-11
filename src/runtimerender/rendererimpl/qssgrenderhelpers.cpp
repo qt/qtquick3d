@@ -106,10 +106,18 @@ std::pair<QSSGBoxPoints, QSSGBoxPoints> RenderHelpers::calculateSortedObjectBoun
         for (const QSSGRenderableObjectHandle &handle : *handles) {
             const QSSGRenderableObject &obj = *handle.obj;
             // We skip objects not casting or receiving shadows since they don't influence or need to be covered by the shadow map
-            if (obj.renderableFlags.castsShadows())
-                boundsCasting.include(obj.globalBounds);
-            if (obj.renderableFlags.receivesShadows())
-                boundsReceiving.include(obj.globalBounds);
+            if (obj.renderableFlags.castsShadows()) {
+                if (!obj.globalBoundsInstancing.isEmpty())
+                    boundsCasting.include(obj.globalBoundsInstancing);
+                else
+                    boundsCasting.include(obj.globalBounds);
+            }
+            if (obj.renderableFlags.receivesShadows()) {
+                if (!obj.globalBoundsInstancing.isEmpty())
+                    boundsReceiving.include(obj.globalBoundsInstancing);
+                else
+                    boundsReceiving.include(obj.globalBounds);
+            }
         }
     }
     return { boundsCasting.toQSSGBoxPointsNoEmptyCheck(), boundsReceiving.toQSSGBoxPointsNoEmptyCheck() };
