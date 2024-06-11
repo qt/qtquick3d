@@ -88,7 +88,7 @@ QT_BEGIN_NAMESPACE
 
     For further usage examples, see \l{Qt Quick 3D - Lights Example}.
 
-    \sa DirectionalLight, PointLight
+    \sa DirectionalLight, PointLight, {Shadow Mapping}
 */
 
 /*!
