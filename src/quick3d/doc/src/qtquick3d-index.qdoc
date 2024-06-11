@@ -79,6 +79,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D Level of Detail}{Level of Detail}
     \li \l{Custom Material Editor}{Custom Material Editor}
     \li \l{quick3d-lightmap}{Lightmaps and Global Illumination}
+    \li \l{quick3d-shadow-mapping}{Shadow Mapping}
     \li \l{\qxr Overview}
     \li \l{Multiview Rendering}
 \endlist

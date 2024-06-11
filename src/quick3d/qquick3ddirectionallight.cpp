@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
 
     For further usage examples, see \l{Qt Quick 3D - Lights Example}.
 
-    \sa PointLight, SpotLight
+    \sa PointLight, SpotLight, {Shadow Mapping}
 */
 
 /*!
@@ -88,6 +88,7 @@ QT_BEGIN_NAMESPACE
     CSM is active.
 
     Range: \c{[0.0, 1.0]}
+
     Default value: \c{0}
 
     \sa csmSplit2, csmSplit3
@@ -100,6 +101,7 @@ QT_BEGIN_NAMESPACE
     CSM is active.
 
     Range: \c{[0.0, 1.0]}
+
     Default value: \c{0.25}
 
     \sa csmSplit1, csmSplit3
@@ -112,6 +114,7 @@ QT_BEGIN_NAMESPACE
     CSM is active.
 
     Range: \c{[0.0, 1.0]}
+
     Default value: \c{0.5}
 
     \sa csmSplit1, csmSplit2
@@ -125,6 +128,7 @@ QT_BEGIN_NAMESPACE
     so that it covers the bounding box of all shadow casting and receiving objects.
 
     Range: \c{[0, 3]}
+
     Default value: \c{0}
 
     \sa csmSplit1, csmSplit2, csmSplit3
@@ -136,6 +140,7 @@ QT_BEGIN_NAMESPACE
     together with the previous one.
 
     Range: \c{[0.0, 1.0]}
+
     Default value: \c{0.05}
 */
 
