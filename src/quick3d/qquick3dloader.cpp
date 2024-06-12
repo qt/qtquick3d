@@ -61,12 +61,9 @@ QQuick3DLoader::QQuick3DLoader(QQuick3DNode *parent)
 
 QQuick3DLoader::~QQuick3DLoader()
 {
-    delete m_itemContext;
-    m_itemContext = nullptr;
+    clear();
     delete m_incubator;
     m_incubator = nullptr;
-    disposeInitialPropertyValues();
-    clear();
 }
 
 /*!
