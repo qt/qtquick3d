@@ -185,6 +185,33 @@ static qsizetype getJointIndex(ar_hand_skeleton_joint_name_t jointName)
     return index;
 }
 
+template <QQuick3DXrHandInput::HandPoseSpace HandPose>
+static void getHandPose(ar_hand_skeleton_t handSkeleton, const simd_float4x4 handTransform, QVector3D &posePosition, QQuaternion &poseRotation)
+{
+    QMatrix4x4 qHandTransform{handTransform.columns[0].x, handTransform.columns[1].x, handTransform.columns[2].x, handTransform.columns[3].x,
+                                handTransform.columns[0].y, handTransform.columns[1].y, handTransform.columns[2].y, handTransform.columns[3].y,
+                                handTransform.columns[0].z, handTransform.columns[1].z, handTransform.columns[2].z, handTransform.columns[3].z,
+                                0.0f, 0.0f, 0.0f, 1.0f};
+    simd_float4x4 rotHandTransform = { simd_float4{ qHandTransform(0,0), qHandTransform(1,0), qHandTransform(2,0), qHandTransform(3,0) },
+                                       simd_float4{ qHandTransform(0,1), qHandTransform(1,1), qHandTransform(2,1), qHandTransform(3,1) },
+                                       simd_float4{ qHandTransform(0,2), qHandTransform(1,2), qHandTransform(2,2), qHandTransform(3,2) },
+                                       simd_float4{ qHandTransform(0,3), qHandTransform(1,3), qHandTransform(2,3), qHandTransform(3,3) } };
+
+    if constexpr (HandPose == QQuick3DXrHandInput::HandPoseSpace::AimPose) {
+        // Using the knuckle joint as the aim pose, as it produces a more "stable" feeling when aiming.
+        setupJoint(ar_hand_skeleton_joint_name_index_finger_knuckle, handSkeleton, rotHandTransform, posePosition, poseRotation);
+
+        static QQuaternion rotation = QQuaternion::fromEulerAngles(QVector3D(0, 90, 90));
+        poseRotation = poseRotation * rotation;
+    } else {
+        static_assert(HandPose == QQuick3DXrHandInput::HandPoseSpace::GripPose);
+        setupJoint(ar_hand_skeleton_joint_name_middle_finger_knuckle, handSkeleton, rotHandTransform, posePosition, poseRotation);
+
+        static QQuaternion rotation = QQuaternion::fromEulerAngles(QVector3D(0, 180, 90));
+        poseRotation = poseRotation * rotation;
+    }
+}
+
 qsizetype QQuick3DXrInputManagerPrivate::getPokeJointIndex() const
 {
     // NOTE: Static for now...
@@ -241,6 +268,25 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
             if (setupJoint(jointName, handSkeleton, handTransform, jointPosition, jointRotation)) {
                 jpositions.append(jointPosition);
                 jrotations.append(jointRotation);
+            }
+        }
+
+        // Get and set the aim pose.
+        if (QQuick3DXrHandInput *inputState = m_handInputState[hand]) {
+            if (inputState->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::AimPose) {
+                QVector3D handPosition;
+                QQuaternion handRotation;
+                getHandPose<QQuick3DXrHandInput::HandPoseSpace::AimPose>(handSkeleton, handTransform, handPosition, handRotation);
+
+                setPosePosition(hand, handPosition);
+                setPoseRotation(hand, handRotation);
+            } else {
+                QVector3D handPosition;
+                QQuaternion handRotation;
+                getHandPose<QQuick3DXrHandInput::HandPoseSpace::GripPose>(handSkeleton, handTransform, handPosition, handRotation);
+
+                setPosePosition(hand, handPosition);
+                setPoseRotation(hand, handRotation);
             }
         }
 
