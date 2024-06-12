@@ -20,6 +20,34 @@
 
 QT_BEGIN_NAMESPACE
 
+// NOTE: Another indiraction to try to clean-up resource in a nice way.
+QSSGCleanupObject::QSSGCleanupObject(std::shared_ptr<QSSGRenderContextInterface> rci, QList<QSSGRenderGraphObject *> resourceCleanupQueue, QQuickWindow *window)
+    : QObject(window)
+    , m_rci(rci)
+    , m_window(window)
+    , m_resourceCleanupQueue(resourceCleanupQueue)
+{
+    Q_ASSERT(window != nullptr && rci); // We need a window and a rci for this!
+
+    if (QSGRenderContext *rc = QQuickWindowPrivate::get(window)->context) {
+        connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, this, &QSSGCleanupObject::cleanupResources, Qt::DirectConnection);
+        connect(rc, &QSGRenderContext::invalidated, this, &QSSGCleanupObject::cleanupResources, Qt::DirectConnection);
+    } else {
+        qWarning() << "No QSGRenderContext, cannot cleanup resources!";
+    }
+}
+
+QSSGCleanupObject::~QSSGCleanupObject()
+{
+    QSSG_CHECK(QSSG_DEBUG_COND(m_resourceCleanupQueue.isEmpty()));
+}
+
+void QSSGCleanupObject::cleanupResources()
+{
+    m_rci->renderer()->cleanupResources(m_resourceCleanupQueue);
+    deleteLater();
+}
+
 static constexpr char qtQQ3DWAPropName[] { "_qtquick3dWindowAttachment" };
 
 QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
@@ -463,12 +491,23 @@ QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
     // remaining sceneManagers should also be removed
     qDeleteAll(sceneManagers);
     QSSG_CHECK(QSSG_DEBUG_COND(resourceCleanupQueue.isEmpty()));
-    QSSG_CHECK(QSSG_DEBUG_COND(pendingResourceCleanupQueue.isEmpty()));
+
+    if (!pendingResourceCleanupQueue.isEmpty()) {
+        // Let's try to recover from this situation. Most likely this is some loader usage
+        // situation, where all View3Ds have been destroyed while the window still lives and might
+        // eventually just create a new View3D. We cannot release the resources here, as we'll need
+        // to do that on the render thread. Instaed we'll transform the pendingResourceCleanupQueue
+        // to a cleanup object that can be called on the render thread.
+        if (m_rci && m_window) {
+            new QSSGCleanupObject(m_rci, std::move(pendingResourceCleanupQueue), m_window);
+            QMetaObject::invokeMethod(m_window, &QQuickWindow::releaseResources, Qt::QueuedConnection);
+        } else {
+            qWarning() << "Pending resource cleanup queue not empty, but no RCI or window to clean it up!";
+        }
+    }
 
     if (m_window)
         m_window->setProperty(qtQQ3DWAPropName, QVariant());
-
-    QSSG_CHECK_X(!m_rci || m_rci.use_count() == 1, "RCI has unexpected reference count!");
 }
 
 void QQuick3DWindowAttachment::preSync()

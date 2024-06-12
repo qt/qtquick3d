@@ -182,6 +182,24 @@ private Q_SLOTS:
     void updateExtensions(QQuick3DObject **listHead);
 };
 
+class QSSGCleanupObject : public QObject
+{
+    Q_OBJECT
+public:
+    QSSGCleanupObject(std::shared_ptr<QSSGRenderContextInterface> rci,
+                      QList<QSSGRenderGraphObject *> resourceCleanupQueue,
+                      QQuickWindow *window);
+
+    ~QSSGCleanupObject() override;
+
+    Q_INVOKABLE void cleanupResources();
+
+private:
+    std::shared_ptr<QSSGRenderContextInterface> m_rci;
+    QPointer<QQuickWindow> m_window;
+    QList<QSSGRenderGraphObject *> m_resourceCleanupQueue;
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuick3DSceneManager)
