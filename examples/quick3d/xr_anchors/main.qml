@@ -15,6 +15,20 @@ XrView {
 
     enableDepthSubmission: true
 
+    property list<color> colorTable: [Qt.rgba(1, 0, 1, 1), // magenta
+                                      Qt.rgba(0, 1, 0, 1), // green
+                                      Qt.rgba(0, 0, 1, 1), // blue
+                                      Qt.rgba(1, 0, 0, 1), // red
+                                      Qt.rgba(0.5, 0.5, 0, 1), // darkYellow
+                                      Qt.rgba(0.5, 0, 0, 1), // darkRed
+                                      Qt.rgba(0, 0.5, 0.5, 1), // darkCyan
+                                      Qt.rgba(1, 1, 0, 1)] // yellow
+
+    function colorForClassification(name) {
+        const index = ["door", "window", "ceiling", "floor", "wall", "table", "seat", "unknown"].indexOf(name.toLowerCase())
+        return colorTable[index > 0 ? index : 0]
+    }
+
     property bool preferPassthrough: true
     enablePassthrough: passthroughSupported && preferPassthrough
 
@@ -163,10 +177,7 @@ XrView {
                 scale: anchorNode.anchor.has3DBounds ? anchorNode.anchor.extent3D : Qt.vector3d(anchorNode.anchor.extent2D.x, anchorNode.anchor.extent2D.y, 0.01)
                 materials: PrincipledMaterial {
                     // Make anchor objects invisible in passthrough mode
-                    property real baseAlpha: xrView.enablePassthrough ? 0 : 1
-                    property real baseRed: anchorNode.anchor.has3DBounds ? 1.0 : 0.5
-                    property real baseGreen: anchorNode.anchor.has2DBounds ? 1.0 : 0.5
-                    baseColor: Qt.rgba(baseRed, baseGreen, 0.5, baseAlpha)
+                    baseColor: xrView.enablePassthrough ? Qt.rgba(0, 0, 0, 0) : colorForClassification(anchor.semanticLabels.split(",")[0])
                     alphaMode: xrView.enablePassthrough ? PrincipledMaterial.Blend : PrincipledMaterial.Opaque
                     roughness: 0.7
                 }
