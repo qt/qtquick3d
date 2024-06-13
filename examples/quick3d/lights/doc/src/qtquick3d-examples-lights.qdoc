@@ -7,7 +7,7 @@
     \title Qt Quick 3D - Lights Example
     \examplecategory {3D}
     \brief Demonstrates the use of different light types.
-    \image lights-example.jpg
+    \image lights-example.webp
 
     This example demonstrates using three different light types in an application.
 
@@ -49,9 +49,9 @@
 
     \snippet lights/main.qml rectangle models
 
-    Then we add our main teapot model which is rotated around y-axis.
+    Then we add our main logo model which is rotated around y-axis.
 
-    \snippet lights/RotatingTeaPot.qml teapot model
+    \snippet lights/RotatingLogo.qml logo model
 
     We also add small cube models to demonstrate position & rotation of each light type.
     These cubes scale bigger when user is accessing related sliders.

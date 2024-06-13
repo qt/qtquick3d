@@ -3,6 +3,6 @@
 
 void MAIN()
 {
-    VERTEX.x += sin(uTime * 4.0 + VERTEX.y) * uAmplitude;
+    VERTEX.y += sin(uTime * 4.0 + 50.0*VERTEX.x) * uAmplitude;
     POSITION = MODELVIEWPROJECTION_MATRIX * vec4(VERTEX, 1.0);
 }
