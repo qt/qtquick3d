@@ -1,8 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>RotatingTeaPot.qml</file>
-        <file>teapot.mesh</file>
+        <file>RotatingLogo.qml</file>
+        <file>qtlogo.mesh</file>
         <file>custom.vert</file>
         <file>icon_settings.png</file>
         <file>icon_settings@4x.png</file>

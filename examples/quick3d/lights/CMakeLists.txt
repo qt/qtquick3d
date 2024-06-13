@@ -28,12 +28,12 @@ qt_add_qml_module(lights
     URI Example
     VERSION 1.0
     QML_FILES
-        RotatingTeaPot.qml
+        RotatingLogo.qml
         SettingsDrawer.qml
         main.qml
     RESOURCES
         custom.vert
-        teapot.mesh
+        qtlogo.mesh
         icon_settings.png
         icon_settings@2x.png
         icon_settings@3x.png
