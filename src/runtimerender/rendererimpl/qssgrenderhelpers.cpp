@@ -1364,12 +1364,13 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             pEntry->m_csmSplits[2] = shadowMapFar * (light->m_csmNumSplits > 2 ? light->m_csmSplit3 : 1.0f);
             pEntry->m_csmSplits[3] = shadowMapFar * 1.0f;
 
+            memset(pEntry->m_csmActive, 0, sizeof(pEntry->m_csmActive));
+
             for (int cascadeIndex = 0; cascadeIndex < cascades.length(); cascadeIndex++) {
                 const auto &cascadeCamera = cascades[cascadeIndex];
-                pEntry->m_csmActive[cascadeIndex] = cascadeCamera == nullptr ? 0.f : 1.f;
                 if (!cascadeCamera)
                     continue;
-
+                pEntry->m_csmActive[cascadeIndex] = 1.f;
                 cascadeCamera->calculateViewProjectionMatrix(pEntry->m_lightViewProjection[cascadeIndex]);
                 pEntry->m_lightView = cascadeCamera->globalTransform.inverted(); // pre-calculate this for the material
                 rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust, sortedOpaqueObjects, *cascadeCamera, true, QSSGRenderTextureCubeFaceNone, cascadeIndex);
