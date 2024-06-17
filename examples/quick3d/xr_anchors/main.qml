@@ -13,7 +13,7 @@ XrView {
     id: xrView
     referenceSpace: XrView.ReferenceSpaceStage
 
-    enableDepthSubmission: true
+    depthSubmissionEnabled: true
 
     property list<color> colorTable: [Qt.rgba(1, 0, 1, 1), // magenta
                                       Qt.rgba(0, 1, 0, 1), // green

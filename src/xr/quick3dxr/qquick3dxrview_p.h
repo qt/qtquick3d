@@ -55,7 +55,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(FoveationLevel fixedFoveation READ fixedFoveation WRITE setFixedFoveation NOTIFY fixedFoveationChanged FINAL)
     Q_PROPERTY(ReferenceSpace referenceSpace READ referenceSpace WRITE setReferenceSpace NOTIFY referenceSpaceChanged FINAL)
-    Q_PROPERTY(bool enableDepthSubmission READ isDepthSubmissionEnabled WRITE setEnableDepthSubmission NOTIFY enableDepthSubmissionChanged FINAL)
+    Q_PROPERTY(bool depthSubmissionEnabled READ depthSubmissionEnabled WRITE setDepthSubmissionEnabled NOTIFY depthSubmissionEnabledChanged FINAL)
     Q_PROPERTY(bool multiViewRenderingSupported READ isMultiViewRenderingSupported CONSTANT)
     Q_PROPERTY(bool enableMultiViewRendering READ isMultiViewRenderingEnabled WRITE setEnableMultiViewRendering NOTIFY enableMultiViewRenderingChanged FINAL)
     QML_NAMED_ELEMENT(XrView)
@@ -110,7 +110,7 @@ public:
     ReferenceSpace referenceSpace() const;
     void setReferenceSpace(ReferenceSpace newReferenceSpace);
 
-    bool isDepthSubmissionEnabled() const;
+    bool depthSubmissionEnabled() const;
 
     void registerXrItem(QQuick3DXrItem *newXrItem);
     void unregisterXrItem(QQuick3DXrItem *xrItem);
@@ -122,7 +122,7 @@ public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setPassthroughEnabled(bool enable);
     void setQuitOnSessionEnd(bool enable);
-    void setEnableDepthSubmission(bool enable);
+    void setDepthSubmissionEnabled(bool enable);
     void setEnableMultiViewRendering(bool enable);
 
 private Q_SLOTS:
@@ -142,7 +142,7 @@ Q_SIGNALS:
     void fixedFoveationChanged();
     void frameReady(QRhiTexture *colorBuffer); // tooling
     void referenceSpaceChanged();
-    void enableDepthSubmissionChanged();
+    void depthSubmissionEnabledChanged();
     void enableMultiViewRenderingChanged();
 
 private:

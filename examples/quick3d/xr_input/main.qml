@@ -13,7 +13,7 @@ XrView {
     id: xrView
     referenceSpace: XrView.ReferenceSpaceStage
 
-    enableDepthSubmission: true
+    depthSubmissionEnabled: true
 
     environment: SceneEnvironment {
         id: sceneEnvironment

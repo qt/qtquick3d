@@ -546,7 +546,7 @@ void QQuick3DXrView::setReferenceSpace(ReferenceSpace newReferenceSpace)
     m_openXRManager.setReferenceSpace(QtQuick3DXr::ReferenceSpace(newReferenceSpace));
 }
 
-bool QQuick3DXrView::isDepthSubmissionEnabled() const
+bool QQuick3DXrView::depthSubmissionEnabled() const
 {
     if (!m_openXRManager.isValid()) {
         qWarning("Attempted to check depth submission mode without a valid XR manager");
@@ -625,7 +625,7 @@ void QQuick3DXrView::unregisterXrItem(QQuick3DXrItem *xrItem)
 }
 
 /*!
-    \qmlproperty bool QtQuick3D.Xr::XrView::enableDepthSubmission
+    \qmlproperty bool QtQuick3D.Xr::XrView::depthSubmissionEnabled
 
     \brief Gets or sets whether submitting the depth buffer to the XR compositor
     is enabled.
@@ -637,7 +637,7 @@ void QQuick3DXrView::unregisterXrItem(QQuick3DXrItem *xrItem)
     has no effect on those platforms. Elsewhere, with OpenXR in particular,
     support depends on the OpenXR implementation used at run time.
 
-    It is always safe to set enableDepthSubmission to \c true. It will just have
+    It is always safe to set depthSubmissionEnabled to \c true. It will just have
     no effect when not support by the underlying stack. Inspect the debug output
     to see if depth submission is in use.
 
@@ -677,7 +677,7 @@ void QQuick3DXrView::unregisterXrItem(QQuick3DXrItem *xrItem)
     conscious choice based on their testing if they wish to enable it or not.
 */
 
-void QQuick3DXrView::setEnableDepthSubmission(bool enable)
+void QQuick3DXrView::setDepthSubmissionEnabled(bool enable)
 {
     if (!m_openXRManager.isValid()) {
         qWarning("Attempted to set depth submission mode without a valid XR manager");
@@ -689,7 +689,7 @@ void QQuick3DXrView::setEnableDepthSubmission(bool enable)
     m_openXRManager.setDepthSubmissionEnabled(enable);
 
     if (orgDepthSubmission != m_openXRManager.isDepthSubmissionEnabled())
-        emit enableDepthSubmissionChanged();
+        emit depthSubmissionEnabledChanged();
 }
 
 void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
@@ -771,9 +771,9 @@ void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
 
 
 /*!
-    \qmlsignal XrView::enableDepthSubmissionChanged()
+    \qmlsignal XrView::depthSubmissionEnabledChanged()
 
-    Emitted when the enableDepthSubmission property value changes.
+    Emitted when the depthSubmissionEnabled property value changes.
  */
 
 
