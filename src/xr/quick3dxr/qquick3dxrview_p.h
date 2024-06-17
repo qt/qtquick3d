@@ -49,7 +49,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(QQuick3DXrHandTrackerInput *leftHandTrackerInput READ leftHandTrackerInput CONSTANT)
     Q_PROPERTY(QQuick3DXrHandTrackerInput *rightHandTrackerInput READ rightHandTrackerInput CONSTANT)
     Q_PROPERTY(bool passthroughSupported READ isPassthroughSupported CONSTANT)
-    Q_PROPERTY(bool enablePassthrough READ isPassthroughEnabled WRITE setEnablePassthrough NOTIFY enablePassthroughChanged FINAL)
+    Q_PROPERTY(bool passthroughEnabled READ passthroughEnabled WRITE setPassthroughEnabled NOTIFY passthroughEnabledChanged FINAL)
     Q_PROPERTY(QOpenXRRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
     Q_PROPERTY(bool quitOnSessionEnd READ isQuitOnSessionEndEnabled WRITE setQuitOnSessionEnd NOTIFY quitOnSessionEndChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
@@ -89,7 +89,7 @@ public:
     QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
 
     bool isPassthroughSupported() const;
-    bool isPassthroughEnabled() const;
+    bool passthroughEnabled() const;
 
     FoveationLevel fixedFoveation() const;
     void setFixedFoveation(FoveationLevel level);
@@ -120,7 +120,7 @@ public:
 
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
-    void setEnablePassthrough(bool enable);
+    void setPassthroughEnabled(bool enable);
     void setQuitOnSessionEnd(bool enable);
     void setEnableDepthSubmission(bool enable);
     void setEnableMultiViewRendering(bool enable);
@@ -137,7 +137,7 @@ Q_SIGNALS:
     void sessionEnded();
     void xrOriginChanged(QQuick3DXrOrigin* xrOrigin);
     void environmentChanged(QQuick3DSceneEnvironment * environment);
-    void enablePassthroughChanged(bool enable);
+    void passthroughEnabledChanged();
     void quitOnSessionEndChanged();
     void fixedFoveationChanged();
     void frameReady(QRhiTexture *colorBuffer); // tooling

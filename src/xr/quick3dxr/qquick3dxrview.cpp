@@ -115,10 +115,10 @@ QQuick3DViewport *QQuick3DXrView::view3d() const
 }
 
 /*!
-    \qmlproperty bool QtQuick3D.Xr::XrView::isPassthroughEnabled
+    \qmlproperty bool QtQuick3D.Xr::XrView::passthroughEnabled
     \brief Holds whether passthrough is enabled for the XR view.
 */
-bool QQuick3DXrView::isPassthroughEnabled() const
+bool QQuick3DXrView::passthroughEnabled() const
 {
     return m_openXRManager.isPassthroughEnabled();
 }
@@ -179,7 +179,7 @@ bool QQuick3DXrView::isPassthroughSupported() const
     return m_openXRManager.supportsPassthrough();
 }
 
-void QQuick3DXrView::setEnablePassthrough(bool enable)
+void QQuick3DXrView::setPassthroughEnabled(bool enable)
 {
     if (!m_openXRManager.isValid()) {
         qWarning("Attempted to set passthrough mode without a valid XR manager");
@@ -196,7 +196,7 @@ void QQuick3DXrView::setEnablePassthrough(bool enable)
     m_openXRManager.setPassthroughEnabled(enable);
 
     if (orgPassthroughEnabled != m_openXRManager.isPassthroughEnabled())
-        emit enablePassthroughChanged(enable);
+        emit passthroughEnabledChanged();
 }
 
 /*!
@@ -736,9 +736,9 @@ void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
 
 
 /*!
-    \qmlsignal XrView::enablePassthroughChanged(bool enable)
+    \qmlsignal XrView::passthroughEnabledChanged()
 
-    Emitted when passthrough mode is changed to the value of \a enable .
+    Emitted when passthroughEnabled property value changes.
  */
 
 
