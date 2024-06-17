@@ -57,7 +57,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(ReferenceSpace referenceSpace READ referenceSpace WRITE setReferenceSpace NOTIFY referenceSpaceChanged FINAL)
     Q_PROPERTY(bool depthSubmissionEnabled READ depthSubmissionEnabled WRITE setDepthSubmissionEnabled NOTIFY depthSubmissionEnabledChanged FINAL)
     Q_PROPERTY(bool multiViewRenderingSupported READ isMultiViewRenderingSupported CONSTANT)
-    Q_PROPERTY(bool enableMultiViewRendering READ isMultiViewRenderingEnabled WRITE setEnableMultiViewRendering NOTIFY enableMultiViewRenderingChanged FINAL)
+    Q_PROPERTY(bool multiviewRenderingEnabled READ multiviewRenderingEnabled WRITE setMultiviewRenderingEnabled NOTIFY multiviewRenderingEnabledChanged FINAL)
     QML_NAMED_ELEMENT(XrView)
     QML_ADDED_IN_VERSION(6, 8)
 
@@ -116,14 +116,14 @@ public:
     void unregisterXrItem(QQuick3DXrItem *xrItem);
 
     bool isMultiViewRenderingSupported() const;
-    bool isMultiViewRenderingEnabled() const;
+    bool multiviewRenderingEnabled() const;
 
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setPassthroughEnabled(bool enable);
     void setQuitOnSessionEnd(bool enable);
     void setDepthSubmissionEnabled(bool enable);
-    void setEnableMultiViewRendering(bool enable);
+    void setMultiviewRenderingEnabled(bool enable);
 
 private Q_SLOTS:
     void updateViewportGeometry();
@@ -143,7 +143,7 @@ Q_SIGNALS:
     void frameReady(QRhiTexture *colorBuffer); // tooling
     void referenceSpaceChanged();
     void depthSubmissionEnabledChanged();
-    void enableMultiViewRenderingChanged();
+    void multiviewRenderingEnabledChanged();
 
 private:
     // The XrView does not expose the View3D in its public interface. This is intentional.

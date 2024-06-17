@@ -561,7 +561,7 @@ bool QQuick3DXrView::depthSubmissionEnabled() const
 
     \brief This read-only property reports the availability of \l{Multiview Rendering}.
 
-    \sa enableMultiViewRendering
+    \sa multiviewRenderingEnabled
  */
 bool QQuick3DXrView::isMultiViewRenderingSupported() const
 {
@@ -572,7 +572,7 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
 }
 
 /*!
-    \qmlproperty bool QtQuick3D.Xr::XrView::enableMultiViewRendering
+    \qmlproperty bool QtQuick3D.Xr::XrView::multiviewRenderingEnabled
 
     \brief Gets or sets whether \l{Multiview Rendering} is enabled for the XR view.
 
@@ -595,7 +595,7 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
     improve performance, reduce CPU and GPU load, as well as reduce power
     consumption. It defaults to disabled in order to ensure maximum
     compatibility. Developers are encouraged to verify that their application
-    renders as expected with enableMultiViewRendering set to \c true, and then
+    renders as expected with multiviewRenderingEnabled set to \c true, and then
     leave it set afterwards.
 
     Certain Qt Quick and Quick 3D features that involve application-provided
@@ -606,7 +606,7 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
 
      \sa multiViewRenderingSupported
 */
-bool QQuick3DXrView::isMultiViewRenderingEnabled() const
+bool QQuick3DXrView::multiviewRenderingEnabled() const
 {
     if (!m_openXRManager.isValid())
         return false;
@@ -692,7 +692,7 @@ void QQuick3DXrView::setDepthSubmissionEnabled(bool enable)
         emit depthSubmissionEnabledChanged();
 }
 
-void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
+void QQuick3DXrView::setMultiviewRenderingEnabled(bool enable)
 {
     if (!m_openXRManager.isValid()) {
         qWarning("Attempted to set multiview rendering mode without having m_openXRManager initialized");
@@ -703,7 +703,7 @@ void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
     m_openXRManager.setMultiviewRenderingEnabled(enable);
 
     if (orgMultiView != m_openXRManager.isMultiViewRenderingEnabled())
-        emit enableMultiViewRenderingChanged();
+        emit multiviewRenderingEnabledChanged();
 }
 
 /*!
@@ -778,9 +778,9 @@ void QQuick3DXrView::setEnableMultiViewRendering(bool enable)
 
 
 /*!
-    \qmlsignal XrView::enableMultiViewRenderingChanged()
+    \qmlsignal XrView::multiviewRenderingEnabledChanged()
 
-    Emitted when the enableMultiViewRendering property value changes.
+    Emitted when the multiviewRenderingEnabled property value changes.
  */
 
 QT_END_NAMESPACE

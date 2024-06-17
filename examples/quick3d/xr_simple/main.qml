@@ -70,7 +70,7 @@ XrView {
                 color: "white"
             }
             Text {
-                visible: xrView.enableMultiViewRendering
+                visible: xrView.multiviewRenderingEnabled
                 text: "Multiview rendering enabled"
                 font.pointSize: 4
                 color: "green"
