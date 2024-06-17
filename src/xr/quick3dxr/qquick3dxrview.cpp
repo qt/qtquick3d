@@ -167,11 +167,11 @@ void QQuick3DXrView::setEnvironment(QQuick3DSceneEnvironment *environment)
 }
 
 /*!
-    \qmlproperty bool QtQuick3D.Xr::XrView::isPassthroughSupported
+    \qmlproperty bool QtQuick3D.Xr::XrView::passthroughSupported
     \brief Indicates whether passthrough is supported for the XR view.
 */
 
-bool QQuick3DXrView::isPassthroughSupported() const
+bool QQuick3DXrView::passthroughSupported() const
 {
     if (!m_openXRManager.isValid())
         return false;
