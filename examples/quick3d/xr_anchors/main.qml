@@ -30,7 +30,7 @@ XrView {
     }
 
     property bool preferPassthrough: true
-    enablePassthrough: passthroughSupported && preferPassthrough
+    passthroughEnabled: passthroughSupported && preferPassthrough
 
     XrErrorDialog { id: err }
     onInitializeFailed: (errorString) => {
@@ -46,7 +46,7 @@ XrView {
         }
         antialiasingMode: SceneEnvironment.MSAA
         antialiasingQuality: SceneEnvironment.High
-        backgroundMode: xrView.enablePassthrough ? SceneEnvironment.Transparent : SceneEnvironment.Color
+        backgroundMode: xrView.passthroughEnabled ? SceneEnvironment.Transparent : SceneEnvironment.Color
         clearColor: "skyblue"
         probeHorizon: 0.5
     }
@@ -177,8 +177,8 @@ XrView {
                 scale: anchorNode.anchor.has3DBounds ? anchorNode.anchor.extent3D : Qt.vector3d(anchorNode.anchor.extent2D.x, anchorNode.anchor.extent2D.y, 0.01)
                 materials: PrincipledMaterial {
                     // Make anchor objects invisible in passthrough mode
-                    baseColor: xrView.enablePassthrough ? Qt.rgba(0, 0, 0, 0) : colorForClassification(anchor.semanticLabels.split(",")[0])
-                    alphaMode: xrView.enablePassthrough ? PrincipledMaterial.Blend : PrincipledMaterial.Opaque
+                    baseColor: xrView.passthroughEnabled ? Qt.rgba(0, 0, 0, 0) : colorForClassification(anchor.semanticLabels.split(",")[0])
+                    alphaMode: xrView.passthroughEnabled ? PrincipledMaterial.Blend : PrincipledMaterial.Opaque
                     roughness: 0.7
                 }
                 source: anchorNode.anchor.has3DBounds ? "#Cube" : "#Rectangle"
