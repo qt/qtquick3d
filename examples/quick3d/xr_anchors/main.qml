@@ -67,11 +67,10 @@ XrView {
 
             Component.onCompleted: handInput.poseSpace = XrHandInput.AimPose
 
-            XrActionMapper {
-                XrInputAction {
-                    actionId: [XrActionMapper.Button2Pressed, XrActionMapper.MiddleFingerPinch]
-                    onTriggered: xrView.preferPassthrough = !xrView.preferPassthrough
-                }
+            XrInputAction {
+                hand: XrInputAction.RightHand
+                actionId: [XrInputAction.Button2Pressed, XrInputAction.MiddleFingerPinch]
+                onTriggered: xrView.preferPassthrough = !xrView.preferPassthrough
             }
 
             onRotationChanged: {

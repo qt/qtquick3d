@@ -48,62 +48,60 @@ XrView {
 
             Component.onCompleted: handInput.poseSpace = XrHandInput.AimPose
 
-           XrActionMapper {
-               id: rightActionMapper
-               XrInputAction {
-                   id: rightTrigger
-                   actionId: [XrActionMapper.TriggerPressed, XrActionMapper.TriggerValue, XrActionMapper.IndexFingerPinch]
-                   onTriggered: {
-                       const button = rightController.hitObject as ExampleButton
-                       if (button && button !== panel.activeButton) {
-                           panel.activeButton = button
-                       }
-                   }
-               }
-           }
+            property QtObject hitObject
 
-           property QtObject hitObject
+            onRotationChanged: {
+                const pickResult = xrView.rayPick(scenePosition, forward)
+                if (pickResult.hitType !== PickResult.Null) {
+                    pickRay.hit = true
+                    pickRay.length = pickResult.distance
+                    hitObject = pickResult.objectHit
+                } else {
+                    pickRay.hit = false
+                    pickRay.length = 50
+                    hitObject = null
+                }
+            }
 
-           onRotationChanged: {
-               const pickResult = xrView.rayPick(scenePosition, forward)
-               if (pickResult.hitType !== PickResult.Null) {
-                   pickRay.hit = true
-                   pickRay.length = pickResult.distance
-                   hitObject = pickResult.objectHit
-               } else {
-                   pickRay.hit = false
-                   pickRay.length = 50
-                   hitObject = null
-               }
-           }
+            Node {
+                z: 5
+                Model {
+                    eulerRotation.x: 90
+                    scale: Qt.vector3d(0.05, 0.10, 0.05)
+                    source: "#Cylinder"
+                    materials: PrincipledMaterial {
+                        baseColor: "black"
+                        roughness: 0.2
+                    }
+                }
+            }
 
-           Node {
-               z: 5
-               Model {
-                   eulerRotation.x: 90
-                   scale: Qt.vector3d(0.05, 0.10, 0.05)
-                   source: "#Cylinder"
-                   materials: PrincipledMaterial {
-                       baseColor: "black"
-                       roughness: 0.2
-                   }
-               }
-           }
+            Node {
+                id: pickRay
+                property real length: 50
+                property bool hit: false
 
-           Node {
-               id: pickRay
-               property real length: 50
-               property bool hit: false
+                z: -length/2
+                Model {
+                    eulerRotation.x: 90
+                    scale: Qt.vector3d(0.02, pickRay.length/100, 0.02)
+                    source: "#Cylinder"
+                    materials: PrincipledMaterial { baseColor: pickRay.hit ? "green" : "gray" }
+                    opacity: 0.5
+                }
+            }
+        }
+    }
 
-               z: -length/2
-               Model {
-                   eulerRotation.x: 90
-                   scale: Qt.vector3d(0.02, pickRay.length/100, 0.02)
-                   source: "#Cylinder"
-                   materials: PrincipledMaterial { baseColor: pickRay.hit ? "green" : "gray" }
-                   opacity: 0.5
-               }
-           }
+    XrInputAction {
+        id: rightTrigger
+        hand: XrInputAction.RightHand
+        actionId: [XrInputAction.TriggerPressed, XrInputAction.TriggerValue, XrInputAction.IndexFingerPinch]
+        onTriggered: {
+            const button = rightController.hitObject as ExampleButton
+            if (button && button !== panel.activeButton) {
+                panel.activeButton = button
+            }
         }
     }
 

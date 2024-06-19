@@ -8,7 +8,7 @@
 
 #include <openxr/openxr.h>
 #include <functional>
-#include "qopenxractionmapper_p.h"
+#include "qquick3dxractionmapper_p.h"
 #include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
 
 #include <private/qquick3dmodel_p.h>
@@ -119,7 +119,7 @@ private:
     XrPath makeInputPath(const QByteArrayView path);
 
     struct InputActionInfo {
-        QOpenXRActionMapper::InputAction id;
+        QQuick3DXrInputAction::Action id;
         const char *shortName;
         const char *localizedName;
         XrActionType type;
@@ -142,7 +142,7 @@ private:
     QQuick3DXrHandInput *m_handInputState[2];
     QQuick3DXrHandTrackerInput *m_handTrackerInputState[2];
     HandActions m_handActions;
-    XrAction m_inputActions[QOpenXRActionMapper::NumActions] = {};
+    XrAction m_inputActions[QQuick3DXrInputAction::NumActions] = {};
 
     uint m_aimStateFlags[2] = {};
     bool m_initialized = false;

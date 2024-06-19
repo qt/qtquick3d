@@ -10,6 +10,7 @@
 #endif
 
 #include "qquick3dxrview_p.h"
+#include "qquick3dxractionmapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -70,11 +71,13 @@ void QOpenXRController::setController(QOpenXRController::Controller newControlle
         m_isActiveConnection = connect(input, &QQuick3DXrHandInput::isActiveChanged, this, [this, input]{
             setVisible(input->isActive());
         });
+
+        //### TODO invoke the action mapper directly from input manager
         m_inputActionConnection = connect(input, &QQuick3DXrHandInput::inputValueChange,
                                           this, [this](int id, const char *shortName, float value) {
-                                              if (m_actionMapper)
-                                                  m_actionMapper->handleInput(QOpenXRActionMapper::InputAction(id), shortName, value);
-                                          });
+            QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), QQuick3DXrInputAction::Hand(m_controller), shortName, value);
+        });
+
     } else {
         setVisible(false);
     }
@@ -97,50 +100,4 @@ QQuick3DXrHandInput *QOpenXRController::handInput() const
     return nullptr;
 }
 
-/*!
-    \qmlproperty XrActionMapper XrController::actionMapper
-    The action mapper associated with this controller.
-*/
-
-QOpenXRActionMapper *QOpenXRController::actionMapper() const
-{
-    return m_actionMapper;
-}
-
-void QOpenXRController::setActionMapper(QOpenXRActionMapper *newActionMapper)
-{
-    if (m_actionMapper == newActionMapper)
-        return;
-
-    if (m_actionMapperConnection) {
-        QObject::disconnect(m_actionMapperConnection);
-        m_actionMapperConnection = {};
-    }
-
-    if (newActionMapper)
-        m_actionMapperConnection = QObject::connect(newActionMapper, &QObject::destroyed, this, [this](QObject *destroyedMapper) {
-            if (m_actionMapper == destroyedMapper) {
-                m_actionMapper = nullptr;
-                emit actionMapperChanged();
-            }
-        });
-
-    m_actionMapper = newActionMapper;
-    emit actionMapperChanged();
-}
-
-/*!
-    \qmlsignal XrController::controllerChanged()
-    Emitted when the controller property changes.
-*/
-
-/*!
-    \qmlsignal XrController::handInputChanged()
-    Emitted when the handInput property changes.
-*/
-
-/*!
-    \qmlsignal XrController::actionMapperChanged()
-    Emitted when the actionMapper property changes.
-*/
 QT_END_NAMESPACE
