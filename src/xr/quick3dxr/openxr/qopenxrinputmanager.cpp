@@ -246,7 +246,7 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
     // Bindings
 
     using XrActionBindings = std::vector<XrActionSuggestedBinding>;
-    using HandInputMapping = std::vector<std::tuple<QOpenXRActionMapper::InputAction, QXRHandComponentPath, SubPathSelector>>;
+    using HandInputMapping = std::vector<std::tuple<QQuick3DXrInputAction::Action, QXRHandComponentPath, SubPathSelector>>;
     auto addToBindings = [this](XrActionBindings &bindings, const HandInputMapping &defs){
         for (const auto &[actionId, path, selector] : defs) {
             if (selector & LeftHandSubPath)
@@ -259,24 +259,24 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
     // Oculus Touch
     {
         HandInputMapping mappingDefs {
-            { QOpenXRActionMapper::Button1Pressed, xClick, LeftHandSubPath },
-            { QOpenXRActionMapper::Button1Pressed, aClick, RightHandSubPath },
-            { QOpenXRActionMapper::Button2Pressed, yClick, LeftHandSubPath },
-            { QOpenXRActionMapper::Button2Pressed, bClick, RightHandSubPath },
-            { QOpenXRActionMapper::Button1Touched, xTouch, LeftHandSubPath },
-            { QOpenXRActionMapper::Button1Touched, aTouch, RightHandSubPath },
-            { QOpenXRActionMapper::Button2Touched, yTouch, LeftHandSubPath },
-            { QOpenXRActionMapper::Button2Touched, bTouch, RightHandSubPath },
-            { QOpenXRActionMapper::ButtonMenuPressed, menuClick, LeftHandSubPath },
-            { QOpenXRActionMapper::ButtonSystemPressed, systemClick, RightHandSubPath },
-            { QOpenXRActionMapper::SqueezeValue, squeezeValue, BothHandsSubPath },
-            { QOpenXRActionMapper::TriggerValue, triggerValue, BothHandsSubPath },
-            { QOpenXRActionMapper::TriggerTouched, triggerTouch, BothHandsSubPath },
-            { QOpenXRActionMapper::ThumbstickX, thumbstickX, BothHandsSubPath },
-            { QOpenXRActionMapper::ThumbstickY, thumbstickY, BothHandsSubPath },
-            { QOpenXRActionMapper::ThumbstickPressed, thumbstickClick, BothHandsSubPath },
-            { QOpenXRActionMapper::ThumbstickTouched, thumbstickTouch, BothHandsSubPath },
-            { QOpenXRActionMapper::ThumbrestTouched, thumbrestTouch, BothHandsSubPath },
+            { QQuick3DXrInputAction::Button1Pressed, xClick, LeftHandSubPath },
+            { QQuick3DXrInputAction::Button1Pressed, aClick, RightHandSubPath },
+            { QQuick3DXrInputAction::Button2Pressed, yClick, LeftHandSubPath },
+            { QQuick3DXrInputAction::Button2Pressed, bClick, RightHandSubPath },
+            { QQuick3DXrInputAction::Button1Touched, xTouch, LeftHandSubPath },
+            { QQuick3DXrInputAction::Button1Touched, aTouch, RightHandSubPath },
+            { QQuick3DXrInputAction::Button2Touched, yTouch, LeftHandSubPath },
+            { QQuick3DXrInputAction::Button2Touched, bTouch, RightHandSubPath },
+            { QQuick3DXrInputAction::ButtonMenuPressed, menuClick, LeftHandSubPath },
+            { QQuick3DXrInputAction::ButtonSystemPressed, systemClick, RightHandSubPath },
+            { QQuick3DXrInputAction::SqueezeValue, squeezeValue, BothHandsSubPath },
+            { QQuick3DXrInputAction::TriggerValue, triggerValue, BothHandsSubPath },
+            { QQuick3DXrInputAction::TriggerTouched, triggerTouch, BothHandsSubPath },
+            { QQuick3DXrInputAction::ThumbstickX, thumbstickX, BothHandsSubPath },
+            { QQuick3DXrInputAction::ThumbstickY, thumbstickY, BothHandsSubPath },
+            { QQuick3DXrInputAction::ThumbstickPressed, thumbstickClick, BothHandsSubPath },
+            { QQuick3DXrInputAction::ThumbstickTouched, thumbstickTouch, BothHandsSubPath },
+            { QQuick3DXrInputAction::ThumbrestTouched, thumbrestTouch, BothHandsSubPath },
         };
 
         XrPath oculusTouchProfile;
@@ -315,7 +315,7 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
         }};
 
         HandInputMapping mappingDefs {
-            { QOpenXRActionMapper::SqueezeValue, squeezeValue, BothHandsSubPath },
+            { QQuick3DXrInputAction::SqueezeValue, squeezeValue, BothHandsSubPath },
         };
 
         addToBindings(bindings, mappingDefs);
@@ -335,15 +335,15 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
         setPath(htcViveProfile, "/interaction_profiles/htc/vive_controller");
 
         HandInputMapping mappingDefs {
-            { QOpenXRActionMapper::ButtonMenuPressed, menuClick, BothHandsSubPath },
-            { QOpenXRActionMapper::ButtonSystemPressed, systemClick, BothHandsSubPath },
-            { QOpenXRActionMapper::SqueezePressed, squeezeClick, BothHandsSubPath },
-            { QOpenXRActionMapper::TriggerValue, triggerValue, BothHandsSubPath },
-            { QOpenXRActionMapper::TriggerPressed, triggerClick, BothHandsSubPath },
-            { QOpenXRActionMapper::TrackpadX, trackpadX, BothHandsSubPath },
-            { QOpenXRActionMapper::TrackpadY, trackpadY, BothHandsSubPath },
-            { QOpenXRActionMapper::TrackpadPressed, trackpadClick, BothHandsSubPath },
-            { QOpenXRActionMapper::TrackpadTouched, trackpadTouch, BothHandsSubPath },
+            { QQuick3DXrInputAction::ButtonMenuPressed, menuClick, BothHandsSubPath },
+            { QQuick3DXrInputAction::ButtonSystemPressed, systemClick, BothHandsSubPath },
+            { QQuick3DXrInputAction::SqueezePressed, squeezeClick, BothHandsSubPath },
+            { QQuick3DXrInputAction::TriggerValue, triggerValue, BothHandsSubPath },
+            { QQuick3DXrInputAction::TriggerPressed, triggerClick, BothHandsSubPath },
+            { QQuick3DXrInputAction::TrackpadX, trackpadX, BothHandsSubPath },
+            { QQuick3DXrInputAction::TrackpadY, trackpadY, BothHandsSubPath },
+            { QQuick3DXrInputAction::TrackpadPressed, trackpadClick, BothHandsSubPath },
+            { QQuick3DXrInputAction::TrackpadTouched, trackpadTouch, BothHandsSubPath },
         };
 
         std::vector<XrActionSuggestedBinding> bindings {{
@@ -616,16 +616,16 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking(XrTime predictedDisplayTi
             for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
                 const uint state = aimState[hand].status;
                 const uint oldState = m_aimStateFlags[hand];
-                auto updateState = [&](const char *name, QOpenXRActionMapper::InputAction id, uint flag) {
+                auto updateState = [&](const char *name, QQuick3DXrInputAction::Action id, uint flag) {
                     if ((state & flag) != (oldState & flag))
                         m_handInputState[hand]->setInputValue(id, name, float(!!(state & flag)));
                 };
 
-                updateState("index_pinch", QOpenXRActionMapper::IndexFingerPinch, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
-                updateState("middle_pinch", QOpenXRActionMapper::MiddleFingerPinch, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
-                updateState("ring_pinch", QOpenXRActionMapper::RingFingerPinch, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
-                updateState("little_pinch", QOpenXRActionMapper::LittleFingerPinch, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
-                updateState("hand_tracking_menu_press", QOpenXRActionMapper::HandTrackingMenuPress, XR_HAND_TRACKING_AIM_MENU_PRESSED_BIT_FB);
+                updateState("index_pinch", QQuick3DXrInputAction::IndexFingerPinch, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
+                updateState("middle_pinch", QQuick3DXrInputAction::MiddleFingerPinch, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
+                updateState("ring_pinch", QQuick3DXrInputAction::RingFingerPinch, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
+                updateState("little_pinch", QQuick3DXrInputAction::LittleFingerPinch, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
+                updateState("hand_tracking_menu_press", QQuick3DXrInputAction::HandTrackingMenuPress, XR_HAND_TRACKING_AIM_MENU_PRESSED_BIT_FB);
                 m_aimStateFlags[hand] = state;
             }
 
@@ -722,30 +722,30 @@ bool QQuick3DXrInputManagerPrivate::queryHandMesh(Hand hand)
 void QQuick3DXrInputManagerPrivate::setupActions()
 {
     m_handInputActionDefs = {
-        { QOpenXRActionMapper::Button1Pressed, "b1_pressed", "Button 1 Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::Button1Touched, "b1_touched", "Button 1 Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::Button2Pressed, "b2_pressed", "Button 2 Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::Button2Touched, "b2_touched", "Button 2 Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::ButtonMenuPressed, "bmenu_pressed", "Button Menu Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::ButtonMenuTouched, "bmenu_touched", "Button Menu Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::ButtonSystemPressed, "bsystem_pressed", "Button System Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::ButtonSystemTouched, "bsystem_touched", "Button System Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::SqueezeValue, "squeeze_value", "Squeeze Value", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::SqueezeForce, "squeeze_force", "Squeeze Force", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::SqueezePressed, "squeeze_pressed", "Squeeze Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::TriggerValue, "trigger_value", "Trigger Value", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::TriggerPressed, "trigger_pressed", "Trigger Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::TriggerTouched, "trigger_touched", "Trigger Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::ThumbstickX, "thumbstick_x", "Thumbstick X", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::ThumbstickY, "thumbstick_y", "Thumbstick Y", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::ThumbstickPressed, "thumbstick_pressed", "Thumbstick Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::ThumbstickTouched, "thumbstick_touched", "Thumbstick Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::ThumbrestTouched, "thumbrest_touched", "Thumbrest Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::TrackpadX, "trackpad_x", "Trackpad X", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::TrackpadY, "trackpad_y", "Trackpad Y", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::TrackpadForce, "trackpad_force", "Trackpad Force", XR_ACTION_TYPE_FLOAT_INPUT },
-        { QOpenXRActionMapper::TrackpadTouched, "trackpad_touched", "Trackpad Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
-        { QOpenXRActionMapper::TrackpadPressed, "trackpad_pressed", "Trackpad Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT }
+        { QQuick3DXrInputAction::Button1Pressed, "b1_pressed", "Button 1 Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::Button1Touched, "b1_touched", "Button 1 Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::Button2Pressed, "b2_pressed", "Button 2 Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::Button2Touched, "b2_touched", "Button 2 Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::ButtonMenuPressed, "bmenu_pressed", "Button Menu Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::ButtonMenuTouched, "bmenu_touched", "Button Menu Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::ButtonSystemPressed, "bsystem_pressed", "Button System Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::ButtonSystemTouched, "bsystem_touched", "Button System Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::SqueezeValue, "squeeze_value", "Squeeze Value", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::SqueezeForce, "squeeze_force", "Squeeze Force", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::SqueezePressed, "squeeze_pressed", "Squeeze Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::TriggerValue, "trigger_value", "Trigger Value", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::TriggerPressed, "trigger_pressed", "Trigger Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::TriggerTouched, "trigger_touched", "Trigger Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::ThumbstickX, "thumbstick_x", "Thumbstick X", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::ThumbstickY, "thumbstick_y", "Thumbstick Y", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::ThumbstickPressed, "thumbstick_pressed", "Thumbstick Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::ThumbstickTouched, "thumbstick_touched", "Thumbstick Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::ThumbrestTouched, "thumbrest_touched", "Thumbrest Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::TrackpadX, "trackpad_x", "Trackpad X", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::TrackpadY, "trackpad_y", "Trackpad Y", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::TrackpadForce, "trackpad_force", "Trackpad Force", XR_ACTION_TYPE_FLOAT_INPUT },
+        { QQuick3DXrInputAction::TrackpadTouched, "trackpad_touched", "Trackpad Touched", XR_ACTION_TYPE_BOOLEAN_INPUT },
+        { QQuick3DXrInputAction::TrackpadPressed, "trackpad_pressed", "Trackpad Pressed", XR_ACTION_TYPE_BOOLEAN_INPUT }
     };
 
     // Create an action set.

@@ -1,100 +1,88 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxractionmapper_p.h"
-#include "qopenxrcontroller_p.h"
+#include "qquick3dxractionmapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmltype XrActionMapper
-    \inherits Object3D
-    \inqmlmodule QtQuick3D.Xr
-    \brief Maps XrInputActions to affect an XR application.
- */
-QOpenXRActionMapper::QOpenXRActionMapper(QQuick3DObject *parent) : QQuick3DObject(parent)
+QQuick3DXrActionMapper::QQuick3DXrActionMapper(QObject *parent) : QObject(parent)
 {
 }
 
-void QOpenXRActionMapper::classBegin()
+static inline quint32 actionIntKey(const QQuick3DXrInputAction::Action id, const QQuick3DXrInputAction::Hand hand)
 {
+    return quint16(id) | (quint32(hand) << 16);
 }
 
-void QOpenXRActionMapper::componentComplete()
+static inline QString actionStringKey(const QString &name, const QQuick3DXrInputAction::Hand hand)
 {
-    m_controller = qobject_cast<QOpenXRController *>(parent());
-    if (m_controller && !m_controller->actionMapper())
-        m_controller->setActionMapper(this);
+    return QString::number(hand) + name;
 }
 
-// returns true if inserted into m_actionMap
-bool QOpenXRActionMapper::insertAction(QOpenXrInputAction *action, InputAction id)
+QQuick3DXrActionMapper *QQuick3DXrActionMapper::instance()
 {
-    Q_ASSERT(id > CustomAction && id < NumActions);
-    if (m_actionMap[id] == nullptr) {
-        m_actionMap[id] = action;
-        return true;
-    } else {
-        setOverflow(id);
-        return false;
-    }
+    static QQuick3DXrActionMapper instance;
+    return &instance;
 }
 
-void QOpenXRActionMapper::removeAction(QOpenXrInputAction *action)
+void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuick3DXrInputAction::Hand hand, const char *shortName, float value)
 {
-    const auto idList = action->actionId();
-    for (const auto &id : idList) {
-        if (id != CustomAction && m_actionMap[id] == action)
-            m_actionMap[id] = nullptr;
-    }
-    m_extraActions.removeAll(action);
-}
-
-void QOpenXRActionMapper::handleInput(InputAction id, const char *shortName, float value)
-{
+    auto *that = instance();
     auto set = [](auto action, auto value) {
         action->setValue(value);
         // TODO: distinguish between bool and float values
         action->setPressed(value > 0.9);
     };
 
-    if (id == CustomAction) {
-        emit inputValueChange(id, QLatin1StringView(shortName), value);
-    } else {
-        emit inputValueChange(id, {}, value);
-        if (auto *action = m_actionMap[id])
-            set(action, value);
+    const QLatin1StringView name(shortName);
+    emit that->inputValueChange(id, name, value); // TODO: emit signal from public class (XrController?)
 
+    QList<QQuick3DXrInputAction *> actions;
+    if (id == QQuick3DXrInputAction::CustomAction) {
+        actions = that->m_customActions.values(actionStringKey(name, hand));
+    } else {
+        actions = that->m_actions.values(actionIntKey(id, hand));
     }
 
-    if (id == CustomAction || isOverflow(id)) {
-        for (auto *action : std::as_const(m_extraActions)) {
-            if ((action->actionId().isEmpty() && action->actionName() == QLatin1StringView(shortName)) || action->actionId().contains(id))
-                set(action, value);
+    for (const auto &action : std::as_const(actions))
+        set(action, value);
+}
+
+// Note: it is the responsibility of the caller to call removeAction() before changing actionId/actionName
+void QQuick3DXrActionMapper::registerAction(QQuick3DXrInputAction *action)
+{
+    auto *that = instance();
+
+    const auto &idList = action->actionId();
+    const auto hand = action->hand();
+
+    if (idList.isEmpty()) {
+        that->m_customActions.insert(actionStringKey(action->actionName(), hand), action);
+    } else {
+        for (const auto &id : idList) {
+            if (id != QQuick3DXrInputAction::CustomAction)
+                that->m_actions.insert(actionIntKey(id, hand), action);
+        }
+    }
+
+    connect(action, &QObject::destroyed, that, [that, action](){ that->removeAction(action); });
+}
+
+void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
+{
+    auto *that = instance();
+
+    const auto idList = action->actionId();
+    const auto hand = action->hand();
+    if (idList.isEmpty()) {
+        that->m_customActions.remove(action->actionName(), action);
+    } else {
+        for (const auto &id : idList) {
+            if (id != QQuick3DXrInputAction::CustomAction)
+                that->m_actions.remove(actionIntKey(id, hand));
         }
     }
 }
-
-void QOpenXRActionMapper::registerAction(QOpenXrInputAction *action)
-{
-    const auto idList = action->actionId();
-    bool needsExtra = idList.isEmpty(); // We definitely need to add to m_extraActions if no actionId
-    for (const auto &id : idList) {
-        if (id != CustomAction)
-            needsExtra = !insertAction(action, id) || needsExtra; //make sure not to shortcut the function call
-    }
-    if (needsExtra)
-        m_extraActions.append(action);
-    connect(action, &QObject::destroyed, this, [this, action](){ removeAction(action); });
-}
-
-/*!
-    \qmlsignal XrActionMapper::inputValueChange(InputAction id, QString shortName, float value)
-    \brief Emitted when an input action is triggered.
-
-    This signal provides an \a id, \a shortName, and \a value when an inputValue
-    has changed.
- */
 
 /*!
     \qmltype XrInputAction
@@ -103,7 +91,7 @@ void QOpenXRActionMapper::registerAction(QOpenXrInputAction *action)
     \brief Maps input actions to corresponding actions.
  */
 
-void QOpenXrInputAction::setValue(float newValue)
+void QQuick3DXrInputAction::setValue(float newValue)
 {
     if (qFuzzyCompare(m_value, newValue))
         return;
@@ -119,12 +107,12 @@ void QOpenXrInputAction::setValue(float newValue)
     is currently pressed.
  */
 
-bool QOpenXrInputAction::pressed() const
+bool QQuick3DXrInputAction::pressed() const
 {
     return m_pressed;
 }
 
-void QOpenXrInputAction::setPressed(bool newPressed)
+void QQuick3DXrInputAction::setPressed(bool newPressed)
 {
     if (m_pressed == newPressed)
         return;
@@ -135,26 +123,31 @@ void QOpenXrInputAction::setPressed(bool newPressed)
 }
 
 /*!
-    \qmlproperty string QOpenXrInputAction::actionName
+    \qmlproperty string QQuick3DXrInputAction::actionName
     \brief The name of the input action.
 
-    Use this property to specify the name of the input action you want to map.
+    Use this property to specify the name of the custom input action you want to map. This property does not have an effect if \l actionId is set.
  */
 
-QString QOpenXrInputAction::actionName() const
+QString QQuick3DXrInputAction::actionName() const
 {
     return m_actionName;
 }
 
-void QOpenXrInputAction::setActionName(const QString &newActionName)
+void QQuick3DXrInputAction::setActionName(const QString &newActionName)
 {
     if (m_actionName == newActionName)
         return;
+    const bool needsRemap = m_actionIds.isEmpty() && m_componentComplete;
+    if (needsRemap)
+        QQuick3DXrActionMapper::removeAction(this);
     m_actionName = newActionName;
+    if (needsRemap)
+        QQuick3DXrActionMapper::registerAction(this);
     emit actionNameChanged();
 }
 
-QOpenXrInputAction::QOpenXrInputAction(QObject *parent)
+QQuick3DXrInputAction::QQuick3DXrInputAction(QObject *parent)
     : QObject(parent)
 {
 }
@@ -167,20 +160,19 @@ QOpenXrInputAction::QOpenXrInputAction(QObject *parent)
     the value of the input (usually in the range [0, 1]).
  */
 
-float QOpenXrInputAction::value() const
+float QQuick3DXrInputAction::value() const
 {
     return m_value;
 }
 
-void QOpenXrInputAction::classBegin()
+void QQuick3DXrInputAction::classBegin()
 {
 }
 
-void QOpenXrInputAction::componentComplete()
+void QQuick3DXrInputAction::componentComplete()
 {
-    auto *mapper = qobject_cast<QOpenXRActionMapper *>(parent());
-    if (mapper)
-        mapper->registerAction(this);
+    QQuick3DXrActionMapper::registerAction(this);
+    m_componentComplete = true;
 }
 
 /*!
@@ -242,38 +234,39 @@ void QOpenXrInputAction::componentComplete()
     \value XrActionMapper.NumActions Number of actions.
  */
 
-QList<QOpenXRActionMapper::InputAction> QOpenXrInputAction::actionId() const
+QList<QQuick3DXrInputAction::Action> QQuick3DXrInputAction::actionId() const
 {
     return m_actionIds;
 }
 
-void QOpenXrInputAction::setActionId(const QList<QOpenXRActionMapper::InputAction> &newActionId)
+void QQuick3DXrInputAction::setActionId(const QList<Action> &newActionId)
 {
     if (m_actionIds == newActionId)
         return;
+
+    if (m_componentComplete)
+        QQuick3DXrActionMapper::removeAction(this);
+
     m_actionIds = newActionId;
+
+    if (m_componentComplete)
+        QQuick3DXrActionMapper::registerAction(this);
+
     emit actionIdChanged();
 }
 
-/*!
-    \qmlsignal XrInputAction::valueChanged()
-    \brief Emitted when the value property changes.
- */
- /*!
-    \qmlsignal XrInputAction::pressedChanged()
-    \brief Emitted when the pressed property changes.
- */
-/*!
-    \qmlsignal XrInputAction::triggered()
-    \brief Emitted when the input action is triggered.
- */
- /*!
-    \qmlsignal XrInputAction::actionNameChanged()
-    \brief Emitted when the name of the input action changes.
- */
- /*!
-    \qmlsignal XrInputAction::actionIdChanged()
-    \brief Emitted when the ID of the input action changes.
- */
+
+QQuick3DXrInputAction::Hand QQuick3DXrInputAction::hand() const
+{
+    return m_hand;
+}
+
+void QQuick3DXrInputAction::setHand(Hand newHand)
+{
+    if (m_hand == newHand)
+        return;
+    m_hand = newHand;
+    emit handChanged();
+}
 
 QT_END_NAMESPACE

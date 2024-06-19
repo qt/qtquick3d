@@ -5,36 +5,42 @@ import QtQuick
 import QtQuick3D
 import QtQuick3D.Xr
 
-XrActionMapper {
+Item {
     id: actionMapper
 
+    required property XrInputAction.Hand hand
     property alias triggerPressed: trigger.pressed
     property bool button1Pressed: button1.pressed || trackpad.rightPressed
     property bool button2Pressed: button2.pressed || trackpad.leftPressed
 
     XrInputAction {
         id: trigger
-        actionId: [XrActionMapper.TriggerValue, XrActionMapper.TriggerPressed, XrActionMapper.IndexFingerPinch]
+        hand: actionMapper.hand
+        actionId: [XrInputAction.TriggerValue, XrInputAction.TriggerPressed, XrInputAction.IndexFingerPinch]
     }
 
     XrInputAction {
         id: button1
-        actionId: [XrActionMapper.Button1Pressed, XrActionMapper.MiddleFingerPinch]
+        hand: actionMapper.hand
+        actionId: [XrInputAction.Button1Pressed, XrInputAction.MiddleFingerPinch]
     }
 
     XrInputAction {
         id: button2
-        actionId: [XrActionMapper.Button2Pressed, XrActionMapper.ButtonMenuPressed, XrActionMapper.RingFingerPinch]
+        hand: actionMapper.hand
+        actionId: [XrInputAction.Button2Pressed, XrInputAction.ButtonMenuPressed, XrInputAction.RingFingerPinch]
     }
 
     XrInputAction {
         id: trackpadX
-        actionId: [XrActionMapper.TrackpadX]
+        hand: actionMapper.hand
+        actionId: [XrInputAction.TrackpadX]
     }
 
     XrInputAction {
         id: trackpad
-        actionId: [XrActionMapper.TrackpadPressed]
+        hand: actionMapper.hand
+        actionId: [XrInputAction.TrackpadPressed]
         property bool rightPressed: pressed && trackpadX > 0.1
         property bool leftPressed: pressed && trackpadX < -0.1
     }

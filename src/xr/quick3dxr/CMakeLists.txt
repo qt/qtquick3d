@@ -10,7 +10,7 @@ qt_internal_add_qml_module(Quick3DXr
     VERSION "${PROJECT_VERSION}"
     DEPENDENCIES QtQuick QtQuick3D
     SOURCES
-        qopenxractionmapper_p.h qopenxractionmapper.cpp
+        qquick3dxractionmapper_p.h qquick3dxractionmapper.cpp
         qquick3dxrorigin.cpp qquick3dxrorigin_p.h
         qquick3dxranimationdriver.cpp qquick3dxranimationdriver_p.h
         qquick3dxrcamera.cpp qquick3dxrcamera_p.h
