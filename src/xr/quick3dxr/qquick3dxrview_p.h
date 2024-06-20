@@ -140,7 +140,7 @@ Q_SIGNALS:
     void passthroughEnabledChanged();
     void quitOnSessionEndChanged();
     void fixedFoveationChanged();
-    void frameReady(QRhiTexture *colorBuffer); // tooling
+    void frameReady(); // tooling
     void referenceSpaceChanged();
     void depthSubmissionEnabledChanged();
     void multiviewRenderingEnabledChanged();

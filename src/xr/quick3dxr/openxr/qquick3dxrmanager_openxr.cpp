@@ -1575,10 +1575,8 @@ void QQuick3DXrManagerPrivate::doRender(const XrSwapchainSubImage &subImage,
     // the 3D APIs perspective. Without multiview this is done - and so the
     // signal is emitted - multiple times (twice) per "frame" (eye).
     QRhiRenderTarget *rt = QQuickWindowPrivate::get(quickWindow)->activeCustomRhiRenderTarget();
-    if (rt->resourceType() == QRhiResource::TextureRenderTarget) {
-        QRhiTexture *colorBuffer = static_cast<QRhiTextureRenderTarget *>(rt)->description().colorAttachmentAt(0)->texture();
-        emit q->frameReady(colorBuffer);
-    }
+    if (rt->resourceType() == QRhiResource::TextureRenderTarget && static_cast<QRhiTextureRenderTarget *>(rt)->description().colorAttachmentAt(0)->texture())
+        emit q->frameReady();
 }
 
 void QQuick3DXrManagerPrivate::setupMetaQuestColorSpaces()

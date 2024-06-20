@@ -757,9 +757,10 @@ void QQuick3DXrView::setMultiviewRenderingEnabled(bool enable)
 
 
 /*!
-    \qmlsignal XrView::frameReady(QRhiTexture* colorBuffer)
+    \qmlsignal XrView::frameReady()
+    \internal
 
-    Emitted when a new frame is ready to provide \a colorBuffer.
+    Emitted when a new frame is ready.
  */
 
 
