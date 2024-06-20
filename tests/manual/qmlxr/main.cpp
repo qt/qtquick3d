@@ -196,7 +196,15 @@ int main(int argc, char *argv[])
             }
         }
 
-        QObject::connect(xrView, &QQuick3DXrView::frameReady, xrView, [&](QRhiTexture *colorBuffer) {
+        QObject::connect(xrView, &QQuick3DXrView::frameReady, xrView, Qt::DirectConnection, [&]() {
+            QRhiTexture *colorBuffer = nullptr;
+            if (xrView->view() && xwView->view()->window()) {
+                QQuickWindow *quickWindow = xrView->view()->window();
+                QRhiRenderTarget *rt = QQuickWindowPrivate::get(quickWindow)->activeCustomRhiRenderTarget();
+                if (rt && rt->resourceType() == QRhiResource::TextureRenderTarget)
+                    colorBuffer = static_cast<QRhiTextureRenderTarget *>(rt)->description().colorAttachmentAt(0)->texture();
+            }
+
             const int viewCount = qMax(1, colorBuffer->arraySize());
 
             if (cmdLineParser.isSet(grabOption)) {

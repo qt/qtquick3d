@@ -81,7 +81,7 @@ Q_SIGNALS:
     void initialized();
     void sessionEnded();
     void xrOriginChanged();
-    void frameReady(QRhiTexture *colorBuffer);
+    void frameReady();
     void referenceSpaceChanged();
 
 protected:
