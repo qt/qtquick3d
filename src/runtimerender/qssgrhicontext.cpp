@@ -1344,8 +1344,12 @@ void QSSGRhiContextPrivate::releaseMesh(QSSGRenderMesh *mesh)
 {
     if (mesh) {
         for (const auto &subset : std::as_const(mesh->subsets)) {
-            if (subset.rhi.targetsTexture)
+            if (subset.rhi.targetsTexture) {
+                // If there is a morph targets texture, it should be the same for
+                // all subsets, so just release and break
                 releaseTexture(subset.rhi.targetsTexture);
+                break;
+            }
         }
     }
     m_meshes.remove(mesh);
