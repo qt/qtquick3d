@@ -273,11 +273,16 @@ bool QQuick3DXrSpatialAnchor::has2DBounds() const
 
 void QQuick3DXrSpatialAnchor::setBounds2D(const QVector2D &offset, const QVector2D &extent)
 {
+    if (qFuzzyCompare(m_offset2D, offset) && qFuzzyCompare(m_extent2D, extent))
+        return;
+
     m_offset2D = offset;
     m_extent2D = extent;
 
     // FIXME: verify
     m_has2DBounds = true;
+
+    emit has2DBoundsChanged();
 }
 
 /*!
@@ -298,10 +303,16 @@ bool QQuick3DXrSpatialAnchor::has3DBounds() const
 
 void QQuick3DXrSpatialAnchor::setBounds3D(const QVector3D &offset, const QVector3D &extent)
 {
+    if (qFuzzyCompare(m_offset3D, offset) && qFuzzyCompare(m_extent3D, extent))
+        return;
+
     m_offset3D = offset;
     m_extent3D = extent;
+
     // FIXME: Store the 3D bounds and verify
     m_has3DBounds = true;
+
+    emit has3DBoundsChanged();
 }
 
 QVector2D QQuick3DXrSpatialAnchor::offset2D() const

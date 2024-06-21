@@ -32,14 +32,14 @@ QT_BEGIN_NAMESPACE
 class QQuick3DXrSpatialAnchor : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool has2DBounds READ has2DBounds CONSTANT)
-    Q_PROPERTY(bool has3DBounds READ has3DBounds CONSTANT)
-    Q_PROPERTY(QVector2D offset2D READ offset2D CONSTANT)
-    Q_PROPERTY(QVector2D extent2D READ extent2D CONSTANT)
-    Q_PROPERTY(QVector3D offset3D READ offset3D CONSTANT)
-    Q_PROPERTY(QVector3D extent3D READ extent3D CONSTANT)
-    Q_PROPERTY(QVector3D position READ position NOTIFY positionChanged)
-    Q_PROPERTY(QQuaternion rotation READ rotation NOTIFY rotationChanged)
+    Q_PROPERTY(bool has2DBounds READ has2DBounds NOTIFY has2DBoundsChanged FINAL)
+    Q_PROPERTY(bool has3DBounds READ has3DBounds NOTIFY has3DBoundsChanged FINAL)
+    Q_PROPERTY(QVector2D offset2D READ offset2D NOTIFY offset2DChanged FINAL)
+    Q_PROPERTY(QVector2D extent2D READ extent2D NOTIFY extent2DChanged FINAL)
+    Q_PROPERTY(QVector3D offset3D READ offset3D NOTIFY offset3DChanged FINAL)
+    Q_PROPERTY(QVector3D extent3D READ extent3D NOTIFY extent3DChanged FINAL)
+    Q_PROPERTY(QVector3D position READ position NOTIFY positionChanged FINAL)
+    Q_PROPERTY(QQuaternion rotation READ rotation NOTIFY rotationChanged FINAL)
     Q_PROPERTY(Classification classification READ classification NOTIFY classificationChanged FINAL)
     Q_PROPERTY(QString classificationString READ classificationString NOTIFY classificationStringChanged FINAL)
     Q_PROPERTY(QString identifier READ identifier CONSTANT)
