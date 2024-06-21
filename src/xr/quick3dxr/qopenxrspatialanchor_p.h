@@ -40,13 +40,27 @@ class QQuick3DXrSpatialAnchor : public QObject
     Q_PROPERTY(QVector3D extent3D READ extent3D CONSTANT)
     Q_PROPERTY(QVector3D position READ position NOTIFY positionChanged)
     Q_PROPERTY(QQuaternion rotation READ rotation NOTIFY rotationChanged)
-    Q_PROPERTY(QString semanticLabels READ semanticLabels CONSTANT)
+    Q_PROPERTY(Classification classification READ classification NOTIFY classificationChanged FINAL)
+    Q_PROPERTY(QString classificationString READ classificationString NOTIFY classificationStringChanged FINAL)
     Q_PROPERTY(QString identifier READ identifier CONSTANT)
 
     QML_NAMED_ELEMENT(XrSpatialAnchor)
     QML_UNCREATABLE("Spatial anchor objects cannot be created in QML");
     QML_ADDED_IN_VERSION(6, 8)
 public:
+    enum class Classification {
+        Unknown,
+        Wall,
+        Ceiling,
+        Floor,
+        Table,
+        Seat,
+        Window,
+        Door,
+        Other,
+    };
+    Q_ENUM(Classification)
+
     QQuick3DXrSpatialAnchor(QtQuick3DXr::XrSpaceId space, QUuid &uuid, QObject *parent = nullptr);
     ~QQuick3DXrSpatialAnchor() override;
 
@@ -62,8 +76,11 @@ public:
     QQuaternion rotation() const;
     void setRotation(const QQuaternion &newRotation);
 
-    QString semanticLabels() const;
-    void setSemanticLabels(const QString &newSemanticLabels);
+    Classification classification() const;
+    void setClassification(Classification newClassification);
+
+    QString classificationString() const;
+    void setClassificationString(const QString &newClassificationString);
 
     bool has2DBounds() const;
     void setBounds2D(const QVector2D &offset, const QVector2D &extent);
@@ -88,7 +105,8 @@ signals:
     void extent3DChanged();
     void positionChanged();
     void rotationChanged();
-    void semanticLabelsChanged();
+    void classificationChanged();
+    void classificationStringChanged();
     void has2DBoundsChanged();
     void has3DBoundsChanged();
     void offset2DChanged();
@@ -107,7 +125,8 @@ private:
     QVector3D m_extent3D;
     QVector3D m_position;
     QQuaternion m_rotation;
-    QString m_semanticLabels;
+    Classification m_classification { Classification::Unknown };
+    QString m_classificationString;
     QSet<QUuid> m_roomLayoutUuids;
     QSet<QUuid> m_spaceContainerUuids;
     bool m_has2DBounds = false;
