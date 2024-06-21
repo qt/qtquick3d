@@ -33,7 +33,7 @@ class QQuick3DXrSpatialAnchorListModel : public QAbstractListModel
     Q_PROPERTY(ClassificationFlags classificationFilter READ classificationFilter WRITE setClassificationFilter NOTIFY classificationFilterChanged FINAL)
     Q_PROPERTY(QStringList identifierFilter READ identifierFilter WRITE setIdentifierFilter NOTIFY identifierFilterChanged FINAL)
 
-    QML_NAMED_ELEMENT(XrSpatialAnchorModel)
+    QML_NAMED_ELEMENT(XrSpatialAnchorListModel)
     QML_ADDED_IN_VERSION(6, 8)
 public:
     enum class FilterMode {

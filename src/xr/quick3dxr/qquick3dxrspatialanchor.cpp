@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
     a specific location or object in real space. It provides information about
     the anchor's position, rotation, classification, and bounds.
 
-    They are accessed through an \l XrSpatialAnchorModel.
+    They are accessed through an \l XrSpatialAnchorListModel.
 
     \note You can not create these in QML.
  */
@@ -338,7 +338,7 @@ QVector2D QQuick3DXrSpatialAnchor::extent2D() const
     \brief A unique identifier for this spatial anchor.
 
     This property returns a unique identifier associated with the
-    spatial anchor. This is the same identified referenced by a \l XrSpatialAnchorModel.
+    spatial anchor. This is the same identified referenced by a \l XrSpatialAnchorListModel.
  */
 
 QString QQuick3DXrSpatialAnchor::identifier() const

@@ -171,7 +171,7 @@ XrView {
 
     Repeater3D {
         id: spatialAnchors
-        model: XrSpatialAnchorModel {
+        model: XrSpatialAnchorListModel {
         }
         Node {
             id: anchorNode

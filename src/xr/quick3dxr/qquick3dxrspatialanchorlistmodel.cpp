@@ -13,7 +13,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype XrSpatialAnchorModel
+    \qmltype XrSpatialAnchorListModel
     \inherits ListModel
     \inqmlmodule QtQuick3D.Xr
     \brief Provides a model for managing spatial anchors.
@@ -23,10 +23,10 @@ QT_BEGIN_NAMESPACE
 
     You can use it like so:
     \qml
-    XrSpatialAnchorModel {
+    XrSpatialAnchorListModel {
         id: anchorModel
-        filterMode: XrSpatialAnchorModel.Labels
-        labels: XrSpatialAnchorModel.Ceiling | XrSpatialAnchorModel.Floor
+        filterMode: XrSpatialAnchorListModel.Labels
+        labels: XrSpatialAnchorListModel.Ceiling | XrSpatialAnchorListModel.Floor
         // ... other properties and methods ...
     \endqml
     }
@@ -123,7 +123,7 @@ void QQuick3DXrSpatialAnchorListModel::handleAnchorUpdated(QQuick3DXrSpatialAnch
 }
 
 /*!
-    \qmlproperty enumeration XrSpatialAnchorModel::filterMode
+    \qmlproperty enumeration XrSpatialAnchorListModel::filterMode
     \brief Specifies the filter mode for spatial anchors.
 
     Holds the filter mode.
@@ -147,7 +147,7 @@ void QQuick3DXrSpatialAnchorListModel::setFilterMode(FilterMode newFilterMode)
 }
 
 /*!
-    \qmlproperty list XrSpatialAnchorModel::identifierFilter
+    \qmlproperty list XrSpatialAnchorListModel::identifierFilter
     \brief Holds the list of identifiers for filtering spatial anchors.
  */
 
@@ -165,7 +165,7 @@ void QQuick3DXrSpatialAnchorListModel::setIdentifierFilter(const QStringList &fi
 }
 
 /*!
-    \qmlproperty enumeration XrSpatialAnchorModel::classificationFilter
+    \qmlproperty enumeration XrSpatialAnchorListModel::classificationFilter
     \brief  Holds the classification flag used for filtering spatial anchors.
 
     The ClassificationFlag filter is represented as a combination of flags:
@@ -194,17 +194,17 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFla
 }
 
 /*!
-    \qmlsignal XrSpatialAnchorModel::filterModeChanged()
+    \qmlsignal XrSpatialAnchorListModel::filterModeChanged()
     \brief Emitted when the filter mode changes.
  */
 
 /*!
-    \qmlsignal XrSpatialAnchorModel::uuidsChanged()
-    \brief Emitted when the list of UUIDs changes.
+    \qmlsignal XrSpatialAnchorListModel::identifierFilterChanged()
+    \brief Emitted when the list of identifiers used for filtering anchors changes.
  */
 
 /*!
-    \qmlsignal XrSpatialAnchorModel::classificationFilterChanged()
+    \qmlsignal XrSpatialAnchorListModel::classificationFilterChanged()
     \brief Emitted when the classification filter changes.
 */
 
