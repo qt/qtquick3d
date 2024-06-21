@@ -31,6 +31,7 @@ class QQuick3DXrSpatialAnchorListModel : public QAbstractListModel
     Q_OBJECT
     Q_PROPERTY(FilterMode filterMode READ filterMode WRITE setFilterMode NOTIFY filterModeChanged FINAL)
     Q_PROPERTY(ClassificationFlags classificationFilter READ classificationFilter WRITE setClassificationFilter NOTIFY classificationFilterChanged FINAL)
+    Q_PROPERTY(QStringList classificationStringFilter READ classificationStringFilter WRITE setClassificationStringFilter NOTIFY classificationStringFilterChanged FINAL)
     Q_PROPERTY(QStringList identifierFilter READ identifierFilter WRITE setIdentifierFilter NOTIFY identifierFilterChanged FINAL)
 
     QML_NAMED_ELEMENT(XrSpatialAnchorListModel)
@@ -79,10 +80,14 @@ public:
     ClassificationFlags classificationFilter() const;
     void setClassificationFilter(ClassificationFlags newClassFilter);
 
+    QStringList classificationStringFilter() const;
+    void setClassificationStringFilter(const QStringList &newClassStringFilter);
+
 signals:
     void filterModeChanged();
     void identifierFilterChanged();
     void classificationFilterChanged();
+    void classificationStringFilterChanged();
 
 private Q_SLOTS:
     void handleAnchorAdded(QQuick3DXrSpatialAnchor* anchor);
@@ -94,6 +99,7 @@ private:
     FilterMode m_filterMode = FilterMode::All;
     QStringList m_uuids;
     ClassificationFlags m_classFilter;
+    QSet<QString> m_classStringFilter;
 };
 
 QT_END_NAMESPACE
