@@ -19,12 +19,90 @@ QT_BEGIN_NAMESPACE
 
     This type represents a spatial anchor that can be used to track
     a specific location or object in real space. It provides information about
-    the anchor's position, rotation, semantic labels, and bounds.
+    the anchor's position, rotation, classification, and bounds.
 
     They are accessed through an \l XrSpatialAnchorModel.
 
     \note You can not create these in QML.
  */
+
+/*!
+    \qmlproperty enumeration XrSpatialAnchor::Classification
+    \ingroup xr-anchors
+    \brief The classification of the spatial anchor.
+
+    The Classification enum provides a set of predefined category types that can be used to describe
+    the purpose or context of a spatial anchor.
+
+    \value Classification.Unknown The label has not been set or identified.
+    \value Classification.Wall The anchor represents a wall.
+    \value Classification.Ceiling The anchor represents a ceiling.
+    \value Classification.Floor The anchor represents a floor.
+    \value Classification.Table The anchor represents a table.
+    \value Classification.Seat The anchor represents a seat.
+    \value Classification.Window The anchor represents a window.
+    \value Classification.Door The anchor represents a door.
+    \value Classification.Other The anchor was not identified as any of the above types. See: \l classificationString
+
+    \note This list is meant to show the mapping between the classification type in QtQuick3DXr,
+    OpenXR, and VisionOS. If the classification type from the system falls outside of the defined types
+    then the \e Type is set to \c Other and the system type can be inspected by looking at the content
+    of the \l classificationString property. Note that the classification string can also be "Other".
+
+    \table
+    \header
+        \li Type
+        \li OpenXR
+        \li VisionOS
+        \li Description
+    \row
+        \li Unknown
+        \li -
+        \li -
+        \li The label has not been set or identified.
+    \row
+        \li Wall
+        \li WALL_FACE
+        \li Wall
+        \li The anchor represents a wall.
+    \row
+        \li Ceiling
+        \li CEILING
+        \li Ceiling
+        \li The anchor represents a ceiling.
+    \row
+        \li Floor
+        \li FLOOR
+        \li Floor
+        \li The anchor represents a floor.
+    \row
+        \li Table
+        \li TABLE
+        \li Table
+        \li The anchor represents a table.
+    \row
+        \li Seat
+        \li COUCH
+        \li Seat
+        \li The anchor represents a seat.
+    \row
+        \li Window
+        \li WINDOW_FRAME
+        \li Window
+        \li The anchor represents a window.
+    \row
+        \li Door
+        \li DOOR_FRAME
+        \li Door
+        \li The anchor represents a door.
+    \row
+        \li Other
+        \li -
+        \li -
+        \li The anchor represents something else. See: \l classificationString
+    \endtable
+ */
+
 
 QQuick3DXrSpatialAnchor::QQuick3DXrSpatialAnchor(QtQuick3DXr::XrSpaceId space, QUuid &uuid, QObject *parent)
     : QObject(parent)
@@ -124,24 +202,58 @@ void QQuick3DXrSpatialAnchor::setRotation(const QQuaternion &newRotation)
 }
 
 /*!
-    \qmlproperty string XrSpatialAnchor::semanticLabels
-    \brief The semantic labels associated with the spatial anchor.
+    \qmlproperty string XrSpatialAnchor::classification
+    \brief The classification type associated with the spatial anchor.
 
-    This property returns a comma-separated string containing semantic labels
-    (for example,\c table or \c chair) describing the anchor's purpose or context.
+    This property returns the \l {XrSpatialAnchor::Classification}{classification type} for this anchor
+    (for example,\c Table or \c Floor) describing the anchor's purpose or context.
+
+    \note The classification type coming from the system might not be in the set of labels
+    defined by the \l Classification enum, in which case the type will be set to \c Other
+    and the \l classificationString property will contain the original label.
+
+    \sa classificationString
  */
 
-QString QQuick3DXrSpatialAnchor::semanticLabels() const
+QQuick3DXrSpatialAnchor::Classification QQuick3DXrSpatialAnchor::classification() const
 {
-    return m_semanticLabels;
+    return m_classification;
 }
 
-void QQuick3DXrSpatialAnchor::setSemanticLabels(const QString &newSemanticLabels)
+void QQuick3DXrSpatialAnchor::setClassification(Classification newClassification)
 {
-    if (m_semanticLabels == newSemanticLabels)
+    if (m_classification == newClassification)
         return;
-    m_semanticLabels = newSemanticLabels;
-    emit semanticLabelsChanged();
+    m_classification = newClassification;
+    emit classificationChanged();
+}
+
+/*!
+    \qmlproperty string XrSpatialAnchor::classificationString
+    \brief The system classification type as a string for the spatial anchor.
+
+    This property returns the classification type as a string, if one exisits.
+    If the classification type is not in the set of types defined by the \l Classification enums, the
+    label is set to \c Other and this property can be used to access the type as it was reported by
+    the system.
+
+    \note This string can be empty, or change, depending on the system and how the anchor gets classified.
+
+    \sa classification
+*/
+
+
+QString QQuick3DXrSpatialAnchor::classificationString() const
+{
+    return m_classificationString;
+}
+
+void QQuick3DXrSpatialAnchor::setClassificationString(const QString &newClassificationString)
+{
+    if (m_classificationString == newClassificationString)
+        return;
+    m_classificationString = newClassificationString;
+    emit classificationStringChanged();
 }
 
 /*!
@@ -272,11 +384,18 @@ void QQuick3DXrSpatialAnchor::setSpaceContainerUuids(const QSet<QUuid> &newSpace
  */
 
 /*!
-    \qmlsignal XrSpatialAnchor::semanticLabelsChanged()
-    \brief Emitted when the semantic labels associated with the spatial anchor change.
+    \qmlsignal XrSpatialAnchor::classificationChanged()
+    \brief Emitted when the Classification type associated with the spatial anchor changes.
 
-    This signal indicates that the semanticLabels property has been updated.
+    This signal indicates that the classification property has been updated.
  */
+
+/*!
+    \qmlsignal XrSpatialAnchor::classificationStringChanged()
+    \brief Emitted when the classification string changes.
+
+    This signal indicates that the classificationString property has been updated.
+*/
 
 /*!
     \qmlsignal XrSpatialAnchor::has2DBoundsChanged()

@@ -17,16 +17,31 @@ XrView {
 
     property list<color> colorTable: [Qt.rgba(1, 0, 1, 1), // magenta
                                       Qt.rgba(0, 1, 0, 1), // green
+                                      Qt.rgba(0, 0.5, 0.5, 1), // darkCyan
+                                      Qt.rgba(0.5, 0.5, 0, 1), // darkYellow
                                       Qt.rgba(0, 0, 1, 1), // blue
                                       Qt.rgba(1, 0, 0, 1), // red
-                                      Qt.rgba(0.5, 0.5, 0, 1), // darkYellow
                                       Qt.rgba(0.5, 0, 0, 1), // darkRed
-                                      Qt.rgba(0, 0.5, 0.5, 1), // darkCyan
                                       Qt.rgba(1, 1, 0, 1)] // yellow
 
-    function colorForClassification(name) {
-        const index = ["door", "window", "ceiling", "floor", "wall", "table", "seat", "unknown"].indexOf(name.toLowerCase())
-        return colorTable[index > 0 ? index : 0]
+    property list<color> extraColorTable: [Qt.rgba(0.5, 0.5, 0.5, 1), // dark gray
+                                           Qt.rgba(0.9, 0.9, 0.7, 1)] // beige
+
+    function colorForClassification(index) {
+        return colorTable[index > 0 && index < colorTable.length ? index : 0]
+    }
+
+    function colorForClassificationOther(classificationName) {
+        const index = ["screen", "storage"].indexOf(classificationName.toLowerCase())
+        return extraColorTable[index > 0 && index < extraColorTable.length ? index : 0]
+    }
+
+    function anchorColor(anchor) {
+        const classification = anchor.classification
+        if (classification === XrSpatialAnchor.Other)
+            return colorForClassificationOther(anchor.classificationString)
+        else
+            return colorForClassification(classification)
     }
 
     property bool preferPassthrough: true
@@ -177,12 +192,12 @@ XrView {
                 scale: anchorNode.anchor.has3DBounds ? anchorNode.anchor.extent3D : Qt.vector3d(anchorNode.anchor.extent2D.x, anchorNode.anchor.extent2D.y, 0.01)
                 materials: PrincipledMaterial {
                     // Make anchor objects invisible in passthrough mode
-                    baseColor: xrView.passthroughEnabled ? Qt.rgba(0, 0, 0, 0) : colorForClassification(anchor.semanticLabels.split(",")[0])
+                    baseColor: xrView.passthroughEnabled ? Qt.rgba(0, 0, 0, 0) : anchorColor(anchor)
                     alphaMode: xrView.passthroughEnabled ? PrincipledMaterial.Blend : PrincipledMaterial.Opaque
                     roughness: 0.7
                 }
                 source: anchorNode.anchor.has3DBounds ? "#Cube" : "#Rectangle"
-                property string anchorInfo: "anchor #" + anchorNode.index + ", " + anchorNode.anchor.semanticLabels
+                property string anchorInfo: "anchor #" + anchorNode.index + ", " + anchorNode.anchor.classificationString
             }
 
             Model {

@@ -30,38 +30,32 @@ class QQuick3DXrSpatialAnchorListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(FilterMode filterMode READ filterMode WRITE setFilterMode NOTIFY filterModeChanged FINAL)
-    Q_PROPERTY(SemanticLabels labels READ labels WRITE setLabels NOTIFY labelsChanged FINAL)
+    Q_PROPERTY(ClassificationFlags classificationFilter READ classificationFilter WRITE setClassificationFilter NOTIFY classificationFilterChanged FINAL)
     Q_PROPERTY(QStringList identifierFilter READ identifierFilter WRITE setIdentifierFilter NOTIFY identifierFilterChanged FINAL)
 
     QML_NAMED_ELEMENT(XrSpatialAnchorModel)
     QML_ADDED_IN_VERSION(6, 8)
 public:
-    enum FilterMode {
+    enum class FilterMode {
         All,
-        Labels,
+        Classification,
         Identifier
     };
     Q_ENUM(FilterMode)
 
-    enum SemanticLabel {
-        Ceiling = 0x01,
-        DoorFrame = 0x02,
-        Floor = 0x04,
-        WallArt = 0x08,
-        WallFace = 0x10,
-        WindowFrame = 0x20,
-        Couch = 0x40,
-        Table = 0x80,
-        Bed = 0x100,
-        Lamp = 0x200,
-        Plant = 0x400,
-        Screen = 0x800,
-        Storage = 0x1000,
-        Other = 0x2000
+    enum ClassificationFlag : quint32 {
+        Wall = 0x1,
+        Ceiling = 0x2,
+        Floor = 0x4,
+        Table = 0x8,
+        Seat = 0x10,
+        Window = 0x20,
+        Door = 0x40,
+        Other = 0x80,
     };
-    Q_ENUM(SemanticLabel)
-    Q_DECLARE_FLAGS(SemanticLabels , SemanticLabel)
-    Q_FLAG(SemanticLabels)
+    Q_ENUM(ClassificationFlag)
+    Q_DECLARE_FLAGS(ClassificationFlags , ClassificationFlag)
+    Q_FLAG(ClassificationFlags)
 
     enum SpatialAnchorRoles {
         Anchor = Qt::UserRole + 21
@@ -82,13 +76,13 @@ public:
     QStringList identifierFilter() const;
     void setIdentifierFilter(const QStringList &filter);
 
-    SemanticLabels labels() const;
-    void setLabels(const SemanticLabels &newLabels);
+    ClassificationFlags classificationFilter() const;
+    void setClassificationFilter(ClassificationFlags newClassFilter);
 
 signals:
     void filterModeChanged();
     void identifierFilterChanged();
-    void labelsChanged();
+    void classificationFilterChanged();
 
 private Q_SLOTS:
     void handleAnchorAdded(QQuick3DXrSpatialAnchor* anchor);
@@ -99,7 +93,7 @@ private:
     QPointer<QQuick3DXrAnchorManager> m_anchorManager;
     FilterMode m_filterMode = FilterMode::All;
     QStringList m_uuids;
-    SemanticLabels m_labels;
+    ClassificationFlags m_classFilter;
 };
 
 QT_END_NAMESPACE

@@ -129,7 +129,7 @@ void QQuick3DXrSpatialAnchorListModel::handleAnchorUpdated(QQuick3DXrSpatialAnch
     Holds the filter mode.
     The filter mode can be one of the following:
     \value All Show all spatial anchors.
-    \value Label Show spatial anchors based on semantic labels.
+    \value Classification Show spatial anchors based on the provided classification filter flag.
     \value Identifier Show spatial anchors based matching the provided Identifiers.
  */
 
@@ -165,38 +165,32 @@ void QQuick3DXrSpatialAnchorListModel::setIdentifierFilter(const QStringList &fi
 }
 
 /*!
-    \qmlproperty enumeration XrSpatialAnchorModel::labels
-    \brief  Holds the semantic labels used for filtering spatial anchors.
+    \qmlproperty enumeration XrSpatialAnchorModel::classificationFilter
+    \brief  Holds the classification flag used for filtering spatial anchors.
 
-    The semantic labels are represented as a combination of flags:
+    The ClassificationFlag filter is represented as a combination of flags:
 
+    \value Wall
     \value Ceiling
-    \value DoorFrame
     \value Floor
-    \value WallArt
-    \value WallFace
-    \value WindowFrame
-    \value Couch
     \value Table
-    \value Bed
-    \value Lamp
-    \value Plant
-    \value Screen
-    \value Storage
+    \value Seat
+    \value Window
+    \value Door
     \value Other
  */
 
-QQuick3DXrSpatialAnchorListModel::SemanticLabels QQuick3DXrSpatialAnchorListModel::labels() const
+QQuick3DXrSpatialAnchorListModel::ClassificationFlags QQuick3DXrSpatialAnchorListModel::classificationFilter() const
 {
-    return m_labels;
+    return m_classFilter;
 }
 
-void QQuick3DXrSpatialAnchorListModel::setLabels(const SemanticLabels &newLabels)
+void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFlags newClassFilter)
 {
-    if (m_labels == newLabels)
+    if (m_classFilter == newClassFilter)
         return;
-    m_labels = newLabels;
-    emit labelsChanged();
+    m_classFilter = newClassFilter;
+    emit classificationFilterChanged();
 }
 
 /*!
@@ -210,8 +204,8 @@ void QQuick3DXrSpatialAnchorListModel::setLabels(const SemanticLabels &newLabels
  */
 
 /*!
-    \qmlsignal XrSpatialAnchorModel::labelsChanged()
-    \brief Emitted when the semantic labels changes.
+    \qmlsignal XrSpatialAnchorModel::classificationFilterChanged()
+    \brief Emitted when the classification filter changes.
 */
 
 QT_END_NAMESPACE

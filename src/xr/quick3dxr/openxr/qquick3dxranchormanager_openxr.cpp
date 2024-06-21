@@ -17,6 +17,29 @@ QT_BEGIN_NAMESPACE
 
 static const uint32_t MAX_PERSISTENT_SPACES = 100;
 
+static const char qssgXrRecognizedLabels[] = "TABLE,COUCH,FLOOR,CEILING,WALL_FACE,WINDOW_FRAME,DOOR_FRAME,STORAGE,BED,SCREEN,LAMP,PLANT,WALL_ART,OTHER";
+
+[[nodiscard]] static QQuick3DXrSpatialAnchor::Classification getLabelForString(const QString &label)
+{
+    if (label == QStringLiteral("TABLE"))
+        return QQuick3DXrSpatialAnchor::Classification::Table;
+    if (label == QStringLiteral("COUCH"))
+        return QQuick3DXrSpatialAnchor::Classification::Seat;
+    if (label == QStringLiteral("FLOOR"))
+        return QQuick3DXrSpatialAnchor::Classification::Floor;
+    if (label == QStringLiteral("CEILING"))
+        return QQuick3DXrSpatialAnchor::Classification::Ceiling;
+    if (label == QStringLiteral("WALL_FACE"))
+        return QQuick3DXrSpatialAnchor::Classification::Wall;
+    if (label == QStringLiteral("WINDOW_FRAME"))
+        return QQuick3DXrSpatialAnchor::Classification::Window;
+    if (label == QStringLiteral("DOOR_FRAME"))
+        return QQuick3DXrSpatialAnchor::Classification::Door;
+
+    return QQuick3DXrSpatialAnchor::Classification::Other;
+}
+
+
 QQuick3DXrAnchorManager::QQuick3DXrAnchorManager()
 {
 
@@ -282,7 +305,11 @@ bool QQuick3DXrAnchorManager::setupSpatialAnchor(XrSpace space, QQuick3DXrSpatia
     if (m_has3DBounds)
         anchor.setBounds3D(offset3D, extent3D);
 
-    anchor.setSemanticLabels(getSemanticLabels(space));
+    auto stringLabel = getSemanticLabels(space);
+    auto semanticLable = getLabelForString(stringLabel);
+
+    anchor.setClassification(semanticLable);
+    anchor.setClassificationString(stringLabel);
 
     return true;
 }
@@ -367,12 +394,11 @@ QSet<QUuid> QQuick3DXrAnchorManager::collectSpaceContainerUuids(XrSpace space)
 }
 
 QString QQuick3DXrAnchorManager::getSemanticLabels(const XrSpace space) {
-    static const std::string recognizedLabels = "TABLE,COUCH,FLOOR,CEILING,WALL_FACE,WINDOW_FRAME,DOOR_FRAME,STORAGE,BED,SCREEN,LAMP,PLANT,WALL_ART,OTHER";
     const XrSemanticLabelsSupportInfoFB semanticLabelsSupportInfo = {
                                                                      XR_TYPE_SEMANTIC_LABELS_SUPPORT_INFO_FB,
                                                                      nullptr,
                                                                      XR_SEMANTIC_LABELS_SUPPORT_MULTIPLE_SEMANTIC_LABELS_BIT_FB | XR_SEMANTIC_LABELS_SUPPORT_ACCEPT_DESK_TO_TABLE_MIGRATION_BIT_FB,
-                                                                     recognizedLabels.c_str()
+                                                                     qssgXrRecognizedLabels
     };
 
     XrSemanticLabelsFB labels{};

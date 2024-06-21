@@ -77,23 +77,24 @@ static constexpr size_t anchorClassificationStart = size_t(AnchorClassifcation::
 
 struct AnchorClassificationMap {
     ar_plane_classification_t classification;
-    const char name[16];
+    AnchorClassifcation classificationEnum;
+    QQuick3DXrSpatialAnchor::Classification label;
+    const char classificationName[16];
 };
 static const AnchorClassificationMap anchorClassificationMap[] = {
-    {ar_plane_classification_status_unknown, "Unknown"}, // ALWAYS FIRST (0)
-    {ar_plane_classification_status_not_available, "Not Available"},
-    {ar_plane_classification_status_undetermined, "Undetermined"},
-    // First actual classification starts at 3
-    {ar_plane_classification_wall, "Wall"},
-    {ar_plane_classification_ceiling, "Ceiling"},
-    {ar_plane_classification_floor, "Floor"},
-    {ar_plane_classification_table, "Table"},
-    {ar_plane_classification_seat, "Seat"},
-    {ar_plane_classification_window, "Window"},
-    {ar_plane_classification_door, "Door"},
+    {ar_plane_classification_status_unknown, AnchorClassifcation::Unknown, QQuick3DXrSpatialAnchor::Classification::Unknown, "Unknown"},
+    {ar_plane_classification_status_not_available, AnchorClassifcation::NotAvailable, QQuick3DXrSpatialAnchor::Classification::Unknown, "Not Available"},
+    {ar_plane_classification_status_undetermined, AnchorClassifcation::Undetermined, QQuick3DXrSpatialAnchor::Classification::Unknown, "Undetermined"},
+    {ar_plane_classification_wall, AnchorClassifcation::Wall, QQuick3DXrSpatialAnchor::Classification::Wall, "Wall"},
+    {ar_plane_classification_ceiling, AnchorClassifcation::Ceiling, QQuick3DXrSpatialAnchor::Classification::Ceiling, "Ceiling"},
+    {ar_plane_classification_floor, AnchorClassifcation::Floor, QQuick3DXrSpatialAnchor::Classification::Floor, "Floor"},
+    {ar_plane_classification_table, AnchorClassifcation::Table, QQuick3DXrSpatialAnchor::Classification::Table, "Table"},
+    {ar_plane_classification_seat, AnchorClassifcation::Seat, QQuick3DXrSpatialAnchor::Classification::Seat, "Seat"},
+    {ar_plane_classification_window, AnchorClassifcation::Window, QQuick3DXrSpatialAnchor::Classification::Window, "Window"},
+    {ar_plane_classification_door, AnchorClassifcation::Door, QQuick3DXrSpatialAnchor::Classification::Door, "Door"},
 };
 
-static QLatin1StringView getAnchorClassificationName(ar_plane_classification_t classification, bool *identified = nullptr)
+static const AnchorClassificationMap &getAnchorClassificationName(ar_plane_classification_t classification, bool *identified = nullptr)
 {
     size_t foundIndex = 0;
     for (size_t i = 0, end = std::size(anchorClassificationMap); i != end; ++i) {
@@ -106,7 +107,7 @@ static QLatin1StringView getAnchorClassificationName(ar_plane_classification_t c
     if (identified) // If the caller wants to know if the classification was found (I.e. not Unknown, Not Available, or Undetermined)
         *identified = (foundIndex >= anchorClassificationStart);
 
-    return QLatin1StringView(anchorClassificationMap[foundIndex].name);
+    return anchorClassificationMap[foundIndex];
 }
 
 static void updateAnchorProperties(QQuick3DXrSpatialAnchor &anchor, ar_plane_anchor_t planeAnchor)
@@ -120,9 +121,12 @@ static void updateAnchorProperties(QQuick3DXrSpatialAnchor &anchor, ar_plane_anc
                            0.0f, 0.0f, 0.0f, 1.0f};
 
     ar_plane_classification_t classification = ar_plane_anchor_get_plane_classification(planeAnchor);
-    auto semanticLabel = getAnchorClassificationName(classification);
+    const auto &classificationEntry = getAnchorClassificationName(classification);
 
-    anchor.setSemanticLabels(semanticLabel);
+    if (anchor.classification() != classificationEntry.label) {
+        anchor.setClassification(classificationEntry.label);
+        anchor.setClassificationString(QString::fromLatin1(classificationEntry.classificationName));
+    }
 
     ar_plane_geometry_t planeGeometry = ar_plane_anchor_get_geometry(planeAnchor);
     ar_plane_extent_t planeExtent = ar_plane_geometry_get_plane_extent(planeGeometry);
