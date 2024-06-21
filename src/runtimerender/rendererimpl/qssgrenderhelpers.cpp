@@ -748,6 +748,40 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 }
             }
 
+            // Skinning
+            if (QRhiTexture *boneTexture = inData.getBonemapTexture(subsetRenderable.modelContext)) {
+                int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
+                if (binding >= 0) {
+                    QRhiSampler *boneSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                            QRhiSampler::Nearest,
+                            QRhiSampler::None,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::Repeat
+                    });
+                    bindings.addTexture(binding,
+                                        QRhiShaderResourceBinding::VertexStage,
+                                        boneTexture,
+                                        boneSampler);
+                }
+            }
+
+            // Morphing
+            auto *targetsTexture = subsetRenderable.subset.rhi.targetsTexture;
+            if (targetsTexture) {
+                int binding = shaderPipeline->bindingForTexture("qt_morphTargetTexture");
+                if (binding >= 0) {
+                    QRhiSampler *targetsSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                            QRhiSampler::Nearest,
+                            QRhiSampler::None,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge
+                    });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, subsetRenderable.subset.rhi.targetsTexture, targetsSampler);
+                }
+            }
+
             QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
             subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtxD->pipeline(*ps, pEntry->m_rhiRenderPassDesc[cascadeIndex], srb);
             subsetRenderable.rhiRenderData.shadowPass.srb[cubeFaceIdx] = srb;
@@ -2073,6 +2107,40 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                               subsetRenderable.firstImage,
                                               bindings,
                                               (obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset));
+            }
+
+            // Skinning
+            if (QRhiTexture *boneTexture = inData.getBonemapTexture(subsetRenderable.modelContext)) {
+                int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
+                if (binding >= 0) {
+                    QRhiSampler *boneSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                            QRhiSampler::Nearest,
+                            QRhiSampler::None,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::Repeat
+                    });
+                    bindings.addTexture(binding,
+                                        QRhiShaderResourceBinding::VertexStage,
+                                        boneTexture,
+                                        boneSampler);
+                }
+            }
+
+            // Morphing
+            auto *targetsTexture = subsetRenderable.subset.rhi.targetsTexture;
+            if (targetsTexture) {
+                int binding = shaderPipeline->bindingForTexture("qt_morphTargetTexture");
+                if (binding >= 0) {
+                    QRhiSampler *targetsSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                            QRhiSampler::Nearest,
+                            QRhiSampler::None,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge
+                    });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, subsetRenderable.subset.rhi.targetsTexture, targetsSampler);
+                }
             }
 
             QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
