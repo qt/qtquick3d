@@ -13,7 +13,7 @@ XrView {
     id: xrView
     referenceSpace: XrView.ReferenceSpaceStage
 
-    enableDepthSubmission: true
+    depthSubmissionEnabled: true
 
     environment: SceneEnvironment {
         id: sceneEnvironment
@@ -37,7 +37,12 @@ XrView {
         id: handComponentRoot
         property color color: "#ddaa88"
         required property int touchId
-        property vector3d touchPos: handTracker?.pokePosition ?? Qt.vector3d(0,0,0)
+        XrController {
+            id: handController
+            controller: handComponentRoot.hand
+        }
+
+        property vector3d touchPos: handController.pokePosition
         onTouchPosChanged: {
             const scenePos = theOrigin.mapPositionToScene(touchPos)
             const touchOffset = xrView.processTouch(scenePos, handComponentRoot.touchId)
@@ -54,19 +59,14 @@ XrView {
         id: theOrigin
         z: 25
 
-        Component.onCompleted: {
-            camera.setClipFar(10000)
-            camera.setClipNear(10)
-        }
-
         Hand {
             id: rightHandModel
-            handTracker: xrView.rightHandTrackerInput
+            hand: XrHandModel.RightHand
             touchId: 0
         }
         Hand {
             id: leftHandModel
-            handTracker: xrView.leftHandTrackerInput
+            hand: XrHandModel.LeftHand
             touchId: 1
         }
     }

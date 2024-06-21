@@ -53,62 +53,6 @@ QQuick3DSceneEnvironment *QQuick3DXrView::environment() const
     return m_openXRManager.m_vrViewport ? m_openXRManager.m_vrViewport->environment() : nullptr;
 }
 
-/*!
-    \qmlproperty XrHandInput QtQuick3D.Xr::XrView::leftHandInput
-    \brief Provides access to the left hand input for the XR view.
-*/
-
-QQuick3DXrHandInput *QQuick3DXrView::leftHandInput() const
-{
-    QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    if (inputManager && inputManager->isValid())
-        return inputManager->leftHandInput();
-
-    return nullptr;
-}
-
-/*!
-    \qmlproperty XrHandInput QtQuick3D.Xr::XrView::rightHandInput
-    \brief Provides access to the right hand input for the XR view.
-*/
-
-QQuick3DXrHandInput *QQuick3DXrView::rightHandInput() const
-{
-    QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    if (inputManager && inputManager->isValid())
-        return inputManager->rightHandInput();
-
-    return nullptr;
-}
-
-/*!
-    \qmlproperty XrHandTrackerInput QtQuick3D.Xr::XrView::leftHandTrackerInput
-    \brief Provides access to the left hand tracker input for the XR view.
-*/
-
-QQuick3DXrHandTrackerInput *QQuick3DXrView::leftHandTrackerInput() const
-{
-    QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    if (inputManager && inputManager->isValid())
-        return inputManager->leftHandTrackerInput();
-
-    return nullptr;
-}
-
-/*!
-    \qmlproperty XrHandTrackerInput QtQuick3D.Xr::XrView::rightHandTrackerInput
-    \brief Provides access to the right hand tracker input for the XR view.
-*/
-
-QQuick3DXrHandTrackerInput *QQuick3DXrView::rightHandTrackerInput() const
-{
-    QQuick3DXrInputManager *inputManager = m_openXRManager.getInputManager();
-    if (inputManager && inputManager->isValid())
-        return inputManager->rightHandTrackerInput();
-
-    return nullptr;
-}
-
 QQuick3DViewport *QQuick3DXrView::view3d() const
 {
     return m_openXRManager.m_vrViewport;

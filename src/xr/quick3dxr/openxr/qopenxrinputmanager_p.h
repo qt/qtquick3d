@@ -27,7 +27,6 @@
 QT_BEGIN_NAMESPACE
 
 class QQuick3DXrHandInput;
-class QQuick3DXrHandTrackerInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
 
@@ -54,18 +53,13 @@ public:
 
     XrSpace handSpace(Hand hand);
     bool isHandActive(Hand hand);
-
-    XrSpace handTrackerSpace(Hand handtracker);
-    bool isHandTrackerActive(Hand handtracker);
+    bool isHandTrackerActive(Hand hand);
 
     void setPosePosition(Hand hand, const QVector3D &position);
     void setPoseRotation(Hand hand, const QQuaternion &rotation);
 
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
-
-    QQuick3DXrHandTrackerInput *leftHandTrackerInput() const;
-    QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
 
     void setupHandModel(QQuick3DXrHandModel *model);
 
@@ -140,7 +134,6 @@ private:
     XrSpace m_handAimSpace[2];
 
     QQuick3DXrHandInput *m_handInputState[2];
-    QQuick3DXrHandTrackerInput *m_handTrackerInputState[2];
     HandActions m_handActions;
     XrAction m_inputActions[QQuick3DXrInputAction::NumActions] = {};
 

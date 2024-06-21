@@ -26,14 +26,6 @@ QT_BEGIN_NAMESPACE
 class QQuick3DXrHandInput : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool isActive READ isActive NOTIFY isActiveChanged)
-    Q_PROPERTY(HandPoseSpace poseSpace READ poseSpace WRITE setPoseSpace NOTIFY poseSpaceChanged)
-    Q_PROPERTY(QVector3D posePosition READ posePosition NOTIFY posePositionChanged)
-    Q_PROPERTY(QQuaternion poseRotation READ poseRotation NOTIFY poseRotationChanged)
-
-    QML_NAMED_ELEMENT(XrHandInput)
-    QML_UNCREATABLE("Created by XrView")
-    QML_ADDED_IN_VERSION(6, 8)
 
 public:
     enum class HandPoseSpace {
@@ -57,6 +49,18 @@ public:
 
     void setInputValue(int id, const char *shortName, float value) { emit inputValueChange(id, shortName, value); }
 
+    void setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations);
+
+    QList<QVector3D> jointPositions() const;
+
+    QList<QQuaternion> jointRotations() const;
+
+    QVector3D pokePosition() const;
+    void setPokePosition(const QVector3D &newPokePosition);
+
+    bool isHandTrackingActive() const;
+    void setIsHandTrackingActive(bool newIsHandTracking);
+
 public Q_SLOTS:
     void setPoseSpace(HandPoseSpace poseSpace);
 
@@ -69,11 +73,23 @@ Q_SIGNALS:
     void posePositionChanged();
     void poseRotationChanged();
 
+    void jointPositionsChanged();
+    void jointRotationsChanged();
+    void jointDataUpdated();
+
+    void pokePositionChanged();
+    void isHandTrackingChanged();
+
 private:
     bool m_isActive = false;
     HandPoseSpace m_poseSpace = HandPoseSpace::GripPose;
     QVector3D m_posePosition;
     QQuaternion m_poseRotation;
+
+    QList<QVector3D> m_jointPositions;
+    QList<QQuaternion> m_jointRotations;
+    QVector3D m_pokePosition;
+    bool m_isHandTracking;
 };
 
 QT_END_NAMESPACE

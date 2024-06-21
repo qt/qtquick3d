@@ -1,18 +1,11 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "openxr/qopenxrinputmanager_p.h"
 #include "qquick3dxrhandinput_p.h"
+#include "qquick3dxrinputmanager_p.h"
 
 QT_BEGIN_NAMESPACE
-
-/*!
-    \qmltype XrHandInput
-    \inherits Item
-    \inqmlmodule QtQuick3D.Xr
-    \brief Represents a hand input.
-
-    This type provides information about hand poses, position, and rotation.
- */
 
 QQuick3DXrHandInput::QQuick3DXrHandInput(QObject *parent)
     : QObject(parent)
@@ -20,24 +13,10 @@ QQuick3DXrHandInput::QQuick3DXrHandInput(QObject *parent)
 
 }
 
-/*!
-    \qmlproperty bool XrHandInput::isActive
-    Indicates whether the hand input is active.
-*/
-
 bool QQuick3DXrHandInput::isActive() const
 {
     return m_isActive;
 }
-
-/*!
-    \qmlproperty enumeration XrHandInput::poseSpace
-     Specifies the hand pose space.
-     Can be one of the following:
-
-     \value XrHandInput.GripPose
-     \value XrHandINput.AimPose
-*/
 
 QQuick3DXrHandInput::HandPoseSpace QQuick3DXrHandInput::poseSpace() const
 {
@@ -80,44 +59,65 @@ void QQuick3DXrHandInput::setPoseSpace(QQuick3DXrHandInput::HandPoseSpace poseSp
     emit poseSpaceChanged();
 }
 
-/*!
-    \qmlproperty vector3d XrHandInput::posePosition
-    The position of the hand pose in 3D space.
-*/
-
 const QVector3D &QQuick3DXrHandInput::posePosition() const
 {
     return m_posePosition;
 }
-
-/*!
-    \qmlproperty Quaternion XrHandInput::poseRotation
-    The rotation of the hand pose.
- */
 
 const QQuaternion &QQuick3DXrHandInput::poseRotation() const
 {
     return m_poseRotation;
 }
 
-/*!
-    \qmlsignal XrHandInput::isActiveChanged()
-    Emitted when the isActive property changes.
-*/
+void QQuick3DXrHandInput::setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations)
+{
+    m_jointPositions = newJointPositions;
+    emit jointPositionsChanged();
+    m_jointRotations = newJointRotations;
+    emit jointRotationsChanged();
+    emit jointDataUpdated();
 
-/*!
-    \qmlsignal XrHandInput::poseSpaceChanged()
-    Emitted when the poseSpace property changes.
-*/
+    QQuick3DXrInputManager *inputMan = QQuick3DXrInputManager::instance();
+    const auto pokeIndex = QQuick3DXrInputManagerPrivate::get(inputMan)->getPokeJointIndex();
 
-/*!
-    \qmlsignal XrHandInput::posePositionChanged()
-    Emitted when the posePosition property changes.
-*/
+    if (pokeIndex >= 0 && pokeIndex < m_jointPositions.size())
+        setPokePosition(m_jointPositions[pokeIndex]);
+}
 
-/*!
-    \qmlsignal XrHandInput::poseRotationChanged()
-    Emitted when the poseRotation property changes.
-*/
+QList<QVector3D> QQuick3DXrHandInput::jointPositions() const
+{
+    return m_jointPositions;
+}
+
+QList<QQuaternion> QQuick3DXrHandInput::jointRotations() const
+{
+    return m_jointRotations;
+}
+
+QVector3D QQuick3DXrHandInput::pokePosition() const
+{
+    return m_pokePosition;
+}
+
+void QQuick3DXrHandInput::setPokePosition(const QVector3D &newPokePosition)
+{
+    if (m_pokePosition == newPokePosition)
+        return;
+    m_pokePosition = newPokePosition;
+    emit pokePositionChanged();
+}
+
+bool QQuick3DXrHandInput::isHandTrackingActive() const
+{
+    return m_isHandTracking;
+}
+
+void QQuick3DXrHandInput::setIsHandTrackingActive(bool newIsHandTracking)
+{
+    if (m_isHandTracking == newIsHandTracking)
+        return;
+    m_isHandTracking = newIsHandTracking;
+    emit isHandTrackingChanged();
+}
 
 QT_END_NAMESPACE
