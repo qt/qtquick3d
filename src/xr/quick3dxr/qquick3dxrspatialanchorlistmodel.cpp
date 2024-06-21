@@ -194,6 +194,34 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFla
 }
 
 /*!
+    \qmlproperty string XrSpatialAnchorListModel::classificationStringFilter
+    \brief Holds the classification strings used for filtering spatial anchors.
+
+    If the \l FilterMode is set to \c Classification, this property can be used to provide a
+    list of additional classification string to filter on. These labels will then be matched against
+    the same value as reported by \l {XrSpatialAnchor::classificationString} property
+    of the spatial anchor.
+
+    \note Only \l {XrSpatialAnchor}{spatial anchors} that are classified as \l {XrSpatialAnchor::Classification::Other}{Other}
+    will be checked against this filter.
+ */
+QStringList QQuick3DXrSpatialAnchorListModel::classificationStringFilter() const
+{
+    return m_classStringFilter.values();
+}
+
+void QQuick3DXrSpatialAnchorListModel::setClassificationStringFilter(const QStringList &newClassStringFilter)
+{
+    QSet<QString> newFilter { newClassStringFilter.cbegin(), newClassStringFilter.cend()};
+
+    if (m_classStringFilter == newFilter)
+        return;
+
+    m_classStringFilter = newFilter;
+    emit classificationStringFilterChanged();
+}
+
+/*!
     \qmlsignal XrSpatialAnchorListModel::filterModeChanged()
     \brief Emitted when the filter mode changes.
  */
@@ -206,6 +234,11 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFla
 /*!
     \qmlsignal XrSpatialAnchorListModel::classificationFilterChanged()
     \brief Emitted when the classification filter changes.
+*/
+
+/*!
+    \qmlsignal XrSpatialAnchorListModel::classificationStringFilterChanged()
+    \brief Emitted when the classification string filter changes.
 */
 
 QT_END_NAMESPACE
