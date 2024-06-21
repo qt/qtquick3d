@@ -24,7 +24,6 @@ QT_BEGIN_NAMESPACE
 class QQuick3DGeometry;
 
 class QQuick3DXrHandInput;
-class QQuick3DXrHandTrackerInput;
 
 class QQuick3DXrInputManagerPrivate;
 
@@ -40,9 +39,6 @@ public:
 
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
-
-    QQuick3DXrHandTrackerInput *leftHandTrackerInput() const;
-    QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
 
     bool isValid() const;
 

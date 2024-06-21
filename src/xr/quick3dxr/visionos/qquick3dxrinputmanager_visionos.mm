@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qquick3dxrhandinput_p.h"
-#include "qquick3dxrhandtrackerinput_p.h"
 #include "qquick3dxrinputmanager_visionos_p.h"
 
 #include "../qquick3dxrinputmanager_p.h"
@@ -20,8 +19,6 @@ QQuick3DXrInputManagerPrivate::QQuick3DXrInputManagerPrivate(QQuick3DXrInputMana
 {
     m_handInputState[Hand::LeftHand] = new QQuick3DXrHandInput(&manager);
     m_handInputState[Hand::RightHand] = new QQuick3DXrHandInput(&manager);
-    m_handTrackerInputState[Hand::LeftHand] = new QQuick3DXrHandTrackerInput(&manager);
-    m_handTrackerInputState[Hand::RightHand] = new QQuick3DXrHandTrackerInput(&manager);
 }
 
 QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
@@ -79,16 +76,6 @@ QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::rightHandInput() const
 {
     return m_handInputState[Hand::RightHand];
-}
-
-QQuick3DXrHandTrackerInput *QQuick3DXrInputManagerPrivate::rightHandTrackerInput() const
-{
-    return m_handTrackerInputState[Hand::RightHand];
-}
-
-QQuick3DXrHandTrackerInput *QQuick3DXrInputManagerPrivate::leftHandTrackerInput() const
-{
-    return m_handTrackerInputState[Hand::LeftHand];
 }
 
 QQuick3DXrInputManagerPrivate *QQuick3DXrInputManagerPrivate::get(QQuick3DXrInputManager *inputManager)
@@ -230,7 +217,7 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
     for (const auto hand : { Hand::LeftHand, Hand::RightHand }) {
         const auto handSkeleton = handSkeletons[hand];
         if (handSkeleton == nullptr) {
-            m_handTrackerInputState[hand]->setIsActive(false);
+            m_handInputState[hand]->setIsHandTracking(false);
             continue;
         }
 
@@ -257,7 +244,7 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
             }
         }
 
-        m_handTrackerInputState[hand]->setJointPositionsAndRotations(jpositions, jrotations);
+        m_handInputState[hand]->setJointPositionsAndRotations(jpositions, jrotations);
 
         m_handInputState[hand]->setIsActive(isWristTracked);
     }

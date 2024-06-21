@@ -37,16 +37,11 @@ XrView {
         id: theOrigin
         z: 100
 
-        Component.onCompleted: {
-            camera.setClipFar(10000)
-            camera.setClipNear(10)
-        }
-
         XrController {
             id: rightController
             controller: XrController.ControllerRight
 
-            Component.onCompleted: handInput.poseSpace = XrHandInput.AimPose
+            poseSpace: XrController.AimPose
 
             property QtObject hitObject
 

@@ -71,16 +71,11 @@ XrView {
 
         property vector3d headPos: camera.position
 
-        Component.onCompleted: {
-            camera.setClipFar(10000)
-            camera.setClipNear(10)
-        }
-
         XrController {
             id: rightController
             controller: XrController.ControllerRight
 
-            Component.onCompleted: handInput.poseSpace = XrHandInput.AimPose
+            poseSpace: XrController.AimPose
 
             XrInputAction {
                 hand: XrInputAction.RightHand

@@ -29,18 +29,6 @@ QQuick3DXrHandInput *QQuick3DXrInputManager::rightHandInput() const
     return d->rightHandInput();
 }
 
-QQuick3DXrHandTrackerInput *QQuick3DXrInputManager::leftHandTrackerInput() const
-{
-    Q_D(const QQuick3DXrInputManager);
-    return d->leftHandTrackerInput();
-}
-
-QQuick3DXrHandTrackerInput *QQuick3DXrInputManager::rightHandTrackerInput() const
-{
-    Q_D(const QQuick3DXrInputManager);
-    return d->rightHandTrackerInput();
-}
-
 bool QQuick3DXrInputManager::isValid() const
 {
     Q_D(const QQuick3DXrInputManager);

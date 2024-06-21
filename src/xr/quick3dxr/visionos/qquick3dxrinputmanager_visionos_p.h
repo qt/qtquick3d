@@ -28,7 +28,6 @@ typedef struct ar_data_providers_s *ar_data_providers_t;
 QT_BEGIN_NAMESPACE
 
 class QQuick3DXrHandInput;
-class QQuick3DXrHandTrackerInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
 
@@ -59,9 +58,6 @@ public:
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
 
-    QQuick3DXrHandTrackerInput *leftHandTrackerInput() const;
-    QQuick3DXrHandTrackerInput *rightHandTrackerInput() const;
-
     void setupHandModel(QQuick3DXrHandModel *model);
 
     qsizetype getPokeJointIndex() const;
@@ -71,7 +67,6 @@ public:
 private:
     QQuick3DXrInputManager *q_ptr = nullptr;
     QQuick3DXrHandInput *m_handInputState[2] {};
-    QQuick3DXrHandTrackerInput *m_handTrackerInputState[2] {};
 
     ar_hand_tracking_provider_t m_handTrackingProvider;
     ar_hand_anchor_t m_handAnchors[2] {};

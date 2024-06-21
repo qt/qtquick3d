@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenXRController;
+class QQuick3DXrController;
 class QQuick3DXrInputAction;
 class QQuick3DXrActionMapper;
 
@@ -42,7 +42,7 @@ class QQuick3DXrInputAction : public QObject, public QQmlParserStatus
 
 public:
 
-    // TODO: There should be only one enum for hands
+    // Same values as XrController and XrHandModel enums
     enum Hand : quint8 {
         Unknown = 0,
         LeftHand,

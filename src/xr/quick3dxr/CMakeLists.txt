@@ -19,9 +19,9 @@ qt_internal_add_qml_module(Quick3DXr
         qquick3dxrruntimeinfo_p.h qquick3dxrruntimeinfo.cpp
         qquick3dxritem_p.h qquick3dxritem.cpp
         qquick3dxrvirtualmouse.cpp qquick3dxrvirtualmouse_p.h
-        qopenxrcontroller_p.h qopenxrcontroller.cpp
-        qquick3dxrhandinput.cpp qquick3dxrhandinput_p.h qquick3dxrhandtrackerinput_p_p.h
-        qquick3dxrhandtrackerinput_p.h qquick3dxrhandtrackerinput.cpp
+        qquick3dxrcontroller_p.h qquick3dxrcontroller.cpp
+        qquick3dxrhandinput.cpp qquick3dxrhandinput_p.h
+        qquick3dxrhandmodel_p.h qquick3dxrhandmodel.cpp
         qquick3dxrinputmanager.cpp qquick3dxrinputmanager_p.h
         qquick3dxrspatialanchor_p.h qquick3dxrspatialanchor.cpp
         qquick3dxrspatialanchorlistmodel_p.h qquick3dxrspatialanchorlistmodel.cpp

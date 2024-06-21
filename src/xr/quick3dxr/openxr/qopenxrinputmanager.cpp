@@ -5,9 +5,9 @@
 #include "qopenxrinputmanager_p.h"
 #include "openxr/qopenxrhelpers_p.h"
 #include "qquick3dxrhandinput_p.h"
-#include "qquick3dxrhandtrackerinput_p.h"
+#include "qquick3dxrhandmodel_p.h"
 
-#include "qopenxrcontroller_p.h" //### InputAction enum
+#include "qquick3dxrcontroller_p.h" //### InputAction enum
 
 #include <QDebug>
 
@@ -20,8 +20,6 @@ QQuick3DXrInputManagerPrivate::QQuick3DXrInputManagerPrivate(QQuick3DXrInputMana
 {
     m_handInputState[Hand::LeftHand] = new QQuick3DXrHandInput(this);
     m_handInputState[Hand::RightHand] = new QQuick3DXrHandInput(this);
-    m_handTrackerInputState[Hand::LeftHand] = new QQuick3DXrHandTrackerInput(this);
-    m_handTrackerInputState[Hand::RightHand] = new QQuick3DXrHandTrackerInput(this);
 }
 
 QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
@@ -29,13 +27,9 @@ QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
     teardown();
     delete m_handInputState[Hand::LeftHand];
     delete m_handInputState[Hand::RightHand];
-    delete m_handTrackerInputState[Hand::LeftHand];
-    delete m_handTrackerInputState[Hand::RightHand];
 
     m_handInputState[Hand::LeftHand] = nullptr;
     m_handInputState[Hand::RightHand] = nullptr;
-    m_handTrackerInputState[Hand::LeftHand] = nullptr;
-    m_handTrackerInputState[Hand::RightHand] = nullptr;
 }
 
 QQuick3DXrInputManagerPrivate::QXRHandComponentPath QQuick3DXrInputManagerPrivate::makeHandInputPaths(const QByteArrayView path)
@@ -607,8 +601,8 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking(XrTime predictedDisplayTi
                 jp.append(OpenXRHelpers::toQVector(pose.position));
                 jr.append(OpenXRHelpers::toQQuaternion(pose.orientation));
             }
-            m_handTrackerInputState[hand]->setJointPositionsAndRotations(jp, jr);
-            m_handTrackerInputState[hand]->setIsActive(locations[hand].isActive);
+            m_handInputState[hand]->setJointPositionsAndRotations(jp, jr);
+            m_handInputState[hand]->setIsHandTrackingActive(locations[hand].isActive);
         }
 
         if (aimExtensionEnabled) {
@@ -881,27 +875,19 @@ XrSpace QQuick3DXrInputManagerPrivate::handSpace(QQuick3DXrInputManagerPrivate::
         return m_handAimSpace[hand];
 }
 
-XrSpace QQuick3DXrInputManagerPrivate::handTrackerSpace(Hand handtracker)
-{
-    if (m_handTrackerInputState[handtracker]->poseSpace() == QQuick3DXrHandTrackerInput::HandPoseSpace::GripPose)
-        return m_handGripSpace[handtracker];
-    else
-        return m_handAimSpace[handtracker];
-}
-
 bool QQuick3DXrInputManagerPrivate::isHandActive(QQuick3DXrInputManagerPrivate::Hand hand)
 {
     return m_handInputState[hand]->isActive();
 }
 
-bool QQuick3DXrInputManagerPrivate::isHandTrackerActive(Hand handtracker)
+bool QQuick3DXrInputManagerPrivate::isHandTrackerActive(Hand hand)
 {
-    return m_handTrackerInputState[handtracker]->isActive();
+    return m_handInputState[hand]->isHandTrackingActive();
 }
 
 void QQuick3DXrInputManagerPrivate::setPosePosition(Hand hand, const QVector3D &position)
 {
-    m_handInputState[hand]->setPosePosition(position);
+    m_handInputState[hand]->setPosePosition(position); // TODO: move to controller!!!
 }
 
 void QQuick3DXrInputManagerPrivate::setPoseRotation(Hand hand, const QQuaternion &rotation)
@@ -917,16 +903,6 @@ QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::rightHandInput() const
 {
     return m_handInputState[Hand::RightHand];
-}
-
-QQuick3DXrHandTrackerInput *QQuick3DXrInputManagerPrivate::rightHandTrackerInput() const
-{
-    return m_handTrackerInputState[Hand::RightHand];
-}
-
-QQuick3DXrHandTrackerInput *QQuick3DXrInputManagerPrivate::leftHandTrackerInput() const
-{
-    return m_handTrackerInputState[Hand::LeftHand];
 }
 
 static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuaternion &rotation)
@@ -978,14 +954,13 @@ void QQuick3DXrInputManagerPrivate::setupHandModel(QQuick3DXrHandModel *model)
         return;
     }
 
-    if (QQuick3DXrHandTrackerInput *targetHT = model->handTracker()) {
-        if (targetHT == m_handTrackerInputState[Hand::LeftHand])
-            setupHandModelInternal(model, Hand::LeftHand);
-        else if (targetHT == m_handTrackerInputState[Hand::RightHand])
-            setupHandModelInternal(model, Hand::RightHand);
-        else
-            qWarning() << "No matching hand tracker input found for hand model.";
-    }
+    auto hand = model->hand();
+    if (hand == QQuick3DXrHandModel::LeftHand)
+        setupHandModelInternal(model, Hand::LeftHand);
+    else if (hand == QQuick3DXrHandModel::RightHand)
+        setupHandModelInternal(model, Hand::RightHand);
+    else
+        qWarning() << "No matching hand tracker input found for hand model.";
 }
 
 void QQuick3DXrInputManagerPrivate::createHandModelData(Hand hand)
