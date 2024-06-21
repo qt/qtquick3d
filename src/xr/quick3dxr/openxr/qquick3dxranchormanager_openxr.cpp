@@ -3,7 +3,7 @@
 
 #include "qquick3dxranchormanager_openxr_p.h"
 #include "openxr/qopenxrhelpers_p.h"
-#include "qopenxrspatialanchor_p.h"
+#include "qquick3dxrspatialanchor_p.h"
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 

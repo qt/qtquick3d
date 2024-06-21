@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qquick3dxrspatialanchorlistmodel_p.h"
-#include "qopenxrspatialanchor_p.h"
+#include "qquick3dxrspatialanchor_p.h"
 
 #if defined(Q_OS_VISIONOS)
 #include "visionos/qquick3dxranchormanager_visionos_p.h"

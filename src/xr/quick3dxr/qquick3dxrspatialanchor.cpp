@@ -1,7 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "qopenxrspatialanchor_p.h"
+#include "qquick3dxrspatialanchor_p.h"
 
 #if defined(Q_OS_VISIONOS)
 #include "visionos/qquick3dxranchormanager_visionos_p.h"
