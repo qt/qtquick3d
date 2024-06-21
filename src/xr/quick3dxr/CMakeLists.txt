@@ -23,7 +23,7 @@ qt_internal_add_qml_module(Quick3DXr
         qquick3dxrhandinput.cpp qquick3dxrhandinput_p.h qquick3dxrhandtrackerinput_p_p.h
         qquick3dxrhandtrackerinput_p.h qquick3dxrhandtrackerinput.cpp
         qquick3dxrinputmanager.cpp qquick3dxrinputmanager_p.h
-        qopenxrspatialanchor_p.h qopenxrspatialanchor.cpp
+        qquick3dxrspatialanchor_p.h qquick3dxrspatialanchor.cpp
         qquick3dxrspatialanchorlistmodel_p.h qquick3dxrspatialanchorlistmodel.cpp
         qtquick3dxrglobal_p.h
         qtquick3dxrglobal.h
