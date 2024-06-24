@@ -766,7 +766,7 @@ void QQuick3DParticleSpriteParticle::qmlClearLights(QQmlListProperty<QQuick3DAbs
     for (const auto &light : std::as_const(self->m_lights)) {
         if (light->parentItem() == nullptr)
             QQuick3DObjectPrivate::get(light)->derefSceneManager();
-        light->disconnect(self, SLOT(onLightDestroyed(QObject*)));
+        disconnect(light, &QQuick3DParticleSpriteParticle::destroyed, self, &QQuick3DParticleSpriteParticle::onLightDestroyed);
     }
     self->m_lights.clear();
     self->updateFeatureLevel();
