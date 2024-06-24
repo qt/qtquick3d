@@ -18,6 +18,7 @@
 #include <QAbstractListModel>
 #include <QtQmlIntegration/qqmlintegration.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qstringlist.h>
 #include <QUuid>
 
 QT_BEGIN_NAMESPACE
@@ -30,14 +31,15 @@ class QQuick3DXrSpatialAnchorListModel : public QAbstractListModel
     Q_OBJECT
     Q_PROPERTY(FilterMode filterMode READ filterMode WRITE setFilterMode NOTIFY filterModeChanged FINAL)
     Q_PROPERTY(SemanticLabels labels READ labels WRITE setLabels NOTIFY labelsChanged FINAL)
-    Q_PROPERTY(QList<QUuid> uuids READ uuids WRITE setUuids NOTIFY uuidsChanged FINAL)
+    Q_PROPERTY(QStringList identifierFilter READ identifierFilter WRITE setIdentifierFilter NOTIFY identifierFilterChanged FINAL)
+
     QML_NAMED_ELEMENT(XrSpatialAnchorModel)
     QML_ADDED_IN_VERSION(6, 8)
 public:
     enum FilterMode {
         All,
         Labels,
-        UUID
+        Identifier
     };
     Q_ENUM(FilterMode)
 
@@ -77,15 +79,15 @@ public:
     FilterMode filterMode() const;
     void setFilterMode(FilterMode newFilterMode);
 
-    QList<QUuid> uuids() const;
-    void setUuids(const QList<QUuid> &newUuids);
+    QStringList identifierFilter() const;
+    void setIdentifierFilter(const QStringList &filter);
 
     SemanticLabels labels() const;
     void setLabels(const SemanticLabels &newLabels);
 
 signals:
     void filterModeChanged();
-    void uuidsChanged();
+    void identifierFilterChanged();
     void labelsChanged();
 
 private Q_SLOTS:
@@ -96,7 +98,7 @@ private Q_SLOTS:
 private:
     QPointer<QQuick3DXrAnchorManager> m_anchorManager;
     FilterMode m_filterMode = FilterMode::All;
-    QList<QUuid> m_uuids;
+    QStringList m_uuids;
     SemanticLabels m_labels;
 };
 

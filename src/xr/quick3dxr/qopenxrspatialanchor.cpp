@@ -211,16 +211,16 @@ QVector2D QQuick3DXrSpatialAnchor::extent2D() const
 }
 
 /*!
-    \qmlproperty QUuid XrSpatialAnchor::uuid
-    \brief The unique identifier (UUID) of the spatial anchor.
+    \qmlproperty QUuid XrSpatialAnchor::identifier
+    \brief A unique identifier for this spatial anchor.
 
-    This property returns a universally unique identifier (UUID) associated with the
-    spatial anchor. This is what is referenced by a \l XrSpatialAnchorModel.
+    This property returns a unique identifier associated with the
+    spatial anchor. This is the same identified referenced by a \l XrSpatialAnchorModel.
  */
 
-QUuid QQuick3DXrSpatialAnchor::uuid() const
+QString QQuick3DXrSpatialAnchor::identifier() const
 {
-    return m_uuid;
+    return QString::fromLatin1(m_uuid.toRfc4122());
 }
 
 QSet<QUuid> QQuick3DXrSpatialAnchor::roomLayoutUuids() const
