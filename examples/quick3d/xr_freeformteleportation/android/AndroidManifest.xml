@@ -10,7 +10,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="org.khronos.openxr.permission.OPENXR"/>
     <uses-permission android:name="org.khronos.openxr.permission.OPENXR_SYSTEM"/>
-    <uses-feature android:name="android.hardware.vr.headtracking" android:required="true" android:version="1" />
+    <uses-permission android:name="com.oculus.permission.HAND_TRACKING"/>
+    <uses-feature android:name="android.hardware.vr.headtracking" android:required="true" android:version="1"/>
+    <uses-feature android:name="oculus.software.handtracking" android:required="false"/>
+    <uses-feature android:name="wave.feature.handtracking" android:required="false"/>
     <uses-feature android:glEsVersion="0x00030000" />
     <application android:name="org.qtproject.qt.android.bindings.QtApplication"
         android:label="Quick3DXr Freeform Teleportation Example"

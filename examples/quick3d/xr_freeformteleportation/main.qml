@@ -73,6 +73,38 @@ XrView {
                 actionId: [XrInputAction.TrackpadPressed]
             }
 
+            XrInputAction {
+                id: indexFingerPinch
+                property bool active: false
+                hand: XrInputAction.RightHand
+                actionId: [XrInputAction.IndexFingerPinch]
+                onTriggered: {
+                    // Mimic teleportation as done by the thumbstick
+                    if (active) {
+                        teleporter.yStickValue = 0
+                        active = false
+                    } else {
+                        active = true
+                        teleporter.yStickValue = 1
+                    }
+                }
+            }
+
+            // Rotate left/right by pinching the middle fingers
+            XrInputAction {
+                id: leftMiddleFingerPinch
+                hand: XrInputAction.LeftHand
+                actionId: [XrInputAction.MiddleFingerPinch]
+                onTriggered: teleporter.rotateLeft()
+            }
+
+            XrInputAction {
+                id: rightMiddleFingerPinch
+                hand: XrInputAction.RightHand
+                actionId: [XrInputAction.MiddleFingerPinch]
+                onTriggered: teleporter.rotateRight()
+            }
+
             property real xValue: trackpadPressed.pressed ? trackpadX.value : thumbstickX.value
             property real yValue: trackpadPressed.pressed ? trackpadY.value : thumbstickY.value
 

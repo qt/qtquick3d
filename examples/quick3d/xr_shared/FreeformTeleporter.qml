@@ -42,6 +42,14 @@ Node {
         doRotation(originNode.rotation.times(r), originNode.position.minus(delta))
     }
 
+    function rotateRight() {
+        rotateBy(-cameraSnapRotation)
+    }
+
+    function rotateLeft() {
+        rotateBy(cameraSnapRotation)
+    }
+
     signal doTeleportation(var cameraOriginPosition)
 
     signal doRotation(var cameraOriginRotation, var cameraOriginPosition)
@@ -49,13 +57,13 @@ Node {
     readonly property bool xPlusRotation: xStickValue > 0.5
     onXPlusRotationChanged: {
         if (xPlusRotation)
-            rotateBy(-cameraSnapRotation)
+            rotateRight()
     }
 
     readonly property bool xMinusRotation: xStickValue < -0.5
     onXMinusRotationChanged: {
         if (xMinusRotation)
-            rotateBy(cameraSnapRotation)
+            rotateLeft()
     }
 
     ValueFader {
