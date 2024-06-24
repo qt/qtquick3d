@@ -145,9 +145,9 @@ qsizetype QQuick3DSkin::qmlJointsCount(QQmlListProperty<QQuick3DNode> *list)
 void QQuick3DSkin::qmlClearJoints(QQmlListProperty<QQuick3DNode> *list)
 {
     QQuick3DSkin *self = static_cast<QQuick3DSkin *>(list->object);
-    for (const auto &joint : std::as_const(self->m_joints)) {
-        joint->disconnect(self, SLOT(onJointDestroyed(QObject*)));
-    }
+    for (const auto &joint : std::as_const(self->m_joints))
+        disconnect(joint, &QQuick3DNode::destroyed, self, &QQuick3DSkin::onJointDestroyed);
+
     self->m_joints.clear();
     self->m_boneData.clear();
     self->markDirty();
