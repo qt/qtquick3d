@@ -977,7 +977,7 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 }
 
 /*!
-    \qmlmethod PickResult View3D::pick(float x, float y)
+    \qmlmethod pickResult View3D::pick(float x, float y)
 
     This method will "shoot" a ray into the scene from view coordinates \a x and \a y
     and return information about the nearest intersection with an object in the scene.
@@ -1001,7 +1001,7 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 }
 
 /*!
-    \qmlmethod PickResult View3D::pick(float x, float y, Model model)
+    \qmlmethod pickResult View3D::pick(float x, float y, Model model)
 
     This method will "shoot" a ray into the scene from view coordinates \a x and \a y
     and return information about the intersection between the ray and the specified \a model.
@@ -1029,7 +1029,7 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y, QQuick3DModel *model
 }
 
 /*!
-    \qmlmethod List<PickResult> View3D::pickSubset(float x, float y, list<Model> models)
+    \qmlmethod List<pickResult> View3D::pickSubset(float x, float y, list<Model> models)
 
     This method will "shoot" a ray into the scene from view coordinates \a x and \a y
     and return information about the intersections with the passed in list of \a models.
@@ -1117,7 +1117,7 @@ QList<QQuick3DPickResult> QQuick3DViewport::pickSubset(float x, float y, const Q
 }
 
 /*!
-    \qmlmethod List<PickResult> View3D::pickAll(float x, float y)
+    \qmlmethod List<pickResult> View3D::pickAll(float x, float y)
 
     This method will "shoot" a ray into the scene from view coordinates \a x and \a y
     and return a list of information about intersections with objects in the scene.
@@ -1150,7 +1150,7 @@ QList<QQuick3DPickResult> QQuick3DViewport::pickAll(float x, float y) const
 }
 
 /*!
-    \qmlmethod PickResult View3D::rayPick(vector3d origin, vector3d direction)
+    \qmlmethod pickResult View3D::rayPick(vector3d origin, vector3d direction)
 
     This method will "shoot" a ray into the scene starting at \a origin and in
     \a direction and return information about the nearest intersection with an
@@ -1174,7 +1174,7 @@ QQuick3DPickResult QQuick3DViewport::rayPick(const QVector3D &origin, const QVec
 }
 
 /*!
-    \qmlmethod List<PickResult> View3D::rayPickAll(vector3d origin, vector3d direction)
+    \qmlmethod List<pickResult> View3D::rayPickAll(vector3d origin, vector3d direction)
 
     This method will "shoot" a ray into the scene starting at \a origin and in
     \a direction and return a list of information about the nearest intersections with
