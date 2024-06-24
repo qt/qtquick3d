@@ -41,7 +41,8 @@ class QQuick3DXrSpatialAnchor : public QObject
     Q_PROPERTY(QVector3D position READ position NOTIFY positionChanged)
     Q_PROPERTY(QQuaternion rotation READ rotation NOTIFY rotationChanged)
     Q_PROPERTY(QString semanticLabels READ semanticLabels CONSTANT)
-    Q_PROPERTY(QUuid uuid READ uuid CONSTANT)
+    Q_PROPERTY(QString identifier READ identifier CONSTANT)
+
     QML_NAMED_ELEMENT(XrSpatialAnchor)
     QML_UNCREATABLE("Spatial anchor objects cannot be created in QML");
     QML_ADDED_IN_VERSION(6, 8)
@@ -72,7 +73,7 @@ public:
     QVector2D offset2D() const;
     QVector2D extent2D() const;
 
-    QUuid uuid() const;
+    QString identifier() const;
 
     QSet<QUuid> roomLayoutUuids() const;
     void setRoomLayoutUuids(const QSet<QUuid> &newRoomLayoutUuids);
@@ -94,6 +95,12 @@ signals:
     void extent2DChanged();
 
 private:
+    // Note: internally, and from C++ we still store this as a QUuid,
+    // so this just keeps the compatibility and avoid conversions in
+    // in the managers.
+    friend class QQuick3DXrAnchorManager;
+    QUuid uuid() const { return m_uuid; }
+
     QtQuick3DXr::XrSpaceId m_space { };
     QUuid m_uuid;
     QVector3D m_offset3D;

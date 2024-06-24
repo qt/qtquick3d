@@ -130,7 +130,7 @@ void QQuick3DXrSpatialAnchorListModel::handleAnchorUpdated(QQuick3DXrSpatialAnch
     The filter mode can be one of the following:
     \value All Show all spatial anchors.
     \value Label Show spatial anchors based on semantic labels.
-    \value UUID  Show spatial anchors based on UUIDs.
+    \value Identifier Show spatial anchors based matching the provided Identifiers.
  */
 
 QQuick3DXrSpatialAnchorListModel::FilterMode QQuick3DXrSpatialAnchorListModel::filterMode() const
@@ -147,21 +147,21 @@ void QQuick3DXrSpatialAnchorListModel::setFilterMode(FilterMode newFilterMode)
 }
 
 /*!
-    \qmlproperty list XrSpatialAnchorModel::uuids
-    \brief Holds the list of UUIDs for filtering spatial anchors.
+    \qmlproperty list XrSpatialAnchorModel::identifierFilter
+    \brief Holds the list of identifiers for filtering spatial anchors.
  */
 
-QList<QUuid> QQuick3DXrSpatialAnchorListModel::uuids() const
+QStringList QQuick3DXrSpatialAnchorListModel::identifierFilter() const
 {
     return m_uuids;
 }
 
-void QQuick3DXrSpatialAnchorListModel::setUuids(const QList<QUuid> &newUuids)
+void QQuick3DXrSpatialAnchorListModel::setIdentifierFilter(const QStringList &filter)
 {
-    if (m_uuids == newUuids)
+    if (m_uuids == filter)
         return;
-    m_uuids = newUuids;
-    emit uuidsChanged();
+    m_uuids = filter;
+    emit identifierFilterChanged();
 }
 
 /*!
