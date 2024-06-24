@@ -378,7 +378,7 @@ bool QQuick3DXrView::init()
 }
 
 /*!
-    \qmlmethod PickResult XrView::rayPick(vector3d origin, vector3d direction)
+    \qmlmethod pickResult XrView::rayPick(vector3d origin, vector3d direction)
 
     This method will "shoot" a ray into the scene starting at \a origin and in
     \a direction and return information about the nearest intersection with an
@@ -394,7 +394,7 @@ QQuick3DPickResult QQuick3DXrView::rayPick(const QVector3D &origin, const QVecto
 }
 
 /*!
-    \qmlmethod List<PickResult> XrView::rayPickAll(vector3d origin, vector3d direction)
+    \qmlmethod List<pickResult> XrView::rayPickAll(vector3d origin, vector3d direction)
 
     This method will "shoot" a ray into the scene starting at \a origin and in
     \a direction and return a list of information about the nearest intersections with
