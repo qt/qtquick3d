@@ -1026,7 +1026,7 @@ void QQuick3DModel::qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list)
                 mat.refed = false;
             }
         }
-        mat.material->disconnect(self, SLOT(onMaterialDestroyed(QObject*)));
+        disconnect(mat.material, &QQuick3DMaterial::destroyed, self, &QQuick3DModel::onMaterialDestroyed);
     }
     self->m_materials.clear();
     self->markDirty(QQuick3DModel::MaterialsDirty);
@@ -1103,7 +1103,7 @@ void QQuick3DModel::qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *
     for (const auto &morph : std::as_const(self->m_morphTargets)) {
         if (morph->parentItem() == nullptr)
             QQuick3DObjectPrivate::get(morph)->derefSceneManager();
-        morph->disconnect(self, SLOT(onMorphTargetDestroyed(QObject*)));
+        disconnect(morph, &QQuick3DMorphTarget::destroyed, self, &QQuick3DModel::onMorphTargetDestroyed);
     }
     self->m_morphTargets.clear();
     self->m_numMorphAttribs = 0;
