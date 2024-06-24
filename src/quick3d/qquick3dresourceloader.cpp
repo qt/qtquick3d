@@ -236,7 +236,7 @@ void QQuick3DResourceLoader::qmlClearGeometries(QQmlListProperty<QQuick3DGeometr
     for (const auto &geometry : std::as_const(self->m_geometries)) {
         if (geometry->parentItem() == nullptr)
             QQuick3DObjectPrivate::get(geometry)->derefSceneManager();
-        geometry->disconnect(self, SLOT(onMorphTargetDestroyed(QObject*)));
+        disconnect(geometry, &QQuick3DGeometry::destroyed, self, &QQuick3DResourceLoader::onGeometryDestroyed);
     }
 
     self->m_geometries.clear();
@@ -292,7 +292,7 @@ void QQuick3DResourceLoader::qmlClearTextures(QQmlListProperty<QQuick3DTexture> 
     for (const auto &data : std::as_const(self->m_textures)) {
         if (data->parentItem() == nullptr)
             QQuick3DObjectPrivate::get(data)->derefSceneManager();
-        data->disconnect(self, SLOT(onMorphTargetDestroyed(QObject*)));
+        disconnect(data, &QQuick3DTextureData::destroyed, self, &QQuick3DResourceLoader::onTextureDestroyed);
     }
     self->m_textures.clear();
     self->markDirty(QQuick3DResourceLoader::TexturesDirty);
