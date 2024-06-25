@@ -66,7 +66,7 @@ static constexpr DefineEntry DefineTable[] {
     { "QSSG_ENABLE_SSAO", QSSGShaderFeatures::Feature::Ssao },
     { "QSSG_ENABLE_DEPTH_PASS", QSSGShaderFeatures::Feature::DepthPass },
     { "QSSG_ENABLE_ORTHO_SHADOW_PASS", QSSGShaderFeatures::Feature::OrthoShadowPass },
-    { "QSSG_ENABLE_CUBE_SHADOW_PASS", QSSGShaderFeatures::Feature::CubeShadowPass },
+    { "QSSG_ENABLE_PERSPECTIVE_SHADOW_PASS", QSSGShaderFeatures::Feature::PerspectiveShadowPass },
     { "QSSG_ENABLE_LINEAR_TONEMAPPING", QSSGShaderFeatures::Feature::LinearTonemapping },
     { "QSSG_ENABLE_ACES_TONEMAPPING", QSSGShaderFeatures::Feature::AcesTonemapping },
     { "QSSG_ENABLE_HEJLDAWSON_TONEMAPPING", QSSGShaderFeatures::Feature::HejlDawsonTonemapping },

@@ -279,7 +279,7 @@ float normalizedShadowFactor(float shadow, float factor) {
 }
 
 // Point + Spot Light
-float qt_sampleCubemap_hard( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+float qt_samplePointLight_hard( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
     float dist = length(worldPos - lightPos);
     float mapSizeInv = 1.0f / (shadowData.shadowMapFar - shadowData.clipNear);
     float currentDepth = clamp((dist - shadowData.clipNear) / (shadowData.shadowMapFar - shadowData.clipNear), 0.0, 1.0);
@@ -291,7 +291,7 @@ float qt_sampleCubemap_hard( in samplerCube shadowCube, in ShadowData shadowData
     return normalizedShadowFactor(shadow, shadowData.factor);
 }
 
-float qt_sampleCubemap_pcf( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in int numSamples )
+float qt_samplePointLight_pcf( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in int numSamples )
 {
     vec3 cubePos = (worldPos - lightPos);
     float dist = length(worldPos - lightPos);
@@ -313,24 +313,24 @@ float qt_sampleCubemap_pcf( in samplerCube shadowCube, in ShadowData shadowData,
     return normalizedShadowFactor(shadow, shadowData.factor);
 }
 
-float qt_sampleCubemap_pcf_4( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
-    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 4);
+float qt_samplePointLight_pcf_4( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_samplePointLight_pcf(shadowCube, shadowData, lightPos, worldPos, 4);
 }
 
-float qt_sampleCubemap_pcf_8( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
-    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 8);
+float qt_samplePointLight_pcf_8( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_samplePointLight_pcf(shadowCube, shadowData, lightPos, worldPos, 8);
 }
 
-float qt_sampleCubemap_pcf_16( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
-    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 16);
+float qt_samplePointLight_pcf_16( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_samplePointLight_pcf(shadowCube, shadowData, lightPos, worldPos, 16);
 }
 
-float qt_sampleCubemap_pcf_32( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
-    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 32);
+float qt_samplePointLight_pcf_32( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_samplePointLight_pcf(shadowCube, shadowData, lightPos, worldPos, 32);
 }
 
-float qt_sampleCubemap_pcf_64( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
-    return qt_sampleCubemap_pcf(shadowCube, shadowData, lightPos, worldPos, 64);
+float qt_samplePointLight_pcf_64( in samplerCube shadowCube, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos ) {
+    return qt_samplePointLight_pcf(shadowCube, shadowData, lightPos, worldPos, 64);
 }
 
 // Directional
@@ -344,7 +344,7 @@ int findSplitIndex(in float depth, in vec4 splits, in vec4 splitActive, in int n
     return -1;
 }
 
-float qt_sampleOrthographic_splitIndex(in sampler2DArray shadowMap,
+float qt_sampleDirectionalLight_splitIndex(in sampler2DArray shadowMap,
                                        in int splitIndex,
                                        in float shadowBias,
                                        in float shadowFactor,
@@ -371,7 +371,7 @@ float qt_sampleOrthographic_splitIndex(in sampler2DArray shadowMap,
     return normalizedShadowFactor(shadow, shadowFactor);
 }
 
-float qt_sampleOrthographic_pcf( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos, in int numSamples )
+float qt_sampleDirectionalLight_pcf( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos, in int numSamples )
 {
     int splitIndex = findSplitIndex(zDepthViewSpace, shadowData.csmSplits, shadowData.csmActive, shadowData.csmNumSplits);
 
@@ -380,7 +380,7 @@ float qt_sampleOrthographic_pcf( in sampler2DArray shadowMap, in ShadowData shad
 
     vec4 projCoord = shadowData.matrices[splitIndex] * vec4( worldPos, 1.0 );
     vec3 dimensions = shadowData.dimensionsInverted[splitIndex].xyz;
-    float shadow = qt_sampleOrthographic_splitIndex(shadowMap, splitIndex, shadowData.bias, shadowData.factor, dimensions, float(shadowData.isYUp), shadowData.pcfFactor, numSamples, projCoord, worldPos, float(shadowData.layerIndex + splitIndex));
+    float shadow = qt_sampleDirectionalLight_splitIndex(shadowMap, splitIndex, shadowData.bias, shadowData.factor, dimensions, float(shadowData.isYUp), shadowData.pcfFactor, numSamples, projCoord, worldPos, float(shadowData.layerIndex + splitIndex));
 
     if (splitIndex == 0) {
         return shadow;
@@ -393,14 +393,14 @@ float qt_sampleOrthographic_pcf( in sampler2DArray shadowMap, in ShadowData shad
     if (zDepthViewSpace < splitPrev + bandLength && shadowData.csmActive[splitIndex - 1] > 0.0) {
         vec4 projCoordPrev = shadowData.matrices[splitIndex - 1] * vec4(worldPos, 1.0 );
         vec3 dimensionsPrev = shadowData.dimensionsInverted[splitIndex - 1].xyz;
-        float shadowPrev = qt_sampleOrthographic_splitIndex(shadowMap, splitIndex, shadowData.bias, shadowData.factor, dimensionsPrev, float(shadowData.isYUp), shadowData.pcfFactor, numSamples, projCoordPrev, worldPos, float(shadowData.layerIndex + splitIndex - 1));
+        float shadowPrev = qt_sampleDirectionalLight_splitIndex(shadowMap, splitIndex, shadowData.bias, shadowData.factor, dimensionsPrev, float(shadowData.isYUp), shadowData.pcfFactor, numSamples, projCoordPrev, worldPos, float(shadowData.layerIndex + splitIndex - 1));
         float t = (splitPrev + bandLength - zDepthViewSpace) / bandLength;
         shadow = mix(shadow, shadowPrev, t);
     }
     return shadow;
 }
 
-float qt_sampleOrthographic_hard(in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos ) {
+float qt_sampleDirectionalLight_hard(in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos ) {
     if (zDepthViewSpace >= shadowData.csmSplits[3])
         return 1.0;
     int splitIndex = findSplitIndex(zDepthViewSpace, shadowData.csmSplits, shadowData.csmActive, shadowData.csmNumSplits);
@@ -414,24 +414,89 @@ float qt_sampleOrthographic_hard(in sampler2DArray shadowMap, in ShadowData shad
     return normalizedShadowFactor(shadow, shadowData.factor);
 }
 
-float qt_sampleOrthographic_pcf_4( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
-    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 4);
+float qt_sampleDirectionalLight_pcf_4( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 4);
 }
 
-float qt_sampleOrthographic_pcf_8( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
-    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 8);
+float qt_sampleDirectionalLight_pcf_8( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 8);
 }
 
-float qt_sampleOrthographic_pcf_16( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
-    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 16);
+float qt_sampleDirectionalLight_pcf_16( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 16);
 }
 
-float qt_sampleOrthographic_pcf_32( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
-    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 32);
+float qt_sampleDirectionalLight_pcf_32( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 32);
 }
 
-float qt_sampleOrthographic_pcf_64( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
-    return qt_sampleOrthographic_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 64);
+float qt_sampleDirectionalLight_pcf_64( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 64);
+}
+
+// SpotLight
+
+float qt_sampleSpotLight_pcf( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in vec3 lightDir, in float coneAngle, in int numSamples )
+{
+    vec3 dir = worldPos - lightPos;
+    float lightAngle = dot(normalize(dir), normalize(lightDir));
+    if (lightAngle < coneAngle)
+        return 1.f;
+
+    float dist = length(dir);
+    float mapSizeInv = 1.0f / (shadowData.shadowMapFar - shadowData.clipNear);
+    float currentDepth = clamp((dist - shadowData.clipNear) / (shadowData.shadowMapFar - shadowData.clipNear), 0.0, 1.0) - shadowData.bias * mapSizeInv;
+    float shadow = 0.0f;
+    for (int i = 0; i < numSamples; ++i)
+    {
+        vec3 worldPosPCF = worldPos + CUBEMAP_SAMPLE_DIRECTIONS[i + numSamples - 4] * shadowData.pcfFactor;
+        vec4 projCoord = shadowData.matrices[0] * vec4(worldPosPCF, 1.0);
+        vec3 smpCoord = projCoord.xyz / projCoord.w;
+        smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, shadowData.isYUp);
+
+        float sampleDepth = texture(shadowMap, vec3(smpCoord.xy, float(shadowData.layerIndex))).x ;
+        if (currentDepth < sampleDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(numSamples);
+    return normalizedShadowFactor(shadow, shadowData.factor);
+}
+
+float qt_sampleSpotLight_hard( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in vec3 lightDir, in float coneAngle) {
+    vec3 dir = worldPos - lightPos;
+    float lightAngle = dot(normalize(dir), normalize(lightDir));
+    if (lightAngle < coneAngle)
+        return 1.0;
+
+    float dist = length(dir);
+    float mapSizeInv = 1.0f / (shadowData.shadowMapFar - shadowData.clipNear);
+    float currentDepth = clamp((dist - shadowData.clipNear) / (shadowData.shadowMapFar - shadowData.clipNear), 0.0, 1.0) - shadowData.bias * mapSizeInv;
+    vec4 projCoord = shadowData.matrices[0] * vec4(worldPos, 1.0);
+    vec3 smpCoord = projCoord.xyz / projCoord.w;
+    smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, shadowData.isYUp);
+    float sampleDepth = texture(shadowMap, vec3(smpCoord.xy, float(shadowData.layerIndex))).x;
+    float shadow = currentDepth < sampleDepth ? 1.0 : 0.0;
+    return normalizedShadowFactor(shadow, shadowData.factor);
+}
+
+float qt_sampleSpotLight_pcf_4( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in vec3 lightDir, in float coneAngle) {
+    return qt_sampleSpotLight_pcf(shadowMap, shadowData, lightPos, worldPos, lightDir, coneAngle, 4);
+}
+
+float qt_sampleSpotLight_pcf_8( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in vec3 lightDir, in float coneAngle) {
+    return qt_sampleSpotLight_pcf(shadowMap, shadowData, lightPos, worldPos, lightDir, coneAngle, 8);
+}
+
+float qt_sampleSpotLight_pcf_16( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in vec3 lightDir, in float coneAngle) {
+    return qt_sampleSpotLight_pcf(shadowMap, shadowData, lightPos, worldPos, lightDir, coneAngle, 16);
+}
+
+float qt_sampleSpotLight_pcf_32( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in vec3 lightDir, in float coneAngle) {
+    return qt_sampleSpotLight_pcf(shadowMap, shadowData, lightPos, worldPos, lightDir, coneAngle, 32);
+}
+
+float qt_sampleSpotLight_pcf_64( in sampler2DArray shadowMap, in ShadowData shadowData, in vec3 lightPos, in vec3 worldPos, in vec3 lightDir, in float coneAngle) {
+    return qt_sampleSpotLight_pcf(shadowMap, shadowData, lightPos, worldPos, lightDir, coneAngle, 64);
 }
 
 #endif

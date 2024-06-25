@@ -121,7 +121,10 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real SpotLight::coneAngle
 
     This property defines the cut-off angle (from edge to edge) beyond which the light doesn't affect the scene.
-    Defined in degrees between 0 and 180. The default value is 40.
+    Defined in degrees between \c{0} and \c{180}. The default value is \c{40}.
+
+    \note When the cone angle approaches \c{180} degrees the shadow quality will start to deteriorate. A value
+    under \c{170} is therefore recommended.
 */
 
 /*!

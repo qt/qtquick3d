@@ -628,7 +628,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
     if (orthographic)
         featureSet.set(QSSGShaderFeatures::Feature::OrthoShadowPass, true);
     else
-        featureSet.set(QSSGShaderFeatures::Feature::CubeShadowPass, true);
+        featureSet.set(QSSGShaderFeatures::Feature::PerspectiveShadowPass, true);
 
     // Do note how updateUniformsForDefaultMaterial() get a single camera and a
     // custom mvp; make sure multiview is disabled in the shader generator using
@@ -1335,7 +1335,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             const QSize size = pEntry->m_rhiDepthTextureArray->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-            Q_ASSERT(light->type == QSSGRenderLight::Type::DirectionalLight);
+            Q_ASSERT(light->type == QSSGRenderLight::Type::DirectionalLight || light->type == QSSGRenderLight::Type::SpotLight);
 
             // This is just a way to store the old camera so we can use it for debug
             // drawing. There are probably cleaner ways to do this
@@ -1346,23 +1346,47 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 debugCamera->globalTransform = camera.globalTransform;
             }
 
-            // Cascading Shadow Maps
-            auto cascades = setupCascadingCamerasForShadowMap(disableShadowCameraUpdate ? *debugCamera : camera,
-                                                              light,
-                                                              castingObjectsBox,
-                                                              receivingObjectsBox,
-                                                              debugDrawSystem,
-                                                              drawCascades,
-                                                              drawSceneCascadeIntersection);
+            QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> cascades;
+            if (light->type == QSSGRenderLight::Type::DirectionalLight) {
+                cascades = setupCascadingCamerasForShadowMap(disableShadowCameraUpdate ? *debugCamera : camera,
+                                                             light,
+                                                             castingObjectsBox,
+                                                             receivingObjectsBox,
+                                                             debugDrawSystem,
+                                                             drawCascades,
+                                                             drawSceneCascadeIntersection);
+                const float shadowMapFar = qMax(2.0f, qMin(light->m_shadowMapFar, camera.clipFar));
 
-            const float shadowMapFar = qMax(2.0f, qMin(light->m_shadowMapFar, camera.clipFar));
-            pEntry->m_shadowMapFar = shadowMapFar;
-
-            // Write the split distances from value 0 in the z-axis of the eye view-space
-            pEntry->m_csmSplits[0] = shadowMapFar * (light->m_csmNumSplits > 0 ? light->m_csmSplit1 : 1.0f);
-            pEntry->m_csmSplits[1] = shadowMapFar * (light->m_csmNumSplits > 1 ? light->m_csmSplit2 : 1.0f);
-            pEntry->m_csmSplits[2] = shadowMapFar * (light->m_csmNumSplits > 2 ? light->m_csmSplit3 : 1.0f);
-            pEntry->m_csmSplits[3] = shadowMapFar * 1.0f;
+                // Write the split distances from value 0 in the z-axis of the eye view-space
+                pEntry->m_csmSplits[0] = shadowMapFar * (light->m_csmNumSplits > 0 ? light->m_csmSplit1 : 1.0f);
+                pEntry->m_csmSplits[1] = shadowMapFar * (light->m_csmNumSplits > 1 ? light->m_csmSplit2 : 1.0f);
+                pEntry->m_csmSplits[2] = shadowMapFar * (light->m_csmNumSplits > 2 ? light->m_csmSplit3 : 1.0f);
+                pEntry->m_csmSplits[3] = shadowMapFar * 1.0f;
+                pEntry->m_shadowMapFar = shadowMapFar;
+            } else if (light->type == QSSGRenderLight::Type::SpotLight) {
+                auto spotlightCamera = std::make_unique<QSSGRenderCamera>(QSSGRenderCamera::Type::PerspectiveCamera);
+                spotlightCamera->fov = qDegreesToRadians(light->m_coneAngle * 2.0f);
+                spotlightCamera->clipNear = 1.0f;
+                spotlightCamera->clipFar = light->m_shadowMapFar;
+                const QVector3D lightDir = light->getDirection();
+                const QVector3D lightPos = light->getGlobalPos() - lightDir * spotlightCamera->clipNear;
+                const QVector3D lightPivot = light->pivot;
+                const QVector3D forward = lightDir.normalized();
+                const QVector3D right = qFuzzyCompare(qAbs(forward.y()), 1.0f)
+                        ? QVector3D::crossProduct(forward, QVector3D(1, 0, 0)).normalized()
+                        : QVector3D::crossProduct(forward, QVector3D(0, 1, 0)).normalized();
+                const QVector3D up = QVector3D::crossProduct(right, forward).normalized();
+                spotlightCamera->localTransform = QSSGRenderNode::calculateTransformMatrix(lightPos,
+                                                                                           QSSGRenderNode::initScale,
+                                                                                           lightPivot,
+                                                                                           QQuaternion::fromDirection(forward, up));
+                QRectF theViewport(0.0f, 0.0f, (float)light->m_shadowMapRes, (float)light->m_shadowMapRes);
+                spotlightCamera->calculateGlobalVariables(theViewport);
+                cascades.push_back(std::move(spotlightCamera));
+                pEntry->m_shadowMapFar = light->m_shadowMapFar;
+            } else {
+                Q_UNREACHABLE();
+            }
 
             memset(pEntry->m_csmActive, 0, sizeof(pEntry->m_csmActive));
 
@@ -1373,7 +1397,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 pEntry->m_csmActive[cascadeIndex] = 1.f;
                 cascadeCamera->calculateViewProjectionMatrix(pEntry->m_lightViewProjection[cascadeIndex]);
                 pEntry->m_lightView = cascadeCamera->globalTransform.inverted(); // pre-calculate this for the material
-                rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust, sortedOpaqueObjects, *cascadeCamera, true, QSSGRenderTextureCubeFaceNone, cascadeIndex);
+                const bool isOrtho = cascadeCamera->type == QSSGRenderGraphObject::Type::OrthographicCamera;
+                rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust, sortedOpaqueObjects, *cascadeCamera, isOrtho, QSSGRenderTextureCubeFaceNone, cascadeIndex);
                 // Render into the 2D texture pEntry->m_rhiDepthMap, using
                 // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
                 QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[cascadeIndex];
