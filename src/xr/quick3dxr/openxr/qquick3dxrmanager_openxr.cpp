@@ -292,6 +292,7 @@ void QQuick3DXrManagerPrivate::destroySwapchain()
 
     m_swapchains.clear();
     m_swapchainImages.clear();
+    m_configViews.clear();
 
     for (const Swapchain &swapchain : m_depthSwapchains)
         xrDestroySwapchain(swapchain.handle);
