@@ -39,7 +39,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQuick3DRender, "qt.quick3d.render");
+Q_STATIC_LOGGING_CATEGORY(lcQuick3DRender, "qt.quick3d.render");
 
 #define POS4BONETRANS(x)    (sizeof(float) * 16 * (x) * 2)
 #define POS4BONENORM(x)     (sizeof(float) * 16 * ((x) * 2 + 1))

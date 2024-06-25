@@ -10,7 +10,7 @@
 
 #include <QtCore/qloggingcategory.h>
 
-Q_LOGGING_CATEGORY(lcQuick3D, "qt.quick3d.general")
+Q_STATIC_LOGGING_CATEGORY(lcQuick3D, "qt.quick3d.general")
 
 /*!
     \class QQuick3D

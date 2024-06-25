@@ -39,9 +39,8 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
-Q_LOGGING_CATEGORY(lcPick, "qt.quick3d.pick")
-Q_LOGGING_CATEGORY(lcHover, "qt.quick3d.hover")
+Q_STATIC_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
+Q_STATIC_LOGGING_CATEGORY(lcPick, "qt.quick3d.pick")
 
 static bool isforceInputHandlingSet()
 {
