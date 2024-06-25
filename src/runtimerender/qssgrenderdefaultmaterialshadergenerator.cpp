@@ -381,14 +381,20 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         };
 
         fragmentShader << "    if (" << names.shadowData << ".factor > 0.01) {\n";
-        if (inType == QSSGRenderLight::Type::DirectionalLight) {
+        if (inType == QSSGRenderLight::Type::PointLight) {
+            fragmentShader.addUniform(names.shadowCube, "samplerCube");
+            fragmentShader << "      qt_shadow_map_occl = qt_samplePointLight_" << sampleFunctionSuffix << "(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
+        } else if (inType == QSSGRenderLight::Type::DirectionalLight || inType == QSSGRenderLight::Type::SpotLight) {
             if (!fragmentShader.m_uniforms.contains(names.shadowMapTexture)) {
                 fragmentShader.addUniform(names.shadowMapTexture, "sampler2DArray");
             }
-            fragmentShader << "      qt_shadow_map_occl = qt_sampleOrthographic_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_zDepthViewSpace, qt_varWorldPos);\n";
+            if (inType == QSSGRenderLight::Type::DirectionalLight) {
+                fragmentShader << "      qt_shadow_map_occl = qt_sampleDirectionalLight_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_zDepthViewSpace, qt_varWorldPos);\n";
+            } else {
+                fragmentShader << "      qt_shadow_map_occl = qt_sampleSpotLight_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, " << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightConeAngle << ");\n";
+            }
         } else {
-            fragmentShader.addUniform(names.shadowCube, "samplerCube");
-            fragmentShader << "      qt_shadow_map_occl = qt_sampleCubemap_" << sampleFunctionSuffix << "(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
+            Q_UNREACHABLE();
         }
         fragmentShader << "    }\n";
     } else {
@@ -1010,7 +1016,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     const bool isDepthPass = featureSet.isSet(QSSGShaderFeatures::Feature::DepthPass);
     const bool isOrthoShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::OrthoShadowPass);
-    const bool isCubeShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::CubeShadowPass);
+    const bool isPerspectiveShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::PerspectiveShadowPass);
     const bool isOpaqueDepthPrePass = featureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
     const bool hasIblOrientation = featureSet.isSet(QSSGShaderFeatures::Feature::IblOrientation);
     bool enableShadowMaps = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
@@ -1071,7 +1077,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 
     bool includeCustomFragmentMain = true;
-    if (isDepthPass || isOrthoShadowPass || isCubeShadowPass) {
+    if (isDepthPass || isOrthoShadowPass || isPerspectiveShadowPass) {
         hasLighting = false;
         enableSSAO = false;
         enableShadowMaps = false;
@@ -1126,7 +1132,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.append("    vec4 qt_vertColor = vec4(1.0);");
     }
 
-    if (hasImage && ((!isDepthPass && !isOrthoShadowPass && !isCubeShadowPass) || isOpaqueDepthPrePass)) {
+    if (hasImage && ((!isDepthPass && !isOrthoShadowPass && !isPerspectiveShadowPass) || isOpaqueDepthPrePass)) {
         fragmentShader.append("    vec3 qt_uTransform;");
         fragmentShader.append("    vec3 qt_vTransform;");
     }
@@ -1274,7 +1280,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (isOrthoShadowPass)
         vertexShader.generateDepth();
 
-    if (isCubeShadowPass)
+    if (isPerspectiveShadowPass)
         vertexShader.generateShadowWorldPosition(inKey);
 
     // !hasLighting does not mean 'no light source'
@@ -1955,7 +1961,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << ");\n";
         }
 
-        Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isCubeShadowPass);
+        Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isPerspectiveShadowPass);
         fragmentShader.addInclude("tonemapping.glsllib");
         fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_color_sum));");
 
@@ -2007,7 +2013,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    fragOutput = vec4(debugOutput, 1.0);\n");
         }
     } else {
-        if ((isOrthoShadowPass || isCubeShadowPass || isDepthPass) && isOpaqueDepthPrePass) {
+        if ((isOrthoShadowPass || isPerspectiveShadowPass || isDepthPass) && isOpaqueDepthPrePass) {
             fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";
             fragmentShader << "        discard;\n";
         }
@@ -2018,7 +2024,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    // directional shadow pass\n"
                            << "    float qt_shadowDepth = (qt_varDepth + qt_shadowDepthAdjust.x) * qt_shadowDepthAdjust.y;\n"
                            << "    fragOutput = vec4(qt_shadowDepth);\n";
-        } else if (isCubeShadowPass) {
+        } else if (isPerspectiveShadowPass) {
             Q_ASSERT(viewCount == 1);
             fragmentShader.addUniform("qt_cameraPosition", "vec3");
             fragmentShader.addUniform("qt_cameraProperties", "vec2");
@@ -2307,16 +2313,20 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
             QSSGShaderShadowData &shadowData(shadowsUniformData.shadowData[lightIdx]);
 
-            if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
+            if (theLight->type == QSSGRenderLight::Type::DirectionalLight ||
+                theLight->type == QSSGRenderLight::Type::SpotLight) {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthTextureArray;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowMapTexture;
-            } else {
+            } else if (theLight->type == QSSGRenderLight::Type::PointLight) {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowCube;
+            } else {
+                Q_UNREACHABLE();
             }
 
             if (receivesShadows) {
-                if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
+                if (theLight->type == QSSGRenderLight::Type::DirectionalLight ||
+                    theLight->type == QSSGRenderLight::Type::SpotLight) {
                     // add fixed scale bias matrix
                     static const QMatrix4x4 bias = {
                         0.5, 0.0, 0.0, 0.5,
@@ -2328,6 +2338,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                         memcpy(shadowData.matrices[i], m.constData(), 16 * sizeof(float));
                     }
                 } else {
+                    Q_ASSERT(theLight->type == QSSGRenderLight::Type::PointLight);
                     memcpy(&shadowData.matrices[0], pEntry->m_lightView.constData(), 16 * sizeof(float));
                 }
 

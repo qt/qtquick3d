@@ -140,8 +140,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         nodes.append(node);
     }
 
-    bool shadowCubePass = false;
-    bool shadowMapPass = false;
+    bool shadowPerspectivePass = false;
+    bool shadowOrthoPass = false;
 
     // Lights
     const auto &lights = sceneData.lights;
@@ -150,10 +150,10 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             nodes.append(node);
             layer.addChild(static_cast<QSSGRenderNode &>(*node));
             const auto &lightNode = static_cast<const QSSGRenderLight &>(*node);
-            if (lightNode.type == QSSGRenderLight::Type::PointLight)
-                shadowCubePass |= true;
+            if (lightNode.type == QSSGRenderLight::Type::DirectionalLight)
+                shadowOrthoPass |= true;
             else
-                shadowMapPass |= true;
+                shadowPerspectivePass |= true;
         }
     }
 
@@ -265,13 +265,13 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             depthPassFeatures.set(QSSGShaderFeatures::Feature::DepthPass, true);
             generateShader(depthPassFeatures);
 
-            if (shadowCubePass) {
+            if (shadowPerspectivePass) {
                 QSSGShaderFeatures shadowPassFeatures;
-                shadowPassFeatures.set(QSSGShaderFeatures::Feature::CubeShadowPass, true);
+                shadowPassFeatures.set(QSSGShaderFeatures::Feature::PerspectiveShadowPass, true);
                 generateShader(shadowPassFeatures);
             }
 
-            if (shadowMapPass) {
+            if (shadowOrthoPass) {
                 QSSGShaderFeatures shadowPassFeatures;
                 shadowPassFeatures.set(QSSGShaderFeatures::Feature::OrthoShadowPass, true);
                 generateShader(shadowPassFeatures);

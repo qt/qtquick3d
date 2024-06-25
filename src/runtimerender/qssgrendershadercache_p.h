@@ -71,7 +71,7 @@ enum class Feature : FlagType
     Ssao = (1 << 11) + 3,
     DepthPass = (1 << 12) + 4,
     OrthoShadowPass = (1 << 13) + 5,
-    CubeShadowPass = (1 << 14) + 6,
+    PerspectiveShadowPass = (1 << 14) + 6,
     LinearTonemapping = (1 << 15) + 7,
     AcesTonemapping = (1 << 16) + 8,
     HejlDawsonTonemapping = (1 << 17) + 9,

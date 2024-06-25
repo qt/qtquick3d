@@ -91,9 +91,8 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
 
     for (quint32 lightIndex = 0; lightIndex < numLights; ++lightIndex) {
         const QSSGShaderLight &shaderLight = renderableLights.at(lightIndex);
-        ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
-                ? ShadowMapModes::CUBE
-                : ShadowMapModes::VSM;
+        ShadowMapModes mapMode = (shaderLight.light->type == QSSGRenderLight::Type::PointLight) ? ShadowMapModes::CUBE
+                                                                                                : ShadowMapModes::VSM;
         if (shaderLight.shadows)
             numShadows += 1;
         if (!shaderLight.shadows || mapMode == ShadowMapModes::CUBE)
@@ -121,9 +120,8 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
                 break;
             }
 
-            ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
-                    ? ShadowMapModes::CUBE
-                    : ShadowMapModes::VSM;
+            ShadowMapModes mapMode = (shaderLight.light->type == QSSGRenderLight::Type::PointLight) ? ShadowMapModes::CUBE
+                                                                                                    : ShadowMapModes::VSM;
             quint32 mapSize = shaderLight.light->m_shadowMapRes;
             quint32 csmNumSplits = shaderLight.light->m_csmNumSplits;
             quint32 layerIndex = mapMode == ShadowMapModes::VSM ? lightIndexToLayerStartIndex[lightIndex] : 0;
@@ -159,8 +157,8 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
             continue;
 
         QSize mapSize = QSize(shaderLight.light->m_shadowMapRes, shaderLight.light->m_shadowMapRes);
-        ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight) ? ShadowMapModes::CUBE
-                                                                                                      : ShadowMapModes::VSM;
+        ShadowMapModes mapMode = (shaderLight.light->type == QSSGRenderLight::Type::PointLight) ? ShadowMapModes::CUBE
+                                                                                                : ShadowMapModes::VSM;
         switch (mapMode) {
         case ShadowMapModes::VSM: {
             quint32 layerStartIndex = lightIndexToLayerStartIndex.value(lightIdx);
