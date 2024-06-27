@@ -217,7 +217,7 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
     for (const auto hand : { Hand::LeftHand, Hand::RightHand }) {
         const auto handSkeleton = handSkeletons[hand];
         if (handSkeleton == nullptr) {
-            m_handInputState[hand]->setIsHandTracking(false);
+            m_handInputState[hand]->setIsHandTrackingActive(false);
             continue;
         }
 
