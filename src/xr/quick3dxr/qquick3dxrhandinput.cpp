@@ -1,9 +1,14 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include "openxr/qopenxrinputmanager_p.h"
 #include "qquick3dxrhandinput_p.h"
 #include "qquick3dxrinputmanager_p.h"
+
+#if defined(Q_OS_VISIONOS)
+#include "visionos/qquick3dxrinputmanager_visionos_p.h"
+#else
+#include "openxr/qopenxrinputmanager_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
