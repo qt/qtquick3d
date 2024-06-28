@@ -147,7 +147,7 @@ void QQuick3DXrSpatialAnchorListModel::setFilterMode(FilterMode newFilterMode)
 }
 
 /*!
-    \qmlproperty list XrSpatialAnchorListModel::identifierFilter
+    \qmlproperty list<string> XrSpatialAnchorListModel::identifierFilter
     \brief Holds the list of identifiers for filtering spatial anchors.
  */
 
@@ -194,7 +194,7 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFla
 }
 
 /*!
-    \qmlproperty string XrSpatialAnchorListModel::classificationStringFilter
+    \qmlproperty list<string> XrSpatialAnchorListModel::classificationStringFilter
     \brief Holds the classification strings used for filtering spatial anchors.
 
     If the \l FilterMode is set to \c Classification, this property can be used to provide a
