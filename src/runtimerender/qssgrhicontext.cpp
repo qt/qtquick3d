@@ -962,6 +962,12 @@ QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindi
     return srb;
 }
 
+void QSSGRhiContext::releaseCachedSrb(QSSGRhiShaderResourceBindingList &bindings)
+{
+    auto srb = m_srbCache.take(bindings);
+    delete srb;
+}
+
 void QSSGRhiContext::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
 {
     delete dcd.ubuf;

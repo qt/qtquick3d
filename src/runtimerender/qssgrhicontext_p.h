@@ -951,6 +951,7 @@ public:
 
     QRhiShaderResourceBindings *srb(const QSSGRhiShaderResourceBindingList &bindings);
     void releaseDrawCallData(QSSGRhiDrawCallData &dcd);
+    void releaseCachedSrb(QSSGRhiShaderResourceBindingList &bindings);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key,
                                    QRhiRenderPassDescriptor *rpDesc,
                                    QRhiShaderResourceBindings *srb);
