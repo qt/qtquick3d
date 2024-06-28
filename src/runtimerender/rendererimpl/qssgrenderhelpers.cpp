@@ -912,6 +912,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             bool srbChanged = false;
             if (!srb || bindings != dcd.bindings) {
                 srb = rhiCtxD->srb(bindings);
+                rhiCtxD->releaseCachedSrb(dcd.bindings);
                 dcd.bindings = bindings;
                 srbChanged = true;
             }

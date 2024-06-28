@@ -1194,6 +1194,12 @@ QRhiShaderResourceBindings *QSSGRhiContextPrivate::srb(const QSSGRhiShaderResour
     return srb;
 }
 
+void QSSGRhiContextPrivate::releaseCachedSrb(QSSGRhiShaderResourceBindingList &bindings)
+{
+    auto srb = m_srbCache.take(bindings);
+    delete srb;
+}
+
 void QSSGRhiContextPrivate::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
 {
     delete dcd.ubuf;
