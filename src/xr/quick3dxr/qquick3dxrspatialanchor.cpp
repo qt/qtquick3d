@@ -334,7 +334,7 @@ QVector2D QQuick3DXrSpatialAnchor::extent2D() const
 }
 
 /*!
-    \qmlproperty QUuid XrSpatialAnchor::identifier
+    \qmlproperty string XrSpatialAnchor::identifier
     \brief A unique identifier for this spatial anchor.
 
     This property returns a unique identifier associated with the
