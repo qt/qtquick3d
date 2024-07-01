@@ -36,6 +36,10 @@ public:
         cp_layer_renderer_configuration_set_layout(configuration, cp_layer_renderer_layout_dedicated);
         cp_layer_renderer_configuration_set_foveation_enabled(configuration, supportsFoveation);
         cp_layer_renderer_configuration_set_color_format(configuration, MTLPixelFormatRGBA16Float);
+        simd_float2 depthRange = cp_layer_renderer_configuration_get_default_depth_range(configuration);
+        // NOTE: The depth range is inverted for VisionOS (x = far, y = near)
+        m_depthRange[0] = depthRange.y;
+        m_depthRange[1] = depthRange.x;
     }
 
     void render(cp_layer_renderer_t renderer) override
@@ -61,6 +65,12 @@ public:
         return m_layerRenderer;
     }
 
+    void getDefaultDepthRange(float &near, float &far) const
+    {
+        near = m_depthRange[0];
+        far = m_depthRange[1];
+    }
+
 Q_SIGNALS:
     void renderingRequested();
     void layerRendererChanged();
@@ -68,6 +78,7 @@ Q_SIGNALS:
 
 private:
     cp_layer_renderer_t m_layerRenderer = nullptr;
+    mutable float m_depthRange[2] {1.0f, 10000.0f}; // NOTE: Near, Far
     bool m_active = false;
 };
 
@@ -112,6 +123,7 @@ bool QQuick3DXrManagerPrivate::initialize()
     }
 
     cp_layer_renderer_t renderer = layerRenderer();
+
     if (!renderer) {
         qWarning("QQuick3DXrManagerPrivate: Layer renderer is not available.");
         return false;
@@ -193,6 +205,11 @@ QQuick3DXrManagerPrivate::RenderState QQuick3DXrManagerPrivate::getRenderState()
             return RenderState::Invalidated;
     }
     return RenderState::Invalidated;
+}
+
+void QQuick3DXrManagerPrivate::getDefaultClipDistances(float &nearClip, float &farClip) const
+{
+    s_compositorLayer->getDefaultDepthRange(nearClip, farClip);
 }
 
 void QQuick3DXrManagerPrivate::teardown()

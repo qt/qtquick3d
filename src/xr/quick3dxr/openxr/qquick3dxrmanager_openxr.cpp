@@ -1182,6 +1182,13 @@ QtQuick3DXr::ReferenceSpace QQuick3DXrManagerPrivate::getReferenceSpace() const
     return getReferenceSpaceType(m_referenceSpace);
 }
 
+void QQuick3DXrManagerPrivate::getDefaultClipDistances(float &nearClip, float &farClip) const
+{
+    // Hardcoded defaults
+    nearClip = 1.0f;
+    farClip = 10000.0f;
+}
+
 void QQuick3DXrManagerPrivate::pollEvents(bool *exitRenderLoop, bool *requestRestart) {
     *exitRenderLoop = false;
     *requestRestart = false;

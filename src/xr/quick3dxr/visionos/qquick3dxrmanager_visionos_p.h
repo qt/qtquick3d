@@ -76,6 +76,8 @@ public:
 
     RenderState getRenderState();
 
+    void getDefaultClipDistances(float &nearClip, float &farClip) const;
+
     cp_layer_renderer_t layerRenderer() const;
 
     void runWorldTrackingARSession();

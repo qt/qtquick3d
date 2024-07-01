@@ -86,6 +86,8 @@ public:
     void setReferenceSpace(QtQuick3DXr::ReferenceSpace newReferenceSpace);
     QtQuick3DXr::ReferenceSpace getReferenceSpace() const;
 
+    void getDefaultClipDistances(float &nearClip, float &farClip) const;
+
     QString errorString() const { return m_errorString; }
 
 private:
