@@ -23,6 +23,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuick3DXrOrigin;
+
 class Q_QUICK3DXR_EXPORT QQuick3DXrEyeCamera : public QQuick3DCamera
 {
     Q_OBJECT
@@ -34,7 +36,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrEyeCamera : public QQuick3DCamera
     Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
 
 public:
-    QQuick3DXrEyeCamera(QQuick3DNode *parent = nullptr);
+    explicit QQuick3DXrEyeCamera(QQuick3DXrOrigin *parent = nullptr);
 
     float leftTangent() const;
     float rightTangent() const;
@@ -80,13 +82,13 @@ private:
 class Q_QUICK3DXR_EXPORT QQuick3DXrCamera : public QQuick3DNode
 {
     Q_OBJECT
-    Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged)
-    Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged)
+    Q_PROPERTY(float clipNear READ clipNear WRITE setClipNear NOTIFY clipNearChanged FINAL)
+    Q_PROPERTY(float clipFar READ clipFar WRITE setClipFar NOTIFY clipFarChanged FINAL)
     QML_NAMED_ELEMENT(XrCamera)
     QML_ADDED_IN_VERSION(6, 8)
 
 public:
-    QQuick3DXrCamera(QQuick3DNode *parent = nullptr);
+    explicit QQuick3DXrCamera(QQuick3DXrOrigin *parent = nullptr);
     ~QQuick3DXrCamera();
     float clipNear() const;
     float clipFar() const;
@@ -99,7 +101,12 @@ Q_SIGNALS:
     void clipNearChanged(float clipNear);
     void clipFarChanged(float clipFar);
 
+protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
+
 private:
+    void syncCameraSettings();
+
     float m_clipNear = 1.0f;
     float m_clipFar = 10000.0f;
 };

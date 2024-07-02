@@ -411,6 +411,13 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
     // Get the pose transform from the anchor
     simd_float4x4 headTransform = ar_anchor_get_origin_from_anchor_transform(anchor);
 
+    // NOTE: We need to convert from meters to centimeters here
+    QMatrix4x4 qtHeadTransform{headTransform.columns[0].x, headTransform.columns[1].x, headTransform.columns[2].x, headTransform.columns[3].x * 100,
+                                 headTransform.columns[0].y, headTransform.columns[1].y, headTransform.columns[2].y, headTransform.columns[3].y * 100,
+                                 headTransform.columns[0].z, headTransform.columns[1].z, headTransform.columns[2].z, headTransform.columns[3].z * 100,
+                                 0.0f, 0.0f, 0.0f, 1.0f};
+    xrOrigin->updateTrackedCamera(qtHeadTransform);
+
     // Update the hands
     if (QSSG_GUARD(m_inputManager != nullptr))
         QQuick3DXrInputManagerPrivate::get(m_inputManager)->updateHandtracking();

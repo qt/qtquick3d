@@ -73,6 +73,8 @@ public:
     bool isMultiViewRenderingEnabled() const;
     bool isMultiViewRenderingSupported() const;
 
+    void getDefaultClipDistances(float &nearClip, float &farClip) const;
+
 private Q_SLOTS:
     void update();
     void processSpatialEvents(const QJsonObject &events);

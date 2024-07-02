@@ -25,6 +25,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuick3DXrView;
+
 class Q_QUICK3DXR_EXPORT QQuick3DXrOrigin : public QQuick3DNode
 {
     Q_OBJECT
@@ -44,10 +46,17 @@ Q_SIGNALS:
 
 private:
     QQuick3DXrEyeCamera *eyeCamera(int index) const;
-    QQuick3DXrCamera *m_camera = nullptr;
-    QQuick3DXrCamera *m_builtInCamera = nullptr;
-    QVarLengthArray<QQuick3DXrEyeCamera *, 2> m_eyeCameras;
 
+    void syncCameraSettings();
+    void resetCameraSettings();
+
+    void updateTrackedCamera(const QMatrix4x4 &transform);
+    void updateTrackedCamera(QVector3D position, QQuaternion rotation);
+
+    QQuick3DXrCamera *m_camera = nullptr;
+    std::array<QQuick3DXrEyeCamera *, 2> m_eyeCameras;
+
+    friend class QQuick3DXrCamera;
     friend class QQuick3DXrManager;
     friend class QQuick3DXrManagerPrivate;
 };

@@ -119,6 +119,12 @@ bool QQuick3DXrManager::isMultiViewRenderingSupported() const
     return d->isMultiViewRenderingSupported();
 }
 
+void QQuick3DXrManager::getDefaultClipDistances(float &nearClip, float &farClip) const
+{
+    Q_D(const QQuick3DXrManager);
+    d->getDefaultClipDistances(nearClip, farClip);
+}
+
 QtQuick3DXr::FoveationLevel QQuick3DXrManager::getFixedFoveationLevel() const
 {
 #if defined(Q_OS_VISIONOS)
