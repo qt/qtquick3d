@@ -69,8 +69,6 @@ XrView {
     XrOrigin {
         id: theOrigin
 
-        property vector3d headPos: camera.position
-
         XrController {
             id: rightController
             controller: XrController.ControllerRight

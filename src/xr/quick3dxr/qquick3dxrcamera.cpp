@@ -15,9 +15,17 @@ QT_BEGIN_NAMESPACE
     \inherits Node
     \inqmlmodule QtQuick3D.Xr
     \brief The camera for an XrView.
+
+    The XrCamera is a tracked spatial node that tracks the position and orientation of the Head Mounted Display in the XR environment.
+
+    Since this is a tracked node the spatial properties of the node should be considered read-only.
+    Properties specific to the XrCamera, such as the near and far clip planes, are settable and when set overrides the devices own
+    preferred values.
+
+    \sa XrOrigin::camera
 */
 
-QQuick3DXrEyeCamera::QQuick3DXrEyeCamera(QQuick3DNode *parent)
+QQuick3DXrEyeCamera::QQuick3DXrEyeCamera(QQuick3DXrOrigin *parent)
     : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera)), parent)
 {
 
@@ -192,7 +200,7 @@ void QQuick3DXrEyeCamera::maybeUpdateProjection()
     }
 }
 
-QQuick3DXrCamera::QQuick3DXrCamera(QQuick3DNode *parent)
+QQuick3DXrCamera::QQuick3DXrCamera(QQuick3DXrOrigin *parent)
     : QQuick3DNode(parent)
 {
 }
@@ -205,6 +213,8 @@ QQuick3DXrCamera::~QQuick3DXrCamera()
 /*!
     \qmlproperty float QtQuick3D.Xr::XrCamera::clipNear
     \brief The start of the distance range, with reference to the camera position, in which objects will appear.
+
+    \note Unless set explicitly, the clipNear value will be set to the device's preferred value.
 */
 
 float QQuick3DXrCamera::clipNear() const
@@ -215,6 +225,8 @@ float QQuick3DXrCamera::clipNear() const
 /*!
     \qmlproperty float QtQuick3D.Xr::XrCamera::clipFar
     \brief The end of the distance range, with reference to the camera position, in which objects will appear.
+
+    \note Unless set explicitly, the clipFar value will be set to the device's preferred value.
 */
 
 float QQuick3DXrCamera::clipFar() const
@@ -222,12 +234,15 @@ float QQuick3DXrCamera::clipFar() const
     return m_clipFar;
 }
 
-
 void QQuick3DXrCamera::setClipNear(float clipNear)
 {
     if (qFuzzyCompare(m_clipNear, clipNear))
         return;
+
     m_clipNear = clipNear;
+
+    syncCameraSettings();
+
     emit clipNearChanged(m_clipNear);
 }
 
@@ -235,8 +250,36 @@ void QQuick3DXrCamera::setClipFar(float clipFar)
 {
     if (qFuzzyCompare(m_clipFar, clipFar))
         return;
+
     m_clipFar = clipFar;
+
+    syncCameraSettings();
+
     emit clipFarChanged(m_clipFar);
+}
+
+void QQuick3DXrCamera::itemChange(ItemChange change, const ItemChangeData &data)
+{
+    // Sanity check (If we get a tracked item we'll do this there instead).
+    if (change == QQuick3DObject::ItemParentHasChanged) {
+        if (data.item != nullptr) {
+            if (QQuick3DXrOrigin *xrOrigin = qobject_cast<QQuick3DXrOrigin *>(data.item)) {
+                xrOrigin->setCamera(this);
+            } else {
+                qWarning() << "XrCamera must be a child of an XrOrigin!";
+                setParentItem(nullptr);
+            }
+        } else {
+            QQuick3DNode::itemChange(change, data);
+        }
+    }
+}
+
+void QQuick3DXrCamera::syncCameraSettings()
+{
+    QQuick3DXrOrigin *xrOrigin = qobject_cast<QQuick3DXrOrigin *>(parentItem());
+    if (xrOrigin && xrOrigin->camera() == this)
+        xrOrigin->syncCameraSettings();
 }
 
 /*!

@@ -105,6 +105,8 @@ public:
     bool isMultiViewRenderingSupported() const;
     bool multiviewRenderingEnabled() const;
 
+    QQuick3DXrManager *xrManager() { return &m_openXRManager; }
+
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setPassthroughEnabled(bool enable);

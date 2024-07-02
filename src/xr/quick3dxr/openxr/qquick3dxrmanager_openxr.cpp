@@ -1337,13 +1337,15 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
         XrSpaceLocation location{};
         location.type = XR_TYPE_SPACE_LOCATION;
         if (checkXrResult(xrLocateSpace(m_viewSpace, m_appSpace, predictedDisplayTime, &location))) {
-            xrOrigin->camera()->setPosition(QVector3D(location.pose.position.x,
-                                                        location.pose.position.y,
-                                                        location.pose.position.z) * 100.0f); // convert m to cm
-            xrOrigin->camera()->setRotation(QQuaternion(location.pose.orientation.w,
-                                                          location.pose.orientation.x,
-                                                          location.pose.orientation.y,
-                                                          location.pose.orientation.z));
+            QVector3D position = QVector3D(location.pose.position.x,
+                                           location.pose.position.y,
+                                           location.pose.position.z) * 100.0f; // convert m to cm
+            QQuaternion rotation(location.pose.orientation.w,
+                                 location.pose.orientation.x,
+                                 location.pose.orientation.y,
+                                 location.pose.orientation.z);
+
+            xrOrigin->updateTrackedCamera(position, rotation);
         }
 
         // Set the hand positions

@@ -3,6 +3,12 @@
 
 #include "qquick3dxrorigin_p.h"
 
+#include "qquick3dxrview_p.h"
+
+#include <QtQuick3D/private/qquick3dnode_p_p.h>
+
+#include <QtQuick3DUtils/private/qssgassert_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -13,21 +19,15 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DXrOrigin::QQuick3DXrOrigin()
-    : m_builtInCamera(new QQuick3DXrCamera(this))
 {
     // These are the "real" cameras that are used for rendering.
-    auto *leftEyeCamera = new QQuick3DXrEyeCamera;
-    leftEyeCamera->setParent(this);
+    QQuick3DXrEyeCamera *leftEyeCamera = new QQuick3DXrEyeCamera(this);
     leftEyeCamera->setParentItem(this);
-    m_eyeCameras.append(leftEyeCamera);
 
-    auto *rightEyeCamera = new QQuick3DXrEyeCamera;
-    rightEyeCamera->setParent(this);
+    QQuick3DXrEyeCamera *rightEyeCamera = new QQuick3DXrEyeCamera(this);
     rightEyeCamera->setParentItem(this);
-    m_eyeCameras.append(rightEyeCamera);
 
-    // This is the user facing camera
-    setCamera(m_builtInCamera);
+    m_eyeCameras = { leftEyeCamera, rightEyeCamera };
 }
 
 QQuick3DXrOrigin::~QQuick3DXrOrigin()
@@ -37,7 +37,13 @@ QQuick3DXrOrigin::~QQuick3DXrOrigin()
 
 /*!
     \qmlproperty XrCamera QtQuick3D.Xr::XrOrigin::camera
-    \brief Holds the camera for the XrOrigin
+    \brief Property for adding a tracked camera node.
+
+    The XrCamera is a tracked spatial node that tracks the position and orientation of the Head Mounted Display in the XR environment.
+
+    \note This property is optional and by default \c null.
+
+    \sa XrCamera
 */
 
 QQuick3DXrCamera *QQuick3DXrOrigin::camera() const
@@ -50,30 +56,27 @@ void QQuick3DXrOrigin::setCamera(QQuick3DXrCamera *newCamera)
     if (m_camera == newCamera)
         return;
 
-    if (m_camera) {
-        // connect the near/far properties to the real eye camers
-        for (auto eyeCamera : m_eyeCameras) {
-            // disconnnect the old camera
-            disconnect(m_camera, &QQuick3DXrCamera::clipNearChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipNear);
-            disconnect(m_camera, &QQuick3DXrCamera::clipFarChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipFar);
-        }
-    }
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DXrOrigin::setCamera, m_camera, newCamera);
 
-    // There will always be a camera, either the built-in one or the user provided one
-    if (newCamera)
-        m_camera = newCamera;
-    else
-        m_camera = m_builtInCamera;
+    m_camera = newCamera;
 
     if (m_camera) {
-        for (auto eyeCamera : m_eyeCameras) {
-            // Set the initial value, and connect the signals
-            eyeCamera->setClipNear(m_camera->clipNear());
-            eyeCamera->setClipFar(m_camera->clipFar());
-            connect(m_camera, &QQuick3DXrCamera::clipNearChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipNear);
-            connect(m_camera, &QQuick3DXrCamera::clipFarChanged, eyeCamera, &QQuick3DXrEyeCamera::setClipFar);
+        // Ensure that the parent item is the XrOrigin
+        QQuick3DObject *camParentItem = m_camera->parentItem();
+        if (camParentItem != this) {
+            m_camera->setParentItem(this);
+            if (camParentItem != nullptr)
+                qWarning() << "XrCamera needs to be a child of XrOrigin. Reparenting...";
         }
+
+        // If there's a camera it will call this function to update the camera settings
+        // when its properties changes.
+        syncCameraSettings();
+    } else {
+        // Restore default values
+        resetCameraSettings();
     }
+
     emit cameraChanged();
 }
 
@@ -82,10 +85,48 @@ QQuick3DXrEyeCamera *QQuick3DXrOrigin::eyeCamera(int index) const
     return m_eyeCameras[index];
 }
 
+void QQuick3DXrOrigin::syncCameraSettings()
+{
+    QSSG_ASSERT(m_camera != nullptr, return);
+
+    for (auto eyeCamera : m_eyeCameras) {
+        eyeCamera->setClipNear(m_camera->clipNear());
+        eyeCamera->setClipFar(m_camera->clipFar());
+    }
+}
+
+void QQuick3DXrOrigin::resetCameraSettings()
+{
+    Q_ASSERT(!m_camera);
+
+    if (QQuick3DXrView *xrView = qobject_cast<QQuick3DXrView *>(parentItem())) {
+        // Use the default clip distances from the XrManager
+        float nearClip, farClip;
+        xrView->xrManager()->getDefaultClipDistances(nearClip, farClip);
+        for (auto eyeCamera : m_eyeCameras) {
+            eyeCamera->setClipNear(nearClip);
+            eyeCamera->setClipFar(farClip);
+        }
+    }
+}
+
+void QQuick3DXrOrigin::updateTrackedCamera(const QMatrix4x4 &transform)
+{
+    if (m_camera)
+        QQuick3DNodePrivate::get(m_camera)->setLocalTransform(transform);
+}
+
+void QQuick3DXrOrigin::updateTrackedCamera(QVector3D position, QQuaternion rotation)
+{
+    if (m_camera) {
+        m_camera->setPosition(position);
+        m_camera->setRotation(rotation);
+    }
+}
+
 /*!
     \qmlsignal XrOrigin::cameraChanged()
     Emitted when the camera changes.
 */
 
 QT_END_NAMESPACE
-
