@@ -1330,9 +1330,6 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
         Q_ASSERT(viewCountOutput == m_projectionLayerViews.size());
         Q_ASSERT(m_multiviewRendering ? viewCountOutput == m_swapchains[0].arraySize : viewCountOutput == m_swapchains.size());
 
-        // Check for XrOrigin
-        q->checkOrigin();
-
         // Update the camera/head position
         XrSpaceLocation location{};
         location.type = XR_TYPE_SPACE_LOCATION;

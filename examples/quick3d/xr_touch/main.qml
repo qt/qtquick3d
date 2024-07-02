@@ -15,6 +15,8 @@ XrView {
 
     depthSubmissionEnabled: true
 
+    xrOrigin: theOrigin
+
     environment: SceneEnvironment {
         id: sceneEnvironment
         lightProbe: Texture {

@@ -18,7 +18,8 @@ QT_BEGIN_NAMESPACE
     \brief An origin location for the XrView.
 */
 
-QQuick3DXrOrigin::QQuick3DXrOrigin()
+QQuick3DXrOrigin::QQuick3DXrOrigin(QQuick3DNode *parent)
+    : QQuick3DNode(parent)
 {
     // These are the "real" cameras that are used for rendering.
     QQuick3DXrEyeCamera *leftEyeCamera = new QQuick3DXrEyeCamera(this);

@@ -13,12 +13,15 @@ XrView {
     onInitializeFailed: (errorString) => err.run("XRView", errorString)
     referenceSpace: XrView.ReferenceSpaceLocal
 
+    xrOrigin: theOrigin
+
     environment: SceneEnvironment {
         clearColor: "black"
         backgroundMode: SceneEnvironment.Color
     }
 
     XrOrigin {
+        id: theOrigin
         position: Qt.vector3d(50, 2, 50)
 
         LeftHand {
