@@ -35,7 +35,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrOrigin : public QQuick3DNode
     QML_ADDED_IN_VERSION(6, 8)
 
 public:
-    QQuick3DXrOrigin();
+    explicit QQuick3DXrOrigin(QQuick3DNode *parent = nullptr);
     ~QQuick3DXrOrigin() override;
 
     QQuick3DXrCamera *camera() const;

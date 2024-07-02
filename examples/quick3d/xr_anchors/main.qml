@@ -66,7 +66,7 @@ XrView {
         probeHorizon: 0.5
     }
 
-    XrOrigin {
+    xrOrigin: XrOrigin {
         id: theOrigin
 
         XrController {

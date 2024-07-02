@@ -37,7 +37,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuick3DXrOrigin *xrOrigin READ xrOrigin NOTIFY xrOriginChanged)
+    Q_PROPERTY(QQuick3DXrOrigin *xrOrigin READ xrOrigin WRITE setXROrigin NOTIFY xrOriginChanged)
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged)
     Q_PROPERTY(bool passthroughSupported READ passthroughSupported CONSTANT)
     Q_PROPERTY(bool passthroughEnabled READ passthroughEnabled WRITE setPassthroughEnabled NOTIFY passthroughEnabledChanged FINAL)
@@ -113,6 +113,7 @@ public Q_SLOTS:
     void setQuitOnSessionEnd(bool enable);
     void setDepthSubmissionEnabled(bool enable);
     void setMultiviewRenderingEnabled(bool enable);
+    void setXROrigin(QQuick3DXrOrigin *newXrOrigin);
 
 private Q_SLOTS:
     void updateViewportGeometry();
@@ -124,7 +125,7 @@ private Q_SLOTS:
 Q_SIGNALS:
     void initializeFailed(const QString &errorString);
     void sessionEnded();
-    void xrOriginChanged(QQuick3DXrOrigin* xrOrigin);
+    void xrOriginChanged();
     void environmentChanged(QQuick3DSceneEnvironment * environment);
     void passthroughEnabledChanged();
     void quitOnSessionEndChanged();
@@ -149,6 +150,7 @@ private:
     QList<QQuick3DXrItem *> m_xrItems;
     struct XrTouchState;
     XrTouchState *m_touchState = nullptr;
+    QQuick3DXrOrigin *m_xrOrigin = nullptr;
 };
 
 QT_END_NAMESPACE

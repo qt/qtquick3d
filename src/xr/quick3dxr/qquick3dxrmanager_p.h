@@ -73,6 +73,8 @@ public:
     bool isMultiViewRenderingEnabled() const;
     bool isMultiViewRenderingSupported() const;
 
+    void setXROrigin(QQuick3DXrOrigin *origin);
+
     void getDefaultClipDistances(float &nearClip, float &farClip) const;
 
 private Q_SLOTS:
@@ -102,7 +104,6 @@ private:
 
     void preSetupQuickScene();
     bool setupQuickScene();
-    void checkOrigin();
 
     bool supportsPassthrough() const;
 
@@ -111,6 +112,7 @@ private:
     QQuick3DViewport *m_vrViewport = nullptr;
     QQuick3DXrOrigin *m_xrOrigin = nullptr;
     QQuick3DXrAnimationDriver *m_animationDriver = nullptr;
+    bool m_xrOriginWarningShown = false;
 
     std::unique_ptr<QQuick3DXrManagerPrivate> d_ptr;
 };

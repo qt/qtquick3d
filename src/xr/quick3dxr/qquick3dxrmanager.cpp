@@ -119,6 +119,12 @@ bool QQuick3DXrManager::isMultiViewRenderingSupported() const
     return d->isMultiViewRenderingSupported();
 }
 
+void QQuick3DXrManager::setXROrigin(QQuick3DXrOrigin *origin)
+{
+    m_xrOrigin = origin;
+    update();
+}
+
 void QQuick3DXrManager::getDefaultClipDistances(float &nearClip, float &farClip) const
 {
     Q_D(const QQuick3DXrManager);
@@ -191,8 +197,10 @@ void QQuick3DXrManager::setSamples(int samples)
 
 void QQuick3DXrManager::update()
 {
-    QEvent *request = new QEvent(QEvent::UpdateRequest);
-    QCoreApplication::postEvent(this, request);
+    if (m_quickWindow && m_renderControl && m_xrOrigin && m_vrViewport) {
+        QEvent *request = new QEvent(QEvent::UpdateRequest);
+        QCoreApplication::postEvent(this, request);
+    }
 }
 
 void QQuick3DXrManager::processSpatialEvents(const QJsonObject &events)
@@ -339,7 +347,14 @@ void QQuick3DXrManager::renderFrame()
 {
     Q_D(QQuick3DXrManager);
 
-    checkOrigin();
+    if (!m_xrOrigin) {
+        if (!m_xrOriginWarningShown) {
+            qWarning() << "No XrOrigin found!";
+            m_xrOriginWarningShown = true;
+        }
+        return;
+    }
+
     d->doRenderFrame();
 }
 
@@ -382,36 +397,6 @@ bool QQuick3DXrManager::setupQuickScene()
     }
 
     return true;
-}
-
-void QQuick3DXrManager::checkOrigin()
-{
-    if (!m_xrOrigin) {
-        // Check the scene for an XrOrigin
-        std::function<QQuick3DXrOrigin*(QQuick3DObject *)> findOriginNode;
-        findOriginNode = [&findOriginNode](QQuick3DObject *node) -> QQuick3DXrOrigin *{
-            if (!node)
-                return nullptr;
-            auto origin = qobject_cast<QQuick3DXrOrigin *>(node);
-            if (origin)
-                return origin;
-            for (auto child : node->childItems()) {
-                origin = findOriginNode(child);
-                if (origin)
-                    return origin;
-            }
-            return nullptr;
-        };
-        auto origin = findOriginNode(m_vrViewport->importScene());
-        if (origin) {
-            m_xrOrigin = origin;
-            emit xrOriginChanged();
-            connect(m_xrOrigin, &QObject::destroyed, this, [this](){
-                m_xrOrigin = nullptr;
-               emit xrOriginChanged();
-            });
-        }
-    }
 }
 
 bool QQuick3DXrManager::supportsPassthrough() const

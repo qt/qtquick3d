@@ -32,15 +32,24 @@ QQuick3DXrView::~QQuick3DXrView()
 {
     m_inDestructor = true;
 }
+
 /*!
     \qmlproperty XrOrigin QtQuick3D.Xr::XrView::xrOrigin
-    \brief Holds the XR origin.
-*/
+    \brief Holds the active XR origin.
 
+    The XR origin is the point in the scene that is considered the origin of the
+    XR coordinate system. The XR origin is used to position tracked objects like
+    the camera and controllers in the scene. An application can have multiple XrOrigins
+    but only one can be active at a time.
+
+    \note This property must be set for the scene to be rendered in XR.
+
+    \sa XrOrigin
+*/
 
 QQuick3DXrOrigin *QQuick3DXrView::xrOrigin() const
 {
-    return m_openXRManager.m_xrOrigin;
+    return m_xrOrigin;
 }
 
 /*!
@@ -650,6 +659,24 @@ void QQuick3DXrView::setMultiviewRenderingEnabled(bool enable)
         emit multiviewRenderingEnabledChanged();
 }
 
+void QQuick3DXrView::setXROrigin(QQuick3DXrOrigin *newXrOrigin)
+{
+    if (m_xrOrigin == newXrOrigin)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DXrView::setXROrigin, newXrOrigin, m_xrOrigin);
+
+    m_xrOrigin = newXrOrigin;
+
+    // Make sure the XrOrigin has a parent item, if it hasn't we're it.
+    if (m_xrOrigin && !m_xrOrigin->parentItem())
+        m_xrOrigin->setParentItem(this);
+
+    m_openXRManager.setXROrigin(m_xrOrigin);
+
+    emit xrOriginChanged();
+}
+
 /*!
     \qmlsignal XrView::initializeFailed(const QString &errorString)
 
@@ -666,9 +693,9 @@ void QQuick3DXrView::setMultiviewRenderingEnabled(bool enable)
 
 
 /*!
-    \qmlsignal XrView::xrOriginChanged(QQuick3DXrOrigin* xrOrigin)
+    \qmlsignal XrView::xrOriginChanged()
 
-    Emitted when the XR origin changes to \a xrOrigin .
+    Emitted when the XR origin changes.
  */
 
 

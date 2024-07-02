@@ -371,12 +371,7 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
     QQuick3DXrOrigin *xrOrigin = q->m_xrOrigin;
     QQuick3DViewport *xrViewport = q->m_vrViewport;
 
-    QSSG_ASSERT_X(quickWindow && renderControl && xrViewport, "Invalid state, rendering aborted", return);
-
-    if (!xrOrigin) {
-        qWarning("No XR origin, trying to recover...");
-        q->checkOrigin();
-    }
+    QSSG_ASSERT_X(quickWindow && renderControl && xrViewport && xrOrigin, "Invalid state, rendering aborted", return);
 
     auto layerRenderer = this->layerRenderer();
     cp_frame_t frame = cp_layer_renderer_query_next_frame(layerRenderer);
