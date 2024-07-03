@@ -46,6 +46,13 @@ if(ANDROID)
     set_property(TARGET xr_touch APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/android)
 endif()
 
+if (APPLE AND CMAKE_SYSTEM_NAME STREQUAL "visionOS")
+    set_target_properties(xr_touch PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER io.qt.xr_touch
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/visionos/MacOSXBundleInfo.plist.in
+    )
+endif()
+
 qt_finalize_executable(xr_touch)
 
 install(TARGETS xr_touch
