@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DXrManager;
 
-class Q_QUICK3DXR_EXPORT QOpenXRRuntimeInfo : public QObject
+class Q_QUICK3DXR_EXPORT QQuick3DXrRuntimeInfo : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QStringList enabledExtensions READ enabledExtensions CONSTANT)
@@ -36,7 +36,7 @@ class Q_QUICK3DXR_EXPORT QOpenXRRuntimeInfo : public QObject
     QML_ADDED_IN_VERSION(6, 8)
 
 public:
-    QOpenXRRuntimeInfo(QQuick3DXrManager *manager, QObject *parent = nullptr);
+    QQuick3DXrRuntimeInfo(QQuick3DXrManager *manager, QObject *parent = nullptr);
     QStringList enabledExtensions() const;
     QString runtimeName() const;
     QString runtimeVersion() const;

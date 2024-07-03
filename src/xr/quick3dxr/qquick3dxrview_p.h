@@ -41,7 +41,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(QQuick3DSceneEnvironment *environment READ environment WRITE setEnvironment NOTIFY environmentChanged)
     Q_PROPERTY(bool passthroughSupported READ passthroughSupported CONSTANT)
     Q_PROPERTY(bool passthroughEnabled READ passthroughEnabled WRITE setPassthroughEnabled NOTIFY passthroughEnabledChanged FINAL)
-    Q_PROPERTY(QOpenXRRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
+    Q_PROPERTY(QQuick3DXrRuntimeInfo *runtimeInfo READ runtimeInfo CONSTANT)
     Q_PROPERTY(bool quitOnSessionEnd READ isQuitOnSessionEndEnabled WRITE setQuitOnSessionEnd NOTIFY quitOnSessionEndChanged FINAL)
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
     Q_PROPERTY(FoveationLevel fixedFoveation READ fixedFoveation WRITE setFixedFoveation NOTIFY fixedFoveationChanged FINAL)
@@ -81,7 +81,7 @@ public:
     FoveationLevel fixedFoveation() const;
     void setFixedFoveation(FoveationLevel level);
 
-    QOpenXRRuntimeInfo *runtimeInfo() const;
+    QQuick3DXrRuntimeInfo *runtimeInfo() const;
 
     bool isQuitOnSessionEndEnabled() const;
 
@@ -105,7 +105,7 @@ public:
     bool isMultiViewRenderingSupported() const;
     bool multiviewRenderingEnabled() const;
 
-    QQuick3DXrManager *xrManager() { return &m_openXRManager; }
+    QQuick3DXrManager *xrManager() { return &m_xrManager; }
 
 public Q_SLOTS:
     void setEnvironment(QQuick3DSceneEnvironment * environment);
@@ -140,8 +140,8 @@ private:
     QQuick3DViewport *view3d() const;
 
     QPointer<QQuick3DSceneEnvironment> m_sceneEnvironment;
-    QQuick3DXrManager m_openXRManager;
-    mutable QOpenXRRuntimeInfo m_openXRRuntimeInfo;
+    QQuick3DXrManager m_xrManager;
+    mutable QQuick3DXrRuntimeInfo m_xrRuntimeInfo;
     bool m_quitOnSessionEnd = true;
     bool m_inDestructor = false;
     bool m_isInitialized = false;

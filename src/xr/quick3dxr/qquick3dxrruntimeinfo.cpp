@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
     manually created.
 */
 
-QOpenXRRuntimeInfo::QOpenXRRuntimeInfo(QQuick3DXrManager *manager, QObject *parent)
+QQuick3DXrRuntimeInfo::QQuick3DXrRuntimeInfo(QQuick3DXrManager *manager, QObject *parent)
     : QObject(parent),
       m_xrmanager(manager)
 {
@@ -45,7 +45,7 @@ QOpenXRRuntimeInfo::QOpenXRRuntimeInfo(QQuick3DXrManager *manager, QObject *pare
     empty.
 */
 
-QStringList QOpenXRRuntimeInfo::enabledExtensions() const
+QStringList QQuick3DXrRuntimeInfo::enabledExtensions() const
 {
     QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_xrmanager);
     return manager ? manager->enabledExtensions() : QStringList{};
@@ -59,7 +59,7 @@ QStringList QOpenXRRuntimeInfo::enabledExtensions() const
     used.
 */
 
-QString QOpenXRRuntimeInfo::runtimeName() const
+QString QQuick3DXrRuntimeInfo::runtimeName() const
 {
     QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_xrmanager);
     return manager ? manager->runtimeName() : QString{};
@@ -73,7 +73,7 @@ QString QOpenXRRuntimeInfo::runtimeName() const
     (for example, "1.0.0").
 */
 
-QString QOpenXRRuntimeInfo::runtimeVersion() const
+QString QQuick3DXrRuntimeInfo::runtimeVersion() const
 {
     QQuick3DXrManagerPrivate *manager = QQuick3DXrManagerPrivate::get(m_xrmanager);
     return manager ? manager->runtimeVersion().toString() : QString{};
@@ -86,7 +86,7 @@ QString QOpenXRRuntimeInfo::runtimeVersion() const
     XR runtime is utilizing.
 */
 
-QString QOpenXRRuntimeInfo::graphicsApiName() const
+QString QQuick3DXrRuntimeInfo::graphicsApiName() const
 {
     // This matches what Qt Quick's GraphicsInfo would expose to QML, but that
     // does not provide a string. We have seen way too many switch statements

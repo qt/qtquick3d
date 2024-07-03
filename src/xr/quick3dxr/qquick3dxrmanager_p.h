@@ -1,8 +1,8 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#ifndef QOPENXRMANAGER_H
-#define QOPENXRMANAGER_H
+#ifndef QQUICK3DXRMANAGER_P_H
+#define QQUICK3DXRMANAGER_P_H
 
 //
 //  W A R N I N G
@@ -92,7 +92,7 @@ protected:
     bool event(QEvent *e) override;
 
 private:
-    friend class QOpenXRRuntimeInfo;
+    friend class QQuick3DXrRuntimeInfo;
     friend class QQuick3DXrView;
 
     QQuick3DXrInputManager *getInputManager() const;
@@ -119,4 +119,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QOPENXRMANAGER_H
+#endif // QQUICK3DXRMANAGER_P_H
