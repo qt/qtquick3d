@@ -91,7 +91,7 @@ public:
     QString errorString() const { return m_errorString; }
 
 private:
-    friend class QOpenXRRuntimeInfo;
+    friend class QQuick3DXrRuntimeInfo;
 
     bool initialize();
     void teardown();

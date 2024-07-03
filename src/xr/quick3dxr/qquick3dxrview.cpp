@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DXrView::QQuick3DXrView()
-    : m_openXRRuntimeInfo(&m_openXRManager)
+    : m_xrRuntimeInfo(&m_xrManager)
 {
     init();
 }
@@ -59,12 +59,12 @@ QQuick3DXrOrigin *QQuick3DXrView::xrOrigin() const
 
 QQuick3DSceneEnvironment *QQuick3DXrView::environment() const
 {
-    return m_openXRManager.m_vrViewport ? m_openXRManager.m_vrViewport->environment() : nullptr;
+    return m_xrManager.m_vrViewport ? m_xrManager.m_vrViewport->environment() : nullptr;
 }
 
 QQuick3DViewport *QQuick3DXrView::view3d() const
 {
-    return m_openXRManager.m_vrViewport;
+    return m_xrManager.m_vrViewport;
 }
 
 /*!
@@ -73,17 +73,17 @@ QQuick3DViewport *QQuick3DXrView::view3d() const
 */
 bool QQuick3DXrView::passthroughEnabled() const
 {
-    return m_openXRManager.isPassthroughEnabled();
+    return m_xrManager.isPassthroughEnabled();
 }
 
 /*!
-    \qmlproperty QOpenXRRuntimeInfo QtQuick3D.Xr::XrView::runtimeInfo
+    \qmlproperty QQuick3DXrRuntimeInfo QtQuick3D.Xr::XrView::runtimeInfo
     \brief Provides information about the XR runtime for the XR view.
 */
 
-QOpenXRRuntimeInfo *QQuick3DXrView::runtimeInfo() const
+QQuick3DXrRuntimeInfo *QQuick3DXrView::runtimeInfo() const
 {
-    return &m_openXRRuntimeInfo;
+    return &m_xrRuntimeInfo;
 }
 
 void QQuick3DXrView::setEnvironment(QQuick3DSceneEnvironment *environment)
@@ -91,10 +91,10 @@ void QQuick3DXrView::setEnvironment(QQuick3DSceneEnvironment *environment)
     if (environment != m_sceneEnvironment)
         m_sceneEnvironment = environment;
 
-    if (!m_openXRManager.m_vrViewport)
+    if (!m_xrManager.m_vrViewport)
         return;
 
-    auto oldEnvironment = m_openXRManager.m_vrViewport->environment();
+    auto oldEnvironment = m_xrManager.m_vrViewport->environment();
     if (oldEnvironment == environment)
         return;
 
@@ -105,7 +105,7 @@ void QQuick3DXrView::setEnvironment(QQuick3DSceneEnvironment *environment)
         disconnect(oldEnvironment, &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QQuick3DXrView::handleAAChanged);
     }
 
-    m_openXRManager.m_vrViewport->setEnvironment(environment);
+    m_xrManager.m_vrViewport->setEnvironment(environment);
     handleClearColorChanged();
     handleAAChanged();
 
@@ -116,7 +116,7 @@ void QQuick3DXrView::setEnvironment(QQuick3DSceneEnvironment *environment)
         connect(environment, &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QQuick3DXrView::handleAAChanged);
     }
 
-    emit environmentChanged(m_openXRManager.m_vrViewport->environment());
+    emit environmentChanged(m_xrManager.m_vrViewport->environment());
 }
 
 /*!
@@ -126,29 +126,29 @@ void QQuick3DXrView::setEnvironment(QQuick3DSceneEnvironment *environment)
 
 bool QQuick3DXrView::passthroughSupported() const
 {
-    if (!m_openXRManager.isValid())
+    if (!m_xrManager.isValid())
         return false;
 
-    return m_openXRManager.supportsPassthrough();
+    return m_xrManager.supportsPassthrough();
 }
 
 void QQuick3DXrView::setPassthroughEnabled(bool enable)
 {
-    if (!m_openXRManager.isValid()) {
+    if (!m_xrManager.isValid()) {
         qWarning("Attempted to set passthrough mode without a valid XR manager");
         return;
     }
 
     // bail if passthrough is not supported
-    if (enable && !m_openXRManager.supportsPassthrough()) {
+    if (enable && !m_xrManager.supportsPassthrough()) {
         qWarning("Enabling Passthrough is not supported.");
         return;
     }
 
-    const bool orgPassthroughEnabled = m_openXRManager.isPassthroughEnabled();
-    m_openXRManager.setPassthroughEnabled(enable);
+    const bool orgPassthroughEnabled = m_xrManager.isPassthroughEnabled();
+    m_xrManager.setPassthroughEnabled(enable);
 
-    if (orgPassthroughEnabled != m_openXRManager.isPassthroughEnabled())
+    if (orgPassthroughEnabled != m_xrManager.isPassthroughEnabled())
         emit passthroughEnabledChanged();
 }
 
@@ -178,14 +178,14 @@ void QQuick3DXrView::setPassthroughEnabled(bool enable)
 
 QQuick3DXrView::FoveationLevel QQuick3DXrView::fixedFoveation() const
 {
-    return FoveationLevel(m_openXRManager.getFixedFoveationLevel());
+    return FoveationLevel(m_xrManager.getFixedFoveationLevel());
 }
 
 void QQuick3DXrView::setFixedFoveation(FoveationLevel level)
 {
-    const auto orgFoviationLevel = m_openXRManager.getFixedFoveationLevel();
-    m_openXRManager.setFixedFoveationLevel(QtQuick3DXr::FoveationLevel(level));
-    if (orgFoviationLevel != m_openXRManager.getFixedFoveationLevel())
+    const auto orgFoviationLevel = m_xrManager.getFixedFoveationLevel();
+    m_xrManager.setFixedFoveationLevel(QtQuick3DXr::FoveationLevel(level));
+    if (orgFoviationLevel != m_xrManager.getFixedFoveationLevel())
         emit fixedFoveationChanged();
 }
 
@@ -214,13 +214,13 @@ void QQuick3DXrView::setQuitOnSessionEnd(bool enable)
 
 QQuick3DRenderStats *QQuick3DXrView::renderStats() const
 {
-    return m_openXRManager.m_vrViewport ? m_openXRManager.m_vrViewport->renderStats() : nullptr;
+    return m_xrManager.m_vrViewport ? m_xrManager.m_vrViewport->renderStats() : nullptr;
 }
 
 void QQuick3DXrView::updateViewportGeometry()
 {
-    auto contentItem = m_openXRManager.m_quickWindow->contentItem();
-    auto viewport = m_openXRManager.m_vrViewport;
+    auto contentItem = m_xrManager.m_quickWindow->contentItem();
+    auto viewport = m_xrManager.m_vrViewport;
     if (viewport->height() != contentItem->height())
         viewport->setHeight(contentItem->height());
     if (viewport->width() != contentItem->width())
@@ -244,9 +244,9 @@ void QQuick3DXrView::handleClearColorChanged()
 
     if (env) {
         if (env->backgroundMode() == QQuick3DSceneEnvironment::Color)
-            m_openXRManager.m_quickWindow->setColor(env->clearColor());
+            m_xrManager.m_quickWindow->setColor(env->clearColor());
         else if (env->backgroundMode() == QQuick3DSceneEnvironment::Transparent)
-            m_openXRManager.m_quickWindow->setColor(Qt::transparent);
+            m_xrManager.m_quickWindow->setColor(Qt::transparent);
     }
 }
 
@@ -267,7 +267,7 @@ void QQuick3DXrView::handleAAChanged()
             break;
         }
     }
-    m_openXRManager.setSamples(samples);
+    m_xrManager.setSamples(samples);
 }
 
 bool QQuick3DXrView::init()
@@ -277,14 +277,14 @@ bool QQuick3DXrView::init()
         return false;
     }
 
-    if (!m_openXRManager.isReady() && !m_openXRManager.initialize()) {
+    if (!m_xrManager.isReady() && !m_xrManager.initialize()) {
         qDebug() << "Waiting for XR platform to be initialized...";
-        connect(&m_openXRManager, &QQuick3DXrManager::initialized, this, &QQuick3DXrView::init, Qt::UniqueConnection);
+        connect(&m_xrManager, &QQuick3DXrManager::initialized, this, &QQuick3DXrView::init, Qt::UniqueConnection);
         return false;
     }
 
-    if (!m_openXRManager.initialize()) {
-        QString errorString = m_openXRManager.errorString();
+    if (!m_xrManager.initialize()) {
+        QString errorString = m_xrManager.errorString();
         if (errorString.isEmpty())
             errorString = tr("Failed to initialize XR platform");
         qWarning("\n%s\n", qPrintable(errorString));
@@ -293,12 +293,12 @@ bool QQuick3DXrView::init()
     }
 
     // Create View3D
-    QSSG_CHECK_X(m_openXRManager.m_vrViewport == nullptr, "View3D already created!");
+    QSSG_CHECK_X(m_xrManager.m_vrViewport == nullptr, "View3D already created!");
     auto viewport = new QQuick3DViewport();
     viewport->setRenderMode(QQuick3DViewport::Underlay);
-    auto contentItem = m_openXRManager.m_quickWindow->contentItem();
+    auto contentItem = m_xrManager.m_quickWindow->contentItem();
     viewport->setParentItem(contentItem);
-    m_openXRManager.m_vrViewport = viewport;
+    m_xrManager.m_vrViewport = viewport;
     viewport->setImportScene(this);
 
     contentItem->forceActiveFocus(Qt::MouseFocusReason);
@@ -316,14 +316,14 @@ bool QQuick3DXrView::init()
         connect(env, &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QQuick3DXrView::handleAAChanged);
     }
 
-    connect(&m_openXRManager, &QQuick3DXrManager::sessionEnded, this, &QQuick3DXrView::handleSessionEnded);
-    connect(&m_openXRManager, &QQuick3DXrManager::frameReady, this, &QQuick3DXrView::frameReady);
-    connect(&m_openXRManager, &QQuick3DXrManager::referenceSpaceChanged, this, &QQuick3DXrView::referenceSpaceChanged);
+    connect(&m_xrManager, &QQuick3DXrManager::sessionEnded, this, &QQuick3DXrView::handleSessionEnded);
+    connect(&m_xrManager, &QQuick3DXrManager::frameReady, this, &QQuick3DXrView::frameReady);
+    connect(&m_xrManager, &QQuick3DXrManager::referenceSpaceChanged, this, &QQuick3DXrView::referenceSpaceChanged);
 
     // NOTE: If we're called async we need to make sure the environment etc. is set again
     setEnvironment(m_sceneEnvironment);
 
-    m_openXRManager.update();
+    m_xrManager.update();
 
     m_isInitialized = true;
 
@@ -343,7 +343,7 @@ bool QQuick3DXrView::init()
  */
 QQuick3DPickResult QQuick3DXrView::rayPick(const QVector3D &origin, const QVector3D &direction) const
 {
-    return m_openXRManager.m_vrViewport->rayPick(origin, direction);
+    return m_xrManager.m_vrViewport->rayPick(origin, direction);
 }
 
 /*!
@@ -362,7 +362,7 @@ QQuick3DPickResult QQuick3DXrView::rayPick(const QVector3D &origin, const QVecto
  */
 QList<QQuick3DPickResult> QQuick3DXrView::rayPickAll(const QVector3D &origin, const QVector3D &direction) const
 {
-    return m_openXRManager.m_vrViewport->rayPickAll(origin, direction);
+    return m_xrManager.m_vrViewport->rayPickAll(origin, direction);
 }
 
 /*!
@@ -491,22 +491,22 @@ QVariantMap QQuick3DXrView::touchpointState(int pointId) const
 
 QQuick3DXrView::ReferenceSpace QQuick3DXrView::referenceSpace() const
 {
-    return ReferenceSpace(m_openXRManager.getReferenceSpace());
+    return ReferenceSpace(m_xrManager.getReferenceSpace());
 }
 
 void QQuick3DXrView::setReferenceSpace(ReferenceSpace newReferenceSpace)
 {
-    m_openXRManager.setReferenceSpace(QtQuick3DXr::ReferenceSpace(newReferenceSpace));
+    m_xrManager.setReferenceSpace(QtQuick3DXr::ReferenceSpace(newReferenceSpace));
 }
 
 bool QQuick3DXrView::depthSubmissionEnabled() const
 {
-    if (!m_openXRManager.isValid()) {
+    if (!m_xrManager.isValid()) {
         qWarning("Attempted to check depth submission mode without a valid XR manager");
         return false;
     }
 
-    return m_openXRManager.isDepthSubmissionEnabled();
+    return m_xrManager.isDepthSubmissionEnabled();
 }
 
 /*!
@@ -518,10 +518,10 @@ bool QQuick3DXrView::depthSubmissionEnabled() const
  */
 bool QQuick3DXrView::isMultiViewRenderingSupported() const
 {
-    if (!m_openXRManager.isValid())
+    if (!m_xrManager.isValid())
         return false;
 
-    return m_openXRManager.isMultiViewRenderingSupported();
+    return m_xrManager.isMultiViewRenderingSupported();
 }
 
 /*!
@@ -561,10 +561,10 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
 */
 bool QQuick3DXrView::multiviewRenderingEnabled() const
 {
-    if (!m_openXRManager.isValid())
+    if (!m_xrManager.isValid())
         return false;
 
-    return m_openXRManager.isMultiViewRenderingEnabled();
+    return m_xrManager.isMultiViewRenderingEnabled();
 }
 
 void QQuick3DXrView::registerXrItem(QQuick3DXrItem *newXrItem)
@@ -632,30 +632,30 @@ void QQuick3DXrView::unregisterXrItem(QQuick3DXrItem *xrItem)
 
 void QQuick3DXrView::setDepthSubmissionEnabled(bool enable)
 {
-    if (!m_openXRManager.isValid()) {
+    if (!m_xrManager.isValid()) {
         qWarning("Attempted to set depth submission mode without a valid XR manager");
         return;
     }
 
-    const bool orgDepthSubmission = m_openXRManager.isDepthSubmissionEnabled();
+    const bool orgDepthSubmission = m_xrManager.isDepthSubmissionEnabled();
 
-    m_openXRManager.setDepthSubmissionEnabled(enable);
+    m_xrManager.setDepthSubmissionEnabled(enable);
 
-    if (orgDepthSubmission != m_openXRManager.isDepthSubmissionEnabled())
+    if (orgDepthSubmission != m_xrManager.isDepthSubmissionEnabled())
         emit depthSubmissionEnabledChanged();
 }
 
 void QQuick3DXrView::setMultiviewRenderingEnabled(bool enable)
 {
-    if (!m_openXRManager.isValid()) {
+    if (!m_xrManager.isValid()) {
         qWarning("Attempted to set multiview rendering mode without having m_openXRManager initialized");
         return;
     }
 
-    const bool orgMultiView = m_openXRManager.isMultiViewRenderingEnabled();
-    m_openXRManager.setMultiviewRenderingEnabled(enable);
+    const bool orgMultiView = m_xrManager.isMultiViewRenderingEnabled();
+    m_xrManager.setMultiviewRenderingEnabled(enable);
 
-    if (orgMultiView != m_openXRManager.isMultiViewRenderingEnabled())
+    if (orgMultiView != m_xrManager.isMultiViewRenderingEnabled())
         emit multiviewRenderingEnabledChanged();
 }
 
@@ -672,7 +672,7 @@ void QQuick3DXrView::setXROrigin(QQuick3DXrOrigin *newXrOrigin)
     if (m_xrOrigin && !m_xrOrigin->parentItem())
         m_xrOrigin->setParentItem(this);
 
-    m_openXRManager.setXROrigin(m_xrOrigin);
+    m_xrManager.setXROrigin(m_xrOrigin);
 
     emit xrOriginChanged();
 }
