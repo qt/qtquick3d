@@ -181,57 +181,57 @@ void QQuick3DXrInputAction::componentComplete()
 
     Holds a List of InputActions Ids, that can be of the following values:
 
-    \value XrActionmappter.CustomAction Represents a custom action with a value
+    \value XrInputAction.CustomAction Represents a custom action with a value
     of -1.
-    \value XrActionmappter.Button1Pressed Indicates that Button 1 is pressed.
-    \value XrActionMapper.Button1Touched Indicates that Button 1 is touched.
-    \value XrActionMapper.Button2Pressed Indicates that Button 2 is pressed.
-    \value XrActionMapper.Button2Touched Indicates that Button 2 is touched.
-    \value XrActionMapper.ButtonMenuPressed Indicates that the menu button is
+    \value XrInputAction.Button1Pressed Indicates that Button 1 is pressed.
+    \value XrInputAction.Button1Touched Indicates that Button 1 is touched.
+    \value XrInputAction.Button2Pressed Indicates that Button 2 is pressed.
+    \value XrInputAction.Button2Touched Indicates that Button 2 is touched.
+    \value XrInputAction.ButtonMenuPressed Indicates that the menu button is
     pressed.
-    \value XrActionMapper.ButtonMenuTouched Indicates that the menu button is
+    \value XrInputAction.ButtonMenuTouched Indicates that the menu button is
     touched.
-    \value XrActionMapper.ButtonSystemPressed Indicates that the system button
+    \value XrInputAction.ButtonSystemPressed Indicates that the system button
     is pressed.
-    \value XrActionMapper.ButtonSystemTouched Indicates that the system button
+    \value XrInputAction.ButtonSystemTouched Indicates that the system button
     is touched.
-    \value XrActionMapper.SqueezeValue Represents the squeeze value in a
+    \value XrInputAction.SqueezeValue Represents the squeeze value in a
     controller.
-    \value XrActionMapper.SqueezeForce Represents the force of a squeeze action.
-    \value XrActionMapper.SqueezePressed Indicates that the squeeze action is
+    \value XrInputAction.SqueezeForce Represents the force of a squeeze action.
+    \value XrInputAction.SqueezePressed Indicates that the squeeze action is
     pressed.
-    \value XrActionMapper.TriggerValue Represents the value of the trigger
+    \value XrInputAction.TriggerValue Represents the value of the trigger
     (for example, how much it's pressed).
-    \value XrActionMapper.TriggerPressed Indicates that the trigger is pressed.
-    \value XrActionMapper.TriggerTouched Indicates that the trigger is touched.
-    \value XrActionMapper.ThumbstickX Represents the X-axis value of the
+    \value XrInputAction.TriggerPressed Indicates that the trigger is pressed.
+    \value XrInputAction.TriggerTouched Indicates that the trigger is touched.
+    \value XrInputAction.ThumbstickX Represents the X-axis value of the
     thumbstick.
-    \value XrActionMapper.ThumbstickY Represents the Y-axis value of the
+    \value XrInputAction.ThumbstickY Represents the Y-axis value of the
     thumbstick.
-    \value XrActionMapper.ThumbstickPressed Indicates that the thumbstick
+    \value XrInputAction.ThumbstickPressed Indicates that the thumbstick
     is pressed.
-    \value XrActionMapper.ThumbstickTouched Indicates that the thumbstick
+    \value XrInputAction.ThumbstickTouched Indicates that the thumbstick
     is touched.
-    \value XrActionMapper.ThumbrestTouched Indicates that the thumbrest
+    \value XrInputAction.ThumbrestTouched Indicates that the thumbrest
     is touched.
-    \value XrActionMapper.TrackpadX Represents the X-axis value of the trackpad.
-    \value XrActionMapper.TrackpadY Represents the Y-axis value of the trackpad.
-    \value XrActionMapper.TrackpadForce Represents the force applied on the
+    \value XrInputAction.TrackpadX Represents the X-axis value of the trackpad.
+    \value XrInputAction.TrackpadY Represents the Y-axis value of the trackpad.
+    \value XrInputAction.TrackpadForce Represents the force applied on the
     trackpad.
-    \value XrActionMapper.TrackpadTouched Indicates that the trackpad is touched.
-    \value XrActionMapper.TrackpadPressed Indicates that the trackpad is pressed.
-    \value XrActionMapper.IndexFingerPinch Indicates that the index finger is
+    \value XrInputAction.TrackpadTouched Indicates that the trackpad is touched.
+    \value XrInputAction.TrackpadPressed Indicates that the trackpad is pressed.
+    \value XrInputAction.IndexFingerPinch Indicates that the index finger is
     pinched.
-    \value XrActionMapper.MiddleFingerPinch Indicates that the middle finger is
+    \value XrInputAction.MiddleFingerPinch Indicates that the middle finger is
     pinched.
-    \value XrActionMapper.RingFingerPinch Indicates that the ring finger is pinched.
-    \value XrActionMapper.LittleFingerPinch Indicates that the little finger is
+    \value XrInputAction.RingFingerPinch Indicates that the ring finger is pinched.
+    \value XrInputAction.LittleFingerPinch Indicates that the little finger is
     pinched.
-    \value XrActionMapper.HandTrackingMenuPress Indicates a menu press in hand
+    \value XrInputAction.HandTrackingMenuPress Indicates a menu press in hand
     tracking.
-    \value XrActionMapper.NumHandActions Represents the total number of hand
+    \value XrInputAction.NumHandActions Represents the total number of hand
     actions.
-    \value XrActionMapper.NumActions Number of actions.
+    \value XrInputAction.NumActions Number of actions.
  */
 
 QList<QQuick3DXrInputAction::Action> QQuick3DXrInputAction::actionId() const
