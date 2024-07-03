@@ -169,7 +169,7 @@ void QQuick3DXrAnchorManager::planeUpdateHandler(void *context, ar_plane_anchors
             unsigned char identifier[16] {};
             ar_anchor_get_identifier(planeAnchor, identifier);
 
-            if (!QtQuick3DXr::isValidUuid(identifier)) {
+            if (Q_UNLIKELY(QtQuick3DXr::isNullUuid(identifier))) {
                 qWarning() << "Invalid UUID for anchor";
                 return false;
             }
@@ -193,7 +193,7 @@ void QQuick3DXrAnchorManager::planeUpdateHandler(void *context, ar_plane_anchors
             unsigned char identifier[16] {};
             ar_anchor_get_identifier(planeAnchor, identifier);
 
-            if (!QtQuick3DXr::isValidUuid(identifier)) {
+            if (Q_UNLIKELY(QtQuick3DXr::isNullUuid(identifier))) {
                 qWarning() << "Invalid UUID for anchor";
                 return false;
             }
@@ -218,7 +218,7 @@ void QQuick3DXrAnchorManager::planeUpdateHandler(void *context, ar_plane_anchors
             unsigned char identifier[16] {};
             ar_anchor_get_identifier(planeAnchor, identifier);
 
-            if (!QtQuick3DXr::isValidUuid(identifier)) {
+            if (Q_UNLIKELY(QtQuick3DXr::isNullUuid(identifier))) {
                 qWarning() << "Invalid UUID for anchor";
                 return false;
             }

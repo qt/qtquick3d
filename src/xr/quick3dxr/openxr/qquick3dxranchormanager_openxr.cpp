@@ -316,7 +316,10 @@ bool QQuick3DXrAnchorManager::setupSpatialAnchor(XrSpace space, QQuick3DXrSpatia
 
 namespace {
 bool isValidUuid(const XrUuidEXT& uuid) {
-    return QtQuick3DXr::isValidUuid(uuid.data);
+    // The best, and reasonable way we can say if a uuid is valid, is to check if it's not null.
+    // Anyting more then that is outside the scope of this function (There's no real way to check if a uuid is valid
+    // that makese sense here anyways).
+    return !QtQuick3DXr::isNullUuid(uuid.data);
 }
 
 QUuid fromXrUuidExt(XrUuidEXT uuid) {
