@@ -54,17 +54,6 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
         globalBounds = inModelContext.model.particleBuffer->bounds();
     else
         globalBounds.transform(globalTransform);
-
-    if (auto instanceTable = inModelContext.model.instanceTable;
-        instanceTable && (inFlags.castsShadows() || inFlags.receivesShadows())) {
-        const auto points = globalBounds.toQSSGBoxPointsNoEmptyCheck();
-        for (int i = 0; i < instanceTable->count(); ++i) {
-            const QMatrix4x4 transform = instanceTable->getTransform(i);
-            for (const QVector3D& point : points) {
-                globalBoundsInstancing.include(transform.map(point));
-            }
-        }
-    }
 }
 
 QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
