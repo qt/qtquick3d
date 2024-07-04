@@ -4,7 +4,6 @@
 #ifndef VOLUMETEXTUREDATA_H
 #define VOLUMETEXTUREDATA_H
 
-#include "qthread.h"
 #include <QMutex>
 #include <QtQuick3D/QQuick3DTextureData>
 #include <QtQml/QQmlEngine>
@@ -15,6 +14,8 @@
 #include <QVector3D>
 
 QT_BEGIN_NAMESPACE
+
+class Worker;
 
 class VolumeTextureData : public QQuick3DTextureData
 {
@@ -68,14 +69,8 @@ signals:
     void loadSucceeded(QUrl source, qsizetype width, qsizetype height, qsizetype depth, QString dataType);
     void loadFailed(QUrl source, qsizetype width, qsizetype height, qsizetype depth, QString dataType);
 
-public slots:
+private:
     void handleResults(VolumeTextureData::AsyncLoaderData result);
-
-private:
-signals:
-    void startWorker(VolumeTextureData::AsyncLoaderData data);
-
-private:
     void updateTextureDimensions();
     void initWorker();
 
@@ -90,7 +85,7 @@ private:
     AsyncLoaderData loaderData;
     bool m_isLoading = false;
     bool m_isAborting = false;
-    QThread workerThread;
+    Worker *m_worker = nullptr;
 };
 
 QT_END_NAMESPACE
