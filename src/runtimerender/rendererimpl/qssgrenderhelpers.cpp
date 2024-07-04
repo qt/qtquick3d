@@ -395,14 +395,14 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
                                          };
 
     const QVector3D inLightPos = inLight->getGlobalPos();
-    const QVector3D inLightPivot = inLight->pivot;
+    constexpr QVector3D lightPivot = QVector3D(0, 0, 0);
 
     for (int i = 0; i < 6; ++i) {
         inCameras[i].parent = nullptr;
         inCameras[i].clipNear = 1.0f;
         inCameras[i].clipFar = qMax<float>(2.0f, inLight->m_shadowMapFar);
         inCameras[i].fov = qDegreesToRadians(90.f);
-        inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inLightPos, QSSGRenderNode::initScale, inLightPivot, rotOfs[i]);
+        inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inLightPos, QSSGRenderNode::initScale, lightPivot, rotOfs[i]);
         inCameras[i].calculateGlobalVariables(theViewport);
     }
 
