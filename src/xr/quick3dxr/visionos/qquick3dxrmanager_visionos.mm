@@ -8,6 +8,7 @@
 #include "qquick3dxranchormanager_visionos_p.h"
 
 #include "../qquick3dxrinputmanager_p.h"
+#include "../qquick3dxranimationdriver_p.h"
 
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
@@ -370,8 +371,9 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
     QQuickRenderControl *renderControl = q->m_renderControl;
     QQuick3DXrOrigin *xrOrigin = q->m_xrOrigin;
     QQuick3DViewport *xrViewport = q->m_vrViewport;
+    QQuick3DXrAnimationDriver *animationDriver = q->m_animationDriver;
 
-    QSSG_ASSERT_X(quickWindow && renderControl && xrViewport && xrOrigin, "Invalid state, rendering aborted", return);
+    QSSG_ASSERT_X(quickWindow && renderControl && xrViewport && xrOrigin && animationDriver, "Invalid state, rendering aborted", return);
 
     auto layerRenderer = this->layerRenderer();
     cp_frame_t frame = cp_layer_renderer_query_next_frame(layerRenderer);
@@ -390,7 +392,8 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 
     cp_frame_end_update(frame);
 
-    cp_time_wait_until(cp_frame_timing_get_optimal_input_time(timing));
+    cp_time_t optimalInputTime = cp_frame_timing_get_optimal_input_time(timing);
+    cp_time_wait_until(optimalInputTime);
 
     cp_frame_start_submission(frame);
     cp_drawable_t drawable = cp_frame_query_drawable(frame);
@@ -416,6 +419,22 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
     // Update the hands
     if (QSSG_GUARD(m_inputManager != nullptr))
         QQuick3DXrInputManagerPrivate::get(m_inputManager)->updateHandtracking();
+
+    // Animation driver
+    // Convert the cp_frame_timing_t ticks to milliseconds
+    const qint64 displayPeriodMS = qint64(cp_time_to_cf_time_interval(optimalInputTime) * 1000.0);
+    const qint64 displayDeltaMS = ((qint64(cp_time_to_cf_time_interval(cp_frame_timing_get_optimal_input_time(actualTiming)) * 1000.0)) - m_previousTime);
+
+    if (m_previousTime == 0)
+        animationDriver->setStep(displayPeriodMS);
+    else {
+        if (displayDeltaMS > displayPeriodMS)
+            animationDriver->setStep(displayPeriodMS);
+        else
+            animationDriver->setStep(displayDeltaMS);
+        animationDriver->advance();
+    }
+    m_previousTime = displayPeriodMS;
 
     QRhi *rhi = renderControl->rhi();
 

@@ -105,6 +105,7 @@ private:
     QPointer<QQuick3DXrAnchorManager> m_anchorManager;
     ar_session_t m_arSession;
     ar_world_tracking_provider_t m_worldTrackingProvider = nullptr;
+    qint64 m_previousTime = 0;
     bool m_isGraphicsInitialized = false;
 };
 
