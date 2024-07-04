@@ -648,8 +648,11 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             const bool hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(renderable.shaderDescription) > 0;
             modelViewProjection = hasSkinning ? pEntry->m_lightViewProjection[cascadeIndex]
                                               : pEntry->m_lightViewProjection[cascadeIndex] * renderable.globalTransform;
-            const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(renderable.subset.offset) << 3));
-            dcd = &rhiCtxD->drawCallData({ passKey, &renderable.modelContext.model, pEntry, entryIdx + cascadeIndex });
+            // cascadeIndex is 0..3 for directional light and 0 for the pointlight & spotlight
+            // cubeFaceIdx is 0 for directional & spotlight and 0..5 for the pointlight
+            // pEntry is unique per light and a light can only be one of directional, point, or spotlight.
+            const quintptr entryIdx = cascadeIndex + cubeFaceIdx + (quintptr(renderable.subset.offset) << 3);
+            dcd = &rhiCtxD->drawCallData({ passKey, &renderable.modelContext.model, pEntry, entryIdx });
         }
 
         QSSGRhiShaderResourceBindingList bindings;
