@@ -184,7 +184,7 @@ bool QSSGUtils::mat44::decompose(const QMatrix4x4 &transform, QVector3D &positio
 
     const auto det = m.determinant();
 
-    return qFuzzyCompare(det, 1.0) && qFuzzyCompare(det, -1.0);
+    return !qFuzzyIsNull(det);
 }
 
 QT_END_NAMESPACE
