@@ -6,6 +6,7 @@ import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D.MaterialEditor
+import QtQuick3D
 
 SplitView {
     id: editorView
@@ -21,6 +22,8 @@ SplitView {
     property alias tabButtonShaderOutput: tabButtonShaderOutput
     property alias uniformModel: uniformManagerPane.uniformModel
     required property MaterialAdapter materialAdapter
+    required property InstanceListEntry instanceEntry
+    required property Model targetModel
 
     ColumnLayout {
         SplitView.preferredHeight: parent.height * .8
@@ -44,8 +47,12 @@ SplitView {
                 }
             }
             TabButton {
-                id: propertiesTabText
+                id: matPropTabText
                 text: qsTr("Material Properties")
+            }
+            TabButton {
+                id: instPropTabText
+                text: qsTr("Instancing Properties")
             }
         }
 
@@ -67,8 +74,16 @@ SplitView {
             }
 
             MaterialPropertiesPane {
-                id: propertiesPane
+                id: matPropPane
                 targetMaterial: editorView.materialAdapter
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
+
+            InstancingPropertiesPane {
+                id: instPropPane
+                instanceEntry: editorView.instanceEntry
+                targetModel: editorView.targetModel
                 Layout.fillHeight: true
                 Layout.fillWidth: true
             }

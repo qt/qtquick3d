@@ -21,6 +21,7 @@ Item {
 
     property alias modelInstance: model
     property alias rootNode: resourceRoot
+    property alias instanceEntry: instEntry
 
     Settings {
         property alias cameraOriginRotation: originNode.rotation
@@ -69,6 +70,32 @@ Item {
             id: model
             source: previewControls.modelSource
             materials: [ previewRoot.currentMaterial, previewRoot.fallbackMaterial ]
+            property bool enableInstancing: false
+            instancing: enableInstancing ? manualInstancing : null
+        }
+
+        InstanceList {
+            id: manualInstancing
+            instances: [instEntry, instEntry1, instEntry2, instEntry3, instEntry4]
+        }
+        InstanceListEntry {
+            id: instEntry
+        }
+        InstanceListEntry {
+            id: instEntry1
+            position: Qt.vector3d(120, 150, 150);
+        }
+        InstanceListEntry {
+            id: instEntry2
+            position: Qt.vector3d(-70, 70, -100);
+        }
+        InstanceListEntry {
+            id: instEntry3
+            position: Qt.vector3d(-100, -120, -70);
+        }
+        InstanceListEntry {
+            id: instEntry4
+            position: Qt.vector3d(120, -50, 100);
         }
 
         OrbitCameraController {

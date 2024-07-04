@@ -65,6 +65,7 @@ qt_internal_add_qml_module(${target_name}
         FrostedGlass.qml
         AboutDialog.qml
         MaterialPropertiesPane.qml
+        InstancingPropertiesPane.qml
         SaveChangesDialog.qml
         UniformManagerPane.qml
     NO_PLUGIN

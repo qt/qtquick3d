@@ -259,6 +259,8 @@ ApplicationWindow {
             SplitView.preferredWidth: window.width * 0.5
             SplitView.fillWidth: true
             materialAdapter: materialAdapter
+            instanceEntry: preview.instanceEntry
+            targetModel: preview.modelInstance
         }
         Preview {
             id: preview
