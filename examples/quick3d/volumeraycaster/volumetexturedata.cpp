@@ -236,19 +236,21 @@ static VolumeTextureData::AsyncLoaderData loadVolume(const VolumeTextureData::As
     return result;
 }
 
-class Worker : public QObject
+class Worker : public QThread
 {
     Q_OBJECT
-
-public slots:
-    void doWork(VolumeTextureData::AsyncLoaderData data)
+public:
+    Worker(VolumeTextureData *parent, const VolumeTextureData::AsyncLoaderData &loaderData)
+        : QThread(parent), m_loaderData(loaderData)
     {
-        auto result = loadVolume(data);
-        emit resultReady(result);
     }
+    void run() override { emit resultReady(loadVolume(m_loaderData)); }
 
 signals:
     void resultReady(const VolumeTextureData::AsyncLoaderData result);
+
+private:
+    VolumeTextureData::AsyncLoaderData m_loaderData;
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -270,8 +272,11 @@ VolumeTextureData::VolumeTextureData()
 
 VolumeTextureData::~VolumeTextureData()
 {
-    workerThread.quit();
-    workerThread.wait();
+    if (m_worker) {
+        m_worker->quit();
+        m_worker->wait();
+        delete m_worker;
+    }
 }
 
 QUrl VolumeTextureData::source() const
@@ -373,26 +378,23 @@ void VolumeTextureData::loadAsync(QUrl source, qsizetype width, qsizetype height
     }
 
     m_isLoading = true;
-    Q_ASSERT(!workerThread.isRunning());
     initWorker();
 }
 
 void VolumeTextureData::initWorker()
 {
-    Worker *worker = new Worker;
-    worker->moveToThread(&workerThread);
-    connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater); // delete worker on thread exit
-    connect(this, &VolumeTextureData::startWorker, worker, &Worker::doWork);
-    connect(worker, &Worker::resultReady, this, &VolumeTextureData::handleResults);
-    workerThread.start();
-    emit startWorker(loaderData);
+    Q_ASSERT(!m_worker || !m_worker->isRunning());
+    delete m_worker;
+    m_worker = new Worker(this, loaderData);
+    connect(m_worker, &Worker::resultReady, this, &VolumeTextureData::handleResults);
+    m_worker->start();
+    Q_ASSERT(m_worker->isRunning());
 }
 
 void VolumeTextureData::handleResults(AsyncLoaderData result)
 {
-    Q_ASSERT(workerThread.isRunning());
-    workerThread.quit();
-    workerThread.wait();
+    m_worker->quit();
+    m_worker->wait();
 
     if (m_isAborting) {
         m_isAborting = false;
