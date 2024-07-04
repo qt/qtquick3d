@@ -11,7 +11,7 @@ XrView {
     id: xrView
     XrErrorDialog { id: err }
     onInitializeFailed: (errorString) => err.run("XRView", errorString)
-    referenceSpace: XrView.ReferenceSpaceLocal
+    referenceSpace: XrView.ReferenceSpaceLocalFloor
 
     xrOrigin: theOrigin
 
@@ -22,7 +22,6 @@ XrView {
 
     XrOrigin {
         id: theOrigin
-        position: Qt.vector3d(50, 2, 50)
 
         LeftHand {
             id: left
@@ -31,52 +30,59 @@ XrView {
         RightHand {
             id: right
         }
+
     }
 
     DirectionalLight {
     }
 
-    Model {
-        source: "#Cube"
-        materials: DefaultMaterial {
-            diffuseColor: Qt.rgba(0.4, 0.7, 0.0, 1.0)
-        }
-
-        y: -10
-
-        scale: Qt.vector3d(0.1, 0.1, 0.1)
-
-
-        NumberAnimation  on eulerRotation.y {
-            duration: 10000
-            easing.type: Easing.InOutQuad
-            from: 0
-            to: 360
-            running: true
-            loops: -1
-        }
-    }
 
     Node {
-        x: 10
-        y: 20
-        ColumnLayout {
-            spacing: 0
-            Text {
-                text: "Qt 6 in VR"
-                font.pointSize: 12
-                color: "white"
+        position: Qt.vector3d(0, 150, -100)
+
+        Model {
+            source: "#Cube"
+            materials: DefaultMaterial {
+                diffuseColor: Qt.rgba(0.4, 0.7, 0.0, 1.0)
             }
-            Text {
-                text: "On " + xrView.runtimeInfo.runtimeName + " " + xrView.runtimeInfo.runtimeVersion + " with " + xrView.runtimeInfo.graphicsApiName
-                font.pointSize: 4
-                color: "white"
+
+            y: -10
+
+            scale: Qt.vector3d(0.1, 0.1, 0.1)
+
+
+            NumberAnimation  on eulerRotation.y {
+                duration: 10000
+                easing.type: Easing.InOutQuad
+                from: 0
+                to: 360
+                running: true
+                loops: -1
             }
-            Text {
-                visible: xrView.multiviewRenderingEnabled
-                text: "Multiview rendering enabled"
-                font.pointSize: 4
-                color: "green"
+        }
+
+        Node {
+            x: 10
+            y: 20
+            ColumnLayout {
+                anchors.centerIn: parent
+                spacing: 0
+                Text {
+                    text: "Qt 6 in VR"
+                    font.pointSize: 12
+                    color: "white"
+                }
+                Text {
+                    text: "On " + xrView.runtimeInfo.runtimeName + " " + xrView.runtimeInfo.runtimeVersion + " with " + xrView.runtimeInfo.graphicsApiName
+                    font.pointSize: 4
+                    color: "white"
+                }
+                Text {
+                    visible: xrView.multiviewRenderingEnabled
+                    text: "Multiview rendering enabled"
+                    font.pointSize: 4
+                    color: "green"
+                }
             }
         }
     }
