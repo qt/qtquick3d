@@ -6,8 +6,7 @@
 QMatrix4x4 QSSGRenderInstanceTable::getTransform(int index) const
 {
     Q_ASSERT(index < instanceCount);
-    // NOTE: table size can be bigger than instanceCount due to QQuick3DInstancing::instanceCountOverride
-    Q_ASSERT(table.size() >= instanceStride * (index + 1));
+    Q_ASSERT(table.size() == instanceStride * instanceCount);
     auto *entry = reinterpret_cast<const QSSGRenderInstanceTableEntry*>(table.constData() + index * instanceStride);
 
     QMatrix4x4 res;

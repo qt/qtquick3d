@@ -235,9 +235,6 @@ struct QSSGRenderableObject
     const QSSGBounds3 &bounds;
     QSSGBounds3 globalBounds;
 
-    // Used for shadow map bounds when model has instancing
-    QSSGBounds3 globalBoundsInstancing;
-
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
