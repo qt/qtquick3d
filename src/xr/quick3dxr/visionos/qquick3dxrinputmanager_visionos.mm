@@ -5,6 +5,7 @@
 #include "qquick3dxrinputmanager_visionos_p.h"
 
 #include "../qquick3dxrinputmanager_p.h"
+#include "../qquick3dxractionmapper_p.h"
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -212,6 +213,71 @@ static void getHandPose(ar_hand_skeleton_t handSkeleton, const simd_float4x4 han
     }
 }
 
+struct ActionTypeAndName
+{
+    const char name[16];
+    const float pinchDistanceThreshold;
+    QQuick3DXrInputAction::Action type;
+};
+
+static const ActionTypeAndName VOPinchGestures[] {
+    { "", 0.0, QQuick3DXrInputAction::CustomAction },
+    { "index_pinch", 0.005, QQuick3DXrInputAction::IndexFingerPinch },
+    { "middle_pinch", 0.009, QQuick3DXrInputAction::MiddleFingerPinch },
+    { "ring_pinch", 0.009, QQuick3DXrInputAction::RingFingerPinch },
+    { "little_pinch", 0.01, QQuick3DXrInputAction::LittleFingerPinch },
+};
+
+static void detectGestures(ar_hand_skeleton_t handSkeleton, QQuick3DXrHandInput &handInputState)
+{
+    enum PinchJoints {
+        ThumbTip,
+        IndexFingerTip,
+        MiddleFingerTip,
+        RingFingerTip,
+        LittleFingerTip,
+    };
+
+    const ar_hand_skeleton_joint_name_t pinchJoints[] { ar_hand_skeleton_joint_name_thumb_tip,
+                                                        ar_hand_skeleton_joint_name_index_finger_tip,
+                                                        ar_hand_skeleton_joint_name_middle_finger_tip,
+                                                        ar_hand_skeleton_joint_name_ring_finger_tip,
+                                                        ar_hand_skeleton_joint_name_little_finger_tip                                                        };
+
+    constexpr size_t pinchJointCount = std::size(pinchJoints);
+
+    simd_float4x4 jointTransforms[pinchJointCount];
+    // Assume the thumb tip is tracked.
+    bool isTracked[pinchJointCount] { true, false, false, false };
+
+    for (int i = 0, end = pinchJointCount; isTracked[ThumbTip] && i != end; ++i) {
+        ar_hand_skeleton_joint_name_t jointName = pinchJoints[i];
+        if (ar_skeleton_joint_t joint = ar_hand_skeleton_get_joint_named(handSkeleton, jointName)) {
+            if (ar_skeleton_joint_is_tracked(joint)) {
+                jointTransforms[i] = ar_skeleton_joint_get_anchor_from_joint_transform(joint);
+                isTracked[i] = true;
+            }
+        }
+    }
+
+    // If the thumb isn't tracked, we can't do anything, bail out.
+    if (!isTracked[ThumbTip])
+        return;
+
+    // Calculate the distance between the tips and the thumb tip (first one wins).
+    const simd_float4 thumbTip = jointTransforms[ThumbTip].columns[3];
+
+    // Start from the index finger (1).
+    for (int i = 1, end = pinchJointCount; i != end; ++i) {
+        if (!isTracked[i])
+            continue;
+
+        const simd_float4 diff = jointTransforms[i].columns[3] - thumbTip;
+        const float distance = simd_length(diff);
+        handInputState.setInputValue(VOPinchGestures[i].type, VOPinchGestures[i].name, float(distance < VOPinchGestures[i].pinchDistanceThreshold));
+    }
+}
+
 qsizetype QQuick3DXrInputManagerPrivate::getPokeJointIndex() const
 {
     // NOTE: Static for now...
@@ -271,8 +337,11 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
             }
         }
 
-        // Get and set the aim pose.
         if (QQuick3DXrHandInput *inputState = m_handInputState[hand]) {
+            // Detect gestures.
+            detectGestures(handSkeleton, *m_handInputState[hand]);
+
+            // Get and set the aim/grip pose.
             if (inputState->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::AimPose) {
                 QVector3D handPosition;
                 QQuaternion handRotation;
