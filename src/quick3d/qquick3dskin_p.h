@@ -43,14 +43,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void inverseBindPosesChanged();
 
-private Q_SLOTS:
-    void onJointChanged(QQuick3DNode *node);
-    void onJointDestroyed(QObject *object);
-
 private:
-    void markDirty();
-    void markAllDirty() override;
-
     static void qmlAppendJoint(QQmlListProperty<QQuick3DNode> *list, QQuick3DNode *joint);
     static QQuick3DNode *qmlJointAt(QQmlListProperty<QQuick3DNode> *list, qsizetype index);
     static qsizetype qmlJointsCount(QQmlListProperty<QQuick3DNode> *list);
@@ -61,7 +54,11 @@ private:
     QVector<QQuick3DNode *> m_joints;
     QByteArray m_boneData;
     QList<QMatrix4x4> m_inverseBindPoses;
-    bool m_dirty = false;
+    using JointConnections = std::pair<QMetaObject::Connection, QMetaObject::Connection>;
+    QHash<QObject *, JointConnections> m_jointsConnections;
+    QSet<QQuick3DNode *> m_dirtyJoints;
+    QSet<QQuick3DNode *> m_removedJoints;
+    int m_updatedByNewInverseBindPoses = 0;
 };
 
 QT_END_NAMESPACE
