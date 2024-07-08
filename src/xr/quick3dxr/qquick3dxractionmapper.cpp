@@ -48,7 +48,7 @@ void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuic
         set(action, value);
 }
 
-// Note: it is the responsibility of the caller to call removeAction() before changing actionId/actionName
+// Note: it is the responsibility of the caller to call removeAction() before the action is destroyed or actionId/actionName is changed
 void QQuick3DXrActionMapper::registerAction(QQuick3DXrInputAction *action)
 {
     auto *that = instance();
@@ -64,8 +64,6 @@ void QQuick3DXrActionMapper::registerAction(QQuick3DXrInputAction *action)
                 that->m_actions.insert(actionIntKey(id, hand), action);
         }
     }
-
-    connect(action, &QObject::destroyed, that, [that, action](){ that->removeAction(action); });
 }
 
 void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
@@ -150,6 +148,11 @@ void QQuick3DXrInputAction::setActionName(const QString &newActionName)
 QQuick3DXrInputAction::QQuick3DXrInputAction(QObject *parent)
     : QObject(parent)
 {
+}
+
+QQuick3DXrInputAction::~QQuick3DXrInputAction()
+{
+    QQuick3DXrActionMapper::removeAction(this);
 }
 
 /*!

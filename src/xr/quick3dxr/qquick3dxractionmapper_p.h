@@ -87,6 +87,7 @@ public:
     Q_ENUM(Action)
 
     explicit QQuick3DXrInputAction(QObject *parent = nullptr);
+    ~QQuick3DXrInputAction() override;
     float value() const;
     void setValue(float newValue);
     bool pressed() const;
