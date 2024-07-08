@@ -42,20 +42,38 @@ XrView {
             poseSpace: XrController.AimPose
 
             XrInputAction {
+                id: thumbstickX
                 hand: XrInputAction.RightHand
                 actionId: [XrInputAction.ThumbstickX]
-                onValueChanged: {
-                    teleporter.xStickValue = value
-                }
             }
 
             XrInputAction {
+                id: thumbstickY
                 hand: XrInputAction.RightHand
                 actionId: [XrInputAction.ThumbstickY]
-                onValueChanged: {
-                    teleporter.yStickValue = value
-                }
             }
+
+            XrInputAction {
+                id: trackpadX
+                hand: XrInputAction.RightHand
+                actionId: [XrInputAction.TrackpadX]
+            }
+
+            XrInputAction {
+                id: trackpadY
+                hand: XrInputAction.RightHand
+                actionId: [XrInputAction.TrackpadY]
+            }
+
+            XrInputAction {
+                id: trackpadPressed
+                hand: XrInputAction.RightHand
+                actionId: [XrInputAction.TrackpadPressed]
+            }
+
+            property real xValue: trackpadPressed.pressed ? trackpadX.value : thumbstickX.value
+            property real yValue: trackpadPressed.pressed ? trackpadY.value : thumbstickY.value
+
 
             Model {
                 source: "#Cube"
@@ -74,6 +92,10 @@ XrView {
         cameraOrigin: xrOrigin
         camera: xrOrigin.camera
         beamHandle: xrRightController
+
+        xStickValue: xrRightController.xValue
+        yStickValue: xrRightController.yValue
+
         onDoTeleportation: (cameraOriginPosition)=> {
                                xrOrigin.position = cameraOriginPosition
                            }
