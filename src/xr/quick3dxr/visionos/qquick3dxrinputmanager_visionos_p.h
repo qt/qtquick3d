@@ -30,12 +30,14 @@ QT_BEGIN_NAMESPACE
 class QQuick3DXrHandInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
+class QQuick3DXrController;
 
 class QQuick3DXrInputManagerPrivate
 {
     Q_DECLARE_PUBLIC(QQuick3DXrInputManager)
 public:
     using Hand = QtQuick3DXr::Hand;
+    using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
 
     explicit QQuick3DXrInputManagerPrivate(QQuick3DXrInputManager &manager);
     ~QQuick3DXrInputManagerPrivate();
@@ -52,8 +54,12 @@ public:
 
     static QQuick3DXrInputManagerPrivate *get(QQuick3DXrInputManager *inputManager);
 
-    void setPosePosition(Hand hand, const QVector3D &position);
-    void setPoseRotation(Hand hand, const QQuaternion &rotation);
+    void setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation);
+
+    void registerController(QQuick3DXrController *controller);
+    void unregisterController(QQuick3DXrController *controller);
+
+    bool isPoseInUse(Hand hand, HandPoseSpace poseSpace);
 
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
@@ -67,6 +73,10 @@ public:
 private:
     QQuick3DXrInputManager *q_ptr = nullptr;
     QQuick3DXrHandInput *m_handInputState[2] {};
+
+    QSet<QQuick3DXrController *> m_controllers;
+    bool m_poseInUse[2][2] = {};
+    bool m_poseUsageDirty = true;
 
     ar_hand_tracking_provider_t m_handTrackingProvider;
     ar_hand_anchor_t m_handAnchors[2] {};

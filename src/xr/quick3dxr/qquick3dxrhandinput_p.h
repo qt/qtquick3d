@@ -38,14 +38,7 @@ public:
     explicit QQuick3DXrHandInput(QObject *parent = nullptr);
 
     bool isActive() const;
-    HandPoseSpace poseSpace() const;
     void setIsActive(bool isActive);
-    void setPosePosition(const QVector3D &position);
-    void setPoseRotation(const QQuaternion &rotation);
-
-    const QVector3D &posePosition() const;
-
-    const QQuaternion &poseRotation() const;
 
     void setInputValue(int id, const char *shortName, float value) { emit inputValueChange(id, shortName, value); }
 
@@ -60,9 +53,6 @@ public:
 
     bool isHandTrackingActive() const;
     void setIsHandTrackingActive(bool newIsHandTracking);
-
-public Q_SLOTS:
-    void setPoseSpace(HandPoseSpace poseSpace);
 
 Q_SIGNALS:
     void isActiveChanged();
@@ -82,9 +72,6 @@ Q_SIGNALS:
 
 private:
     bool m_isActive = false;
-    HandPoseSpace m_poseSpace = HandPoseSpace::GripPose;
-    QVector3D m_posePosition;
-    QQuaternion m_poseRotation;
 
     QList<QVector3D> m_jointPositions;
     QList<QQuaternion> m_jointRotations;

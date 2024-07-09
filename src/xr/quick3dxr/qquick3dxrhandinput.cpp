@@ -23,11 +23,6 @@ bool QQuick3DXrHandInput::isActive() const
     return m_isActive;
 }
 
-QQuick3DXrHandInput::HandPoseSpace QQuick3DXrHandInput::poseSpace() const
-{
-    return m_poseSpace;
-}
-
 void QQuick3DXrHandInput::setIsActive(bool isActive)
 {
     if (m_isActive == isActive)
@@ -35,43 +30,6 @@ void QQuick3DXrHandInput::setIsActive(bool isActive)
 
     m_isActive = isActive;
     emit isActiveChanged();
-}
-
-void QQuick3DXrHandInput::setPosePosition(const QVector3D &position)
-{
-    if (m_posePosition == position)
-        return;
-
-    m_posePosition = position;
-    emit posePositionChanged();
-}
-
-void QQuick3DXrHandInput::setPoseRotation(const QQuaternion &rotation)
-{
-    if (m_poseRotation == rotation)
-        return;
-
-    m_poseRotation = rotation;
-    emit poseRotationChanged();
-}
-
-void QQuick3DXrHandInput::setPoseSpace(QQuick3DXrHandInput::HandPoseSpace poseSpace)
-{
-    if (poseSpace == m_poseSpace)
-        return;
-
-    m_poseSpace = poseSpace;
-    emit poseSpaceChanged();
-}
-
-const QVector3D &QQuick3DXrHandInput::posePosition() const
-{
-    return m_posePosition;
-}
-
-const QQuaternion &QQuick3DXrHandInput::poseRotation() const
-{
-    return m_poseRotation;
 }
 
 void QQuick3DXrHandInput::setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations)
