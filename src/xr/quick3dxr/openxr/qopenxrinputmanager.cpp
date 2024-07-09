@@ -461,10 +461,10 @@ void QQuick3DXrInputManagerPrivate::pollActions()
     // Hands
     XrActionStateGetInfo getInfo{};
     getInfo.type = XR_TYPE_ACTION_STATE_GET_INFO;
-    for (int i = 0; i < 2; ++i) {
+    for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
 
-        getInfo.subactionPath = m_handSubactionPath[i];
-        auto &inputState = m_handInputState[i];
+        getInfo.subactionPath = m_handSubactionPath[hand];
+        auto &inputState = m_handInputState[hand];
 
         for (const auto &def : m_handInputActionDefs) {
             getInfo.action = m_inputActions[def.id];
@@ -475,7 +475,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
                 if (checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue))) {
                     if (boolValue.isActive && boolValue.changedSinceLastSync) {
                         //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
-                        m_handInputState[i]->setInputValue(def.id, def.shortName, float(boolValue.currentState));
+                        setInputValue(hand, def.id, def.shortName, float(boolValue.currentState));
                     }
                 } else {
                     qWarning("Failed to get action state for bool hand input");
@@ -488,7 +488,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
                 if (checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue))) {
                     if (floatValue.isActive && floatValue.changedSinceLastSync) {
                         //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
-                        m_handInputState[i]->setInputValue(def.id, def.shortName, float(floatValue.currentState));
+                        setInputValue(hand, def.id, def.shortName, float(floatValue.currentState));
                     }
                 } else {
                     qWarning("Failed to get action state for float hand input");
@@ -617,7 +617,7 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking(XrTime predictedDisplayTi
                 const uint oldState = m_aimStateFlags[hand];
                 auto updateState = [&](const char *name, QQuick3DXrInputAction::Action id, uint flag) {
                     if ((state & flag) != (oldState & flag))
-                        m_handInputState[hand]->setInputValue(id, name, float(!!(state & flag)));
+                        setInputValue(hand, id, name, float(!!(state & flag)));
                 };
 
                 updateState("index_pinch", QQuick3DXrInputAction::IndexFingerPinch, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
@@ -899,6 +899,12 @@ void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPo
             controller->setRotation(rotation);
         }
     }
+}
+
+void QQuick3DXrInputManagerPrivate::setInputValue(Hand hand, int id, const char *shortName, float value)
+{
+    QSSG_ASSERT(hand < 2, hand = Hand::LeftHand);
+    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Hand>(hand), shortName, value);
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const

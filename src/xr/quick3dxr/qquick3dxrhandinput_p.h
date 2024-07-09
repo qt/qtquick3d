@@ -40,8 +40,6 @@ public:
     bool isActive() const;
     void setIsActive(bool isActive);
 
-    void setInputValue(int id, const char *shortName, float value) { emit inputValueChange(id, shortName, value); }
-
     void setJointPositionsAndRotations(const QList<QVector3D> &newJointPositions, const QList<QQuaternion> &newJointRotations);
 
     QList<QVector3D> jointPositions() const;
@@ -56,8 +54,6 @@ public:
 
 Q_SIGNALS:
     void isActiveChanged();
-
-    void inputValueChange(int id, const char *shortName, float value);
 
     void poseSpaceChanged();
     void posePositionChanged();

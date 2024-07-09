@@ -28,6 +28,13 @@ QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
 
 }
 
+static inline void setInputValue(QtQuick3DXr::Hand hand, int id, const char *shortName, float value)
+{
+    QSSG_ASSERT(hand < 2, hand = QtQuick3DXr::Hand::LeftHand);
+    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Hand>(hand), shortName, value);
+}
+
+
 void QQuick3DXrInputManagerPrivate::prepareHandtracking(ar_data_providers_t dataProviders)
 {
     QSSG_ASSERT_X(!m_initialized, "Handtracking is already initialized!", return);
@@ -259,7 +266,7 @@ static const ActionTypeAndName VOPinchGestures[] {
     { "little_pinch", 0.01, QQuick3DXrInputAction::LittleFingerPinch },
 };
 
-static void detectGestures(ar_hand_skeleton_t handSkeleton, QQuick3DXrHandInput &handInputState)
+static void detectGestures(ar_hand_skeleton_t handSkeleton, QtQuick3DXr::Hand hand)
 {
     enum PinchJoints {
         ThumbTip,
@@ -305,7 +312,7 @@ static void detectGestures(ar_hand_skeleton_t handSkeleton, QQuick3DXrHandInput 
 
         const simd_float4 diff = jointTransforms[i].columns[3] - thumbTip;
         const float distance = simd_length(diff);
-        handInputState.setInputValue(VOPinchGestures[i].type, VOPinchGestures[i].name, float(distance < VOPinchGestures[i].pinchDistanceThreshold));
+        setInputValue(hand, VOPinchGestures[i].type, VOPinchGestures[i].name, float(distance < VOPinchGestures[i].pinchDistanceThreshold));
     }
 }
 
@@ -368,25 +375,23 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
             }
         }
 
-        if (QQuick3DXrHandInput *inputState = m_handInputState[hand]) {
-            // Detect gestures.
-            detectGestures(handSkeleton, *m_handInputState[hand]);
+        // Detect gestures.
+        detectGestures(handSkeleton, hand);
 
-            // Get and set the aim/grip pose.
+        // Get and set the aim/grip pose.
 
-            if (isPoseInUse(hand, HandPoseSpace::AimPose) ) {
-                QVector3D handPosition;
-                QQuaternion handRotation;
-                getHandPose<HandPoseSpace::AimPose>(handSkeleton, handTransform, handPosition, handRotation);
+        if (isPoseInUse(hand, HandPoseSpace::AimPose) ) {
+            QVector3D handPosition;
+            QQuaternion handRotation;
+            getHandPose<HandPoseSpace::AimPose>(handSkeleton, handTransform, handPosition, handRotation);
 
-                setPosePositionAndRotation(hand, HandPoseSpace::AimPose, handPosition, handRotation);
-            } else if (isPoseInUse(hand, HandPoseSpace::GripPose)) {
-                QVector3D handPosition;
-                QQuaternion handRotation;
-                getHandPose<HandPoseSpace::GripPose>(handSkeleton, handTransform, handPosition, handRotation);
+            setPosePositionAndRotation(hand, HandPoseSpace::AimPose, handPosition, handRotation);
+        } else if (isPoseInUse(hand, HandPoseSpace::GripPose)) {
+            QVector3D handPosition;
+            QQuaternion handRotation;
+            getHandPose<HandPoseSpace::GripPose>(handSkeleton, handTransform, handPosition, handRotation);
 
-                setPosePositionAndRotation(hand, HandPoseSpace::GripPose, handPosition, handRotation);
-            }
+            setPosePositionAndRotation(hand, HandPoseSpace::GripPose, handPosition, handRotation);
         }
 
         m_handInputState[hand]->setJointPositionsAndRotations(jpositions, jrotations);

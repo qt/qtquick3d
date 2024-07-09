@@ -135,9 +135,6 @@ public:
     static void registerAction(QQuick3DXrInputAction *action);
     static void removeAction(QQuick3DXrInputAction *action);
 
-Q_SIGNALS:
-    void inputValueChange(QQuick3DXrInputAction::Action id, QString shortName, float value); //### This needs to be on a public class/type
-
 private:
     explicit QQuick3DXrActionMapper(QObject *parent = nullptr);
 
