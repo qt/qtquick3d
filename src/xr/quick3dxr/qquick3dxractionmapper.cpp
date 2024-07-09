@@ -35,7 +35,7 @@ void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuic
     };
 
     const QLatin1StringView name(shortName);
-    emit that->inputValueChange(id, name, value); // TODO: emit signal from public class (XrController?)
+    // emit that->inputValueChange(id, name, value); // TODO: emit a signal from public class
 
     QList<QQuick3DXrInputAction *> actions;
     if (id == QQuick3DXrInputAction::CustomAction) {

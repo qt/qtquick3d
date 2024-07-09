@@ -102,6 +102,8 @@ private:
     void getBoolInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(bool)> setter);
     void getFloatInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(float)> setter);
 
+    void setInputValue(Hand hand, int id, const char *shortName, float value);
+
     QQuick3DXrInputManager *q_ptr = nullptr;
 
     XrInstance m_instance{XR_NULL_HANDLE};

@@ -51,7 +51,6 @@ void QQuick3DXrController::setController(QQuick3DXrController::Controller newCon
     emit controllerChanged();
 
     disconnect(m_isActiveConnection);
-    disconnect(m_inputActionConnection);
 
     QQuick3DXrInputManager::instance()->registerController(this);
     auto *input = handInput();
@@ -66,13 +65,6 @@ void QQuick3DXrController::setController(QQuick3DXrController::Controller newCon
         connect(input, &QQuick3DXrHandInput::jointPositionsChanged, this, &QQuick3DXrController::jointPositionsChanged);
         connect(input, &QQuick3DXrHandInput::jointRotationsChanged, this, &QQuick3DXrController::jointRotationsChanged);
         connect(input, &QQuick3DXrHandInput::jointDataUpdated, this, &QQuick3DXrController::jointDataUpdated);
-
-        //### TODO invoke the action mapper directly from input manager
-        m_inputActionConnection = connect(input, &QQuick3DXrHandInput::inputValueChange,
-                                          this, [this](int id, const char *shortName, float value) {
-            QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), QQuick3DXrInputAction::Hand(m_controller), shortName, value);
-        });
-
     } else {
         setVisible(false);
     }
