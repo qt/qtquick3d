@@ -29,6 +29,7 @@ QT_BEGIN_NAMESPACE
 class QQuick3DXrHandInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
+class QQuick3DXrController;
 
 class QQuick3DXrInputManagerPrivate : public QObject
 {
@@ -46,22 +47,26 @@ public:
     static QQuick3DXrInputManagerPrivate *get(QQuick3DXrInputManager *inputManager);
 
     using Hand = QtQuick3DXr::Hand;
+    using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
 
     void pollActions();
     void updatePoses(XrTime predictedDisplayTime, XrSpace appSpace);
     void updateHandtracking(XrTime predictedDisplayTime, XrSpace appSpace, bool aimExtensionEnabled);
 
-    XrSpace handSpace(Hand hand);
+    XrSpace handSpace(Hand hand, HandPoseSpace poseSpace);
     bool isHandActive(Hand hand);
     bool isHandTrackerActive(Hand hand);
 
-    void setPosePosition(Hand hand, const QVector3D &position);
-    void setPoseRotation(Hand hand, const QQuaternion &rotation);
+    void setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation);
 
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
 
     void setupHandModel(QQuick3DXrHandModel *model);
+    void registerController(QQuick3DXrController *controller);
+    void unregisterController(QQuick3DXrController *controller);
+
+    bool isPoseInUse(Hand hand, HandPoseSpace poseSpace);
 
     // NOTE: Static for now...
     qsizetype getPokeJointIndex() const { return qsizetype(XR_HAND_JOINT_INDEX_TIP_EXT); }
@@ -136,6 +141,9 @@ private:
     QQuick3DXrHandInput *m_handInputState[2];
     HandActions m_handActions;
     XrAction m_inputActions[QQuick3DXrInputAction::NumActions] = {};
+    QSet<QQuick3DXrController *> m_controllers;
+    bool m_poseInUse[2][2] = {};
+    bool m_poseUsageDirty = true;
 
     uint m_aimStateFlags[2] = {};
     bool m_initialized = false;

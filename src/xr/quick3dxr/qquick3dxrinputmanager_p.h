@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuick3DGeometry;
 
 class QQuick3DXrHandInput;
-
+class QQuick3DXrController;
 class QQuick3DXrInputManagerPrivate;
 
 class QQuick3DXrInputManager : public QObject
@@ -34,11 +34,15 @@ class QQuick3DXrInputManager : public QObject
 
 public:
     using Hand = QtQuick3DXr::Hand;
+    using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
 
     static QQuick3DXrInputManager *instance();
 
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
+
+    void registerController(QQuick3DXrController *controller);
+    void unregisterController(QQuick3DXrController *controller);
 
     bool isValid() const;
 

@@ -17,6 +17,7 @@
 
 #include <QtQuick3DXr/qtquick3dxrglobal.h>
 #include "qquick3dxrhandinput_p.h"
+#include "qtquick3dxrglobal_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQml/QQmlEngine>
 
@@ -70,7 +71,6 @@ public:
 
 Q_SIGNALS:
     void controllerChanged();
-    void handInputChanged();
     void actionMapperChanged();
 
     void poseSpaceChanged();
@@ -86,14 +86,18 @@ Q_SIGNALS:
 private:
     QPointer<QQuick3DXrInputManager> m_inputManager;
     Controller m_controller = ControllerNone;
-    QMetaObject::Connection m_posePositionConnection;
-    QMetaObject::Connection m_poseRotationConnection;
     QMetaObject::Connection m_isActiveConnection;
     QMetaObject::Connection m_inputActionConnection;
     HandPoseSpace m_poseSpace;
     QVector3D m_pokePosition;
     bool m_isActive;
 };
+
+namespace QtQuick3DXr
+{
+QtQuick3DXr::Hand handForController(QQuick3DXrController::Controller controller);
+QtQuick3DXr::HandPoseSpace pose_cast(QQuick3DXrController::HandPoseSpace poseSpace);
+}
 
 QT_END_NAMESPACE
 

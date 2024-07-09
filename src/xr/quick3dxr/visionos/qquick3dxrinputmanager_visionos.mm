@@ -6,6 +6,7 @@
 
 #include "../qquick3dxrinputmanager_p.h"
 #include "../qquick3dxractionmapper_p.h"
+#include "../qquick3dxrcontroller_p.h"
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -59,14 +60,44 @@ void QQuick3DXrInputManagerPrivate::teardown()
     Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
-void QQuick3DXrInputManagerPrivate::setPosePosition(Hand hand, const QVector3D &position)
+void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation)
 {
-    m_handInputState[hand]->setPosePosition(position);
+    for (QQuick3DXrController *controller : std::as_const(m_controllers)) {
+        if (QtQuick3DXr::handForController(controller->controller()) == hand && QtQuick3DXr::pose_cast(controller->poseSpace()) == poseSpace) {
+            controller->setPosition(position);
+            controller->setRotation(rotation);
+        }
+    }
 }
 
-void QQuick3DXrInputManagerPrivate::setPoseRotation(Hand hand, const QQuaternion &rotation)
+// Used both to add a new controller, and notify that an existing one has changed
+void QQuick3DXrInputManagerPrivate::registerController(QQuick3DXrController *controller)
 {
-    m_handInputState[hand]->setPoseRotation(rotation);
+    m_poseUsageDirty = true;
+    if (controller->controller() == QQuick3DXrController::ControllerNone) {
+        m_controllers.remove(controller);
+        return;
+    }
+    // No point in checking whether it's already in the set: that's just as expensive as inserting
+    m_controllers.insert(controller);
+}
+
+void QQuick3DXrInputManagerPrivate::unregisterController(QQuick3DXrController *controller)
+{
+    m_poseUsageDirty = m_controllers.remove(controller);
+}
+
+bool QQuick3DXrInputManagerPrivate::isPoseInUse(Hand hand, HandPoseSpace poseSpace)
+{
+    QSSG_ASSERT(uint(hand) < 2 && uint(poseSpace) < 2, return false);
+    if (m_poseUsageDirty) {
+        std::fill_n(&m_poseInUse[0][0], 4, false);
+        for (const auto *controller : std::as_const(m_controllers)) {
+            m_poseInUse[uint(controller->controller())][uint(controller->poseSpace())] = true;
+        }
+        m_poseUsageDirty = false;
+    }
+    return m_poseInUse[uint(hand)][uint(poseSpace)];
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const
@@ -186,7 +217,7 @@ static qsizetype getJointIndex(ar_hand_skeleton_joint_name_t jointName)
     return index;
 }
 
-template <QQuick3DXrHandInput::HandPoseSpace HandPose>
+template <QtQuick3DXr::HandPoseSpace HandPose>
 static void getHandPose(ar_hand_skeleton_t handSkeleton, const simd_float4x4 handTransform, QVector3D &posePosition, QQuaternion &poseRotation)
 {
     QMatrix4x4 qHandTransform{handTransform.columns[0].x, handTransform.columns[1].x, handTransform.columns[2].x, handTransform.columns[3].x,
@@ -198,14 +229,14 @@ static void getHandPose(ar_hand_skeleton_t handSkeleton, const simd_float4x4 han
                                        simd_float4{ qHandTransform(0,2), qHandTransform(1,2), qHandTransform(2,2), qHandTransform(3,2) },
                                        simd_float4{ qHandTransform(0,3), qHandTransform(1,3), qHandTransform(2,3), qHandTransform(3,3) } };
 
-    if constexpr (HandPose == QQuick3DXrHandInput::HandPoseSpace::AimPose) {
+    if constexpr (HandPose == QtQuick3DXr::HandPoseSpace::AimPose) {
         // Using the knuckle joint as the aim pose, as it produces a more "stable" feeling when aiming.
         setupJoint(ar_hand_skeleton_joint_name_index_finger_knuckle, handSkeleton, rotHandTransform, posePosition, poseRotation);
 
         static QQuaternion rotation = QQuaternion::fromEulerAngles(QVector3D(0, 90, 90));
         poseRotation = poseRotation * rotation;
     } else {
-        static_assert(HandPose == QQuick3DXrHandInput::HandPoseSpace::GripPose);
+        static_assert(HandPose == QtQuick3DXr::HandPoseSpace::GripPose);
         setupJoint(ar_hand_skeleton_joint_name_middle_finger_knuckle, handSkeleton, rotHandTransform, posePosition, poseRotation);
 
         static QQuaternion rotation = QQuaternion::fromEulerAngles(QVector3D(0, 180, 90));
@@ -342,20 +373,19 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
             detectGestures(handSkeleton, *m_handInputState[hand]);
 
             // Get and set the aim/grip pose.
-            if (inputState->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::AimPose) {
+
+            if (isPoseInUse(hand, HandPoseSpace::AimPose) ) {
                 QVector3D handPosition;
                 QQuaternion handRotation;
-                getHandPose<QQuick3DXrHandInput::HandPoseSpace::AimPose>(handSkeleton, handTransform, handPosition, handRotation);
+                getHandPose<HandPoseSpace::AimPose>(handSkeleton, handTransform, handPosition, handRotation);
 
-                setPosePosition(hand, handPosition);
-                setPoseRotation(hand, handRotation);
-            } else {
+                setPosePositionAndRotation(hand, HandPoseSpace::AimPose, handPosition, handRotation);
+            } else if (isPoseInUse(hand, HandPoseSpace::GripPose)) {
                 QVector3D handPosition;
                 QQuaternion handRotation;
-                getHandPose<QQuick3DXrHandInput::HandPoseSpace::GripPose>(handSkeleton, handTransform, handPosition, handRotation);
+                getHandPose<HandPoseSpace::GripPose>(handSkeleton, handTransform, handPosition, handRotation);
 
-                setPosePosition(hand, handPosition);
-                setPoseRotation(hand, handRotation);
+                setPosePositionAndRotation(hand, HandPoseSpace::GripPose, handPosition, handRotation);
             }
         }
 

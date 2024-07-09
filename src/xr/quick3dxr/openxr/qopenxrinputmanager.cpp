@@ -525,37 +525,42 @@ void QQuick3DXrInputManagerPrivate::updatePoses(XrTime predictedDisplayTime, XrS
 {
     // Update the Hands pose
 
-    for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
-        XrSpaceLocation spaceLocation{};
-        spaceLocation.type = XR_TYPE_SPACE_LOCATION;
-        XrResult res;
-        res = xrLocateSpace(handSpace(hand), appSpace, predictedDisplayTime, &spaceLocation);
-        // qDebug() << "LOCATE SPACE hand:" << hand << "res" << res << "flags" << spaceLocation.locationFlags
-        //          << "active" << m_handInputState[hand]->isActive()
-        //          << "Pos" << spaceLocation.pose.position.x << spaceLocation.pose.position.y << spaceLocation.pose.position.z;
-        m_validAimStateFromUpdatePoses[hand] = m_handInputState[hand]->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::AimPose
-                && XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT)
-                && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT); // ### Workaround for Quest issue with hand interaction aim pose
+    for (auto poseSpace : {HandPoseSpace::AimPose, HandPoseSpace::GripPose}) {
+        for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
+            if (!isPoseInUse(hand, poseSpace))
+                continue;
+            XrSpaceLocation spaceLocation{};
+            spaceLocation.type = XR_TYPE_SPACE_LOCATION;
+            XrResult res;
+            res = xrLocateSpace(handSpace(hand, poseSpace), appSpace, predictedDisplayTime, &spaceLocation);
+            // qDebug() << "LOCATE SPACE hand:" << hand << "res" << res << "flags" << spaceLocation.locationFlags
+            //          << "active" << m_handInputState[hand]->isActive()
+            //          << "Pos" << spaceLocation.pose.position.x << spaceLocation.pose.position.y << spaceLocation.pose.position.z;
+            m_validAimStateFromUpdatePoses[hand] = poseSpace == HandPoseSpace::AimPose
+                    && XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT)
+                    && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT); // ### Workaround for Quest issue with hand interaction aim pose
 
-        if (XR_UNQUALIFIED_SUCCESS(res)) {
-            if ((spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
+            if (XR_UNQUALIFIED_SUCCESS(res)) {
+                if ((spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
                     (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
 
-                // Update hand transform
-                setPosePosition(hand, QVector3D(spaceLocation.pose.position.x,
-                                                                spaceLocation.pose.position.y,
-                                                                spaceLocation.pose.position.z) * 100.0f);
-                setPoseRotation(hand, QQuaternion(spaceLocation.pose.orientation.w,
-                                                                  spaceLocation.pose.orientation.x,
-                                                                  spaceLocation.pose.orientation.y,
-                                                                  spaceLocation.pose.orientation.z));
-            }
-        } else {
-            // Tracking loss is expected when the hand is not active so only log a message
-            // if the hand is active.
-            if (isHandActive(hand)) {
-                const char* handName[] = {"left", "right"};
-                qDebug("Unable to locate %s hand action space in app space: %d", handName[hand], res);
+                    // Update hand transform
+                    setPosePositionAndRotation(hand, poseSpace,
+                                               QVector3D(spaceLocation.pose.position.x,
+                                                         spaceLocation.pose.position.y,
+                                                         spaceLocation.pose.position.z) * 100.0f,
+                                               QQuaternion(spaceLocation.pose.orientation.w,
+                                                           spaceLocation.pose.orientation.x,
+                                                           spaceLocation.pose.orientation.y,
+                                                           spaceLocation.pose.orientation.z));
+                }
+            } else {
+                // Tracking loss is expected when the hand is not active so only log a message
+                // if the hand is active.
+                if (isHandActive(hand)) {
+                    const char* handName[] = {"left", "right"};
+                    qDebug("Unable to locate %s hand action space in app space: %d", handName[hand], res);
+                }
             }
         }
     }
@@ -625,12 +630,13 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking(XrTime predictedDisplayTi
 
             // ### Workaround for Quest issue with hand interaction aim pose
             for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
-                if (!m_validAimStateFromUpdatePoses[hand]) {
-                    if ((aimState[hand].status & XR_HAND_TRACKING_AIM_VALID_BIT_FB) && m_handInputState[hand]->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::AimPose) {
-                        setPosePosition(hand, QVector3D(aimState[hand].aimPose.position.x,
+                if (isPoseInUse(hand, HandPoseSpace::AimPose) && !m_validAimStateFromUpdatePoses[hand]) {
+                    if ((aimState[hand].status & XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+                        setPosePositionAndRotation(hand, HandPoseSpace::AimPose,
+                                                   QVector3D(aimState[hand].aimPose.position.x,
                                                         aimState[hand].aimPose.position.y,
-                                                        aimState[hand].aimPose.position.z) * 100.0f);
-                        setPoseRotation(hand, QQuaternion(aimState[hand].aimPose.orientation.w,
+                                                        aimState[hand].aimPose.position.z) * 100.0f,
+                                                   QQuaternion(aimState[hand].aimPose.orientation.w,
                                                           aimState[hand].aimPose.orientation.x,
                                                           aimState[hand].aimPose.orientation.y,
                                                           aimState[hand].aimPose.orientation.z));
@@ -867,9 +873,9 @@ void QQuick3DXrInputManagerPrivate::getFloatInputState(XrActionStateGetInfo &get
     }
 }
 
-XrSpace QQuick3DXrInputManagerPrivate::handSpace(QQuick3DXrInputManagerPrivate::Hand hand)
+XrSpace QQuick3DXrInputManagerPrivate::handSpace(QQuick3DXrInputManagerPrivate::Hand hand, HandPoseSpace poseSpace)
 {
-    if (m_handInputState[hand]->poseSpace() == QQuick3DXrHandInput::HandPoseSpace::GripPose)
+    if (poseSpace == HandPoseSpace::GripPose)
         return m_handGripSpace[hand];
     else
         return m_handAimSpace[hand];
@@ -885,14 +891,14 @@ bool QQuick3DXrInputManagerPrivate::isHandTrackerActive(Hand hand)
     return m_handInputState[hand]->isHandTrackingActive();
 }
 
-void QQuick3DXrInputManagerPrivate::setPosePosition(Hand hand, const QVector3D &position)
+void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation)
 {
-    m_handInputState[hand]->setPosePosition(position); // TODO: move to controller!!!
-}
-
-void QQuick3DXrInputManagerPrivate::setPoseRotation(Hand hand, const QQuaternion &rotation)
-{
-    m_handInputState[hand]->setPoseRotation(rotation);
+    for (auto *controller : std::as_const(m_controllers)) {
+        if (QtQuick3DXr::handForController(controller->controller()) == hand && QtQuick3DXr::pose_cast(controller->poseSpace()) == poseSpace) {
+            controller->setPosition(position);
+            controller->setRotation(rotation);
+        }
+    }
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const
@@ -961,6 +967,36 @@ void QQuick3DXrInputManagerPrivate::setupHandModel(QQuick3DXrHandModel *model)
         setupHandModelInternal(model, Hand::RightHand);
     else
         qWarning() << "No matching hand tracker input found for hand model.";
+}
+
+// Used both to add a new controller, and notify that an existing one has changed
+void QQuick3DXrInputManagerPrivate::registerController(QQuick3DXrController *controller)
+{
+    m_poseUsageDirty = true;
+    if (controller->controller() == QQuick3DXrController::ControllerNone) {
+        m_controllers.remove(controller);
+        return;
+    }
+    // No point in checking whether it's already in the set: that's just as expensive as inserting
+    m_controllers.insert(controller);
+}
+
+void QQuick3DXrInputManagerPrivate::unregisterController(QQuick3DXrController *controller)
+{
+    m_poseUsageDirty = m_controllers.remove(controller);
+}
+
+bool QQuick3DXrInputManagerPrivate::isPoseInUse(Hand hand, HandPoseSpace poseSpace)
+{
+    QSSG_ASSERT(uint(hand) < 2 && uint(poseSpace) < 2, return false);
+    if (m_poseUsageDirty) {
+        std::fill_n(&m_poseInUse[0][0], 4, false);
+        for (const auto *controller : std::as_const(m_controllers)) {
+            m_poseInUse[uint(controller->controller())][uint(controller->poseSpace())] = true;
+        }
+        m_poseUsageDirty = false;
+    }
+    return m_poseInUse[uint(hand)][uint(poseSpace)];
 }
 
 void QQuick3DXrInputManagerPrivate::createHandModelData(Hand hand)

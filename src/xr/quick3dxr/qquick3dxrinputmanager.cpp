@@ -9,6 +9,8 @@
 # include "openxr/qopenxrinputmanager_p.h"
 #endif
 
+#include "qquick3dxrcontroller_p.h"
+
 QT_BEGIN_NAMESPACE
 
 QQuick3DXrInputManager *QQuick3DXrInputManager::instance()
@@ -27,6 +29,21 @@ QQuick3DXrHandInput *QQuick3DXrInputManager::rightHandInput() const
 {
     Q_D(const QQuick3DXrInputManager);
     return d->rightHandInput();
+}
+
+void QQuick3DXrInputManager::registerController(QQuick3DXrController *controller)
+{
+    Q_D(QQuick3DXrInputManager);
+
+    connect(controller, &QObject::destroyed, this, [this](QObject *obj) { unregisterController(static_cast<QQuick3DXrController *>(obj)); });
+
+    d->registerController(controller);
+}
+
+void QQuick3DXrInputManager::unregisterController(QQuick3DXrController *controller)
+{
+    Q_D(QQuick3DXrInputManager);
+    d->unregisterController(controller);
 }
 
 bool QQuick3DXrInputManager::isValid() const

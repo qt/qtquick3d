@@ -49,26 +49,15 @@ void QQuick3DXrController::setController(QQuick3DXrController::Controller newCon
         return;
     m_controller = newController;
     emit controllerChanged();
-    emit handInputChanged();
 
-    disconnect(m_posePositionConnection);
-    disconnect(m_poseRotationConnection);
     disconnect(m_isActiveConnection);
     disconnect(m_inputActionConnection);
 
+    QQuick3DXrInputManager::instance()->registerController(this);
     auto *input = handInput();
     if (input) {
-        input->setPoseSpace(static_cast<QQuick3DXrHandInput::HandPoseSpace>(m_poseSpace));
-        setPosition(input->posePosition());
-        setRotation(input->poseRotation());
-        setVisible(input->isActive());
+        setVisible(input->isActive()); // ### position not set yet, so might show up briefly in wrong location
 
-        m_posePositionConnection = connect(input, &QQuick3DXrHandInput::posePositionChanged, this, [this, input]{
-            setPosition(input->posePosition());
-        });
-        m_poseRotationConnection = connect(input, &QQuick3DXrHandInput::poseRotationChanged, this, [this, input]{
-            setRotation(input->poseRotation());
-        });
         m_isActiveConnection = connect(input, &QQuick3DXrHandInput::isActiveChanged, this, [this, input]{
             setVisible(input->isActive());
         });
@@ -116,9 +105,7 @@ void QQuick3DXrController::setPoseSpace(HandPoseSpace newPoseSpace)
     if (m_poseSpace == newPoseSpace)
         return;
     m_poseSpace = newPoseSpace;
-    auto *input = handInput();
-    if (input)
-        input->setPoseSpace(static_cast<QQuick3DXrHandInput::HandPoseSpace>(m_poseSpace));
+    QQuick3DXrInputManager::instance()->registerController(this);
     emit poseSpaceChanged();
 }
 
@@ -151,4 +138,24 @@ bool QQuick3DXrController::isActive() const
     return m_isActive;
 }
 
+QtQuick3DXr::Hand QtQuick3DXr::handForController(QQuick3DXrController::Controller controller)
+{
+    QSSG_ASSERT(controller != QQuick3DXrController::ControllerNone, return QQuick3DXrInputManager::Hand::RightHand);
+    switch (controller) {
+    case QQuick3DXrController::ControllerLeft:
+        return QQuick3DXrInputManager::Hand::LeftHand;
+    case QQuick3DXrController::ControllerRight:
+        return QQuick3DXrInputManager::Hand::RightHand;
+    default:
+        Q_UNREACHABLE();
+    }
+}
+
+QtQuick3DXr::HandPoseSpace QtQuick3DXr::pose_cast(QQuick3DXrController::HandPoseSpace poseSpace)
+{
+    return static_cast<QtQuick3DXr::HandPoseSpace>(poseSpace);
+}
+
 QT_END_NAMESPACE
+
+
