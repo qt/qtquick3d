@@ -184,7 +184,6 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             if (materialAdapter->usesCustomSkinning()) {
                 vertexShader.addInclude("skinanim.glsllib");
                 vertexShader.addUniform("qt_boneTexture", "sampler2D");
-                m_hasSkinning = false;
             }
 
             if (materialAdapter->usesCustomMorphing()) {
@@ -321,7 +320,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         if (m_hasMorphing && !hasCustomVertexShader)
             vertexShader.append("    qt_vertPosition.xyz = qt_getTargetPosition(qt_vertPosition.xyz);");
 
-        if (m_hasSkinning) {
+        if (m_hasSkinning && !materialAdapter->usesCustomSkinning()) {
             vertexShader.append("    mat4 skinMat = mat4(1);");
             vertexShader.append("    if (qt_vertWeights != vec4(0.0)) {");
             vertexShader.append("        skinMat = qt_getSkinMatrix(qt_vertJoints, qt_vertWeights);");
