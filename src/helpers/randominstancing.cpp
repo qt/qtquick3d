@@ -192,6 +192,7 @@ void QQuick3DRandomInstancing::setInstanceCount(int instanceCount)
     if (instanceCount == m_randomCount)
         return;
     m_randomCount = instanceCount;
+    emit instanceCountChanged();
     m_dirty = true;
     markDirty();
 }
