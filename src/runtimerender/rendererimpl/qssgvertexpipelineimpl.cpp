@@ -367,7 +367,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         if (m_hasMorphing && !hasCustomVertexShader)
             vertexShader.append("    qt_vertPosition.xyz = qt_getTargetPosition(qt_vertPosition.xyz);");
 
-        if (m_hasSkinning && !materialAdapter->usesCustomSkinning()) {
+        m_needsSkinning = m_hasSkinning && !materialAdapter->usesCustomSkinning();
+        if (m_needsSkinning) {
             vertexShader.append("    mat4 skinMat = mat4(1);");
             vertexShader.append("    if (qt_vertWeights != vec4(0.0)) {");
             vertexShader.append("        skinMat = qt_getSkinMatrix(qt_vertJoints, qt_vertWeights);");
@@ -467,7 +468,7 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangent(const QSSGShaderDefaultMat
 {
     if (m_hasMorphing)
         vertex() << "    qt_vertTangent = qt_getTargetTangent(qt_vertTangent);\n";
-    if (m_hasSkinning) {
+    if (m_needsSkinning) {
         vertex() << "    if (qt_vertWeights != vec4(0.0))\n"
                  << "       qt_vertTangent = (skinMat * vec4(qt_vertTangent, 0.0)).xyz;\n";
 
@@ -487,7 +488,7 @@ void QSSGMaterialVertexPipeline::doGenerateVarBinormal(const QSSGShaderDefaultMa
 {
     if (m_hasMorphing)
         vertex() << "    qt_vertBinormal = qt_getTargetBinormal(qt_vertBinormal);\n";
-    if (m_hasSkinning) {
+    if (m_needsSkinning) {
         vertex() << "    if (qt_vertWeights != vec4(0.0))\n"
                  << "       qt_vertBinormal = (skinMat * vec4(qt_vertBinormal, 0.0)).xyz;\n";
     }
