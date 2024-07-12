@@ -106,6 +106,24 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty vector3d RandomInstancing::gridSpacing
+    \since 6.9
+
+    The gridSpacing property defines the minimum spacing between instances, ensuring they do not overlap.
+    Each position will be separated by at least the value specified in \c gridSpacing.
+
+    If the specified \c gridSpacing cannot accommodate the requested number of instances, the \c instanceCount
+    property will be reduced to the number of instances that can be placed without overlap.
+
+    \note The gridSpacing property affects only the position of instances.
+    Rotation and scaling applied to instances are not considered in the spacing algorithm.
+
+    The default value is \c{[0, 0, 0]},  which imposes no restriction on overlapping instances.
+
+    \sa position
+*/
+
+/*!
     \qmlproperty InstanceRange RandomInstancing::scale
 
     The scale property defines the scaling limits for the generated instances. The type is
@@ -376,6 +394,115 @@ QByteArray QQuick3DRandomInstancing::getInstanceBuffer(int *instanceCount)
     return m_instanceData;
 }
 
+namespace   {
+
+struct GridPosition {
+    int x, y, z;
+};
+
+inline bool operator==(const GridPosition &e1, const GridPosition &e2)
+{
+    return e1.x == e2.x && e1.y == e2.y && e1.z == e2.z;
+}
+
+inline size_t qHash(const GridPosition &key, size_t seed)
+{
+    return qHashMulti(seed, key.x, key.y, key.z);
+}
+
+class PositionGenerator {
+public:
+    void init(QVector3D fromPos, QVector3D toPos, bool proportional, bool gridMode, QVector3D gridSize) {
+        m_from = fromPos;
+        m_to = toPos;
+        m_proportional = proportional;
+        m_gridMode = gridMode;
+        if (gridMode) {
+            int nx, ny, nz;
+            float cellWidth;
+            float cellDepth;
+            float cellHeight;
+            float width  = toPos.x() - fromPos.x();
+            float height = toPos.y() - fromPos.y();
+            float depth  = toPos.z() - fromPos.z();
+            if (qFuzzyIsNull(width)) {
+                cellWidth = 0;
+                nx = 1;
+            } else {
+                cellWidth = gridSize.x() > 0 ? gridSize.x() : width;
+                nx = width / cellWidth;
+            }
+            if (qFuzzyIsNull(height)) {
+                cellHeight = 0;
+                ny = 1;
+            } else {
+                cellHeight = gridSize.y() > 0 ? gridSize.y() : height;
+                ny = height / cellHeight;
+            }
+            if (qFuzzyIsNull(depth)) {
+                cellDepth = 0;
+                nz = 1;
+            } else {
+                cellDepth = gridSize.z() > 0 ? gridSize.z() : depth;
+                nz = depth / cellDepth;
+            }
+            m_xGrid = nx > 1;
+            m_yGrid = ny > 1;
+            m_zGrid = nz > 1;
+            m_gridSize = {cellWidth, cellHeight, cellDepth};
+        }
+        m_remainingAttempts = 1000000;
+    }
+
+    inline GridPosition gridPos(QVector3D pos) {
+        int ix = m_xGrid ? int(pos.x() / m_gridSize.x()) : 0;
+        int iy = m_yGrid ? int(pos.y() / m_gridSize.y()) : 0;
+        int iz = m_zGrid ? int(pos.z() / m_gridSize.z()) : 0;
+        return {ix, iy, iz};
+    }
+
+    inline bool collision(const GridPosition &gp) {
+        for (int x = gp.x - m_xGrid; x <= gp.x + m_xGrid; ++x)
+            for (int y = gp.y - m_yGrid; y <= gp.y + m_yGrid; ++y)
+                for (int z = gp.z - m_zGrid; z <= gp.z + m_zGrid; ++z )
+                    if (m_occupiedCells.contains({x,y,z}))
+                        return true;
+        return false;
+    }
+
+    QVector3D generate(QRandomGenerator *rgen) {
+        if (m_gridMode) {
+            while (m_remainingAttempts > 0) {
+                auto pos = genRandom(m_from, m_to, m_proportional, rgen);
+                auto gPos = gridPos(pos);
+                if (!collision(gPos)) {
+                    m_occupiedCells.insert(gPos);
+                    return pos;
+                }
+                m_remainingAttempts--;
+            }
+            return {};
+        }
+        return genRandom(m_from, m_to, m_proportional, rgen);
+    }
+
+    bool isFull() const { return m_remainingAttempts <= 0; }
+
+private:
+    QVector3D m_from;
+    QVector3D m_to;
+    QVector3D m_gridSize;
+    QSet<GridPosition> m_occupiedCells; // TODO: We could use a Bloom filter (no, not the graphics effect;) to save memory
+    int m_remainingAttempts;
+    bool m_proportional = false;
+    bool m_gridMode = false;
+    bool m_xGrid = false;
+    bool m_yGrid = false;
+    bool m_zGrid = false;
+};
+}
+
+
 void QQuick3DRandomInstancing::generateInstanceTable()
 {
     m_dirty = false;
@@ -388,16 +515,21 @@ void QQuick3DRandomInstancing::generateInstanceTable()
     qsizetype tableSize = count * sizeof(InstanceTableEntry);
     m_instanceData.resize(tableSize);
 
-    //qDebug() << "generating" << count << "instances, for total size" << tableSize;
     auto *array = reinterpret_cast<InstanceTableEntry*>(m_instanceData.data());
+
+    PositionGenerator posGen;
+    if (m_position)
+        posGen.init(m_position->from().value<QVector3D>(), m_position->to().value<QVector3D>(), m_position->proportional(), m_gridMode, m_gridSpacing);
+
     for (int i = 0; i < count; ++i) {
         QVector3D pos;
         QVector3D scale{1, 1, 1};
         QVector3D eulerRotation;
         QColor color(Qt::white);
         QVector4D customData;
+
         if (m_position)
-            pos = genRandom(m_position->from().value<QVector3D>(), m_position->to().value<QVector3D>(), m_position->proportional(), &rgen);
+            pos = posGen.generate(&rgen);
         if (m_scale)
             scale = genRandom(m_scale->from().value<QVector3D>(), m_scale->to().value<QVector3D>(), m_scale->proportional(), &rgen);
         if (m_rotation) //TODO: quaternion rotation???
@@ -406,6 +538,15 @@ void QQuick3DRandomInstancing::generateInstanceTable()
             color = genRandom(m_color->from().value<QColor>(), m_color->to().value<QColor>(), m_color->proportional(), m_colorModel, &rgen);
         if (m_customData)
             customData = genRandom(m_customData->from().value<QVector4D>(), m_customData->to().value<QVector4D>(), m_customData->proportional(), &rgen);
+
+        if (Q_UNLIKELY(posGen.isFull())) {
+            qWarning() << "RandomInstancing: Could not find free cell, truncating instance array" << i;
+            qsizetype newSize = i * sizeof(InstanceTableEntry);
+            m_instanceData.truncate(newSize);
+            m_randomCount = i;
+            emit instanceCountChanged();
+            break;
+        }
 
         array[i] = calculateTableEntry(pos, scale, eulerRotation, color, customData);
     }
@@ -445,6 +586,22 @@ void QQuick3DInstanceRange::setProportional(bool proportional)
     m_proportional = proportional;
     emit proportionalChanged();
     emit changed();
+}
+
+QVector3D QQuick3DRandomInstancing::gridSpacing() const
+{
+    return m_gridSpacing;
+}
+
+void QQuick3DRandomInstancing::setGridSpacing(const QVector3D &newGridSpacing)
+{
+    if (m_gridSpacing == newGridSpacing)
+        return;
+    m_gridSpacing = newGridSpacing;
+    emit gridSpacingChanged();
+    m_gridMode = (newGridSpacing.x() > 0 || newGridSpacing.y() > 0 || newGridSpacing.z() > 0) && !(newGridSpacing.x() < 0 || newGridSpacing.y() < 0 || newGridSpacing.z() < 0);
+    m_dirty = true;
+    markDirty();
 }
 
 QT_END_NAMESPACE

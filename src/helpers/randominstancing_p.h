@@ -82,6 +82,8 @@ class QQuick3DRandomInstancing : public QQuick3DInstancing
     Q_PROPERTY(ColorModel colorModel READ colorModel WRITE setColorModel NOTIFY colorModelChanged)
     Q_PROPERTY(QQuick3DInstanceRange *customData READ customData WRITE setCustomData NOTIFY customDataChanged)
 
+    Q_PROPERTY(QVector3D gridSpacing READ gridSpacing WRITE setGridSpacing NOTIFY gridSpacingChanged FINAL REVISION(6, 9))
+
     Q_PROPERTY(int randomSeed READ randomSeed WRITE setRandomSeed NOTIFY randomSeedChanged)
 
     QML_NAMED_ELEMENT(RandomInstancing)
@@ -136,6 +138,9 @@ public:
         return m_colorModel;
     }
 
+    QVector3D gridSpacing() const;
+    void setGridSpacing(const QVector3D &newGridSpacing);
+
 public Q_SLOTS:
     void setInstanceCount(int instanceCount);
     void setRandomSeed(int randomSeed);
@@ -157,6 +162,8 @@ Q_SIGNALS:
     void customDataChanged();
     void colorModelChanged();
 
+    void gridSpacingChanged();
+
 private Q_SLOTS:
     void handleChange();
 
@@ -165,6 +172,7 @@ private:
     int m_randomCount = 0;
     int m_randomSeed = -1;
     bool m_dirty = true;
+    bool m_gridMode = false;
     QByteArray m_instanceData;
     QQuick3DInstanceRange *m_position = nullptr;
     QQuick3DInstanceRange *m_scale = nullptr;
@@ -172,6 +180,7 @@ private:
     QQuick3DInstanceRange *m_color = nullptr;
     QQuick3DInstanceRange *m_customData = nullptr;
     ColorModel m_colorModel = ColorModel::RGB;
+    QVector3D m_gridSpacing;
 };
 QT_END_NAMESPACE
 #endif // RANDOMINSTANCING_P_H
