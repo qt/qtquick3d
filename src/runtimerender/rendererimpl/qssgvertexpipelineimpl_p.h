@@ -49,6 +49,7 @@ struct QSSGMaterialVertexPipeline
 
     GenerationFlags m_generationFlags;
     bool m_hasSkinning;
+    bool m_needsSkinning;
     bool m_hasMorphing;
     QList<QByteArray> m_addedFunctions;
     int m_viewCount = 1;
