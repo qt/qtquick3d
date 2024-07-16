@@ -59,7 +59,7 @@ The SpotLight emits light towards one direction in a cone shape, which is define
 
 \image {shadows-spot-light.webp}
 
-Just like the PointLight, the SpotLight also renders its shadowmap into a cubemap.
+Unlike the PointLight, the SpotLight renders its shadowmap into a single depth map.
 
 \section1 Performance and scene tweaking
 
