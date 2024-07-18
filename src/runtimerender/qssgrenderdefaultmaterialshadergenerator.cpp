@@ -23,6 +23,8 @@
 
 #include <QtCore/QByteArray>
 
+#include <limits>
+
 QT_BEGIN_NAMESPACE
 
 namespace  {
@@ -251,14 +253,14 @@ static const QSSGMaterialShaderGenerator::ShadowVariableNames& setupShadowMapVar
     QSSGMaterialShaderGenerator::ShadowVariableNames &names = (*q3ds_shadowMapVariableNames)[{lightIdx, shadowMapRes}];
     if (names.shadowMapTexture.isEmpty()) {
         names.shadowCube = QByteArrayLiteral("qt_shadowcube");
-        char buf[16];
-        qsnprintf(buf, 16, "%d", int(lightIdx));
+        char buf[std::numeric_limits<qsizetype>::digits10 + 1 + 2 + 1]; // digits10 is one short; 2 for [] and 1 for NUL
+        qsnprintf(buf, sizeof buf, "%lld", qlonglong(lightIdx));
         names.shadowCube.append(buf);
         names.shadowData = QByteArrayLiteral("ubShadows.shadowData");
-        qsnprintf(buf, 16, "[%d]", int(lightIdx));
+        qsnprintf(buf, sizeof buf, "[%lld]", qlonglong(lightIdx));
         names.shadowData.append(buf);
         names.shadowMapTexture = QByteArrayLiteral("qt_shadowmap_texture_");
-        qsnprintf(buf, 16, "%d", shadowMapRes);
+        qsnprintf(buf, sizeof buf, "%d", shadowMapRes);
         names.shadowMapTexture.append(buf);
     }
 
@@ -305,7 +307,7 @@ static QSSGMaterialShaderGenerator::LightVariableNames setupLightVariableNames(q
     // instance name.
     QByteArray lightStem = "ubLights.lights";
     char buf[16];
-    qsnprintf(buf, 16, "[%d].", int(lightIdx));
+    qsnprintf(buf, 16, "[%d].", lightIdx);
     lightStem.append(buf);
 
     names.lightColor = lightStem;
