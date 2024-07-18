@@ -229,15 +229,6 @@ quint16 tst_Quick3D::checksumFileOrDir(const QString &path)
     return 0;
 }
 
-
-#define main _realmain
-QTEST_MAIN(tst_Quick3D)
-#undef main
-
-int main(int argc, char *argv[])
-{
-    QBaselineTest::handleCmdLineArgs(&argc, &argv);
-    return _realmain(argc, argv);
-}
+QBASELINETEST_MAIN(tst_Quick3D)
 
 #include "tst_baseline_quick3d.moc"
