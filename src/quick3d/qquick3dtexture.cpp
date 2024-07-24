@@ -8,6 +8,7 @@
 #include <QtQml/QQmlFile>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QSGTextureProvider>
 #include <QtCore/qmath.h>
 
 #include <ssg/qssgrenderextensions.h>
