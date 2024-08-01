@@ -9287,9 +9287,6 @@ int SaveEXR(const float *data, int width, int height, int components,
   }
 
   int ret = SaveEXRImageToFile(&image, &header, outfilename, err);
-  if (ret != TINYEXR_SUCCESS) {
-    return ret;
-  }
 
   free(header.channels);
   free(header.pixel_types);
