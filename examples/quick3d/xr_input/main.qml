@@ -102,10 +102,23 @@ XrView {
         }
     }
 
+    XrInputAction {
+        id: rightThumbstickX
+        hand: XrInputAction.RightHand
+        actionId: [XrInputAction.ThumbstickX]
+    }
+    XrInputAction {
+        id: rightThumbstickY
+        hand: XrInputAction.RightHand
+        actionId: [XrInputAction.ThumbstickY]
+    }
+
     XrVirtualMouse {
         view: xrView
         source: rightController
         leftMouseButton: rightTrigger.pressed
+        scrollWheelX: rightThumbstickX.value
+        scrollWheelY: rightThumbstickY.value
     }
 
     Model {
@@ -143,7 +156,7 @@ XrView {
     Model {
         id: teapot
         y: table.height + 5
-        source: "teapot.mesh"
+        source: "meshes/teapot.mesh"
         scale: Qt.vector3d(10, 10, 10)
         property color color: "#cdad52"
         materials: [
@@ -163,6 +176,13 @@ XrView {
                 teapot.eulerRotation.y += speed * frameTime
             }
         }
+    }
+
+    Teacup {
+        x: 50
+        y: table.height
+        scale: Qt.vector3d(1.5, 1.5, 1.5)
+        color: colorView.selectedColor
     }
 
     Node {
@@ -244,7 +264,7 @@ XrView {
                     from: 0.5
                     value: 1
                     to: 5
-
+                    wheelEnabled: true
                     Layout.fillWidth: true
                 }
                 Text {
@@ -255,7 +275,7 @@ XrView {
                     from: 0.0
                     value: 0.0
                     to: 1.0
-
+                    wheelEnabled: true
                     Layout.fillWidth: true
                 }
                 Text {
@@ -265,6 +285,35 @@ XrView {
                     id: metalnessCheckBox
                     text: "Metallic"
                     checked: false
+                }
+            }
+        }
+    }
+
+    Node {
+        x: 150
+        y: listviewItem.height + table.height + 5
+        z: 40
+        eulerRotation.y: -45
+        XrItem {
+            id: listviewItem
+            width: 75
+            height: 100
+            x: -width
+            color: "transparent"
+
+            contentItem: Rectangle {
+                color: Qt.rgba(1, 1, 1, 0.5)
+                border.width: 5
+                border.color: "lightblue"
+                height: 400
+                width: 300
+                radius: 25
+
+                ColorView {
+                    id: colorView
+                    anchors.fill: parent
+                    anchors.margins: 25
                 }
             }
         }

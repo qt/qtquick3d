@@ -35,8 +35,12 @@ qt_add_qml_module(xr_input
     QML_FILES
         main.qml
         ExampleButton.qml
+        Teacup.qml
+        ColorView.qml
     RESOURCES
-        teapot.mesh
+        meshes/teapot.mesh
+        meshes/cup.mesh
+        meshes/handle.mesh
     NO_RESOURCE_TARGET_PATH
 )
 
