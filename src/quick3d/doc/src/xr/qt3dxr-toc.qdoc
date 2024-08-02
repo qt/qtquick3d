@@ -45,7 +45,7 @@
     \li Tools and IDEs
         \list
             \li \l{CMake Manual}
-            \li \l{Qt Creator Manual}
+            \li \l{\QC Documentation}
             \li \l{Qt Design Studio}
         \endlist
 //! [tools-ide]

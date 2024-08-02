@@ -47,7 +47,7 @@
 
     \section2 Android-based devices
 
-    If this is your first time developing with Qt for Android or using Qt Creator,
+    If this is your first time developing with Qt for Android or using \QC,
     you must complete some additional steps to set up your build environment.
     See \l{Getting Started with Qt for Android} for more information.
 

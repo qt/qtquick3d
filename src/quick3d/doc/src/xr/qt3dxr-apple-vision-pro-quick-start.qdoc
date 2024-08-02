@@ -19,7 +19,7 @@
 
     \section1 Setting up the Simple Example Project
     \list 1
-    \li Open the example project from the qt creator welcome screen.
+    \li Open the example project from the \QC \uicontrol Welcome mode.
     \li Configure the project settings (Projects mode: Ctrl+5 by default)
         \list 1
         \li Confirm that the applicable Android Kit for your target device is

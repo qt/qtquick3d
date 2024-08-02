@@ -8,7 +8,7 @@
     on a meta quest headset.
 
     This page lists all the instructions you need to get up an running with
-    \qxr. It uses Qt Creator for automated setup where possible and assumes you
+    \qxr. It uses \QC for automated setup where possible and assumes you
     have a Meta Quest 3 device. For the Apple Vision Pro, see
     \l{Getting Started With the Apple Vision Pro}.
 
@@ -22,7 +22,7 @@
 
     \section1 Setting up the Simple Example Project
     \list 1
-    \li Open the example project from the qt creator welcome screen.
+    \li Open the example project from the \QC \uicontrol Welcome mode.
     \li Configure the project settings (Projects mode: Ctrl+5 by default)
         \list 1
         \li Confirm that the applicable Android Kit for your target device is
