@@ -264,9 +264,10 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
         theImageData = customTextureMap.insert(imageKey, ImageData());
     } else if (data->generationId() != theImageData->generationId) {
         auto &renderImageTexture = theImageData.value().renderImageTexture;
-        if (toRhiFormat(data->format()) != renderImageTexture.m_texture->format()
+        if (renderImageTexture.m_texture &&
+                (toRhiFormat(data->format()) != renderImageTexture.m_texture->format()
                 || data->size() != renderImageTexture.m_texture->pixelSize()
-                || depth != renderImageTexture.m_texture->depth()) {
+                || depth != renderImageTexture.m_texture->depth())) {
             // release first
             releaseTextureData(imageKey);
             // reinsert the placeholder since releaseTextureData removed from map
