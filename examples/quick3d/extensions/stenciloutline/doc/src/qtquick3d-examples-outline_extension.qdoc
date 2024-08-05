@@ -38,7 +38,7 @@
 
     \snippet extensions/stenciloutline/outlinerenderextension.cpp extension back_prepareRender
 
-    When the engine is ready to record the rendering calls for our extension it wll call the virtual QSSGRenderExtension::render() function.
+    When the engine is ready to record the rendering calls for our extension it will call the virtual QSSGRenderExtension::render() function.
     In this example we can simply call QSSGRenderHelpers::renderRenderables() for the two models, they will then
     be rendered just the same way as QtQuick3D would have done internally, only this time with our settings.
 
