@@ -10,6 +10,7 @@ qt_copy_or_install(
         BufferSection.qml
         BufferSpecifics.qml
         CameraSection.qml
+        CascadesSection.qml
         CubeMapTextureSpecifics.qml
         CustomCameraSpecifics.qml
         CustomMaterialSection.qml

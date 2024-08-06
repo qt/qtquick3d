@@ -54,28 +54,6 @@ Section {
 
         PropertyLabel {
             visible: shadowCheckBox.checked
-            text: qsTr("Filter")
-            tooltip: qsTr("Sets how much blur is applied to the shadows.")
-        }
-
-        SecondColumnLayout {
-            visible: shadowCheckBox.checked
-            SpinBox {
-                minimumValue: 1.0
-                maximumValue: 100.0
-                decimals: 0
-                sliderIndicatorVisible: true
-                backendValue: backendValues.shadowFilter
-                enabled: shadowCheckBox.backendValue.value === true
-                implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                               + StudioTheme.Values.actionIndicatorWidth
-            }
-
-            ExpandingSpacer {}
-        }
-
-        PropertyLabel {
-            visible: shadowCheckBox.checked
             text: qsTr("Quality")
             tooltip: qsTr("Sets the quality of the shadow map created for shadow rendering.")
         }
@@ -103,12 +81,53 @@ Section {
         SecondColumnLayout {
             visible: shadowCheckBox.checked
             SpinBox {
-                minimumValue: -1.0
-                maximumValue: 1.0
-                decimals: 3
-                stepSize: 0.001
-                sliderIndicatorVisible: true
+                minimumValue: 0
+                maximumValue: 9999999
+                decimals: 2
+                stepSize: 1
                 backendValue: backendValues.shadowBias
+                enabled: shadowCheckBox.backendValue.value === true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            visible: shadowCheckBox.checked
+            text: qsTr("Soft Shadow Quality")
+            tooltip: qsTr("Sets the quality of the soft shadows.")
+        }
+
+        SecondColumnLayout {
+            visible: shadowCheckBox.checked
+            ComboBox {
+                scope: "Light"
+                model: ["Hard", "PCF4", "PCF8", "PCF16", "PCF32", "PCF64"]
+                backendValue: backendValues.softShadowQuality
+                enabled: shadowCheckBox.backendValue.value === true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            visible: shadowCheckBox.checked
+            text: qsTr("PCF Factor")
+            tooltip: qsTr("Sets the PCF (percentage-closer filtering) factor.")
+        }
+
+        SecondColumnLayout {
+            visible: shadowCheckBox.checked
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 9999999
+                decimals: 1
+                stepSize: 0.1
+                backendValue: backendValues.pcfFactor
                 enabled: shadowCheckBox.backendValue.value === true
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
@@ -127,7 +146,7 @@ Section {
             visible: shadowCheckBox.checked
             SpinBox {
                 minimumValue: 0
-                maximumValue: Infinity
+                maximumValue: 9999999
                 decimals: 0
                 stepSize: 10
                 backendValue: backendValues.shadowMapFar
