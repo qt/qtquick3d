@@ -102,10 +102,13 @@ float QQuick3DParticleLineParticle::length() const
 /*!
     \qmlproperty real LineParticle3D::lengthVariation
 
-    This property holds the length variation of the line. This parameter is not used if
-    the length parameter has not been set. When the length is set, this parameter can be used to
-    vary the length of each line. The default value is 0.0.
+    This property holds the length variation applied to each line. Variation is applied
+    only if the \l length property is also set. The resulting line length clamps to positive
+    values.
+
+    The default value is 0.0.
 */
+
 float QQuick3DParticleLineParticle::lengthVariation() const
 {
     return m_lengthVariation;
