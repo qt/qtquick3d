@@ -607,7 +607,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     // Synchronize scene managers under this window
     QSet<QSSGRenderGraphObject *> resourceLoaders;
-    bool requestSharedUpdate = false;
+    QQuick3DWindowAttachment::SyncResult requestSharedUpdate = QQuick3DWindowAttachment::SyncResultFlag::None;
     if (auto window = view3D->window()) {
         if (!winAttacment || winAttacment->window() != window)
             winAttacment = QQuick3DSceneManager::getOrSetWindowAttachment(*window);
@@ -616,7 +616,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             winAttacment->setRci(m_sgContext);
 
         if (winAttacment)
-            requestSharedUpdate = winAttacment->synchronize(resourceLoaders);
+            requestSharedUpdate |= winAttacment->synchronize(resourceLoaders);
     }
 
     // Import scenes used in a multi-window application...
@@ -637,7 +637,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 } else if (rci && !window->isExposed()) { // Forced sync of non-exposed windows
                     // Not exposed, so not rendering (playing with fire here)...
                     winAttacment->synchronize(resourceLoaders);
-                } else if (!rci || requestSharedUpdate) {
+                } else if (!rci || (requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::SharedResourcesDirty)) {
                     // If there's no RCI for the importscene we'll request an update, which should
                     // mean we only get here once. It also means the update to any secondary windows
                     // will be delayed. Note that calling this function on each sync would cause the
@@ -656,7 +656,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_renderStats->setRhiContext(rhiCtx, m_layer);
 
     // if the list is dirty we rebuild (assumption is that this won't happen frequently).
-    if (view3D->extensionListDirty()) {
+    if ((requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::ExtensionsDiry) || view3D->extensionListDirty()) {
         for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionStage::Count); ++i)
             m_layer->renderExtensions[i].clear();
         // All items in the extension list are root items,
