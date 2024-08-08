@@ -21,6 +21,8 @@ class Q_QUICK3D_EXPORT QQuick3DRenderExtension : public QQuick3DObject
 public:
     explicit QQuick3DRenderExtension(QQuick3DObject *parent = nullptr);
     virtual ~QQuick3DRenderExtension();
+
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 };
 
 QT_END_NAMESPACE
