@@ -40,9 +40,10 @@ enum class ReferenceSpace {
     ReferenceSpaceLocalFloor
 };
 
-enum Hand {
+enum Hand : quint8 {
     LeftHand = 0,
     RightHand = 1,
+    Unknown = 2,
 };
 
 enum class HandPoseSpace {
