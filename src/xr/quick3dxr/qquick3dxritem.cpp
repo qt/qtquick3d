@@ -294,7 +294,7 @@ void QQuick3DXrItem::setHeight(qreal newHeight)
     if (d->m_height == newHeight)
         return;
     d->m_height = newHeight;
-    emit widthChanged();
+    emit heightChanged();
 
     d->updateContent();
 }
