@@ -39,9 +39,9 @@ class QQuick3DXrHandModel : public QQuick3DModel
 
 public:
     enum Hand : quint8 {
-        Unknown = 0,
-        LeftHand,
-        RightHand
+        LeftHand = 0,
+        RightHand,
+        Unknown,
     };
     Q_ENUM(Hand)
 

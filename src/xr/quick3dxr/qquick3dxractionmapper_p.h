@@ -44,9 +44,9 @@ public:
 
     // Same values as XrController and XrHandModel enums
     enum Hand : quint8 {
-        Unknown = 0,
-        LeftHand,
-        RightHand
+        LeftHand = 0,
+        RightHand,
+        Unknown,
     };
     Q_ENUM(Hand)
 

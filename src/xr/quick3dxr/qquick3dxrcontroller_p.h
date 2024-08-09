@@ -39,9 +39,9 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrController : public QQuick3DNode
     QML_ADDED_IN_VERSION(6, 8)
 public:
     enum Controller {
-        ControllerNone = 0,
-        ControllerLeft = 1,
-        ControllerRight = 2,
+        ControllerLeft = 0,
+        ControllerRight = 1,
+        ControllerNone = 2,
     };
     Q_ENUM(Controller)
 
