@@ -856,7 +856,7 @@ bool QQuick3DXrManagerPrivate::createSwapchains()
             return false;
         }
 
-        Q_ASSERT(swapchainFormatCount == swapchainFormats.size());
+        Q_ASSERT(static_cast<qsizetype>(swapchainFormatCount) == swapchainFormats.size());
         m_colorSwapchainFormat = m_graphics->colorSwapchainFormat(swapchainFormats);
         if (m_compositionLayerDepthSupported)
             m_depthSwapchainFormat = m_graphics->depthSwapchainFormat(swapchainFormats);
@@ -1326,9 +1326,9 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
     res = xrLocateViews(m_session, &viewLocateInfo, &viewState, viewCapacityInput, &viewCountOutput, m_views.data());
     if (XR_UNQUALIFIED_SUCCESS(res)) {
         Q_ASSERT(viewCountOutput == viewCapacityInput);
-        Q_ASSERT(viewCountOutput == m_configViews.size());
-        Q_ASSERT(viewCountOutput == m_projectionLayerViews.size());
-        Q_ASSERT(m_multiviewRendering ? viewCountOutput == m_swapchains[0].arraySize : viewCountOutput == m_swapchains.size());
+        Q_ASSERT(static_cast<qsizetype>(viewCountOutput) == m_configViews.size());
+        Q_ASSERT(static_cast<qsizetype>(viewCountOutput) == m_projectionLayerViews.size());
+        Q_ASSERT(m_multiviewRendering ? viewCountOutput == m_swapchains[0].arraySize : static_cast<qsizetype>(viewCountOutput) == m_swapchains.size());
 
         // Update the camera/head position
         XrSpaceLocation location{};
