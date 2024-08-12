@@ -35,6 +35,14 @@ public:
             m_contentItemDestroyedConnection = QObject::connect(m_contentItem, &QObject::destroyed, q, [q]() {
                 q->setContentItem(nullptr);
             });
+
+            if (m_automaticHeight) {
+                setAutomaticHeightConnection();
+            }
+
+            if (m_automaticWidth) {
+                setAutomaticWidthConnection();
+            }
         }
 
         updateContent();
@@ -59,15 +67,58 @@ public:
 
     void updateContent();
 
+void setAutomaticHeightConnection()
+{
+    Q_Q(QQuick3DXrItem);
+    if (m_automaticHeightConnection && ((m_contentItem == nullptr) || !m_automaticHeight)) {
+        QObject::disconnect(m_automaticHeightConnection);
+        m_automaticHeightConnection = {};
+    }
+    if (m_contentItem) {
+        m_automaticHeightConnection = QObject::connect(m_contentItem, &QQuickItem::heightChanged, q, [this, q](){
+            qreal newHeight = m_contentItem->height()/m_pixelsPerUnit;
+            if (m_height != newHeight) {
+                m_height = newHeight;
+                emit q->heightChanged();
+                updateContent();
+            }
+        });
+    }
+}
+
+void setAutomaticWidthConnection()
+{
+    Q_Q(QQuick3DXrItem);
+    if (m_automaticWidthConnection && ((m_contentItem == nullptr) || !m_automaticHeight)) {
+        QObject::disconnect(m_automaticWidthConnection);
+        m_automaticWidthConnection = {};
+    }
+
+    if (m_contentItem) {
+        m_automaticWidthConnection = QObject::connect(m_contentItem, &QQuickItem::widthChanged, q, [this, q](){
+            qreal newWidth = m_contentItem->width()/m_pixelsPerUnit;
+            if (m_width != newWidth) {
+                m_width = newWidth;
+                emit q->widthChanged();
+                updateContent();
+            }
+        });
+    }
+}
+
     QQuickItem *m_contentItem = nullptr;
     QQuickRectangle *m_containerItem = nullptr;
     QPointer<QQuick3DXrView> m_XrView;
     QMetaObject::Connection m_contentItemDestroyedConnection;
+    QMetaObject::Connection m_automaticHeightConnection;
+    QMetaObject::Connection m_automaticWidthConnection;
     QColor m_color = Qt::white;
     qreal m_pixelsPerUnit { 1.0 };
     qreal m_width = 1;
     qreal m_height = 1;
     bool m_manualPixelsPerUnit = false;
+    bool m_automaticHeight = false;
+    bool m_automaticWidth = false;
 };
 
 static inline qreal calculatePPU(qreal pxWidth, qreal pxHeight, qreal diagonal)
@@ -267,7 +318,7 @@ qreal QQuick3DXrItem::width() const
 void QQuick3DXrItem::setWidth(qreal newWidth)
 {
     Q_D(QQuick3DXrItem);
-    if (d->m_width == newWidth)
+    if ((d->m_width == newWidth) || d->m_automaticWidth)
         return;
     d->m_width = newWidth;
     emit widthChanged();
@@ -291,7 +342,7 @@ qreal QQuick3DXrItem::height() const
 void QQuick3DXrItem::setHeight(qreal newHeight)
 {
     Q_D(QQuick3DXrItem);
-    if (d->m_height == newHeight)
+    if ((d->m_height == newHeight) || d->m_automaticHeight)
         return;
     d->m_height = newHeight;
     emit heightChanged();
@@ -440,6 +491,61 @@ void QQuick3DXrItem::setColor(const QColor &newColor)
     d->m_color = newColor;
     emit colorChanged();
     d->updateContent();
+}
+
+/*!
+   \qmlproperty bool XrItem::automaticHeight
+
+    When set to true XrItem will ignore height set through height property and use height calculated from contentItem height.
+
+    \default "false"
+    \sa automaticWidth
+ */
+
+bool QQuick3DXrItem::automaticHeight() const
+{
+    Q_D(const QQuick3DXrItem);
+    return d->m_automaticHeight;
+}
+
+void QQuick3DXrItem::setAutomaticHeight(bool newAutomaticHeight)
+{
+    Q_D(QQuick3DXrItem);
+    if (d->m_automaticHeight == newAutomaticHeight) {
+        return;
+    }
+
+    d->m_automaticHeight = newAutomaticHeight;
+    d->setAutomaticHeightConnection();
+    d->updateContent();
+    emit automaticHeightChanged();
+}
+
+/*!
+   \qmlproperty bool XrItem::automaticWidth
+
+    When set to true XrItem will ignore width set through width property and use width calculated from contentItem width.
+
+    \default "false"
+    \sa automaticHeight
+ */
+
+bool QQuick3DXrItem::automaticWidth() const
+{
+    Q_D(const QQuick3DXrItem);
+    return d->m_automaticWidth;
+}
+
+void QQuick3DXrItem::setAutomaticWidth(bool newAutomaticWidth)
+{
+    Q_D(QQuick3DXrItem);
+    if (d->m_automaticWidth == newAutomaticWidth)
+        return;
+
+    d->m_automaticWidth = newAutomaticWidth;
+    d->setAutomaticWidthConnection();
+    d->updateContent();
+    emit automaticWidthChanged();
 }
 
 QT_END_NAMESPACE
