@@ -172,7 +172,7 @@ public:
     QVector3D emissiveFactor() const;
     float glossiness() const;
     QQuick3DTexture *glossinessMap() const;
-    bool invertOpacityMapValue() const;
+    Q_REVISION(6, 8) bool invertOpacityMapValue() const;
     float opacity() const;
     QQuick3DTexture *opacityMap() const;
     QQuick3DTexture *normalMap() const;
@@ -246,7 +246,7 @@ public Q_SLOTS:
     void setEmissiveFactor(const QVector3D &emissiveFactor);
     void setGlossiness(float glossiness);
     void setGlossinessMap(QQuick3DTexture *glossinessMap);
-    void setInvertOpacityMapValue(bool invertOpacityMapValue);
+    Q_REVISION(6, 8) void setInvertOpacityMapValue(bool invertOpacityMapValue);
     void setOpacity(float opacity);
     void setOpacityMap(QQuick3DTexture *opacityMap);
     void setNormalMap(QQuick3DTexture *normalMap);
@@ -320,7 +320,7 @@ Q_SIGNALS:
     void emissiveFactorChanged();
     void glossinessChanged();
     void glossinessMapChanged();
-    void invertOpacityMapValueChanged();
+    Q_REVISION(6, 8) void invertOpacityMapValueChanged();
     void opacityChanged();
     void opacityMapChanged();
     void normalMapChanged();
