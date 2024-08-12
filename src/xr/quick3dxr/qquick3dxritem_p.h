@@ -33,6 +33,8 @@ class QQuick3DXrItem : public QQuick3DNode
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(qreal pixelsPerUnit READ pixelsPerUnit WRITE setPixelsPerUnit NOTIFY pixelsPerUnitChanged FINAL)
     Q_PROPERTY(bool manualPixelsPerUnit READ manualPixelsPerUnit WRITE setManualPixelsPerUnit NOTIFY manualPixelsPerUnitChanged FINAL)
+    Q_PROPERTY(bool automaticHeight READ automaticHeight WRITE setAutomaticHeight NOTIFY automaticHeightChanged FINAL)
+    Q_PROPERTY(bool automaticWidth READ automaticWidth WRITE setAutomaticWidth NOTIFY automaticWidthChanged FINAL)
     Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged FINAL)
     Q_PROPERTY(qreal height READ height WRITE setHeight NOTIFY heightChanged FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
@@ -73,6 +75,12 @@ public:
     QColor color() const;
     void setColor(const QColor &newColor);
 
+    bool automaticHeight() const;
+    void setAutomaticHeight(bool newAutomaticHeight);
+
+    bool automaticWidth() const;
+    void setAutomaticWidth(bool newAutomaticHeight);
+
     void componentComplete() override;
 
     bool handleVirtualTouch(QQuick3DXrView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset);
@@ -85,6 +93,8 @@ signals:
     void widthChanged();
     void heightChanged();
     void colorChanged();
+    void automaticHeightChanged();
+    void automaticWidthChanged();
 };
 
 QT_END_NAMESPACE
