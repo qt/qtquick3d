@@ -9,7 +9,7 @@
     \qmltype Geometry
     \inherits Object3D
     \inqmlmodule QtQuick3D
-    \instantiates QQuick3DGeometry
+    \nativetype QQuick3DGeometry
     \brief Base type for custom geometry.
 
     Custom geometry allows using application-generated vertex and index data,

@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Instancing
     \inherits Object3D
     \inqmlmodule QtQuick3D
-    \instantiates QQuick3DInstancing
+    \nativetype QQuick3DInstancing
     \since 6.2
     \brief Base type for instance tables.
 

@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TextureData
     \inherits Object3D
     \inqmlmodule QtQuick3D
-    \instantiates QQuick3DTextureData
+    \nativetype QQuick3DTextureData
     \brief Base type for custom texture data.
 
     Custom texture data allows using application-generated texture data, that

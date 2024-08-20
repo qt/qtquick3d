@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Effect
     \inherits Object3D
     \inqmlmodule QtQuick3D
-    \instantiates QQuick3DEffect
+    \nativetype QQuick3DEffect
     \brief Base component for creating a post-processing effect.
 
     The Effect type allows the user to implement their own post-processing

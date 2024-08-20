@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype RenderExtension
-    \instantiates QQuick3DRenderExtension
+    \nativetype QQuick3DRenderExtension
     \inqmlmodule QtQuick3D
     \inherits Object3D
     \since 6.7

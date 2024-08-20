@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Object3D
     \inqmlmodule QtQuick3D
-    \instantiates QQuick3DObject
+    \nativetype QQuick3DObject
     \inherits QtObject
     \brief Abstract base type of all 3D nodes and resources.
 
