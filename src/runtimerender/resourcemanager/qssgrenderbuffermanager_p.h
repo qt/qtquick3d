@@ -26,6 +26,8 @@
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 #include <QtCore/QMutex>
+#include <QtCore/qhash.h>
+#include <QtCore/qsize.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,6 +80,18 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 {
     Q_DISABLE_COPY(QSSGBufferManager)
 public:
+    enum MipMode : quint8 {
+        MipModeFollowRenderImage,
+        MipModeEnable,
+        MipModeDisable,
+        MipModeBsdf
+    };
+
+    enum LoadRenderImageFlag {
+        LoadWithFlippedY = 0x01
+    };
+    Q_DECLARE_FLAGS(LoadRenderImageFlags, LoadRenderImageFlag)
+
     struct ImageCacheKey {
         QSSGRenderPath path;
         int mipMode;
@@ -86,13 +100,14 @@ public:
 
     struct CustomImageCacheKey {
         QSSGRenderTextureData *data;
-        int mipMode;
+        QSize pixelSize;
+        MipMode mipMode;
     };
 
     struct ImageData {
         QSSGRenderImageTexture renderImageTexture;
         QHash<QSSGRenderLayer*, uint32_t> usageCounts;
-        uint32_t generationId = 0;
+        uint32_t version = 0;
     };
 
     struct MeshData {
@@ -106,18 +121,6 @@ public:
         quint64 meshDataSize = 0;
         quint64 imageDataSize = 0;
     };
-
-    enum MipMode {
-        MipModeFollowRenderImage,
-        MipModeEnable,
-        MipModeDisable,
-        MipModeBsdf
-    };
-
-    enum LoadRenderImageFlag {
-        LoadWithFlippedY = 0x01
-    };
-    Q_DECLARE_FLAGS(LoadRenderImageFlags, LoadRenderImageFlag)
 
     QSSGBufferManager();
     ~QSSGBufferManager();
@@ -240,14 +243,11 @@ inline bool operator==(const QSSGBufferManager::ImageCacheKey &a, const QSSGBuff
     return a.path == b.path && a.mipMode == b.mipMode && a.type == b.type;
 }
 
-inline size_t qHash(const QSSGBufferManager::CustomImageCacheKey &k, size_t seed) Q_DECL_NOTHROW
-{
-    return qHash(k.data, seed) ^ k.mipMode;
-}
+size_t qHash(const QSSGBufferManager::CustomImageCacheKey &k, size_t seed) noexcept;
 
 inline bool operator==(const QSSGBufferManager::CustomImageCacheKey &a, const QSSGBufferManager::CustomImageCacheKey &b) Q_DECL_NOTHROW
 {
-    return a.data == b.data && a.mipMode == b.mipMode;
+    return a.data == b.data && a.pixelSize == b.pixelSize && a.mipMode == b.mipMode;
 }
 
 QT_END_NAMESPACE
