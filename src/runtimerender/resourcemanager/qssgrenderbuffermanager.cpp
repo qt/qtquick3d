@@ -232,24 +232,20 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 
 QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode)
 {
-    const CustomImageCacheKey imageKey = { data, inMipMode };
+    QSSG_ASSERT(data != nullptr, return {});
+
+    const CustomImageCacheKey imageKey = { data, data->size(), inMipMode };
     auto theImageData = customTextureMap.find(imageKey);
     if (theImageData == customTextureMap.end()) {
         theImageData = customTextureMap.insert(imageKey, ImageData());
-    } else if (data->generationId() != theImageData->generationId) {
-        auto &renderImageTexture = theImageData.value().renderImageTexture;
-        if (toRhiFormat(data->format()) != renderImageTexture.m_texture->format()
-                || data->size() != renderImageTexture.m_texture->pixelSize()) {
-            // release first
-            releaseTextureData(imageKey);
-            // reinsert the placeholder since releaseTextureData removed from map
-            theImageData = customTextureMap.insert(imageKey, ImageData());
-        }
-        theImageData->generationId = data->generationId();
-    } else {
+    } else if (data->version() == theImageData->version) {
         // Return the currently loaded texture
         theImageData.value().usageCounts[currentLayer]++;
         return theImageData.value().renderImageTexture;
+    } else {
+        // Optimization: If only the version number has changed, we can attempt to reuse the texture.
+        // Just update the version number and let setRhiTexture handle the rest.
+        theImageData->version = data->version();
     }
 
     // Load the texture
@@ -261,10 +257,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
         bool wasTextureCreated = false;
 
         if (setRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), inMipMode, {}, data->debugObjectName, &wasTextureCreated)) {
-            if (wasTextureCreated) {
-                theImageData.value().generationId = data->generationId();
+            if (wasTextureCreated)
                 increaseMemoryStat(theImageData.value().renderImageTexture.m_texture);
-            }
         } else {
             theImageData.value() = ImageData();
         }
@@ -1991,6 +1985,14 @@ void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
             + bufferMemorySize(mesh->subsets.at(0).rhi.indexBuffer);
     stats.meshDataSize = qMax(0u, stats.meshDataSize - s);
     m_contextInterface->rhiContext()->stats().meshDataSizeChanges(stats.meshDataSize);
+}
+
+size_t qHash(const QSSGBufferManager::CustomImageCacheKey &k, size_t seed) noexcept
+{
+    // NOTE: The data pointer should never be null, as null data pointers shouldn't be inserted into
+    //       the cached (make sure to check that before inserting!!!)
+    using MipMap_t = std::underlying_type_t<QSSGBufferManager::MipMode>;
+    return qHash(*k.data, seed) ^ MipMap_t(k.mipMode);
 }
 
 QT_END_NAMESPACE
