@@ -6,7 +6,7 @@
 #include "resourcemanager/qssgrenderbuffermanager_p.h"
 
 QSSGRenderGeometry::QSSGRenderGeometry()
-    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::Geometry)
+    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::Geometry, FlagT(Flags::HasGraphicsResources))
 {
 }
 

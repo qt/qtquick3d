@@ -8,7 +8,7 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderImage::QSSGRenderImage(QSSGRenderGraphObject::Type type)
-    : QSSGRenderGraphObject(type)
+    : QSSGRenderGraphObject(type, FlagT(QSSGRenderGraphObject::Flags::HasGraphicsResources))
 {
     m_flags.setFlag(Flag::Dirty);
     m_flags.setFlag(Flag::TransformDirty);

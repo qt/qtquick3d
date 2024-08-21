@@ -20,8 +20,8 @@ QSSGRenderNode::QSSGRenderNode()
 {
 }
 
-QSSGRenderNode::QSSGRenderNode(Type type)
-    : QSSGRenderGraphObject(type)
+QSSGRenderNode::QSSGRenderNode(Type type, QSSGRenderGraphObject::FlagT flags)
+    : QSSGRenderGraphObject(type, flags)
 {
     globalTransform = localTransform = calculateTransformMatrix({}, initScale, {}, {});
 }

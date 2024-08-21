@@ -10,7 +10,7 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderModel::QSSGRenderModel()
-    : QSSGRenderNode(QSSGRenderGraphObject::Type::Model)
+    : QSSGRenderNode(QSSGRenderGraphObject::Type::Model, FlagT(Flags::HasGraphicsResources))
 {
 }
 
