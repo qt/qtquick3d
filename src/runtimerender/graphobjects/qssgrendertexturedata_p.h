@@ -35,34 +35,44 @@ public:
     const QByteArray &textureData() const;
     void setTextureData(const QByteArray &data);
 
-    QSize size() const;
+    QSize size() const { return m_size; }
     void setSize(const QSize &size);
 
-    int depth() const;
+    int depth() const { return m_depth; }
     void setDepth(int depth);
 
-    QSSGRenderTextureFormat format() const;
+    QSSGRenderTextureFormat format() const { return m_format; }
     void setFormat(QSSGRenderTextureFormat format);
 
-    bool hasTransparancy() const;
+    bool hasTransparancy() const { return m_hasTransparency; }
     void setHasTransparency(bool hasTransparency);
 
-    uint32_t generationId() const;
+    // We use a version number to track changes in the texture data.
+    [[nodiscard]] quint32 version() const { return m_textureDataVersion; }
 
     QString debugObjectName;
 
 protected:
     Q_DISABLE_COPY(QSSGRenderTextureData)
 
-    void markDirty();
-
     QByteArray m_textureData;
     QSize m_size;
     int m_depth = 0;
+    quint32 m_textureDataVersion = 0;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
     bool m_hasTransparency = false;
-    uint32_t m_generationId = 1;
 };
+
+// NOTE: We only hash the size, depth, format and hasTransparency here, not the actual data.
+// This is because we want to be able to quickly check if a texture has changed, without needing
+// to inspect the data content. If only the version changes we'll try to recycle the existing
+// texture resource, if the size, depth, format or hasTransparency changes we'll need to create a
+// new texture resource (See: QSSGBufferManager::loadTextureData).
+inline size_t qHash(const QSSGRenderTextureData &data, size_t seed) noexcept
+{
+    const auto format = data.format();
+    return qHashMulti(seed, data.size(), data.depth(), format.format, data.hasTransparancy());
+}
 
 QT_END_NAMESPACE
 
