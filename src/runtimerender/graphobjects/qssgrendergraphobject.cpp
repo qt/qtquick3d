@@ -50,21 +50,9 @@ static const char *asString(QSSGRenderGraphObject::Type type)
     return nullptr;
 }
 
-static QSSGRenderGraphObject::FlagT flagForType(QSSGRenderGraphObject::Type type)
-{
-    const bool hasGraphicsResources = ((type == QSSGRenderGraphObject::Type::Model)
-                                       || (QSSGRenderGraphObject::isTexture(type))
-                                       || (type == QSSGRenderGraphObject::Type::Geometry)
-                                       || (type == QSSGRenderGraphObject::Type::TextureData)
-                                       || (type == QSSGRenderGraphObject::Type::ResourceLoader)
-                                       || (type == QSSGRenderGraphObject::Type::RenderExtension));
-    return hasGraphicsResources ? QSSGRenderGraphObject::FlagT(QSSGRenderGraphObject::Flags::HasGraphicsResources)
-                                : 0;
-}
-
 QSSGRenderGraphObject::QSSGRenderGraphObject(Type inType)
     : type(inType)
-    , flags(flagForType(inType)) {}
+    , flags(0) {}
 
 QSSGRenderGraphObject::~QSSGRenderGraphObject() {}
 

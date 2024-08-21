@@ -6,13 +6,13 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderTextureData::QSSGRenderTextureData()
-    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::TextureData)
+    : QSSGRenderTextureData(QSSGRenderGraphObject::Type::TextureData)
 {
 
 }
 
 QSSGRenderTextureData::QSSGRenderTextureData(QSSGRenderGraphObject::Type type)
-    : QSSGRenderGraphObject(type)
+    : QSSGRenderGraphObject(type, FlagT(Flags::HasGraphicsResources))
 {
 
 }

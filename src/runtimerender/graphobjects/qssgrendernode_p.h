@@ -95,7 +95,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     QString debugObjectName;
 
     QSSGRenderNode();
-    explicit QSSGRenderNode(Type type);
+    QSSGRenderNode(Type type, FlagT flags = 0);
     ~QSSGRenderNode() override;
 
     // Sets this object dirty and walks down the graph setting all

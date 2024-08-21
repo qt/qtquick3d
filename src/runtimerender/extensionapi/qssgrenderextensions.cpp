@@ -92,7 +92,7 @@ QSSGFrameData::QSSGFrameData(QSSGRenderContextInterface *ctx)
 */
 
 QSSGRenderExtension::QSSGRenderExtension()
-    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::RenderExtension)
+    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::RenderExtension, FlagT(Flags::HasGraphicsResources))
 {
 
 }

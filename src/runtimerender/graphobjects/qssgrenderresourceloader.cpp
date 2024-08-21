@@ -6,7 +6,7 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderResourceLoader::QSSGRenderResourceLoader()
-    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::ResourceLoader)
+    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::ResourceLoader, FlagT(Flags::HasGraphicsResources))
 {
 }
 
