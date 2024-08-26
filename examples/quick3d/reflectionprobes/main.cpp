@@ -7,10 +7,10 @@
 
 int main(int argc, char *argv[])
 {
+    qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
     QGuiApplication app(argc, argv);
 
     QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
-    qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));
