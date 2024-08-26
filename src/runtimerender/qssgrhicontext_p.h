@@ -950,6 +950,7 @@ public:
     void cleanupDrawCallData(const QSSGRenderModel *model);
 
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable);
+    void releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable);
 
     QSSGRhiInstanceBufferData &instanceBufferData(const QSSGRenderModel *model);
 

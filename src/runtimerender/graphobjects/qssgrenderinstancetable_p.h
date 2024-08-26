@@ -34,7 +34,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTableEntry {
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRenderGraphObject
 {
-    QSSGRenderInstanceTable() : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::ModelInstance) {}
+    QSSGRenderInstanceTable() : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::ModelInstance, FlagT(Flags::HasGraphicsResources)) {}
 
     int count() const { return instanceCount; }
     qsizetype dataSize() const { return table.size(); }
