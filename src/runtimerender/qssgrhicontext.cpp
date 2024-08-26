@@ -1424,6 +1424,15 @@ QSSGRhiInstanceBufferData &QSSGRhiContextPrivate::instanceBufferData(QSSGRenderI
     return m_instanceBuffers[instanceTable];
 }
 
+void QSSGRhiContextPrivate::releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable)
+{
+    auto it = m_instanceBuffers.constFind(instanceTable);
+    if (it != m_instanceBuffers.constEnd()) {
+        it->buffer->destroy();
+        m_instanceBuffers.erase(it);
+    }
+}
+
 QSSGRhiInstanceBufferData &QSSGRhiContextPrivate::instanceBufferData(const QSSGRenderModel *model)
 {
     return m_instanceBuffersLod[model];
