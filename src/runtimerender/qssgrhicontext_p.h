@@ -1000,6 +1000,8 @@ public:
         return m_instanceBuffersLod[model];
     }
 
+    void releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable);
+
     QSSGRhiParticleData &particleData(const QSSGRenderGraphObject *particlesOrModel)
     {
         return m_particleData[particlesOrModel];

@@ -1281,4 +1281,13 @@ void QSSGRhiContextStats::printRenderPass(const QSSGRhiContextStats::RenderPassI
     }
 }
 
+void QSSGRhiContext::releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable)
+{
+    auto it = m_instanceBuffers.constFind(instanceTable);
+    if (it != m_instanceBuffers.constEnd()) {
+        it->buffer->destroy();
+        m_instanceBuffers.erase(it);
+    }
+}
+
 QT_END_NAMESPACE
