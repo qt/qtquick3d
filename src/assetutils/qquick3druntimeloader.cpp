@@ -218,26 +218,26 @@ void QQuick3DRuntimeLoader::loadSource()
         break;
     }
 
+    if (m_status == Status::Success) {
+        // We create a dummy root node here, as it will be the parent to the first-level nodes
+        // and resources. If we use 'this' those first-level nodes/resources won't be deleted
+        // when a new scene is loaded.
+        m_root = new QQuick3DNode(this);
+        m_imported = QSSGRuntimeUtils::createScene(*m_root, scene);
+        m_assetId = scene.id;
+        m_boundsDirty = true;
+        m_instancingChanged = m_instancing != nullptr;
+        updateModels();
+        // Cleanup scene before deleting.
+        scene.cleanup();
+    } else {
+        m_source.clear();
+        emit sourceChanged();
+    }
+
     emit statusChanged();
     emit errorStringChanged();
 
-    if (m_status != Status::Success) {
-        m_source.clear();
-        emit sourceChanged();
-        return;
-    }
-
-    // We create a dummy root node here, as it will be the parent to the first-level nodes
-    // and resources. If we use 'this' those first-level nodes/resources won't be deleted
-    // when a new scene is loaded.
-    m_root = new QQuick3DNode(this);
-    m_imported = QSSGRuntimeUtils::createScene(*m_root, scene);
-    m_assetId = scene.id;
-    m_boundsDirty = true;
-    m_instancingChanged = m_instancing != nullptr;
-    updateModels();
-    // Cleanup scene before deleting.
-    scene.cleanup();
 }
 
 void QQuick3DRuntimeLoader::updateModels()
