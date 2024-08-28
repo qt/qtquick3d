@@ -1829,21 +1829,35 @@ bool QQuick3DViewport::singlePointPick(QSinglePointEvent *event, const QVector3D
 
     bool delivered = false;
 
+    constexpr float jitterLimit = 2.5; // TODO: add property for this?
+    bool withinJitterLimit = false;
+
     for (const auto &pickResult : pickResults) {
         auto [item, position] = getItemAndPosition(pickResult);
         if (!item)
             continue;
+        if (item == m_prevMouseItem && (position - m_prevMousePos).manhattanLength() < jitterLimit && !event->button()) {
+            withinJitterLimit = true;
+            break;
+        }
         auto da = QQuickItemPrivate::get(item)->deliveryAgent();
         QEventPoint &ep = event->point(0);
         QMutableEventPoint::setPosition(ep, position);
         QMutableEventPoint::setScenePosition(ep, position);
         if (da->event(event)) {
             delivered = true;
+            if (event->type() == QEvent::MouseButtonPress) {
+                m_prevMouseItem = item;
+                m_prevMousePos = position;
+                withinJitterLimit = true;
+            }
             break;
         }
     }
 
     QMutableEventPoint::setScenePosition(event->point(0), originalPosition);
+    if (!withinJitterLimit)
+        m_prevMouseItem = nullptr;
 
     // Normally this would occur in QQuickWindowPrivate::clearGrabbers(...) but
     // for ray based input, input never goes through QQuickWindow (since events

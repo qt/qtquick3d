@@ -238,6 +238,9 @@ private:
     QPointingDevice *m_syntheticTouchDevice = nullptr;
     QVarLengthArray<TouchState, 2> m_touchState{2};
 
+    QPointer<QQuickItem> m_prevMouseItem = nullptr;
+    QPointF m_prevMousePos;
+
     Q_QUICK3D_PROFILE_ID
 };
 
