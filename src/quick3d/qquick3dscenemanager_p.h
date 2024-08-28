@@ -104,11 +104,11 @@ public:
     void sync();
     void preSync();
 
-    bool cleanupNodes();
+    SyncResult cleanupNodes();
     SyncResult updateDirtyResourceNodes();
     void updateDirtySpatialNodes();
     SyncResult updateDiryExtensions();
-    bool updateDirtyResourceSecondPass();
+    SyncResult updateDirtyResourceSecondPass();
 
     void updateDirtyResource(QQuick3DObject *resourceObject);
     void updateDirtySpatialNode(QQuick3DNode *spatialNode);

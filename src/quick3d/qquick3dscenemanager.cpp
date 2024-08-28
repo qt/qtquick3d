@@ -180,7 +180,7 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateDiryExtensions()
     return ret;
 }
 
-bool QQuick3DSceneManager::updateDirtyResourceSecondPass()
+QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateDirtyResourceSecondPass()
 {
     const auto updateDirtyResourceNode = [this](QQuick3DObject *resource) {
         QQuick3DObjectPrivate *po = QQuick3DObjectPrivate::get(resource);
@@ -189,21 +189,21 @@ bool QQuick3DSceneManager::updateDirtyResourceSecondPass()
         po->spatialNode = resource->updateSpatialNode(node);
         if (po->spatialNode)
             m_nodeMap.insert(po->spatialNode, resource);
-        return po->sharedResource;
+        return po->sharedResource ? SyncResultFlag::SharedResourcesDirty : SyncResultFlag::None;
     };
 
-    bool ret = false;
+    SyncResult res = SyncResultFlag::None;
     auto it = dirtySecondPassResources.constBegin();
     const auto end = dirtySecondPassResources.constEnd();
     for (; it != end; ++it)
-        ret |= updateDirtyResourceNode(*it);
+        res |= updateDirtyResourceNode(*it);
 
     // Expectation is that we won't get here often, for other updates the
     // backend nodes should have been realized and we won't get here, so
     // just release space used by the set.
     dirtySecondPassResources = {};
 
-    return ret;
+    return res;
 }
 
 void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
@@ -333,9 +333,10 @@ QQuick3DWindowAttachment *QQuick3DSceneManager::getOrSetWindowAttachment(QQuickW
     return wa;
 }
 
-bool QQuick3DSceneManager::cleanupNodes()
+QQuick3DSceneManager::SyncResult QQuick3DSceneManager::cleanupNodes()
 {
-    bool ret = sharedResourceRemoved;
+    SyncResult res = sharedResourceRemoved ? SyncResultFlag::SharedResourcesDirty : SyncResultFlag::None;
+    // Reset the shared resource removed value.
     sharedResourceRemoved = false;
     for (auto node : std::as_const(cleanupNodeList)) {
         // Remove "spatial" nodes from scenegraph
@@ -372,7 +373,7 @@ bool QQuick3DSceneManager::cleanupNodes()
     // Nodes are now "cleaned up" so clear the cleanup list
     cleanupNodeList.clear();
 
-    return ret;
+    return res;
 }
 
 QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
