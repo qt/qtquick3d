@@ -28,7 +28,6 @@ QT_BEGIN_NAMESPACE
 QQuick3DXrEyeCamera::QQuick3DXrEyeCamera(QQuick3DXrOrigin *parent)
     : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera)), parent)
 {
-
 }
 
 float QQuick3DXrEyeCamera::leftTangent() const
@@ -207,7 +206,6 @@ QQuick3DXrCamera::QQuick3DXrCamera(QQuick3DXrOrigin *parent)
 
 QQuick3DXrCamera::~QQuick3DXrCamera()
 {
-
 }
 
 /*!
@@ -281,15 +279,5 @@ void QQuick3DXrCamera::syncCameraSettings()
     if (xrOrigin && xrOrigin->camera() == this)
         xrOrigin->syncCameraSettings();
 }
-
-/*!
-    \qmlsignal XrCamera::clipNearChanged
-    Emitted when the clipNear property changes.
-*/
-
-/*!
-    \qmlsignal XrCamera::clipFarChanged
-    Emitted when the clipFar property changes.
-*/
 
 QT_END_NAMESPACE
