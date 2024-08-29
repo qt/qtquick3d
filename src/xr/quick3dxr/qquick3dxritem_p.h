@@ -61,9 +61,6 @@ public:
     qreal pixelsPerUnit() const;
     void setPixelsPerUnit(qreal newPixelsPerUnit);
 
-    QQuickScale *uiScale() const;
-    void setUiScale(QQuickScale *newUiScale);
-
     bool manualPixelsPerUnit() const;
     void setManualPixelsPerUnit(bool newManualPixelsPerUnit);
 
@@ -83,7 +80,6 @@ public:
 signals:
     void contentItemChanged();
     void pixelsPerUnitChanged();
-    void uiScaleChanged();
     void flagsChanged();
     void manualPixelsPerUnitChanged();
     void widthChanged();
