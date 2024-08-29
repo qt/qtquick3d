@@ -1884,7 +1884,11 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     appInfo.applicationVersion = 7;
     strcpy(appInfo.engineName, QStringLiteral("Qt").toUtf8());
     appInfo.engineVersion = 6;
-    appInfo.apiVersion = XR_CURRENT_API_VERSION;
+
+    // apiVersion must not be XR_CURRENT_API_VERSION. Consider what happens when
+    // building against 1.1 headers and running on an 1.0-only runtime. (it all
+    // breaks down) For now, use a known, fixed version: the last 1.0 release.
+    appInfo.apiVersion = XR_MAKE_VERSION(1, 0, 34);
 
     // Query available API layers
     uint32_t apiLayerCount = 0;
