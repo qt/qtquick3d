@@ -86,7 +86,31 @@ void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
     \qmltype XrInputAction
     \inherits Item
     \inqmlmodule QtQuick3D.Xr
-    \brief Maps input actions to corresponding actions.
+    \brief Represents an action from an input controller.
+
+    Actions can be boolean, such as a button press, or analog, such as a joystick axis.
+
+    To react to a boolean action, use the \l pressed property or the \l triggered signal. An analog action will set the \l value property.
+
+    \note For convenience, an analog property will also set the \c pressed property and emit the \c triggered signal,
+    while a boolean property will set \c value to 1.0 when pressed.
+
+    The following shows how to react to either the right hand grip being pressed, or to a right hand pinch gesture from hand tracking:
+    \qml
+    XrInputAction {
+        hand: XrInputAction.RightHand
+        actionId: [XrInputAction.SqueezePressed, XrInputAction.SqueezeValue, XrInputAction.IndexFingerPinch]
+        onTriggered: console.log("Do action here.")
+    }
+    \endqml
+    The reason for specifying both \c SqueezePressed and \c SqueezeValue is that some controllers have an analog grip button,
+    and some controllers just have an on/off grip switch.
+ */
+
+/*!
+    \qmlsignal XrInputAction::triggered()
+
+    This signal is emitted when a boolean action is activated. This happens at the same time as the \l pressed property is set to \c true.
  */
 
 void QQuick3DXrInputAction::setValue(float newValue)
@@ -121,10 +145,10 @@ void QQuick3DXrInputAction::setPressed(bool newPressed)
 }
 
 /*!
-    \qmlproperty string QQuick3DXrInputAction::actionName
+    \qmlproperty string XrInputAction::actionName
     \brief The name of the input action.
 
-    Use this property to specify the name of the custom input action you want to map. This property does not have an effect if \l actionId is set.
+    Use this property to specify the name of the custom input action to react to. This property does not have an effect if \l actionId is set.
  */
 
 QString QQuick3DXrInputAction::actionName() const
@@ -157,7 +181,7 @@ QQuick3DXrInputAction::~QQuick3DXrInputAction()
 
 /*!
     \qmlproperty float XrInputAction::value
-    \brief The value associated with the input action.
+    \brief The analog value of the input action.
 
     For analog inputs, such as a thumbstick position, this property holds
     the value of the input (usually in the range [0, 1]).
@@ -180,61 +204,39 @@ void QQuick3DXrInputAction::componentComplete()
 
 /*!
     \qmlproperty List<enumeration> XrInputAction::actionId
-    \brief The value associated with the input action.
+    \brief Specifies the action(s) to react to
 
-    Holds a List of InputActions Ids, that can be of the following values:
+    Holds a List of IDs, that can be of the following values:
 
-    \value XrInputAction.CustomAction Represents a custom action with a value
-    of -1.
-    \value XrInputAction.Button1Pressed Indicates that Button 1 is pressed.
-    \value XrInputAction.Button1Touched Indicates that Button 1 is touched.
-    \value XrInputAction.Button2Pressed Indicates that Button 2 is pressed.
-    \value XrInputAction.Button2Touched Indicates that Button 2 is touched.
-    \value XrInputAction.ButtonMenuPressed Indicates that the menu button is
-    pressed.
-    \value XrInputAction.ButtonMenuTouched Indicates that the menu button is
-    touched.
-    \value XrInputAction.ButtonSystemPressed Indicates that the system button
-    is pressed.
-    \value XrInputAction.ButtonSystemTouched Indicates that the system button
-    is touched.
-    \value XrInputAction.SqueezeValue Represents the squeeze value in a
-    controller.
-    \value XrInputAction.SqueezeForce Represents the force of a squeeze action.
-    \value XrInputAction.SqueezePressed Indicates that the squeeze action is
-    pressed.
-    \value XrInputAction.TriggerValue Represents the value of the trigger
-    (for example, how much it's pressed).
-    \value XrInputAction.TriggerPressed Indicates that the trigger is pressed.
-    \value XrInputAction.TriggerTouched Indicates that the trigger is touched.
-    \value XrInputAction.ThumbstickX Represents the X-axis value of the
-    thumbstick.
-    \value XrInputAction.ThumbstickY Represents the Y-axis value of the
-    thumbstick.
-    \value XrInputAction.ThumbstickPressed Indicates that the thumbstick
-    is pressed.
-    \value XrInputAction.ThumbstickTouched Indicates that the thumbstick
-    is touched.
-    \value XrInputAction.ThumbrestTouched Indicates that the thumbrest
-    is touched.
-    \value XrInputAction.TrackpadX Represents the X-axis value of the trackpad.
-    \value XrInputAction.TrackpadY Represents the Y-axis value of the trackpad.
-    \value XrInputAction.TrackpadForce Represents the force applied on the
-    trackpad.
-    \value XrInputAction.TrackpadTouched Indicates that the trackpad is touched.
-    \value XrInputAction.TrackpadPressed Indicates that the trackpad is pressed.
-    \value XrInputAction.IndexFingerPinch Indicates that the index finger is
-    pinched.
-    \value XrInputAction.MiddleFingerPinch Indicates that the middle finger is
-    pinched.
-    \value XrInputAction.RingFingerPinch Indicates that the ring finger is pinched.
-    \value XrInputAction.LittleFingerPinch Indicates that the little finger is
-    pinched.
-    \value XrInputAction.HandTrackingMenuPress Indicates a menu press in hand
-    tracking.
-    \value XrInputAction.NumHandActions Represents the total number of hand
-    actions.
-    \value XrInputAction.NumActions Number of actions.
+    \value XrInputAction.Button1Pressed Button 1 is pressed. \e Boolean.
+    \value XrInputAction.Button1Touched Button 1 is touched. \e Boolean.
+    \value XrInputAction.Button2Pressed Button 2 is pressed. \e Boolean.
+    \value XrInputAction.Button2Touched Button 2 is touched. \e Boolean.
+    \value XrInputAction.ButtonMenuPressed The menu button is pressed. \e Boolean.
+    \value XrInputAction.ButtonMenuTouched The menu button is touched. \e Boolean.
+    \value XrInputAction.ButtonSystemPressed The system button is pressed. \e Boolean.
+    \value XrInputAction.ButtonSystemTouched The system button is touched. \e Boolean.
+    \value XrInputAction.SqueezeValue How far the grip button is pressed. \e Analog.
+    \value XrInputAction.SqueezeForce The force applied on the grip button. \e Analog.
+    \value XrInputAction.SqueezePressed The grip button is pressed.  \e Boolean.
+    \value XrInputAction.TriggerValue How far the trigger button is pressed. \e Analog.
+    \value XrInputAction.TriggerPressed The trigger is pressed. \e Boolean.
+    \value XrInputAction.TriggerTouched The trigger is touched. \e Boolean.
+    \value XrInputAction.ThumbstickX The X-axis value of the thumbstick. \e Analog.
+    \value XrInputAction.ThumbstickY The Y-axis value of the thumbstick. \e Analog.
+    \value XrInputAction.ThumbstickPressed The thumbstick is pressed. \e Boolean.
+    \value XrInputAction.ThumbstickTouched The thumbstick is touched. \e Boolean.
+    \value XrInputAction.ThumbrestTouched The thumbrest is touched. \e Boolean.
+    \value XrInputAction.TrackpadX The X-axis position on the trackpad. \e Analog.
+    \value XrInputAction.TrackpadY The Y-axis position on the trackpad. \e Analog.
+    \value XrInputAction.TrackpadForce The force applied on the trackpad. \e Analog.
+    \value XrInputAction.TrackpadTouched The trackpad is touched. \e Boolean.
+    \value XrInputAction.TrackpadPressed The trackpad is pressed. \e Boolean.
+    \value XrInputAction.IndexFingerPinch Thumb to index finger pinch gesture. \e Boolean.
+    \value XrInputAction.MiddleFingerPinch Thumb to middle finger pinch gesture. \e Boolean.
+    \value XrInputAction.RingFingerPinch Thumb to ring finger pinch gesture. \e Boolean.
+    \value XrInputAction.LittleFingerPinch Thumb to little finger pinch gesture. \e Boolean.
+    \value XrInputAction.HandTrackingMenuPress Hand tracking menu gesture. \e Boolean.
  */
 
 QList<QQuick3DXrInputAction::Action> QQuick3DXrInputAction::actionId() const
