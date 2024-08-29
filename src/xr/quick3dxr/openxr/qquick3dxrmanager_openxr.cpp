@@ -1099,7 +1099,7 @@ QVersionNumber QQuick3DXrManagerPrivate::runtimeVersion() const
     return m_runtimeVersion;
 }
 
-void QQuick3DXrManagerPrivate::setMultiviewRenderingEnabled(bool enable)
+void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
 {
     Q_Q(QQuick3DXrManager);
     QRhi *rhi = q->m_renderControl->rhi();

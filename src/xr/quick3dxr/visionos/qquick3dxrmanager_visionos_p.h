@@ -58,7 +58,7 @@ public:
 
     void teardown();
 
-    void setMultiviewRenderingEnabled(bool enable);
+    void setMultiViewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const { return false; }
     bool isMultiViewRenderingSupported() const { return false; }
 

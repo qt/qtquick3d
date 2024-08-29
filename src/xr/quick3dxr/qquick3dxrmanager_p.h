@@ -69,7 +69,7 @@ public:
 
     void setSamples(int samples);
 
-    void setMultiviewRenderingEnabled(bool enable);
+    void setMultiViewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const;
     bool isMultiViewRenderingSupported() const;
 

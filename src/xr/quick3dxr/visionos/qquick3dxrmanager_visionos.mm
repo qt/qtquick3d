@@ -218,7 +218,7 @@ void QQuick3DXrManagerPrivate::teardown()
     Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
-void QQuick3DXrManagerPrivate::setMultiviewRenderingEnabled(bool enable)
+void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
 {
     Q_UNUSED(enable);
     Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;

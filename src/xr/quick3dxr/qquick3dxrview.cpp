@@ -514,7 +514,7 @@ bool QQuick3DXrView::depthSubmissionEnabled() const
 
     \brief This read-only property reports the availability of \l{Multiview Rendering}.
 
-    \sa multiviewRenderingEnabled
+    \sa multiViewRenderingEnabled
  */
 bool QQuick3DXrView::isMultiViewRenderingSupported() const
 {
@@ -525,7 +525,7 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
 }
 
 /*!
-    \qmlproperty bool QtQuick3D.Xr::XrView::multiviewRenderingEnabled
+    \qmlproperty bool QtQuick3D.Xr::XrView::multiViewRenderingEnabled
 
     \brief Gets or sets whether \l{Multiview Rendering} is enabled for the XR view.
 
@@ -548,7 +548,7 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
     improve performance, reduce CPU and GPU load, as well as reduce power
     consumption. It defaults to disabled in order to ensure maximum
     compatibility. Developers are encouraged to verify that their application
-    renders as expected with multiviewRenderingEnabled set to \c true, and then
+    renders as expected with multiViewRenderingEnabled set to \c true, and then
     leave it set afterwards.
 
     Certain Qt Quick and Quick 3D features that involve application-provided
@@ -559,7 +559,7 @@ bool QQuick3DXrView::isMultiViewRenderingSupported() const
 
      \sa multiViewRenderingSupported
 */
-bool QQuick3DXrView::multiviewRenderingEnabled() const
+bool QQuick3DXrView::multiViewRenderingEnabled() const
 {
     if (!m_xrManager.isValid())
         return false;
@@ -645,7 +645,7 @@ void QQuick3DXrView::setDepthSubmissionEnabled(bool enable)
         emit depthSubmissionEnabledChanged();
 }
 
-void QQuick3DXrView::setMultiviewRenderingEnabled(bool enable)
+void QQuick3DXrView::setMultiViewRenderingEnabled(bool enable)
 {
     if (!m_xrManager.isValid()) {
         qWarning("Attempted to set multiview rendering mode without having m_openXRManager initialized");
@@ -653,10 +653,10 @@ void QQuick3DXrView::setMultiviewRenderingEnabled(bool enable)
     }
 
     const bool orgMultiView = m_xrManager.isMultiViewRenderingEnabled();
-    m_xrManager.setMultiviewRenderingEnabled(enable);
+    m_xrManager.setMultiViewRenderingEnabled(enable);
 
     if (orgMultiView != m_xrManager.isMultiViewRenderingEnabled())
-        emit multiviewRenderingEnabledChanged();
+        emit multiViewRenderingEnabledChanged();
 }
 
 void QQuick3DXrView::setXROrigin(QQuick3DXrOrigin *newXrOrigin)
@@ -750,9 +750,9 @@ void QQuick3DXrView::setXROrigin(QQuick3DXrOrigin *newXrOrigin)
 
 
 /*!
-    \qmlsignal XrView::multiviewRenderingEnabledChanged()
+    \qmlsignal XrView::multiViewRenderingEnabledChanged()
 
-    Emitted when the multiviewRenderingEnabled property value changes.
+    Emitted when the multiViewRenderingEnabled property value changes.
  */
 
 QT_END_NAMESPACE
