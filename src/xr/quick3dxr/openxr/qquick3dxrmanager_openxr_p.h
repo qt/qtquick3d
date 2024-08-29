@@ -73,7 +73,7 @@ public:
     QString runtimeName() const;
     QVersionNumber runtimeVersion() const;
 
-    void setMultiviewRenderingEnabled(bool enable);
+    void setMultiViewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const { return m_multiviewRendering; }
     bool isMultiViewRenderingSupported() const;
 

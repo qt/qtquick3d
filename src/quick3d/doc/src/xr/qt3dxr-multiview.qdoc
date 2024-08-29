@@ -130,7 +130,7 @@
     As of Qt 6.8, multiview rendering is \b disabled by default in \qxr
     applications. This is done to ensure the best level of compatibility. To
     enable multiview rendering, set
-    \l{QtQuick3D.Xr::XrView::multiviewRenderingEnabled}{multiviewRenderingEnabled}
+    \l{QtQuick3D.Xr::XrView::multiViewRenderingEnabled}{multiViewRenderingEnabled}
     on \l XrView to \c true. This will have no effect when the underlying 3D API
     does not support multiview rendering. To query if multiview rendering can be
     supported, check the

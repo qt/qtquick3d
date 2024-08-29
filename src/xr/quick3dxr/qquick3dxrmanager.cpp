@@ -101,10 +101,10 @@ bool QQuick3DXrManager::isPassthroughEnabled() const
     return d->isPassthroughEnabled();
 }
 
-void QQuick3DXrManager::setMultiviewRenderingEnabled(bool enable)
+void QQuick3DXrManager::setMultiViewRenderingEnabled(bool enable)
 {
     Q_D(QQuick3DXrManager);
-    d->setMultiviewRenderingEnabled(enable);
+    d->setMultiViewRenderingEnabled(enable);
 }
 
 bool QQuick3DXrManager::isMultiViewRenderingEnabled() const
@@ -393,7 +393,7 @@ bool QQuick3DXrManager::setupQuickScene()
 
     if (qEnvironmentVariableIntValue("QT_QUICK3D_XR_MULTIVIEW")) {
         qDebug("Quick3D XR: multiview rendering requested via the environment");
-        setMultiviewRenderingEnabled(true);
+        setMultiViewRenderingEnabled(true);
     }
 
     return true;
