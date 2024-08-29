@@ -13,7 +13,27 @@ QT_BEGIN_NAMESPACE
     \qmltype XrVirtualMouse
     \inherits Item
     \inqmlmodule QtQuick3D.Xr
-    \brief Represents a virtual mouse for interacting with UIs in XR.
+    \brief Maps 3D controller input to mouse input in 2D items.
+
+    The XrVirtualMouse provides a way to interact with \l{Qt Quick 3D Scenes with 2D Content}{2D user interfaces}
+    in the 3D scene.
+
+    It is typically used like this:
+
+    \qml
+    // XrView { id: xrView
+    // XrController { id: rightController
+    XrInputAction {
+        id: rightTrigger
+        hand: XrInputAction.RightHand
+        actionId: [XrInputAction.TriggerPressed, XrInputAction.TriggerValue]
+    }
+    XrVirtualMouse {
+        view: xrView
+        source: rightController
+        leftMouseButton: rightTrigger.pressed
+    }
+    \endqml
 */
 
 QQuick3DXrVirtualMouse::QQuick3DXrVirtualMouse(QObject *parent) : QObject(parent)
@@ -25,9 +45,9 @@ QQuick3DXrVirtualMouse::QQuick3DXrVirtualMouse(QObject *parent) : QObject(parent
 
 /*!
     \qmlproperty bool XrVirtualMouse::rightMouseButton
-    \brief Indicates whether the right mouse button is pressed.
+    \brief Sets the state of the right mouse button.
 
-    When set to true, the right mouse button is considered pressed.
+    When set to true, the right mouse button is pressed.
 */
 
 bool QQuick3DXrVirtualMouse::rightMouseButton() const
@@ -37,9 +57,9 @@ bool QQuick3DXrVirtualMouse::rightMouseButton() const
 
 /*!
     \qmlproperty bool XrVirtualMouse::leftMouseButton
-    \brief Indicates whether the left mouse button is pressed.
+    \brief Sets the state of the left mouse button.
 
-    When set to true, the left mouse button is considered pressed.
+    When set to true, the left mouse button is pressed.
 */
 
 bool QQuick3DXrVirtualMouse::leftMouseButton() const
@@ -49,9 +69,9 @@ bool QQuick3DXrVirtualMouse::leftMouseButton() const
 
 /*!
     \qmlproperty bool XrVirtualMouse::middleMouseButton
-    \brief Indicates whether the middle mouse button is pressed.
+    \brief Sets the state of the middle mouse button.
 
-    When set to true, the middle mouse button is considered pressed.
+    When set to true, the middle mouse button is pressed.
 */
 
 bool QQuick3DXrVirtualMouse::middleMouseButton() const
@@ -61,10 +81,12 @@ bool QQuick3DXrVirtualMouse::middleMouseButton() const
 
 /*!
     \qmlproperty float XrVirtualMouse::scrollWheelX
-    \brief Indicates the scrolling direction on the X-axis.
+    \brief Sets the horizontal scrolling speed.
 
     Positive values scroll right and negative values scroll left.
     Scroll speed increases relative to distance from zero.
+
+    \sa scrollPixelDelta
 */
 
 float QQuick3DXrVirtualMouse::scrollWheelX() const
@@ -74,10 +96,12 @@ float QQuick3DXrVirtualMouse::scrollWheelX() const
 
 /*!
     \qmlproperty float XrVirtualMouse::scrollWheelY
-    \brief Indicates the scrolling direction on the Y-axis.
+    \brief Sets the vertical scrolling speed.
 
     Positive values scroll up and negative values scroll down.
     Scroll speed increases relative to distance from zero.
+
+    \sa scrollPixelDelta
 */
 
 float QQuick3DXrVirtualMouse::scrollWheelY() const
@@ -98,8 +122,12 @@ int QQuick3DXrVirtualMouse::scrollTimerInterval() const
 
 /*!
     \qmlproperty float XrVirtualMouse::scrollPixelDelta
-    \brief Defines the distance scrolled with each scrolling event.
+    \brief Defines the base distance scrolled with each scrolling event.
     \default 15
+
+    This is the distance scrolled when the scrolling speed is 1.
+
+    \sa scrollWheelX, scrollWheelY
 */
 
 int QQuick3DXrVirtualMouse::scrollPixelDelta() const
@@ -109,8 +137,11 @@ int QQuick3DXrVirtualMouse::scrollPixelDelta() const
 
 /*!
     \qmlproperty Node XrVirtualMouse::source
-    \brief The 3D node associated with the virtual mouse.
-    Holds a node representing the position of the virtual cursor in the 3D scene.
+    \brief The 3D node controlling the virtual mouse.
+
+    The \c source property is normally set to an \l XrController. Mouse events
+    are generated for the position where the \l{QtQuick3D::Node::forward}{forward vector} of
+    the \c source node intersects with a 2D item.
 */
 
 QQuick3DNode *QQuick3DXrVirtualMouse::source() const
@@ -120,7 +151,7 @@ QQuick3DNode *QQuick3DXrVirtualMouse::source() const
 
 /*!
     \qmlproperty XrView XrVirtualMouse::view
-    \brief The OpenXR view associated with the virtual mouse.
+    \brief The XR view associated with the virtual mouse.
     Holds the view in which the virtual mouse operates.
 */
 
@@ -132,7 +163,7 @@ QQuick3DXrView *QQuick3DXrVirtualMouse::view() const
 /*!
     \qmlproperty bool XrVirtualMouse::enabled
     \brief Indicates whether the virtual mouse is enabled.
-    When true, the virtual mouse can interact with 3D objects in the scene.
+    When true, the virtual mouse sends mouse events to 2D objects in the scene.
 */
 
 bool QQuick3DXrVirtualMouse::enabled() const
@@ -348,50 +379,5 @@ void QQuick3DXrVirtualMouse::generateEvent(QEvent::Type type,  Qt::MouseButton b
     // Cleanup
     delete event;
 }
-
-
-/*! \qmlsignal XrVirtualMouse::rightMouseButtonChanged(bool rightMouseButton)
-    \brief Emitted when the state of the right mouse button changes.
-    \a rightMouseButton has new state of the right mouse button
-    (true if pressed, false if released).
-*/
-    /*! \qmlsignal XrVirtualMouse::leftMouseButtonChanged(bool leftMouseButton)
-    \brief Emitted when the state of the left mouse button changes.
-    \a leftMouseButton has new state of the left mouse button
-    (true if pressed, false if released).
-*/
-/*! \qmlsignal XrVirtualMouse::middleMouseButtonChanged(bool middleMouseButton)
-    \brief Emitted when the state of the middle mouse button changes.
-    \a middleMouseButton has new state of the middle mouse button
-    (true if pressed, false if released).
-*/
-/*! \qmlsignal XrVirtualMouse::scrollWheelXChanged(float scrollWheelX)
-    \brief Emitted when the value of scroll wheel X changes.
-    \a scrollWheelX has new value.
-*/
-/*! \qmlsignal XrVirtualMouse::scrollWheelYChanged(float scrollWheelY)
-    \brief Emitted when the value of scroll wheel Y changes.
-    \a scrollWheelY has new value.
-*/
-/*! \qmlsignal XrVirtualMouse::scrollTimerIntervalChanged(int scrollTimerInterval)
-    \brief Emitted when the scroll timer interval changes.
-    \a scrollTimerInterval has new value.
-*/
-/*! \qmlsignal XrVirtualMouse::scrollPixelDeltaChanged(int scrollPixelDelta)
-    \brief  Emitted when the scroll pixel delta changes.
-    \a scrollPixelDelta has new value.
-*/
-/*! \qmlsignal XrVirtualMouse::sourceChanged(Node source);
-    \brief Emitted when the source property changes.
-    \a source has the new Node held in the source property.
-*/
-/*! \qmlsignal XrVirtualMouse::viewChanged(XrView view);
-    \brief Emitted when the view property changes.
-    \a view has the new XrView held in the view property.
-*/
-/*! \qmlsignal XrVirtualMouse::enabledChanged(bool enabled);
-    \brief Emitted when the enabled property changes.
-    \a enabled has the new value of the enabled property.
-*/
 
 QT_END_NAMESPACE
