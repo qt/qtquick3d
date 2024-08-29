@@ -29,9 +29,7 @@ static QRhiRenderBuffer *allocateRhiShadowRenderBuffer(QRhi *rhi, QRhiRenderBuff
 
 static QRhiTexture::Format getShadowMapTextureFormat(QRhi *rhi)
 {
-    QRhiTexture::Format rhiFormat = QRhiTexture::R32F;
-    if (!rhi->isTextureFormatSupported(rhiFormat))
-        rhiFormat = QRhiTexture::R16F;
+    QRhiTexture::Format rhiFormat = QRhiTexture::R16F;
     if (!rhi->isTextureFormatSupported(rhiFormat))
         rhiFormat = QRhiTexture::R16;
 
