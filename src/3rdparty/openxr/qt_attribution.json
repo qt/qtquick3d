@@ -7,7 +7,7 @@
         "QtUsage": "Use by QtQuick3DXr module to interact with an OpenXR runtime.",
 
         "Homepage": "https://www.khronos.org/openxr/",
-        "Version": "1.0.33",
+        "Version": "1.0.34",
         "License": "Apache License 2.0",
         "LicenseId": "Apache-2.0",
         "LicenseFile": "LICENSE",
