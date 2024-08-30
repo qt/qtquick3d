@@ -22,7 +22,6 @@
         \list
             \li \l{\qxr Getting Started With the Quest}
             \li \l{\qxr Overview}
-            \li \l{Installing \qxr}
         \endlist
 //! [listitems-getting-started]
 
@@ -61,7 +60,6 @@
 
 //! [listitems-quick-links]
     \li \l{Supported Headsets}
-    \li \l{\qxr Known Issues and Limitations}
     \li \l{\qxr Getting Started With the Quest}
 //! [listitems-quick-links]
 
