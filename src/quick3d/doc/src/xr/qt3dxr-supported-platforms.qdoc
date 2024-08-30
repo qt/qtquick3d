@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
@@ -6,27 +6,26 @@
     \title Supported Headsets
     \target Supported Platforms
 
-    This page outlines the combinations of use cases that are supported.
+    This page outlines the supported platforms and devices for which QtQuick3D.Xr is tested and
+    supported.
 
-    \section1 Supported hardware
+    \note QtQuick3D.Xr is still under development and all features might not be available on all
+    platforms.
 
-    \table
-        \header Support matrix
-        \header \li Platform \li PCVR Streaming \li Native \li Debugging
-        \row \li Quest 2 \li Yes \li Yes \li Yes
-        \row \li Quest 3 \li Yes \li Yes \li Yes
-        \row \li Quest Pro \li Yes \li Yes \li Yes
-        \row \li Varjo \li Yes \li NA \li Na
-        \row \li Apple Vision Pro \li Na \li Yes \li No
-    \endtable
+    QtQuick3D.Xr supports two main platforms, devices that use OpenXR as their XR environment and
+    devices that use Apple's visonOS.
 
-    This hardware is used when developing \qxr.
+    \section1 Tested headsets
 
-    \section1 Supported development host environments
+    \list
+      \li Quest 2
+      \li Quest 3
+      \li Quest Pro
+      \li Varjo
+      \li Apple Vision Pro
+    \endlist
 
-    \qxr supports the same host platforms that \l Qt supports.
 
-    If you need to run applications for other host architectures or operating
-    systems, contact \l{contact Qt sales}{the Qt Company}.
-
+    \sa {Getting Started With the Apple Vision Pro}
+    \sa {Getting Started With the Oculus Quest}
 */
