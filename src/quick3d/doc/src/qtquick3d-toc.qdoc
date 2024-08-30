@@ -40,7 +40,6 @@
             \li \l{\qxr Overview}
             \li \l{Supported Headsets}
             \li \l{\qxr Getting Started With the Quest}
-            \li \l{Android Manifests and \qxr features}
             \li \l{\qxr QML Types}
             \li \l{Qt Quick 3D - XR Simple Example}
         \endlist

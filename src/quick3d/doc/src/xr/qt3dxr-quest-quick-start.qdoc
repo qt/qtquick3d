@@ -55,4 +55,7 @@
     <uses-permission android:name="com.oculus.permission.HAND_TRACKING" />
     <uses-feature android:name="oculus.software.handtracking" android:required="false" />
     \endcode
+
+    See \l{https://developer.oculus.com/documentation/native/android/mobile-native-manifest/}{Meta's Manifest docs}
+    for more information.
 */
