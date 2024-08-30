@@ -171,7 +171,7 @@ XrView {
         id: spatialAnchors
         model: XrSpatialAnchorListModel {
         }
-        Node {
+        delegate: Node {
             id: anchorNode
             required property XrSpatialAnchor anchor
             required property int index

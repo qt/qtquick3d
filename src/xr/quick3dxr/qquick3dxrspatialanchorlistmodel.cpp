@@ -16,18 +16,25 @@ QT_BEGIN_NAMESPACE
     \qmltype XrSpatialAnchorListModel
     \inherits ListModel
     \inqmlmodule QtQuick3D.Xr
-    \brief Provides a model for managing spatial anchors.
+    \brief Provides a model containing spatial anchors.
 
-    This type provides a way to manage spatial anchors, which are points in
+    This type provides a list of spatial anchors, which are points in
     the physical world that can be tracked and associated with virtual content.
 
-    You can use it like so:
+    The list contains elements that have an \c anchor property with the type \l XrSpatialAnchor.
+
+    You can use it like this:
     \qml
-    XrSpatialAnchorListModel {
-        id: anchorModel
-        filterMode: XrSpatialAnchorListModel.Labels
-        labels: XrSpatialAnchorListModel.Ceiling | XrSpatialAnchorListModel.Floor
-        // ... other properties and methods ...
+    Repeater3D {
+        model: XrSpatialAnchorListModel {
+        }
+        delegate: Node {
+            required property XrSpatialAnchor anchor
+            position: anchor.position
+            rotation: anchor.rotation
+            // Further use of anchor properties...
+        }
+    }
     \endqml
     }
 */
@@ -122,7 +129,11 @@ void QQuick3DXrSpatialAnchorListModel::handleAnchorUpdated(QQuick3DXrSpatialAnch
     endResetModel();
 }
 
-/*!
+// NOTE: filtering is not implemented yet, so the associated properties are left
+// undocumented in this version. They are not removed completely, since filtering
+// will definitely be implemented in a future release.
+
+/*
     \qmlproperty enumeration XrSpatialAnchorListModel::filterMode
     \brief Specifies the filter mode for spatial anchors.
 
@@ -146,7 +157,7 @@ void QQuick3DXrSpatialAnchorListModel::setFilterMode(FilterMode newFilterMode)
     emit filterModeChanged();
 }
 
-/*!
+/*
     \qmlproperty list<string> XrSpatialAnchorListModel::identifierFilter
     \brief Holds the list of identifiers for filtering spatial anchors.
  */
@@ -164,7 +175,7 @@ void QQuick3DXrSpatialAnchorListModel::setIdentifierFilter(const QStringList &fi
     emit identifierFilterChanged();
 }
 
-/*!
+/*
     \qmlproperty enumeration XrSpatialAnchorListModel::classificationFilter
     \brief  Holds the classification flag used for filtering spatial anchors.
 
@@ -193,7 +204,7 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFla
     emit classificationFilterChanged();
 }
 
-/*!
+/*
     \qmlproperty list<string> XrSpatialAnchorListModel::classificationStringFilter
     \brief Holds the classification strings used for filtering spatial anchors.
 
@@ -202,7 +213,8 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFla
     the same value as reported by \l {XrSpatialAnchor::classificationString} property
     of the spatial anchor.
 
-    \note Only \l {XrSpatialAnchor}{spatial anchors} that are classified as \l {XrSpatialAnchor::Classification::Other}{Other}
+    \note Only \l {XrSpatialAnchor}{spatial anchors} that are classified as
+    \l {XrSpatialAnchor::Classification::Other}{Other}
     will be checked against this filter.
  */
 QStringList QQuick3DXrSpatialAnchorListModel::classificationStringFilter() const
@@ -220,25 +232,5 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationStringFilter(const QStri
     m_classStringFilter = newFilter;
     emit classificationStringFilterChanged();
 }
-
-/*!
-    \qmlsignal XrSpatialAnchorListModel::filterModeChanged()
-    \brief Emitted when the filter mode changes.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchorListModel::identifierFilterChanged()
-    \brief Emitted when the list of identifiers used for filtering anchors changes.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchorListModel::classificationFilterChanged()
-    \brief Emitted when the classification filter changes.
-*/
-
-/*!
-    \qmlsignal XrSpatialAnchorListModel::classificationStringFilterChanged()
-    \brief Emitted when the classification string filter changes.
-*/
 
 QT_END_NAMESPACE

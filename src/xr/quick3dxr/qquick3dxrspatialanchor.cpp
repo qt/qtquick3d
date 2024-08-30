@@ -13,17 +13,17 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype XrSpatialAnchor
-    \inherits Item
+    \inherits QtObject
     \inqmlmodule QtQuick3D.Xr
     \brief Represents a spatial anchor in an XR session.
 
-    This type represents a spatial anchor that can be used to track
+    This type represents a spatial anchor that tracks
     a specific location or object in real space. It provides information about
     the anchor's position, rotation, classification, and bounds.
 
-    They are accessed through an \l XrSpatialAnchorListModel.
+    Spatial anchors are accessed through an \l XrSpatialAnchorListModel.
 
-    \note You can not create these in QML.
+    \note Anchor objects are provided by the system, they cannot be created in QML.
  */
 
 /*!
@@ -31,7 +31,8 @@ QT_BEGIN_NAMESPACE
     \ingroup xr-anchors
     \brief The classification of the spatial anchor.
 
-    The Classification enum provides a set of predefined category types that can be used to describe
+    \readonly
+    The Classification enum provides a set of predefined category types that describe
     the purpose or context of a spatial anchor.
 
     \value Classification.Unknown The label has not been set or identified.
@@ -44,10 +45,10 @@ QT_BEGIN_NAMESPACE
     \value Classification.Door The anchor represents a door.
     \value Classification.Other The anchor was not identified as any of the above types. See: \l classificationString
 
-    \note This list is meant to show the mapping between the classification type in QtQuick3DXr,
+    The following list show the mapping between the classification type in QtQuick3DXr,
     OpenXR, and VisionOS. If the classification type from the system falls outside of the defined types
-    then the \e Type is set to \c Other and the system type can be inspected by looking at the content
-    of the \l classificationString property. Note that the classification string can also be "Other".
+    then the \e Type is set to \c Other and the system type is provided by the \l classificationString property.
+    Note that the classification string can also be "Other".
 
     \table
     \header
@@ -103,7 +104,6 @@ QT_BEGIN_NAMESPACE
     \endtable
  */
 
-
 QQuick3DXrSpatialAnchor::QQuick3DXrSpatialAnchor(QtQuick3DXr::XrSpaceId space, QUuid &uuid, QObject *parent)
     : QObject(parent)
     , m_space(space)
@@ -113,16 +113,16 @@ QQuick3DXrSpatialAnchor::QQuick3DXrSpatialAnchor(QtQuick3DXr::XrSpaceId space, Q
 
 QQuick3DXrSpatialAnchor::~QQuick3DXrSpatialAnchor()
 {
-
 }
-
 
 /*!
     \qmlproperty vector3d XrSpatialAnchor::offset3D
     \brief The 3D offset of the spatial anchor.
 
-    This property provides the 3D offset (in meters) from the anchor's origin to
-    its position within the 3D space.
+    \readonly
+    This property provides the 3D offset of the anchor's bounds (in meters) from the anchor's \l position.
+
+    \sa offset3D, has3DBounds
  */
 
 QVector3D QQuick3DXrSpatialAnchor::offset3D() const
@@ -142,8 +142,11 @@ void QQuick3DXrSpatialAnchor::setOffset3D(const QVector3D &newOffset)
     \qmlproperty vector3d XrSpatialAnchor::extent3D
     \brief The 3D extent of the spatial anchor.
 
-    This property specifies the 3D size (width, height, and depth) of the spatial anchor
-    within the 3D space.
+    \readonly
+    This property specifies the 3D size (width, height, and depth) of the spatial anchor.
+    It is valid when \l has3DBounds is \c true.
+
+    \sa offset3D, has3DBounds
  */
 
 QVector3D QQuick3DXrSpatialAnchor::extent3D() const
@@ -163,8 +166,9 @@ void QQuick3DXrSpatialAnchor::setExtent3D(const QVector3D &newExtent)
     \qmlproperty vector3d XrSpatialAnchor::position
     \brief The position of the spatial anchor.
 
-    This property returns the 3D position (in meters) of the spatial anchor within the
-    session's coordinate system. It emits the `positionChanged` signal when updated.
+    \readonly
+    This property returns the 3D position (in meters) of the spatial anchor's origin within the
+    session's coordinate system.
  */
 
 QVector3D QQuick3DXrSpatialAnchor::position() const
@@ -182,10 +186,10 @@ void QQuick3DXrSpatialAnchor::setPosition(const QVector3D &newPosition)
 
 /*!
     \qmlproperty quaternion XrSpatialAnchor::rotation
-    \brief The rotation of the spatial anchor.
+    \brief The orientation of the spatial anchor.
 
+    \readonly
     This property provides the 3D rotation (as a quaternion) of the spatial anchor.
-    It emits the `rotationChanged` signal when updated.
  */
 
 QQuaternion QQuick3DXrSpatialAnchor::rotation() const
@@ -202,9 +206,10 @@ void QQuick3DXrSpatialAnchor::setRotation(const QQuaternion &newRotation)
 }
 
 /*!
-    \qmlproperty string XrSpatialAnchor::classification
-    \brief The classification type associated with the spatial anchor.
+    \qmlproperty enumeration XrSpatialAnchor::classification
+    \brief The classification type of the spatial anchor.
 
+    \readonly
     This property returns the \l {XrSpatialAnchor::Classification}{classification type} for this anchor
     (for example,\c Table or \c Floor) describing the anchor's purpose or context.
 
@@ -230,8 +235,9 @@ void QQuick3DXrSpatialAnchor::setClassification(Classification newClassification
 
 /*!
     \qmlproperty string XrSpatialAnchor::classificationString
-    \brief The system classification type as a string for the spatial anchor.
+    \brief The classification type of the spatial anchor as a string.
 
+    \readonly
     This property returns the classification type as a string, if one exisits.
     If the classification type is not in the set of types defined by the \l Classification enums, the
     label is set to \c Other and this property can be used to access the type as it was reported by
@@ -241,7 +247,6 @@ void QQuick3DXrSpatialAnchor::setClassification(Classification newClassification
 
     \sa classification
 */
-
 
 QString QQuick3DXrSpatialAnchor::classificationString() const
 {
@@ -260,10 +265,13 @@ void QQuick3DXrSpatialAnchor::setClassificationString(const QString &newClassifi
     \qmlproperty bool XrSpatialAnchor::has2DBounds
     \brief Indicates whether the spatial anchor has 2D bounds.
 
+    \readonly
     This property returns true if the spatial anchor has 2D bounds,
-    indicating that it represents a flat surface (for example, a floor or wall)
+    indicating that it represents a flat surface (for example, a floor or wall).
+    The bounds are described by \l offset2D and \l extent2D.
 
     Otherwise, it returns false.
+    \sa offset2D, extent2D, has3DBounds
  */
 
 bool QQuick3DXrSpatialAnchor::has2DBounds() const
@@ -289,10 +297,13 @@ void QQuick3DXrSpatialAnchor::setBounds2D(const QVector2D &offset, const QVector
     \qmlproperty bool XrSpatialAnchor::has3DBounds
     \brief Indicates whether the spatial anchor has 3D bounds.
 
+    \readonly
     This property returns true if the spatial anchor has 3D bounds, indicating
-    that it represents a volume (for example, a table).
-    Otherwise, it returns false.
+    that it represents a volume (for example, a table or a cupboard).
+    The bounds are described by \l offset3D and \l extent3D.
 
+    Otherwise, it returns false.
+    \sa offset3D, extent3D, has2DBounds
  */
 
 
@@ -315,6 +326,17 @@ void QQuick3DXrSpatialAnchor::setBounds3D(const QVector3D &offset, const QVector
     emit has3DBoundsChanged();
 }
 
+/*!
+    \qmlproperty vector2d XrSpatialAnchor::offset2D
+    \brief The 2D offset of the spatial anchor.
+
+    \readonly
+    This property specifies the offset of the anchor's bounds within
+    the X/Z plane. It is valid when \l has2DBounds is \c true.
+
+    \sa has2DBounds, extent2D
+*/
+
 QVector2D QQuick3DXrSpatialAnchor::offset2D() const
 {
     return m_offset2D;
@@ -324,8 +346,11 @@ QVector2D QQuick3DXrSpatialAnchor::offset2D() const
     \qmlproperty vector2d XrSpatialAnchor::extent2D
     \brief The 2D extent of the spatial anchor.
 
+    \readonly
     This property specifies the 2D size (width and height) of the spatial anchor within
-    the 2D plane.
+    the X/Z plane. It is valid when \l has2DBounds is \c true.
+
+    \sa has2DBounds, offset2D
  */
 
 QVector2D QQuick3DXrSpatialAnchor::extent2D() const
@@ -337,6 +362,7 @@ QVector2D QQuick3DXrSpatialAnchor::extent2D() const
     \qmlproperty string XrSpatialAnchor::identifier
     \brief A unique identifier for this spatial anchor.
 
+    \readonly
     This property returns a unique identifier associated with the
     spatial anchor. This is the same identified referenced by a \l XrSpatialAnchorListModel.
  */
@@ -365,61 +391,5 @@ void QQuick3DXrSpatialAnchor::setSpaceContainerUuids(const QSet<QUuid> &newSpace
 {
     m_spaceContainerUuids = newSpaceContainerUuids;
 }
-
-/*!
-    \qmlsignal XrSpatialAnchor::offset3DChanged()
-    \brief Emitted when the 3D offset of the spatial anchor changes.
-
-    This signal indicates that the offset3D property has been updated.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchor::extent3DChanged()
-    \brief Emitted when the 3D extent of the spatial anchor changes.
-
-    This signal indicates that the extent3D property has been updated.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchor::positionChanged()
-    \brief Emitted when the position of the spatial anchor changes.
-
-    This signal indicates that the `position` property has been updated.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchor::rotationChanged()
-    \brief Emitted when the rotation of the spatial anchor changes.
-
-    This signal indicates that the rotation property has been updated.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchor::classificationChanged()
-    \brief Emitted when the Classification type associated with the spatial anchor changes.
-
-    This signal indicates that the classification property has been updated.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchor::classificationStringChanged()
-    \brief Emitted when the classification string changes.
-
-    This signal indicates that the classificationString property has been updated.
-*/
-
-/*!
-    \qmlsignal XrSpatialAnchor::has2DBoundsChanged()
-    \brief Emitted when the 2D bounds state of the spatial anchor changes.
-
-    This signal indicates that the has2DBounds property has been updated.
- */
-
-/*!
-    \qmlsignal XrSpatialAnchor::has3DBoundsChanged()
-    \brief Emitted when the 3D bounds state of the spatial anchor changes.
-
-    This signal indicates that the has3DBounds property has been updated.
- */
 
 QT_END_NAMESPACE
