@@ -87,7 +87,7 @@ private:
     QPointer<QQuick3DXrInputManager> m_inputManager;
     Controller m_controller = ControllerNone;
     QMetaObject::Connection m_isActiveConnection;
-    HandPoseSpace m_poseSpace;
+    HandPoseSpace m_poseSpace = HandPoseSpace::AimPose;
     QVector3D m_pokePosition;
     bool m_isActive;
 };

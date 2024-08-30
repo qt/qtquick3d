@@ -18,8 +18,13 @@ QT_BEGIN_NAMESPACE
     \qmltype XrController
     \inherits Node
     \inqmlmodule QtQuick3D.Xr
-    \brief A type enabling the use of different controller inputs.
+    \brief A node representing an input controller.
 
+    The XrController is a tracked spatial node that tracks the position and orientation of an input controller.
+
+    Since this is a tracked node the spatial properties of the node should be considered read-only.
+
+    \sa XrInputAction
 */
 
 QQuick3DXrController::QQuick3DXrController()
@@ -30,7 +35,7 @@ QQuick3DXrController::QQuick3DXrController()
 /*!
     \qmlproperty enumeration QtQuick3D.Xr::XrController::controller
 
-    Holds the controller.
+    Specifies the controller to track.
 
     It can be one of:
     \value XrController.ControllerNone
@@ -70,11 +75,6 @@ void QQuick3DXrController::setController(QQuick3DXrController::Controller newCon
     }
 }
 
-/*!
-    \qmlproperty XrHandInput XrController::handInput
-    The hand input associated with this controller.
-*/
-
 QQuick3DXrHandInput *QQuick3DXrController::handInput() const
 {
     if (m_inputManager && m_inputManager->isValid()) {
@@ -86,6 +86,18 @@ QQuick3DXrHandInput *QQuick3DXrController::handInput() const
 
     return nullptr;
 }
+
+/*!
+    \qmlproperty enumeration XrController::poseSpace
+
+    Specifies the pose of the controller to track, that is the orientation and
+    position relative to the physical controller.
+
+    It can be one of:
+    \value XrController.AimPose Used when aiming at something, such as with \l XrVirtualMouse.
+    \value XrController.GripPose Used when grabbing something, such as when holding an object in the hand.
+    \default XrController.AimPose
+*/
 
 QQuick3DXrController::HandPoseSpace QQuick3DXrController::poseSpace() const
 {
@@ -101,6 +113,16 @@ void QQuick3DXrController::setPoseSpace(HandPoseSpace newPoseSpace)
     emit poseSpaceChanged();
 }
 
+/*!
+    \qmlproperty vector3d XrController::pokePosition
+
+    \readonly
+    This property holds the position to use for touch interactions.
+    Typically it will be the tip of the index finger when hand tracking.
+
+    \sa XrView::processTouch, XrView::setTouchpoint
+*/
+
 QVector3D QQuick3DXrController::pokePosition() const
 {
     auto *input = handInput();
@@ -109,6 +131,14 @@ QVector3D QQuick3DXrController::pokePosition() const
     return {};
 }
 
+/*!
+    \qmlproperty list<vector3d> XrController::jointPositions
+
+    \readonly
+    When hand tracking, this property holds the positions of all the bones in the hand.
+
+   \sa jointRotations, XrHandModel
+*/
 QList<QVector3D> QQuick3DXrController::jointPositions() const
 {
     auto *input = handInput();
@@ -117,6 +147,14 @@ QList<QVector3D> QQuick3DXrController::jointPositions() const
     return {};
 }
 
+/*!
+    \qmlproperty list<quaternion> XrController::jointRotations
+
+    \readonly
+    When hand tracking, this property holds the orientation of all the bones in the hand.
+
+    \sa jointPositions, XrHandModel
+*/
 QList<QQuaternion> QQuick3DXrController::jointRotations() const
 {
     auto *input = handInput();
@@ -124,6 +162,15 @@ QList<QQuaternion> QQuick3DXrController::jointRotations() const
         return input->jointRotations();
     return {};
 }
+
+/*!
+    \qmlproperty bool XrController::isActive
+    \brief Indicates whether the controller is providing input.
+
+    \readonly
+    This property is true if the corresponding physical controller is present
+    and tracking.
+*/
 
 bool QQuick3DXrController::isActive() const
 {
