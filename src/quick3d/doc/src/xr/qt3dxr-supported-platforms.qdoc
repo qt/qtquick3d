@@ -13,7 +13,11 @@
     platforms.
 
     QtQuick3D.Xr supports two main platforms, devices that use OpenXR as their XR environment and
-    devices that use Apple's visonOS.
+    devices that use Apple's visionOS.
+
+    \note Other platforms and devices might work, especially if they are OpenXR compatible.
+    However, as such platforms and devices are not verified by Qt, there is no guarantee for full
+    functionality and compatibility out of the box.
 
     \section1 Tested headsets
 
@@ -26,6 +30,6 @@
     \endlist
 
 
-    \sa {Getting Started With the Apple Vision Pro}
-    \sa {\qxr Getting Started With the Quest}
+    \sa {Getting Started With Apple Vision Pro}
+    \sa {Getting Started With Meta Quest 3}
 */

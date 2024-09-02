@@ -37,9 +37,9 @@
     \li \l {Instancer Tool}
     \li \l {\qxr}
         \list
-            \li \l{\qxr Overview}
             \li \l{Supported Headsets}
-            \li \l{\qxr Getting Started With the Quest}
+            \li \l{Getting Started With Meta Quest 3}
+            \li \l{Getting Started With Apple Vision Pro}
             \li \l{\qxr QML Types}
             \li \l{Qt Quick 3D - XR Simple Example}
         \endlist

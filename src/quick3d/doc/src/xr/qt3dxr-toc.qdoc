@@ -19,8 +19,9 @@
 //! [listitems-getting-started]
     \li Getting Started
         \list
-            \li \l{\qxr Getting Started With the Quest}
-            \li \l{\qxr Overview}
+            \li \l{\qxr}
+            \li \l{Getting Started With Meta Quest 3}
+            \li \l{Getting Started With Apple Vision Pro}
         \endlist
 //! [listitems-getting-started]
 
@@ -59,7 +60,6 @@
 
 //! [listitems-quick-links]
     \li \l{Supported Headsets}
-    \li \l{\qxr Getting Started With the Quest}
 //! [listitems-quick-links]
 
     \endlist
