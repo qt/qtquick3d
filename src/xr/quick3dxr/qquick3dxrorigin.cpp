@@ -15,7 +15,19 @@ QT_BEGIN_NAMESPACE
     \qmltype XrOrigin
     \inherits Node
     \inqmlmodule QtQuick3D.Xr
-    \brief An origin location for the XrView.
+    \brief The origin location for the XrView.
+
+    The origin determines the center of the \l{XrView::referenceSpace}{reference space}.
+    Changing the position of the origin will transport the user to a different position
+    in the scene.
+
+    Most XR platforms allow the user to move physically, changing the view point. This
+    does not change the position of the origin. To track the position of the headset, create
+    an XrCamera and assign it to the \l camera property.
+
+    \warning Be careful to follow best practices when changing the position/rotation of
+    the origin. Not doing so may cause physical discomfort, nausea, or loss of balance.
+    In the worst case, this could lead to injury or even death.
 */
 
 QQuick3DXrOrigin::QQuick3DXrOrigin(QQuick3DNode *parent)
@@ -40,7 +52,7 @@ QQuick3DXrOrigin::~QQuick3DXrOrigin()
     \qmlproperty XrCamera QtQuick3D.Xr::XrOrigin::camera
     \brief Property for adding a tracked camera node.
 
-    The XrCamera is a tracked spatial node that tracks the position and orientation of the Head Mounted Display in the XR environment.
+    XrCamera is a tracked spatial node that tracks the position and orientation of the Head Mounted Display in the XR environment.
 
     \note This property is optional and by default \c null.
 
@@ -124,10 +136,5 @@ void QQuick3DXrOrigin::updateTrackedCamera(QVector3D position, QQuaternion rotat
         m_camera->setRotation(rotation);
     }
 }
-
-/*!
-    \qmlsignal XrOrigin::cameraChanged()
-    Emitted when the camera changes.
-*/
 
 QT_END_NAMESPACE
