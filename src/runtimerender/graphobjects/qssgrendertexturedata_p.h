@@ -44,7 +44,7 @@ public:
     QSSGRenderTextureFormat format() const { return m_format; }
     void setFormat(QSSGRenderTextureFormat format);
 
-    bool hasTransparancy() const { return m_hasTransparency; }
+    bool hasTransparency() const { return m_hasTransparency; }
     void setHasTransparency(bool hasTransparency);
 
     // We use a version number to track changes in the texture data.
@@ -71,7 +71,7 @@ protected:
 inline size_t qHash(const QSSGRenderTextureData &data, size_t seed) noexcept
 {
     const auto format = data.format();
-    return qHashMulti(seed, data.size(), data.depth(), format.format, data.hasTransparancy());
+    return qHashMulti(seed, data.size(), data.depth(), format.format, data.hasTransparency());
 }
 
 QT_END_NAMESPACE

@@ -122,7 +122,7 @@ void tst_QQuick3DTextureData::testProperties()
     textureData.setHasTransparency(isTransparent);
     node = static_cast<QSSGRenderTextureData *>(QQuick3DObjectPrivate::updateSpatialNode(&textureData, node));
     QCOMPARE(originalNode, node);
-    QCOMPARE(isTransparent, node->hasTransparancy());
+    QCOMPARE(isTransparent, node->hasTransparency());
 
     const QByteArray data(16*16*4, 'x');
     textureData.setTextureData(data);

@@ -462,7 +462,7 @@ QSSGRenderGraphObject *QQuick3DTextureData::updateSpatialNode(QSSGRenderGraphObj
         changed = true;
     }
 
-    if (d->hasTransparency != textureData->hasTransparancy()) {
+    if (d->hasTransparency != textureData->hasTransparency()) {
         textureData->setHasTransparency(d->hasTransparency);
         changed = true;
     }
