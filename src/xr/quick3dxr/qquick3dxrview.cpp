@@ -684,75 +684,17 @@ void QQuick3DXrView::setXROrigin(QQuick3DXrOrigin *newXrOrigin)
     describing the failure.
  */
 
-
 /*!
     \qmlsignal XrView::sessionEnded()
 
     Emitted when the session ends.
  */
 
-
-/*!
-    \qmlsignal XrView::xrOriginChanged()
-
-    Emitted when the XR origin changes.
- */
-
-
-/*!
-    \qmlsignal XrView::environmentChanged(QQuick3DSceneEnvironment* environment)
-
-    Emitted when the scene environment changes to \a environment .
- */
-
-
-/*!
-    \qmlsignal XrView::passthroughEnabledChanged()
-
-    Emitted when passthroughEnabled property value changes.
- */
-
-
-/*!
-    \qmlsignal XrView::quitOnSessionEndChanged()
-
-    Emitted when the behavior of quitting on session end changes.
- */
-
-
-/*!
-    \qmlsignal XrView::fixedFoveationChanged()
-
-    Emitted when the fixedFoveation property value changes.
- */
-
-
 /*!
     \qmlsignal XrView::frameReady()
     \internal
 
     Emitted when a new frame is ready.
- */
-
-
-/*!
-    \qmlsignal XrView::referenceSpaceChanged()
-
-    Emitted when the referenceSpace property value changes.
- */
-
-
-/*!
-    \qmlsignal XrView::depthSubmissionEnabledChanged()
-
-    Emitted when the depthSubmissionEnabled property value changes.
- */
-
-
-/*!
-    \qmlsignal XrView::multiViewRenderingEnabledChanged()
-
-    Emitted when the multiViewRenderingEnabled property value changes.
  */
 
 QT_END_NAMESPACE
