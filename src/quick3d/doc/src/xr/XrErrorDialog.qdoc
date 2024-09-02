@@ -5,26 +5,27 @@
     \qmltype XrErrorDialog
     \inherits Item
     \inqmlmodule QtQuick3D.Xr
-    \brief A custom error dialog for XR applications.
+    \brief Custom error dialog for PCVR applications.
 
-    This type provides a dialog box (internally it dynamically instantiates a
-    Window with a message dialog), for showing an on-screen error message in XR
-    applications in PCVR mode (streaming from a desktop PC), which otherwise
-    have no on-screen windows (as in QQuickWindow / Window).
+    This type is provided for use when streaming content from a desktop
+    computer to an XR headset. It displays a dialog box on the
+    desktop screen, typically to inform users about errors in initializing
+    the headset. Internally, it dynamically instantiates a Window with a message
+    dialog.
 
-     \code
+    \code
+    XrView {
+        id: xrView
+
         XrErrorDialog {
             id: errorDialog
-            messageTitle: "Error"
-            messageText: "An unexpected error occurred."
         }
+        onInitializeFailed: (errorString) => errorDialog.run("XRView", errorString)
+    }
     \endcode
 */
 /*!
-      \qmlproperty string XrErrorDialog::messageTitle
-      \brief The title of the error message.
-*/
-/*!
-      \qmlproperty string XrErrorDialog::messageText
-      \brief The detailed text of the error message.
+    \qmlmethod XrErrorDialog::run(string title, string message)
+
+    Displays an error dialog with the title \a title and message contents \a message.
 */
