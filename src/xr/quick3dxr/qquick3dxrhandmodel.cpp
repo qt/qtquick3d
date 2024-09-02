@@ -20,6 +20,13 @@ QT_BEGIN_NAMESPACE
     \brief Represents a 3D model for a hand.
 
     Contains an animated 3D model that tracks the user's hands.
+
+    XrHandModel is only visible when hand tracking is active.
+
+    \note XrHandModel depends on hand tracking data from the underlying
+    system, and is therefore not available on all platforms. In particular,
+    the Apple Vision Pro will show the user's hands directly, and the
+    XrHandModel will not have any content.
 */
 
 QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)
@@ -83,7 +90,8 @@ void QQuick3DXrHandModel::componentComplete()
     \qmlproperty enumeration XrHandModel::hand
     \brief Specifies which hand the model is showing
 
-    \warning Changing hands is not currently supported.
+    \warning This property must be set when the XrHandModel is constructed.
+    Changing hands later is not currently supported.
 */
 
 QQuick3DXrHandModel::Hand QQuick3DXrHandModel::hand() const
