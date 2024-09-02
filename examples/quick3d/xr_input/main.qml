@@ -38,11 +38,10 @@ XrView {
     XrOrigin {
         id: theOrigin
         z: 100
-
+        //! [picking]
         XrController {
             id: rightController
             controller: XrController.ControllerRight
-
             poseSpace: XrController.AimPose
 
             property QtObject hitObject
@@ -61,19 +60,6 @@ XrView {
             }
 
             Node {
-                z: 5
-                Model {
-                    eulerRotation.x: 90
-                    scale: Qt.vector3d(0.05, 0.10, 0.05)
-                    source: "#Cylinder"
-                    materials: PrincipledMaterial {
-                        baseColor: "black"
-                        roughness: 0.2
-                    }
-                }
-            }
-
-            Node {
                 id: pickRay
                 property real length: 50
                 property bool hit: false
@@ -87,9 +73,25 @@ XrView {
                     opacity: 0.5
                 }
             }
+
+            Node {
+                z: 5
+                Model {
+                    eulerRotation.x: 90
+                    scale: Qt.vector3d(0.05, 0.10, 0.05)
+                    source: "#Cylinder"
+                    materials: PrincipledMaterial {
+                        baseColor: "black"
+                        roughness: 0.2
+                    }
+                }
+            }
+
         }
+        //! [picking]
     }
 
+    //! [trigger input]
     XrInputAction {
         id: rightTrigger
         hand: XrInputAction.RightHand
@@ -101,7 +103,9 @@ XrView {
             }
         }
     }
+    //! [trigger input]
 
+    //! [mouse input]
     XrInputAction {
         id: rightThumbstickX
         hand: XrInputAction.RightHand
@@ -120,6 +124,7 @@ XrView {
         scrollWheelX: rightThumbstickX.value
         scrollWheelY: rightThumbstickY.value
     }
+    //! [mouse input]
 
     Model {
         id: floor
@@ -222,6 +227,7 @@ XrView {
         }
     }
 
+    //! [xritem start]
     XrItem {
         width: 75
         height: 100
@@ -237,6 +243,7 @@ XrView {
             height: 400
             width: 300
             radius: 25
+    //! [xritem start]
 
             ColumnLayout {
                 anchors.fill: parent
@@ -286,8 +293,10 @@ XrView {
                     text: "Metallic"
                     checked: false
                 }
+    //! [xritem end]
             }
         }
+    //! [xritem end]
     }
 
     Node {
