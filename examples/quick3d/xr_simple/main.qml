@@ -3,8 +3,9 @@
 
 import QtQuick
 import QtQuick.Layouts
-import QtQuick3D
 import QtQuick3D.Helpers
+//! [XrView]
+import QtQuick3D
 import QtQuick3D.Xr
 
 XrView {
@@ -12,30 +13,44 @@ XrView {
     XrErrorDialog { id: err }
     onInitializeFailed: (errorString) => err.run("XRView", errorString)
     referenceSpace: XrView.ReferenceSpaceLocalFloor
-
-    xrOrigin: theOrigin
+//! [XrView]
 
     environment: SceneEnvironment {
         clearColor: "black"
         backgroundMode: SceneEnvironment.Color
     }
 
+//! [XrOrigin]
+    xrOrigin: theOrigin
     XrOrigin {
         id: theOrigin
 
-        LeftHand {
-            id: left
+        XrController {
+            controller: XrController.ControllerLeft
+            poseSpace: XrController.AimPose
+            CubeModel { color: "blue" }
         }
 
-        RightHand {
-            id: right
+        XrController {
+            controller: XrController.ControllerRight
+            poseSpace: XrController.AimPose
+            CubeModel { color: "red" }
         }
+    }
+//! [XrOrigin]
 
+    component CubeModel : Model {
+        source: "#Cube"
+        scale: Qt.vector3d(0.1, 0.1, 0.1)
+        property alias color: boxMaterial.baseColor
+        materials: PrincipledMaterial {
+            id: boxMaterial
+            lighting: DefaultMaterial.NoLighting
+        }
     }
 
     DirectionalLight {
     }
-
 
     Node {
         position: Qt.vector3d(0, 150, -100)

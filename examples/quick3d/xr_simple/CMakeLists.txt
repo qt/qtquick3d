@@ -33,8 +33,6 @@ qt_add_qml_module(xr_simple
     URI Example
     VERSION 1.0
     QML_FILES
-        LeftHand.qml
-        RightHand.qml
         main.qml
     NO_RESOURCE_TARGET_PATH
 )
