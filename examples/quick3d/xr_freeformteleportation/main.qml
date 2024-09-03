@@ -33,7 +33,7 @@ XrView {
         }
 
         Component.onCompleted: {
-            teleporter.teleportTo(Qt.vector3d(1000, 175, -300))
+            teleporter.teleportTo(Qt.vector3d(1000, 200, -300))
         }
 
         XrController {
