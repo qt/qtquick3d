@@ -32,7 +32,6 @@ QT_BEGIN_NAMESPACE
 QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)
     : QQuick3DModel(parent)
 {
-
 }
 
 void QQuick3DXrHandModel::updatePose()
@@ -89,6 +88,14 @@ void QQuick3DXrHandModel::componentComplete()
 /*!
     \qmlproperty enumeration XrHandModel::hand
     \brief Specifies which hand the model is showing
+
+    \value XrHandModel.LeftHand The left hand.
+    \value XrHandModel.RightHand The right hand.
+    \value XrHandModel.Unknown No hand is shown.
+
+    \default XrHandModel.Unknown
+
+    The value of this property is compatible with \l{XrController::controller}{XrController.controller}.
 
     \warning This property must be set when the XrHandModel is constructed.
     Changing hands later is not currently supported.
