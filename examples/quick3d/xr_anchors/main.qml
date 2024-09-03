@@ -137,7 +137,7 @@ XrView {
             }
         }
     }
-
+    //! [label]
     Node {
         id: labelNode
         position: rightController.position
@@ -166,7 +166,8 @@ XrView {
             }
         }
     }
-
+    //! [label]
+    //! [repeater]
     Repeater3D {
         id: spatialAnchors
         model: XrSpatialAnchorListModel {
@@ -220,4 +221,5 @@ XrView {
             visible: anchor.has2DBounds || anchor.has3DBounds
         }
     }
+    //! [repeater]
 }
