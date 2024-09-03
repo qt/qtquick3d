@@ -15,8 +15,6 @@ XrView {
 
     depthSubmissionEnabled: true
 
-    xrOrigin: theOrigin
-
     environment: SceneEnvironment {
         id: sceneEnvironment
         lightProbe: Texture {
@@ -35,32 +33,39 @@ XrView {
         eulerRotation.y: -70
     }
 
-    component Hand : XrHandModel {
+    //! [hand component]
+    component Hand : Node {
         id: handComponentRoot
         property color color: "#ddaa88"
         required property int touchId
+        property alias hand: handModel.hand
+
+        property vector3d touchPosition: handController.pokePosition
+        onTouchPositionChanged: {
+            const scenePos = theOrigin.mapPositionToScene(touchPosition)
+            const touchOffset = xrView.processTouch(scenePos, handComponentRoot.touchId)
+            handModel.position = touchOffset
+            buttons.handleTouch(scenePos)
+        }
+
         XrController {
             id: handController
             controller: handComponentRoot.hand
         }
-
-        property vector3d touchPos: handController.pokePosition
-        onTouchPosChanged: {
-            const scenePos = theOrigin.mapPositionToScene(touchPos)
-            const touchOffset = xrView.processTouch(scenePos, handComponentRoot.touchId)
-            position = touchOffset
-            buttons.handleTouch(scenePos)
-        }
-        materials: PrincipledMaterial {
-            baseColor: handComponentRoot.color
-            roughness: 0.5
+        XrHandModel {
+            id: handModel
+            materials: PrincipledMaterial {
+                baseColor: handComponentRoot.color
+                roughness: 0.5
+            }
         }
     }
+    //! [hand component]
 
+    //! [origin]
     XrOrigin {
         id: theOrigin
-        z: 25
-
+        z: 50
         Hand {
             id: rightHandModel
             hand: XrHandModel.RightHand
@@ -72,6 +77,8 @@ XrView {
             touchId: 1
         }
     }
+    xrOrigin: theOrigin
+    //! [origin]
 
     Model {
         id: floor
