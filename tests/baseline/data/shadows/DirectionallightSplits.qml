@@ -60,7 +60,7 @@ Item {
             position: Qt.vector3d(0, 1.1, 0)
             scale: Qt.vector3d(1,1,1).times(0.008)
             materials: PrincipledMaterial {
-                baseColor: color
+                baseColor: "white"
             }
         }
 
@@ -69,7 +69,7 @@ Item {
             position: Qt.vector3d(0, 1.6, 0)
             scale: Qt.vector3d(1,1,1).times(0.006)
             materials: PrincipledMaterial {
-                baseColor: color
+                baseColor: "white"
             }
         }
     }
