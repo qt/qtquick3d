@@ -414,6 +414,12 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     // So we get it as a dedicated argument.
     baker.setMultiViewCount(viewCount);
 
+    // For fragment shaders for GLSL ES (but only ES) we can make the generated
+    // sources contain 'precision mediump float' instead of 'precision highp float'.
+    const bool mediumPrecision = qEnvironmentVariableIntValue("QT_QUICK3D_MEDIUM_PRECISION");
+    if (mediumPrecision)
+        baker.setGlslOptions(QShaderBaker::GlslOption::GlslEsFragDefaultFloatPrecisionMedium);
+
     const bool editorMode = QSSGRhiContextPrivate::editorMode();
     // Shader debug is disabled in editor mode
     const bool shaderDebug = !editorMode && QSSGRhiContextPrivate::shaderDebuggingEnabled();
