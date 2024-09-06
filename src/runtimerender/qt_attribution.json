@@ -4,6 +4,7 @@
         "Name": "Godot Engine: Fog",
         "QDocModule": "qtquick3d",
         "QtUsage": "Used in the Qt Quick 3D module.",
+        "Files": "res/effectlib/fog.glsllib",
 
         "Description": "Simple fog support.",
         "Homepage": "https://godotengine.org/",
