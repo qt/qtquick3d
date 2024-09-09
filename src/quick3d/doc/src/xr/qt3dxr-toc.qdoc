@@ -34,9 +34,12 @@
 
 
 //! [listitems-examples]
-    \li \l{\qxr Examples}{Examples}
+    \li Examples
         \list
-            \li \l{Qt Quick 3D - XR Simple Example}
+            \li \l{Qt Quick 3D - XR Freeform Teleportation Example}{Freeform Teleportation Example}
+            \li \l{Qt Quick 3D - XR Spatial Anchors Example}{Spatial Anchors Example}
+            \li \l{Qt Quick 3D - XR Simple Touch Example}{Touch Example}
+            \li \l{\qxr Examples}{More}
         \endlist
 //! [listitems-examples]
 
