@@ -67,6 +67,7 @@ XrView {
         }
     }
 
+    //! [FreeformTeleporter component]
     FreeformTeleporter {
         id: teleporter
 
@@ -82,6 +83,7 @@ XrView {
                           xrOrigin.position = cameraOriginPosition
                       }
     }
+    //! [FreeformTeleporter component]
 
     Building {}
 }
