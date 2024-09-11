@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \page qtxr-multiview.html
+    \page qt3dxr-multiview.html
     \title Multiview Rendering
 
     \brief This page describes the concepts and practical implications of
@@ -143,7 +143,7 @@
 
     To query if multiview rendering is in use (regardless of how it was
     enabled), use the same
-    \l{QtQuick3D.Xr::XrView::multiviewRenderingEnabled}{multiviewRenderingEnabled}
+    \l{QtQuick3D.Xr::XrView::multiViewRenderingEnabled}{multiViewRenderingEnabled}
     property. The value stays false always if multiview rendering cannot be
     enabled.
 
