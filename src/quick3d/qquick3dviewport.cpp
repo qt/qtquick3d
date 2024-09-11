@@ -380,7 +380,19 @@ QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::scene
     \readonly
 
-    Holds the root \l Node of the View3D's scene.
+    Returns the root \l Node of the View3D's scene.
+
+    To define the 3D scene that is visualized in the View3D:
+
+    \list
+    \li  Define a hierarchy of \l{Node}{Node-based} items as children of
+        the View3D directly, then this will become the implicit \l scene of the
+        View3D.
+    \li Reference an existing scene by using the \l importScene property and
+        set it to the root \l Node of the scene you want to visualize. This
+        \l Node does not have to be an ancestor of the View3D, and you can have
+        multiple View3Ds that import the same scene.
+    \endlist
 
     \sa importScene
 */
@@ -392,12 +404,19 @@ QQuick3DNode *QQuick3DViewport::scene() const
 /*!
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::importScene
 
-    This property defines the reference node of the scene to render to the viewport.
-    The node does not have to be a child of the View3D. This referenced node becomes
-    a sibling with child nodes of View3D, if there are any.
+    This property defines the reference node of the scene to render to the
+    viewport. The node does not have to be a child of the View3D. This
+    referenced node becomes a sibling with child nodes of View3D, if there are
+    any.
 
-    \note This property can only be set once, and subsequent changes will have no
-    effect.
+    \note This property can only be set once, and subsequent changes will have
+    no effect.
+
+    You can also define a hierarchy of \l{Node}{Node-based} items as children of
+    the View3D directly, then this will become the implicit scene of the
+    View3D.
+
+    To return the current scene of the View3D, use the \l scene property.
 
     \sa Node
 */
