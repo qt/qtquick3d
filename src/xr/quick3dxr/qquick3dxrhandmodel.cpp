@@ -19,7 +19,14 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D.Xr
     \brief Represents a 3D model for a hand.
 
-    Contains an animated 3D model that tracks the user's hands.
+    Contains an animated 3D model that tracks the user's hands
+
+    XrHandModel is only visible when hand tracking is active.
+
+    \note XrHandModel depends on hand tracking data from the underlying
+    system and is therefore not available on all platforms. In particular,
+    the Apple Vision Pro will overlay video of the user's hands directly,
+    and the XrHandModel will not have any content.
 */
 
 QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)

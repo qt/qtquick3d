@@ -21,11 +21,11 @@ QT_BEGIN_NAMESPACE
     Changing the position of the origin will transport the user to a different position
     in the scene.
 
-    Most XR platforms allow the user to move physically, changing the view point. This
+    Most XR platforms allow the user to move physically, changing the viewpoint. This
     does not change the position of the origin. To track the position of the headset, create
     an XrCamera and assign it to the \l camera property.
 
-    \warning Be careful to follow best practices when changing the position/rotation of
+    \warning Ensure you follow best practices when changing the position/rotation of
     the origin. Not doing so may cause physical discomfort, nausea, or loss of balance.
     In the worst case, this could lead to injury or even death.
 */
@@ -52,9 +52,12 @@ QQuick3DXrOrigin::~QQuick3DXrOrigin()
     \qmlproperty XrCamera QtQuick3D.Xr::XrOrigin::camera
     \brief Property for adding a tracked camera node.
 
-    XrCamera is a tracked spatial node that tracks the position and orientation of the Head Mounted Display in the XR environment.
+    \default null
 
-    \note This property is optional and by default \c null.
+    Holds an XrCamera, which is a tracked spatial node that tracks the position and orientation
+    of the head-mounted display in the XR environment.
+
+    \note This property is optional.
 
     \sa XrCamera
 */
@@ -82,8 +85,8 @@ void QQuick3DXrOrigin::setCamera(QQuick3DXrCamera *newCamera)
                 qWarning() << "XrCamera needs to be a child of XrOrigin. Reparenting...";
         }
 
-        // If there's a camera it will call this function to update the camera settings
-        // when its properties changes.
+        // If there's a camera, it will call this function to update the camera settings
+        // when its properties change.
         syncCameraSettings();
     } else {
         // Restore default values
