@@ -14,13 +14,15 @@ QT_BEGIN_NAMESPACE
     \qmltype XrCamera
     \inherits Node
     \inqmlmodule QtQuick3D.Xr
-    \brief The camera for an XrView.
+    \brief Tracks spatial position and orientation from which the user views an XR scene.
 
-    The XrCamera is a tracked spatial node that tracks the position and orientation of the Head Mounted Display in the XR environment.
+    The XrCamera is a tracked spatial node that tracks the spatial position and orientation
+    of the users's view of an XR scene.
 
-    Since this is a tracked node the spatial properties of the node should be considered read-only.
-    Properties specific to the XrCamera, such as the near and far clip planes, are settable and when set overrides the devices own
-    preferred values.
+    Since this is a tracked node, its spatial properties should be considered read-only.
+    Properties specific to the XrCamera, such as the \l{clipNear}{near} and \l{clipFar}{far} clip planes, are settable.
+    When set, they override preferred values.
+
 
     \sa XrOrigin::camera
 */

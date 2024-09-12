@@ -18,11 +18,11 @@ QT_BEGIN_NAMESPACE
     \qmltype XrController
     \inherits Node
     \inqmlmodule QtQuick3D.Xr
-    \brief A node representing an input controller.
+    \brief A tracked spatial node that tracks the position and orientation of an input controller.
 
     The XrController is a tracked spatial node that tracks the position and orientation of an input controller.
 
-    Since this is a tracked node the spatial properties of the node should be considered read-only.
+    Since this is a tracked node, its spatial properties should be considered read-only.
 
     \sa XrInputAction
 */
@@ -90,7 +90,7 @@ QQuick3DXrHandInput *QQuick3DXrController::handInput() const
 /*!
     \qmlproperty enumeration XrController::poseSpace
 
-    Specifies the pose of the controller to track, that is the orientation and
+    Specifies the pose of the controller to track, that is, the orientation and
     position relative to the physical controller.
 
     It can be one of:
@@ -117,8 +117,8 @@ void QQuick3DXrController::setPoseSpace(HandPoseSpace newPoseSpace)
     \qmlproperty vector3d XrController::pokePosition
 
     \readonly
-    This property holds the position to use for touch interactions.
-    Typically it will be the tip of the index finger when hand tracking.
+    This property holds the position to be used for touch interactions.
+    Typically, it will be the tip of the index finger when tracking a hand.
 
     \sa XrView::processTouch, XrView::setTouchpoint
 */
@@ -135,7 +135,7 @@ QVector3D QQuick3DXrController::pokePosition() const
     \qmlproperty list<vector3d> XrController::jointPositions
 
     \readonly
-    When hand tracking, this property holds the positions of all the bones in the hand.
+    When using hand tracking, this property holds the positions of all the bones in the hand.
 
    \sa jointRotations, XrHandModel
 */
@@ -151,7 +151,7 @@ QList<QVector3D> QQuick3DXrController::jointPositions() const
     \qmlproperty list<quaternion> XrController::jointRotations
 
     \readonly
-    When hand tracking, this property holds the orientation of all the bones in the hand.
+    When using hand tracking, this property holds the orientation of all the bones in the hand.
 
     \sa jointPositions, XrHandModel
 */
