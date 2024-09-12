@@ -44,11 +44,7 @@ struct QSSGShadowMapEntry
 
     static QSSGShadowMapEntry withRhiDepthMap(quint32 lightIdx, ShadowMapModes mode, QRhiTexture *textureArray);
 
-    static QSSGShadowMapEntry withRhiDepthCubeMap(quint32 lightIdx,
-                                                  ShadowMapModes mode,
-                                                  QRhiTexture *depthCube,
-                                                  QRhiTexture *cubeCopy,
-                                                  QRhiRenderBuffer *depthStencil);
+    static QSSGShadowMapEntry withRhiDepthCubeMap(quint32 lightIdx, ShadowMapModes mode, QRhiTexture *depthCube, QRhiRenderBuffer *depthStencil);
     bool isCompatible(QSize mapSize, quint32 layerIndex, quint32 csmNumSplits, ShadowMapModes mapMode);
     void destroyRhiResources();
 
@@ -58,9 +54,7 @@ struct QSSGShadowMapEntry
 
     // RHI resources
     QRhiTexture *m_rhiDepthTextureArray = nullptr; // for shadow map (VSM) (not owned)
-    std::array<QRhiTexture *, 4> m_rhiDepthCopy = {}; // for blur pass (VSM)
     QRhiTexture *m_rhiDepthCube = nullptr; // shadow cube map (CUBE)
-    QRhiTexture *m_rhiCubeCopy = nullptr; // for blur pass (CUBE)
     std::array<QRhiRenderBuffer *, 4> m_rhiDepthStencil = {}; // depth/stencil
     std::array<QRhiTextureRenderTarget *, 6> m_rhiRenderTargets = {}; // texture RT
     std::array<QRhiRenderPassDescriptor *, 4> m_rhiRenderPassDesc = {}; // texture RT renderpass descriptor
