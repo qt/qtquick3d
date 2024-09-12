@@ -24,9 +24,9 @@ QT_BEGIN_NAMESPACE
     XrHandModel is only visible when hand tracking is active.
 
     \note XrHandModel depends on hand tracking data from the underlying
-    system, and is therefore not available on all platforms. In particular,
-    the Apple Vision Pro will show the user's hands directly, and the
-    XrHandModel will not have any content.
+    system and is therefore not available on all platforms. In particular,
+    the Apple Vision Pro will overlay video of the user's hands directly,
+    and the XrHandModel will not have any content.
 */
 
 QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)

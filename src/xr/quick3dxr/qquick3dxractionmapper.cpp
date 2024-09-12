@@ -90,12 +90,13 @@ void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
 
     Actions can be boolean, such as a button press, or analog, such as a joystick axis.
 
-    To react to a boolean action, use the \l pressed property or the \l triggered signal. An analog action will set the \l value property.
+    Use the \l pressed property or the \l triggered signal to react to a boolean action. An analog action will set the \l value property.
 
     \note For convenience, an analog property will also set the \c pressed property and emit the \c triggered signal,
     while a boolean property will set \c value to 1.0 when pressed.
 
-    The following shows how to react to either the right hand grip being pressed, or to a right hand pinch gesture from hand tracking:
+    The following shows how to react to either the right hand grip being pressed or to a right hand pinch gesture from hand tracking:
+
     \qml
     XrInputAction {
         hand: XrInputAction.RightHand
@@ -103,6 +104,7 @@ void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
         onTriggered: console.log("Do action here.")
     }
     \endqml
+
     The reason for specifying both \c SqueezePressed and \c SqueezeValue is that some controllers have an analog grip button,
     and some controllers just have an on/off grip switch.
  */
@@ -148,7 +150,7 @@ void QQuick3DXrInputAction::setPressed(bool newPressed)
     \qmlproperty string XrInputAction::actionName
     \brief The name of the input action.
 
-    Use this property to specify the name of the custom input action to react to. This property does not have an effect if \l actionId is set.
+    Use this property to specify the name of the custom input action you want to react to. This property does not have an effect if \l actionId is set.
  */
 
 QString QQuick3DXrInputAction::actionName() const
@@ -206,7 +208,7 @@ void QQuick3DXrInputAction::componentComplete()
     \qmlproperty List<enumeration> XrInputAction::actionId
     \brief Specifies the action(s) to react to
 
-    Holds a List of IDs, that can be of the following values:
+    Holds a List of IDs that can be of the following values:
 
     \value XrInputAction.Button1Pressed Button 1 is pressed. \e Boolean.
     \value XrInputAction.Button1Touched Button 1 is touched. \e Boolean.
@@ -217,7 +219,7 @@ void QQuick3DXrInputAction::componentComplete()
     \value XrInputAction.ButtonSystemPressed The system button is pressed. \e Boolean.
     \value XrInputAction.ButtonSystemTouched The system button is touched. \e Boolean.
     \value XrInputAction.SqueezeValue How far the grip button is pressed. \e Analog.
-    \value XrInputAction.SqueezeForce The force applied on the grip button. \e Analog.
+    \value XrInputAction.SqueezeForce The force applied to the grip button. \e Analog.
     \value XrInputAction.SqueezePressed The grip button is pressed.  \e Boolean.
     \value XrInputAction.TriggerValue How far the trigger button is pressed. \e Analog.
     \value XrInputAction.TriggerPressed The trigger is pressed. \e Boolean.
