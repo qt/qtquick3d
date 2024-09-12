@@ -1444,7 +1444,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             }
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map"));
         } else {
-            Q_ASSERT(pEntry->m_rhiDepthCube && pEntry->m_rhiCubeCopy);
+            Q_ASSERT(pEntry->m_rhiDepthCube);
             const QSize size = pEntry->m_rhiDepthCube->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
