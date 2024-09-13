@@ -44,8 +44,8 @@
 
     \section1 Continuous movement
 
-    Continuous movement is usually better suited for when the explorable area is small, or when the
-    user needs a more fine-grained control over the movement using a controller or a keyboard. See
+    Continuous movement is usually better suited for when the explorable area is small or when the
+    user needs more fine-grained control over the movement using a controller or a keyboard. See
     the \l XrController documentation for more information on how to get the data from the
     controller. As with teleportation, it is important to minimize motion sickness and
     disorientation when using continuous movement. This can be done by, for example, adding a
