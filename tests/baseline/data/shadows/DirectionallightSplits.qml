@@ -31,8 +31,8 @@ Item {
             castsShadow: true
             brightness: 1
             shadowFactor: 50
-            shadowBias: 0.1
-            pcfFactor: 0.01
+            shadowBias: 0.2
+            pcfFactor: 0.02
             csmNumSplits: 1
         }
 

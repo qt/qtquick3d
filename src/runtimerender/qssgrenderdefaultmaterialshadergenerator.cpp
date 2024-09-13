@@ -2359,9 +2359,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 shadowData.csmBlendRatio = theLight->m_csmBlendRatio;
                 for (int i = 0; i < 4; i++) {
                     QMatrix4x4 inv = pEntry->m_lightViewProjection[i].inverted();
-                    const float x = 1.0f / (inv * QVector4D(1, 0, 0, 0)).length();
-                    const float y = 1.0f / (inv * QVector4D(0, 1, 0, 0)).length();
-                    const float z = 1.0f / (inv * QVector4D(0, 0, 1, 0)).length();
+                    const float x = 0.5f / (inv * QVector4D(1, 0, 0, 0)).length();
+                    const float y = 0.5f / (inv * QVector4D(0, 1, 0, 0)).length();
+                    const float z = 0.5f / (inv * QVector4D(0, 0, 1, 0)).length();
                     QVector4D dimensionsInverted = QVector4D(x, y, z, 0);
                     memcpy(shadowData.dimensionsInverted[i], &dimensionsInverted, 4 * sizeof(float));
                 }

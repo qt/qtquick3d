@@ -35,6 +35,7 @@ Item {
             brightness: 50
             coneAngle: 150
             innerConeAngle: 100
+            shadowBias: 20
         }
 
         Model {
