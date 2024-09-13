@@ -80,8 +80,8 @@ Item {
             shadowFactor: 100
             shadowMapQuality: Light.ShadowMapQualityHigh
             softShadowQuality: Light.PCF8
-            pcfFactor: 0.25
-            shadowBias: 2
+            pcfFactor: 0.5
+            shadowBias: 4
         }
 
         Model {

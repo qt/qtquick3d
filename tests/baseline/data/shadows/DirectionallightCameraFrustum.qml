@@ -45,6 +45,7 @@ Item
                 visible: true
                 shadowFactor: 100
                 shadowMapFar: 20000
+                shadowBias: 20
             }
 
             PerspectiveCamera

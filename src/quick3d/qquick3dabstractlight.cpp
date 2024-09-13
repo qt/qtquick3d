@@ -177,16 +177,13 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty real Light::pcfFactor
-    The property controls the PCF (percentage-closer filtering) factor.
-
-    \note This value does not correspond to a PCF filtering size in world space
-    but does try to approximate it for DirectionalLight. For SpotLight and PointLight
-    no approximation is done.
+    The property controls the PCF (percentage-closer filtering) factor. This
+    value tries to approximate the radius of a PCF filtering in world space.
 
     \note PCF needs to be set in \l{Light::}{softShadowQuality} for this property
     to have an effect.
 
-    Default value: \c{1.0}
+    Default value: \c{2.0}
 
     \sa Light::softShadowQuality
 */

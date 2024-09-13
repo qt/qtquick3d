@@ -66,7 +66,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     float m_shadowFilter; // Shadow map filter step size
     SoftShadowQuality m_softShadowQuality = SoftShadowQuality::PCF4;
 
-    float m_pcfFactor = 1.0f;
+    float m_pcfFactor = 2.0f;
 
     bool m_bakingEnabled;
     bool m_fullyBaked; // direct+indirect
