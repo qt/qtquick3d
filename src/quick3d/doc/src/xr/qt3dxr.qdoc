@@ -22,7 +22,7 @@
     and size of these elements are defined in the scene's coordinate system, which is arbitrary and can be
     defined by the developer to fit the needs of the application.
 
-    \badcode
+    \qml
     View3D {
         width: 1280
         height: 720
@@ -46,7 +46,7 @@
             }
         }
     }
-    \endcode
+    \endqml
 
     In an XR application, the scene's coordinate system is, normally, defined by the real-world units and
     tracking data. The camera's position and orientation are defined by the device's, or in the case of
@@ -56,7 +56,7 @@
     Note also that in an \qxr application the entry point is not a \l View3D but the \l  XrView. In addition
     an \l XrOrigin is used to define the origin of the scene where tracked items are placed relative to.
 
-    \badcode
+    \qml
     XrView {
         DirectionalLight {
         }
@@ -107,7 +107,7 @@
             }
         }
     }
-    \endcode
+    \endqml
 
     \section2 Where to go from here?
 
