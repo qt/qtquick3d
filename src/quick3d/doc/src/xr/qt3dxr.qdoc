@@ -4,19 +4,19 @@
     \page qt-quick-3d-xr.html
     \title \qxr
     \image xr_development.webp
-    \brief The \qxr module provides APIs for developing XR applications with Qt Quick 3D.
+    \brief The \qxr module provides APIs for developing XR applications.
 
     \section1 Introduction
 
     Extended Reality (XR) is a term that includes Virtual Reality (VR), Augmented Reality (AR),
-    and Mixed Reality (MR). These technologies are used to create immersive experiences that can
+    and Mixed Reality (MR). These technologies create immersive experiences that can
     alter a user's perception of the world around them. The \qxr module provides APIs for developing
-    XR applications with Qt Quick 3D, across a variety of devices and platforms.
+    XR applications with Qt Quick 3D across a variety of devices and platforms.
 
-    \section2 Difference between a Qt Quick 3D and a \qxr application
+    \section2 Difference between Qt Quick 3D and \qxr applications
 
     The main difference between a Qt Quick 3D and a \qxr application, from a developer's perspective,
-    is the scene's entry point and the importance of being aware of real-world units and tracking data.
+    is the scene's entry point, and being aware of real-world units and tracking data is essential.
 
     In Qt Quick 3D, a minimal application would consist of a camera, light, and a 3D model. The positioning
     and size of these elements are defined in the scene's coordinate system, which is arbitrary and can be
@@ -48,13 +48,14 @@
     }
     \endqml
 
-    In an XR application, the scene's coordinate system is, normally, defined by the real-world units and
-    tracking data. The camera's position and orientation are defined by the device's, or in the case of
-    head-mounted displays (HMD), the user's head position and orientation. The scene's units are then
-    defined so they match the real-world units, for example, you'd want a door or a desk to be the same
+    In an XR application, consider real-world units and tracking data when defining the scene.
+    The camera's position and orientation are defined by the device's, or in the case of
+    head-mounted displays (HMD), the user's head position and orientation. The scene's units should
+    match the real-world unit. For example, you'd want a door or a desk to be the same
     size in the real world as in the virtual world.
-    Note also that in an \qxr application the entry point is not a \l View3D but the \l  XrView. In addition
-    an \l XrOrigin is used to define the origin of the scene where tracked items are placed relative to.
+
+    \note The entry point in an \qxr application is not a \l View3D but the \l  XrView. In addition,
+    an \l XrOrigin defines the scene's origin, which tracked items are placed relative to.
 
     \qml
     XrView {
@@ -111,10 +112,9 @@
 
     \section2 Where to go from here?
 
-    Depending on the target hardware, take a look at \l{Getting Started With Meta Quest 3} or
-    \l{Getting Started With Apple Vision Pro} for more information about how to get started
-    with your specific device. Take a look at the \l{Supported Platforms} page for more information
-    about other platforms and devices.
+    Take a look at \l{Getting Started With Meta Quest 3} or \l{Getting Started With Apple Vision Pro}
+    for more information about how to get started with your specific device. See the
+    \l{Supported Platforms} page for more information about platforms and devices supported.
 
     If you are looking for a specific \qxr API, take a look at the \l{\qxr QML Types}{API Reference},
     or try out one of the \l{\qxr Examples}, which demonstrate how the \qxr APIs can be used.

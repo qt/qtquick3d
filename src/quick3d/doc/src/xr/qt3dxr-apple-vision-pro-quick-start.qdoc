@@ -9,40 +9,40 @@
 
     \section1 Introduction
 
-    This guide will help you get started with developing applications for visionOS.
+    This guide will get you started developing applications for \tm visionOS.
 
-    Before starting it is important to understand that there are two ways to develop applications
-    for visionOS. The first method is what we'll refer to as "low-immersion" applications. These
-    applications can be developed as any normal iPad/iOS application and deployed to visionOS,
-    these applications will then be run in windowed mode and look like a normal iPad application
-    floating in you VR environment.
+    Before starting, it is crucial to understand that there are two ways to develop applications
+    for visionOS. The first method we'll refer to produces "low-immersion" applications. These
+    applications can be developed as any regular iPad/iOS application and deployed to visionOS,
+    these applications run in windowed mode and look like a regular iPad application
+    floating in your VR environment.
 
-    Note visionOS specific application can also be placed in the "low-immersion" mode, and will
+    \note  visionOS specific applications can also be placed in the \e low-immersion mode and will
     essentially work the same as an iPad/iOS application.
 
-    The second method is what we'll refer to as a "high-immersion" applications. These applications
+    We'll refer to the second method as producing \e high-immersion applications. These applications
     are developed using the visionOS SDK and are run in "full screen" mode, meaning QtQuick3D takes
-    full control of the rendering, with some exceptions (Like pass-through of the hands).
+    complete control of the rendering, with some exceptions (Like pass-through video of the hands).
 
-    \note visionOS supports applications transitioning between these two states, but for the time
-    being only these two modes are supported by QtQuick3D.Xr.
+    \note visionOS supports applications transitioning between these two states, but this is not
+    supported by QtQuick3D.Xr.
 
-    \note Developing for VisionOS requires Apple hardware with Apple Silicon.
+    \note Developing for visionOS requires Apple hardware with Apple Silicon.
 
-    \note There is no binary build of Qt for visionOS, you will need to build Qt from source. See
+    \note There is no binary build of Qt for visionOS. You will need to build Qt from source. See
     \l{Building Qt for visionOS} for more information.
 
-    \section2 Deploying an iOS application
+    \section1 Deploying a low-immersion application
 
-    To deploy an iPad/iOS application to visionOS, simply build and deploy the application as you
-    would normally for \l {Qt for iOS}{iOS/iPad}
+    To deploy an iPad/iOS application to visionOS, build and deploy the application as you
+    would normally for \l {Qt for iOS}{iOS/iPad}.
 
-    \section2 Building Qt for visionOS
+    \section1 Building Qt for visionOS
 
-    To build Qt for visionOS you will need the Qt 6.8 source code with Qt Quick3D, see \l {Building
+    To build Qt for visionOS, you will need the Qt  source code with Qt Quick3D; see \l {Building
     Qt Sources} for more information on getting the source code.
 
-    \section3 Configuring and building for the simulator
+    \section2 Configuring and building for the simulator
 
     A minimal configure command for building Qt for the visionOS simulator would look like this:
 
@@ -50,9 +50,9 @@
     [QT_SOURCE_DIR]/configure -qt-host-path [PATH_TO_QT_HOST_BUILD] -platform macx-visionos-clang -sdk xrsimulator -submodules qtquick3d
     \endcode
 
-    After configuring, you can build using you build tool, for example, cmake.
+    After configuring, you can build using your build tool, for example, CMake.
 
-    \section3 Configuring and building for the device
+    \section2 Configuring and building for the device
 
     A minimal configure command for building Qt for the visionOS device would look like this:
 
@@ -60,15 +60,15 @@
     [QT_SOURCE_DIR]/configure -qt-host-path [PATH_TO_QT_HOST_BUILD] -platform macx-visionos-clang -sdk xros -submodules qtquick3d
     \endcode
 
-    After configuring, you can build using you build tool, for example, cmake.
+    After configuring, you can build using your build tool.
 
     \section2 Deploying a visionOS application
 
-    To deploy a visionOS application you will need a recent version of Xcode with the visionOS sdk
-    components installed, and optionally the visionOS simulator.
+    To deploy a visionOS application, you will need Xcode with the visionOS SDK
+    components installed and, optionally, the visionOS simulator.    See \l{visonOS supported versions} for more information.
 
-    \note Unlike the iOS/iPad applications, visionOS applications are not deployed using the
-    QtCreator, but rather using Xcode.
+    \note Unlike the iOS/iPad applications, visionOS applications are not deployed using
+    \QC, but instead using Xcode.
 
     To build one of Qt's examples for visionOS, you can use the following command:
 
@@ -76,6 +76,6 @@
     [QT_VISIONOS_BUILD]/bin/qt-cmake [EXAMPLE_BUILD_DIR] [EXAMPLE_SOURCE_DIR]
     \endcode
 
-    This will produce an Xcode project that you can open in Xcode and deploy to the device.
+    Running this command produces an Xcode project that you can open in Xcode and deploy to the device.
 
 */
