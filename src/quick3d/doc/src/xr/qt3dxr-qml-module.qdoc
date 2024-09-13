@@ -9,6 +9,7 @@
 
     \brief Provides QML types for XR and VR applications.
 
-    This module provides QML types that enable you to use the features
-    of Qt Quick 3D on XR platforms.
+    This module provides QML types that enable you to develop XR applications and
+    use XR APIs such as spatial anchors, pass-through, and hand tracking.
+
 */

@@ -9,13 +9,13 @@
     This page outlines the supported platforms and devices for which QtQuick3D.Xr is
     tested and supported.
 
-    \note QtQuick3D.Xr is still under development and all features might not be available
-    on all platforms.
+    \note QtQuick3D.Xr is still under development, and all features might not be available on all
+    platforms.
 
     \section1 Basic XR Platform Concepts
 
     QtQuick3D.Xr supports two main platforms: devices that use OpenXR as the API for
-    developing applications, and devices that use Apple's visionOS.
+    developing applications and devices that use Apple's visionOS.
 
     \section2 OpenXR
 
@@ -30,15 +30,15 @@
     tablets. Such devices and their software platform are sometimes referred to as
     \c{Standalone VR}.
 
-    Other headsets may not provide a full application deployment and runtime platform, but
+    Other headsets may not provide a full application deployment and runtime platform but
     rather are used in combination with a computer, typically running Windows or Linux,
     from where the application-rendered content is streamed to the headset, either via a
     wired or wireless connection. This setup is sometimes referred to as \c{PCVR}. The
-    applications in this case are developed and deployed as regular, desktop Windows or
+    applications, in this case, are developed and deployed as regular desktop Windows or
     Linux applications. However, instead of opening on-screen windows and showing content
     there, as typical desktop applications would do, they render into offscreen buffers
     via OpenXR and a 3D API such as Direct 3D or Vulkan. The resulting content is streamed
-    to the headset for displaying; the actual streaming and the related processing is
+    to the headset for displaying; the actual streaming and the related processing are
     managed by the underlying software stack, transparently to Qt and the application. An
     example of such headsets are some devices from Varjo, or the non-standalone devices in
     the HTC Vive range.
@@ -51,7 +51,7 @@
     which applications then use when launched on the device.
 
     With non-standalone devices, all rendering and most of the related processing happens
-    on the host PC. The quality and performance depends heavily on the host PC's
+    on the host PC. The quality and performance depend heavily on the host PC's
     capabilities, but the streaming technology and associated factors, such as the
     wireless network bandwidth, can affect the results as well. In the PCVR world, there
     are multiple solutions that provide an OpenXR implementation and wired or wireless
@@ -63,13 +63,13 @@
 
     \section2 Devices and platforms not based on OpenXR
 
-    \qxr current supports one non-OpenXR platform: Apple's visionOS. Devices such as the
+    \qxr currently supports one non-OpenXR platform: Apple's visionOS. Devices such as the
     \l{https://www.apple.com/apple-vision-pro/}{Apple Vision Pro} fall into the
     \c{Standalone VR} category.
 
     \section1 Tested and Verified Headsets, Tier One
 
-    This is the list of devices that are regularly tested and verified by Qt, and are
+    This is the list of devices that are regularly tested and verified by Qt and are
     actively used during the development of \qxr.
 
     \list
@@ -91,22 +91,22 @@
     \section1 Special Developer Environments
 
     This is a list of VR simulator solutions that are used during \qxr
-    development, and can be useful for application developers as well. Full
+    development and can be useful for application developers as well. Full
     functionality is not guaranteed with these solutions, especially when it
     comes to AR features.
 
     \list
       \li \l{https://developer.oculus.com/documentation/native/xrsim-intro/}{Meta XR
       Simulator} (Windows). This is an OpenXR implementation for Windows that shows the
-      rendered content separately for the left and eye right in a desktop window, while
-      offering input controller simulation, and many other developer-oriented features.
+      rendered content separately for the left and eye right in a desktop window while
+      offering input controller simulation and many other developer-oriented features.
       From the applications' perspective, using the simulator is no different from PCVR on
       Windows.
     \endlist
 
     \section1 Additional Notes
 
-    As mentioned above, other devices using OpenXR, for example the Pico 4, may be
+    As mentioned above, other devices using OpenXR, for example, the Pico 4, may be
     functional too, but this is not verified by Qt. The list of tested devices can be
     expected to change and increase in future Qt releases.
 
