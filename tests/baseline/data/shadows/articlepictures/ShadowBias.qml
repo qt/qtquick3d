@@ -38,7 +38,7 @@ Item {
             shadowMapQuality: Light.ShadowMapQualityHigh
             csmBlendRatio: 0.05
             shadowBias: 0
-            pcfFactor: 5
+            pcfFactor: 10
             softShadowQuality: Light.PCF16
             shadowMapFar: camera1.clipFar
         }
@@ -110,8 +110,8 @@ Item {
             csmNumSplits: 2
             shadowMapQuality: Light.ShadowMapQualityHigh
             csmBlendRatio: 0.05
-            shadowBias: 10
-            pcfFactor: 5
+            shadowBias: 20
+            pcfFactor: 10
             softShadowQuality: Light.PCF16
             shadowMapFar: camera1.clipFar
         }

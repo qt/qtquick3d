@@ -41,6 +41,7 @@ Item {
             castsShadow: true 
             brightness: 12
             coneAngle: 110
+            shadowBias: 20
         }
 
         //! [rectangle models]

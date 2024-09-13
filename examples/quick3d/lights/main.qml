@@ -45,7 +45,7 @@ ApplicationWindow {
             position: Qt.vector3d(0, 200, 0)
             rotation: Quaternion.fromEulerAngles(-135, -90, 0)
             shadowMapQuality: Light.ShadowMapQualityVeryHigh
-            pcfFactor: 0.5
+            pcfFactor: 1
             visible: directionalLightCheckBox.checked
             castsShadow: checkBoxShadows.checked
             brightness: directionalLightSlider.value

@@ -276,9 +276,9 @@ Window {
             }
             SliderWithValue {
                 id: sliderPCFFactor
-                value: 10
-                from: 1
-                to: 30
+                value: 20
+                from: 0
+                to: 60
                 enabled: checkBoxDirectionalLight.checked
             }
             Label {
@@ -287,9 +287,9 @@ Window {
             }
             SliderWithValue {
                 id: sliderShadowBiasDirLight
-                value: 10
+                value: 20
                 from: 0
-                to: 30
+                to: 60
                 stepSize: 1
                 enabled: true
             }
@@ -370,9 +370,9 @@ Window {
             }
             SliderWithValue {
                 id: sliderShadowBiasSpotLight
-                value: 10
+                value: 20
                 from: 0
-                to: 30
+                to: 60
                 stepSize: 1
                 enabled: true
             }
@@ -382,9 +382,9 @@ Window {
             }
             SliderWithValue {
                 id: sliderPCFFactorSpot
-                value: 1.67
+                value: 3.34
                 from: 0
-                to: 30
+                to: 60
                 enabled: checkBoxSpotLight.checked
             }
             Label {

@@ -147,7 +147,7 @@ private:
     QSSGSoftShadowQuality m_softShadowQuality = QSSGSoftShadowQuality::PCF4;
     float m_shadowMapFar = 5000.0f;
     float m_shadowFilter = 5.0f;
-    float m_pcfFactor = 1.0f;
+    float m_pcfFactor = 2.0f;
     QSSGBakeMode m_bakeMode = QSSGBakeMode::BakeModeDisabled;
 };
 
