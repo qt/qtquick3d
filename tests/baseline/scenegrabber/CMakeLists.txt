@@ -50,4 +50,5 @@ qt6_add_qml_module(qquick3d_qmlscenegrabber
     URI "QtQuick3D.Lancelot"
     VERSION "${PROJECT_VERSION}"
     NO_GENERATE_PLUGIN_SOURCE
+    RESOURCE_PREFIX "/"
 )
