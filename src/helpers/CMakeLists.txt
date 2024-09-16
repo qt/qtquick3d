@@ -25,6 +25,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         proceduralskytexturedata.cpp proceduralskytexturedata_p.h
         qquick3dtexturedatafrontend_p.h qquick3dtexturedatafrontend.cpp
         proceduralmesh_p.h proceduralmesh.cpp
+        extrudedtextgeometry_p.h extrudedtextgeometry.cpp
         qtquick3dhelpersglobal_p.h
     QML_FILES
         AxisHelper.qml
@@ -44,6 +45,11 @@ qt_internal_add_qml_module(Quick3DHelpers
         Qt::Quick
         Qt::Quick3DPrivate
         Qt::GuiPrivate
+)
+
+qt_internal_extend_target(Quick3DHelpers CONDITION QT_FEATURE_concurrent
+    LIBRARIES
+        Qt::Concurrent
 )
 
 if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
