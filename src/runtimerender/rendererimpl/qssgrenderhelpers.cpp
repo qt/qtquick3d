@@ -132,7 +132,7 @@ static QSSGBoxPoints computeFrustumBounds(const QSSGRenderCamera &inCamera)
              inv.map(QVector3D(+1, +1, +1)), inv.map(QVector3D(-1, +1, +1)) };
 }
 
-static QSSGBoxPoints computeFrustumBoundsWithNearFar(const QSSGRenderCamera &inCamera, float clipNear, float clipFar)
+static QSSGBoxPoints computeFrustumBoundsWithNearFar(const QSSGRenderCamera &inCamera, float clipNear, float clipFar, float pcfRadius)
 {
     QMatrix4x4 viewProjection;
     inCamera.calculateViewProjectionMatrix(viewProjection, clipNear, clipFar);
@@ -145,6 +145,52 @@ static QSSGBoxPoints computeFrustumBoundsWithNearFar(const QSSGRenderCamera &inC
                           inv.map(QVector3D(+1, +1, -1)), inv.map(QVector3D(-1, +1, -1)),
                           inv.map(QVector3D(-1, -1, +1)), inv.map(QVector3D(+1, -1, +1)),
                           inv.map(QVector3D(+1, +1, +1)), inv.map(QVector3D(-1, +1, +1)) };
+
+    if (pcfRadius > 0.f) {
+        // Expand the frustum in all directions to cover the pcf radius
+        const QVector3D origin = inv.map(QVector3D(0, 0, 0));
+        const QVector3D x = (inv.map(QVector3D(1, 0, 0)) - origin).normalized() * pcfRadius;
+        const QVector3D y = (inv.map(QVector3D(0, 1, 0)) - origin).normalized() * pcfRadius;
+        const QVector3D z = (inv.map(QVector3D(0, 0, 1)) - origin).normalized() * pcfRadius;
+
+        //     bottom          top
+        //  4__________5  7__________6
+        //   \        /    \        /
+        //    \      /      \      /
+        //     \____/        \____/
+        //     0    1        3    2
+        // left
+        pts[0] -= x;
+        pts[3] -= x;
+        pts[7] -= x;
+        pts[4] -= x;
+        // right
+        pts[1] += x;
+        pts[5] += x;
+        pts[6] += x;
+        pts[2] += x;
+        // top
+        pts[3] += y;
+        pts[2] += y;
+        pts[6] += y;
+        pts[7] += y;
+        // bottom
+        pts[0] -= y;
+        pts[1] -= y;
+        pts[5] -= y;
+        pts[4] -= y;
+        // back
+        pts[0] -= z;
+        pts[1] -= z;
+        pts[2] -= z;
+        pts[3] -= z;
+        // front
+        pts[4] += z;
+        pts[5] += z;
+        pts[6] += z;
+        pts[7] += z;
+    }
+
     return pts;
 }
 
@@ -154,6 +200,8 @@ static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QS
                                                                         const QVector3D &lightPivot,
                                                                         const QVector3D &lightForward,
                                                                         const QVector3D &lightUp,
+                                                                        const float shadowMapResolution,
+                                                                        const float pcfRadius,
                                                                         float clipRange,
                                                                         float frustumStartT,
                                                                         float frustumEndT,
@@ -181,7 +229,7 @@ static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QS
     const float clipNear = 1.0f + clipRange * frustumStartT;
     const float clipFar = 1.0f + clipRange * frustumEndT;
 
-    QSSGBoxPoints frustumPoints = computeFrustumBoundsWithNearFar(inCamera, clipNear, clipFar);
+    QSSGBoxPoints frustumPoints = computeFrustumBoundsWithNearFar(inCamera, clipNear, clipFar, pcfRadius);
     if (drawCascades)
         ShadowmapHelpers::addDebugFrustum(frustumPoints, QColorConstants::Black, debugDrawSystem);
 
@@ -215,12 +263,14 @@ static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QS
         castReceiveBounds.minimum.setZ(zMin);
     }
 
-    // Expand a bit to avoid precision issues.
-    castReceiveBounds.scale(1.05f);
-
     QVector3D boundsCenterWorld = lightMatrixInverted.map(castReceiveBounds.center());
     QVector3D boundsDims = castReceiveBounds.dimensions();
-    QRectF theViewport(0.0f, 0.0f, boundsDims.x(), boundsDims.y());
+    boundsDims.setZ(boundsDims.z() * 1.01f); // Expand slightly in z direction to avoid pancaking precision errors
+
+    // We expand the shadowmap to cover the bounds with one extra texel on all sides
+    const float texelExpandFactor = shadowMapResolution / (shadowMapResolution - 2);
+
+    QRectF theViewport(0.0f, 0.0f, boundsDims.x() * texelExpandFactor, boundsDims.y() * texelExpandFactor);
 
     auto camera = std::make_unique<QSSGRenderCamera>(QSSGRenderGraphObject::Type::OrthographicCamera);
     camera->clipNear = -0.5f * boundsDims.z();
@@ -238,6 +288,8 @@ static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QS
 
 static QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> setupCascadingCamerasForShadowMap(const QSSGRenderCamera &inCamera,
                                                                                                const QSSGRenderLight *inLight,
+                                                                                               const int shadowMapResolution,
+                                                                                               const float pcfRadius,
                                                                                                const QSSGBounds3 &castingObjectsBox,
                                                                                                const QSSGBounds3 &receivingObjectsBox,
                                                                                                QSSGDebugDrawSystem *debugDrawSystem,
@@ -286,6 +338,8 @@ static QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> setupCascadingCamer
                                                          lightPivot,
                                                          forward,
                                                          up,
+                                                         shadowMapResolution,
+                                                         pcfRadius,
                                                          clipRange,
                                                          range.first,
                                                          range.second,
@@ -1378,8 +1432,11 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
             QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> cascades;
             if (light->type == QSSGRenderLight::Type::DirectionalLight) {
+                const float pcfRadius = light->m_softShadowQuality == QSSGRenderLight::SoftShadowQuality::Hard ? 0.f : light->m_pcfFactor;
                 cascades = setupCascadingCamerasForShadowMap(disableShadowCameraUpdate ? *debugCamera : camera,
                                                              light,
+                                                             size.width(),
+                                                             pcfRadius,
                                                              castingObjectsBox,
                                                              receivingObjectsBox,
                                                              debugDrawSystem,
