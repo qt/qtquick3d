@@ -8,7 +8,9 @@ import QtQuick.Timeline
 
 Item {
     id: mainWindow
-    anchors.fill: parent
+    width: 400
+    height: 400
+    visible: true
 
     View3D {
         anchors.fill: parent
