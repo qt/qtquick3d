@@ -57,6 +57,8 @@ Rectangle {
             fontSizeMode: Text.Fit
             minimumPointSize: 1
             font.pointSize: 128
+            font.hintingPreference: Font.PreferNoHinting
+            renderType: Text.NativeRendering
         }
     }
 

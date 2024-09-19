@@ -26,6 +26,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         qquick3dtexturedatafrontend_p.h qquick3dtexturedatafrontend.cpp
         proceduralmesh_p.h proceduralmesh.cpp
         extrudedtextgeometry_p.h extrudedtextgeometry.cpp
+        torusgeometry_p.h torusgeometry.cpp
         qtquick3dhelpersglobal_p.h
     QML_FILES
         AxisHelper.qml

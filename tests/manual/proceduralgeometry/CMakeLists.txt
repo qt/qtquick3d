@@ -20,5 +20,6 @@ qt_add_qml_module(manual_test_proceduralgeometry
         Main.qml
         OriginGizmo.qml
         ExtrudedTextSettings.qml
+        TorusSettings.qml
         UVChecker.qml
 )

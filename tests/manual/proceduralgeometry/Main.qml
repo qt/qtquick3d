@@ -50,7 +50,32 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            RadioButton {
+                                id: torusRadioButton
+                                text: "Torus"
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        testModel.geometry = torusGeometry
+                                        propertyEditor.setSource("TorusSettings.qml", {target: torusGeometry})
+                                    }
+                                }
+                            }
                         }
+                    }
+
+                    CheckBox {
+                        id: uvCheckerCheckBox
+                        text: "Enable UV Checker"
+                        checked: false
+                        onCheckedChanged: {
+                            testMaterial.baseColorMap = checked ? uvCheckerTexture : null
+                        }
+                    }
+
+                    CheckBox {
+                        id: gridCheckBox
+                        text: "Enable Grid"
+                        checked: true
                     }
 
                     Loader {
@@ -73,7 +98,8 @@ ApplicationWindow {
                 clearColor: "lightblue"
                 backgroundMode: SceneEnvironment.Color
                 InfiniteGrid {
-
+                    id: infiniteGrid
+                    visible: gridCheckBox.checked
                 }
 
             }
@@ -94,14 +120,25 @@ ApplicationWindow {
                 text: "test"
             }
 
+            TorusGeometry {
+                id: torusGeometry
+            }
+
+            Texture {
+                id: uvCheckerTexture
+                sourceItem: UVChecker {
+                    width: 1024
+                    height: 1024
+                }
+            }
+
             Model {
                 id: testModel
                 property real spacing
                 geometry: extrudedTextGeometry
                 materials: [
                     PrincipledMaterial {
-                        baseColorMap: Texture {
-                        }
+                        id: testMaterial
                     }
                 ]
             }
