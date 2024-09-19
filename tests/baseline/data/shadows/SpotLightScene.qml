@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick3D
 
 Item {
-    width: 640
-    height: 480
-    anchors.fill: parent
+    width: 400
+    height: 400
+    visible: true
 
     View3D {
         id: v3d

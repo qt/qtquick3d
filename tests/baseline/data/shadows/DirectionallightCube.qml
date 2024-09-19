@@ -4,8 +4,9 @@ import QtQuick3D.Helpers
 
 Item {
     id: mainWindow
-
-    anchors.fill: parent
+    width: 400
+    height: 400
+    visible: true
 
     View3D {
         anchors.fill: parent
