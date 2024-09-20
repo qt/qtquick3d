@@ -7,15 +7,15 @@
     \ingroup qt3dxr-examples
     \title Qt Quick 3D - XR Simple Touch Example
     \examplecategory {3D}
-    \brief Demonstrates hand-tracking input in Qt Quick 3D XR.
+    \brief Demonstrates hand-tracking input in \qxr.
     \image xrtouch-example.jpg
 
-    This example shows how to use the hand-tracking API in Qt Quick 3D XR to
+    This example shows how to use the hand-tracking API in \qxr to
     interact with 2D and 3D objects in the scene. It follows the basic structure of
     the \l{Qt Quick 3D - XR Simple Example}{xr_simple} example.
 
     Since we need to support two hands, we start by creating a component that encapsulates
-    all the logic that we need for each hand, to avoid repetition:
+    all the logic that we need for each hand to avoid repetition:
 
     \snippet xr_touch/main.qml hand component
 
@@ -26,10 +26,10 @@
     from the 3D position to the touch point on the 2D surface. We then use that offset to shift the position
     of the XrHandModel, to give the illusion that the hand is stopped by the surface.
 
-    \note This effect will not work on the Apple Vision Pro, since the system shows the real hands of the user,
+    \note This effect will not work on the Apple Vision Pro since the system shows the real hands of the user,
     and the XrHandModel is not shown.
 
-    Finally we do the 3D interaction. Here, \c buttons is a group of 3D buttons that has a \c handleTouch function.
+    Finally, we do the 3D interaction. Here, \c buttons is a group of 3D buttons that has a \c handleTouch function.
     (The implementation is not XR specific, so the details are not documented here.)
 
     We create two instances of the hand component inside the XrOrigin, one for each hand:
@@ -40,4 +40,5 @@
     touching distance.
 
     The rest of the scene contains some 3D models and an XrItem that reacts to touch events.
+
 */

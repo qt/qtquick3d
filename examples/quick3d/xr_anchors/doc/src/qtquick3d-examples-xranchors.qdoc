@@ -15,9 +15,9 @@
     immersive mode. The basic structure follows the \l{Qt Quick 3D - XR Simple Example}{xr_simple}
     example.
 
-    The main part of the example is a Repeater3D on an XrSpatialAnchorListModel.
-    For each anchor, we create a box that fill the extents of the anchor with color that
-    depends on the classification of the anchor. This box is invisible in passthrough mode
+    The most relevant part of the example is a Repeater3D on an XrSpatialAnchorListModel.
+    For each anchor, we create a box that fills the volume of the anchor with a color. The choice
+    of color depends on the classification of the anchor. This box is invisible in passthrough mode.
     In addition, we visualize the position and orientation of the anchor with small boxes:
 
     \snippet xr_anchors/main.qml repeater

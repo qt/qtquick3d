@@ -33,5 +33,4 @@
     model of a cube to visualize the controller's position.
 
     The rest of main.qml is a normal Qt Quick 3D scene.
-
 */
