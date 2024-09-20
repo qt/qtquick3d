@@ -60,6 +60,16 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            RadioButton {
+                                id: coneRadioButton
+                                text: "Cone"
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        testModel.geometry = coneGeometry
+                                        propertyEditor.setSource("ConeSettings.qml", {target: coneGeometry})
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -122,6 +132,10 @@ ApplicationWindow {
 
             TorusGeometry {
                 id: torusGeometry
+            }
+
+            ConeGeometry {
+                id: coneGeometry
             }
 
             Texture {
