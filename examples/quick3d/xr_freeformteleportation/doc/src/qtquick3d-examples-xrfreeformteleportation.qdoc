@@ -12,7 +12,8 @@
 
     \section1 Overview
 
-    This example shows how to move to places in the virtual environment using a simple freeform teleportation system.
+    This example shows how to move to places in the virtual environment using a simple freeform
+    teleportation system, a non-continuous form of movement.
 
     \section2 Controls
 
@@ -20,8 +21,8 @@
 
     \table
         \header
-            \li
-            \li
+            \li Action
+            \li Control
         \row
             \li Rotation
             \li Left and Right stick on the right controller
@@ -32,42 +33,42 @@
 
     \section1 Implementation
 
-    In this example the logic for the teleportation is contained within the FreeformTeleporter
-    component for easy re-use in other projects.
+    You can easily re-use \c FreeformTeleporter in other projects, as all the logic is
+    contained within that type.
 
     \snippet xr_freeformteleportation/main.qml FreeformTeleporter component
 
-    The FreeformTeleporter component has the following properties
-    that needs to be set:
+    The FreeformTeleporter component has the following properties that need to be set:
 
     \qml
         var rayPicker
     \endqml
 
-    The rayPicker property can be any object that implements a rayPick method. In this example
-    we are using the XrView's built-in ray picking method.
+    The \c rayPicker property can be any object that implements a rayPick method. In this example,
+    we are using XrView's built-in ray-picking method.
 
     \qml
         Node cameraOrigin
     \endqml
 
-    The cameraOrigin property is the center of the camera's local reference space. In Xr this will
-    be the location where tracked items, like the camera, will be placed in relation to. We will
-    therefore use the XrOrigin node as the cameraOrigin.
+    The \c cameraOrigin property is the center of the camera's local reference space. In Xr this
+    will be the location where tracked items, like the camera, will be placed relative to.
+    We will, therefore, use the XrOrigin node as the cameraOrigin.
 
     \qml
         Node camera
     \endqml
 
-    The camera property contains the camera that that is used to render the scene. In our example
-    we use the tracked XrCamera we created earlier.
+    The \c camera property contains the camera used to render the scene. In this
+    example, we use the tracked XrCamera we created earlier.
 
     \qml
         Node beamHandle
     \endqml
 
-    The beamHandle property is the node that will be used as the start point for the teleportation beam.
-    In our example we use the right controller \l {XrController}{xrRightController} as the beamHandle.
+    The \c beamHandle property is the Node used as the teleportation beam's start point.
+    In this example, we use the right controller \l {XrController}{xrRightController} as the beamHandle.
 
     \sa {Locomotion in \qxr}
+
 */
