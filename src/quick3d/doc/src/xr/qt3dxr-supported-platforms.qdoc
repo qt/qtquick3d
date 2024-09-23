@@ -113,6 +113,16 @@
     When it comes to PCVR, there are further software stack details and complications that
     may need to be considered. See the dedicated \l PCVR page for details.
 
+    \qxr prints warnings on the debug output by default. Diagnostic messages are not
+    printed out of the box. To enable those, enable the \c{qt.quick3d.xr} logging
+    category. For example, by setting the environment variable
+    \c{QT_LOGGING_RULES=qt.quick3d.xr=true}. See \l QLoggingCategory for more information.
+    It is strongly recommended that the additional debug prints are enabled, whenever
+    problems arise, or if the application does not start as expected. When reporting
+    problems, always include the full log in the error report. Due to the vast variety of
+    ways to run an XR application, especially when OpenXR is involved, these logs are
+    essential in order to better understand what is happening.
+
     \sa {Getting Started With Meta Quest 3}
     \sa {Getting Started With Apple Vision Pro}
     \sa {PCVR}

@@ -22,8 +22,11 @@
 #include <QtGui/qguiapplication_platform.h>
 
 #include <QtCore/qoperatingsystemversion.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 
 class CompositorLayer : public QObject, public QNativeInterface::QVisionOSApplication::ImmersiveSpaceCompositorLayer
 {
@@ -281,7 +284,7 @@ void QQuick3DXrManagerPrivate::processXrEvents()
     if (renderState == QQuick3DXrManagerPrivate::RenderState::Paused) {
         // Wait
         if (!logOnce[RenderState::Paused]) {
-            qDebug() << "-- Wait --";
+            qCDebug(lcQuick3DXr) << "-- Wait --";
             logOnce[RenderState::Paused] = true;
             logOnce[RenderState::Running] = false;
             logOnce[RenderState::Invalidated] = false;
@@ -289,14 +292,14 @@ void QQuick3DXrManagerPrivate::processXrEvents()
     } else if (renderState == QQuick3DXrManagerPrivate::RenderState::Running) {
         q->renderFrame();
         if (!logOnce[RenderState::Running]) {
-            qDebug() << "-- Running --";
+            qCDebug(lcQuick3DXr) << "-- Running --";
             logOnce[RenderState::Paused] = false;
             logOnce[RenderState::Running] = true;
             logOnce[RenderState::Invalidated] = false;
         }
     } else if (renderState == QQuick3DXrManagerPrivate::RenderState::Invalidated) {
         if (!logOnce[RenderState::Invalidated]) {
-            qDebug() << "-- Invalidated --";
+            qCDebug(lcQuick3DXr) << "-- Invalidated --";
             logOnce[RenderState::Paused] = false;
             logOnce[RenderState::Running] = false;
             logOnce[RenderState::Invalidated] = true;

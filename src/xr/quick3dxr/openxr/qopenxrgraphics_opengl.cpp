@@ -99,7 +99,7 @@ bool QOpenXRGraphicsOpenGL::finializeGraphics(QRhi *rhi)
 
     const XrVersion desiredApiVersion = XR_MAKE_VERSION(context->format().majorVersion(), context->format().minorVersion(), 0);
     if (m_graphicsRequirements.minApiVersionSupported > desiredApiVersion) {
-        qDebug() << "Runtime does not support desired Graphics API and/or version";
+        qWarning("Qt Quick 3D XR (OpenGL): Runtime does not support desired graphics API and/or version");
         return false;
     }
 

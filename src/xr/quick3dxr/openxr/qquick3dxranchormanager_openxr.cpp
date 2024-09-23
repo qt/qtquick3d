@@ -7,11 +7,15 @@
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
+#include <QLoggingCategory>
+
 #if defined(Q_OS_ANDROID)
 # include <QtCore/private/qandroidextras_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 
 //<uses-permission android:name="com.oculus.permission.USE_ANCHOR_API" />
 
@@ -131,7 +135,7 @@ QList<const char *> QQuick3DXrAnchorManager::requiredExtensions() const
 void QQuick3DXrAnchorManager::handleEvent(const XrEventDataBaseHeader *event)
 {
     if (event->type == XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB) {
-        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB");
+        qCDebug(lcQuick3DXr, "QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB");
         const XrEventDataSpaceSetStatusCompleteFB* setStatusComplete = (const XrEventDataSpaceSetStatusCompleteFB*)(event);
         if (setStatusComplete->result == XR_SUCCESS) {
             if (setStatusComplete->componentType == XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB) {
@@ -139,22 +143,22 @@ void QQuick3DXrAnchorManager::handleEvent(const XrEventDataBaseHeader *event)
             }
         }
     } else if (event->type == XR_TYPE_EVENT_DATA_SCENE_CAPTURE_COMPLETE_FB) {
-        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SCENE_CAPTURE_COMPLETE_FB");
+        qCDebug(lcQuick3DXr, "QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SCENE_CAPTURE_COMPLETE_FB");
         const XrEventDataSceneCaptureCompleteFB* captureResult = (const XrEventDataSceneCaptureCompleteFB*)(event);
         if (captureResult->result == XR_SUCCESS) {
             Q_EMIT sceneCaptureCompleted();
-            qDebug(
+            qCDebug(lcQuick3DXr,
                 "QQuick3DXrAnchorManager::handleEvent: Scene capture (ID = %llu) succeeded",
                 static_cast<long long unsigned int>(captureResult->requestId));
         } else {
-            qDebug(
+            qCDebug(lcQuick3DXr,
                 "QQuick3DXrAnchorManager::handleEvent: Scene capture (ID = %llu) failed with an error %d",
                 static_cast<long long unsigned int>(captureResult->requestId),
                 captureResult->result);
         }
 
     } else if (event->type == XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB) {
-        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB");
+        qCDebug(lcQuick3DXr, "QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB");
         const XrEventDataSpaceQueryResultsAvailableFB* resultsAvailable = (const XrEventDataSpaceQueryResultsAvailableFB*)(event);
 
         XrSpaceQueryResultsFB queryResults{};
@@ -178,7 +182,7 @@ void QQuick3DXrAnchorManager::handleEvent(const XrEventDataBaseHeader *event)
             return;
         }
 
-        qDebug("retrieveSpaceQueryResults: num of results received: %d", queryResults.resultCountOutput);
+        qCDebug(lcQuick3DXr, "retrieveSpaceQueryResults: num of results received: %d", queryResults.resultCountOutput);
         for (const auto &result : results) {
             if (isComponentSupported(result.space, XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB)) {
                 XrSpaceComponentStatusSetInfoFB request = {
@@ -196,7 +200,7 @@ void QQuick3DXrAnchorManager::handleEvent(const XrEventDataBaseHeader *event)
             }
         }
     } else if (event->type == XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB) {
-        qDebug("QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB");
+        qCDebug(lcQuick3DXr, "QQuick3DXrAnchorManager::handleEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB");
     }
 }
 
