@@ -15,6 +15,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
+
 QQuick3DXrInputManagerPrivate::QQuick3DXrInputManagerPrivate(QQuick3DXrInputManager &manager)
     : q_ptr(&manager)
 {
@@ -559,7 +561,7 @@ void QQuick3DXrInputManagerPrivate::updatePoses(XrTime predictedDisplayTime, XrS
                 // if the hand is active.
                 if (isHandActive(hand)) {
                     const char* handName[] = {"left", "right"};
-                    qDebug("Unable to locate %s hand action space in app space: %d", handName[hand], res);
+                    qCDebug(lcQuick3DXr, "Unable to locate %s hand action space in app space: %d", handName[hand], res);
                 }
             }
         }
@@ -844,7 +846,7 @@ void QQuick3DXrInputManagerPrivate::createAction(XrActionType type,
     actionInfo.countSubactionPaths = quint32(numSubactions);
     actionInfo.subactionPaths = subactionPath;
     if (!checkXrResult(xrCreateAction(m_actionSet, &actionInfo, &action)))
-        qDebug() << "xrCreateAction failed. Name:" << name << "localizedName:" << localizedName;
+        qCDebug(lcQuick3DXr) << "xrCreateAction failed. Name:" << name << "localizedName:" << localizedName;
 }
 
 void QQuick3DXrInputManagerPrivate::getBoolInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(bool)> setter)

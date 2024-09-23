@@ -6,10 +6,13 @@
 #include "qquick3dxrview_p.h"
 #include <QQuickWindow>
 #include <QQuickItem>
+#include <QLoggingCategory>
 
 #include "qquick3dxrinputmanager_p.h"
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 
 /*!
     \qmltype XrView
@@ -281,7 +284,7 @@ bool QQuick3DXrView::init()
     }
 
     if (!m_xrManager.isReady() && !m_xrManager.initialize()) {
-        qDebug() << "Waiting for XR platform to be initialized...";
+        qCDebug(lcQuick3DXr, "Waiting for XR platform to be initialized");
         connect(&m_xrManager, &QQuick3DXrManager::initialized, this, &QQuick3DXrView::init, Qt::UniqueConnection);
         return false;
     }

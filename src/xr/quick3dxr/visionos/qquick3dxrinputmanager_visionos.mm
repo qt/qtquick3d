@@ -48,7 +48,7 @@ void QQuick3DXrInputManagerPrivate::prepareHandtracking(ar_data_providers_t data
         qWarning("Hand tracking is not supported on this device.");
     }
 
-    qDebug() << Q_FUNC_INFO << ", Handtracking supported: " << m_isHandTrackingSupported;
+    qCDebug(lcQuick3DXr) << Q_FUNC_INFO << ", Handtracking supported: " << m_isHandTrackingSupported;
 }
 
 void QQuick3DXrInputManagerPrivate::initHandtracking()
@@ -59,7 +59,7 @@ void QQuick3DXrInputManagerPrivate::initHandtracking()
         m_initialized = true;
     }
 
-    qDebug() << Q_FUNC_INFO << ", Initialized: " << m_initialized;
+    qCDebug(lcQuick3DXr) << Q_FUNC_INFO << ", Initialized: " << m_initialized;
 }
 
 void QQuick3DXrInputManagerPrivate::teardown()
