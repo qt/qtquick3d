@@ -28,6 +28,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         extrudedtextgeometry_p.h extrudedtextgeometry.cpp
         torusgeometry_p.h torusgeometry.cpp
         conegeometry_p.h conegeometry.cpp
+        cylindergeometry_p.h cylindergeometry.cpp
         qtquick3dhelpersglobal_p.h
     QML_FILES
         AxisHelper.qml

@@ -70,6 +70,16 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            RadioButton {
+                                id: cylinderRadioButton
+                                text: "Cylinder"
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        testModel.geometry = cylinderGeometry
+                                        propertyEditor.setSource("CylinderSettings.qml", {target: cylinderGeometry})
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -136,6 +146,10 @@ ApplicationWindow {
 
             ConeGeometry {
                 id: coneGeometry
+            }
+
+            CylinderGeometry {
+                id: cylinderGeometry
             }
 
             Texture {

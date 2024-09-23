@@ -22,5 +22,6 @@ qt_add_qml_module(manual_test_proceduralgeometry
         ExtrudedTextSettings.qml
         TorusSettings.qml
         ConeSettings.qml
+        CylinderSettings.qml
         UVChecker.qml
 )
