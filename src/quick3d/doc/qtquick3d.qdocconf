@@ -55,6 +55,7 @@ headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/torusgeometry_p.h \
            ../../helpers/conegeometry_p.h \
            ../../helpers/cylindergeometry_p.h \
+           ../../helpers/spheregeometry_p.h \
            ../../assetutils/qquick3druntimeloader_p.h \
            ../../runtimerender/qssgrendercontextcore.h \
            ../../runtimerender/qssgrhicontext.h \
@@ -79,6 +80,7 @@ sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/torusgeometry.cpp \
            ../../helpers/conegeometry.cpp \
            ../../helpers/cylindergeometry.cpp \
+           ../../helpers/spheregeometry.cpp \
            ../../assetutils/qquick3druntimeloader.cpp \
            ../../runtimerender/qssgrendercontextcore.cpp \
            ../../runtimerender/qssgrhicontext.cpp

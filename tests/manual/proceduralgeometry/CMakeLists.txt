@@ -23,5 +23,6 @@ qt_add_qml_module(manual_test_proceduralgeometry
         TorusSettings.qml
         ConeSettings.qml
         CylinderSettings.qml
+        SphereSettings.qml
         UVChecker.qml
 )

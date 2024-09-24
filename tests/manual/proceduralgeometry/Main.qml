@@ -80,6 +80,16 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            RadioButton {
+                                id: sphereRadioButton
+                                text: "Sphere"
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        testModel.geometry = sphereGeometry
+                                        propertyEditor.setSource("SphereSettings.qml", {target: sphereGeometry})
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -150,6 +160,10 @@ ApplicationWindow {
 
             CylinderGeometry {
                 id: cylinderGeometry
+            }
+
+            SphereGeometry {
+                id: sphereGeometry
             }
 
             Texture {

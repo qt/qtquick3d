@@ -29,6 +29,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         torusgeometry_p.h torusgeometry.cpp
         conegeometry_p.h conegeometry.cpp
         cylindergeometry_p.h cylindergeometry.cpp
+        spheregeometry_p.h spheregeometry.cpp
         qtquick3dhelpersglobal_p.h
     QML_FILES
         AxisHelper.qml
