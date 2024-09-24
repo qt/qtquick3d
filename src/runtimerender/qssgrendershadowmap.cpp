@@ -9,6 +9,8 @@
 
 QT_BEGIN_NAMESPACE
 
+static constexpr quint32 NUM_TEXTURE_SIZES = 5;
+
 static QRhiTexture *allocateRhiShadowTexture(QRhi *rhi, QRhiTexture::Format format, const QSize &size, quint32 numLayers, QRhiTexture::Flags flags)
 {
     auto texture = rhi->newTexture(format, size, 1, flags);
@@ -41,13 +43,13 @@ static quint8 mapSizeToIndex(quint32 mapSize)
     Q_ASSERT(!(mapSize & (mapSize - 1)) && "shadow map resolution is power of 2");
     Q_ASSERT(mapSize >= 256);
     quint8 index = qCountTrailingZeroBits(mapSize) - 8;
-    Q_ASSERT(index <= 4);
+    Q_ASSERT(index < NUM_TEXTURE_SIZES);
     return index;
 }
 
 static quint32 indexToMapSize(quint8 index)
 {
-    Q_ASSERT(index <= 4);
+    Q_ASSERT(index < NUM_TEXTURE_SIZES);
     return 1 << (index + 8);
 }
 
@@ -83,7 +85,7 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
     constexpr quint32 MAX_SPLITS = 4;
     const quint32 numLights = renderableLights.size();
     qsizetype numShadows = 0;
-    std::array<quint8, 4> textureSizeLayerCount = {};
+    std::array<quint8, NUM_TEXTURE_SIZES> textureSizeLayerCount = {};
     QVarLengthArray<quint8, 16> lightIndexToLayerStartIndex;
     lightIndexToLayerStartIndex.resize(numLights * MAX_SPLITS);
 

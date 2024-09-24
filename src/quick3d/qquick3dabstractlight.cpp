@@ -89,10 +89,11 @@ QT_BEGIN_NAMESPACE
     produces better quality shadows.
 
     Supported quality values are:
-    \value Light.ShadowMapQualityLow Render shadowmap using 256x256 texture.
-    \value Light.ShadowMapQualityMedium Render shadowmap using 512x512 texture.
-    \value Light.ShadowMapQualityHigh Render shadowmap using 1024x1024 texture.
-    \value Light.ShadowMapQualityVeryHigh Render shadowmap using 2048x2048 texture.
+    \value Light.ShadowMapQualityLow Render shadowmap using a 256x256 texture.
+    \value Light.ShadowMapQualityMedium Render shadowmap using a 512x512 texture.
+    \value Light.ShadowMapQualityHigh Render shadowmap using a 1024x1024 texture.
+    \value Light.ShadowMapQualityVeryHigh Render shadowmap using a 2048x2048 texture.
+    \value Light.ShadowMapQualityUltra Render shadowmap using a 4096x4096 texture.
 
     The default value is \c Light.ShadowMapQualityLow
 */
@@ -424,6 +425,8 @@ quint32 QQuick3DAbstractLight::mapToShadowResolution(QSSGShadowMapQuality qualit
         return 1024;
     case QSSGShadowMapQuality::ShadowMapQualityVeryHigh:
         return 2048;
+    case QSSGShadowMapQuality::ShadowMapQualityUltra:
+        return 4096;
     default:
         break;
     }

@@ -48,6 +48,7 @@ public:
         ShadowMapQualityMedium,
         ShadowMapQualityHigh,
         ShadowMapQualityVeryHigh,
+        ShadowMapQualityUltra,
     };
     Q_ENUM(QSSGShadowMapQuality)
 

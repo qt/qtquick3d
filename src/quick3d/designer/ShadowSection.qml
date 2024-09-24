@@ -62,7 +62,7 @@ Section {
             visible: shadowCheckBox.checked
             ComboBox {
                 scope: "Light"
-                model: ["ShadowMapQualityLow", "ShadowMapQualityMedium", "ShadowMapQualityHigh", "ShadowMapQualityVeryHigh"]
+                model: ["ShadowMapQualityLow", "ShadowMapQualityMedium", "ShadowMapQualityHigh", "ShadowMapQualityVeryHigh", "ShadowMapQualityUltra"]
                 backendValue: backendValues.shadowMapQuality
                 enabled: shadowCheckBox.backendValue.value === true
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
