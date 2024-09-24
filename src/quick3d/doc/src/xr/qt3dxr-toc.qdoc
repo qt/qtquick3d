@@ -61,6 +61,7 @@
 
 //! [listitems-quick-links]
     \li \l{Supported Headsets}
+    \li \l{Supported OpenXR Extensions}
 //! [listitems-quick-links]
 
     \endlist
