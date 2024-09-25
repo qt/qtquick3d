@@ -24,5 +24,6 @@ qt_add_qml_module(manual_test_proceduralgeometry
         ConeSettings.qml
         CylinderSettings.qml
         SphereSettings.qml
+        PlaneSettings.qml
         UVChecker.qml
 )

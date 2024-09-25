@@ -90,6 +90,16 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            RadioButton {
+                                id: planeRadioButton
+                                text: "Plane"
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        testModel.geometry = planeGeometry
+                                        propertyEditor.setSource("PlaneSettings.qml", {target: planeGeometry})
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -164,6 +174,10 @@ ApplicationWindow {
 
             SphereGeometry {
                 id: sphereGeometry
+            }
+
+            PlaneGeometry {
+                id: planeGeometry
             }
 
             Texture {
