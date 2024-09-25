@@ -100,6 +100,16 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            RadioButton {
+                                id: cuboidRadioButton
+                                text: "Cuboid"
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        testModel.geometry = cuboidGeometry
+                                        propertyEditor.setSource("CuboidSettings.qml", {target: cuboidGeometry})
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -180,6 +190,10 @@ ApplicationWindow {
                 id: planeGeometry
             }
 
+            CuboidGeometry {
+                id: cuboidGeometry
+            }
+
             Texture {
                 id: uvCheckerTexture
                 sourceItem: UVChecker {
@@ -198,6 +212,7 @@ ApplicationWindow {
                     }
                 ]
             }
+
             OrbitCameraController {
                 id: orbitCameraController
                 camera: cameraNode
