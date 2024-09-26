@@ -60,7 +60,7 @@ protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
-    float m_csmSplit1 = 0.0f;
+    float m_csmSplit1 = 0.1f;
     float m_csmSplit2 = 0.25f;
     float m_csmSplit3 = 0.5f;
     int m_csmNumSplits = 0;

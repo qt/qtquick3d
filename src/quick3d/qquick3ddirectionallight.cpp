@@ -89,7 +89,7 @@ QT_BEGIN_NAMESPACE
 
     Range: \c{[0.0, 1.0]}
 
-    Default value: \c{0}
+    Default value: \c{0.1}
 
     \sa csmSplit2, csmSplit3
     \note This property is only used when DirectionalLight::csmNumSplits is greater than \c{0}.
