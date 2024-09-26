@@ -15,6 +15,7 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 
 QQuick3DXrInputManagerPrivate::QQuick3DXrInputManagerPrivate(QQuick3DXrInputManager &manager)
     : q_ptr(&manager)
