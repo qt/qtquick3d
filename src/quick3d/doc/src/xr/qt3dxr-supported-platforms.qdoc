@@ -71,7 +71,7 @@
 
     This is the list of devices that are regularly tested and verified by Qt and are
     actively used during the development of \qxr.
-
+    \target visionOS_supported_versions
     \list
       \li Meta Quest 3, standalone (Android)
       \li Meta Quest 3, PCVR mode (Windows)
