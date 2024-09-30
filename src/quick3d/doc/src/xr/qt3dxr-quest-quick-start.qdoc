@@ -22,8 +22,7 @@
     You'll need Qt 6.8 or later and the \qxr module to get started. The \qxr module is part of
     QtQuick3D and will be installed with it. You'll also need the Android NDK, SDK, and JDK
     installed and configured. You can find more information on setting up Qt Creator for Android
-    development here: \l [Qt Creator]{Set up Android development environment} and \l {Getting Started with Qt
-    for Android}.
+    development here \l {Getting Started with Qt for Android}.
 
     \section1 Setting up the Quest
 

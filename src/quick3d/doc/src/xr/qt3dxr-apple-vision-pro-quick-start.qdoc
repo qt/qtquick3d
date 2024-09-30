@@ -65,7 +65,8 @@
     \section2 Deploying a visionOS application
 
     To deploy a visionOS application, you will need Xcode with the visionOS SDK
-    components installed and, optionally, the visionOS simulator.    See \l{visonOS supported versions} for more information.
+    components installed and, optionally, the visionOS simulator.
+    See \l{visonOS_supported_versions}{supported versions} for more information.
 
     \note Unlike the iOS/iPad applications, visionOS applications are not deployed using
     \QC, but instead using Xcode.
