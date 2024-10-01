@@ -2337,7 +2337,9 @@ void QSSGLayerRenderData::prepareForRender()
     if (!renderedCameras.isEmpty())
         meshLodThreshold = renderedCameras[0]->levelOfDetailPixelThreshold / theViewport.width();
 
+    layer.renderedCamerasMutex.lock();
     layer.renderedCameras = renderedCameras;
+    layer.renderedCamerasMutex.unlock();
 
     // ResourceLoaders
     prepareResourceLoaders();
