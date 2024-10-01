@@ -1795,7 +1795,9 @@ void QSSGLayerRenderData::prepareForRender()
         }
     }
 
+    layer.renderedCameraMutex.lock();
     layer.renderedCamera = camera;
+    layer.renderedCameraMutex.unlock();
 
     // ResourceLoaders
     prepareResourceLoaders();

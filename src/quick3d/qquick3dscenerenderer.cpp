@@ -980,7 +980,12 @@ void QQuick3DSceneRenderer::releaseCachedResources()
 
 std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
 {
-    if (!m_layer || !m_layer->renderedCamera)
+    if (!m_layer)
+        return std::nullopt;
+
+    QMutexLocker locker(&m_layer->renderedCameraMutex);
+
+    if (!m_layer->renderedCamera)
         return std::nullopt;
 
     const QVector2D viewportSize(m_surfaceSize.width(), m_surfaceSize.height());
