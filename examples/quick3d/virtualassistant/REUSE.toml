@@ -1,0 +1,7 @@
+version = 1
+
+[[annotations]]
+path = ["content/colosseum_4k.hdr"]
+precedence = "closest"
+SPDX-FileCopyrightText = "None"
+SPDX-License-Identifier = "CC0-1.0"
