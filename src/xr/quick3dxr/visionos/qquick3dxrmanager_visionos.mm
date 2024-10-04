@@ -36,8 +36,12 @@ public:
     {
         // NOTE: foveation is disabled for now
         const bool supportsFoveation = false && cp_layer_renderer_capabilities_supports_foveation(capabilities);
+        const bool disableMultiview = QQuick3DXrManager::isMultiviewRenderingDisabled();
 
-        cp_layer_renderer_configuration_set_layout(configuration, cp_layer_renderer_layout_dedicated);
+        cp_layer_renderer_layout textureLayout = disableMultiview ? cp_layer_renderer_layout_dedicated
+                                                                  : cp_layer_renderer_layout_layered;
+
+        cp_layer_renderer_configuration_set_layout(configuration, textureLayout);
         cp_layer_renderer_configuration_set_foveation_enabled(configuration, supportsFoveation);
         cp_layer_renderer_configuration_set_color_format(configuration, MTLPixelFormatRGBA16Float);
         simd_float2 depthRange = cp_layer_renderer_configuration_get_default_depth_range(configuration);
@@ -69,6 +73,11 @@ public:
         return m_layerRenderer;
     }
 
+    bool isMultiviewRenderingEnabled() const
+    {
+        return !QQuick3DXrManager::isMultiviewRenderingDisabled();
+    }
+
     void getDefaultDepthRange(float &near, float &far) const
     {
         near = m_depthRange[0];
@@ -87,6 +96,55 @@ private:
 };
 
 Q_GLOBAL_STATIC(CompositorLayer, s_compositorLayer)
+
+
+// FIXME: Maybe unify with the openxr implementation?!
+void QQuick3DXrManagerPrivate::updateCameraImp(simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i)
+{
+    cp_view_t view = cp_drawable_get_view(drawable, i);
+    simd_float4 tangents = cp_view_get_tangents(view);
+    const float tangentLeft = tangents[0];
+    const float tangentRight = tangents[1];
+    const float tangentUp = tangents[2];
+    const float tangentDown = tangents[3];
+    //qDebug() << "Left: " << tangentLeft << " Right: " << tangentRight << " Up: " << tangentUp << " Down: " << tangentDown;
+    simd_float2 depth_range = cp_drawable_get_depth_range(drawable);
+    const float clipNear = depth_range[1];
+    const float clipFar = depth_range[0];
+    //qDebug() << "Near: " << clipNear << " Far: " << clipFar;
+    xrOrigin->eyeCamera(i)->setLeftTangent(tangentLeft);
+    xrOrigin->eyeCamera(i)->setRightTangent(tangentRight);
+    xrOrigin->eyeCamera(i)->setUpTangent(tangentUp);
+    xrOrigin->eyeCamera(i)->setDownTangent(tangentDown);
+    xrOrigin->eyeCamera(i)->setClipNear(clipNear);
+    xrOrigin->eyeCamera(i)->setClipFar(clipFar);
+
+    simd_float4x4 localEyeTransform = cp_view_get_transform(view);
+    simd_float4x4 eyeCameraTransform = simd_mul(headTransform, localEyeTransform);
+    // NOTE: We need to convert from meters to centimeters here
+    QMatrix4x4 transform{eyeCameraTransform.columns[0].x, eyeCameraTransform.columns[1].x, eyeCameraTransform.columns[2].x, eyeCameraTransform.columns[3].x * 100,
+                           eyeCameraTransform.columns[0].y, eyeCameraTransform.columns[1].y, eyeCameraTransform.columns[2].y, eyeCameraTransform.columns[3].y * 100,
+                           eyeCameraTransform.columns[0].z, eyeCameraTransform.columns[1].z, eyeCameraTransform.columns[2].z, eyeCameraTransform.columns[3].z * 100,
+                           0.0f, 0.0f, 0.0f, 1.0f};
+    QQuick3DNodePrivate::get(xrOrigin->eyeCamera(i))->setLocalTransform(transform);
+}
+
+void QQuick3DXrManagerPrivate::updateCamera(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i)
+{
+    updateCameraImp(headTransform, drawable, xrOrigin, i);
+    xrViewport->setCamera(xrOrigin->eyeCamera(i));
+}
+
+void QQuick3DXrManagerPrivate::updateCameraMultiview(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin)
+{
+    QQuick3DCamera *cameras[2] {xrOrigin->eyeCamera(0), xrOrigin->eyeCamera(1)};
+
+    for (int i = 0; i < 2; ++i)
+        updateCameraImp(headTransform, drawable, xrOrigin, i);
+
+    xrViewport->setMultiViewCameras(cameras);
+}
+
 
 QQuick3DXrManagerPrivate::QQuick3DXrManagerPrivate(QQuick3DXrManager &manager)
     : q_ptr(&manager)
@@ -160,6 +218,7 @@ void QQuick3DXrManagerPrivate::setupWindow(QQuickWindow *window)
 bool QQuick3DXrManagerPrivate::finalizeGraphics(QRhi *rhi)
 {
     Q_UNUSED(rhi);
+
     m_isGraphicsInitialized = true;
     return m_isGraphicsInitialized;
 }
@@ -224,7 +283,12 @@ void QQuick3DXrManagerPrivate::teardown()
 void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
 {
     Q_UNUSED(enable);
-    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
+    qWarning() << "Changing multiview rendering is not supported at runtime on VisionOS!";
+}
+
+bool QQuick3DXrManagerPrivate::isMultiViewRenderingEnabled() const
+{
+    return !QQuick3DXrManager::isMultiviewRenderingDisabled();
 }
 
 void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
@@ -378,6 +442,8 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 
     QSSG_ASSERT_X(quickWindow && renderControl && xrViewport && xrOrigin && animationDriver, "Invalid state, rendering aborted", return);
 
+    const bool multiviewRenderingEnabled = s_compositorLayer->isMultiviewRenderingEnabled();
+
     auto layerRenderer = this->layerRenderer();
     cp_frame_t frame = cp_layer_renderer_query_next_frame(layerRenderer);
     if (frame == nullptr) {
@@ -441,11 +507,24 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 
     QRhi *rhi = renderControl->rhi();
 
-    for (size_t i = 0, end = cp_drawable_get_view_count(drawable); i != end ; ++i) {
+    const auto drawableCount = cp_drawable_get_view_count(drawable);
+    const auto textureCount = cp_drawable_get_texture_count(drawable);
+
+    // NOTE: Expectation is that when multiview rendering is enabled we get a multiple drawables with a single texture array,
+    //       each view/eye is then rendered to a slice in the texture array. If multiview rendering is not enabled we get a
+    //
+
+    for (size_t i = 0, end = textureCount; i != end ; ++i) {
         // Setup the RenderTarget based on the current drawable
         id<MTLTexture> colorMetalTexture = cp_drawable_get_color_texture(drawable, i);
         auto textureSize = QSize([colorMetalTexture width], [colorMetalTexture height]);
-        auto renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], textureSize);
+
+        QQuickRenderTarget renderTarget;
+
+        if (multiviewRenderingEnabled)
+            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, textureSize, 1 /*sampleCount*/, drawableCount, {});
+        else
+            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], textureSize);
 
         auto depthMetalTexture = cp_drawable_get_depth_texture(drawable, i);
         auto depthTextureSize = QSize([depthMetalTexture width], [depthMetalTexture height]);
@@ -468,8 +547,12 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
                 m_rhiDepthTexture = nullptr;
             }
 
-            if (!m_rhiDepthTexture)
-                m_rhiDepthTexture = rhi->newTexture(depthFormat, depthTextureSize, 1, QRhiTexture::RenderTarget);
+            if (!m_rhiDepthTexture) {
+                if (multiviewRenderingEnabled)
+                    m_rhiDepthTexture = rhi->newTextureArray(depthFormat, drawableCount, depthTextureSize, 1, QRhiTexture::RenderTarget);
+                else
+                    m_rhiDepthTexture = rhi->newTexture(depthFormat, depthTextureSize, 1, QRhiTexture::RenderTarget);
+            }
 
 
             m_rhiDepthTexture->createFrom({ quint64(static_cast<MTLTexture*>(depthMetalTexture)), 0});
@@ -488,33 +571,10 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 
         // Update the camera pose
         if (QSSG_GUARD(xrOrigin)) {
-            cp_view_t view = cp_drawable_get_view(drawable, i);
-            simd_float4 tangents = cp_view_get_tangents(view);
-            const float tangentLeft = tangents[0];
-            const float tangentRight = tangents[1];
-            const float tangentUp = tangents[2];
-            const float tangentDown = tangents[3];
-            //qDebug() << "Left: " << tangentLeft << " Right: " << tangentRight << " Up: " << tangentUp << " Down: " << tangentDown;
-            simd_float2 depth_range = cp_drawable_get_depth_range(drawable);
-            const float clipNear = depth_range[1];
-            const float clipFar = depth_range[0];
-            //qDebug() << "Near: " << clipNear << " Far: " << clipFar;
-            xrOrigin->eyeCamera(i)->setLeftTangent(tangentLeft);
-            xrOrigin->eyeCamera(i)->setRightTangent(tangentRight);
-            xrOrigin->eyeCamera(i)->setUpTangent(tangentUp);
-            xrOrigin->eyeCamera(i)->setDownTangent(tangentDown);
-            xrOrigin->eyeCamera(i)->setClipNear(clipNear);
-            xrOrigin->eyeCamera(i)->setClipFar(clipFar);
-
-            simd_float4x4 localEyeTransform = cp_view_get_transform(view);
-            simd_float4x4 eyeCameraTransform = simd_mul(headTransform, localEyeTransform);
-            // NOTE: We need to convert from meters to centimeters here
-            QMatrix4x4 transform{eyeCameraTransform.columns[0].x, eyeCameraTransform.columns[1].x, eyeCameraTransform.columns[2].x, eyeCameraTransform.columns[3].x * 100,
-                                 eyeCameraTransform.columns[0].y, eyeCameraTransform.columns[1].y, eyeCameraTransform.columns[2].y, eyeCameraTransform.columns[3].y * 100,
-                                 eyeCameraTransform.columns[0].z, eyeCameraTransform.columns[1].z, eyeCameraTransform.columns[2].z, eyeCameraTransform.columns[3].z * 100,
-                                 0.0f, 0.0f, 0.0f, 1.0f};
-            QQuick3DNodePrivate::get(xrOrigin->eyeCamera(i))->setLocalTransform(transform);
-            xrViewport->setCamera(xrOrigin->eyeCamera(i));
+            if (multiviewRenderingEnabled)
+                updateCameraMultiview(xrViewport, headTransform, drawable, xrOrigin);
+            else
+                updateCamera(xrViewport, headTransform, drawable, xrOrigin, i);
         }
 
         renderControl->polishItems();

@@ -105,7 +105,11 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
         outputs.append({ QShader::HlslShader, QShaderVersion(61) }); // Shader Model 6.1 (includes multiview support)
         break;
     case QRhi::Metal:
+#if defined(Q_OS_VISIONOS)
+        outputs.append({ QShader::MslShader, QShaderVersion(21) }); // Metal 2.1 (multiview support)
+#else
         outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
+#endif // Q_OS_VISIONOS
         break;
     case QRhi::OpenGLES2:
     {
@@ -168,7 +172,11 @@ static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
     outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
     outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
     outputs.append({ QShader::HlslShader, QShaderVersion(61) }); // Shader Model 6.1 (for multiview on d3d12)
+#if defined(Q_OS_VISIONOS)
+    outputs.append({ QShader::MslShader, QShaderVersion(21) }); // Metal 2.1 (multiview support)
+#else
     outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
+#endif // Q_OS_VISIONOS
     outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
     outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
     outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+

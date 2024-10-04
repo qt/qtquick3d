@@ -59,8 +59,7 @@ public:
     void teardown();
 
     void setMultiViewRenderingEnabled(bool enable);
-    bool isMultiViewRenderingEnabled() const { return false; }
-    bool isMultiViewRenderingSupported() const { return false; }
+    bool isMultiViewRenderingEnabled() const;
 
     void setPassthroughEnabled(bool enable);
     bool isPassthroughEnabled() const { return false; }
@@ -99,6 +98,10 @@ Q_SIGNALS:
     void initialized();
 
 private:
+    static void updateCameraImp(simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i);
+    static void updateCamera(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i);
+    static void updateCameraMultiview(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin);
+
     QQuick3DXrManager *q_ptr = nullptr;
     QRhiTexture *m_rhiDepthTexture = nullptr;
     QPointer<QQuick3DXrInputManager> m_inputManager;

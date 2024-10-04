@@ -72,6 +72,7 @@ public:
     void setMultiViewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const;
     bool isMultiViewRenderingSupported() const;
+    static bool isMultiviewRenderingDisabled();
 
     void setXROrigin(QQuick3DXrOrigin *origin);
 
