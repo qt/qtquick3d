@@ -1124,13 +1124,6 @@ void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
     }
 }
 
-bool QQuick3DXrManagerPrivate::isMultiViewRenderingSupported() const
-{
-    Q_Q(const QQuick3DXrManager);
-    QRhi *rhi = q->m_renderControl->rhi();
-    return rhi ? rhi->isFeatureSupported(QRhi::MultiView) : false;
-}
-
 void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
     m_enablePassthrough = enable;

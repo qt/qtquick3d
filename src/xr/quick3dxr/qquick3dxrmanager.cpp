@@ -117,8 +117,8 @@ bool QQuick3DXrManager::isMultiViewRenderingEnabled() const
 
 bool QQuick3DXrManager::isMultiViewRenderingSupported() const
 {
-    Q_D(const QQuick3DXrManager);
-    return d->isMultiViewRenderingSupported();
+    QRhi *rhi = m_renderControl->rhi();
+    return rhi ? rhi->isFeatureSupported(QRhi::MultiView) : false;
 }
 
 void QQuick3DXrManager::setXROrigin(QQuick3DXrOrigin *origin)
@@ -314,6 +314,12 @@ bool QQuick3DXrManager::event(QEvent *e)
         return true;
     }
     return QObject::event(e);
+}
+
+bool QQuick3DXrManager::isMultiviewRenderingDisabled()
+{
+    static bool disabled = qEnvironmentVariableIntValue("QT_QUICK3D_XR_DISABLE_MULTIVIEW") != 0;
+    return disabled;
 }
 
 QQuick3DXrInputManager *QQuick3DXrManager::getInputManager() const

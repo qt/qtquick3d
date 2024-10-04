@@ -171,6 +171,12 @@ Q_SIGNALS:
 
 private:
     void setMultiViewCameras(QQuick3DCamera **firstCamera, int count);
+    template <size_t N>
+    void setMultiViewCameras(QQuick3DCamera *(&cameras)[N])
+    {
+        static_assert(N > 1, "Use setCamera for single view");
+        setMultiViewCameras(cameras, N);
+    }
 
     friend class QQuick3DExtensionListHelper;
     friend class QQuick3DXrManager;
