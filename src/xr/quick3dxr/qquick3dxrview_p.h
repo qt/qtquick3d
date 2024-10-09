@@ -48,7 +48,7 @@ class Q_QUICK3DXR_EXPORT QQuick3DXrView : public QQuick3DNode
     Q_PROPERTY(ReferenceSpace referenceSpace READ referenceSpace WRITE setReferenceSpace NOTIFY referenceSpaceChanged FINAL)
     Q_PROPERTY(bool depthSubmissionEnabled READ depthSubmissionEnabled WRITE setDepthSubmissionEnabled NOTIFY depthSubmissionEnabledChanged FINAL)
     Q_PROPERTY(bool multiViewRenderingSupported READ isMultiViewRenderingSupported CONSTANT)
-    Q_PROPERTY(bool multiViewRenderingEnabled READ multiViewRenderingEnabled WRITE setMultiViewRenderingEnabled NOTIFY multiViewRenderingEnabledChanged FINAL)
+    Q_PROPERTY(bool multiViewRenderingEnabled READ multiViewRenderingEnabled NOTIFY multiViewRenderingEnabledChanged FINAL)
     QML_NAMED_ELEMENT(XrView)
     QML_ADDED_IN_VERSION(6, 8)
 
@@ -112,7 +112,6 @@ public Q_SLOTS:
     void setPassthroughEnabled(bool enable);
     void setQuitOnSessionEnd(bool enable);
     void setDepthSubmissionEnabled(bool enable);
-    void setMultiViewRenderingEnabled(bool enable);
     void setXROrigin(QQuick3DXrOrigin *newXrOrigin);
 
 private Q_SLOTS:

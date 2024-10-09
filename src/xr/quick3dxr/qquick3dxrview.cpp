@@ -639,12 +639,6 @@ void QQuick3DXrView::setDepthSubmissionEnabled(bool enable)
         emit depthSubmissionEnabledChanged();
 }
 
-void QQuick3DXrView::setMultiViewRenderingEnabled(bool enable)
-{
-    Q_UNUSED(enable);
-    qWarning("Setting multiViewRenderingEnabled is not supported.");
-}
-
 void QQuick3DXrView::setXROrigin(QQuick3DXrOrigin *newXrOrigin)
 {
     if (m_xrOrigin == newXrOrigin)
