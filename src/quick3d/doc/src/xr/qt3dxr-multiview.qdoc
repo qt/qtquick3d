@@ -127,29 +127,23 @@
 
     \section2 Multiview support in \qxr
 
-    Multiview rendering is \b disabled by default in \qxr applications. This is done
-    to ensure the best level of compatibility. To enable multiview rendering, set
-    \l{QtQuick3D.Xr::XrView::multiViewRenderingEnabled}{multiViewRenderingEnabled}
-    on \l XrView to \c true. This will have no effect when the underlying 3D API
-    does not support multiview rendering. To query if multiview rendering can be
-    supported, check the
+    Multiview rendering is \b enabled by default, as long as the underlying graphics API
+    supports it. This is done to ensure the best possible performance. To query if multiview
+    rendering is supported, check the
     \l{QtQuick3D.Xr::XrView::multiViewRenderingSupported}{multiViewRenderingSupported}
     property.
 
-    For development and testing purposes, it can be useful to force the usage of
-    multiview rendering via an environment variable. This is done by setting
-    \c{QT_QUICK3D_XR_MULTIVIEW} to a non-zero value.
+    For development and testing purposes, it can be useful to disable the usage of
+    multiview rendering. This is done by setting the environment variable
+    \c QT_QUICK3D_XR_DISABLE_MULTIVIEW to a non-zero value.
 
-    To query if multiview rendering is in use (regardless of how it was
-    enabled), use the same
+    To query if multiview rendering is enabled, use the
     \l{QtQuick3D.Xr::XrView::multiViewRenderingEnabled}{multiViewRenderingEnabled}
     property. The value stays false always if multiview rendering cannot be
     enabled.
 
-    In general, it is recommended that VR/AR applications enable multiview
-    rendering unconditionally via the XrView property once rendering is
-    verified to work as expected in multiview mode during the development phase.
-    Multiview rendering is expected to improve performance, reducing the GPU and
-    especially the CPU load.
-
+    In general, it is recommended that VR/AR applications leave multiview
+    rendering enabled when it's supported, and only disable it when experiencing problems,
+    or for testing purposes. Multiview rendering is expected to improve performance,
+    reducing the GPU and especially the CPU load.
 */

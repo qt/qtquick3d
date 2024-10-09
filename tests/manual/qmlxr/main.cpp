@@ -97,8 +97,8 @@ int main(int argc, char *argv[])
 
     qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
 
-    if (cmdLineParser.isSet(multiviewOption))
-        qputenv("QT_QUICK3D_XR_MULTIVIEW", "1");
+    if (!cmdLineParser.isSet(multiviewOption))
+        qputenv("QT_QUICK3D_XR_DISABLE_MULTIVIEW", "1");
 
     if (cmdLineParser.isSet(shaderDebugOption))
         qputenv("QT_RHI_SHADER_DEBUG", "1");

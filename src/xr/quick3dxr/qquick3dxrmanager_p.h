@@ -88,6 +88,7 @@ Q_SIGNALS:
     void xrOriginChanged();
     void frameReady();
     void referenceSpaceChanged();
+    void multiViewRenderingEnabledChanged();
 
 protected:
     bool event(QEvent *e) override;

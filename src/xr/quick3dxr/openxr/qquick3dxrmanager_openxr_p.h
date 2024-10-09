@@ -206,7 +206,7 @@ private:
     bool m_passThroughEnabled = false;
     bool m_passthroughSupported = false;
     bool m_enablePassthrough = false;
-    bool m_multiviewRendering = false;
+    bool m_multiviewRendering = true;
     bool m_spaceExtensionSupported = false;
     QQuick3DXrAnchorManager *m_spaceExtension = nullptr;
     bool m_colorspaceExtensionSupported = false;

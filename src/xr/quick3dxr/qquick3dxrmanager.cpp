@@ -348,6 +348,9 @@ bool QQuick3DXrManager::setupGraphics()
     QRhi *rhi = m_quickWindow->rhi();
     QSSG_ASSERT_X(rhi != nullptr, "No RHI handle!", return false);
 
+    if (!d->isMultiViewRenderingEnabled())
+        emit multiViewRenderingEnabledChanged();
+
     return d->finalizeGraphics(rhi);
 }
 
@@ -398,11 +401,6 @@ bool QQuick3DXrManager::setupQuickScene()
     }
 
     qCDebug(lcQuick3DXr, "Quick 3D XR: QRhi initialized with backend %s", rhi->backendName());
-
-    if (qEnvironmentVariableIntValue("QT_QUICK3D_XR_MULTIVIEW")) {
-        qCDebug(lcQuick3DXr, "Quick3D XR: multiview rendering requested via the environment");
-        setMultiViewRenderingEnabled(true);
-    }
 
     return true;
 }
