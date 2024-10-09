@@ -152,7 +152,7 @@ void QQuick3DXrManagerPrivate::setErrorString(XrResult result, const char *callN
 QQuick3DXrManagerPrivate::QQuick3DXrManagerPrivate(QQuick3DXrManager &manager)
     : q_ptr(&manager)
 {
-
+    m_multiviewRendering = !QQuick3DXrManager::isMultiviewRenderingDisabled();
 }
 
 QQuick3DXrManagerPrivate::~QQuick3DXrManagerPrivate()
@@ -367,6 +367,11 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 bool QQuick3DXrManagerPrivate::finalizeGraphics(QRhi *rhi)
 {
     QSSG_ASSERT(rhi != nullptr && m_graphics != nullptr, return false);
+
+    if (m_multiviewRendering && !rhi->isFeatureSupported(QRhi::MultiView)) {
+        qCDebug(lcQuick3DXr) << "Multiview rendering is not supported with the current graphics API";
+        m_multiviewRendering = false;
+    }
 
 #if QT_CONFIG(graphicsframecapture)
     if (m_frameCapture) {
@@ -1121,6 +1126,8 @@ void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
         qCDebug(lcQuick3DXr, "OpenXR swapchain already exists, creating new one due to change in multiview mode");
         destroySwapchain();
         createSwapchains();
+
+        emit q->multiViewRenderingEnabledChanged();
     }
 }
 
