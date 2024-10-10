@@ -223,8 +223,11 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
     delete m_multiViewDepthStencilBuffer;
     m_multiViewDepthStencilBuffer = nullptr;
 
-    delete m_msaaRenderBuffer;
-    m_msaaRenderBuffer = nullptr;
+    delete m_msaaRenderBufferLegacy;
+    m_msaaRenderBufferLegacy = nullptr;
+
+    delete m_msaaRenderTexture;
+    m_msaaRenderTexture = nullptr;
 
     delete m_msaaMultiViewRenderBuffer;
     m_msaaMultiViewRenderBuffer = nullptr;
@@ -301,8 +304,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         // Graphics pipeline objects depend on the MSAA sample count, so the
         // renderer needs to know the value.
-        rhiCtxD->setMainPassSampleCount(m_msaaRenderBuffer ? m_msaaRenderBuffer->sampleCount() :
-            (m_msaaMultiViewRenderBuffer ? m_msaaMultiViewRenderBuffer->sampleCount() : 1));
+        rhiCtxD->setMainPassSampleCount(m_msaaRenderBufferLegacy ? m_msaaRenderBufferLegacy->sampleCount() :
+            (m_msaaRenderTexture ? m_msaaRenderTexture->sampleCount() :
+                (m_msaaMultiViewRenderBuffer ? m_msaaMultiViewRenderBuffer->sampleCount() : 1)));
 
         // mainPassViewCount is left unchanged
 
@@ -871,9 +875,13 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                             m_multiViewDepthStencilBuffer->setPixelSize(renderSize);
                             m_multiViewDepthStencilBuffer->create();
                         }
-                        if (m_msaaRenderBuffer) {
-                            m_msaaRenderBuffer->setPixelSize(renderSize);
-                            m_msaaRenderBuffer->create();
+                        if (m_msaaRenderBufferLegacy) {
+                            m_msaaRenderBufferLegacy->setPixelSize(renderSize);
+                            m_msaaRenderBufferLegacy->create();
+                        }
+                        if (m_msaaRenderTexture) {
+                            m_msaaRenderTexture->setPixelSize(renderSize);
+                            m_msaaRenderTexture->create();
                         }
                         if (m_msaaMultiViewRenderBuffer) {
                             m_msaaMultiViewRenderBuffer->setPixelSize(renderSize);
@@ -994,10 +1002,21 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                     m_msaaMultiViewRenderBuffer->create();
                     att.setTexture(m_msaaMultiViewRenderBuffer);
                 } else {
-                    // pass in the texture's format (which may be a floating point one!) as the preferred format hint
-                    m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, renderSize, m_samples, {}, m_texture->format());
-                    m_msaaRenderBuffer->create();
-                    att.setRenderBuffer(m_msaaRenderBuffer);
+                    if (!rhi->isFeatureSupported(QRhi::MultisampleTexture)) {
+                        // pass in the texture's format (which may be a floating point one!) as the preferred format hint
+                        m_msaaRenderBufferLegacy = rhi->newRenderBuffer(QRhiRenderBuffer::Color, renderSize, m_samples, {}, m_texture->format());
+                        m_msaaRenderBufferLegacy->create();
+                        att.setRenderBuffer(m_msaaRenderBufferLegacy);
+                    } else {
+                        // The texture-backed MSAA path has the benefit of being able to use
+                        // GL_EXT_multisampled_render_to_texture on OpenGL ES when supported (Mali
+                        // and Qualcomm GPUs typically), potentially giving significant performance
+                        // gains. Whereas with 3D APIs other than OpenGL there is often no
+                        // difference between QRhiRenderBuffer and QRhiTexture anyway.
+                        m_msaaRenderTexture = rhi->newTexture(textureFormat, renderSize, m_samples, QRhiTexture::RenderTarget);
+                        m_msaaRenderTexture->create();
+                        att.setTexture(m_msaaRenderTexture);
+                    }
                 }
                 att.setResolveTexture(m_texture);
             } else {

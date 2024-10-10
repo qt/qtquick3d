@@ -97,7 +97,8 @@ private:
     // used by the draw quad that does m_ssaaTexture -> m_texture
     QRhiTextureRenderTarget *m_ssaaTextureToTextureRenderTarget = nullptr;
     QRhiRenderPassDescriptor *m_ssaaTextureToTextureRenderPassDescriptor = nullptr;
-    QRhiRenderBuffer *m_msaaRenderBuffer = nullptr;
+    QRhiRenderBuffer *m_msaaRenderBufferLegacy = nullptr;
+    QRhiTexture *m_msaaRenderTexture = nullptr;
     QRhiTexture *m_msaaMultiViewRenderBuffer = nullptr;
     QRhiTexture *m_ssaaTexture = nullptr;
     QRhiTexture *m_temporalAATexture = nullptr;
