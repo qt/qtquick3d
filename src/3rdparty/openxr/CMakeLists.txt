@@ -48,10 +48,6 @@ qt_internal_add_3rdparty_library(BundledOpenXR
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-qt_internal_add_3rdparty_header_module(OpenXRPrivate
-    EXTERNAL_HEADERS_DIR include
-)
-
 qt_internal_extend_target(BundledOpenXR CONDITION WIN32
     DEFINES
         XR_OS_WINDOWS
