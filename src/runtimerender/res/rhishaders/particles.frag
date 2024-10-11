@@ -2,8 +2,13 @@
 
 layout(std140, binding = 0) uniform buf {
     mat4 qt_modelMatrix;
+#if QSHADER_VIEW_COUNT >=2
+    mat4 qt_viewMatrix[QSHADER_VIEW_COUNT];
+    mat4 qt_projectionMatrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_viewMatrix;
     mat4 qt_projectionMatrix;
+#endif
 #ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
     // ParticleLightData struct
     vec4 qt_pointLightPosition[4];
