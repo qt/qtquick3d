@@ -1059,14 +1059,16 @@ bool QQuick3DXrManagerPrivate::createSwapchains()
             m_projectionLayerViews[i].subImage.imageRect.extent.width = vp.recommendedImageRectWidth;
             m_projectionLayerViews[i].subImage.imageRect.extent.height = vp.recommendedImageRectHeight;
 
-            m_layerDepthInfos[i].type = XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR;
-            m_layerDepthInfos[i].next = nullptr;
-            m_layerDepthInfos[i].subImage.swapchain = m_depthSwapchains[0].handle; // for non-multiview this gets overwritten later
-            m_layerDepthInfos[i].subImage.imageArrayIndex = i; // this too
-            m_layerDepthInfos[i].subImage.imageRect.offset.x = 0;
-            m_layerDepthInfos[i].subImage.imageRect.offset.y = 0;
-            m_layerDepthInfos[i].subImage.imageRect.extent.width = vp.recommendedImageRectWidth;
-            m_layerDepthInfos[i].subImage.imageRect.extent.height = vp.recommendedImageRectHeight;
+            if (m_compositionLayerDepthSupported) {
+                m_layerDepthInfos[i].type = XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR;
+                m_layerDepthInfos[i].next = nullptr;
+                m_layerDepthInfos[i].subImage.swapchain = m_depthSwapchains[0].handle; // for non-multiview this gets overwritten later
+                m_layerDepthInfos[i].subImage.imageArrayIndex = i; // this too
+                m_layerDepthInfos[i].subImage.imageRect.offset.x = 0;
+                m_layerDepthInfos[i].subImage.imageRect.offset.y = 0;
+                m_layerDepthInfos[i].subImage.imageRect.extent.width = vp.recommendedImageRectWidth;
+                m_layerDepthInfos[i].subImage.imageRect.extent.height = vp.recommendedImageRectHeight;
+            }
         }
     }
 
