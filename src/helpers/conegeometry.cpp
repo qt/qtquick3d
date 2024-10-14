@@ -13,12 +13,12 @@ QT_BEGIN_NAMESPACE
 
 namespace {
 
-void createSidesVertices(float *&verticesPtr,
-                         int rings,
-                         int slices,
-                         double topRadius,
-                         double bottomRadius,
-                         double length)
+void createConeSidesVertices(float *&verticesPtr,
+                             int rings,
+                             int slices,
+                             double topRadius,
+                             double bottomRadius,
+                             double length)
 {
     const float dY = length / static_cast<float>(rings - 1);
     const float dTheta = (M_PI * 2) / static_cast<float>(slices);
@@ -84,7 +84,7 @@ void createSidesVertices(float *&verticesPtr,
     }
 }
 
-void createSidesIndices(quint16 *&indicesPtr, int rings, int slices)
+void createConeSidesIndices(quint16 *&indicesPtr, int rings, int slices)
 {
     for (int ring = 0; ring < rings-1; ++ring) {
         const int ringIndexStart = ring * (slices + 1);
@@ -106,12 +106,12 @@ void createSidesIndices(quint16 *&indicesPtr, int rings, int slices)
     }
 }
 
-void createDiscVertices(float *&verticesPtr,
-                        int slices,
-                        double topRadius,
-                        double bottomRadius,
-                        double length,
-                        double yPosition)
+void createConeDiscVertices(float *&verticesPtr,
+                             int slices,
+                             double topRadius,
+                             double bottomRadius,
+                             double length,
+                             double yPosition)
 {
     const float dTheta = (M_PI * 2) / static_cast<float>(slices);
     const double yNormal = (yPosition < 0.0f) ? -1.0f : 1.0f;
@@ -480,36 +480,36 @@ ConeGeometry::GeometryData ConeGeometry::generateConeGeometry(float topRadius, f
 
     // Truncated Cone
     if (bottomRadius > 0 && topRadius > 0) {
-        createSidesVertices(verticesPtr, rings, slices, topRadius, bottomRadius, length);
-        createSidesIndices(indicesPtr, rings, slices);
+        createConeSidesVertices(verticesPtr, rings, slices, topRadius, bottomRadius, length);
+        createConeSidesIndices(indicesPtr, rings, slices);
         int bottomCenterIndex = rings * (slices + 1);
-        createDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, -length / 2);
+        createConeDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, -length / 2);
         createDiscIndices(indicesPtr, bottomCenterIndex, slices, true);
         int topCenterIndex = bottomRadius > 0 ? rings * (slices + 1) + (slices + 2) : rings * (slices + 1);
-        createDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, length / 2);
+        createConeDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, length / 2);
         createDiscIndices(indicesPtr, topCenterIndex, slices, false);
     } else {
         // Cone Facing up
         if (topRadius > 0) {
             // Create the Cone Shape
-            createSidesVertices(verticesPtr, rings, slices, topRadius, bottomRadius, length);
-            createSidesIndices(indicesPtr, rings, slices);
+            createConeSidesVertices(verticesPtr, rings, slices, topRadius, bottomRadius, length);
+            createConeSidesIndices(indicesPtr, rings, slices);
 
             // Create flat disk at the bottom of the cone
             int topCenterIndex = rings * (slices + 1);
-            createDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, length / 2);
+            createConeDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, length / 2);
             createDiscIndices(indicesPtr, topCenterIndex, slices, false);
         }
 
         // Cone Facing down
         if (bottomRadius > 0) {
             // Create the Cone shape
-            createSidesVertices(verticesPtr, rings, slices, topRadius, bottomRadius, length);
-            createSidesIndices(indicesPtr, rings, slices);
+            createConeSidesVertices(verticesPtr, rings, slices, topRadius, bottomRadius, length);
+            createConeSidesIndices(indicesPtr, rings, slices);
 
             // Create flat disk at the top of the cone
             int bottomCenterIndex = rings * (slices + 1);
-            createDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, -length / 2);
+            createConeDiscVertices(verticesPtr, slices, topRadius, bottomRadius, length, -length / 2);
             createDiscIndices(indicesPtr, bottomCenterIndex, slices, true);
         }
     }

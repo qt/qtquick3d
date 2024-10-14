@@ -15,12 +15,12 @@ QT_BEGIN_NAMESPACE
 
 namespace {
 
-void createSidesVertices(float *&verticesPtr,
-                         int rings,
-                         int slices,
-                         double topRadius,
-                         double bottomRadius,
-                         double length)
+void createCylinderSidesVertices(float *&verticesPtr,
+                                 int rings,
+                                 int slices,
+                                 double topRadius,
+                                 double bottomRadius,
+                                 double length)
 {
     const float dY = length / static_cast<float>(rings - 1);
     const float dTheta = (M_PI * 2) / static_cast<float>(slices);
@@ -57,7 +57,7 @@ void createSidesVertices(float *&verticesPtr,
     }
 }
 
-void createSidesIndices(quint16 *&indicesPtr, int rings, int slices)
+void createCylinderSidesIndices(quint16 *&indicesPtr, int rings, int slices)
 {
     for (int ring = 0; ring < rings-1; ++ring) {
         const int ringIndexStart = ring * (slices + 1);
@@ -79,12 +79,12 @@ void createSidesIndices(quint16 *&indicesPtr, int rings, int slices)
     }
 }
 
-void createDiscVertices(float *&verticesPtr,
-                        int slices,
-                        double topRadius,
-                        double bottomRadius,
-                        double length,
-                        double yPosition)
+void createCylinderDiscVertices(float *&verticesPtr,
+                                int slices,
+                                double topRadius,
+                                double bottomRadius,
+                                double length,
+                                double yPosition)
 {
     const float dTheta = (M_PI * 2) / static_cast<float>(slices);
     const double yNormal = (yPosition < 0.0f) ? -1.0f : 1.0f;
@@ -141,10 +141,10 @@ void createDiscVertices(float *&verticesPtr,
     }
 }
 
-void createDiscIndices(quint16 *&indicesPtr,
-                       int discCenterIndex,
-                       int slices,
-                       bool isTopCap)
+void createCylinderDiscIndices(quint16 *&indicesPtr,
+                               int discCenterIndex,
+                               int slices,
+                               bool isTopCap)
 {
     if ( !isTopCap ) {
         for ( int i = slices - 1 ; i >= 0 ; --i )
@@ -434,14 +434,14 @@ CylinderGeometry::GeometryData CylinderGeometry::generateCylinderGeometry(float 
 
     // Cylinder vertices and indices
 
-    createSidesVertices(verticesPtr, rings, slices, radius, radius, length);
-    createSidesIndices(indicesPtr, rings, slices);
+    createCylinderSidesVertices(verticesPtr, rings, slices, radius, radius, length);
+    createCylinderSidesIndices(indicesPtr, rings, slices);
     int bottomCenterIndex = rings * (slices + 1);
-    createDiscVertices(verticesPtr, slices, radius, radius, length, -length / 2);
-    createDiscIndices(indicesPtr, bottomCenterIndex, slices, true);
+    createCylinderDiscVertices(verticesPtr, slices, radius, radius, length, -length / 2);
+    createCylinderDiscIndices(indicesPtr, bottomCenterIndex, slices, true);
     int topCenterIndex = radius > 0 ? rings * (slices + 1) + (slices + 2) : rings * (slices + 1);
-    createDiscVertices(verticesPtr, slices, radius, radius, length, length / 2);
-    createDiscIndices(indicesPtr, topCenterIndex, slices, false);
+    createCylinderDiscVertices(verticesPtr, slices, radius, radius, length, length / 2);
+    createCylinderDiscIndices(indicesPtr, topCenterIndex, slices, false);
 
 
     // Calculate bounding box (min and max)
