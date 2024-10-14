@@ -199,10 +199,8 @@ void QQuick3DXrManager::setSamples(int samples)
 
 void QQuick3DXrManager::update()
 {
-    if (m_quickWindow && m_renderControl && m_xrOrigin && m_vrViewport) {
-        QEvent *request = new QEvent(QEvent::UpdateRequest);
-        QCoreApplication::postEvent(this, request);
-    }
+    Q_D(QQuick3DXrManager);
+    d->update();
 }
 
 void QQuick3DXrManager::processSpatialEvents(const QJsonObject &events)
@@ -310,7 +308,7 @@ bool QQuick3DXrManager::event(QEvent *e)
 
     if (e->type() == QEvent::UpdateRequest) {
         d->processXrEvents();
-        update();
+        d->update();
         return true;
     }
     return QObject::event(e);

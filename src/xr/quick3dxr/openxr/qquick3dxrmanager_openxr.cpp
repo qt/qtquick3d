@@ -271,6 +271,12 @@ bool QQuick3DXrManagerPrivate::setupGraphics(QQuickWindow *window)
     return m_graphics->setupGraphics(m_instance, m_systemId, window->graphicsConfiguration());
 }
 
+void QQuick3DXrManagerPrivate::update()
+{
+    Q_Q(QQuick3DXrManager);
+    QCoreApplication::postEvent(q, new QEvent(QEvent::UpdateRequest));
+}
+
 void QQuick3DXrManagerPrivate::processXrEvents()
 {
     Q_Q(QQuick3DXrManager);

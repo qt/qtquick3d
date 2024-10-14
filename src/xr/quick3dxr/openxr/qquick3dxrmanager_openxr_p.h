@@ -61,6 +61,8 @@ public:
     bool isGraphicsInitialized() const;
     bool setupGraphics(QQuickWindow *window);
 
+    void update();
+
     void processXrEvents();
 
     void doRenderFrame();

@@ -30,6 +30,16 @@ class QQuick3DViewport;
 class QQuick3DXrInputManager;
 class QQuick3DXrAnchorManager;
 
+class QQuickRenderControl;
+class QQuick3DXrAnimationDriver;
+class QRhiTexture;
+
+class CompositorLayer;
+
+class QMutex;
+template <typename T>
+class QMutexLocker;
+
 class QQuick3DXrManagerPrivate
 {
     Q_DECLARE_PUBLIC(QQuick3DXrManager)
@@ -38,6 +48,13 @@ public:
         Paused,
         Running,
         Invalidated
+    };
+
+    enum class ArTrackingState {
+        Initialized,
+        Running,
+        Paused,
+        Stopped
     };
 
     explicit QQuick3DXrManagerPrivate(QQuick3DXrManager &manager);
@@ -53,8 +70,6 @@ public:
     bool setupGraphics(QQuickWindow *window);
 
     void setupWindow(QQuickWindow *window);
-
-    void createSwapchains();
 
     void teardown();
 
@@ -73,15 +88,9 @@ public:
 
     [[nodiscard]] bool isValid() const { return true; }
 
-    RenderState getRenderState();
-
     void getDefaultClipDistances(float &nearClip, float &farClip) const;
 
-    cp_layer_renderer_t layerRenderer() const;
-
-    void runWorldTrackingARSession();
-    ar_device_anchor_t createPoseForTiming(cp_frame_timing_t timing);
-
+    void update();
     void processXrEvents();
 
     void setSamples(int samples);
@@ -98,18 +107,29 @@ Q_SIGNALS:
     void initialized();
 
 private:
+    friend class CompositorLayer;
+
+    static void prepareAnchorManager(QQuick3DXrAnchorManager *anchorManager, ar_data_providers_t dataProviders);
+    static void initAnchorManager(QQuick3DXrAnchorManager *anchorManager);
+    static void initInputManager(QQuick3DXrInputManager *im);
+    [[nodiscard]] bool renderFrameImpl(QMutexLocker<QMutex> &locker, QWaitCondition &waitCondition);
+
     static void updateCameraImp(simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i);
     static void updateCamera(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i);
     static void updateCameraMultiview(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin);
 
     QQuick3DXrManager *q_ptr = nullptr;
+    CompositorLayer *m_compositorLayer = nullptr;
     QRhiTexture *m_rhiDepthTexture = nullptr;
+    QThread *m_renderThread = nullptr;
     QPointer<QQuick3DXrInputManager> m_inputManager;
     QPointer<QQuick3DXrAnchorManager> m_anchorManager;
-    ar_session_t m_arSession;
-    ar_world_tracking_provider_t m_worldTrackingProvider = nullptr;
     qint64 m_previousTime = 0;
+    qint64 m_nextStepSize = 0;
     bool m_isGraphicsInitialized = false;
+    bool m_running = false;
+    bool m_arRunning = false;
+    bool m_syncDone = false;
 };
 
 QT_END_NAMESPACE

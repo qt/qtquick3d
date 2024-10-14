@@ -28,6 +28,11 @@ QQuick3DXrAnchorManager::~QQuick3DXrAnchorManager()
 
 }
 
+void QQuick3DXrAnchorManager::teardown()
+{
+
+}
+
 void QQuick3DXrAnchorManager::addAnchor(QQuick3DXrSpatialAnchor *anchor)
 {
     anchor->moveToThread(qApp->thread());

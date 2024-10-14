@@ -46,6 +46,8 @@ public:
     void requestSceneCapture();
     bool queryAllAnchors();
 
+    void teardown();
+
     QList<QQuick3DXrSpatialAnchor *> anchors() const;
     qsizetype anchorCount() const;
 
