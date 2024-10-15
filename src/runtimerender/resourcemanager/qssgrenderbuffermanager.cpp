@@ -945,7 +945,7 @@ bool QSSGBufferManager::setRhiTexture(QSSGRenderImageTexture &texture,
         qWarning() << "Could not use 0 sized texture";
         return false;
     } else if (!rhi->isTextureFormatSupported(rhiFormat)) {
-        qWarning() << "Unsupported texture format";
+        qWarning() << "Unsupported texture format" << rhiFormat;
         return false;
     }
 
