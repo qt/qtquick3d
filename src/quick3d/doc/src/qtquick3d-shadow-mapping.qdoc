@@ -23,9 +23,9 @@ Qt provides support for shadow mapping for all our three light types, Directiona
 
 The directional light emits light in one direction from an unidentifiable source located infinitely far away. This is similar to the way sunlight works in real life. A directional light has infinite range and does not diminish.
 
-\section2 Cascading Shadow Maps
+\section2 Cascaded Shadow Maps
 
-One problem with a DirectionalLight is that it renders the whole scene from the point of view of the light. This can lead to blocky looking shadows when the size of the shadowmap is not adequate. One option to get better rendering quality is to use Cascading Shadow Maps (CSM). Qt supports a version of CSM called Parallell Split Shadow Maps (PSSM). PSSM works by splitting the view frustum into several parts and rendering a shadowmap for each part.
+One problem with a DirectionalLight is that it renders the whole scene from the point of view of the light. This can lead to blocky looking shadows when the size of the shadowmap is not adequate. One option to get better rendering quality is to use Cascaded Shadow Maps (CSM). Qt supports a version of CSM called Parallell Split Shadow Maps (PSSM). PSSM works by splitting the view frustum into several parts and rendering a shadowmap for each part.
 
 \image {quick3d-pssm.webp}
 
@@ -100,7 +100,7 @@ For PointLight/SpotLight it determines how big the bounding box of the rendered 
 
 The above image shows the same scene with the same directional light but two different values for \l{Light}{shadowMapFar}.
 
-\sa {Using Image-Based Lighting}, {Lightmaps and Global Illumination}
+\sa {Using Image-Based Lighting}, {Lightmaps and Global Illumination}, {Qt Quick 3D - Cascaded Shadow Maps Example}
 
 */
 
