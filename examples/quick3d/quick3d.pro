@@ -30,4 +30,5 @@ SUBDIRS += \
     bakedlightmap \
     lodhelper \
     simplefog \
-    sceneeffects
+    sceneeffects \
+    orderindependenttransparency
