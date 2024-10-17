@@ -296,6 +296,13 @@
 /*! \qmlproperty bool OrbitCameraController::panEnabled
     Enables panning controls. The default value is true.
 */
+/*! \qmlproperty bool OrbitCameraController::automaticClipping
+    \since 6.9
+
+    Enables automatic updating of the \l{Camera}{camera}'s
+    \l{Camera::}{clipNear} and \{Camera::}{clipFar} properties based on the
+    \l{Camera}{camera}'s z position. The default value is true.
+*/
 
 /*!
     \qmltype LodManager

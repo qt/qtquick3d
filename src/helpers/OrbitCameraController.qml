@@ -17,6 +17,7 @@ Item {
 
     property bool mouseEnabled: true
     property bool panEnabled: true
+    property bool automaticClipping: true
 
     readonly property bool inputsNeedProcessing: status.useMouse || status.isPanning
 
@@ -24,6 +25,7 @@ Item {
     implicitHeight: parent.height
 
     Connections {
+        enabled: root.automaticClipping
         target: root.camera
         function onZChanged() {
             // Adjust near/far values based on distance
