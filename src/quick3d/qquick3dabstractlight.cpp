@@ -161,6 +161,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty enumeration Light::softShadowQuality
+    \since 6.8
+
     The property controls the soft shadow quality.
 
     \value Light.Hard No soft shadows.
@@ -177,6 +179,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty real Light::pcfFactor
+    \since 6.8
+
     The property controls the PCF (percentage-closer filtering) factor. This
     value tries to approximate the radius of a PCF filtering in world space.
 
