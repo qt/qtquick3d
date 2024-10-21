@@ -84,7 +84,7 @@ void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
 
 /*!
     \qmltype XrInputAction
-    \inherits Item
+    \inherits QtObject
     \inqmlmodule QtQuick3D.Xr
     \brief Represents an action from an input controller.
 
