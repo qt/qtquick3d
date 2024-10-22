@@ -3,6 +3,10 @@
 
 #pragma once
 
+#if defined (__AVX__)
+#pragma GCC target("no-sse3")
+#endif
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cstddef>
