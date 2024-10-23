@@ -69,7 +69,7 @@ void QQuick3DXrEyeCamera::setLeftTangent(float leftTangent)
 
     m_leftTangent = leftTangent;
     emit leftTangentChanged(m_leftTangent);
-    markProjectionDirty();
+    markDirty(DirtyFlag::ProjectionDirty);
 }
 
 void QQuick3DXrEyeCamera::setRightTangent(float rightTangent)
@@ -79,7 +79,7 @@ void QQuick3DXrEyeCamera::setRightTangent(float rightTangent)
 
     m_rightTangent = rightTangent;
     emit rightTangentChanged(m_rightTangent);
-    markProjectionDirty();
+    markDirty(DirtyFlag::ProjectionDirty);
 }
 
 void QQuick3DXrEyeCamera::setUpTangent(float upTangent)
@@ -89,7 +89,7 @@ void QQuick3DXrEyeCamera::setUpTangent(float upTangent)
 
     m_upTangent = upTangent;
     emit upTangentChanged(m_upTangent);
-    markProjectionDirty();
+    markDirty(DirtyFlag::ProjectionDirty);
 }
 
 void QQuick3DXrEyeCamera::setDownTangent(float downTangent)
@@ -99,7 +99,7 @@ void QQuick3DXrEyeCamera::setDownTangent(float downTangent)
 
     m_downTangent = downTangent;
     emit downTangentChanged(m_downTangent);
-    markProjectionDirty();
+    markDirty(DirtyFlag::ProjectionDirty);
 }
 
 void QQuick3DXrEyeCamera::setClipNear(float clipNear)
@@ -109,7 +109,7 @@ void QQuick3DXrEyeCamera::setClipNear(float clipNear)
 
     m_clipNear = clipNear;
     emit clipNearChanged(m_clipNear);
-    markProjectionDirty();
+    markDirty(DirtyFlag::ProjectionDirty);
 }
 
 void QQuick3DXrEyeCamera::setClipFar(float clipFar)
@@ -119,37 +119,62 @@ void QQuick3DXrEyeCamera::setClipFar(float clipFar)
 
     m_clipFar = clipFar;
     emit clipFarChanged(m_clipFar);
-    markProjectionDirty();
+    markDirty(DirtyFlag::ProjectionDirty);
+}
+
+void QQuick3DXrEyeCamera::setProjection(const QMatrix4x4 &projection)
+{
+    m_projection = projection;
+    markDirty(DirtyFlag::ProjectionChanged);
 }
 
 QSSGRenderGraphObject *QQuick3DXrEyeCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
     if (camera) {
-        maybeUpdateProjection();
+        // Projection changed takes precedence over projection dirty
         bool changed = false;
-        changed |= qUpdateIfNeeded(camera->projection, m_projection);
-        // Still need to report near and far (used for shadows)
-        changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
-        changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
+        if (m_dirtyFlags & DirtyFlag::ProjectionChanged) {
+            camera->projection = m_projection;
+            qUpdateIfNeeded(camera->clipNear, m_clipNear);
+            qUpdateIfNeeded(camera->clipFar, m_clipFar);
+            m_dirtyFlags &= ~DirtyFlag::ProjectionChanged;
+            changed = true;
+        } else if (m_dirtyFlags & DirtyFlag::ProjectionDirty) {
+            maybeUpdateProjection();
+            changed |= qUpdateIfNeeded(camera->projection, m_projection);
+            changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
+            changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
+            m_dirtyFlags &= ~DirtyFlag::ProjectionDirty;
+        }
+
+        if (m_dirtyFlags & DirtyFlag::ClipChanged) {
+            changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
+            changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
+            m_dirtyFlags &= ~DirtyFlag::ClipChanged;
+        }
+
+        // Reset the dirty flag after all updates have been done
+        m_dirtyFlags = 0;
+
         if (changed)
             camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }
     return camera;
 }
 
-void QQuick3DXrEyeCamera::markProjectionDirty()
+void QQuick3DXrEyeCamera::markDirty(DirtyFlag flag)
 {
-    if (!m_projectionDirty) {
-        m_projectionDirty = true;
-        update();
-    }
+    if (m_dirtyFlags & flag)
+        return;
+
+    m_dirtyFlags |= flag;
+    update();
 }
 
 void QQuick3DXrEyeCamera::maybeUpdateProjection()
 {
-    if (!m_projectionDirty)
-        return;
+    QSSG_ASSERT(m_dirtyFlags & DirtyFlag::ProjectionDirty, return);
 
     const float right = m_rightTangent * m_clipNear;
     const float top = m_upTangent * m_clipNear;

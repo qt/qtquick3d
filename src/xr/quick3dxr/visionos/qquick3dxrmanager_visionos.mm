@@ -102,22 +102,19 @@ Q_GLOBAL_STATIC(CompositorLayer, s_compositorLayer)
 void QQuick3DXrManagerPrivate::updateCameraImp(simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i)
 {
     cp_view_t view = cp_drawable_get_view(drawable, i);
-    simd_float4 tangents = cp_view_get_tangents(view);
-    const float tangentLeft = tangents[0];
-    const float tangentRight = tangents[1];
-    const float tangentUp = tangents[2];
-    const float tangentDown = tangents[3];
-    //qDebug() << "Left: " << tangentLeft << " Right: " << tangentRight << " Up: " << tangentUp << " Down: " << tangentDown;
     simd_float2 depth_range = cp_drawable_get_depth_range(drawable);
     const float clipNear = depth_range[1];
     const float clipFar = depth_range[0];
-    //qDebug() << "Near: " << clipNear << " Far: " << clipFar;
-    xrOrigin->eyeCamera(i)->setLeftTangent(tangentLeft);
-    xrOrigin->eyeCamera(i)->setRightTangent(tangentRight);
-    xrOrigin->eyeCamera(i)->setUpTangent(tangentUp);
-    xrOrigin->eyeCamera(i)->setDownTangent(tangentDown);
+
     xrOrigin->eyeCamera(i)->setClipNear(clipNear);
     xrOrigin->eyeCamera(i)->setClipFar(clipFar);
+
+    simd_float4x4 projection = cp_drawable_compute_projection(drawable, cp_axis_direction_convention_right_up_forward, i);
+    QMatrix4x4 proj{projection.columns[0].x, projection.columns[1].x, projection.columns[2].x, projection.columns[3].x,
+                     projection.columns[0].y, projection.columns[1].y, projection.columns[2].y, projection.columns[3].y,
+                     projection.columns[0].z, projection.columns[1].z, projection.columns[2].z, projection.columns[3].z,
+                     projection.columns[0].w, projection.columns[1].w, projection.columns[2].w, projection.columns[3].w};
+    xrOrigin->eyeCamera(i)->setProjection(proj);
 
     simd_float4x4 localEyeTransform = cp_view_get_transform(view);
     simd_float4x4 eyeCameraTransform = simd_mul(headTransform, localEyeTransform);
