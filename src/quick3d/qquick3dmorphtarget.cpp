@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype MorphTarget
-    \inherits Object
+    \inherits Object3D
     \inqmlmodule QtQuick3D
     \brief Defines the properties of a morph target.
 

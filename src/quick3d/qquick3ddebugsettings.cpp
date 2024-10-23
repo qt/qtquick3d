@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype DebugSettings
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Used to configure debug settings.
 

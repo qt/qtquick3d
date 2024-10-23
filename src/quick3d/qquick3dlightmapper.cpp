@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Lightmapper
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Specifies lightmap baking settings for a scene.
     \since 6.4

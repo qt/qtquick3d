@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Fog
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Specifies fog settings for a scene.
     \since 6.5
