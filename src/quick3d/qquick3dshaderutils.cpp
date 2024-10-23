@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Shader
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Container component for defining shader code used by post-processing effects.
 
@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype TextureInput
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Specifies a texture exposed to the shaders of a CustomMaterial or Effect.
 
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Pass
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Defines a render pass in an Effect.
 
@@ -104,7 +104,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Command
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Supertype of commands to be performed as part of a pass in an Effect.
 
@@ -143,7 +143,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Buffer
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Creates or references a color buffer to be used for a pass of an Effect.
 

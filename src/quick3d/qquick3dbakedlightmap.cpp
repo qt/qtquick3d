@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype BakedLightmap
-    \inherits Object
+    \inherits QtObject
     \inqmlmodule QtQuick3D
     \brief Specifies baked lightmap settings for a model.
     \since 6.4
