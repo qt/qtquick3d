@@ -183,19 +183,22 @@ Item {
         }
 
         function processInput(frameDelta) {
+            // To keep the sensitivty compatible with the old frame based system
+            // we add a constant frame delta factor equivalent to 60 fps
+            const legacyDeltaScale = 1.66666666667;
             if (useMouse) {
                 // Get the delta
                 var rotationVector = root.origin.eulerRotation;
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
-                var rotateX = delta.x * root.xSpeed * frameDelta
+                var rotateX = delta.x * root.xSpeed * legacyDeltaScale
                 if (root.xInvert)
                     rotateX = -rotateX;
                 rotationVector.y += rotateX;
 
                 // rotate y
-                var rotateY = delta.y * -root.ySpeed * frameDelta
+                var rotateY = delta.y * -root.ySpeed * legacyDeltaScale
                 if (root.yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;
@@ -206,8 +209,8 @@ Item {
                 let delta = currentPanPos.minus(lastPanPos);
                 delta.x = -delta.x
 
-                delta.x = (delta.x / root.width) * root.camera.z * frameDelta
-                delta.y = (delta.y / root.height) * root.camera.z * frameDelta
+                delta.x = (delta.x / root.width) * root.camera.z * legacyDeltaScale
+                delta.y = (delta.y / root.height) * root.camera.z * legacyDeltaScale
 
                 let velocity = Qt.vector3d(0, 0, 0)
                 // X Movement

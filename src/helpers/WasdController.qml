@@ -267,18 +267,21 @@ Item {
                 updatePosition(root.controlledObject.up, root.upSpeed * frameDelta, root.controlledObject.position);
 
             if (useMouse) {
+                // To keep the sensitivty compatible with the old frame based system
+                // we add a constant frame delta factor equivalent to 60 fps
+                const legacyDeltaScale = 1.66666666667;
                 // Get the delta
                 var rotationVector = root.controlledObject.eulerRotation;
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
-                var rotateX = delta.x * xSpeed * frameDelta
+                var rotateX = delta.x * xSpeed * legacyDeltaScale
                 if (xInvert)
                     rotateX = -rotateX;
                 rotationVector.y += rotateX;
 
                 // rotate y
-                var rotateY = delta.y * -ySpeed * frameDelta
+                var rotateY = delta.y * -ySpeed * legacyDeltaScale
                 if (yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;
