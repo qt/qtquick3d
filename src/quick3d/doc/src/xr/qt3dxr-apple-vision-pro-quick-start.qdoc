@@ -74,7 +74,7 @@
     To build one of Qt's examples for visionOS, you can use the following command:
 
     \badcode
-    [QT_VISIONOS_BUILD]/bin/qt-cmake [EXAMPLE_BUILD_DIR] [EXAMPLE_SOURCE_DIR]
+    [QT_VISIONOS_BUILD]/bin/qt-cmake -B [EXAMPLE_BUILD_DIR] -S [EXAMPLE_SOURCE_DIR]
     \endcode
 
     Running this command produces an Xcode project that you can open in Xcode and deploy to the device.
