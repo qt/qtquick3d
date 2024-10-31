@@ -29,7 +29,7 @@ target_link_libraries(volumeraycaster PUBLIC
     Qt::Quick3D
 )
 
-if(OpenMP_CXX_FOUND)
+if(OpenMP_CXX_FOUND AND NOT ANDROID)
     target_link_libraries(volumeraycaster PUBLIC
         OpenMP::OpenMP_CXX
     )
