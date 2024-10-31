@@ -31,10 +31,10 @@ Item {
             if (distance < 1) {
                 root.camera.clipNear = 0.01
                 root.camera.clipFar = 100
-                if (camera.z === 0) {
+                if (root.camera.z === 0) {
                     console.warn("camera z set to 0, setting it to near clip")
-                    root.camera.z = camera.clipNear
-                    }
+                    root.camera.z = root.camera.clipNear
+                }
             } else if (distance < 100) {
                 root.camera.clipNear = 0.1
                 root.camera.clipFar = 1000
@@ -176,39 +176,39 @@ Item {
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
-                var rotateX = delta.x * xSpeed * frameDelta
-                if (xInvert)
+                var rotateX = delta.x * root.xSpeed * frameDelta
+                if (root.xInvert)
                     rotateX = -rotateX;
                 rotationVector.y += rotateX;
 
                 // rotate y
-                var rotateY = delta.y * -ySpeed * frameDelta
-                if (yInvert)
+                var rotateY = delta.y * -root.ySpeed * frameDelta
+                if (root.yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;
-                origin.setEulerRotation(rotationVector);
+                root.origin.setEulerRotation(rotationVector);
                 lastPos = currentPos;
             }
             if (isPanning) {
                 let delta = currentPanPos.minus(lastPanPos);
                 delta.x = -delta.x
 
-                delta.x = (delta.x / root.width) * camera.z * frameDelta
-                delta.y = (delta.y / root.height) * camera.z * frameDelta
+                delta.x = (delta.x / root.width) * root.camera.z * frameDelta
+                delta.y = (delta.y / root.height) * root.camera.z * frameDelta
 
                 let velocity = Qt.vector3d(0, 0, 0)
                 // X Movement
-                let xDirection = origin.right
+                let xDirection = root.origin.right
                 velocity = velocity.plus(Qt.vector3d(xDirection.x * delta.x,
                                                      xDirection.y * delta.x,
                                                      xDirection.z * delta.x));
                 // Y Movement
-                let yDirection = origin.up
+                let yDirection = root.origin.up
                 velocity = velocity.plus(Qt.vector3d(yDirection.x * delta.y,
                                                      yDirection.y * delta.y,
                                                      yDirection.z * delta.y));
 
-                origin.position = origin.position.plus(velocity)
+                root.origin.position = root.origin.position.plus(velocity)
 
                 lastPanPos = currentPanPos
             }
