@@ -84,22 +84,29 @@ Item {
         target: null
         enabled: root.mouseEnabled
 
-        property real distance: 0.0
-        onCentroidChanged: {
-            root.panEvent(Qt.vector2d(centroid.position.x, centroid.position.y))
+        onTranslationChanged: (delta) => {
+            if (!root.panEnabled)
+                return;
+            delta.x = -(delta.x / root.width) * root.camera.z;
+            delta.y = (delta.y / root.height) * root.camera.z;
+
+            let movement = Qt.vector3d(0, 0, 0)
+            // X Movement
+            let xDirection = root.origin.right
+            movement = movement.plus(Qt.vector3d(xDirection.x * delta.x,
+                                                 xDirection.y * delta.x,
+                                                 xDirection.z * delta.x));
+            // Y Movement
+            let yDirection = root.origin.up
+            movement = movement.plus(Qt.vector3d(yDirection.x * delta.y,
+                                                 yDirection.y * delta.y,
+                                                 yDirection.z * delta.y));
+
+            root.origin.position = root.origin.position.plus(movement)
         }
 
-        onActiveChanged: {
-            if (active) {
-                root.startPan(Qt.vector2d(centroid.position.x, centroid.position.y))
-                distance = root.camera.z
-            } else {
-                root.endPan()
-                distance = 0.0
-            }
-        }
-        onScaleChanged: {
-            root.camera.z = distance * (1 / scale)
+        onScaleChanged: (delta) => {
+            root.camera.z = root.camera.z * (1 / delta)
         }
     }
 
