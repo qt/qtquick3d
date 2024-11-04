@@ -25,4 +25,10 @@ void QQuick3DXrAnimationDriver::setStep(int stepSize)
     m_step = stepSize;
 }
 
+void QQuick3DXrAnimationDriver::start()
+{
+    m_elapsed = 0;
+    QAnimationDriver::start();
+}
+
 QT_END_NAMESPACE

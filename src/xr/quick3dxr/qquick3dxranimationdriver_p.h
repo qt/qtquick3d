@@ -29,6 +29,9 @@ public:
 
     void setStep(int stepSize);
 
+protected:
+    void start() override;
+
 private:
     int m_step = 16;
     qint64 m_elapsed = 0;

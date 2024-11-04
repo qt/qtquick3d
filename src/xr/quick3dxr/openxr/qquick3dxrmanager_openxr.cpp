@@ -1367,9 +1367,9 @@ bool QQuick3DXrManagerPrivate::renderLayer(XrTime predictedDisplayTime,
         const qint64 displayPeriodMS = predictedDisplayPeriod / 1000000;
         const qint64 displayDeltaMS = (predictedDisplayTime - m_previousTime) / 1000000;
 
-        if (m_previousTime == 0)
+        if (m_previousTime == 0 || !animationDriver->isRunning()) {
             animationDriver->setStep(displayPeriodMS);
-        else {
+        } else {
             if (displayDeltaMS > displayPeriodMS)
                 animationDriver->setStep(displayPeriodMS);
             else
