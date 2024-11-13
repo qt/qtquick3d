@@ -262,6 +262,18 @@ void QQuick3DXrInputAction::setActionId(const QList<Action> &newActionId)
     emit actionIdChanged();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick3D.Xr::XrInputAction::hand
+    \brief The Hand that this input action will apply to.
+
+    Specifies the hand ro react to.
+
+    It can be one of:
+
+    \value XrInputAction.LeftHand
+    \value XrInputAction.RightHand
+    \value XrInputAction.Unknown
+ */
 
 QQuick3DXrInputAction::Hand QQuick3DXrInputAction::hand() const
 {
