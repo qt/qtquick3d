@@ -194,6 +194,7 @@ void QSSGStageGeneratorBase::addShaderUniformMap()
             m_mergeContext->registerUniformMember(iter.value().second, name);
     }
     addShaderPass2Marker(ShaderItemType::Uniform);
+    addShaderPass2Marker(ShaderItemType::Image);
 }
 
 void QSSGStageGeneratorBase::addShaderOutgoingMap()
@@ -326,6 +327,22 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
                 m_finalBuilder.replace(pos, prefixLen + typeLen, block);
             }
                 break;
+            case ShaderItemType::Image:
+            {
+                QByteArray block;
+
+                for (const auto &image : std::as_const(mergeContext->m_images)) {
+                    addStartCond(block, image);
+                    block += QString::asprintf("layout(binding = %d, %s) uniform %s %s %s;\n",
+                                               image.binding,
+                                               image.imgType.constData(),
+                                               image.qualifiers.constData(),
+                                               image.type.constData(),
+                                               image.name.constData()).toUtf8();
+                    addEndCond(block, image);
+                }
+                m_finalBuilder.replace(pos, prefixLen + typeLen, block);
+            } break;
             case ShaderItemType::Uniform:
             {
                 QByteArray block;
@@ -474,6 +491,9 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
         }
     }
 
+    for (const QSSGRenderShaderMetadata::Image &img : std::as_const(meta.images))
+        mergeContext->registerImage(img.type, img.name, img.imageType, img.qualifiers, img.condition, img.conditionName);
+
     for (const QSSGRenderShaderMetadata::InputOutput &inputVar : std::as_const(meta.inputs)) {
         if (inputVar.stage == stage)
             mergeContext->registerInput(stage, inputVar.type, inputVar.name, inputVar.flat);
@@ -504,8 +524,11 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
         return nullptr;
     }
 
+    auto backend = theCache.rhiContext().rhi()->backend();
     QSSGShaderResourceMergeContext mergeContext;
     mergeContext.viewCount = viewCount;
+    if (backend == QRhi::OpenGLES2)
+        mergeContext.separateImageBindingPoints = true;
 
     for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);

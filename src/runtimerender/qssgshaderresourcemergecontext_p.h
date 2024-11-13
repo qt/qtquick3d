@@ -45,6 +45,12 @@ public:
         int binding;
     };
 
+    struct Image : public Sampler
+    {
+        QByteArray imgType;
+        QByteArray qualifiers;
+    };
+
     struct BlockMember {
         QByteArray type;
         QByteArray name;
@@ -60,13 +66,16 @@ public:
     // a different order.
     QMap<QByteArray, InOutVar> m_inOutVars;
     QMap<QByteArray, Sampler> m_samplers;
+    QMap<QByteArray, Image> m_images;
     QMap<QByteArray, BlockMember> m_uniformMembers;
 
     int m_nextFreeResourceBinding = FIRST_CUSTOM_RESOURCE_BINDING_POINT;
+    int m_nextFreeImageBinding = 0;
     QHash<int, int> m_nextFreeInLocation;
     QHash<int, int> m_nextFreeOutLocation;
 
     int viewCount = 1;
+    bool separateImageBindingPoints = false;
 
     void registerInput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name, bool flat = false)
     {
@@ -95,10 +104,23 @@ public:
                          QSSGRenderShaderMetadata::Uniform::Condition conditionType = QSSGRenderShaderMetadata::Uniform::None,
                          const QByteArray &conditionName = QByteArray())
     {
-        if (m_samplers.contains(name))
+        if (m_samplers.contains(name) || m_images.contains(name))
             return;
         Sampler var { type, name, conditionType, conditionName, m_nextFreeResourceBinding++ };
         m_samplers.insert(name, var);
+    }
+
+    void registerImage(const QByteArray &type,
+                       const QByteArray &name,
+                       const QByteArray &imgtype,
+                       const QByteArray &qualifiers,
+                       QSSGRenderShaderMetadata::Uniform::Condition conditionType = QSSGRenderShaderMetadata::Uniform::None,
+                       const QByteArray &conditionName = QByteArray())
+    {
+        if (m_samplers.contains(name) || m_images.contains(name))
+            return;
+        Image var { {type, name, conditionType, conditionName, separateImageBindingPoints ? (m_nextFreeImageBinding++) : (m_nextFreeResourceBinding++) }, imgtype, qualifiers};
+        m_images.insert(name, var);
     }
 
     void registerUniformMember(const QByteArray &type,

@@ -444,6 +444,10 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
     for (const QShaderDescription::InOutVariable &var : combinedImageSamplers)
         m_combinedImageSamplers[var.name] = var;
 
+    const QVector<QShaderDescription::InOutVariable> storageImages  = stage.shader().description().storageImages() + stage.shader().description().separateImages();
+    for (const QShaderDescription::InOutVariable &var : storageImages)
+        m_storageImages[var.name] = var;
+
     std::fill(m_materialImageSamplerBindings,
               m_materialImageSamplerBindings + size_t(QSSGRhiSamplerBindingHints::BindingMapSize),
               -1);
@@ -1032,6 +1036,14 @@ int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
     return binding;
 }
 
+int QSSGRhiShaderPipeline::bindingForImage(const char *name)
+{
+    auto it = m_storageImages.constFind(QByteArray::fromRawData(name, strlen(name)));
+    const int binding = it != m_storageImages.cend() ? it->binding : -1;
+    return binding;
+}
+
+
 /*!
     \internal
  */
@@ -1610,6 +1622,57 @@ void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourc
     d->u.stex.count = 1;
     d->u.stex.texSamplers[0].tex = tex;
     d->u.stex.texSamplers[0].sampler = sampler;
+}
+
+void QSSGRhiShaderResourceBindingList::addImageLoad(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level)
+{
+#ifdef QT_DEBUG
+    if (p == QSSGRhiShaderResourceBindingList::MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
+    h ^= qintptr(tex) ^ qintptr(level);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::ImageLoad;
+    d->u.simage.tex = tex;
+    d->u.simage.level = level;
+}
+
+void QSSGRhiShaderResourceBindingList::addImageStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level)
+{
+#ifdef QT_DEBUG
+    if (p == QSSGRhiShaderResourceBindingList::MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
+    h ^= qintptr(tex) ^ qintptr(level);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::ImageStore;
+    d->u.simage.tex = tex;
+    d->u.simage.level = level;
+}
+
+void QSSGRhiShaderResourceBindingList::addImageLoadStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level)
+{
+#ifdef QT_DEBUG
+    if (p == QSSGRhiShaderResourceBindingList::MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
+    h ^= qintptr(tex) ^ qintptr(level);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::ImageLoadStore;
+    d->u.simage.tex = tex;
+    d->u.simage.level = level;
 }
 
 QT_END_NAMESPACE

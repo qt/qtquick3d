@@ -40,6 +40,14 @@ struct Uniform
     static Condition conditionFromString(const QString &condition);
 };
 
+struct Image : public Uniform
+{
+    Image() {};
+    Image(const Uniform &u) : Uniform(u) {}
+    QByteArray imageType;
+    QByteArray qualifiers;
+};
+
 struct InputOutput
 {
     QByteArray type;
@@ -53,6 +61,7 @@ struct InputOutput
 struct ShaderMetaData
 {
     QVector<Uniform> uniforms;
+    QVector<Image> images;
     QVector<InputOutput> inputs;
     QVector<InputOutput> outputs;
 };

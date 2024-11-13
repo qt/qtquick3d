@@ -120,6 +120,20 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
             return uniform;
         };
 
+        static const auto toImage = [](const QJsonObject &uObj, const Uniform &uniform)
+        {
+            Image img(uniform);
+            auto it = uObj.constBegin();
+            const auto end = uObj.constEnd();
+            if (it != end) {
+                it = uObj.constFind(QLatin1String("imgtype"));
+                img.imageType = (it != end) ? it->toString().toLatin1() : QByteArray();
+                it = uObj.constFind(QLatin1String("qualifiers"));
+                img.qualifiers = (it != end) ? it->toString().toLatin1() : QByteArray();
+            }
+            return img;
+        };
+
         static const auto toInputOutput = [](const QJsonObject &uObj) {
             InputOutput inOutVar;
             auto it = uObj.constBegin();
@@ -154,17 +168,24 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
                         const QJsonObject obj = valueRef.toObject();
                         const auto uniform = toUniform(obj);
                         if (!uniform.type.isEmpty() && !uniform.name.isEmpty()) {
-                            result.uniforms.push_back(uniform);
+                            if (obj.constFind(QLatin1String("imgtype")) != obj.constEnd())
+                                result.images.push_back(toImage(obj, uniform));
+                            else
+                                result.uniforms.push_back(uniform);
                         } else {
                             qWarning("Invalid uniform, skipping");
                         }
                     }
                 } else if (it->type() == QJsonValue::Object) {
                     const auto uniform = toUniform(it->toObject());
-                    if (!uniform.type.isEmpty() && !uniform.name.isEmpty())
-                        result.uniforms.push_back(uniform);
-                    else
+                    if (!uniform.type.isEmpty() && !uniform.name.isEmpty()) {
+                        if (obj.constFind(QLatin1String("imgtype")) != obj.constEnd())
+                            result.images.push_back(toImage(obj, uniform));
+                        else
+                            result.uniforms.push_back(uniform);
+                    } else {
                         qWarning("Invalid uniform, skipping");
+                    }
                 }
             }
 

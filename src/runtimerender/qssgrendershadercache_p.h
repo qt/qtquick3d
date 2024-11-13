@@ -199,6 +199,8 @@ public:
                     const InitBakerFunc initBakeFn = nullptr);
     ~QSSGShaderCache();
 
+    QSSGRhiContext &rhiContext() { return m_rhiContext; }
+
     void releaseCachedResources();
 
     QQsbInMemoryCollection &persistentShaderBakingCache() { return m_persistentShaderBakingCache; }

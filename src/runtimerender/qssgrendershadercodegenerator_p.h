@@ -46,7 +46,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
         VertexInput,
         Input,
         Output,
-        Uniform
+        Uniform,
+        Image
     };
 
     enum class ShaderItemMapFlag {
