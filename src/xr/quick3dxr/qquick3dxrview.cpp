@@ -287,10 +287,11 @@ bool QQuick3DXrView::init()
     connect(&m_xrManager, &QQuick3DXrManager::frameReady, this, &QQuick3DXrView::frameReady);
     connect(&m_xrManager, &QQuick3DXrManager::referenceSpaceChanged, this, &QQuick3DXrView::referenceSpaceChanged);
     connect(&m_xrManager, &QQuick3DXrManager::multiViewRenderingEnabledChanged, this, &QQuick3DXrView::multiViewRenderingEnabledChanged);
+    connect(&m_xrManager, &QQuick3DXrManager::initialized, this, &QQuick3DXrView::init, Qt::UniqueConnection);
 
     if (!m_xrManager.isReady() && !m_xrManager.initialize()) {
         qCDebug(lcQuick3DXr, "Waiting for XR platform to be initialized");
-        connect(&m_xrManager, &QQuick3DXrManager::initialized, this, &QQuick3DXrView::init, Qt::UniqueConnection);
+
         return false;
     }
 

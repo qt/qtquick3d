@@ -45,12 +45,14 @@ class QQuick3DXrManagerPrivate
     Q_DECLARE_PUBLIC(QQuick3DXrManager)
 public:
     enum class RenderState {
+        Uninitialized,
         Paused,
         Running,
         Invalidated
     };
 
     enum class ArTrackingState {
+        Uninitialized,
         Initialized,
         Running,
         Paused,
@@ -127,6 +129,7 @@ private:
     qint64 m_previousTime = 0;
     qint64 m_nextStepSize = 0;
     bool m_isGraphicsInitialized = false;
+    bool m_multiviewRenderingEnabled = true;
     bool m_running = false;
     bool m_arRunning = false;
     bool m_syncDone = false;
