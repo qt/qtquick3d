@@ -185,4 +185,9 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearShadowMapShader()
     return getBuiltinRhiShader(QByteArrayLiteral("clearshadowmap"), m_cache.clearShadowMapShader);
 }
 
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearImageShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("clearimage"), m_cache.clearImageShader);
+}
+
 QT_END_NAMESPACE

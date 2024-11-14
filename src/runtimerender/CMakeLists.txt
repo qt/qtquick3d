@@ -598,6 +598,21 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_uv_tangent"
         QSSG_LIGHTMAPUVRASTER_UV_TANGENT
 )
 
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_clearimage"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "320es,430"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/clearimage.vert
+        res/rhishaders/clearimage.frag
+    OUTPUTS
+        res/rhishaders/clearimage.vert.qsb
+        res/rhishaders/clearimage.frag.qsb
+)
+
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_weightedblended"
     SILENT
     PRECOMPILE

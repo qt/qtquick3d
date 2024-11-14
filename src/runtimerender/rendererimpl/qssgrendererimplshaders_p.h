@@ -58,6 +58,7 @@ public:
     QSSGRhiShaderPipelinePtr getRhiOitCompositeShader(QSSGRenderLayer::OITMethod method, bool multisample);
     QSSGRhiShaderPipelinePtr getRhiCubeMapToAtlasShader();
     QSSGRhiShaderPipelinePtr getRhiClearShadowMapShader();
+    QSSGRhiShaderPipelinePtr getRhiClearImageShader();
 
 private:
     QSSGShaderCache &m_shaderCache; // We're owned by the shadercache
@@ -97,6 +98,7 @@ private:
         BuiltinShader oitCompositeShader[compositeShaderCount];
         BuiltinShader cubeMapToAtlasShader;
         BuiltinShader clearShadowMapShader;
+        BuiltinShader clearImageShader;
     } m_cache;
 };
 
