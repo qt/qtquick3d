@@ -76,7 +76,7 @@ fast-to-load format, and copies the texture map image files as well.
 \li Perform the same using \c balsamui, a GUI frontend for \l{Balsam Asset
 Import Tool}{Balsam}.
 
-\li If using \l{https://www.qt.io/product/ui-design-tools}{Qt Design Studio},
+\li If using \l{Qt Design Studio},
 the asset import process is integrated into the visual design tools. Importing
 can be triggered, for example, by dragging and dropping the .gltf file onto the
 appropriate panel.

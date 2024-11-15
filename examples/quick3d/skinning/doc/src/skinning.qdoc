@@ -11,7 +11,7 @@
 
     Generally most \l{Vertex Skinning}{skin animations} will be designed by modeling tools, and Quick3D
     also supports glTF formats through the \l {Balsam Asset Import Tool}{Balsam importer}
-    and \l {https://doc.qt.io/qtdesignstudio/studio-3d-design-mode.html}{Qt Design Studio}.
+    and \l{Qt Design Studio: Design Views}{Qt Design Studio}.
     This example shows how each property is used for the skin animation in Quick3D.
 
     \note All the data in this example come from \l
