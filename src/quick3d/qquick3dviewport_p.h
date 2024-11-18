@@ -219,6 +219,7 @@ private:
     QQuick3DCamera *m_camera = nullptr;
     QVarLengthArray<QQuick3DCamera *, 2> m_multiViewCameras;
     QQuick3DSceneEnvironment *m_environment = nullptr;
+    mutable QPointer<QQuick3DSceneEnvironment> m_builtInEnvironment;
     QQuick3DSceneRootNode *m_sceneRoot = nullptr;
     QQuick3DNode *m_importScene = nullptr;
     mutable SGFramebufferObjectNode *m_node = nullptr;

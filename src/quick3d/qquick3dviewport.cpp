@@ -246,7 +246,6 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     setFlag(ItemHasContents);
     m_camera = nullptr;
     m_sceneRoot = new QQuick3DSceneRootNode(this);
-    m_environment = new QQuick3DSceneEnvironment(m_sceneRoot);
     m_renderStats = new QQuick3DRenderStats();
     QQuick3DSceneManager *sceneManager = new QQuick3DSceneManager();
     QQuick3DObjectPrivate::get(m_sceneRoot)->refSceneManager(*sceneManager);
@@ -369,10 +368,21 @@ QQuick3DCamera *QQuick3DViewport::camera() const
 
     This property specifies the SceneEnvironment used to render the scene.
 
+    \note Setting this property to \c null will reset the SceneEnvironment to the default.
+
     \sa SceneEnvironment
 */
 QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 {
+    if (!m_environment) {
+        if (!m_builtInEnvironment) {
+            m_builtInEnvironment = new QQuick3DSceneEnvironment(m_sceneRoot);
+            m_builtInEnvironment->setParentItem(m_sceneRoot);
+        }
+
+        return m_builtInEnvironment;
+    }
+
     return m_environment;
 }
 
@@ -754,6 +764,9 @@ void QQuick3DViewport::setEnvironment(QQuick3DSceneEnvironment *environment)
     m_environment = environment;
     if (m_environment && !m_environment->parentItem())
         m_environment->setParentItem(m_sceneRoot);
+
+    QQuick3DObjectPrivate::attachWatcherPriv(m_sceneRoot, this, &QQuick3DViewport::setEnvironment, environment, m_environment);
+
     emit environmentChanged();
     update();
 }
