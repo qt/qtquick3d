@@ -283,6 +283,11 @@ bool QQuick3DXrView::init()
         return false;
     }
 
+    connect(&m_xrManager, &QQuick3DXrManager::sessionEnded, this, &QQuick3DXrView::handleSessionEnded);
+    connect(&m_xrManager, &QQuick3DXrManager::frameReady, this, &QQuick3DXrView::frameReady);
+    connect(&m_xrManager, &QQuick3DXrManager::referenceSpaceChanged, this, &QQuick3DXrView::referenceSpaceChanged);
+    connect(&m_xrManager, &QQuick3DXrManager::multiViewRenderingEnabledChanged, this, &QQuick3DXrView::multiViewRenderingEnabledChanged);
+
     if (!m_xrManager.isReady() && !m_xrManager.initialize()) {
         qCDebug(lcQuick3DXr, "Waiting for XR platform to be initialized");
         connect(&m_xrManager, &QQuick3DXrManager::initialized, this, &QQuick3DXrView::init, Qt::UniqueConnection);
@@ -321,11 +326,6 @@ bool QQuick3DXrView::init()
         connect(env, &QQuick3DSceneEnvironment::antialiasingModeChanged, this, &QQuick3DXrView::handleAAChanged);
         connect(env, &QQuick3DSceneEnvironment::antialiasingQualityChanged, this, &QQuick3DXrView::handleAAChanged);
     }
-
-    connect(&m_xrManager, &QQuick3DXrManager::sessionEnded, this, &QQuick3DXrView::handleSessionEnded);
-    connect(&m_xrManager, &QQuick3DXrManager::frameReady, this, &QQuick3DXrView::frameReady);
-    connect(&m_xrManager, &QQuick3DXrManager::referenceSpaceChanged, this, &QQuick3DXrView::referenceSpaceChanged);
-    connect(&m_xrManager, &QQuick3DXrManager::multiViewRenderingEnabledChanged, this, &QQuick3DXrView::multiViewRenderingEnabledChanged);
 
     // NOTE: If we've called async, we need to make sure the environment, etc. is set again
     setEnvironment(m_sceneEnvironment);
