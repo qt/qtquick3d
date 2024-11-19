@@ -1,4 +1,4 @@
-From bcdf980cd1293e10e3f661e847f41b4e7ec3a4e4 Mon Sep 17 00:00:00 2001
+From e88ce86ad1bcac88804c80c3aeea60a80515703f Mon Sep 17 00:00:00 2001
 From: Laszlo Agocs <laszlo.agocs@qt.io>
 Date: Fri, 3 Jun 2022 10:35:15 +0200
 Subject: [PATCH] Allow Embree to build with custom compiler flags
@@ -8,14 +8,14 @@ that result in linker errors.
 
 Change-Id: I60d8a77c449607762bd5449ead21180744c17dff
 ---
- src/3rdparty/embree/common/sys/platform.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ src/3rdparty/embree/common/sys/platform.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/src/3rdparty/embree/common/sys/platform.h b/src/3rdparty/embree/common/sys/platform.h
-index 7ba5a19f..78d8afce 100644
+index abc784cee..8965c0626 100644
 --- a/src/3rdparty/embree/common/sys/platform.h
 +++ b/src/3rdparty/embree/common/sys/platform.h
-@@ -376,3 +376,11 @@ namespace embree
+@@ -380,3 +380,12 @@ namespace embree
    }
  
  }
@@ -26,7 +26,8 @@ index 7ba5a19f..78d8afce 100644
 +#undef __AVX2__
 +#undef __AVXI__
 +#undef __AVX__
++#undef __SSE4_1__
 +#undef __SSE4_2__
 -- 
-2.36.1.windows.1
+2.43.0
 
