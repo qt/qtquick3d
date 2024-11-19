@@ -30,6 +30,13 @@ Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 
 static const char s_renderThreadName[] = "QQuick3DXrRenderThread";
 
+// NOTE: This only affects visionOS
+static bool qssgDisableFoveation()
+{
+    static bool foveationDisabled = qEnvironmentVariableIntValue("QT_QUICK3D_XR_DISABLE_FOVEATION") != 0;
+    return foveationDisabled;
+}
+
 class CompositorLayer : public QObject, public QNativeInterface::QVisionOSApplication::ImmersiveSpaceCompositorLayer
 {
     Q_OBJECT
@@ -67,14 +74,17 @@ public:
 
     void configure(cp_layer_renderer_capabilities_t capabilities, cp_layer_renderer_configuration_t configuration) const override
     {
-        // NOTE: foveation is disabled for now
-        const bool supportsFoveation = false && cp_layer_renderer_capabilities_supports_foveation(capabilities);
         m_multiviewEnabled = !QQuick3DXrManager::isMultiviewRenderingDisabled();
 
         // If multiview isn't disabled we need to check if the target supports it.
         // NOTE: We're only doing layered or dedicated rendering, so shared is not supported (untested).
         m_multiviewSupported = supportsLayoutType(capabilities, cp_layer_renderer_layout_layered);
         m_multiviewEnabled = m_multiviewEnabled && m_multiviewSupported;
+
+        // NOTE: If foviation is supported we enable it.
+        m_foveationSupported = cp_layer_renderer_capabilities_supports_foveation(capabilities);
+        // ... but we can disable it with an environment variable.
+        m_foveationEnabled = m_foveationSupported && !qssgDisableFoveation();
 
         // NOTE: We're only doing layered or dedicated rendering, so shared is not supported, even though we technically
         // could support it. Since the only target we currently have (visionOS on the Vision Pro) support all these
@@ -83,7 +93,7 @@ public:
                                                                     : cp_layer_renderer_layout_dedicated;
 
         cp_layer_renderer_configuration_set_layout(configuration, textureLayout);
-        cp_layer_renderer_configuration_set_foveation_enabled(configuration, supportsFoveation);
+        cp_layer_renderer_configuration_set_foveation_enabled(configuration, m_foveationEnabled);
         cp_layer_renderer_configuration_set_color_format(configuration, MTLPixelFormatRGBA16Float);
         simd_float2 depthRange = cp_layer_renderer_configuration_get_default_depth_range(configuration);
         // NOTE: The depth range is inverted for VisionOS (x = far, y = near)
@@ -93,7 +103,8 @@ public:
         qCDebug(lcQuick3DXr) << "Configuring with the following settings:"
                              << "\n\tMultiview supported: " << m_multiviewSupported
                              << "\n\tMultiview enabled: " << m_multiviewEnabled
-                             << "\n\tFoveation: " << supportsFoveation
+                             << "\n\tFoveation supported: " << m_foveationSupported
+                             << "\n\tFoveation enabled: " << m_foveationEnabled
                              << "\n\tDepth Range: " << m_depthRange[0] << " to: " << m_depthRange[1];
     }
 
@@ -120,6 +131,8 @@ public:
 
     bool isMultiviewSupported() const { return m_multiviewSupported; }
     bool isMultiviewEnabled() const { return m_multiviewEnabled; }
+    bool isFoveationSupported() const { return m_foveationSupported; }
+    bool isFoveationEnabled() const { return m_foveationEnabled; }
 
     cp_layer_renderer_t layerRenderer() const
     {
@@ -414,6 +427,8 @@ private:
     bool m_initialized = false;
     mutable bool m_multiviewSupported = true;
     mutable bool m_multiviewEnabled = true;
+    mutable bool m_foveationSupported = true;
+    mutable bool m_foveationEnabled = true;
 };
 
 struct QSSGCompositionLayerInstance
@@ -779,6 +794,26 @@ QString QQuick3DXrManagerPrivate::errorString() const
     return QString();
 }
 
+static inline void setupShadingRateMap(QQuickWindow *window, QRhiShadingRateMap *srm)
+{
+    if (QRhiSwapChain *swapchain = window->swapChain()) {
+        swapchain->setShadingRateMap(srm);
+        QRhiRenderPassDescriptor *rpd = swapchain->newCompatibleRenderPassDescriptor();
+        swapchain->setRenderPassDescriptor(rpd);
+    } else {
+        QSGRendererInterface *rif = window->rendererInterface();
+        QRhiTextureRenderTarget *rt = static_cast<QRhiTextureRenderTarget *>(rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
+        if (QSSG_GUARD_X(rt, "No render target!")) {
+            QRhiTextureRenderTargetDescription desc = rt->description();
+            desc.setShadingRateMap(srm);
+            rt->setDescription(desc);
+            QRhiRenderPassDescriptor *rpd = rt->renderPassDescriptor();
+            rt->setRenderPassDescriptor(rpd->newCompatibleRenderPassDescriptor());
+            rt->create();
+        }
+    }
+}
+
 bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWaitCondition &waitCondition)
 {
     Q_Q(QQuick3DXrManager);
@@ -863,11 +898,25 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
     const auto textureCount = cp_drawable_get_texture_count(drawable);
     const auto renderCalls = textureCount; // To make it less confusing...
 
-    static bool viewStatPrinted = false;
-    if (!viewStatPrinted) {
-        qCDebug(lcQuick3DXr) << "View count:" << viewCount
-                             << "Texture count:" << textureCount;
-        viewStatPrinted = true;
+    bool foveationEnabled = m_compositorLayer->isFoveationEnabled();
+    Q_ASSERT(!foveationEnabled || rhi->isFeatureSupported(QRhi::VariableRateShadingMap));
+    // We still should make sure we have a rate map!
+    if (foveationEnabled) {
+        const size_t rrmapcount = cp_drawable_get_rasterization_rate_map_count(drawable);
+        const bool validMapCount = (rrmapcount == 1 || rrmapcount == 2);
+        QSSG_GUARD_X(validMapCount, "Invalid rate map count!");
+        foveationEnabled = validMapCount;
+
+        if (foveationEnabled) {
+            for (size_t i = 0; i < rrmapcount; ++i) {
+                if (!m_srm[i])
+                    m_srm[i] = rhi->newShadingRateMap();
+                id<MTLRasterizationRateMap> rrm = cp_drawable_get_rasterization_rate_map(drawable, i);
+                const bool wasCreated = m_srm[i]->createFrom({ quint64(rrm) });
+                QSSG_GUARD_X(wasCreated, "Failed to create shading rate map!");
+                foveationEnabled = (foveationEnabled && wasCreated);
+            }
+        }
     }
 
     // NOTE: Expectation is that when multiview rendering is enabled we get a multiple drawables with a single texture array,
@@ -925,13 +974,23 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
 
         window->setRenderTarget(renderTarget);
 
-        // Update the window size and content item size using the texture size
+        // Initial window size is the size of the texture, but we also need to check the viewport size
+        // as this can be different. If the viewport size is different we need to adjust the window size.
+        // This is the case when we render to a smaller texture and then scale it up to the window (i.e. foveated rendering).
+        QSize renderSize = textureSize;
+        if (foveationEnabled) {
+            cp_view_t view = cp_drawable_get_view(drawable, i);
+            cp_view_texture_map_t texture_map = cp_view_get_view_texture_map(view);
+            auto vp = cp_view_texture_map_get_viewport(texture_map);
+            renderSize = QSize(vp.width, vp.height);
+        }
+
         window->setGeometry(0,
                             0,
-                            textureSize.width(),
-                            textureSize.height());
-        window->contentItem()->setSize(QSizeF(textureSize.width(),
-                                              textureSize.height()));
+                            renderSize.width(),
+                            renderSize.height());
+        window->contentItem()->setSize(QSizeF(renderSize.width(),
+                                              renderSize.height()));
 
         // Update the camera pose
         if (QSSG_GUARD(xrOrigin)) {
@@ -953,6 +1012,9 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
             if (Q_UNLIKELY(!m_syncDone))
                 return false;
 
+            if (foveationEnabled)
+                setupShadingRateMap(window, m_srm[i]);
+
             // Signal the GUI thread that the sync is done, so it can continue.
             waitCondition.wakeOne();
             locker.unlock();
@@ -965,6 +1027,8 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
             renderControl->polishItems();
             renderControl->beginFrame();
             renderControl->sync();
+            if (foveationEnabled)
+                setupShadingRateMap(window, m_srm[i]);
             renderControl->render();
             renderControl->endFrame();
         }

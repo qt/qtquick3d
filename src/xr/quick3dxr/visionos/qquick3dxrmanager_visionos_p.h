@@ -33,6 +33,7 @@ class QQuick3DXrAnchorManager;
 class QQuickRenderControl;
 class QQuick3DXrAnimationDriver;
 class QRhiTexture;
+class QRhiShadingRateMap;
 
 class CompositorLayer;
 
@@ -123,6 +124,7 @@ private:
     QQuick3DXrManager *q_ptr = nullptr;
     CompositorLayer *m_compositorLayer = nullptr;
     QRhiTexture *m_rhiDepthTexture = nullptr;
+    std::array<QRhiShadingRateMap *, 2> m_srm { nullptr, nullptr };
     QThread *m_renderThread = nullptr;
     QPointer<QQuick3DXrInputManager> m_inputManager;
     QPointer<QQuick3DXrAnchorManager> m_anchorManager;
