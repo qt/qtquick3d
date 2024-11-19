@@ -388,3 +388,4 @@ namespace embree
 #undef __AVXI__
 #undef __AVX__
 #undef __SSE4_2__
+#undef __SSE4_1__
