@@ -24,6 +24,7 @@ public:
 private Q_SLOTS:
     void initTestCase();
     void cleanup();
+    void cleanupTestCase();
     void testRendering_data();
     void testRendering();
 
@@ -84,6 +85,10 @@ void tst_Quick3D::cleanup()
         QTest::qWait(grabberTimeout / 100);
 }
 
+void tst_Quick3D::cleanupTestCase()
+{
+    QBaselineTest::finalizeAndDisconnect();
+}
 
 void tst_Quick3D::testRendering_data()
 {
