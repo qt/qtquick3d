@@ -51,6 +51,7 @@ ApplicationWindow {
             pcfFactor: settings.pcfFactor
             softShadowQuality: settings.softShadowQuality
             shadowMapFar: settings.shadowMapFar
+            lockShadowmapTexels: settings.lockShadowmapTexels
         }
 
         Model {

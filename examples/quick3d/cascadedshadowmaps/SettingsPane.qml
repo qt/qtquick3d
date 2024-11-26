@@ -25,6 +25,7 @@ Item {
     property int softShadowQuality: softshadowquality_combobox.currentIndex
     property real shadowMapFar: sliderShadowMapFar.value
     property real clipFar: sliderCameraClipFar.value
+    property bool lockShadowmapTexels: checkboxLockShadowmapTexels.checked
 
     property real viewX: settingsDrawer.visible ? (settingsDrawer.x + settingsDrawer.width) : 0
 
@@ -285,6 +286,12 @@ Item {
                             ListElement { text: "VeryHigh" }
                         }
                         currentIndex: 2
+                    }
+
+                    CheckBox {
+                        id: checkboxLockShadowmapTexels
+                        checked: false
+                        text: qsTr("Lock Shadow Map Texels")
                     }
                 }
             }
