@@ -26,8 +26,8 @@ QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(QSSGProgramGenerator &pro
 {
 }
 
-static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, const char* (*argListFunc)(),
-                                    QSSGShaderMaterialAdapter *materialAdapter = nullptr, bool isSharedInout = false)
+static inline void insertProcessorArgsFragmentMain(QByteArray &snippet, const char *argKey, const char* (*argListFunc)(),
+                                       QSSGShaderMaterialAdapter *materialAdapter = nullptr, bool isSharedInout = false)
 {
     const int argKeyLen = int(strlen(argKey));
     const int argKeyPos = snippet.indexOf(argKey);
@@ -47,6 +47,21 @@ static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, 
                 const char *inoutString = isSharedInout ? ", inout " : ", in ";
                 flexArgs += inoutString + QByteArrayLiteral("QT_SHARED_VARS SHARED");
             }
+        }
+        snippet = snippet.left(argKeyPos) + argListFunc() + flexArgs + snippet.mid(argKeyPos + argKeyLen);
+    }
+}
+
+static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, const char* (*argListFunc)(),
+                                    QSSGShaderMaterialAdapter *materialAdapter = nullptr, bool isSharedInout = false)
+{
+    const int argKeyLen = int(strlen(argKey));
+    const int argKeyPos = snippet.indexOf(argKey);
+    if (argKeyPos >= 0) {
+        QByteArray flexArgs;
+        if (materialAdapter && materialAdapter->usesSharedVariables()) {
+            const char *inoutString = isSharedInout ? ", inout " : ", in ";
+            flexArgs += inoutString + QByteArrayLiteral("QT_SHARED_VARS SHARED");
         }
         snippet = snippet.left(argKeyPos) + argListFunc() + flexArgs + snippet.mid(argKeyPos + argKeyLen);
     }
@@ -84,7 +99,7 @@ static inline void insertSpecularLightProcessorArgs(QByteArray &snippet, QSSGSha
 
 static inline void insertFragmentMainArgs(QByteArray &snippet, QSSGShaderMaterialAdapter *materialAdapter)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList, materialAdapter, true);
+    insertProcessorArgsFragmentMain(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList, materialAdapter, true);
 }
 
 static inline void insertPostProcessorArgs(QByteArray &snippet, QSSGShaderMaterialAdapter *materialAdapter)
