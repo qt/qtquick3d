@@ -139,6 +139,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGRenderLayer::Background background;
     QVector3D clearColor;
 
+    quint8 viewCount = 1;
+
     // Ambient occlusion
     float aoStrength = 0.0f;
     float aoDistance = 5.0f;

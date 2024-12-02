@@ -90,7 +90,7 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
         QByteArray completeFragmentShader;
         QByteArray sourceCodeForHash;
 
-        const bool multiview = renderContext->rhiContext()->mainPassViewCount() >= 2;
+        const bool multiview = layer.viewCount >= 2;
         const int srcIdx = multiview ? QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex : QSSGRenderCustomMaterial::RegularShaderPathKeyIndex;
 
         if (!pass.vertexShaderCode[srcIdx].isEmpty()) {

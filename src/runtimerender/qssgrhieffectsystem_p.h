@@ -67,7 +67,7 @@ public:
     ~QSSGRhiEffectSystem();
 
     void setup(QSize outputSize);
-    QRhiTexture *process(const QSSGRenderEffect &firstEffect,
+    QRhiTexture *process(const QSSGRenderLayer &layer,
                          QRhiTexture *inTexture,
                          QRhiTexture *inDepthTexture,
                          QVector2D cameraClipRange);
@@ -84,13 +84,14 @@ public:
 private:
     void releaseResources();
     QSSGRhiEffectTexture *doRenderEffect(const QSSGRenderEffect *inEffect,
-                        QSSGRhiEffectTexture *inTexture);
+                                         QSSGRhiEffectTexture *inTexture,
+                                         quint8 viewCount);
 
-    void allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture, const QSSGRenderEffect *inEffect);
+    void allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture, const QSSGRenderEffect *inEffect, quint8 viewCount);
     void applyInstanceValueCmd(const QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect);
     void applyValueCmd(const QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect);
-    void bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect);
-    void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target);
+    void bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect, quint8 viewCount);
+    void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target, quint8 viewCount);
 
     void addCommonEffectUniforms(const QSize &inputSize, const QSize &outputSize);
     void addTextureToShaderPipeline(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc);
@@ -98,7 +99,7 @@ private:
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
     QSSGRhiEffectTexture *getTexture(const QByteArray &bufferName, const QSize &size,
                                      QRhiTexture::Format format, bool isFinalOutput,
-                                     const QSSGRenderEffect *inEffect);
+                                     const QSSGRenderEffect *inEffect, quint8 viewCount);
     void releaseTexture(QSSGRhiEffectTexture *texture);
     void releaseTextures();
 

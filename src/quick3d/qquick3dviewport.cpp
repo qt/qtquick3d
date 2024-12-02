@@ -2074,4 +2074,16 @@ void QQuick3DViewport::rebuildExtensionList()
     update();
 }
 
+/*!
+    \internal
+
+    Private constructor for the QQuick3DViewport class so we can differentiate between
+    a regular QQuick3DViewport and one created for a specific usage, like XR.
+ */
+QQuick3DViewport::QQuick3DViewport(PrivateInstanceType type, QQuickItem *parent)
+    : QQuick3DViewport(parent)
+{
+    m_isXrViewInstance = type == PrivateInstanceType::XrViewInstance;
+}
+
 QT_END_NAMESPACE

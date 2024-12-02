@@ -308,7 +308,7 @@ bool QQuick3DXrView::init()
 
     // Create View3D
     QSSG_CHECK_X(m_xrManager.m_vrViewport == nullptr, "View3D already created!");
-    auto viewport = new QQuick3DViewport();
+    auto viewport = new QQuick3DViewport(QQuick3DViewport::PrivateInstanceType::XrViewInstance);
     viewport->setRenderMode(QQuick3DViewport::Underlay);
     auto contentItem = m_xrManager.m_quickWindow->contentItem();
     viewport->setParentItem(contentItem);

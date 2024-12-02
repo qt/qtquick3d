@@ -2149,7 +2149,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QVector2D camProperties(inCameras[0]->clipNear, inCameras[0]->clipFar);
     shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
-    const int viewCount = inCameras.count();
+    const int viewCount = inRenderProperties.layer.viewCount;
     if (viewCount < 2) {
         const QVector3D camGlobalPos = inCameras[0]->getGlobalPos();
         shaders.setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);

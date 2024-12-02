@@ -1117,9 +1117,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     defaultMaterialShaderKeyProperties.m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
 
     // multiview
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
-    defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, rhiCtx->mainPassViewCount());
-    defaultMaterialShaderKeyProperties.m_usesViewIndex.setValue(theGeneratedKey, rhiCtx->mainPassViewCount() >= 2);
+    defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, layer.viewCount);
+    defaultMaterialShaderKeyProperties.m_usesViewIndex.setValue(theGeneratedKey, layer.viewCount >= 2);
 
     if (!defaultMaterialShaderKeyProperties.m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
         features.set(QSSGShaderFeatures::Feature::LightProbe, true);
@@ -1350,8 +1349,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     defaultMaterialShaderKeyProperties.m_fogEnabled.setValue(theGeneratedKey, layer.fog.enabled);
 
     // multiview
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
-    defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, rhiCtx->mainPassViewCount());
+    defaultMaterialShaderKeyProperties.m_viewCount.setValue(theGeneratedKey, layer.viewCount);
     defaultMaterialShaderKeyProperties.m_usesViewIndex.setValue(theGeneratedKey,
         inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ViewIndex));
 
@@ -2368,7 +2366,10 @@ void QSSGLayerRenderData::prepareForRender()
             if (cam->getGlobalState(QSSGRenderCamera::GlobalState::Active))
                 renderedCameras.append(cam);
         }
-    } else { // this path can never be hit with multiview
+    } else if (QSSG_GUARD_X(layer.viewCount == 1, "Multiview rendering requires explicit cameras to be set!.")) {
+        // NOTE: This path can never be hit with multiview, hence the guard.
+        // (Multiview will always have explicit cameras set.)
+
         // 3.
         for (auto iter = cameras.cbegin(); renderedCameras.isEmpty() && iter != cameras.cend(); iter++) {
             QSSGRenderCamera *theCamera = *iter;

@@ -69,6 +69,8 @@ public:
     void setScissorRect(QRect inScissorRect) { m_scissorRect = inScissorRect; }
     QRect scissorRect() const { return m_scissorRect; }
 
+    quint32 frameDepth() const { return m_activeFrameRef; }
+
     const std::unique_ptr<QSSGRhiQuadRenderer> &rhiQuadRenderer() const;
     const std::unique_ptr<QSSGRhiCubeRenderer> &rhiCubeRenderer() const;
 
