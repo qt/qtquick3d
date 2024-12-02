@@ -68,7 +68,8 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
                                                       const QSize &size,
                                                       QRhiTexture::Format format,
                                                       bool isFinalOutput,
-                                                      const QSSGRenderEffect *inEffect)
+                                                      const QSSGRenderEffect *inEffect,
+                                                      quint8 viewCount)
 {
     QSSGRhiEffectTexture *result = findTexture(bufferName);
     const bool gotMatch = result != nullptr;
@@ -104,8 +105,8 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
         flags |= QRhiTexture::UsedAsTransferSource;
 
     if (!result->texture) {
-        if (rhiCtx->mainPassViewCount() >= 2)
-            result->texture = rhi->newTextureArray(format, rhiCtx->mainPassViewCount(), size, 1, flags);
+        if (viewCount >= 2)
+            result->texture = rhi->newTextureArray(format, viewCount, size, 1, flags);
         else
             result->texture = rhi->newTexture(format, size, 1, flags);
         result->texture->create();
@@ -118,7 +119,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
 
     if (!result->renderTarget) {
         QRhiColorAttachment colorAttachment(result->texture);
-        colorAttachment.setMultiViewCount(rhiCtx->mainPassViewCount());
+        colorAttachment.setMultiViewCount(viewCount);
         QRhiTextureRenderTargetDescription desc(colorAttachment);
         result->renderTarget = rhi->newTextureRenderTarget(desc);
         result->renderPassDescriptor = result->renderTarget->newCompatibleRenderPassDescriptor();
@@ -160,12 +161,13 @@ void QSSGRhiEffectSystem::releaseTextures()
         releaseTexture(t);
 }
 
-QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderEffect &firstEffect,
+QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderLayer &layer,
                                           QRhiTexture *inTexture,
                                           QRhiTexture *inDepthTexture,
                                           QVector2D cameraClipRange)
 {
     QSSG_ASSERT(m_sgContext != nullptr, return inTexture);
+    QSSG_ASSERT(layer.firstEffect != nullptr, return inTexture);
     const auto &rhiContext = m_sgContext->rhiContext();
     const auto &renderer = m_sgContext->renderer();
     QSSG_ASSERT(rhiContext && renderer, return inTexture);
@@ -173,14 +175,17 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderEffect &firstEffect,
     m_depthTexture = inDepthTexture;
     m_cameraClipRange = cameraClipRange;
 
+    const auto viewCount = layer.viewCount;
+
     m_currentUbufIndex = 0;
-    auto *currentEffect = &firstEffect;
+    // FIXME: Keeping the change minimal for now, but we should avoid the need for this cast.
+    QSSGRenderEffect *currentEffect = const_cast<QSSGRenderEffect *>(layer.firstEffect);
     QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}, {}, {} };
-    auto *latestOutput = doRenderEffect(currentEffect, &firstTex);
+    auto *latestOutput = doRenderEffect(currentEffect, &firstTex, viewCount);
     firstTex.texture = nullptr; // make sure we don't delete inTexture when we go out of scope
 
     while ((currentEffect = currentEffect->m_nextEffect)) {
-        auto *effectOut = doRenderEffect(currentEffect, latestOutput);
+        QSSGRhiEffectTexture *effectOut = doRenderEffect(currentEffect, latestOutput, viewCount);
         releaseTexture(latestOutput);
         latestOutput = effectOut;
     }
@@ -212,7 +217,8 @@ QSSGRenderTextureFormat::Format QSSGRhiEffectSystem::overriddenOutputFormat(cons
 }
 
 QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect *inEffect,
-                                                          QSSGRhiEffectTexture *inTexture)
+                                                          QSSGRhiEffectTexture *inTexture,
+                                                          quint8 viewCount)
 {
     // Run through the effect commands and render the effect.
     qCDebug(lcEffectSystem) << "START effect " << inEffect->className;
@@ -225,7 +231,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 
         switch (theCommand->m_type) {
         case CommandType::AllocateBuffer:
-            allocateBufferCmd(static_cast<QSSGAllocateBuffer *>(theCommand), inTexture, inEffect);
+            allocateBufferCmd(static_cast<QSSGAllocateBuffer *>(theCommand), inTexture, inEffect, viewCount);
             break;
 
         case CommandType::ApplyBufferValue: {
@@ -265,7 +271,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
         }
 
         case CommandType::BindShader:
-            bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect);
+            bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect, viewCount);
             break;
 
         case CommandType::BindTarget: {
@@ -279,13 +285,13 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             qCDebug(lcEffectSystem) << "      Target format override" << QSSGBaseTypeHelpers::toString(f) << "Effective RHI format" << rhiFormat;
             // Make sure we use different names for each effect inside one frame
             QByteArray tmpName = QByteArrayLiteral("__output_").append(QByteArray::number(m_currentUbufIndex));
-            currentOutput = getTexture(tmpName, m_outSize, rhiFormat, true, inEffect);
+            currentOutput = getTexture(tmpName, m_outSize, rhiFormat, true, inEffect, viewCount);
             finalOutputTexture = currentOutput;
             break;
         }
 
         case CommandType::Render:
-            renderCmd(currentInput, currentOutput);
+            renderCmd(currentInput, currentOutput, viewCount);
             currentInput = inTexture; // default input for each new pass is defined to be original input
             break;
 
@@ -299,7 +305,10 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
     return finalOutputTexture;
 }
 
-void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture, const QSSGRenderEffect *inEffect)
+void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd,
+                                            QSSGRhiEffectTexture *inTexture,
+                                            const QSSGRenderEffect *inEffect,
+                                            quint8 viewCount)
 {
     // Note: Allocate is used both to allocate new, and refer to buffer created earlier
     QSize bufferSize(m_outSize * qreal(inCmd->m_sizeMultiplier));
@@ -308,7 +317,7 @@ void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSS
     QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format()
                                                                             : QSSGBufferManager::toRhiFormat(f);
 
-    QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat, false, inEffect);
+    QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat, false, inEffect, viewCount);
     auto filter = QSSGRhiHelpers::toRhi(inCmd->m_filterOp);
     auto tiling = QSSGRhiHelpers::toRhi(inCmd->m_texCoordOp);
     buf->desc = { filter, filter, QRhiSampler::None, tiling, tiling, QRhiSampler::Repeat };
@@ -419,7 +428,7 @@ QSSGRhiShaderPipelinePtr QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBin
                                                 false);
 }
 
-void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect)
+void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect, quint8 viewCount)
 {
     QElapsedTimer timer;
     timer.start();
@@ -495,7 +504,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
         Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         const auto &generator = m_sgContext->shaderProgramGenerator();
-        if (auto stages = buildShaderForEffect(*inCmd, *generator, *shaderLib, *shaderCache, rhi->isYUpInFramebuffer(), rhiCtx->mainPassViewCount())) {
+        if (auto stages = buildShaderForEffect(*inCmd, *generator, *shaderLib, *shaderCache, rhi->isYUpInFramebuffer(), viewCount)) {
             m_shaderPipelines.insert(cacheKey, stages);
             m_currentShaderPipeline = stages.get();
         }
@@ -517,7 +526,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     QSSGRhiContextStats::get(*rhiContext).registerEffectShaderGenerationTime(timer.elapsed());
 }
 
-void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target)
+void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target, quint8 viewCount)
 {
     if (!m_currentShaderPipeline)
         return;
@@ -591,7 +600,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     QSSGRhiGraphicsPipelineState ps;
     ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));
     ps.samples = target->renderTarget->sampleCount();
-    ps.viewCount = rhiContext->mainPassViewCount();
+    ps.viewCount = viewCount;
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, m_currentShaderPipeline);
 
     renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiContext.get(), &ps, srb, target->renderTarget, QSSGRhiQuadRenderer::UvCoords);

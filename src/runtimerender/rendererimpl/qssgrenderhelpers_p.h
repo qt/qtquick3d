@@ -72,7 +72,10 @@ void rhiRenderDepthPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineSta
                         const QSSGRenderableObjectList &sortedTransparentObjects,
                         bool *needsSetViewport);
 
-bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
+bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx,
+                         const QSize &size,
+                         QSSGRhiRenderableTexture *renderableTex,
+                         quint8 viewCount);
 
 void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
                         QSSGPassKey passKey,
@@ -84,7 +87,11 @@ void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
                         const QSSGRhiRenderableTexture &rhiDepthTexture,
                         const QSSGRenderCamera &camera);
 
-bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex);
+bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx,
+                             const QSize &size,
+                             bool wantsMips,
+                             QSSGRhiRenderableTexture *renderableTex,
+                             quint8 viewCount);
 
 void rhiPrepareGrid(QSSGRhiContext *rhiCtx,
                     QSSGPassKey passKey,
@@ -127,7 +134,10 @@ Q_QUICK3DRUNTIMERENDER_EXPORT void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                        bool *needsSetViewport,
                                                        QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone);
 
-bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
+bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx,
+                            const QSize &size,
+                            QSSGRhiRenderableTexture *renderableTex,
+                            quint8 viewCount);
 
 inline QRect correctViewportCoordinates(const QRectF &layerViewport, const QRect &deviceRect)
 {

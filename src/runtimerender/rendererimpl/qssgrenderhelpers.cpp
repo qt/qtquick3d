@@ -789,7 +789,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 }
                 if (screenTextureArrayBinding >= 0) {
                     QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
-                    QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates, QSize(64, 64), Qt::black, rhiCtx->mainPassViewCount());
+                    QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates, QSize(64, 64), Qt::black, inData.layer.viewCount);
                     rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                     bindings.addTexture(screenTextureArrayBinding,
                                         QRhiShaderResourceBinding::FragmentStage,
@@ -1686,7 +1686,10 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
     }
 }
 
-bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex)
+bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx,
+                                        const QSize &size,
+                                        QSSGRhiRenderableTexture *renderableTex,
+                                        quint8 viewCount)
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
@@ -1694,10 +1697,10 @@ bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &siz
     if (!renderableTex->texture) {
         QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
         // the ambient occlusion texture is always non-msaa, even if multisampling is used in the main pass
-        if (rhiCtx->mainPassViewCount() <= 1)
+        if (viewCount <= 1)
             renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
         else
-            renderableTex->texture = rhi->newTextureArray(QRhiTexture::RGBA8, rhiCtx->mainPassViewCount(), size, 1, flags);
+            renderableTex->texture = rhi->newTextureArray(QRhiTexture::RGBA8, viewCount, size, 1, flags);
         needsBuild = true;
     } else if (renderableTex->texture->pixelSize() != size) {
         renderableTex->texture->setPixelSize(size);
@@ -1713,7 +1716,7 @@ bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &siz
         renderableTex->resetRenderTarget();
         QRhiTextureRenderTargetDescription desc;
         QRhiColorAttachment colorAttachment(renderableTex->texture);
-        colorAttachment.setMultiViewCount(rhiCtx->mainPassViewCount());
+        colorAttachment.setMultiViewCount(viewCount);
         desc.setColorAttachments({ colorAttachment });
         renderableTex->rt = rhi->newTextureRenderTarget(desc);
         renderableTex->rt->setName(QByteArrayLiteral("Ambient occlusion"));
@@ -1803,7 +1806,11 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, rhiAoTexture.rt, {});
 }
 
-bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex)
+bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx,
+                                            const QSize &size,
+                                            bool wantsMips,
+                                            QSSGRhiRenderableTexture *renderableTex,
+                                            quint8 viewCount)
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
@@ -1813,10 +1820,10 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
 
     if (!renderableTex->texture) {
         // always non-msaa, even if multisampling is used in the main pass
-        if (rhiCtx->mainPassViewCount() <= 1)
+        if (viewCount <= 1)
             renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
         else
-            renderableTex->texture = rhi->newTextureArray(QRhiTexture::RGBA8, rhiCtx->mainPassViewCount(), size, 1, flags);
+            renderableTex->texture = rhi->newTextureArray(QRhiTexture::RGBA8, viewCount, size, 1, flags);
         needsBuild = true;
     } else if (renderableTex->texture->pixelSize() != size) {
         renderableTex->texture->setPixelSize(size);
@@ -1824,10 +1831,10 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
     }
 
     if (!renderableTex->depthStencil && !renderableTex->depthTexture) {
-        if (rhiCtx->mainPassViewCount() <= 1)
+        if (viewCount <= 1)
             renderableTex->depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size);
         else
-            renderableTex->depthTexture = rhi->newTextureArray(QRhiTexture::D24S8, rhiCtx->mainPassViewCount(), size, 1, QRhiTexture::RenderTarget);
+            renderableTex->depthTexture = rhi->newTextureArray(QRhiTexture::D24S8, viewCount, size, 1, QRhiTexture::RenderTarget);
         needsBuild = true;
     } else {
         if (renderableTex->depthStencil && renderableTex->depthStencil->pixelSize() != size) {
@@ -1859,7 +1866,7 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
         renderableTex->resetRenderTarget();
         QRhiTextureRenderTargetDescription desc;
         QRhiColorAttachment colorAttachment(renderableTex->texture);
-        colorAttachment.setMultiViewCount(rhiCtx->mainPassViewCount());
+        colorAttachment.setMultiViewCount(viewCount);
         desc.setColorAttachments({ colorAttachment });
         if (renderableTex->depthStencil)
             desc.setDepthStencilBuffer(renderableTex->depthStencil);
@@ -2305,7 +2312,10 @@ void RenderHelpers::rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
     rhiRenderDepthPassForImp(rhiCtx, pipelineState, sortedTransparentObjects, needsSetViewport);
 }
 
-bool RenderHelpers::rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex)
+bool RenderHelpers::rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx,
+                                           const QSize &size,
+                                           QSSGRhiRenderableTexture *renderableTex,
+                                           quint8 viewCount)
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
@@ -2316,11 +2326,10 @@ bool RenderHelpers::rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &
             format = QRhiTexture::D16;
         if (!rhi->isTextureFormatSupported(format))
             qWarning("Depth texture not supported");
-        // the depth texture is always non-msaa, even if multisampling is used in the main pass
-        if (rhiCtx->mainPassViewCount() <= 1)
+        if (viewCount <= 1)
             renderableTex->texture = rhiCtx->rhi()->newTexture(format, size, 1, QRhiTexture::RenderTarget);
         else
-            renderableTex->texture = rhiCtx->rhi()->newTextureArray(format, rhiCtx->mainPassViewCount(), size, 1, QRhiTexture::RenderTarget);
+            renderableTex->texture = rhiCtx->rhi()->newTextureArray(format, viewCount, size, 1, QRhiTexture::RenderTarget);
         needsBuild = true;
     } else if (renderableTex->texture->pixelSize() != size) {
         renderableTex->texture->setPixelSize(size);

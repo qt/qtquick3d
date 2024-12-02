@@ -249,7 +249,7 @@ void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     active = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
                                          renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects,
-                                         rhiCtx->mainPassSampleCount(), rhiCtx->mainPassViewCount());
+                                         rhiCtx->mainPassSampleCount(), data.layer.viewCount);
     data.setZPrePassPrepResult(active);
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("prepare_z_prepass"));
@@ -302,12 +302,12 @@ void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     QSSG_ASSERT_X((rhiDepthTexture && rhiDepthTexture->isValid()), "Preparing AO pass failed, missing equired texture(s)", return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    ssaoShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSsaoShader(rhiCtx->mainPassViewCount());
+    ssaoShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSsaoShader(data.layer.viewCount);
     aoSettings = { data.layer.aoStrength, data.layer.aoDistance, data.layer.aoSoftness, data.layer.aoBias, data.layer.aoSamplerate, data.layer.aoDither };
 
     ps = data.getPipelineState();
     const auto &layerPrepResult = data.layerPrepResult;
-    const bool ready = rhiAoTexture && rhiPrepareAoTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiAoTexture);
+    const bool ready = rhiAoTexture && rhiPrepareAoTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiAoTexture, data.layer.viewCount);
 
     if (Q_UNLIKELY(!ready))
         rhiAoTexture = nullptr;
@@ -375,13 +375,13 @@ void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     bool ready = false;
     ps = data.getPipelineState();
     rhiDepthTexture = data.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
-    if (Q_LIKELY(rhiDepthTexture && rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiDepthTexture))) {
+    if (Q_LIKELY(rhiDepthTexture && rhiPrepareDepthTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiDepthTexture, data.layer.viewCount))) {
         sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
         sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
         // the depth texture is always non-MSAA, but is a 2D array with multiview
         ready = rhiPrepareDepthPass(rhiCtx.get(), this, ps, rhiDepthTexture->rpDesc, data,
                                     sortedOpaqueObjects, sortedTransparentObjects,
-                                    1, rhiCtx->mainPassViewCount());
+                                    1, data.layer.viewCount);
     }
 
     if (Q_UNLIKELY(!ready))
@@ -460,7 +460,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
     ps = data.getPipelineState();
     ps.samples = 1; // screen texture is always non-MSAA
-    ps.viewCount = rhiCtx->mainPassViewCount(); // but is a 2D texture array when multiview
+    ps.viewCount = data.layer.viewCount; // but is a 2D texture array when multiview
 
     if (layer.background == QSSGRenderLayer::Background::Color)
         clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
@@ -493,7 +493,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     }
 
     bool ready = false;
-    if (Q_LIKELY(rhiScreenTexture && rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), wantsMips, rhiScreenTexture))) {
+    if (Q_LIKELY(rhiScreenTexture && rhiPrepareScreenTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), wantsMips, rhiScreenTexture, layer.viewCount))) {
         ready = true;
         if (skyboxCubeMapPass)
             skyboxCubeMapPass->rpDesc = rhiScreenTexture->rpDesc;
@@ -509,7 +509,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             // Reflection cube maps are not available at this point, make sure they are turned off.
             bool recRef = handle.obj->renderableFlags.receivesReflections();
             handle.obj->renderableFlags.setReceivesReflections(false);
-            rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1, rhiCtx->mainPassViewCount());
+            rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1, data.layer.viewCount);
             handle.obj->renderableFlags.setReceivesReflections(recRef);
         }
     }
@@ -595,7 +595,7 @@ void ScreenReflectionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderDat
 
     QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
     const int samples = rhiCtx->mainPassSampleCount();
-    const int viewCount = rhiCtx->mainPassViewCount();
+    const int viewCount = data.layer.viewCount;
 
     // NOTE: We're piggybacking on the screen map pass for now, but we could do better.
     ps = data.getPipelineState();
@@ -692,7 +692,7 @@ void OpaquePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
-    ps.viewCount = rhiCtx->mainPassViewCount();
+    ps.viewCount = data.layer.viewCount;
     ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
 
@@ -778,7 +778,7 @@ void TransparentPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &da
 
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
-    ps.viewCount = rhiCtx->mainPassViewCount();
+    ps.viewCount = data.layer.viewCount;
 
     // transparent objects (or, without LayerEnableDepthTest, all objects)
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
@@ -819,14 +819,14 @@ void SkyboxPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         const auto &rhiCtx = renderer.contextInterface()->rhiContext();
         QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
         QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-        QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
+        QSSG_ASSERT(data.renderedCameras.count() == data.layer.viewCount, return);
         layer = &data.layer;
         QSSG_ASSERT(layer, return);
 
         rpDesc = rhiCtx->mainRenderPassDescriptor();
         ps = data.getPipelineState();
         ps.samples = rhiCtx->mainPassSampleCount();
-        ps.viewCount = rhiCtx->mainPassViewCount();
+        ps.viewCount = data.layer.viewCount;
         ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
         // When there are effects, then it is up to the last pass of the
@@ -856,7 +856,7 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
 
     QSSGRenderLayer::TonemapMode tonemapMode = skipTonemapping && (layer->tonemapMode != QSSGRenderLayer::TonemapMode::Custom) ?  QSSGRenderLayer::TonemapMode::None : layer->tonemapMode;
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8, rhiCtx->mainPassViewCount());
+    auto shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(tonemapMode, layer->skyBoxIsRgbe8, layer->viewCount);
     QSSG_CHECK(shaderPipeline);
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, shaderPipeline.get());
     renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
@@ -875,18 +875,18 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-    QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
+    QSSG_ASSERT(data.renderedCameras.count() == data.layer.viewCount, return);
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
     rpDesc = rhiCtx->mainRenderPassDescriptor();
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
-    ps.viewCount = rhiCtx->mainPassViewCount();
+    ps.viewCount = data.layer.viewCount;
     ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(rhiCtx->mainPassViewCount());
+    skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(data.layer.viewCount);
 
     RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
 }
@@ -944,7 +944,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         QRhiRenderTarget *renderTarget = rhiCtx->renderTarget();
         item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
-        const int viewCount = rhiCtx->mainPassViewCount();
+        const int viewCount = data.layer.viewCount;
         QSSG_ASSERT(item2D->mvps.count() == viewCount, return);
         if (layer.scissorRect.isValid()) {
             QRect effScissor = layer.scissorRect & layerPrepResult.viewport.toRect();
@@ -977,7 +977,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
             QSSG_CHECK(item2D->m_rp);
         }
         QSGRenderTarget sgRt(renderTarget, item2D->m_rp, rhiCtx->commandBuffer());
-        sgRt.multiViewCount = rhiCtx->mainPassViewCount();
+        sgRt.multiViewCount = data.layer.viewCount;
         item2D->m_renderer->setRenderTarget(sgRt);
         delete oldRp;
         item2D->m_renderer->prepareSceneInline();
@@ -1015,16 +1015,16 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-    QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
+    QSSG_ASSERT(data.renderedCameras.count() == data.layer.viewCount, return);
     layer = &data.layer;
     QSSG_ASSERT(layer, return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    gridShader = shaderCache->getBuiltInRhiShaders().getRhiGridShader(rhiCtx->mainPassViewCount());
+    gridShader = shaderCache->getBuiltInRhiShaders().getRhiGridShader(data.layer.viewCount);
 
     ps = data.getPipelineState();
     ps.samples = rhiCtx->mainPassSampleCount();
-    ps.viewCount = rhiCtx->mainPassViewCount();
+    ps.viewCount = data.layer.viewCount;
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
 
     RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
@@ -1058,7 +1058,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
-    QSSG_ASSERT(data.renderedCameras.count() == rhiCtx->mainPassViewCount(), return);
+    QSSG_ASSERT(data.renderedCameras.count() == data.layer.viewCount, return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
     debugObjectShader = shaderCache->getBuiltInRhiShaders().getRhiDebugObjectShader();

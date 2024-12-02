@@ -129,6 +129,10 @@ public:
 
     Q_REVISION(6, 7) Q_INVOKABLE void rebuildExtensionList();
 
+    enum class PrivateInstanceType : quint8 { XrViewInstance = 1 };
+    explicit QQuick3DViewport(PrivateInstanceType type, QQuickItem *parent = nullptr);
+    [[nodiscard]] bool isXrViewInstance() const { return m_isXrViewInstance; }
+
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
@@ -235,6 +239,7 @@ private:
     QQuick3DLightmapBaker *m_lightmapBaker = nullptr;
     QList<QQuick3DObject *> m_extensions;
     bool m_extensionListDirty = false;
+    bool m_isXrViewInstance = false;
 
     struct TouchState {
         QQuickItem *target = nullptr;
