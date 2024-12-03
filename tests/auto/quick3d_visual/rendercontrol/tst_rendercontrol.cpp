@@ -239,6 +239,14 @@ void tst_RenderControl::dynamicLights()
 #endif
     }
 
+#if defined(Q_OS_WIN)
+#ifdef Q_PROCESSOR_ARM
+    if (qgetenv("QTEST_ENVIRONMENT") == "ci") {
+        QSKIP("Skipping test due to problems on windows arm64 on CI");
+    }
+#endif
+#endif
+
     bool readCompleted = false;
     QRhiReadbackResult readResult;
     QImage result;

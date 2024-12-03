@@ -400,7 +400,19 @@ float qt_sampleDirectionalLight_pcf( in sampler2DArray shadowMap, in ShadowData 
     return shadow;
 }
 
-float qt_sampleDirectionalLight_hard(in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos ) {
+float qt_sampleDirectionalLight_pcf_no_cascades( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos, in int numSamples )
+{
+    if (shadowData.csmActive[0] == 0.0f || zDepthViewSpace >= shadowData.csmSplits[3])
+        return 1.0;
+
+    int splitIndex = 0;
+    vec4 projCoord = shadowData.matrices[splitIndex] * vec4( worldPos, 1.0 );
+    vec3 dimensions = shadowData.dimensionsInverted[splitIndex].xyz;
+    float shadow = qt_sampleDirectionalLight_splitIndex(shadowMap, splitIndex, shadowData.bias, shadowData.factor, dimensions, float(shadowData.isYUp), shadowData.pcfFactor, numSamples, projCoord, worldPos, float(shadowData.layerIndex + splitIndex));
+    return shadow;
+}
+
+float qt_sampleDirectionalLight_hard_cascades(in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos ) {
     if (zDepthViewSpace >= shadowData.csmSplits[3])
         return 1.0;
     int splitIndex = findSplitIndex(zDepthViewSpace, shadowData.csmSplits, shadowData.csmActive, shadowData.csmNumSplits);
@@ -414,23 +426,52 @@ float qt_sampleDirectionalLight_hard(in sampler2DArray shadowMap, in ShadowData 
     return normalizedShadowFactor(shadow, shadowData.factor);
 }
 
+float qt_sampleDirectionalLight_hard_no_cascades(in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos ) {
+    if (shadowData.csmActive[0] == 0.0f || zDepthViewSpace >= shadowData.csmSplits[3])
+        return 1.0;
+
+    int splitIndex = 0;
+    vec4 projCoord = shadowData.matrices[splitIndex] * vec4( worldPos, 1.0 );
+    vec3 smpCoord = projCoord.xyz / projCoord.w;
+    smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, shadowData.isYUp);
+    float depth = texture(shadowMap, vec3(smpCoord.xy, float(shadowData.layerIndex + splitIndex))).x + shadowData.bias * shadowData.dimensionsInverted[splitIndex].z;
+    float shadow = smpCoord.z < depth ? 1.0 : 0.0;
+    return normalizedShadowFactor(shadow, shadowData.factor);
+}
+
+float qt_sampleDirectionalLight_hard(in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos ) {
+    if (shadowData.csmNumSplits == 0)
+        return qt_sampleDirectionalLight_hard_no_cascades(shadowMap, shadowData, zDepthViewSpace, worldPos);
+    return qt_sampleDirectionalLight_hard_cascades(shadowMap, shadowData, zDepthViewSpace, worldPos);
+}
+
 float qt_sampleDirectionalLight_pcf_4( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    if (shadowData.csmNumSplits == 0)
+        return qt_sampleDirectionalLight_pcf_no_cascades(shadowMap, shadowData, zDepthViewSpace, worldPos, 4);
     return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 4);
 }
 
 float qt_sampleDirectionalLight_pcf_8( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    if (shadowData.csmNumSplits == 0)
+        return qt_sampleDirectionalLight_pcf_no_cascades(shadowMap, shadowData, zDepthViewSpace, worldPos, 8);
     return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 8);
 }
 
 float qt_sampleDirectionalLight_pcf_16( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    if (shadowData.csmNumSplits == 0)
+        return qt_sampleDirectionalLight_pcf_no_cascades(shadowMap, shadowData, zDepthViewSpace, worldPos, 16);
     return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 16);
 }
 
 float qt_sampleDirectionalLight_pcf_32( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    if (shadowData.csmNumSplits == 0)
+        return qt_sampleDirectionalLight_pcf_no_cascades(shadowMap, shadowData, zDepthViewSpace, worldPos, 32);
     return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 32);
 }
 
 float qt_sampleDirectionalLight_pcf_64( in sampler2DArray shadowMap, in ShadowData shadowData, in float zDepthViewSpace, in vec3 worldPos  ) {
+    if (shadowData.csmNumSplits == 0)
+        return qt_sampleDirectionalLight_pcf_no_cascades(shadowMap, shadowData, zDepthViewSpace, worldPos, 64);
     return qt_sampleDirectionalLight_pcf(shadowMap, shadowData, zDepthViewSpace, worldPos, 64);
 }
 

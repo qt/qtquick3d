@@ -383,23 +383,21 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
                 Q_UNREACHABLE();
         };
 
-        fragmentShader << "    if (" << names.shadowData << ".factor > 0.01) {\n";
         if (inType == QSSGRenderLight::Type::PointLight) {
             fragmentShader.addUniform(names.shadowCube, "samplerCube");
-            fragmentShader << "      qt_shadow_map_occl = qt_samplePointLight_" << sampleFunctionSuffix << "(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
+            fragmentShader << "    qt_shadow_map_occl = qt_samplePointLight_" << sampleFunctionSuffix << "(" << names.shadowCube << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos);\n";
         } else if (inType == QSSGRenderLight::Type::DirectionalLight || inType == QSSGRenderLight::Type::SpotLight) {
             if (!fragmentShader.m_uniforms.contains(names.shadowMapTexture)) {
                 fragmentShader.addUniform(names.shadowMapTexture, "sampler2DArray");
             }
             if (inType == QSSGRenderLight::Type::DirectionalLight) {
-                fragmentShader << "      qt_shadow_map_occl = qt_sampleDirectionalLight_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_zDepthViewSpace, qt_varWorldPos);\n";
+                fragmentShader << "    qt_shadow_map_occl = qt_sampleDirectionalLight_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", qt_zDepthViewSpace, qt_varWorldPos);\n";
             } else {
-                fragmentShader << "      qt_shadow_map_occl = qt_sampleSpotLight_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, " << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightConeAngle << ");\n";
+                fragmentShader << "    qt_shadow_map_occl = qt_sampleSpotLight_" << sampleFunctionSuffix << "(" << names.shadowMapTexture << ", " << names.shadowData << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, " << lightVarNames.lightDirection << ".xyz, " << lightVarNames.lightConeAngle << ");\n";
             }
         } else {
             Q_UNREACHABLE();
         }
-        fragmentShader << "    }\n";
     } else {
         fragmentShader << "    qt_shadow_map_occl = 1.0;\n";
     }
