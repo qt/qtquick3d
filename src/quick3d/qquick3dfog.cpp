@@ -129,7 +129,7 @@ void QQuick3DFog::setColor(const QColor &newColor)
 }
 
 /*!
-    \qmlproperty float Fog::density
+    \qmlproperty real Fog::density
 
     Controls the fog amount, in practice this is a multiplier in range 0-1. The
     default value is 1.0. Reducing the value decreases the strength of the fog
@@ -190,7 +190,7 @@ void QQuick3DFog::setDepthEnabled(bool newDepthEnabled)
 }
 
 /*!
-    \qmlproperty float Fog::depthNear
+    \qmlproperty real Fog::depthNear
 
     Starting distance from the camera. The default value is 10.0. Applicable
     only when depthEnabled is set to true.
@@ -236,7 +236,7 @@ void QQuick3DFog::setDepthNear(float newDepthNear)
 }
 
 /*!
-    \qmlproperty float Fog::depthFar
+    \qmlproperty real Fog::depthFar
 
     Ending distance from the camera. The default value is 1000.0. Applicable
     only when depthEnabled is set to true.
@@ -272,7 +272,7 @@ void QQuick3DFog::setDepthFar(float newDepthFar)
 }
 
 /*!
-    \qmlproperty float Fog::depthCurve
+    \qmlproperty real Fog::depthCurve
 
     The default value is 1.0.
 
@@ -320,7 +320,7 @@ void QQuick3DFog::setHeightEnabled(bool newHeightEnabled)
 }
 
 /*!
-    \qmlproperty float Fog::leastIntenseY
+    \qmlproperty real Fog::leastIntenseY
 
     Specifies the position (Y coordinate) where the fog is the least intense.
     The default value is 10.0. Applicable only when heightEnabled is set to
@@ -373,7 +373,7 @@ void QQuick3DFog::setLeastIntenseY(float newLeastIntenseY)
 }
 
 /*!
-    \qmlproperty float Fog::mostIntenseY
+    \qmlproperty real Fog::mostIntenseY
 
     Specifies the position (Y coordinate) where the fog is the most intense.
     The default value is 0. Applicable only when heightEnabled is set to true.
@@ -413,7 +413,7 @@ void QQuick3DFog::setMostIntenseY(float newMostIntenseY)
 }
 
 /*!
-    \qmlproperty float Fog::heightCurve
+    \qmlproperty real Fog::heightCurve
 
     Specifies the intensity of the height fog. The default value is 1.0.
     Applicable only when heightEnabled is set to true.
@@ -459,7 +459,7 @@ void QQuick3DFog::setTransmitEnabled(bool newTransmitEnabled)
 }
 
 /*!
-    \qmlproperty float Fog::transmitCurve
+    \qmlproperty real Fog::transmitCurve
 
     Intensity of the light transmission effect. The default value is 1.0.
     Applicable only when transmitEnabled is set to true.

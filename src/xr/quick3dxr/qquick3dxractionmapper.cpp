@@ -182,7 +182,7 @@ QQuick3DXrInputAction::~QQuick3DXrInputAction()
 }
 
 /*!
-    \qmlproperty float XrInputAction::value
+    \qmlproperty real XrInputAction::value
     \brief The analog value of the input action.
 
     For analog inputs, such as a thumbstick position, this property holds

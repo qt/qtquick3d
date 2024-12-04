@@ -185,7 +185,7 @@ QQmlListProperty<QQuick3DAbstractLight> QQuick3DParticleSpriteParticle::lights()
 }
 
 /*!
-    \qmlproperty float SpriteParticle3D::offsetX
+    \qmlproperty real SpriteParticle3D::offsetX
     \since 6.3
 
     This property defines the particles offset in the X axis
@@ -196,7 +196,7 @@ float QQuick3DParticleSpriteParticle::offsetX() const
 }
 
 /*!
-    \qmlproperty float SpriteParticle3D::offsetY
+    \qmlproperty real SpriteParticle3D::offsetY
     \since 6.3
 
     This property defines the particles offset in the Y axis

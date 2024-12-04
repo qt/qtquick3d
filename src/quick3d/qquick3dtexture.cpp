@@ -213,7 +213,7 @@ QQuickItem *QQuick3DTexture::sourceItem() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Texture::scaleU
+    \qmlproperty real QtQuick3D::Texture::scaleU
 
     This property defines how to scale the U texture coordinate when mapping to
     a mesh's UV coordinates.
@@ -238,7 +238,7 @@ float QQuick3DTexture::scaleU() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Texture::scaleV
+    \qmlproperty real QtQuick3D::Texture::scaleV
 
     This property defines how to scale the V texture coordinate when mapping to
     a mesh's UV coordinates.
@@ -344,7 +344,7 @@ QQuick3DTexture::TilingMode QQuick3DTexture::depthTiling() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Texture::rotationUV
+    \qmlproperty real QtQuick3D::Texture::rotationUV
 
     This property rotates the texture around the pivot point. This is defined
     using euler angles and for a positive value rotation is clockwise.
@@ -366,7 +366,7 @@ float QQuick3DTexture::rotationUV() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Texture::positionU
+    \qmlproperty real QtQuick3D::Texture::positionU
 
     This property offsets the U coordinate mapping from left to right.
 
@@ -387,7 +387,7 @@ float QQuick3DTexture::positionU() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Texture::positionV
+    \qmlproperty real QtQuick3D::Texture::positionV
 
     This property offsets the V coordinate mapping from bottom to top.
 
@@ -412,7 +412,7 @@ float QQuick3DTexture::positionV() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Texture::pivotU
+    \qmlproperty real QtQuick3D::Texture::pivotU
 
     This property sets the pivot U position which is used when applying a
     \l{QtQuick3D::Texture::rotationUV}{rotationUV}.
@@ -434,7 +434,7 @@ float QQuick3DTexture::pivotU() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::Texture::pivotV
+    \qmlproperty real QtQuick3D::Texture::pivotV
 
     This property sets the pivot V position which is used when applying a
     \l{QtQuick3D::Texture::rotationUV}{rotationUV}.

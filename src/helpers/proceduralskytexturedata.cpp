@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
   Modifies the curve of the sun gradient.
 */
 
-/*! \qmlproperty float ProceduralSkyTextureData::sunEnergy
+/*! \qmlproperty real ProceduralSkyTextureData::sunEnergy
   Specifies the intensity of the sun.
 */
 

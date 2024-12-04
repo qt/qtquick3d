@@ -594,7 +594,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty float PrincipledMaterial::clearcoatAmount
+    \qmlproperty real PrincipledMaterial::clearcoatAmount
 
     This property defines the intensity of the clearcoat layer.
 
@@ -624,7 +624,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty float PrincipledMaterial::clearcoatRoughnessAmount
+    \qmlproperty real PrincipledMaterial::clearcoatRoughnessAmount
 
     This property defines the roughness of the clearcoat layer.
     The default value is \c 0.0
@@ -669,7 +669,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty float PrincipledMaterial::transmissionFactor
+    \qmlproperty real PrincipledMaterial::transmissionFactor
 
     This property defines the percentage of light that is transmitted through
     the material's surface.
@@ -701,7 +701,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty float PrincipledMaterial::thicknessFactor
+    \qmlproperty real PrincipledMaterial::thicknessFactor
 
     This property defines the thickness of the volume beneath the surface.
     Unlike many other properties of PrincipledMaterial, the value in defined
@@ -735,7 +735,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty float PrincipledMaterial::attenuationDistance
+    \qmlproperty real PrincipledMaterial::attenuationDistance
 
     This property defines the Density of the medium given as the average
     distance that light travels in the medium before interacting with a

@@ -236,7 +236,7 @@ QQuick3DXrCamera::~QQuick3DXrCamera()
 }
 
 /*!
-    \qmlproperty float QtQuick3D.Xr::XrCamera::clipNear
+    \qmlproperty real QtQuick3D.Xr::XrCamera::clipNear
     \brief The start of the distance range, with reference to the camera position, in which objects will appear.
 
     \note Unless set explicitly, the clipNear value will be set to the device's preferred value.
@@ -248,7 +248,7 @@ float QQuick3DXrCamera::clipNear() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D.Xr::XrCamera::clipFar
+    \qmlproperty real QtQuick3D.Xr::XrCamera::clipFar
     \brief The end of the distance range, with reference to the camera position, in which objects will appear.
 
     \note Unless set explicitly, the clipFar value will be set to the device's preferred value.

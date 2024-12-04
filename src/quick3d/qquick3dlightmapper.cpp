@@ -32,7 +32,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlproperty float Lightmapper::opacityThreshold
+    \qmlproperty real Lightmapper::opacityThreshold
 
     The opacity (alpha) threshold below which an object is ignored in ray -
     mesh intersections when calculating lighting via raytracing. When the
@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlproperty float Lightmapper::bias
+    \qmlproperty real Lightmapper::bias
 
     Raycasting bias used during baking. Adapt the value in case artifacts
     occur, for example in order to reduce undesired shadowing patterns. In many
@@ -112,7 +112,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty float Lightmapper::indirectLightFactor
+    \qmlproperty real Lightmapper::indirectLightFactor
 
     Multiplier for the indirect light amount. While it is the value of 1 (i.e.,
     not affecting the indirect light amount calculation) that provides the

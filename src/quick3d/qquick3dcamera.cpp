@@ -360,7 +360,7 @@ void QQuick3DCamera::updateLookAt()
 }
 
 /*!
-    \qmlproperty float Camera::levelOfDetailBias
+    \qmlproperty real Camera::levelOfDetailBias
     \since 6.5
 
     This property changes the size a model needs to be when rendered before the

@@ -80,7 +80,7 @@ QQuick3DModel *QQuick3DPickResult::objectHit() const
 }
 
 /*!
-    \qmlproperty float pickResult::distance
+    \qmlproperty real pickResult::distance
     \readonly
 
     This property holds the distance between the pick origin and the hit position

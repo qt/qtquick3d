@@ -380,7 +380,7 @@ QColor QQuick3DSceneEnvironment::clearColor() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::aoStrength
+    \qmlproperty real QtQuick3D::SceneEnvironment::aoStrength
 
     This property defines the amount of ambient occulusion applied. Ambient
     occulusion is a form of approximated global illumination which causes
@@ -422,7 +422,7 @@ float QQuick3DSceneEnvironment::aoStrength() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::aoDistance
+    \qmlproperty real QtQuick3D::SceneEnvironment::aoDistance
 
     This property defines roughly how far ambient occlusion shadows spread away
     from objects. Greater distances cause increasing impact to performance.
@@ -453,7 +453,7 @@ float QQuick3DSceneEnvironment::aoDistance() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::aoSoftness
+    \qmlproperty real QtQuick3D::SceneEnvironment::aoSoftness
 
     This property defines how smooth the edges of the ambient occlusion shading
     are.
@@ -519,7 +519,7 @@ int QQuick3DSceneEnvironment::aoSampleRate() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::aoBias
+    \qmlproperty real QtQuick3D::SceneEnvironment::aoBias
 
     This property defines a cutoff distance preventing objects from exhibiting
     ambient occlusion at close distances. Higher values increase the distance
@@ -709,7 +709,7 @@ QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probeExposure
+    \qmlproperty real QtQuick3D::SceneEnvironment::probeExposure
 
     This property modifies the amount of light emitted by the light probe. Part
     of the tonemapping is exposure mapping, and this property adjusts how
@@ -728,7 +728,7 @@ float QQuick3DSceneEnvironment::probeExposure() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probeHorizon
+    \qmlproperty real QtQuick3D::SceneEnvironment::probeHorizon
 
     This property when defined with increasing values adds darkness (black)
     to the bottom half of the environment, forcing the lighting to come
@@ -800,7 +800,7 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::temporalAAStrength
+    \qmlproperty real QtQuick3D::SceneEnvironment::temporalAAStrength
     \since 5.15
 
     This property modifies the amount of temporal movement (antialiasing).
@@ -973,7 +973,7 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironme
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::skyboxBlurAmount
+    \qmlproperty real QtQuick3D::SceneEnvironment::skyboxBlurAmount
     \since 6.4
 
     This property determines how much much the skybox should be blurred when

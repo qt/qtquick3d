@@ -80,7 +80,7 @@ bool QQuick3DXrVirtualMouse::middleMouseButton() const
 }
 
 /*!
-    \qmlproperty float XrVirtualMouse::scrollWheelX
+    \qmlproperty real XrVirtualMouse::scrollWheelX
     \brief Sets the horizontal scrolling speed.
 
     Positive values scroll right and negative values scroll left.
@@ -95,7 +95,7 @@ float QQuick3DXrVirtualMouse::scrollWheelX() const
 }
 
 /*!
-    \qmlproperty float XrVirtualMouse::scrollWheelY
+    \qmlproperty real XrVirtualMouse::scrollWheelY
     \brief Sets the vertical scrolling speed.
 
     Positive values scroll up and negative values scroll down.
@@ -121,7 +121,7 @@ int QQuick3DXrVirtualMouse::scrollTimerInterval() const
 }
 
 /*!
-    \qmlproperty float XrVirtualMouse::scrollPixelDelta
+    \qmlproperty real XrVirtualMouse::scrollPixelDelta
     \brief Defines the base distance scrolled with each scrolling event.
     \default 15
 

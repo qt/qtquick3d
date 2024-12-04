@@ -140,7 +140,7 @@ void QQuick3DQuaternionAnimation::setType(Type type)
 }
 
 /*!
-    \qmlproperty float QtQuick3D::QuaternionAnimation::fromXRotation
+    \qmlproperty real QtQuick3D::QuaternionAnimation::fromXRotation
 
     This property holds the starting value of the animation for the X axis as
     an euler angle in degrees.
@@ -164,7 +164,7 @@ void QQuick3DQuaternionAnimation::setFromXRotation(float f)
 }
 
 /*!
-    \qmlproperty float QtQuick3D::QuaternionAnimation::fromYRotation
+    \qmlproperty real QtQuick3D::QuaternionAnimation::fromYRotation
 
     This property holds the starting value of the animation for the Y axis as
     an euler angle in degrees.
@@ -188,7 +188,7 @@ void QQuick3DQuaternionAnimation::setFromYRotation(float f)
 }
 
 /*!
-    \qmlproperty float QtQuick3D::QuaternionAnimation::fromZRotation
+    \qmlproperty real QtQuick3D::QuaternionAnimation::fromZRotation
 
     This property holds the starting value of the animation for the Z axis as
     an euler angle in degrees.
@@ -212,7 +212,7 @@ void QQuick3DQuaternionAnimation::setFromZRotation(float f)
 }
 
 /*!
-    \qmlproperty float QtQuick3D::QuaternionAnimation::toXRotation
+    \qmlproperty real QtQuick3D::QuaternionAnimation::toXRotation
 
     This property holds the ending value of the animation for the X axis as
     an euler angle in degrees.
@@ -236,7 +236,7 @@ void QQuick3DQuaternionAnimation::setToXRotation(float f)
 }
 
 /*!
-    \qmlproperty float QtQuick3D::QuaternionAnimation::toYRotation
+    \qmlproperty real QtQuick3D::QuaternionAnimation::toYRotation
 
     This property holds the ending value of the animation for the Y axis as
     an euler angle in degrees.
@@ -260,7 +260,7 @@ void QQuick3DQuaternionAnimation::setToYRotation(float f)
 }
 
 /*!
-    \qmlproperty float QtQuick3D::QuaternionAnimation::toZRotation
+    \qmlproperty real QtQuick3D::QuaternionAnimation::toZRotation
 
     This property holds the ending value of the animation for the Z axis as
     an euler angle in degrees.

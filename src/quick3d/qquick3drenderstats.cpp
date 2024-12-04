@@ -37,7 +37,7 @@ int QQuick3DRenderStats::fps() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::RenderStats::frameTime
+    \qmlproperty real QtQuick3D::RenderStats::frameTime
     \readonly
 
     This property holds the amount of time elapsed since the last frame, in
@@ -49,7 +49,7 @@ float QQuick3DRenderStats::frameTime() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::RenderStats::renderTime
+    \qmlproperty real QtQuick3D::RenderStats::renderTime
     \readonly
 
     This property holds the amount of time spent on generating a new frame,
@@ -62,7 +62,7 @@ float QQuick3DRenderStats::renderTime() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::RenderStats::renderPrepareTime
+    \qmlproperty real QtQuick3D::RenderStats::renderPrepareTime
     \readonly
 
     This property holds the amount of time spent in the preparation phase of
@@ -75,7 +75,7 @@ float QQuick3DRenderStats::renderPrepareTime() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::RenderStats::syncTime
+    \qmlproperty real QtQuick3D::RenderStats::syncTime
     \readonly
 
     This property holds the amount of time spent inside the sync function, in
@@ -88,7 +88,7 @@ float QQuick3DRenderStats::syncTime() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::RenderStats::maxFrameTime
+    \qmlproperty real QtQuick3D::RenderStats::maxFrameTime
     \readonly
 
     This property holds the maximum time spent rendering a single frame during
@@ -917,7 +917,7 @@ QString QQuick3DRenderStats::graphicsApiName() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::RenderStats::lastCompletedGpuTime
+    \qmlproperty real QtQuick3D::RenderStats::lastCompletedGpuTime
     \readonly
 
     When GPU timing collection is

@@ -35,7 +35,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty float InfiniteGrid::gridInterval
+    \qmlproperty real InfiniteGrid::gridInterval
 
     This property defines the distance between grid lines. The default value is \c 1.0.
 */
