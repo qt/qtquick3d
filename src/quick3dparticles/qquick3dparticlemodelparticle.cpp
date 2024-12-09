@@ -247,7 +247,7 @@ void QQuick3DParticleModelParticle::regenerate()
     delete m_node;
     m_node = nullptr;
 
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !parentItem())
         return;
 
     if (!m_instanceTable) {
