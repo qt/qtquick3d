@@ -74,6 +74,8 @@ public:
 
     void configure(cp_layer_renderer_capabilities_t capabilities, cp_layer_renderer_configuration_t configuration) const override
     {
+        QMutexLocker locker(&m_compositorLayerMtx);
+
         m_multiviewEnabled = !QQuick3DXrManager::isMultiviewRenderingDisabled();
 
         // If multiview isn't disabled we need to check if the target supports it.
@@ -156,20 +158,23 @@ public:
         m_initialized = true;
     }
 
+    // Called from the gui thread while holding the render lock.
+    // For now we only let the thread know that it should stop rendering,
+    // as we're going to tear down the compositor layer on the render thread.
+    void teardown() { m_teardown = true; }
+
     void stopArSession()
     {
         Q_ASSERT(qApp->thread() == QThread::currentThread());
 
+        QMutexLocker locker(&m_arSessionMtx);
+
         if (m_arSession) {
             qCDebug(lcQuick3DXr, "Stopping AR session");
             ar_session_stop(m_arSession);
-            ar_session_set_data_provider_state_change_handler_f(m_arSession, nullptr, nullptr, nullptr);
+            m_arSession = nullptr;
+            m_arTrackingState = QQuick3DXrManagerPrivate::ArTrackingState::Uninitialized;
         }
-    }
-
-    QMutex &arSessionLock() { return m_arSessionMtx; }
-    bool arSessionRunning() const {
-        return m_arTrackingState == QQuick3DXrManagerPrivate::ArTrackingState::Running;
     }
 
     QMutex &renderLock() { return m_mutex; }
@@ -181,6 +186,8 @@ public:
     Q_INVOKABLE static void destroy(QQuickWindow *window, CompositorLayer *compositorLayer)
     {
         QSSG_ASSERT(window != nullptr, return);
+
+        qCDebug(lcQuick3DXr) << "Destroying compositor layer";
 
         if (auto *visionOSApplicaton = qGuiApp->nativeInterface<QNativeInterface::QVisionOSApplication>())
             visionOSApplicaton->setImmersiveSpaceCompositorLayer(nullptr);
@@ -215,6 +222,11 @@ protected:
             // and that has side-effects (e.g. cleanup due to a deferred delete).
             QMutexLocker locker(&m_mutex);
 
+            if (m_teardown) {
+                qCDebug(lcQuick3DXr) << "Teardown in progress, skipping event handling";
+                return QObject::event(event);
+            }
+
             switch (static_cast<Event>(event->type())) {
             case Event::Render:
             {
@@ -223,8 +235,9 @@ protected:
                 // is likely waiting for the render thread to complete rendering, so we
                 // need to wake it up.
                 if (!success) {
+                    qCDebug(lcQuick3DXr) << "Waking up the GUI thread, rendering returned early...";
                     m_xrManager->m_syncDone = false;
-                    m_waitCondition.wakeAll();
+                    m_waitCondition.wakeOne();
                 }
             }
                 return true;
@@ -285,6 +298,13 @@ private:
         }
     }
 
+    enum class RenderStateAction
+    {
+        CheckOnly,
+        WaitUntilRunning,
+    };
+
+    template<RenderStateAction Action = RenderStateAction::WaitUntilRunning>
     void checkRenderState()
     {
         QSSG_ASSERT(m_layerRenderer != nullptr, return);
@@ -306,9 +326,11 @@ private:
             emit renderStateChanged(m_renderState);
 
         if (m_renderState == QQuick3DXrManagerPrivate::RenderState::Paused) {
-            qCDebug(lcQuick3DXr) << "Waiting for rendering to resume...";
-            cp_layer_renderer_wait_until_running(m_layerRenderer);
-            QCoreApplication::postEvent(this, new QEvent(asQEvent(CompositorLayer::Event::Pulse)));
+            if constexpr (Action == RenderStateAction::WaitUntilRunning) {
+                qCDebug(lcQuick3DXr) << "Waiting for rendering to resume...";
+                cp_layer_renderer_wait_until_running(m_layerRenderer);
+                QCoreApplication::postEvent(this, new QEvent(asQEvent(CompositorLayer::Event::Pulse)));
+            }
         }
     }
 
@@ -328,6 +350,8 @@ private:
 
     void runWorldTrackingARSession()
     {
+        QMutexLocker locker(&m_arSessionMtx);
+
         ar_world_tracking_configuration_t worldTrackingConfiguration = ar_world_tracking_configuration_create();
         m_worldTrackingProvider = ar_world_tracking_provider_create(worldTrackingConfiguration);
 
@@ -369,38 +393,26 @@ private:
 
     [[nodiscard]] bool renderFrame(QMutexLocker<QMutex> &locker)
     {
-        QMutexLocker arLocker(&m_arSessionMtx);
-        if (m_arTrackingState != QQuick3DXrManagerPrivate::ArTrackingState::Running) {
-            static bool warned = false;
-            if (!warned) {
-                qCDebug(lcQuick3DXr, "AR tracking is not running!");
-                warned = true;
-            }
-        }
-
+        Q_ASSERT(locker.isLocked());
         checkRenderState();
 
-        if (m_renderState == QQuick3DXrManagerPrivate::RenderState::Invalidated) {
-            qCDebug(lcQuick3DXr, "Rendering is invalidated, releasing resources and stopping rendering");
-            arLocker.unlock();
-            return false;
-        }
-
-        if (m_renderState == QQuick3DXrManagerPrivate::RenderState::Paused) {
-            qCDebug(lcQuick3DXr, "Rendering is paused, waiting...");
-            arLocker.unlock();
-            cp_layer_renderer_wait_until_running(m_layerRenderer);
-            // If the state has changed we need to check again. And if the state
-            // is changed to running a new update will be scheduled, so just return.
-            checkRenderState();
-            return false;
-        }
-
         if (m_renderState != QQuick3DXrManagerPrivate::RenderState::Running) {
-            qCDebug(lcQuick3DXr, "Rendering is not running, skipping frame rendering");
+            qCDebug(lcQuick3DXr, "Rendering is not running, skipping frame rendering!");
             return false;
         }
 
+        // Lock the AR session mutex and render the frame. We hold onto the lock until we're done rendering
+        // to ensure that the AR session isn't stopped while we're rendering (this can happen!)
+        QMutexLocker arLocker(&m_arSessionMtx);
+        if (m_arTrackingState != QQuick3DXrManagerPrivate::ArTrackingState::Running) {
+            qCDebug(lcQuick3DXr, "AR tracking is not running, skipping frame rendering!");
+            return false;
+        }
+
+        // Lock the compositor layer mutex and render the frame. We hold onto the lock until we're done rendering
+        // as the configure call comes from the GUI thread and we need to ensure that the configuration is not
+        // changed while we're rendering.
+        QMutexLocker compositorLayer(&m_compositorLayerMtx);
         return m_xrManager->renderFrameImpl(locker, m_waitCondition);
     }
 
@@ -413,6 +425,8 @@ private:
     mutable QMutex m_mutex;
     QWaitCondition m_waitCondition;
 
+    mutable QMutex m_compositorLayerMtx;
+
     // AR Session
     mutable QMutex m_arSessionMtx;
 
@@ -420,11 +434,12 @@ private:
 
     cp_layer_renderer_t m_layerRenderer = nullptr;
     ar_world_tracking_provider_t m_worldTrackingProvider = nullptr;
-    ar_session_t m_arSession;
+    ar_session_t m_arSession = nullptr;
     mutable float m_depthRange[2] {1.0f, 10000.0f}; // NOTE: Near, Far
     QQuick3DXrManagerPrivate::RenderState m_renderState = QQuick3DXrManagerPrivate::RenderState::Uninitialized;
     QQuick3DXrManagerPrivate::ArTrackingState m_arTrackingState = QQuick3DXrManagerPrivate::ArTrackingState::Uninitialized;
     bool m_initialized = false;
+    bool m_teardown = false;
     mutable bool m_multiviewSupported = true;
     mutable bool m_multiviewEnabled = true;
     mutable bool m_foveationSupported = true;
@@ -658,7 +673,11 @@ void QQuick3DXrManagerPrivate::teardown()
 {
     Q_Q(QQuick3DXrManager);
 
-    QMutexLocker locker(&m_compositorLayer->renderLock());
+    qCDebug(lcQuick3DXr) << "Tearing down XR session";
+
+    QMutexLocker<QMutex> locker { nullptr };
+    if (m_compositorLayer)
+        locker = QMutexLocker<QMutex>{ &m_compositorLayer->renderLock() };
 
     m_running = false;
 
@@ -670,8 +689,10 @@ void QQuick3DXrManagerPrivate::teardown()
 
     if (m_compositorLayer) {
         m_compositorLayer->stopArSession();
+        m_compositorLayer->teardown();
 
         // NOTE: Unlock the render mutex. The compositor layer will be destroyed on the render thread now!
+        // Also, be aware of the race condition here once the lock is released (see: teardownStarted())...
         locker.unlock();
 
         Qt::ConnectionType connection = (m_compositorLayer->thread() == QThread::currentThread())
@@ -744,6 +765,8 @@ void QQuick3DXrManagerPrivate::update()
         if (Q_LIKELY(waitCompleted && m_syncDone && animationDriver)) {
             animationDriver->setStep(m_nextStepSize);
             animationDriver->advance();
+        } else {
+            qCDebug(lcQuick3DXr) << "Failed to wait for sync to complete" << "\nWaitCompleted:" << waitCompleted << "\nsyncDone" << m_syncDone;
         }
     } else {
         [[maybe_unused]] bool ret = m_compositorLayer->renderFrame(locker);
