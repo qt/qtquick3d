@@ -124,9 +124,11 @@ public:
         }
     }
 
+    // Listen for spatial events (these are native gestures like pinch click/drag coming from SwiftUI)
     void handleSpatialEvents(const QJsonObject &events) override
     {
-        emit handleSpatialEventsRequested(events);
+        if (m_xrManager)
+            m_xrManager->processSpatialEvents(events);
     }
 
     bool isInitialized() const { return m_initialized; }
@@ -210,7 +212,6 @@ public:
 Q_SIGNALS:
     void layerRendererReady();
     void layerRendererChanged();
-    void handleSpatialEventsRequested(const QJsonObject &jsonString);
     void renderStateChanged(QQuick3DXrManagerPrivate::RenderState);
     void arStateChanged(QQuick3DXrManagerPrivate::ArTrackingState);
 
@@ -589,9 +590,6 @@ bool QQuick3DXrManagerPrivate::initialize()
                         break;
                 }
             }, Qt::DirectConnection);
-
-            // Listen for spatial events (these are native gestures like pinch click/drag coming from SwiftUI)
-            QObject::connect(m_compositorLayer, &CompositorLayer::handleSpatialEventsRequested, q, &QQuick3DXrManager::processSpatialEvents);
         }
         return false;
     }
@@ -778,6 +776,13 @@ void QQuick3DXrManagerPrivate::update()
 void QQuick3DXrManagerPrivate::processXrEvents()
 {
     // NOTE: This is not used on visionOS
+}
+
+void QQuick3DXrManagerPrivate::processSpatialEvents(const QJsonObject &events)
+{
+    Q_Q(QQuick3DXrManager);
+    QSSG_ASSERT(q->m_vrViewport != nullptr, return);
+    QQuick3DXrInputManagerPrivate::processSpatialEvents(*q->m_vrViewport, events);
 }
 
 void QQuick3DXrManagerPrivate::prepareAnchorManager(QQuick3DXrAnchorManager *anchorManager, ar_data_providers_t dataProviders)

@@ -1227,7 +1227,7 @@ QList<QQuick3DPickResult> QQuick3DViewport::rayPickAll(const QVector3D &origin, 
     return processedResultList;
 }
 
-void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event)
+void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event) const
 {
     internalPick(event, origin, direction);
 }

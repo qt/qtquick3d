@@ -96,6 +96,8 @@ public:
     void update();
     void processXrEvents();
 
+    void processSpatialEvents(const QJsonObject &events);
+
     void setSamples(int samples);
 
     QStringList enabledExtensions() const { return {}; }
