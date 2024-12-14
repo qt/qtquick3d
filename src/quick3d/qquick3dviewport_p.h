@@ -106,7 +106,7 @@ public:
     Q_REVISION(6, 2) Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction) const;
     Q_REVISION(6, 2) Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;
 
-    void processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event);
+    void processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event) const;
     bool singlePointPick(QSinglePointEvent *event, const QVector3D &origin, const QVector3D &direction);
 
     Q_REVISION(6, 8) Q_INVOKABLE void setTouchpoint(QQuickItem *target, const QPointF &position, int pointId, bool active);

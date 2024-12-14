@@ -80,7 +80,6 @@ public:
 
 private Q_SLOTS:
     void update();
-    void processSpatialEvents(const QJsonObject &events);
 
 Q_SIGNALS:
     void initialized();

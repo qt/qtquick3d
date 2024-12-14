@@ -31,6 +31,7 @@ class QQuick3DXrHandInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
 class QQuick3DXrController;
+class QQuick3DViewport;
 
 class QQuick3DXrInputManagerPrivate
 {
@@ -69,6 +70,8 @@ public:
     qsizetype getPokeJointIndex() const;
 
     void updateHandtracking();
+
+    static void processSpatialEvents(const QQuick3DViewport &vrViewport, const QJsonObject &events);
 
 private:
     QQuick3DXrInputManager *q_ptr = nullptr;

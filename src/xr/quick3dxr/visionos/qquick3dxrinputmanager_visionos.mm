@@ -12,6 +12,7 @@
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -398,6 +399,106 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
         m_handInputState[hand]->setJointPositionsAndRotations(jpositions, jrotations);
 
         m_handInputState[hand]->setIsActive(isWristTracked);
+    }
+}
+
+void QQuick3DXrInputManagerPrivate::processSpatialEvents(const QQuick3DViewport &vrViewport, const QJsonObject &events)
+{
+  // An example of the input data
+  // {
+  //     "id":4404736049417834088,
+  //     "inputDevicePose": {
+  //         "altitude":0,
+  //         "azimuth":1.5707963267948966,
+  //         "pose3D":{
+  //             "position":{
+  //                 "x":0.227996826171875,
+  //                 "y":0.957000732421875,
+  //                 "z":-0.55999755859375
+  //             },
+  //             "rotation":{
+  //                 "vector":[0,0,0,1]
+  //             }
+  //         }
+  //     },
+  //     "kind":"indirectPinch",
+  //     "location":[0,0],
+  //     "location3D":{
+  //         "x":0,
+  //         "y":0,
+  //         "z":0
+  //     },
+  //     "modifierKeys":0,
+  //     "phase":"ended",
+  //     "selectionRay":{
+  //         "direction":{
+  //             "x":0.3321685791015625,
+  //             "y":0.25982666015625,
+  //             "z":-0.9067230224609375
+  //         },
+  //         "origin":{
+  //             "x":0.227996826171875,
+  //             "y":0.957000732421875,
+  //             "z":0
+  //         }
+  //     },
+  //     "timestamp":74368.590710375
+  // }
+
+    static qint64 lastId = -1;
+
+    QJsonArray eventArray = events.value(QStringLiteral("events")).toArray();
+    for (const auto &event : eventArray) {
+        QJsonObject eventObj = event.toObject();
+        // qDebug() << eventObj;
+
+        // ID (unique per event)
+        const qint64 id = eventObj.value(QStringLiteral("id")).toDouble();
+        // timestamp (in seconds)
+        //const double timestamp = eventObj.value(QStringLiteral("timestamp")).toDouble();
+        // kind
+        const QString kind = eventObj.value(QStringLiteral("kind")).toString();
+        if (kind != QStringLiteral("indirectPinch"))
+            qWarning() << "kind is " << kind << "!";
+
+
+        // phase
+        const QString phase = eventObj.value(QStringLiteral("phase")).toString();
+
+        // selectionRay (check if exists first)
+        QJsonObject selectionRayObj = eventObj.value(QStringLiteral("selectionRay")).toObject();
+        if (!selectionRayObj.isEmpty()) {
+            // origin
+            QJsonObject originObj = selectionRayObj.value(QStringLiteral("origin")).toObject();
+            QVector3D origin(originObj.value(QStringLiteral("x")).toDouble(), originObj.value(QStringLiteral("y")).toDouble(), originObj.value(QStringLiteral("z")).toDouble());
+            // convert meters to cm
+            origin *= 100.0;
+
+            // direction
+            QJsonObject directionObj = selectionRayObj.value(QStringLiteral("direction")).toObject();
+            QVector3D direction(directionObj.value(QStringLiteral("x")).toDouble(), directionObj.value(QStringLiteral("y")).toDouble(), directionObj.value(QStringLiteral("z")).toDouble());
+
+            QEvent::Type eventType;
+
+            if (phase == QStringLiteral("active")) {
+                if (lastId != id) {
+                    // Press
+                    lastId = id;
+                    eventType = QEvent::MouseButtonPress;
+                } else {
+                    // Move
+                    eventType = QEvent::MouseMove;
+                }
+            } else {
+                // Release
+                lastId = -1;
+                eventType = QEvent::MouseButtonRelease;
+            }
+
+            QMouseEvent *event = new QMouseEvent(eventType, QPointF(), QPointF(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+            vrViewport.processPointerEventFromRay(origin, direction, event);
+            delete event;
+        }
     }
 }
 
