@@ -72,8 +72,8 @@ Q_SIGNALS:
     void instanceCountOverrideChanged();
     void hasTransparencyChanged();
     void depthSortingEnabledChanged();
-    void shadowBoundsMinimumChanged();
-    void shadowBoundsMaximumChanged();
+    Q_REVISION(6, 9) void shadowBoundsMinimumChanged();
+    Q_REVISION(6, 9) void shadowBoundsMaximumChanged();
 
 protected:
     virtual QByteArray getInstanceBuffer(int *instanceCount) = 0;
