@@ -6,7 +6,7 @@ dependencies:
     ref: 3d6ea255dba81dd08532d56d4af6a56cb71940aa
     required: true
   ../tqtc-qtquicktimeline:
-    ref: daffb955f0a6c8e49d8cdd98cfbb9794ae26cc67
+    ref: 7e11648d57c4f211d49db10f1cab0a5dc33d8c19
     required: false
   ../tqtc-qtshadertools:
     ref: 19b2da7db7aca19e121564645f94c79fe0d1c865
