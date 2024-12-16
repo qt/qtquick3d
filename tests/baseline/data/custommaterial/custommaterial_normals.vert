@@ -1,3 +1,6 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
 float getHeight(vec2 pos) {
     return textureLod(heightMap, pos, 0).r;
 }
