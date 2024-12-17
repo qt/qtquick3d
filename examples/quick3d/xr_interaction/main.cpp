@@ -10,16 +10,6 @@ int main(int argc, char *argv[])
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
 
-    qputenv("QSG_INFO", "1");
-
-#if defined(Q_OS_WIN)
-    qputenv("QSG_RHI_BACKEND", "d3d12");
-#elif defined(Q_OS_ANDROID)
-    qputenv("QSG_RHI_BACKEND", "vulkan");
-#endif
-
-    qputenv("QT_QUICK3D_XR_MULTIVIEW", "1");
-
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
