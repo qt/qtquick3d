@@ -1,5 +1,5 @@
 {
-    "Id": "Embree",
+    "Id": "embree",
     "Name": "Intel Embree",
     "QDocModule": "qtquick3d",
     "Description": "Intel Embree is a collection of high performance ray tracing kernels that helps graphics application engineers to improve the performance of their photorealistic rendering application.",
