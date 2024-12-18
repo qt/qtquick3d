@@ -487,7 +487,7 @@ QSSGPrepContextId QSSGLayerRenderData::getOrCreateExtensionContext(const QSSGRen
     QSSG_ASSERT_X(index < PREP_CTX_INDEX_MASK - 1, "Reached maximum entries!", return QSSGPrepContextId::Invalid);
     auto it = std::find_if(extContexts.cbegin(), extContexts.cend(), [&ext, slot](const ExtensionContext &e){ return (e.owner == &ext) && (e.slot == slot); });
     if (it == extContexts.cend()) {
-        extContexts.push_back({ &ext, camera, {/* PS */}, {/* FILTER */}, index, slot });
+        extContexts.push_back(ExtensionContext{ ext, camera, index, slot });
         it = extContexts.cbegin() + index;
         renderableModelStore.emplace_back();
         modelContextStore.emplace_back();
@@ -2767,6 +2767,7 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer 
     , particlesEnabled(checkParticleSupport(inRenderer.contextInterface()->rhi()))
 {
     depthMapPassMS.setMultisamplingEnabled(true);
+    Q_ASSERT(extContexts.size() == 1);
 }
 
 QSSGLayerRenderData::~QSSGLayerRenderData()
