@@ -7,6 +7,7 @@ project(customgeometry LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
+qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(customgeometry
     main.cpp
@@ -33,7 +34,6 @@ qt_add_qml_module(customgeometry
     SOURCES
         examplegeometry.cpp examplegeometry.h
     RESOURCES qt_logo_rect.png
-    RESOURCE_PREFIX "/qt/qml"
     IMPORTS
         QtQuick3D
 )

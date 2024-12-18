@@ -7,6 +7,7 @@ project(proceduraltexture LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Quick3D)
+qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(proceduraltexture
     main.cpp
@@ -31,7 +32,6 @@ qt_add_qml_module(proceduraltexture
         Main.qml
     SOURCES
         gradienttexture.cpp gradienttexture.h
-    RESOURCE_PREFIX "/qt/qml"
     IMPORTS
         QtQuick3D
 )
