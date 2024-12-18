@@ -400,8 +400,13 @@ private:
     friend class QSSGModelHelpers;
     friend class QSSGRenderHelpers;
 
-    struct ExtensionContext
+    class ExtensionContext
     {
+    public:
+        explicit ExtensionContext() = default;
+        explicit ExtensionContext(const QSSGRenderExtension &ownerExt, QSSGRenderCamera *cam, size_t idx, quint32 slot)
+            : owner(&ownerExt), camera(cam), ps{}, filter{0}, index(idx), slot(slot)
+        { }
         const QSSGRenderExtension *owner = nullptr;
         QSSGRenderCamera *camera = nullptr;
         QSSGRhiGraphicsPipelineState ps[3] {};
@@ -410,21 +415,21 @@ private:
         quint32 slot = 0;
     };
 
-    std::vector<ExtensionContext> extContexts { { /* 0 - Always available */ } };
-    std::vector<RenderableNodeEntries> renderableModelStore { { /* 0 - Always available */ } };
-    std::vector<TModelContextPtrList> modelContextStore { { /* 0 - Always available */ }};
-    std::vector<QSSGRenderableObjectList> renderableObjectStore { { /* 0 - Always available */ }};
-    std::vector<QSSGRenderableObjectList> opaqueObjectStore { { /* 0 - Always available */ }};
-    std::vector<QSSGRenderableObjectList> transparentObjectStore { { /* 0 - Always available */ }};
-    std::vector<QSSGRenderableObjectList> screenTextureObjectStore { { /* 0 - Always available */ }};
+    std::vector<ExtensionContext> extContexts { ExtensionContext{ /* 0 - Always available */ } };
+    std::vector<RenderableNodeEntries> renderableModelStore { RenderableNodeEntries{ /* 0 - Always available */ } };
+    std::vector<TModelContextPtrList> modelContextStore { TModelContextPtrList{ /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> renderableObjectStore { QSSGRenderableObjectList{ /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> opaqueObjectStore { QSSGRenderableObjectList{ /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> transparentObjectStore { QSSGRenderableObjectList{ /* 0 - Always available */ }};
+    std::vector<QSSGRenderableObjectList> screenTextureObjectStore { QSSGRenderableObjectList{ /* 0 - Always available */ }};
 
     // Soreted cache (per camera and extension)
     using PerCameraCache = std::unordered_map<const QSSGRenderCamera *, QSSGRenderableObjectList>;
-    std::vector<PerCameraCache> sortedOpaqueObjectCache { { /* 0 - Always available */ } };
-    std::vector<PerCameraCache> sortedTransparentObjectCache { { /* 0 - Always available */ } };
-    std::vector<PerCameraCache> sortedScreenTextureObjectCache { { /* 0 - Always available */ } };
-    std::vector<PerCameraCache> sortedOpaqueDepthPrepassCache { { /* 0 - Always available */ } };
-    std::vector<PerCameraCache> sortedDepthWriteCache { { /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedOpaqueObjectCache { PerCameraCache{ /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedTransparentObjectCache { PerCameraCache{ /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedScreenTextureObjectCache { PerCameraCache{ /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedOpaqueDepthPrepassCache { PerCameraCache{ /* 0 - Always available */ } };
+    std::vector<PerCameraCache> sortedDepthWriteCache { PerCameraCache{ /* 0 - Always available */ } };
 
     [[nodiscard]] const QSSGRenderCameraDataList &getCachedCameraDatas();
     void ensureCachedCameraDatas();
