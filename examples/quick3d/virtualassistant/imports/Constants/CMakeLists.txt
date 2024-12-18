@@ -10,7 +10,6 @@ qt_add_library(Constants STATIC)
 qt_add_qml_module(Constants
     URI "VirtualAssistant.Constants"
     VERSION 1.0
-    RESOURCE_PREFIX "/qt/qml"
     QML_FILES
         Constants.qml
 )

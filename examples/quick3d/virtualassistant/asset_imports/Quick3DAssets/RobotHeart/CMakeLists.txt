@@ -5,7 +5,6 @@ qt_add_library(RobotHeart STATIC)
 qt_add_qml_module(RobotHeart
     URI "Quick3DAssets.RobotHeart"
     VERSION 1.0
-    RESOURCE_PREFIX "/qt/qml"
     QML_FILES
         RobotHeart.qml
     RESOURCES
