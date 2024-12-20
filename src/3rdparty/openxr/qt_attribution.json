@@ -20,6 +20,7 @@
         "Description": "JsonCpp is a C++ library that allows manipulating JSON values, including serialization and deserialization to and from strings.",
         "QtUsage": "Used by the bundled OpenXR Loader inside of QtQuick3DXr to read JSON configuration files.",
 
+        "Path": "src/external/jsoncpp",
         "Homepage": "https://github.com/open-source-parsers/jsoncpp",
         "Version": "1.9.5",
         "License": "MIT License",
@@ -34,6 +35,7 @@
         "Description": "JJNIPP is just a C++ wrapper for the standard Java Native Interface (JNI).",
         "QtUsage": "Used the bundled OpenXR Loader inside of QtQuick3DXr on Android.",
 
+        "Path": "src/external/jnipp",
         "Homepage": "https://github.com/mitchdowd/jnipp",
         "Version": "1.0.0",
         "License": "MIT License",
