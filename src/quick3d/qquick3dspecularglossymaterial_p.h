@@ -154,6 +154,7 @@ public:
     };
     Q_ENUM(VertexColorMask)
     Q_DECLARE_FLAGS(VertexColorMaskFlags, VertexColorMask)
+    Q_FLAG(VertexColorMaskFlags)
 
     explicit QQuick3DSpecularGlossyMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DSpecularGlossyMaterial() override;
