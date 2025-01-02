@@ -164,6 +164,7 @@ public:
     };
     Q_ENUM(VertexColorMask)
     Q_DECLARE_FLAGS(VertexColorMaskFlags, VertexColorMask)
+    Q_FLAG(VertexColorMaskFlags)
 
     explicit QQuick3DPrincipledMaterial(QQuick3DObject *parent = nullptr);
     ~QQuick3DPrincipledMaterial() override;

@@ -73,6 +73,7 @@ public:
     };
     Q_ENUM(VertexColorMask)
     Q_DECLARE_FLAGS(VertexColorMaskFlags, VertexColorMask)
+    Q_FLAG(VertexColorMaskFlags)
 
     ~QQuick3DMaterial() override;
 
