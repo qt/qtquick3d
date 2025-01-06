@@ -14,11 +14,11 @@ QT_BEGIN_NAMESPACE
 AssimpImporter::AssimpImporter()
 {
     QFile optionFile(":/assimpimporter/options.json");
-    optionFile.open(QIODevice::ReadOnly);
-    QByteArray options = optionFile.readAll();
-    optionFile.close();
-    auto optionsDocument = QJsonDocument::fromJson(options);
-    m_options = optionsDocument.object();
+    if (optionFile.open(QIODevice::ReadOnly)) {
+        QByteArray options = optionFile.readAll();
+        auto optionsDocument = QJsonDocument::fromJson(options);
+        m_options = optionsDocument.object();
+    }
 }
 
 AssimpImporter::~AssimpImporter()
