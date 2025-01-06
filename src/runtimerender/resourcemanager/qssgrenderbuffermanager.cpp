@@ -1881,8 +1881,8 @@ void QSSGBufferManager::registerExtensionResult(const QSSGRenderExtension &exten
                                                 QRhiTexture *texture)
 {
     if (texture) {
-        texture->flags().testFlag(QRhiTexture::Flag::MipMapped);
-        const auto mipLevels = QRhi::mipLevelsForSize(texture->pixelSize());
+        const bool isMipMapped = texture->flags().testFlag(QRhiTexture::Flag::MipMapped);
+        const auto mipLevels = isMipMapped ? QRhi::mipLevelsForSize(texture->pixelSize()) : 0;
         QSSGRenderImageTextureFlags flags;
         const bool isSRGB = texture->flags().testFlag(QRhiTexture::Flag::sRGB);
         flags.setLinear(!isSRGB);
