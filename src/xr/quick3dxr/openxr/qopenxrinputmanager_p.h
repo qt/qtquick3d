@@ -136,9 +136,9 @@ private:
 
     // Input State
     XrActionSet m_actionSet{XR_NULL_HANDLE};
-    XrPath m_handSubactionPath[2];
-    XrSpace m_handGripSpace[2];
-    XrSpace m_handAimSpace[2];
+    XrPath m_handSubactionPath[2] = {XR_NULL_PATH, XR_NULL_PATH};
+    XrSpace m_handGripSpace[2] {XR_NULL_HANDLE, XR_NULL_HANDLE};
+    XrSpace m_handAimSpace[2] {XR_NULL_HANDLE, XR_NULL_HANDLE};
 
     QQuick3DXrHandInput *m_handInputState[2];
     HandActions m_handActions;
