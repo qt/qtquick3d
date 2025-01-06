@@ -55,8 +55,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     float m_shadowMapFar; // Far clip plane for the shadow map
     float m_shadowFilter; // Shadow map filter step size
 
-    bool m_bakingEnabled;
-    bool m_fullyBaked; // direct+indirect
+    bool m_bakingEnabled = false;
+    bool m_fullyBaked = false; // direct+indirect
 
     // Defaults to directional light
     explicit QSSGRenderLight(Type type = Type::DirectionalLight);
