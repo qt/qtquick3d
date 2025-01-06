@@ -69,8 +69,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     float m_pcfFactor = 2.0f;
     bool m_use32BitShadowmap = false;
 
-    bool m_bakingEnabled;
-    bool m_fullyBaked; // direct+indirect
+    bool m_bakingEnabled = false;
+    bool m_fullyBaked = false; // direct+indirect
 
     // Cascading shadow map options
     float m_csmSplit1 = 0.1f;
