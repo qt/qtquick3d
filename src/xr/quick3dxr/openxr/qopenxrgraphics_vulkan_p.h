@@ -47,9 +47,9 @@ public:
 
 private:
     QVulkanInstance m_vulkanInstance;
-    VkDevice m_vulkanDevice;
-    VkPhysicalDevice m_vulkanPhysicalDevice;
-    VkQueue m_vulkanCommandQueue;
+    VkDevice m_vulkanDevice = VK_NULL_HANDLE;
+    VkPhysicalDevice m_vulkanPhysicalDevice = VK_NULL_HANDLE;
+    VkQueue m_vulkanCommandQueue = VK_NULL_HANDLE;
     QQuickGraphicsConfiguration m_graphicsConfiguration;
     int m_queueFamilyIndex = -1;
     XrGraphicsBindingVulkanKHR m_graphicsBinding{};
