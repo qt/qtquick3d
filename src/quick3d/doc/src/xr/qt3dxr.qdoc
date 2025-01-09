@@ -122,7 +122,7 @@
 
     \quotefromfile xr_simple/CMakeLists.txt
     \skipto if(ANDROID)
-    \printto endif()
+    \printuntil endif()
 
     For more details about setting up your \c AndroidManifest.xml, see the relevant section of
     the \l{Getting Started With Meta Quest 3} page.
