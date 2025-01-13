@@ -11,6 +11,8 @@ import QtQuick3D.Helpers
 
 import QtQuick3D.Xr
 
+import xr_shared
+
 pragma ComponentBehavior: Bound
 
 XrView {
@@ -62,6 +64,7 @@ XrView {
         AimController {
             id: rightAim
             controller: XrController.RightController
+            view: xrView
 
             onObjectPressed: (obj, pos, dir) => {
                 gadgetBox.handlePress(obj, pos, dir)
@@ -76,10 +79,38 @@ XrView {
             onReleased: {
                 gadgetBox.handleRelease()
             }
-
-            grabMoveEnabled: !gadgetBox.gadgetActive
+            onObjectGrabbed: (obj) => {
+                if (!(obj instanceof XrGadget))
+                    startGrab(obj)
+            }
+            Model {
+                source: "#Cylinder"
+                scale: "0.05, 0.1, 0.05"
+                z: 5
+                eulerRotation.x: 90
+                materials: PrincipledMaterial {
+                    baseColor: "black"
+                }
+            }
+            xrCursor: cursor
         }
         //! [connections]
+
+        XrCamera {
+            id: camera
+        }
+
+        Node {
+            // Separate node to turn off cursor for gadgets. We can't bind to
+            // XrCursor.visible, since AimController assigns to it.
+            visible: !gadgetBox.gadgetActive
+            XrCursor {
+                id: cursor
+                cameraNode: camera
+                size: 2
+                sphere: rightAim.pickStatus === PickResult.Model
+            }
+        }
     }
 
     GadgetBox {

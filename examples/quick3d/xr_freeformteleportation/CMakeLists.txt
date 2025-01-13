@@ -10,6 +10,8 @@ find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
 
 qt6_policy(SET QTP0002 NEW)
 
+add_subdirectory("../xr_shared" "xr_shared")
+
 qt_add_executable(${PROJECT_NAME}
     MANUAL_FINALIZATION
     main.cpp
@@ -35,10 +37,6 @@ qt_add_qml_module(${PROJECT_NAME}
     QML_FILES
         main.qml
         Building.qml
-        ValueFader.qml
-        BeamModel.qml
-        TargetIndicator.qml
-        FreeformTeleporter.qml
     RESOURCES
         maps/Tape001_1K_NormalGL.jpg
         maps/Tape001_1K_Color.jpg
@@ -48,8 +46,6 @@ qt_add_qml_module(${PROJECT_NAME}
         maps/Tiles107_1K_Roughness.jpg
         maps/Tiles108_1K_Color.jpg
         meshes/building.mesh
-        shaders/target_indicator.vert
-        shaders/target_indicator.frag
     NO_RESOURCE_TARGET_PATH
 )
 

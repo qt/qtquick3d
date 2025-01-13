@@ -1,4 +1,4 @@
-// Copyright (C) 2024 The Qt Company Ltd.
+// Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -13,14 +13,21 @@ XrController {
 
     readonly property vector3d pickDirection: Qt.vector3d(0, 0, -1)
 
+    required property QtObject view // an object that has implemented rayPick(pos, dir)
+    property XrCursor xrCursor: null
+    property int pickStatus: PickResult.Null
+
+    property real yeetDistance: 400
+
+    property real emptyRayLength: 400
+
     //! [signals]
     signal objectPressed(obj: Model, pos: vector3d, direction: vector3d)
     signal objectHovered(obj: Model)
     signal moved(pos: vector3d, direction: vector3d)
     signal released()
+    signal objectGrabbed(obj: Model)
     //! [signals]
-
-    property bool grabMoveEnabled: true
 
     QtObject {
         id: priv
@@ -32,13 +39,12 @@ XrController {
         property quaternion rotation
         property Node grabbedObject
 
+        function tryGrab() {
+            theController.objectGrabbed(hitObject as Model)
+        }
 
-        function grab() {
-            if (!grabMoveEnabled)
-                return
-            grabbedObject = hitObject as Node
-            hitObject = null
-
+        function doGrab(obj: Model) {
+            grabbedObject = obj
             if (grabbedObject) {
                 const scenePos = grabbedObject.scenePosition
                 const sceneRot = grabbedObject.sceneRotation
@@ -46,6 +52,8 @@ XrController {
                 offset = theController.mapPositionFromScene(scenePos)
                 rotation = theController.rotation.inverted().times(sceneRot)
                 isGrabbing = true
+                if (xrCursor)
+                    xrCursor.visible = false
             }
         }
 
@@ -58,11 +66,13 @@ XrController {
         function handlePress() {
             theController.objectPressed(hitObject, theController.scenePosition, theController.forward)
             isInteracting = true
+            pickRay.pressed = true
         }
 
         function handleRelease() {
             isInteracting = false
             theController.released()
+            pickRay.pressed = false
         }
 
         function moveObject() {
@@ -84,24 +94,31 @@ XrController {
             const localForward = Qt.vector3d(0, 0, -1)
             const rayPos = localForward.times(pickRay.length)
             const yeetOffset = offset.minus(rayPos)
-            pickRay.length = Math.max(10, Math.min(pickRay.length * (1 + delta/10), 1000))
+            pickRay.length = Math.max(10, Math.min(pickRay.length * (1 + delta/10), theController.yeetDistance))
             offset = yeetOffset.plus(localForward.times(pickRay.length))
         }
 
         function findObject() {
             const dir = theController.mapDirectionToScene(pickDirection)
-            const pickResult = xrView.rayPick(scenePosition, dir)
+            const pickResult = theController.view.rayPick(scenePosition, dir)
 
             const didHit = pickResult.hitType !== PickResult.Null
+            theController.pickStatus = pickResult.hitType
 
             if (didHit) {
                 pickRay.hit = true
-                pickRay.length = pickResult.distance
+                pickRay.length = pickResult.distance * 0.75
                 hitObject = pickResult.objectHit
+                if (xrCursor) {
+                    xrCursor.setPositionAndOrientation(pickResult.scenePosition, pickResult.sceneNormal)
+                    xrCursor.visible = true
+                }
             } else {
                 pickRay.hit = false
-                pickRay.length = 500
+                pickRay.length = theController.emptyRayLength
                 hitObject = null
+                if (xrCursor)
+                    xrCursor.visible = false
             }
             theController.objectHovered(hitObject)
         }
@@ -116,22 +133,14 @@ XrController {
         }
     }
 
-    Node {
+    function startGrab(obj: Model) {
+        priv.doGrab(obj)
+    }
+
+    PickRay {
         id: pickRay
-        property real length: 50
-        property real width: hit ? 2 : 1
-        property bool hit: false
-
         visible: !priv.isGrabbing
-
-        eulerRotation: Qt.vector3d(-90, 0, 0)
-        Model {
-            scale: Qt.vector3d(pickRay.width/100, pickRay.length/100, pickRay.width/100)
-            y: pickRay.length/2
-            source: "#Cylinder"
-            materials: PrincipledMaterial { baseColor: pickRay.hit ? "green" : "red" }
-            opacity: 0.5
-        }
+        length: theController.emptyRayLength
     }
 
     onRotationChanged: {
@@ -144,7 +153,7 @@ XrController {
         actionId: [XrInputAction.SqueezeValue, XrInputAction.SqueezePressed]
         onPressedChanged: {
             if (pressed) {
-                priv.grab()
+                priv.tryGrab()
             } else {
                 priv.ungrab()
             }
@@ -164,12 +173,15 @@ XrController {
     }
 
     XrInputAction {
-        enabled: priv.isGrabbing
+        id: yeetAction
+        enabled: theController.yeetDistance > 0
         hand: theController.controller
         actionId: XrInputAction.ThumbstickY
+    }
 
-        onValueChanged: {
-                priv.yeet(value)
-        }
+    FrameAnimation {
+        id: yeetAnimation
+        running: priv.isGrabbing && Math.abs(yeetAction.value) > 0.1
+        onTriggered: priv.yeet(yeetAction.value * frameTime * 30)
     }
 }

@@ -4,6 +4,8 @@
 import QtQuick
 import QtQuick3D
 
+import xr_shared
+
 pragma ComponentBehavior: Bound
 
 Node {

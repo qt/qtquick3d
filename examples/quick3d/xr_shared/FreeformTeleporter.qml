@@ -1,4 +1,4 @@
-// Copyright (C) 2024 The Qt Company Ltd.
+// Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -6,9 +6,9 @@ import QtQuick3D
 
 Node {
     id: teleporter
-    required property var rayPicker //any object that has implemented rayPick(pos, dir)
-    required property Node cameraOrigin
-    required property Node camera
+    required property QtObject view //any object that has implemented rayPick(pos, dir)
+    required property Node originNode
+    required property Node cameraNode
     required property Node beamHandle
     property real cameraSnapRotation: 30
     property real xStickValue: 0
@@ -22,7 +22,7 @@ Node {
 
     function teleportTo(position) {
         teleporter.teleporting = true
-        let offset = camera.scenePosition.minus(cameraOrigin.scenePosition)
+        let offset = cameraNode.scenePosition.minus(originNode.scenePosition)
         let cameraOriginPosition = position.minus(offset)
         cameraOriginPosition.y = position.y
 
@@ -33,13 +33,13 @@ Node {
 
     function rotateBy(degrees) {
         let r = Quaternion.fromEulerAngles(0, degrees, 0)
-        let origin = Qt.vector3d(camera.position.x, 0, camera.position.z)
-        let mappedOrigin = cameraOrigin.rotation.times(origin).plus(cameraOrigin.position)
+        let origin = Qt.vector3d(cameraNode.position.x, 0, cameraNode.position.z)
+        let mappedOrigin = originNode.rotation.times(origin).plus(originNode.position)
         let rotatedOrigin = r.times(origin)
-        let mappedRO = cameraOrigin.rotation.times(rotatedOrigin).plus(cameraOrigin.position)
+        let mappedRO = originNode.rotation.times(rotatedOrigin).plus(originNode.position)
         let delta = mappedRO.minus(mappedOrigin)
 
-        doRotation(cameraOrigin.rotation.times(r), cameraOrigin.position.minus(delta))
+        doRotation(originNode.rotation.times(r), originNode.position.minus(delta))
     }
 
     signal doTeleportation(var cameraOriginPosition)
@@ -62,11 +62,11 @@ Node {
         id: screenValueFader
     }
 
-    TargetIndicator {
+    TeleportTargetIndicator {
         id: targetIndicator
     }
 
-    BeamModel {
+    TeleportBeam {
         id: beamModel
         color: teleporter.targetValid ? teleporter.rayHitColor : teleporter.rayMissColor
     }
@@ -102,7 +102,7 @@ Node {
         let pickResult = null
         beamPositions.push(Qt.vector3d(pos.x, pos.y, pos.z))
         for (let i = 0; !hit && i < 50; ++i) {
-            pickResult = teleporter.rayPicker.rayPick(pos, d)
+            pickResult = teleporter.view.rayPick(pos, d)
             pos = pos.plus(d)
             d = d.plus(a)
             hit = pickResult.objectHit && pickResult.distance < d.length()

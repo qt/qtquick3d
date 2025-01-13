@@ -6,6 +6,8 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import QtQuick3D.Xr
 
+import xr_shared
+
 XrView {
     id: xrView
     XrErrorDialog { id: err }
@@ -89,9 +91,9 @@ XrView {
     FreeformTeleporter {
         id: teleporter
 
-        rayPicker: xrView
-        cameraOrigin: xrOrigin
-        camera: xrOrigin.camera
+        view: xrView
+        originNode: xrOrigin
+        cameraNode: xrOrigin.camera
         beamHandle: xrRightController
 
         xStickValue: xrRightController.xValue

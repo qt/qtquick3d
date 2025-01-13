@@ -21,17 +21,23 @@
 
     \c AimController defines signals that allows us to implement custom interactions:
 
-    \snippet xr_interaction/AimController.qml signals
+    \snippet xr_shared/AimController.qml signals
 
     \section1 Gadgets
 
-    We define an abstract component, \c XrGadget, that has two functions: \c handleControllerPress and \c handleControllerMove.
+    We define an abstract component, \c XrGadget, which has two functions: \c handleControllerPress and \c handleControllerMove.
     In C++, these functions would have been virtual. Since this example is implemented completely in QML,
     we instead emit signals that can be handled in sub-components.
 
     For example, \c TranslateGadget moves the controlled object along the gadget's axis based on the \c onMoved signal:
 
-    \snippet xr_interaction/TranslateGadget.qml onMoved
+    \snippet xr_shared/TranslateGadget.qml onMoved
+
+    \section1 Reusable components
+
+    We put the \c AimController and the gadgets in the separate sub-project \c xr_shared, so we can
+    reuse them in future examples. (\c xr_shared also includes the \c FreeformTeleporter component from the
+    \l{Qt Quick 3D - XR Freeform Teleportation Example}{Freeform Teleportation Example}.)
 
     \section1 Tying it all together
 

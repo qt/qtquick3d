@@ -10,6 +10,9 @@ find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
 
 qt6_policy(SET QTP0002 NEW)
 
+add_subdirectory("../xr_shared" "xr_shared")
+
+
 qt_add_executable(xr_interaction
     MANUAL_FINALIZATION
     main.cpp
@@ -34,14 +37,8 @@ qt_add_qml_module(xr_interaction
     VERSION 1.0
     QML_FILES
         main.qml
-        AimController.qml
-        AxisGadget.qml
-        ResizeGadget.qml
-        RotateGadget.qml
         Scene.qml
         GadgetBox.qml
-        TranslateGadget.qml
-        XrGadget.qml
     RESOURCES
         meshes/arrow_mesh.mesh
         meshes/rotate_mesh.mesh
