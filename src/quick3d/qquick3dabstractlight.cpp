@@ -195,6 +195,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty bool Light::use32BitShadowmap
+    \since 6.9
+
     The property controls if a 32-bit shadowmap depth buffer should be used for the light.
 
     Default value: \c{false}

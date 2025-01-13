@@ -156,6 +156,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty bool DirectionalLight::lockShadowmapTexels
+    \since 6.9
+
     When this property is enabled, the shadowmap texels are "locked" in position in the
     world eliminating shadow edge shimmering at the cost of bigger shadowmap texels.
     It works by using uniform sized, and texel aligned shadowmaps for each cascade.
