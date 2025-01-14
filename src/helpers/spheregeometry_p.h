@@ -35,6 +35,7 @@ class SphereGeometry : public QQuick3DGeometry
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(6, 9)
 public:
     enum Status { Null, Ready, Loading, Error };
     Q_ENUM(Status)
