@@ -139,7 +139,7 @@ private:
     // The XrView does not expose the View3D in its public interface. This is intentional.
     QQuick3DViewport *view3d() const;
 
-    QPointer<QQuick3DSceneEnvironment> m_sceneEnvironment;
+    QPointer<QQuick3DSceneEnvironment> m_pendingSceneEnvironment;
     QQuick3DXrManager m_xrManager;
     mutable QQuick3DXrRuntimeInfo m_xrRuntimeInfo;
     bool m_quitOnSessionEnd = true;
