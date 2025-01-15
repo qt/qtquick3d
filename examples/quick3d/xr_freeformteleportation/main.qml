@@ -38,7 +38,7 @@ XrView {
 
         XrController {
             id: xrRightController
-            controller: XrController.ControllerRight
+            controller: XrController.RightController
             poseSpace: XrController.AimPose
 
             XrInputAction {

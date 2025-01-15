@@ -26,13 +26,13 @@ XrView {
         id: theOrigin
 
         XrController {
-            controller: XrController.ControllerLeft
+            controller: XrController.LeftController
             poseSpace: XrController.AimPose
             CubeModel { color: "blue" }
         }
 
         XrController {
-            controller: XrController.ControllerRight
+            controller: XrController.RightController
             poseSpace: XrController.AimPose
             CubeModel { color: "red" }
         }

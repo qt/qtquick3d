@@ -71,7 +71,7 @@ XrView {
 
         XrController {
             id: rightController
-            controller: XrController.ControllerRight
+            controller: XrController.RightController
 
             poseSpace: XrController.AimPose
 

@@ -38,9 +38,9 @@ QQuick3DXrController::QQuick3DXrController()
     Specifies the controller to track.
 
     It can be one of:
-    \value XrController.ControllerNone
-    \value XrController.ControllerLeft
-    \value XrController.ControllerRight
+    \value XrController.LeftController
+    \value XrController.RightController
+    \value XrController.UnknownController
 */
 
 QQuick3DXrController::Controller QQuick3DXrController::controller() const

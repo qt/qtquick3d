@@ -61,7 +61,7 @@ XrView {
         //! [connections]
         AimController {
             id: rightAim
-            controller: XrController.ControllerRight
+            controller: XrController.RightController
 
             onObjectPressed: (obj, pos, dir) => {
                 gadgetBox.handlePress(obj, pos, dir)
