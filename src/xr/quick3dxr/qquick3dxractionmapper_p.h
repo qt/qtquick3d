@@ -149,14 +149,14 @@ class QQuick3DXrHapticFeedback : public QObject, public QQmlParserStatus
 public:
 
     // Same values as XrController and XrHandModel enums
-    enum Controller : quint8 {
+    enum class Controller : quint8 {
         LeftController = 0,
         RightController,
-        Unknown,
+        UnknownController,
     };
     Q_ENUM(Controller)
 
-    enum Condition : quint8 {
+    enum class Condition : quint8 {
         RisingEdge = 0,
         TrailingEdge,
     };
@@ -194,8 +194,8 @@ public Q_SLOTS:
 
 private:
     QMetaObject::Connection m_triggerConnection;
-    Controller m_controller;
-    Condition m_condition = RisingEdge;
+    Controller m_controller = Controller::UnknownController;
+    Condition m_condition = Condition::RisingEdge;
     QPointer<QQuick3DXrAbstractHapticEffect> m_hapticEffect;
     bool m_trigger = false;
     bool m_componentComplete = false;

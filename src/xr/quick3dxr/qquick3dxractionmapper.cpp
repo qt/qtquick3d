@@ -78,7 +78,7 @@ void QQuick3DXrActionMapper::registerHapticEffect(QPointer<QQuick3DXrHapticFeedb
 {
     auto *that = instance();
 
-    that->m_hapticData[action->controller()].m_hapticEffects.append(action);
+    that->m_hapticData[size_t(action->controller())].m_hapticEffects.append(action);
 }
 
 void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
@@ -100,7 +100,7 @@ void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
 void QQuick3DXrActionMapper::removeHapticEffect(QQuick3DXrHapticFeedback *action)
 {
     auto *that = instance();
-    QList<QPointer<QQuick3DXrHapticFeedback>> list = that->m_hapticData[action->controller()].m_hapticEffects;
+    QList<QPointer<QQuick3DXrHapticFeedback>> list = that->m_hapticData[size_t(action->controller())].m_hapticEffects;
     list.removeAt(list.indexOf(action));
 }
 
@@ -394,7 +394,7 @@ void QQuick3DXrHapticFeedback::componentComplete()
 
     \value XrHapticFeedback.LeftController
     \value XrHapticFeedback.RightController
-    \value XrHapticFeedback.Unknown
+    \value XrHapticFeedback.UnknownController
  */
 
 QQuick3DXrHapticFeedback::Controller QQuick3DXrHapticFeedback::controller() const
@@ -431,15 +431,13 @@ void QQuick3DXrHapticFeedback::setTrigger(bool newTrigger)
 
     switch (m_condition)
     {
-    case RisingEdge:
+    case Condition::RisingEdge:
         if (newTrigger)
             start();
         break;
-    case TrailingEdge:
+    case Condition::TrailingEdge:
         if (!newTrigger)
             start();
-        break;
-    default:
         break;
     }
     m_trigger = newTrigger;
