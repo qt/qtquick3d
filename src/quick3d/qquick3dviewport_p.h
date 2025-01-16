@@ -133,6 +133,8 @@ public:
     explicit QQuick3DViewport(PrivateInstanceType type, QQuickItem *parent = nullptr);
     [[nodiscard]] bool isXrViewInstance() const { return m_isXrViewInstance; }
 
+    static void updateCameraForLayer(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode);
+
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;

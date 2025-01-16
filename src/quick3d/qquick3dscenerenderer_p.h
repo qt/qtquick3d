@@ -79,7 +79,9 @@ protected:
 
 private:
     void releaseAaDependentRhiResources();
-    void updateLayerNode(QQuick3DViewport *view3D, const QList<QSSGRenderGraphObject *> &resourceLoaders);
+    void updateLayerNode(QSSGRenderLayer &layerNode,
+                         const QQuick3DViewport &view3D,
+                         const QList<QSSGRenderGraphObject *> &resourceLoaders);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
     std::shared_ptr<QSSGRenderContextInterface> m_sgContext;
@@ -88,6 +90,8 @@ private:
     QSize m_surfaceSize;
     SGFramebufferObjectNode *fboNode = nullptr;
     bool m_aaIsDirty = true;
+    bool m_temporalIsDirty = false;
+    bool m_timeBasedAA = false;
 
     // RHI
     QRhiTexture *m_texture = nullptr;
@@ -120,12 +124,11 @@ private:
     QSSGRenderNode *m_sceneRootNode = nullptr;
     QSSGRenderNode *m_importRootNode = nullptr;
 
-    float m_ssaaMultiplier = 1.5f;
-
     bool m_prepared = false;
 
-    int requestedFramesCount = 0;
+    int m_requestedFramesCount = 0;
     bool m_postProcessingStack = false;
+    bool m_useFBO = false;
     Q_QUICK3D_PROFILE_ID
 
     friend class SGFramebufferObjectNode;
@@ -133,12 +136,17 @@ private:
     friend class QQuick3DSGDirectRenderer;
     friend class QQuick3DViewport;
     friend struct ViewportTransformHelper;
+    friend class QQuick3DRenderLayerHelpers;
 };
 
 class Q_QUICK3D_EXPORT QQuick3DRenderLayerHelpers
 {
 public:
-    static void updateLayerNodeHelper(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode, bool &aaIsDirty, bool &temporalIsDirty, float &ssaaMultiplier);
+    static void updateLayerNodeHelper(const QQuick3DViewport &view3D,
+                                      const std::shared_ptr<QSSGRenderContextInterface> &rci,
+                                      QSSGRenderLayer &layerNode,
+                                      bool &aaIsDirty,
+                                      bool &temporalIsDirty);
 };
 
 class SGFramebufferObjectNode final : public QSGTextureProvider, public QSGSimpleTextureNode

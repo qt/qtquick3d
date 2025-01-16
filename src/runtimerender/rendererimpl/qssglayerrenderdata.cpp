@@ -2566,9 +2566,9 @@ void QSSGLayerRenderData::prepareForRender()
     if (animating)
         layer.progAAPassIndex = 0;
 
-    const bool progressiveAA = layer.antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA && !animating;
+    const bool progressiveAA = layer.isProgressiveAAEnabled() && !animating;
     layer.progressiveAAIsActive = progressiveAA;
-    const bool temporalAA = layer.temporalAAEnabled && !progressiveAA &&  layer.antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
+    const bool temporalAA = layer.isTemporalAAEnabled() && !progressiveAA;
 
     layer.temporalAAIsActive = temporalAA;
 
@@ -2757,8 +2757,9 @@ QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraF
     const float horizontalMagnification = inCamera.horizontalMagnification;
     const float verticalMagnification = inCamera.verticalMagnification;
     inCamera.dpr = dpr;
-    inCamera.horizontalMagnification *= layer->ssaaEnabled ? layer->ssaaMultiplier : 1.0f;
-    inCamera.verticalMagnification *= layer->ssaaEnabled ? layer->ssaaMultiplier : 1.0f;
+    const float ssaaMultiplier = layer->isSsaaEnabled() ? layer->ssaaMultiplier : 1.0f;
+    inCamera.horizontalMagnification *= ssaaMultiplier;
+    inCamera.verticalMagnification *= ssaaMultiplier;
     const auto result = inCamera.calculateGlobalVariables(viewport);
     inCamera.horizontalMagnification = horizontalMagnification;
     inCamera.verticalMagnification = verticalMagnification;

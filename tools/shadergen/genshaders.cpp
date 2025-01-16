@@ -105,7 +105,6 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
     bool aaIsDirty = false;
     bool temporalIsDirty = false;
-    float ssaaMultiplier = 1.5f;
 
     QQuick3DViewport *view3D = sceneData.viewport;
     Q_ASSERT(view3D);
@@ -189,7 +188,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         nodes.append(node);
     }
 
-    QQuick3DRenderLayerHelpers::updateLayerNodeHelper(*view3D, layer, aaIsDirty, temporalIsDirty, ssaaMultiplier);
+    QQuick3DRenderLayerHelpers::updateLayerNodeHelper(*view3D, renderContext, layer, aaIsDirty, temporalIsDirty);
 
     const QString outCollectionFile = outputFolder + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile());
     QQsbIODeviceCollection qsbc(outCollectionFile);

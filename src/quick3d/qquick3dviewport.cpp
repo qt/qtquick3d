@@ -2099,4 +2099,15 @@ QQuick3DViewport::QQuick3DViewport(PrivateInstanceType type, QQuickItem *parent)
     m_isXrViewInstance = type == PrivateInstanceType::XrViewInstance;
 }
 
+void QQuick3DViewport::updateCameraForLayer(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode)
+{
+    layerNode.explicitCameras.clear();
+    if (!view3D.m_multiViewCameras.isEmpty()) {
+        for (QQuick3DCamera *camera : std::as_const(view3D.m_multiViewCameras))
+            layerNode.explicitCameras.append(static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(camera)->spatialNode));
+    } else if (view3D.camera()) {
+        layerNode.explicitCameras.append(static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode));
+    }
+}
+
 QT_END_NAMESPACE
