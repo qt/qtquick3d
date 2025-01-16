@@ -5,8 +5,6 @@
 
 int main(int argc, char *argv[])
 {
-    qputenv("QT_QUICK3D_XR_DISABLE_MULTIVIEW", "1");
-
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
