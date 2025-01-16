@@ -5,6 +5,7 @@
 
 #include <QtCore/qcommandlineoption.h>
 #include <QtCore/qcommandlineparser.h>
+#include <QtCore/qdebug.h>
 
 #include <QtNetwork/qlocalsocket.h>
 
