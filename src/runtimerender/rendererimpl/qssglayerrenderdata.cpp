@@ -474,6 +474,22 @@ const std::unique_ptr<QSSGPerFrameAllocator> &QSSGLayerRenderData::perFrameAlloc
     return ctx.perFrameAllocator();
 }
 
+void QSSGLayerRenderData::saveRenderState(const QSSGRenderer &renderer)
+{
+    QSSG_CHECK(!savedRenderState.has_value());
+    savedRenderState = std::make_optional<SavedRenderState>({ renderer.m_viewport, renderer.m_scissorRect, renderer.m_dpr });
+}
+
+void QSSGLayerRenderData::restoreRenderState(QSSGRenderer &renderer)
+{
+    QSSG_ASSERT(savedRenderState.has_value(), return);
+
+    renderer.m_viewport = savedRenderState->viewport;
+    renderer.m_scissorRect = savedRenderState->scissorRect;
+    renderer.m_dpr = savedRenderState->dpr;
+    savedRenderState.reset();
+}
+
 static constexpr quint16 PREP_CTX_INDEX_MASK = 0xffff;
 static constexpr QSSGPrepContextId createPrepId(size_t index, quint32 frame) { return QSSGPrepContextId { ((quint64(frame) << 32) | index ) * quint64(index <= std::numeric_limits<quint16>::max()) }; }
 static constexpr size_t getPrepContextIndex(QSSGPrepContextId id) { return (static_cast<quint64>(id) & PREP_CTX_INDEX_MASK); }
@@ -2716,6 +2732,7 @@ void QSSGLayerRenderData::resetForFrame()
     hasDepthWriteObjects = false;
     depthPrepassObjectsState = { DepthPrepassObjectStateT(DepthPrepassObject::None) };
     zPrePassActive = false;
+    savedRenderState.reset();
 
     clearTable(renderableModelStore);
     clearTable(modelContextStore);

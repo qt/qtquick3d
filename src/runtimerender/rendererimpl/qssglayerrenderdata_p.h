@@ -393,6 +393,8 @@ public:
     [[nodiscard]] const QSSGRhiRenderableTexture *getRenderResult(QSSGFrameData::RenderResult id) const { return &renderResults[size_t(id)]; }
     [[nodiscard]] static inline const std::unique_ptr<QSSGPerFrameAllocator> &perFrameAllocator(QSSGRenderContextInterface &ctx);
     [[nodiscard]] static inline QSSGLayerRenderData *getCurrent(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
+    void saveRenderState(const QSSGRenderer &renderer);
+    void restoreRenderState(QSSGRenderer &renderer);
 
     static void setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode)
     {
@@ -505,6 +507,19 @@ private:
 
     // Persistent data
     QHash<QSSGShaderMapKey, QSSGRhiShaderPipelinePtr> shaderMap;
+
+    // Cached buffer.
+    QByteArray generatedShaderString;
+
+    // Saved render state (for sublayers)
+    struct SavedRenderState
+    {
+        QRect viewport;
+        QRect scissorRect;
+        float dpr = 1.0;
+    };
+
+    std::optional<SavedRenderState> savedRenderState;
 
     // Note: Re-used to avoid expensive initialization.
     // - Should be revisit, as we can do better.

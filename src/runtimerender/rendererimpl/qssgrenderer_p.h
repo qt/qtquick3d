@@ -76,6 +76,13 @@ public:
 
     QSSGRenderContextInterface *contextInterface() const { return m_contextInterface; }
 
+    // Before we start rendering a sublayer(s), e.g., Item2D with View3Ds,
+    // we need to inform the renderer about it, so we can restore the state as we
+    // return from the sublayer(s) rendering. The state will be saved in the data set
+    // for the layer.
+    void beginSubLayerRender(QSSGLayerRenderData &inLayer);
+    void endSubLayerRender(QSSGLayerRenderData &inLayer);
+
 protected:
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
     void cleanupResources(QSet<QSSGRenderGraphObject*> &resources);
@@ -102,7 +109,6 @@ private:
 
     // Temporary information stored only when rendering a particular layer.
     QSSGLayerRenderData *m_currentLayer = nullptr;
-    QByteArray m_generatedShaderString;
 
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
 

@@ -937,6 +937,11 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
 
     item2Ds = data.getRenderableItem2Ds();
+    // NOTE: This marks the start of the 2D sub-scene rendering as it might result in
+    // a nested 3D scene to be rendered and if we don't save the state here, we can
+    // end up with a mismatched state in the QtQuick3D renderer.
+    // See the end of this function for the corresponding end call (endSubLayerRender()).
+    renderer.beginSubLayerRender(data);
     for (const auto &item2D: std::as_const(item2Ds)) {
         // Set the projection matrix
         if (!item2D->m_renderer)
@@ -993,6 +998,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         delete oldRp;
         item2D->m_renderer->prepareSceneInline();
     }
+    renderer.endSubLayerRender(data);
 }
 
 void Item2DPass::renderPass(QSSGRenderer &renderer)
@@ -1006,11 +1012,14 @@ void Item2DPass::renderPass(QSSGRenderer &renderer)
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render 2D sub-scene"));
+    QSSGLayerRenderData *data = QSSGLayerRenderData::getCurrent(renderer);
+    renderer.beginSubLayerRender(*data);
     for (const auto &item : std::as_const(item2Ds)) {
         QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
         if (item2D->m_renderer && item2D->m_renderer->currentRhi() == renderer.contextInterface()->rhiContext()->rhi())
             item2D->m_renderer->renderSceneInline();
     }
+    renderer.endSubLayerRender(*data);
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("2D_sub_scene"));
 }
