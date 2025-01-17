@@ -273,13 +273,13 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipeline(QSSGRend
                                                                         QSSGSubsetRenderable &inRenderable,
                                                                         const QSSGShaderFeatures &inFeatureSet)
 {
-    auto &m_currentLayer = renderer.m_currentLayer;
-    auto &m_generatedShaderString = renderer.m_generatedShaderString;
+    auto *currentLayer = renderer.m_currentLayer;
+    auto &generatedShaderString = currentLayer->generatedShaderString;
     const auto &m_contextInterface = renderer.m_contextInterface;
     const auto &theCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = m_contextInterface->shaderProgramGenerator();
     const auto &shaderLibraryManager = m_contextInterface->shaderLibraryManager();
-    return QSSGRendererPrivate::generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, m_currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
+    return QSSGRendererPrivate::generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, generatedShaderString);
 }
 
 void QSSGRenderer::beginFrame(QSSGRenderLayer &layer, bool allowRecursion)
@@ -397,6 +397,18 @@ const std::unique_ptr<QSSGRhiCubeRenderer> &QSSGRenderer::rhiCubeRenderer() cons
 
     return m_rhiCubeRenderer;
 
+}
+
+void QSSGRenderer::beginSubLayerRender(QSSGLayerRenderData &inLayer)
+{
+    inLayer.saveRenderState(*this);
+    m_currentLayer = nullptr;
+}
+
+void QSSGRenderer::endSubLayerRender(QSSGLayerRenderData &inLayer)
+{
+    inLayer.restoreRenderState(*this);
+    m_currentLayer = &inLayer;
 }
 
 void QSSGRenderer::beginLayerRender(QSSGLayerRenderData &inLayer)
