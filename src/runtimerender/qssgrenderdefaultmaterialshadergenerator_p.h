@@ -32,31 +32,6 @@ struct QSSGMaterialVertexPipeline;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 {
-    struct LightVariableNames
-    {
-        QByteArray lightColor;
-        QByteArray lightSpecularColor;
-        QByteArray lightAttenuation;
-        QByteArray lightConstantAttenuation;
-        QByteArray lightLinearAttenuation;
-        QByteArray lightQuadraticAttenuation;
-        QByteArray normalizedDirection;
-        QByteArray lightDirection;
-        QByteArray lightPos;
-        QByteArray lightConeAngle;
-        QByteArray lightInnerConeAngle;
-        QByteArray relativeDistance;
-        QByteArray relativeDirection;
-        QByteArray spotAngle;
-    };
-
-    struct ShadowVariableNames
-    {
-        QByteArray shadowCube;
-        QByteArray shadowData;
-        QByteArray shadowMapTexture;
-    };
-
     ~QSSGMaterialShaderGenerator() = default;
 
     static const char* getSamplerName(QSSGRenderableImage::Type type);
@@ -67,7 +42,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                                               const QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                               const QSSGShaderFeatures &inFeatureSet,
                                                               const QSSGRenderGraphObject &inMaterial,
-                                                              const QSSGShaderLightListView &inLights,
                                                               QSSGRenderableImage *inFirstImage,
                                                               QSSGShaderLibraryManager &shaderLibraryManager,
                                                               QSSGShaderCache &theCache);

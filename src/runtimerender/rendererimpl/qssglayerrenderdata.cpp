@@ -24,6 +24,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
@@ -920,42 +921,6 @@ template <typename T>
     return { reinterpret_cast<T *>(QSSGLayerRenderData::perFrameAllocator(ctx)->allocate(asize)), qsizetype(count) };
 }
 
-QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
-        QSSGRenderDefaultMaterial::MaterialLighting inLightingType, const QSSGShaderLightListView &lights, bool receivesShadows)
-{
-    QSSGShaderDefaultMaterialKey theGeneratedKey(qHash(features));
-    const bool lighting = inLightingType != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
-    defaultMaterialShaderKeyProperties.m_hasLighting.setValue(theGeneratedKey, lighting);
-    if (lighting) {
-        defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
-
-        quint32 numLights = quint32(lights.size());
-        Q_ASSERT(numLights <= QSSGShaderDefaultMaterialKeyProperties::LightCount);
-        defaultMaterialShaderKeyProperties.m_lightCount.setValue(theGeneratedKey, numLights);
-
-        int shadowMapCount = 0;
-        for (int lightIdx = 0, lightEnd = lights.size(); lightIdx < lightEnd; ++lightIdx) {
-            QSSGRenderLight *theLight(lights[lightIdx].light);
-            const bool isDirectional = theLight->type == QSSGRenderLight::Type::DirectionalLight;
-            const bool isSpot = theLight->type == QSSGRenderLight::Type::SpotLight;
-            const bool castsShadows = theLight->m_castShadow
-                    && !theLight->m_fullyBaked
-                    && receivesShadows
-                    && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
-            if (castsShadows)
-                ++shadowMapCount;
-
-            defaultMaterialShaderKeyProperties.m_lightFlags[lightIdx].setValue(theGeneratedKey, !isDirectional);
-            defaultMaterialShaderKeyProperties.m_lightSpotFlags[lightIdx].setValue(theGeneratedKey, isSpot);
-            defaultMaterialShaderKeyProperties.m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castsShadows);
-            defaultMaterialShaderKeyProperties.m_lightShadowMapSize[lightIdx].setValue(theGeneratedKey, theLight->m_shadowMapRes);
-            defaultMaterialShaderKeyProperties.m_lightSoftShadowQuality[lightIdx].setValue(theGeneratedKey,
-                                                                                           quint32(theLight->m_softShadowQuality));
-        }
-    }
-    return theGeneratedKey;
-}
-
 void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
                                                            QSSGRenderableImage::Type inMapType,
                                                            QSSGRenderableImage *&ioFirstImage,
@@ -1139,12 +1104,12 @@ void QSSGLayerRenderData::setVertexInputPresence(const QSSGRenderableObjectFlags
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterialForRender(
         QSSGRenderDefaultMaterial &inMaterial,
         QSSGRenderableObjectFlags &inExistingFlags,
-        float inOpacity,
-        const QSSGShaderLightListView &lights,
+        float inOpacity, bool hasAnyLights,
+        bool anyLightHasShadows,
         QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
     QSSGRenderDefaultMaterial *theMaterial = &inMaterial;
-    QSSGDefaultMaterialPreparationResult retval(generateLightingKey(theMaterial->lighting, lights, inExistingFlags.receivesShadows()));
+    QSSGDefaultMaterialPreparationResult retval(QSSGShaderDefaultMaterialKey(qHash(features)));
     retval.renderableFlags = inExistingFlags;
     QSSGRenderableObjectFlags &renderableFlags(retval.renderableFlags);
     QSSGShaderDefaultMaterialKey &theGeneratedKey(retval.materialKey);
@@ -1157,6 +1122,14 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     subsetOpacity *= theMaterial->opacity;
 
     QSSGRenderableImage *firstImage = nullptr;
+
+    const bool lighting = theMaterial->lighting != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
+    defaultMaterialShaderKeyProperties.m_hasLighting.setValue(theGeneratedKey, lighting);
+    if (lighting) {
+        defaultMaterialShaderKeyProperties.m_hasPunctualLights.setValue(theGeneratedKey, hasAnyLights);
+        defaultMaterialShaderKeyProperties.m_hasShadows.setValue(theGeneratedKey, anyLightHasShadows);
+        defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
+    }
 
     defaultMaterialShaderKeyProperties.m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
 
@@ -1183,8 +1156,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
     // propagate the flag indicating the presence of a lightmap
     defaultMaterialShaderKeyProperties.m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
-
+    defaultMaterialShaderKeyProperties.m_metallicRoughnessEnabled.setValue(theGeneratedKey, theMaterial->type == QSSGRenderDefaultMaterial::Type::PrincipledMaterial);
     defaultMaterialShaderKeyProperties.m_specularGlossyEnabled.setValue(theGeneratedKey, theMaterial->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial);
+
 
     // debug modes
     defaultMaterialShaderKeyProperties.m_debugMode.setValue(theGeneratedKey, int(layer.debugMode));
@@ -1228,43 +1202,24 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
         const bool specularEnabled = theMaterial->isSpecularEnabled();
         const bool metalnessEnabled = theMaterial->isMetalnessEnabled();
-        defaultMaterialShaderKeyProperties.m_specularEnabled.setValue(theGeneratedKey, (specularEnabled || metalnessEnabled));
-        if (specularEnabled || metalnessEnabled)
-            defaultMaterialShaderKeyProperties.m_specularModel.setSpecularModel(theGeneratedKey, theMaterial->specularModel);
-
+        defaultMaterialShaderKeyProperties.m_specularEnabled.setValue(theGeneratedKey, specularEnabled || metalnessEnabled);
+        defaultMaterialShaderKeyProperties.m_specularModel.setSpecularModel(theGeneratedKey, theMaterial->specularModel);
+        defaultMaterialShaderKeyProperties.m_diffuseModel.setDiffuseModel(theGeneratedKey, theMaterial->diffuseModel);
         defaultMaterialShaderKeyProperties.m_fresnelScaleBiasEnabled.setValue(theGeneratedKey, theMaterial->isFresnelScaleBiasEnabled());
-
         defaultMaterialShaderKeyProperties.m_clearcoatFresnelScaleBiasEnabled.setValue(theGeneratedKey, theMaterial->isClearcoatFresnelScaleBiasEnabled());
-
         defaultMaterialShaderKeyProperties.m_fresnelEnabled.setValue(theGeneratedKey, theMaterial->isFresnelEnabled());
-
-        defaultMaterialShaderKeyProperties.m_fresnelEnabled.setValue(theGeneratedKey, theMaterial->isFresnelEnabled());
-
-        defaultMaterialShaderKeyProperties.m_baseColorSingleChannelEnabled.setValue(theGeneratedKey,
-                                                                            theMaterial->isBaseColorSingleChannelEnabled());
-        defaultMaterialShaderKeyProperties.m_specularSingleChannelEnabled.setValue(theGeneratedKey,
-                                                                            theMaterial->isSpecularAmountSingleChannelEnabled());
-        defaultMaterialShaderKeyProperties.m_emissiveSingleChannelEnabled.setValue(theGeneratedKey,
-                                                                                   theMaterial->isEmissiveSingleChannelEnabled());
-        defaultMaterialShaderKeyProperties.m_invertOpacityMapValue.setValue(theGeneratedKey,
-                                                                            theMaterial->isInvertOpacityMapValue());
-        defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.setValue(theGeneratedKey,
-                                                                                      theMaterial->isVertexColorsEnabled());
-        defaultMaterialShaderKeyProperties.m_vertexColorsMaskEnabled.setValue(theGeneratedKey,
-                                                                         theMaterial->isVertexColorsMaskEnabled());
-        defaultMaterialShaderKeyProperties.m_vertexColorRedMask.setValue(theGeneratedKey,
-                                                                         theMaterial->vertexColorRedMask.toInt());
-        defaultMaterialShaderKeyProperties.m_vertexColorGreenMask.setValue(theGeneratedKey,
-                                                                         quint16(theMaterial->vertexColorGreenMask.toInt()));
-        defaultMaterialShaderKeyProperties.m_vertexColorBlueMask.setValue(theGeneratedKey,
-                                                                         quint16(theMaterial->vertexColorBlueMask.toInt()));
-        defaultMaterialShaderKeyProperties.m_vertexColorAlphaMask.setValue(theGeneratedKey,
-                                                                         quint16(theMaterial->vertexColorAlphaMask.toInt()));
-
-        defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey,
-                                                                                   theMaterial->isClearcoatEnabled());
-        defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey,
-                                                                                      theMaterial->isTransmissionEnabled());
+        defaultMaterialShaderKeyProperties.m_baseColorSingleChannelEnabled.setValue(theGeneratedKey, theMaterial->isBaseColorSingleChannelEnabled());
+        defaultMaterialShaderKeyProperties.m_specularSingleChannelEnabled.setValue(theGeneratedKey, theMaterial->isSpecularAmountSingleChannelEnabled());
+        defaultMaterialShaderKeyProperties.m_emissiveSingleChannelEnabled.setValue(theGeneratedKey, theMaterial->isEmissiveSingleChannelEnabled());
+        defaultMaterialShaderKeyProperties.m_invertOpacityMapValue.setValue(theGeneratedKey, theMaterial->isInvertOpacityMapValue());
+        defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.setValue(theGeneratedKey, theMaterial->isVertexColorsEnabled());
+        defaultMaterialShaderKeyProperties.m_vertexColorsMaskEnabled.setValue(theGeneratedKey, theMaterial->isVertexColorsMaskEnabled());
+        defaultMaterialShaderKeyProperties.m_vertexColorRedMask.setValue(theGeneratedKey, quint16(theMaterial->vertexColorRedMask.toInt()));
+        defaultMaterialShaderKeyProperties.m_vertexColorGreenMask.setValue(theGeneratedKey, quint16(theMaterial->vertexColorGreenMask.toInt()));
+        defaultMaterialShaderKeyProperties.m_vertexColorBlueMask.setValue(theGeneratedKey, quint16(theMaterial->vertexColorBlueMask.toInt()));
+        defaultMaterialShaderKeyProperties.m_vertexColorAlphaMask.setValue(theGeneratedKey, quint16(theMaterial->vertexColorAlphaMask.toInt()));
+        defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey, theMaterial->isClearcoatEnabled());
+        defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey, theMaterial->isTransmissionEnabled());
 
         // Run through the material's images and prepare them for render.
         // this may in fact set pickable on the renderable flags if one of the images
@@ -1367,12 +1322,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialForRender(
         QSSGRenderCustomMaterial &inMaterial, QSSGRenderableObjectFlags &inExistingFlags,
-        float inOpacity, bool alreadyDirty, const QSSGShaderLightListView &lights,
+        float inOpacity, bool alreadyDirty, bool hasAnyLights, bool anyLightHasShadows,
         QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
-    QSSGDefaultMaterialPreparationResult retval(
-                generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting::FragmentLighting,
-                                    lights, inExistingFlags.receivesShadows()));
+    QSSGDefaultMaterialPreparationResult retval(QSSGShaderDefaultMaterialKey(qHash(features)));
     retval.renderableFlags = inExistingFlags;
     QSSGRenderableObjectFlags &renderableFlags(retval.renderableFlags);
     QSSGShaderDefaultMaterialKey &theGeneratedKey(retval.materialKey);
@@ -1393,11 +1346,19 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     else
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 
+    defaultMaterialShaderKeyProperties.m_hasLighting.setValue(theGeneratedKey, true);
+    defaultMaterialShaderKeyProperties.m_hasPunctualLights.setValue(theGeneratedKey, hasAnyLights);
+    defaultMaterialShaderKeyProperties.m_hasShadows.setValue(theGeneratedKey, anyLightHasShadows);
+    defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
+    defaultMaterialShaderKeyProperties.m_specularEnabled.setValue(theGeneratedKey, true);
+
     defaultMaterialShaderKeyProperties.m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
 
     // isDoubleSided
-    defaultMaterialShaderKeyProperties.m_isDoubleSided.setValue(theGeneratedKey,
-                                                                            inMaterial.m_cullMode == QSSGCullFaceMode::Disabled);
+    defaultMaterialShaderKeyProperties.m_isDoubleSided.setValue(theGeneratedKey, inMaterial.m_cullMode == QSSGCullFaceMode::Disabled);
+
+    // Custom Materials are always Metallic Roughness Workflow
+    defaultMaterialShaderKeyProperties.m_metallicRoughnessEnabled.setValue(theGeneratedKey, true);
 
     // Does the material override the position output
     const bool overridesPosition = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::OverridesPosition);
@@ -1674,6 +1635,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                                                      lights.end(),
                                                      [](const QSSGShaderLight &light) { return light.shadows; })
                 != lights.end();
+        const bool hasAnyLights = !lights.isEmpty();
 
         // Subset(s)
         auto &renderableSubsets = theModelContext.subsets;
@@ -1782,7 +1744,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                 theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
-                QSSGDefaultMaterialPreparationResult theMaterialPrepResult(prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights, ioFlags));
+                QSSGDefaultMaterialPreparationResult theMaterialPrepResult(prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, hasAnyLights, anyLightHasShadows, ioFlags));
                 QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -1848,7 +1810,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity, wasDirty,
-                                                       lights, ioFlags));
+                                                       hasAnyLights, anyLightHasShadows, ioFlags));
                 QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -2113,7 +2075,7 @@ static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
     return false;
 }
 
-static const int REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES = 4096; // 256 vec4
+static const int REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES = 5200; // 325 vec4s
 
 static inline int effectiveMaxLightCount(const QSSGShaderFeatures &features)
 {
@@ -2121,6 +2083,14 @@ static inline int effectiveMaxLightCount(const QSSGShaderFeatures &features)
         return QSSG_REDUCED_MAX_NUM_LIGHTS;
 
     return QSSG_MAX_NUM_LIGHTS;
+}
+
+static inline int effectiveMaxDirectionalLightCount(const QSSGShaderFeatures &features)
+{
+    if (features.isSet(QSSGShaderFeatures::Feature::ReduceMaxNumLights))
+        return QSSG_REDUCED_MAX_NUM_DIRECTIONAL_LIGHTS;
+
+    return QSSG_MAX_NUM_DIRECTIONAL_LIGHTS;
 }
 
 static void updateDirtySkeletons(const QSSGLayerRenderData &renderData, const QSSGLayerRenderData::QSSGModelsView &renderableNodes)
@@ -2515,39 +2485,52 @@ void QSSGLayerRenderData::prepareForRender()
     updateDirtySkeletons(*this, modelsView);
 
     // Lights
+    int directionalLightsCount = 0;
+    int positionalLightsCount = 0;
+    const int maxLightCount = effectiveMaxLightCount(features);
+    const int maxDirectionalLights = effectiveMaxDirectionalLightCount(features);
+    QSSGShaderLightList renderableLights;
     int shadowMapCount = 0;
     bool hasScopedLights = false;
+
     // Determine which lights will actually Render
     // Determine how many lights will need shadow maps
     // NOTE: This culling is specific to our Forward renderer
-    const int maxLightCount = effectiveMaxLightCount(features);
-    const bool showLightCountWarning = !tooManyLightsWarningShown && (lightsView.size() > maxLightCount);
-    if (showLightCountWarning) {
-        qWarning("Too many lights in scene, maximum is %d", maxLightCount);
-        tooManyLightsWarningShown = true;
-    }
-
-    QSSGShaderLightList renderableLights; // All lights (upto 'maxLightCount')
-
-    // List should contain only enabled lights (active && birghtness > 0).
     {
         auto it = std::make_reverse_iterator(lightsView.end());
         const auto end = it + qMin(maxLightCount, lightsView.size());
         for (; it != end; ++it) {
             QSSGRenderLight *renderLight = (*it);
             QMatrix4x4 renderLightTransform = getGlobalTransform(*renderLight);
-            hasScopedLights |= (renderLight->m_scope != nullptr);
-            const bool mightCastShadows = renderLight->m_castShadow && !renderLight->m_fullyBaked;
-            const bool shadows = mightCastShadows && (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS);
-            shadowMapCount += int(shadows);
-            const auto &direction = QSSGRenderNode::getScalingCorrectDirection(renderLightTransform);
-            renderableLights.push_back(QSSGShaderLight{ renderLight, shadows, direction });
-        }
+            if (renderLight->type == QSSGRenderGraphObject::Type::DirectionalLight)
+                directionalLightsCount++;
+            else
+                positionalLightsCount++;
 
-        if ((shadowMapCount >= QSSG_MAX_NUM_SHADOW_MAPS) && !tooManyShadowLightsWarningShown) {
-            qWarning("Too many shadow casting lights in scene, maximum is %d", QSSG_MAX_NUM_SHADOW_MAPS);
-            tooManyShadowLightsWarningShown = true;
+            if (positionalLightsCount > maxLightCount)
+                continue;
+            if (directionalLightsCount > maxDirectionalLights)
+                continue;
+
+
+            hasScopedLights |= (renderLight->m_scope != nullptr);
+            const bool castShadows = renderLight->m_castShadow && !renderLight->m_fullyBaked;
+            shadowMapCount += int(castShadows);
+            const auto &direction = renderLight->getScalingCorrectDirection(renderLightTransform);
+            renderableLights.push_back(QSSGShaderLight{ renderLight, castShadows, direction });
         }
+    }
+
+    const bool showLightCountWarning = !tooManyLightsWarningShown && (positionalLightsCount > maxLightCount);
+    if (showLightCountWarning) {
+        qWarning("Too many lights in scene, maximum is %d", maxLightCount);
+        tooManyLightsWarningShown = true;
+    }
+
+    const bool showDirectionalLightCountWarning = !tooManyDirectionalLightsWarningShown && (directionalLightsCount > maxDirectionalLights);
+    if (showDirectionalLightCountWarning) {
+        qWarning("Too many directional lights in scene, maximum is %d", maxDirectionalLights);
+        tooManyDirectionalLightsWarningShown = true;
     }
 
     if (shadowMapCount > 0) { // Setup Shadow Maps Entries for Lights casting shadows

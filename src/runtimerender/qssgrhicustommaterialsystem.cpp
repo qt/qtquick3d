@@ -100,7 +100,6 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                                                                     defaultMaterialShaderKeyProperties,
                                                                                     featureSet,
                                                                                     renderable.material,
-                                                                                    renderable.lights,
                                                                                     renderable.firstImage,
                                                                                     *context->shaderLibraryManager(),
                                                                                     *context->shaderCache());
@@ -288,12 +287,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
 
         bindings.addUniformBuffer(0, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
-        bindings.addUniformBuffer(1, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf,
-                                  shaderPipeline->ub0LightDataOffset(),
-                                  shaderPipeline->ub0LightDataSize());
-        bindings.addUniformBuffer(2, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf,
-                                  shaderPipeline->ub0ShadowDataOffset(),
-                                  shaderPipeline->ub0ShadowDataSize());
+        bindings.addUniformBuffer(1, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf, shaderPipeline->ub0LightDataOffset(), sizeof(QSSGShaderLightsUniformData));
+        bindings.addUniformBuffer(2, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf, shaderPipeline->ub0DirectionalLightDataOffset(), sizeof(QSSGShaderDirectionalLightsUniformData));
 
         QVector<QShaderDescription::InOutVariable> samplerVars =
                 shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
@@ -475,22 +470,18 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             } // else ignore, not an error
         }
 
-        const int shadowMapCount = shaderPipeline->shadowMapCount();
-        for (int i = 0; i < shadowMapCount; ++i) {
-            QSSGRhiShadowMapProperties &shadowMapProperties(shaderPipeline->shadowMapAt(i));
-            QRhiTexture *texture = shadowMapProperties.shadowMapTexture;
-            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-            const QByteArray &name(shadowMapProperties.shadowMapTextureUniformName);
-            if (shadowMapProperties.cachedBinding < 0)
-                shadowMapProperties.cachedBinding = shaderPipeline->bindingForTexture(name);
-            if (shadowMapProperties.cachedBinding < 0) // may not be used in the shader with unshaded custom materials, that's normal
-                continue;
-            samplerBindingsSpecified.setBit(shadowMapProperties.cachedBinding);
-            bindings.addTexture(shadowMapProperties.cachedBinding,
-                                QRhiShaderResourceBinding::FragmentStage,
-                                texture,
-                                sampler);
+        // Shadow map atlas
+        auto shadowMapAtlas = shaderPipeline->shadowMapAtlasTexture();
+        if (shadowMapAtlas) {
+            int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture");
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                QRhiTexture *texture = shadowMapAtlas;
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                Q_ASSERT(texture && sampler);
+                bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+            }
         }
 
         QSSGRenderableImage *renderableImage = renderable.firstImage;

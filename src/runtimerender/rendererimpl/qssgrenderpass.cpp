@@ -93,7 +93,7 @@ void ShadowMapPass::renderPass(QSSGRenderer &renderer)
 
     // DEPENDECY: None
 
-    // OUTPUT: Textures or cube maps
+    // OUTPUT: Texture (Shadowmap Texture Atlas)
 
     // CONDITION: Lights (shadowPassObjects)
 

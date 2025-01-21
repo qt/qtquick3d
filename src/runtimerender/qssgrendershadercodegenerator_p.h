@@ -80,6 +80,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     QSSGShaderGeneratorStage m_stage;
     QSSGShaderGeneratorStageFlags m_enabledStages;
     QList<QByteArray> m_addedFunctions;
+    TStrTableStrMap m_addedTypeDeclarations;
     TStrTableStrMap m_addedDefinitions;
     QSSGShaderResourceMergeContext *m_mergeContext = nullptr;
 
@@ -128,6 +129,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     virtual void addFunction(const QByteArray &functionName) final;
 
     virtual void addDefinition(const QByteArray &name, const QByteArray &value) final;
+
+    virtual void addTypeDeclaration(const QByteArray &typeName, const QByteArray &snippet) final;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGStageGeneratorBase::ShaderItemMapFlags)

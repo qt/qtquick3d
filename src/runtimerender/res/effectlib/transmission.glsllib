@@ -1,6 +1,9 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#ifndef TRANSMISSION_GLSLLIB
+#define TRANSMISSION_GLSLLIB 1
+
 #include "bsdf.glsllib"
 
 #ifdef QQ3D_SHADER_META
@@ -90,3 +93,5 @@ vec3 qt_getIBLVolumeRefraction(in vec3 n, in vec3 v, in float perceptualRoughnes
 
     return (1.0 - specularColor) * attenuatedColor * baseColor;
 }
+
+#endif // TRANSMISSION_GLSLLIB

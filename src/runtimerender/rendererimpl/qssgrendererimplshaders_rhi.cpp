@@ -231,4 +231,14 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOitCompositeShader(QSS
     Q_UNREACHABLE_RETURN(getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended"), m_cache.oitCompositeShader[0]));
 }
 
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiCubeMapToAtlasShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("cubeMapToHemisphere"), m_cache.cubeMapToAtlasShader);
+}
+
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearShadowMapShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("clearshadowmap"), m_cache.clearShadowMapShader);
+}
+
 QT_END_NAMESPACE

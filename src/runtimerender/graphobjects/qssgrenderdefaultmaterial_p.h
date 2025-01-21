@@ -43,9 +43,17 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     };
     enum class MaterialSpecularModel : quint8
     {
-        Default = 0,
-        KGGX
+        BlinnPhong = 0,
+        SchlickGGX
     };
+
+    enum class MaterialDiffuseModel : quint8
+    {
+        Burley = 0,
+        Lambert,
+        LambertWrap
+    };
+
     enum MaterialAlphaMode : quint8
     {
         Default = 0,
@@ -139,7 +147,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
 
     MaterialLighting lighting = MaterialLighting::FragmentLighting;
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
-    QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
+    QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::SchlickGGX;
+    QSSGRenderDefaultMaterial::MaterialDiffuseModel diffuseModel = QSSGRenderDefaultMaterial::MaterialDiffuseModel::Burley;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode = QSSGRenderDefaultMaterial::Default;
     QSSGCullFaceMode cullMode = QSSGCullFaceMode::Back;
     QSSGDepthDrawMode depthDrawMode = QSSGDepthDrawMode::OpaqueOnly;

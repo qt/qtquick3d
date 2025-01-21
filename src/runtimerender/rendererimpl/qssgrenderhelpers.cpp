@@ -1041,13 +1041,11 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             if (shaderPipeline->isLightingEnabled()) {
                 bindings.addUniformBuffer(1, RENDERER_VISIBILITY_ALL, dcd.ubuf,
                                           shaderPipeline->ub0LightDataOffset(),
-                                          shaderPipeline->ub0LightDataSize());
+                                          sizeof(QSSGShaderLightsUniformData));
+                bindings.addUniformBuffer(2, RENDERER_VISIBILITY_ALL, dcd.ubuf,
+                                          shaderPipeline->ub0DirectionalLightDataOffset(),
+                                          sizeof(QSSGShaderDirectionalLightsUniformData));
 
-                if (shaderPipeline->shadowMapCount() > 0) {
-                    bindings.addUniformBuffer(2, RENDERER_VISIBILITY_ALL, dcd.ubuf,
-                                              shaderPipeline->ub0ShadowDataOffset(),
-                                              shaderPipeline->ub0ShadowDataSize());
-                }
             }
 
             // Texture maps
@@ -1077,32 +1075,17 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             }
 
             if (shaderPipeline->isLightingEnabled()) {
-                // Shadow map textures
-                const int shadowMapCount = shaderPipeline->shadowMapCount();
-                QVarLengthArray<QSize, 4> usedTextureArraySizes;
-                for (int i = 0; i < shadowMapCount; ++i) {
-                    QSSGRhiShadowMapProperties &shadowMapProperties(shaderPipeline->shadowMapAt(i));
-                    const QByteArray &name(shadowMapProperties.shadowMapTextureUniformName);
-                    if (shadowMapProperties.cachedBinding < 0)
-                        shadowMapProperties.cachedBinding = shaderPipeline->bindingForTexture(name);
-                    if (shadowMapProperties.cachedBinding < 0) {
-                        qWarning("No combined image sampler for shadow map texture '%s'", name.data());
-                        continue;
+                // Shadow map atlas
+                auto shadowMapAtlas = shaderPipeline->shadowMapAtlasTexture();
+                if (shadowMapAtlas) {
+                    int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture");
+                    if (binding >= 0) {
+                        QRhiTexture *texture = shadowMapAtlas;
+                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                                 QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                        Q_ASSERT(texture && sampler);
+                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
                     }
-
-                    // Re-use same texture array if already created
-                    if (shadowMapProperties.shadowMapTexture->flags() & QRhiTexture::TextureArray) {
-                        if (usedTextureArraySizes.contains(shadowMapProperties.shadowMapTexture->pixelSize()))
-                            continue;
-                        usedTextureArraySizes.append(shadowMapProperties.shadowMapTexture->pixelSize());
-                    }
-
-                    QRhiTexture *texture = shadowMapProperties.shadowMapTexture;
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                    Q_ASSERT(texture && sampler);
-                    bindings.addTexture(shadowMapProperties.cachedBinding, QRhiShaderResourceBinding::FragmentStage,
-                                            texture, sampler);
                 }
 
                  // Prioritize reflection texture over Light Probe texture because
@@ -1346,6 +1329,24 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     }
 }
 
+static QRhiViewport calculateAtlasViewport(QSize atlasPixelSize, const QSSGShadowMapEntry::AtlasEntry &atlasEntry, bool yIsUp) {
+    // Convert normalized offsets/scales to actual pixel values
+    float x = atlasEntry.uOffset * atlasPixelSize.width();
+    float w = atlasEntry.uvScale * atlasPixelSize.width();
+    float h = atlasEntry.uvScale * atlasPixelSize.height();
+
+    // Y in atlasEntry is top-based, whereas QRhiViewport is bottom-based
+    // topY in pixel = atlasEntry.vOffset * atlasPixelSize.height()
+    // so bottom-left Y = totalHeight - topY - h
+    float y;
+    if (!yIsUp)
+        y = atlasPixelSize.height() - (atlasEntry.vOffset * atlasPixelSize.height()) - h;
+    else
+        y = atlasEntry.vOffset * atlasPixelSize.height();
+
+    return QRhiViewport(x, y, w, h);
+}
+
 void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                        QSSGPassKey passKey,
                                        QSSGRhiGraphicsPipelineState &ps,
@@ -1446,6 +1447,18 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         }
     };
 
+    static const auto rhiClearShadowMap = [](QSSGRenderer &renderer, QSSGRenderShadowMap &shadowMapManager, QSSGRhiContext *rhiCtx, QSSGRhiGraphicsPipelineState *ps, QRhiRenderPassDescriptor *renderPassDesc) {
+        auto clearShadowMapShaderPipeline = renderer.contextInterface()->shaderCache()->getBuiltInRhiShaders().getRhiClearShadowMapShader();
+        QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, clearShadowMapShaderPipeline.get());
+
+        // Disable Depth Test and Depth Write
+        ps->flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, false);
+        ps->flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, false);
+        renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, shadowMapManager.shadowClearSrb(), renderPassDesc, {});
+        // Reset
+        ps->flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled };
+    };
+
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
@@ -1468,6 +1481,9 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         ShadowmapHelpers::addDebugBox(receivingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Green, debugDrawSystem);
 
     // Create shadow map for each light in the scene
+    const QSize atlasTextureSize = shadowMapManager.shadowMapAtlasTexture()->pixelSize();
+    // Make sure quad renderer is ready
+    renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
     for (int i = 0, ie = globalLights.size(); i != ie; ++i) {
         if (!globalLights[i].shadows || globalLights[i].light->m_fullyBaked)
             continue;
@@ -1477,12 +1493,12 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             continue;
 
         const auto &light = globalLights[i].light;
-        Q_ASSERT(pEntry->m_rhiDepthStencil[0]);
-        if (pEntry->m_rhiDepthTextureArray) {
-            const QSize size = pEntry->m_rhiDepthTextureArray->pixelSize();
-            ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-            Q_ASSERT(light->type == QSSGRenderLight::Type::DirectionalLight || light->type == QSSGRenderLight::Type::SpotLight);
+        if (!shadowMapManager.shadowMapAtlasTexture())
+            break;
+
+        if (light->type == QSSGRenderLight::Type::DirectionalLight || light->type == QSSGRenderLight::Type::SpotLight) {
+            const QSize size = atlasTextureSize * pEntry->m_atlasInfo[0].uvScale;
 
             // This is just a way to store the old camera so we can use it for debug
             // drawing. There are probably cleaner ways to do this
@@ -1549,6 +1565,11 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             memset(pEntry->m_csmActive, 0, sizeof(pEntry->m_csmActive));
 
             QMatrix4x4 cascadeCameraGlobalTransforms(Qt::Uninitialized);
+            const QMatrix4x4 bias = { 0.5, 0.0, 0.0, 0.5,
+                                      0.0, 0.5, 0.0, 0.5,
+                                      0.0, 0.0, 0.5, 0.5,
+                                      0.0, 0.0, 0.0, 1.0 };
+
             for (int cascadeIndex = 0; cascadeIndex < cascades.length(); cascadeIndex++) {
                 const auto &cascadeCamera = cascades[cascadeIndex];
                 if (!cascadeCamera)
@@ -1558,11 +1579,18 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 pEntry->m_csmActive[cascadeIndex] = 1.f;
                 QMatrix4x4 &viewProjection = pEntry->m_lightViewProjection[cascadeIndex];
                 cascadeCamera->calculateViewProjectionMatrix(cascadeCameraGlobalTransforms, viewProjection);
+                pEntry->m_lightViewProjection[cascadeIndex] = viewProjection;
+                pEntry->m_fixedScaleBiasMatrix[cascadeIndex] = bias * viewProjection;
+                const QMatrix4x4 inverted = viewProjection.inverted();
+                const float x = 0.5f / (inverted * QVector4D(1, 0, 0, 0)).length();
+                const float y = 0.5f / (inverted * QVector4D(0, 1, 0, 0)).length();
+                const float z = 0.5f / (inverted * QVector4D(0, 0, 1, 0)).length();
                 const QSSGBoxPoints frustumPoints = computeFrustumBounds(viewProjection);
                 const QSSGBounds3 bounds = QSSGBounds3(frustumPoints);
-
+                pEntry->m_dimensionsInverted[cascadeIndex] = QVector4D(x, y, z, 0.0f);
                 pEntry->m_lightView = cascadeCameraGlobalTransforms.inverted(); // pre-calculate this for the material
                 const bool isOrtho = cascadeCamera->type == QSSGRenderGraphObject::Type::OrthographicCamera;
+                ps.viewport = calculateAtlasViewport(atlasTextureSize, pEntry->m_atlasInfo[cascadeIndex], rhi->isYUpInFramebuffer());
                 rhiPrepareResourcesForShadowMap(rhiCtx, layerData, passKey, pEntry, &ps, &depthAdjust, sortedOpaqueObjects, *cascadeCamera, isOrtho, QSSGRenderTextureCubeFaceNone, cascadeIndex);
                 // Render into the 2D texture pEntry->m_rhiDepthMap, using
                 // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
@@ -1570,6 +1598,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
                 Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
+                rhiClearShadowMap(renderer, shadowMapManager, rhiCtx, &ps, rt->renderPassDescriptor());
                 rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0, bounds, debugIsObjectCulled, drawCulledObjects);
                 cb->endPass();
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
@@ -1579,9 +1608,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 }
             }
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map"));
-        } else {
-            Q_ASSERT(pEntry->m_rhiDepthCube);
-            const QSize size = pEntry->m_rhiDepthCube->pixelSize();
+        } else { // Point Light
+            const QSize size = atlasTextureSize * pEntry->m_atlasInfo[0].uvScale;
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             QSSGRenderCamera theCameras[6] { QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
@@ -1647,7 +1675,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                     else if (outFace == QSSGRenderTextureCubeFace::NegY)
                         outFace = QSSGRenderTextureCubeFace::PosY;
                 }
-                QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[quint8(outFace)];
+                QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargetCube[quint8(outFace)];
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
                 Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
@@ -1656,6 +1684,48 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("shadow_cube", 0, outFace));
             }
+
+            // Render the CubeMap into the shadowMapAtlasTexture
+            // NOTE: These passes don't require a manual clear because we will always write every pixel in that atlas space
+
+            // Render the front hemisphere of the cube map into the shadow map atlas
+            QRhiTextureRenderTarget *rtFront = pEntry->m_rhiRenderTargets[0]; // A layer in the Atlas
+            QRhiRenderPassDescriptor *frontDesc = pEntry->m_rhiRenderPassDesc[0];
+            auto atlasShaderPipeline = renderer.contextInterface()->shaderCache()->getBuiltInRhiShaders().getRhiCubeMapToAtlasShader();
+            ps.viewport = calculateAtlasViewport(atlasTextureSize, pEntry->m_atlasInfo[0], rhi->isYUpInFramebuffer());
+            QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, atlasShaderPipeline.get());
+            QRhiShaderResourceBindings *srb = pEntry->m_cubeToAtlasFrontSrb;
+            cb->beginPass(rtFront, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
+            QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rtFront));
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+
+            renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, &ps, srb, frontDesc, QSSGRhiQuadRenderer::UvCoords);
+
+            cb->endPass();
+            QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("shadow_atlas", 6, 0));
+
+            // Render the back hemisphere of the cube map into the shadow map atlas
+            QRhiTextureRenderTarget *rtBack = pEntry->m_rhiRenderTargets[1];  // A layer in the Atlas
+            QRhiRenderPassDescriptor *backDesc = pEntry->m_rhiRenderPassDesc[1];
+            srb = pEntry->m_cubeToAtlasBackSrb;
+            ps.viewport = calculateAtlasViewport(atlasTextureSize, pEntry->m_atlasInfo[1], rhi->isYUpInFramebuffer());
+            cb->beginPass(rtBack, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
+            QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rtBack));
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+
+            renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, &ps, srb, backDesc, QSSGRhiQuadRenderer::UvCoords);
+
+            cb->endPass();
+            QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("shadow_atlas", 7, 0));
+
+
+            // reset pipeline (This part is necessary, but not ideal)
+            ps = layerData.getPipelineState();
+            ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled };
+            ps.depthBias = 2;
+            ps.slopeScaledDepthBias = 1.5f;
 
             if (drawPointLightShadowBoxes) {
                 ShadowmapHelpers::addDebugBox(bounds.toQSSGBoxPoints(), QColorConstants::Yellow, debugDrawSystem);

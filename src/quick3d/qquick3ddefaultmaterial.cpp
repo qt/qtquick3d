@@ -894,6 +894,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
             material->colorMap = m_diffuseMap->getRenderImage();
 
         material->diffuseLightWrap = m_diffuseLightWrap;
+        material->diffuseModel = QSSGRenderDefaultMaterial::MaterialDiffuseModel::Lambert;
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {

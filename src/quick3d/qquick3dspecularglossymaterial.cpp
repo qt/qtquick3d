@@ -1386,7 +1386,7 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
 
     QSSGRenderDefaultMaterial *material = static_cast<QSSGRenderDefaultMaterial *>(node);
 
-    material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
+    material->specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::SchlickGGX;
 
     if (m_dirtyAttributes & LightingModeDirty)
         material->lighting = QSSGRenderDefaultMaterial::MaterialLighting(m_lighting);

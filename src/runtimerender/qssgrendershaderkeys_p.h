@@ -331,11 +331,11 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
         ioStr.append(name);
         ioStr.append('=');
         switch (getSpecularModel(inKeySet)) {
-        case QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX:
-            ioStr.append(QByteArrayView("KGGX"));
+        case QSSGRenderDefaultMaterial::MaterialSpecularModel::SchlickGGX:
+            ioStr.append(QByteArrayView("SchlickGGX"));
             break;
-        case QSSGRenderDefaultMaterial::MaterialSpecularModel::Default:
-            ioStr.append(QByteArrayView("Default"));
+        case QSSGRenderDefaultMaterial::MaterialSpecularModel::BlinnPhong:
+            ioStr.append(QByteArrayView("BlinnPhong"));
             break;
         }
     }
@@ -352,10 +352,63 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
             while (ioStr[codeOffsetBegin + codeOffset] != ';')
                 codeOffset++;
             const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
-            if (val == QByteArrayView("KGGX"))
-                setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX);
-            if (val == QByteArrayView("Default"))
-                setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::Default);
+            if (val == QByteArrayView("SchlickGGX"))
+                setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::SchlickGGX);
+            if (val == QByteArrayView("BlinnPhong"))
+                setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::BlinnPhong);
+        }
+    }
+};
+
+struct QSSGShaderKeyDiffuseModel : QSSGShaderKeyUnsigned<2>
+{
+    explicit QSSGShaderKeyDiffuseModel(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+
+    void setDiffuseModel(QSSGDataRef<quint32> inKeySet, QSSGRenderDefaultMaterial::MaterialDiffuseModel inModel)
+    {
+        setValue(inKeySet, quint32(inModel));
+    }
+
+    QSSGRenderDefaultMaterial::MaterialDiffuseModel getDiffuseModel(QSSGDataView<quint32> inKeySet) const
+    {
+        return static_cast<QSSGRenderDefaultMaterial::MaterialDiffuseModel>(getValue(inKeySet));
+    }
+
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
+    {
+        ioStr.append(name);
+        ioStr.append('=');
+        switch (getDiffuseModel(inKeySet)) {
+        case QSSGRenderDefaultMaterial::MaterialDiffuseModel::Burley:
+            ioStr.append(QByteArrayView("Burley"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialDiffuseModel::Lambert:
+            ioStr.append(QByteArrayView("Lambert"));
+            break;
+        case QSSGRenderDefaultMaterial::MaterialDiffuseModel::LambertWrap:
+            ioStr.append(QByteArrayView("LambertWrap"));
+            break;
+        }
+    }
+    void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
+    {
+        const qsizetype nameLen = name.size();
+        const int strOffset = ioStr.indexOf(name);
+        if (strOffset >= 0) {
+            /* The key is stored as name=specularMode; */
+            if (ioStr[strOffset + nameLen] != '=')
+                return;
+            const int codeOffsetBegin = strOffset + nameLen + 1;
+            int codeOffset = 0;
+            while (ioStr[codeOffsetBegin + codeOffset] != ';')
+                codeOffset++;
+            const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
+            if (val == QByteArrayView("Burley"))
+                setDiffuseModel(inKeySet, QSSGRenderDefaultMaterial::MaterialDiffuseModel::Burley);
+            if (val == QByteArrayView("Lambert"))
+                setDiffuseModel(inKeySet, QSSGRenderDefaultMaterial::MaterialDiffuseModel::Lambert);
+            if (val == QByteArrayView("LambertWrap"))
+                setDiffuseModel(inKeySet, QSSGRenderDefaultMaterial::MaterialDiffuseModel::LambertWrap);
         }
     }
 };
@@ -501,9 +554,6 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<9>
 struct QSSGShaderDefaultMaterialKeyProperties
 {
     enum {
-        LightCount = QSSG_MAX_NUM_LIGHTS,
-    };
-    enum {
         SingleChannelImageCount = 13,
     };
     enum ImageMapNames {
@@ -547,14 +597,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
     };
 
     QSSGShaderKeyBoolean m_hasLighting;
+    QSSGShaderKeyBoolean m_hasPunctualLights;
+    QSSGShaderKeyBoolean m_hasShadows;
     QSSGShaderKeyBoolean m_hasIbl;
-    QSSGShaderKeyUnsigned<4> m_lightCount;
-    QSSGShaderKeyBoolean m_lightFlags[LightCount];
-    QSSGShaderKeyBoolean m_lightSpotFlags[LightCount];
-    QSSGShaderKeyBoolean m_lightAreaFlags[LightCount];
-    QSSGShaderKeyBoolean m_lightShadowFlags[LightCount];
-    QSSGShaderKeyUnsigned<16> m_lightShadowMapSize[LightCount];
-    QSSGShaderKeyUnsigned<4> m_lightSoftShadowQuality[LightCount];
     QSSGShaderKeyBoolean m_specularEnabled;
     QSSGShaderKeyBoolean m_fresnelScaleBiasEnabled;
     QSSGShaderKeyBoolean m_clearcoatFresnelScaleBiasEnabled;
@@ -570,6 +615,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyUnsigned<16> m_vertexColorBlueMask;
     QSSGShaderKeyUnsigned<16> m_vertexColorAlphaMask;
     QSSGShaderKeySpecularModel m_specularModel;
+    QSSGShaderKeyDiffuseModel m_diffuseModel;
     QSSGShaderKeyImageMap m_imageMaps[ImageMapCount];
     QSSGShaderKeyTextureChannel m_textureChannels[SingleChannelImageCount];
     QSSGShaderKeyUnsigned<16> m_boneCount;
@@ -598,6 +644,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_specularAAEnabled;
     QSSGShaderKeyBoolean m_lightmapEnabled;
     QSSGShaderKeyBoolean m_specularGlossyEnabled;
+    QSSGShaderKeyBoolean m_metallicRoughnessEnabled;
     QSSGShaderKeyUnsigned<4> m_debugMode;
     QSSGShaderKeyBoolean m_fogEnabled;
     QSSGShaderKeyUnsigned<3> m_viewCount;
@@ -606,8 +653,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
+        , m_hasPunctualLights("hasPunctualLights")
+        , m_hasShadows("hasShadows")
         , m_hasIbl("hasIbl")
-        , m_lightCount("lightCount")
         , m_specularEnabled("specularEnabled")
         , m_fresnelScaleBiasEnabled("fresnelScaleBiasEnabled")
         , m_clearcoatFresnelScaleBiasEnabled("clearcoatFresnelScaleBiasEnabled")
@@ -623,6 +671,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_vertexColorBlueMask("vertexColorBlueMask")
         , m_vertexColorAlphaMask("vertexColorAlphaMask")
         , m_specularModel("specularModel")
+        , m_diffuseModel("diffuseModel")
         , m_boneCount("boneCount")
         , m_isDoubleSided("isDoubleSided")
         , m_overridesPosition("overridesPosition")
@@ -648,108 +697,13 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_specularAAEnabled("specularAAEnabled")
         , m_lightmapEnabled("lightmapEnabled")
         , m_specularGlossyEnabled("specularGlossyEnabled")
+        , m_metallicRoughnessEnabled("metallicRoughnessEnabled")
         , m_debugMode("debugMode")
         , m_fogEnabled("fogEnabled")
         , m_viewCount("viewCount")
         , m_usesViewIndex("usesViewIndex")
         , m_orderIndependentTransparency("orderIndependentTransparency")
     {
-        m_lightFlags[0].name = "light0HasPosition";
-        m_lightFlags[1].name = "light1HasPosition";
-        m_lightFlags[2].name = "light2HasPosition";
-        m_lightFlags[3].name = "light3HasPosition";
-        m_lightFlags[4].name = "light4HasPosition";
-        m_lightFlags[5].name = "light5HasPosition";
-        m_lightFlags[6].name = "light6HasPosition";
-        m_lightFlags[7].name = "light7HasPosition";
-        m_lightFlags[8].name = "light8HasPosition";
-        m_lightFlags[9].name = "light9HasPosition";
-        m_lightFlags[10].name = "light10HasPosition";
-        m_lightFlags[11].name = "light11HasPosition";
-        m_lightFlags[12].name = "light12HasPosition";
-        m_lightFlags[13].name = "light13HasPosition";
-        m_lightFlags[14].name = "light14HasPosition";
-
-        m_lightSpotFlags[0].name = "light0HasSpot";
-        m_lightSpotFlags[1].name = "light1HasSpot";
-        m_lightSpotFlags[2].name = "light2HasSpot";
-        m_lightSpotFlags[3].name = "light3HasSpot";
-        m_lightSpotFlags[4].name = "light4HasSpot";
-        m_lightSpotFlags[5].name = "light5HasSpot";
-        m_lightSpotFlags[6].name = "light6HasSpot";
-        m_lightSpotFlags[7].name = "light7HasSpot";
-        m_lightSpotFlags[8].name = "light8HasSpot";
-        m_lightSpotFlags[9].name = "light9HasSpot";
-        m_lightSpotFlags[10].name = "light10HasSpot";
-        m_lightSpotFlags[11].name = "light11HasSpot";
-        m_lightSpotFlags[12].name = "light12HasSpot";
-        m_lightSpotFlags[13].name = "light13HasSpot";
-        m_lightSpotFlags[14].name = "light14HasSpot";
-
-        m_lightAreaFlags[0].name = "light0HasArea";
-        m_lightAreaFlags[1].name = "light1HasArea";
-        m_lightAreaFlags[2].name = "light2HasArea";
-        m_lightAreaFlags[3].name = "light3HasArea";
-        m_lightAreaFlags[4].name = "light4HasArea";
-        m_lightAreaFlags[5].name = "light5HasArea";
-        m_lightAreaFlags[6].name = "light6HasArea";
-        m_lightAreaFlags[7].name = "light7HasArea";
-        m_lightAreaFlags[8].name = "light8HasArea";
-        m_lightAreaFlags[9].name = "light9HasArea";
-        m_lightAreaFlags[10].name = "light10HasArea";
-        m_lightAreaFlags[11].name = "light11HasArea";
-        m_lightAreaFlags[12].name = "light12HasArea";
-        m_lightAreaFlags[13].name = "light13HasArea";
-        m_lightAreaFlags[14].name = "light14HasArea";
-
-        m_lightShadowFlags[0].name = "light0HasShadow";
-        m_lightShadowFlags[1].name = "light1HasShadow";
-        m_lightShadowFlags[2].name = "light2HasShadow";
-        m_lightShadowFlags[3].name = "light3HasShadow";
-        m_lightShadowFlags[4].name = "light4HasShadow";
-        m_lightShadowFlags[5].name = "light5HasShadow";
-        m_lightShadowFlags[6].name = "light6HasShadow";
-        m_lightShadowFlags[7].name = "light7HasShadow";
-        m_lightShadowFlags[8].name = "light8HasShadow";
-        m_lightShadowFlags[9].name = "light9HasShadow";
-        m_lightShadowFlags[10].name = "light10HasShadow";
-        m_lightShadowFlags[11].name = "light11HasShadow";
-        m_lightShadowFlags[12].name = "light12HasShadow";
-        m_lightShadowFlags[13].name = "light13HasShadow";
-        m_lightShadowFlags[14].name = "light14HasShadow";
-
-        m_lightShadowMapSize[0].name = "light0ShadowMapSize";
-        m_lightShadowMapSize[1].name = "light1ShadowMapSize";
-        m_lightShadowMapSize[2].name = "light2ShadowMapSize";
-        m_lightShadowMapSize[3].name = "light3ShadowMapSize";
-        m_lightShadowMapSize[4].name = "light4ShadowMapSize";
-        m_lightShadowMapSize[5].name = "light5ShadowMapSize";
-        m_lightShadowMapSize[6].name = "light6ShadowMapSize";
-        m_lightShadowMapSize[7].name = "light7ShadowMapSize";
-        m_lightShadowMapSize[8].name = "light8ShadowMapSize";
-        m_lightShadowMapSize[9].name = "light9ShadowMapSize";
-        m_lightShadowMapSize[10].name = "light10ShadowMapSize";
-        m_lightShadowMapSize[11].name = "light11ShadowMapSize";
-        m_lightShadowMapSize[12].name = "light12ShadowMapSize";
-        m_lightShadowMapSize[13].name = "light13ShadowMapSize";
-        m_lightShadowMapSize[14].name = "light14ShadowMapSize";
-
-        m_lightSoftShadowQuality[0].name = "light0SoftShadowQuality";
-        m_lightSoftShadowQuality[1].name = "light1SoftShadowQuality";
-        m_lightSoftShadowQuality[2].name = "light2SoftShadowQuality";
-        m_lightSoftShadowQuality[3].name = "light3SoftShadowQuality";
-        m_lightSoftShadowQuality[4].name = "light4SoftShadowQuality";
-        m_lightSoftShadowQuality[5].name = "light5SoftShadowQuality";
-        m_lightSoftShadowQuality[6].name = "light6SoftShadowQuality";
-        m_lightSoftShadowQuality[7].name = "light7SoftShadowQuality";
-        m_lightSoftShadowQuality[8].name = "light8SoftShadowQuality";
-        m_lightSoftShadowQuality[9].name = "light9SoftShadowQuality";
-        m_lightSoftShadowQuality[10].name = "light10SoftShadowQuality";
-        m_lightSoftShadowQuality[11].name = "light11SoftShadowQuality";
-        m_lightSoftShadowQuality[12].name = "light12SoftShadowQuality";
-        m_lightSoftShadowQuality[13].name = "light13SoftShadowQuality";
-        m_lightSoftShadowQuality[14].name = "light14SoftShadowQuality";
-
         m_imageMaps[0].name = "diffuseMap";
         m_imageMaps[1].name = "emissiveMap";
         m_imageMaps[2].name = "specularMap";
@@ -790,27 +744,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
     void visitProperties(TVisitor &inVisitor)
     {
         inVisitor.visit(m_hasLighting);
+        inVisitor.visit(m_hasPunctualLights);
+        inVisitor.visit(m_hasShadows);
         inVisitor.visit(m_hasIbl);
-        inVisitor.visit(m_lightCount);
-
-        for (auto &lightFlag : m_lightFlags)
-            inVisitor.visit(lightFlag);
-
-        for (auto &lightSpotFlag : m_lightSpotFlags)
-            inVisitor.visit(lightSpotFlag);
-
-        for (auto &lightAreaFlag : m_lightAreaFlags)
-            inVisitor.visit(lightAreaFlag);
-
-        for (auto &lightShadowFlag : m_lightShadowFlags)
-            inVisitor.visit(lightShadowFlag);
-
-        for (auto &lightShadowMapSize : m_lightShadowMapSize)
-            inVisitor.visit(lightShadowMapSize);
-
-        for (auto &softShadowQuality : m_lightSoftShadowQuality)
-            inVisitor.visit(softShadowQuality);
-
         inVisitor.visit(m_specularEnabled);
         inVisitor.visit(m_fresnelEnabled);
         inVisitor.visit(m_fresnelScaleBiasEnabled);
@@ -826,6 +762,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_vertexColorBlueMask);
         inVisitor.visit(m_vertexColorAlphaMask);
         inVisitor.visit(m_specularModel);
+        inVisitor.visit(m_diffuseModel);
 
         for (quint32 idx = 0, end = ImageMapCount; idx < end; ++idx)
             inVisitor.visit(m_imageMaps[idx]);
@@ -858,6 +795,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_specularAAEnabled);
         inVisitor.visit(m_lightmapEnabled);
         inVisitor.visit(m_specularGlossyEnabled);
+        inVisitor.visit(m_metallicRoughnessEnabled);
         inVisitor.visit(m_debugMode);
         inVisitor.visit(m_fogEnabled);
         inVisitor.visit(m_viewCount);

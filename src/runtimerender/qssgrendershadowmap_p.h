@@ -32,32 +32,28 @@ class QRhiTextureRenderTarget;
 class QRhiRenderPassDescriptor;
 class QRhiTexture;
 
-enum class ShadowMapModes
-{
-    VSM, ///< variance shadow mapping
-    CUBE, ///< cubemap omnidirectional shadows
-};
-
 struct QSSGShadowMapEntry
 {
     QSSGShadowMapEntry();
 
-    static QSSGShadowMapEntry withRhiDepthMap(quint32 lightIdx, ShadowMapModes mode, QRhiTexture *textureArray);
+    static QSSGShadowMapEntry withAtlas(quint32 lightIdx);
 
-    static QSSGShadowMapEntry withRhiDepthCubeMap(quint32 lightIdx, ShadowMapModes mode, QRhiTexture *depthCube, QRhiRenderBuffer *depthStencil);
-    bool isCompatible(QSize mapSize, quint32 layerIndex, quint32 csmNumSplits, ShadowMapModes mapMode, QRhiTexture::Format textureFormat);
     void destroyRhiResources();
 
     quint32 m_lightIndex; ///< the light index it belongs to
-    ShadowMapModes m_shadowMapMode; ///< shadow map method
-    quint32 m_depthArrayIndex; ///< shadow map texture array index
+    quint32 m_depthArrayIndex = 0; ///< shadow map texture array index
 
-    // RHI resources
-    QRhiTexture *m_rhiDepthTextureArray = nullptr; // for shadow map (VSM) (not owned)
-    QRhiTexture *m_rhiDepthCube = nullptr; // shadow cube map (CUBE)
-    std::array<QRhiRenderBuffer *, 4> m_rhiDepthStencil = {}; // depth/stencil
-    std::array<QRhiTextureRenderTarget *, 6> m_rhiRenderTargets = {}; // texture RT
-    std::array<QRhiRenderPassDescriptor *, 4> m_rhiRenderPassDesc = {}; // texture RT renderpass descriptor
+    // Owned RHI Resoruces (just for point lights)
+    QRhiTexture *m_rhiDepthCube = nullptr; // shadow cube map
+    QRhiRenderBuffer *m_rhiDepthStencilCube = nullptr;
+    QRhiRenderPassDescriptor *m_rhiRenderPassDescCube = nullptr;
+    std::array<QRhiTextureRenderTarget *, 6> m_rhiRenderTargetCube = {};
+    QRhiShaderResourceBindings *m_cubeToAtlasFrontSrb = nullptr;
+    QRhiShaderResourceBindings *m_cubeToAtlasBackSrb = nullptr;
+
+    // Shared RHI Resources
+    std::array<QRhiTextureRenderTarget *, 4> m_rhiRenderTargets = {};
+    std::array<QRhiRenderPassDescriptor *, 4> m_rhiRenderPassDesc = {};
 
     QMatrix4x4 m_lightViewProjection[4]; ///< light view projection matrix
     QMatrix4x4 m_lightCubeView[6]; ///< light cubemap view matrices
@@ -66,6 +62,15 @@ struct QSSGShadowMapEntry
     float m_csmSplits[4] = {};
     float m_csmActive[4] = {};
     float m_shadowMapFar = 0.f;
+    QMatrix4x4 m_fixedScaleBiasMatrix[4];
+    QVector4D m_dimensionsInverted[4]; ///< (x, y, z, 0) 4 vec4
+
+    struct AtlasEntry {
+        int layerIndex = 0;
+        float uOffset = 0.0f;
+        float vOffset = 0.0f;
+        float uvScale = 1.0f;
+    } m_atlasInfo[4];
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderShadowMap
@@ -81,20 +86,32 @@ public:
     void addShadowMaps(const QSSGShaderLightList &renderableLights);
 
     QSSGShadowMapEntry *shadowMapEntry(int lightIdx);
+    QRhiTextureRenderTarget *layerRenderTarget(int layerIndex);
+    QRhiRenderPassDescriptor *layerRenderPassDescriptor(int layerIndex);
+    QRhiTexture *shadowMapAtlasTexture() const;
 
     qsizetype shadowMapEntryCount() { return m_shadowMapList.size(); }
 
+    QRhiShaderResourceBindings *shadowClearSrb() const { return m_shadowClearSrb.get(); }
+
 private:
-    QSSGShadowMapEntry *addDirectionalShadowMap(qint32 lightIdx,
-                                                QSize size,
-                                                bool use32bit,
-                                                quint32 layerStartIndex,
-                                                quint32 csmNumSplits,
-                                                const QString &renderNodeObjName);
-    QSSGShadowMapEntry *addCubeShadowMap(qint32 lightIdx, QSize size, bool use32bit, const QString &renderNodeObjName);
+    QSSGShadowMapEntry *addShadowMap(quint32 lightIdx,
+                                     QSize size,
+                                     QVector<QSSGShadowMapEntry::AtlasEntry> atlasEntries,
+                                     quint32 csmNumSplits,
+                                     QRhiTexture::Format format,
+                                     bool isPointLight,
+                                     const QString &renderNodeObjName);
 
     QVector<QSSGShadowMapEntry> m_shadowMapList;
-    std::array<QHash<QSize, QRhiTexture *>, 2> m_depthTextureArrays; // 0: 16 bit, 1: 32 bit
+    std::unique_ptr<QRhiTexture> m_shadowMapAtlasTexture;
+    std::unique_ptr<QRhiSampler> m_sharedCubeToAtlasSampler;
+    std::unique_ptr<QRhiBuffer> m_sharedFrontCubeToAtlasUniformBuffer;
+    std::unique_ptr<QRhiBuffer> m_sharedBackCubeToAtlasUniformBuffer;
+    std::unique_ptr<QRhiShaderResourceBindings> m_shadowClearSrb;
+    QVector<QRhiRenderBuffer *> m_layerDepthStencilBuffers;
+    QVector<QRhiTextureRenderTarget *> m_layerRenderTargets;
+    QVector<QRhiRenderPassDescriptor *> m_layerRenderPassDescriptors;
 };
 
 using QSSGRenderShadowMapPtr = std::shared_ptr<QSSGRenderShadowMap>;

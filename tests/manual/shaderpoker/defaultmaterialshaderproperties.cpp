@@ -45,161 +45,6 @@ void DefaultMaterialShaderProperties::setHasIbl(bool newHasIbl)
     updated();
 }
 
-quint32 DefaultMaterialShaderProperties::lightCount() const
-{
-    return m_properties.m_lightCount.getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setLightCount(quint32 newLightCount)
-{
-    if (this->lightCount() == newLightCount)
-        return;
-
-    m_properties.m_lightCount.setValue(m_key, newLightCount);
-    emit lightCountChanged();
-    updated();
-}
-
-bool DefaultMaterialShaderProperties::getLightFlag(quint32 index) const
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return false;
-
-    return m_properties.m_lightFlags[index].getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setLightFlag(quint32 index, bool newValue)
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return;
-
-    if (getLightFlag(index) == newValue)
-        return;
-
-    m_properties.m_lightFlags[index].setValue(m_key, newValue);
-    emit lightFlagChanged(index);
-    updated();
-}
-
-bool DefaultMaterialShaderProperties::getLightSpotFlag(quint32 index) const
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return false;
-
-    return m_properties.m_lightSpotFlags[index].getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setLightSpotFlag(quint32 index, bool newValue)
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return;
-
-    if (getLightSpotFlag(index) == newValue)
-        return;
-
-    m_properties.m_lightSpotFlags[index].setValue(m_key, newValue);
-    emit lightSpotFlagChanged(index);
-    updated();
-}
-
-bool DefaultMaterialShaderProperties::getLightAreaFlag(quint32 index) const
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return false;
-
-    return m_properties.m_lightAreaFlags[index].getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setLightAreaFlag(quint32 index, bool newValue)
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return;
-
-    if (getLightAreaFlag(index) == newValue)
-        return;
-
-    m_properties.m_lightAreaFlags[index].setValue(m_key, newValue);
-    emit lightAreaFlagChanged(index);
-    updated();
-}
-
-bool DefaultMaterialShaderProperties::getLightShadowFlag(quint32 index) const
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return false;
-
-    return m_properties.m_lightShadowFlags[index].getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setLightShadowFlag(quint32 index, bool newValue)
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return;
-
-    if (getLightShadowFlag(index) == newValue)
-        return;
-
-    m_properties.m_lightShadowFlags[index].setValue(m_key, newValue);
-    emit lightShadowFlagChanged(index);
-    updated();
-}
-
-quint16 DefaultMaterialShaderProperties::getLightShadowMapSize(quint32 index) const
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return 0;
-
-    return m_properties.m_lightShadowMapSize[index].getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setLightShadowMapSize(quint32 index, quint16 newValue)
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return;
-
-    if (getLightShadowMapSize(index) == newValue)
-        return;
-
-    m_properties.m_lightShadowMapSize[index].setValue(m_key, newValue);
-    emit lightShadowMapSizeChanged(index);
-    updated();
-}
-
-quint8 DefaultMaterialShaderProperties::getLightSoftShadowQuality(quint32 index) const
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return 0;
-
-    return m_properties.m_lightSoftShadowQuality[index].getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setLightSoftShadowQuality(quint32 index, quint8 newValue)
-{
-    if (index > QSSGShaderDefaultMaterialKeyProperties::LightCount)
-        return;
-
-    if (getLightSoftShadowQuality(index) == newValue)
-        return;
-
-    m_properties.m_lightSoftShadowQuality[index].setValue(m_key, newValue);
-    emit lightSoftShadowQualityChanged(index);
-    updated();
-}
-
-bool DefaultMaterialShaderProperties::specularEnabled() const
-{
-    return m_properties.m_specularEnabled.getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setSpecularEnabled(bool newSpecularEnabled)
-{
-    if (specularEnabled() == newSpecularEnabled)
-        return;
-    m_properties.m_specularEnabled.setValue(m_key, newSpecularEnabled);
-    emit specularEnabledChanged();
-    updated();
-}
-
 bool DefaultMaterialShaderProperties::fresnelScaleBiasEnabled() const
 {
     return m_properties.m_fresnelScaleBiasEnabled.getValue(m_key);
@@ -379,20 +224,6 @@ void DefaultMaterialShaderProperties::setVertexColorAlphaMask(quint16 newVertexC
         return;
     m_properties.m_vertexColorAlphaMask.setValue(m_key, newVertexColorAlphaMask);
     emit vertexColorAlphaMaskChanged();
-    updated();
-}
-
-quint8 DefaultMaterialShaderProperties::specularModel() const
-{
-    return m_properties.m_specularModel.getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setSpecularModel(quint8 newSpecularModel)
-{
-    if (specularModel() == newSpecularModel)
-        return;
-    m_properties.m_specularModel.setValue(m_key, newSpecularModel);
-    emit specularModelChanged();
     updated();
 }
 
@@ -728,20 +559,6 @@ void DefaultMaterialShaderProperties::setLightmapEnabled(bool newLightmapEnabled
         return;
     m_properties.m_lightmapEnabled.setValue(m_key, newLightmapEnabled);
     emit lightmapEnabledChanged();
-    updated();
-}
-
-bool DefaultMaterialShaderProperties::specularGlossyEnabled() const
-{
-    return m_properties.m_specularGlossyEnabled.getValue(m_key);
-}
-
-void DefaultMaterialShaderProperties::setSpecularGlossyEnabled(bool newSpecularGlossyEnabled)
-{
-    if (specularGlossyEnabled() == newSpecularGlossyEnabled)
-        return;
-    m_properties.m_specularGlossyEnabled.setValue(m_key, newSpecularGlossyEnabled);
-    emit specularGlossyEnabledChanged();
     updated();
 }
 
@@ -1253,3 +1070,19 @@ void DefaultMaterialShaderProperties::setOpacityChannel(quint8 newOpacityChannel
     emit opacityChannelChanged();
     updated();
 }
+
+bool DefaultMaterialShaderProperties::hasPunctualLights() const
+{
+    return m_properties.m_hasPunctualLights.getValue(m_key);
+}
+
+void DefaultMaterialShaderProperties::setHasPunctualLights(bool newHasPunctualLights)
+{
+    if (hasPunctualLights() == newHasPunctualLights)
+        return;
+
+    m_properties.m_hasPunctualLights.setValue(m_key, newHasPunctualLights);
+    emit hasPunctualLightsChanged();
+    updated();
+}
+

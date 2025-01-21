@@ -281,69 +281,77 @@ enum class QSSGRhiSamplerBindingHints
 };
 
 // these are our current shader limits
-#define QSSG_MAX_NUM_LIGHTS 15
-#define QSSG_REDUCED_MAX_NUM_LIGHTS 5
-#define QSSG_MAX_NUM_SHADOW_MAPS 8
+#define QSSG_MAX_NUM_LIGHTS 16
+#define QSSG_MAX_NUM_DIRECTIONAL_LIGHTS 4
+#define QSSG_REDUCED_MAX_NUM_LIGHTS 8
+#define QSSG_REDUCED_MAX_NUM_DIRECTIONAL_LIGHTS 2
 
-// note this struct must exactly match the memory layout of the uniform block in
-// funcSampleLightVars.glsllib
-struct QSSGShaderLightData
-{
-    float position[4];
-    float direction[4]; // Specifies the light direction in world coordinates.
-    float diffuse[4];
-    float specular[4];
-    float coneAngle; // Specifies the outer cone angle of the spot light.
-    float innerConeAngle; // Specifies the inner cone angle of the spot light.
-    float constantAttenuation; // Specifies the constant light attenuation factor.
-    float linearAttenuation; // Specifies the linear light attenuation factor.
-    float quadraticAttenuation; // Specifies the quadratic light attenuation factor.
-    float padding[3]; // the next light array element must start at a vec4-aligned offset
+struct QSSGShaderLightData {
+    float position[3];
+    float coneAngle;
+
+    float direction[3];
+    float innerConeAngle;
+
+    float diffuseColor[3];
+    float constantAttenuation;
+
+    float specularColor[3];
+    float linearAttenuation;
+
+    quint32 lightmapState;
+    quint32 shadowPcfSamples;
+    float quadraticAttenuation;
+    float shadowTextureSize;
+
+    float shadowAtlasUV0[2];
+    float shadowAtlasUV1[2];
+
+    float shadowAtlasLayer0;
+    float shadowAtlasLayer1;
+    float shadowPcfFactor;
+    float enableShadows;
+
+    float shadowBias;
+    float shadowFactor;
+    float shadowClipNear;
+    float shadowMapFar;
+
+    float shadowMatrix[16];
 };
 
-struct QSSGShaderLightsUniformData
-{
-    qint32 count = -1;
-    float padding[3]; // first element must start at a vec4-aligned offset
-    QSSGShaderLightData lightData[QSSG_MAX_NUM_LIGHTS];
+struct QSSGShaderDirectionalLightData {
+    float direction[3];
+    float shadowBias;
 
-};
+    float diffuseColor[3];
+    float shadowFactor;
 
-// note this struct must exactly match the memory layout of the uniform block in
-// funcSampleLightVars.glsllib
-struct QSSGShaderShadowData {
+    float specularColor[3];
+    float enableShadows;
+
     float matrices[4][16];
     float dimensionsInverted[4][4];
     float csmSplits[4];
     float csmActive[4];
+    float atlasLocations[4][4]; // (u, v, size, layer)
 
-    float bias;
-    float factor;
-    float isYUp;
-    float clipNear;
+    quint32 lightmapState;
+    quint32 shadowPcfSamples;
+    quint32 csmNumSplits;
+    float shadowPcfFactor;
 
     float shadowMapFar;
-    qint32 layerIndex;
-    qint32 csmNumSplits;
     float csmBlendRatio;
-
-    float pcfFactor;
-    float padding[3];
+    float padding[2];
 };
 
-struct QSSGShaderShadowsUniformData
-{
-    qint32 count = -1;
-    float padding[3]; // first element must start at a vec4-aligned offset
-    QSSGShaderShadowData shadowData[QSSG_MAX_NUM_SHADOW_MAPS];
+struct QSSGShaderLightsUniformData {
+    QSSGShaderLightData lightData[QSSG_MAX_NUM_LIGHTS];
 };
 
-// Default materials work with a regular combined image sampler for each shadowmap.
-struct QSSGRhiShadowMapProperties
-{
-    QRhiTexture *shadowMapTexture = nullptr;
-    QByteArray shadowMapTextureUniformName;
-    int cachedBinding = -1; // -1 == invalid
+struct QSSGShaderDirectionalLightsUniformData {
+    QSSGShaderDirectionalLightData directionalLightData[QSSG_MAX_NUM_DIRECTIONAL_LIGHTS];
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderPipeline
@@ -384,15 +392,7 @@ public:
 
     int ub0Size() const { return m_ub0Size; }
     int ub0LightDataOffset() const { return m_ub0NextUBufOffset; }
-    int ub0LightDataSize() const
-    {
-        return int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
-    }
-    int ub0ShadowDataOffset() const;
-    int ub0ShadowDataSize() const
-    {
-        return int(4 * sizeof(qint32) + m_shadowsUniformData.count * sizeof(QSSGShaderShadowData));
-    }
+    int ub0DirectionalLightDataOffset() const;
 
     const QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
 
@@ -443,6 +443,7 @@ public:
         int fogDepthPropertiesIdx = -1;
         int fogHeightPropertiesIdx = -1;
         int fogTransmitPropertiesIdx = -1;
+        int lightAndShadowCountsIdx = -1;
 
         struct ImageIndices
         {
@@ -472,12 +473,6 @@ public:
 
     void setLightsEnabled(bool enable) { m_lightsEnabled = enable; }
     bool isLightingEnabled() const { return m_lightsEnabled; }
-
-    void resetShadowMaps() { m_shadowMaps.clear(); }
-    QSSGRhiShadowMapProperties &addShadowMap() { m_shadowMaps.append(QSSGRhiShadowMapProperties()); return m_shadowMaps.last(); }
-    int shadowMapCount() const { return m_shadowMaps.size(); }
-    const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
-    QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
     void ensureCombinedUniformBuffer(QRhiBuffer **ubuf);
     void ensureUniformBuffer(QRhiBuffer **ubuf);
@@ -509,6 +504,9 @@ public:
     void setLightmapTexture(QRhiTexture *texture) { m_lightmapTexture = texture; }
     QRhiTexture *lightmapTexture() const { return m_lightmapTexture; }
 
+    void setShadowMapAtlasTexture(QRhiTexture *texture) { m_shadowMapAtlasTexture = texture; }
+    QRhiTexture *shadowMapAtlasTexture() const { return m_shadowMapAtlasTexture; }
+
     void resetExtraTextures() { m_extraTextures.clear(); }
     void addExtraTexture(const QSSGRhiTexture &t) { m_extraTextures.append(t); }
     int extraTextureCount() const { return m_extraTextures.size(); }
@@ -516,7 +514,7 @@ public:
     QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
-    QSSGShaderShadowsUniformData &shadowsUniformData() { return m_shadowsUniformData; }
+    QSSGShaderDirectionalLightsUniformData &directionalLightsUniformData() { return m_directionalLightsUniformData; }
     InstanceLocations instanceBufferLocations() const { return instanceLocations; }
 
     int offsetOfUniform(const QByteArray &name);
@@ -538,8 +536,8 @@ private:
     // transient (per-object) data; pointers are all non-owning
     bool m_lightsEnabled = false;
     QSSGShaderLightsUniformData m_lightsUniformData;
-    QSSGShaderShadowsUniformData m_shadowsUniformData;
-    QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOW_MAPS> m_shadowMaps;
+    QSSGShaderDirectionalLightsUniformData m_directionalLightsUniformData;
+    QRhiTexture *m_shadowMapAtlasTexture = nullptr;
     QRhiTexture *m_lightProbeTexture = nullptr;
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;

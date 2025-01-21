@@ -258,9 +258,6 @@ public:
     using RenderableNodeEntries = QVector<QSSGRenderableNodeEntry>;
     using RenderableItem2DEntries = QVector<QSSGRenderItem2D *>;
 
-    QSSGShaderDefaultMaterialKey generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType,
-                                                     const QSSGShaderLightListView &lights, bool receivesShadows = true);
-
     void prepareImageForRender(QSSGRenderImage &inImage,
                                QSSGRenderableImage::Type inMapType,
                                QSSGRenderableImage *&ioFirstImage,
@@ -376,7 +373,7 @@ public:
 
 
     bool tooManyLightsWarningShown = false;
-    bool tooManyShadowLightsWarningShown = false;
+    bool tooManyDirectionalLightsWarningShown = false;
     bool oitWarningUnsupportedShown = false;
     bool oitWarningInvalidBlendModeShown = false;
     bool orderIndependentTransparencyEnabled = false;
@@ -584,13 +581,14 @@ private:
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                          QSSGRenderableObjectFlags &inExistingFlags,
                                                                          float inOpacity,
-                                                                         const QSSGShaderLightListView &lights,
+                                                                         bool hasAnyLights,
+                                                                         bool anyLightHasShadows,
                                                                          QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
                                                                         QSSGRenderableObjectFlags &inExistingFlags,
                                                                         float inOpacity, bool alreadyDirty,
-                                                                        const QSSGShaderLightListView &lights,
+                                                                        bool hasAnyLights, bool anyLightHasShadows,
                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     static void prepareModelMaterials(RenderableNodeEntries &renderableModels, bool cullUnrenderables);

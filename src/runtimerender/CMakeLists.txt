@@ -133,19 +133,17 @@ qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_QUICK3D_HAS_EMBREE
 set(res_resource_files
     "res/effectlib/bsdf.glsllib"
     "res/effectlib/defaultMaterialBumpNoLod.glsllib"
-    "res/effectlib/defaultMaterialFresnel.glsllib"
     "res/effectlib/depthpass.glsllib"
     "res/effectlib/funccalculatePointLightAttenuation.glsllib"
+    "res/effectlib/funcdebugShadowOcclusion.glsllib"
     "res/effectlib/funcdiffuseBurleyBSDF.glsllib"
-    "res/effectlib/funcdiffuseReflectionBSDF.glsllib"
-    "res/effectlib/funcdiffuseReflectionWrapBSDF.glsllib"
+    "res/effectlib/funcdiffuseLambertBRDF.glsllib"
+    "res/effectlib/funcdiffuseLambertWrapBRDF.glsllib"
     "res/effectlib/funcgetTransformedUVCoords.glsllib"
     "res/effectlib/funclightmap.glsllib"
-    "res/effectlib/funcsampleLightVars.glsllib"
     "res/effectlib/funcsampleNormalTexture.glsllib"
-    "res/effectlib/funcspecularBSDF.glsllib"
+    "res/effectlib/funcspecularBlinnPhong.glsllib"
     "res/effectlib/funcspecularGGXBSDF.glsllib"
-    "res/effectlib/physGlossyBSDF.glsllib"
     "res/effectlib/principledMaterialFresnel.glsllib"
     "res/effectlib/sampleProbe.glsllib"
     "res/effectlib/sampleReflectionProbe.glsllib"
@@ -162,6 +160,9 @@ set(res_resource_files
     "res/effectlib/texturesample.glsllib"
     "res/effectlib/oitcommon.glsllib"
     "res/effectlib/orderindependenttransparency.glsllib"
+    "res/effectlib/lightsData.glsllib"
+    "res/effectlib/funcprocessPunctualLighting.glsllib"
+    "res/effectlib/custommaterialforwarddeclarations.glsllib"
     "res/primitives/Cone.mesh"
     "res/primitives/Cube.mesh"
     "res/primitives/Cylinder.mesh"
@@ -284,6 +285,10 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
         res/rhishaders/skyboxcube.frag
         res/rhishaders/grid.frag
         res/rhishaders/grid.vert
+        res/rhishaders/cubeMapToHemisphere.vert
+        res/rhishaders/cubeMapToHemisphere.frag
+        res/rhishaders/clearshadowmap.vert
+        res/rhishaders/clearshadowmap.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_compute"
     SILENT

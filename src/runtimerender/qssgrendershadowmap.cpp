@@ -9,7 +9,126 @@
 
 QT_BEGIN_NAMESPACE
 
-static constexpr quint32 NUM_TEXTURE_SIZES = 5;
+namespace AtlasHelpers {
+
+struct ShelfPacker {
+    struct Shelf {
+        int y;
+        int height;
+        int curX;
+    };
+
+    struct ShelfPage {
+        int pageIndex;
+        int width;
+        int height;
+        int curY;
+        std::vector<Shelf> shelves;
+    };
+
+    struct AtlasPlacement {
+        bool success;
+        int pageIndex;
+        int x;
+        int y;
+    };
+    const int pageWidth;
+    const int pageHeight;
+    std::vector<ShelfPage> pages;
+
+    ShelfPacker(int pageWidth, int pageHeight)
+        : pageWidth(pageWidth)
+        , pageHeight(pageHeight)
+    {
+    }
+
+    AtlasPlacement addRectangle(int sizeNeeded) {
+        // Try each page in turn
+        for (auto &page : pages) {
+            AtlasPlacement placement = placeOnPage(page, sizeNeeded);
+            if (placement.success)
+                return placement;
+        }
+
+        // If we get here, we need a new page
+        ShelfPage newPage;
+        newPage.pageIndex = int(pages.size());
+        newPage.width = pageWidth;
+        newPage.height = pageHeight;
+        newPage.curY = 0;
+        newPage.shelves.clear();
+        pages.push_back(newPage);
+
+        // now place in the new page
+        return placeOnPage(pages.back(), sizeNeeded);
+    }
+
+    AtlasPlacement placeOnPage(ShelfPage &page, int sizeNeeded)
+    {
+        AtlasPlacement result;
+        result.success = false;
+
+        // Iterate over shelves to see if we can place the rect
+        for (auto &shelf : page.shelves) {
+            // check if it fits horizontally
+            if (shelf.curX + sizeNeeded <= page.width) {
+                // also check if the shelf's height is enough
+                // but here we store the shelf's "height" as the max of the rectangles' heights
+                // If each rect is the same "sizeNeeded," we just need to see if there's room in page.height
+
+                // not enough vertical space
+                if (shelf.y + shelf.height >= page.height)
+                    continue;
+
+                // place here
+                result.success = true;
+                result.pageIndex = page.pageIndex;
+                result.x = shelf.curX;
+                result.y = shelf.y;
+                // update shelf
+                shelf.curX += sizeNeeded;
+                if (sizeNeeded > shelf.height)
+                    shelf.height = sizeNeeded;
+
+                return result;
+            }
+        }
+
+        // No existing shelf had space, so start a new shelf
+        int newShelfY = 0;
+        if (!page.shelves.empty()) {
+            const Shelf &lastShelf = page.shelves.back();
+            newShelfY = lastShelf.y + lastShelf.height;
+        }
+
+        // check if there's enough space left in the page vertically
+        if (newShelfY + sizeNeeded > page.height) {
+            // no space in this page
+            return result; // success = false
+        }
+
+        // create a new shelf
+        Shelf newShelf;
+        newShelf.y = newShelfY;
+        newShelf.height = sizeNeeded;
+        newShelf.curX = 0;
+        page.shelves.push_back(newShelf);
+
+        // place rect at top-left of this shelf
+        Shelf &shelfRef = page.shelves.back();
+        result.success = true;
+        result.pageIndex = page.pageIndex;
+        result.x = shelfRef.curX;
+        result.y = shelfRef.y;
+        shelfRef.curX += sizeNeeded;
+
+        return result;
+    }
+
+    int pagesNeeded() const { return int(pages.size()); }
+};
+
+}
 
 static QRhiTexture *allocateRhiShadowTexture(QRhi *rhi, QRhiTexture::Format format, const QSize &size, quint32 numLayers, QRhiTexture::Flags flags)
 {
@@ -29,29 +148,37 @@ static QRhiRenderBuffer *allocateRhiShadowRenderBuffer(QRhi *rhi, QRhiRenderBuff
     return renderBuffer;
 }
 
-static QRhiTexture::Format getShadowMapTextureFormat(QRhi *rhi, bool use32bit)
-{
-    if (use32bit && rhi->isTextureFormatSupported(QRhiTexture::R32F))
-        return QRhiTexture::R32F;
-    if (rhi->isTextureFormatSupported(QRhiTexture::R16F))
-        return QRhiTexture::R16F;
-    return QRhiTexture::R16;
+
+static bool checkCompatibility(QSSGShadowMapEntry *entry, const QVector<QSSGShadowMapEntry::AtlasEntry> &atlasEntries) {
+    if (!entry)
+        return false;
+
+    for (int i = 0; i < atlasEntries.size(); ++i) {
+        const auto &atlasEntry = atlasEntries.at(i);
+
+        if (!(entry->m_atlasInfo[i].layerIndex == atlasEntry.layerIndex &&
+              qFuzzyCompare(entry->m_atlasInfo[i].uOffset, atlasEntry.uOffset) &&
+              qFuzzyCompare(entry->m_atlasInfo[i].vOffset, atlasEntry.vOffset) &&
+              qFuzzyCompare(entry->m_atlasInfo[i].uvScale, atlasEntry.uvScale)))
+            return false;
+    }
+
+    return true;
 }
 
-static quint8 mapSizeToIndex(quint32 mapSize)
-{
-    Q_ASSERT(!(mapSize & (mapSize - 1)) && "shadow map resolution is power of 2");
-    Q_ASSERT(mapSize >= 256);
-    quint8 index = qCountTrailingZeroBits(mapSize) - 8;
-    Q_ASSERT(index < NUM_TEXTURE_SIZES);
-    return index;
+static QVector<QSSGShadowMapEntry::AtlasEntry> createAtlasEntries(const QVarLengthArray<AtlasHelpers::ShelfPacker::AtlasPlacement, 4> &atlasPlacements, int entrySize, int atlasPageSize) {
+    QVector<QSSGShadowMapEntry::AtlasEntry> atlasEntries;
+    atlasEntries.reserve(atlasPlacements.size());
+    for (int i = 0; i < atlasPlacements.size(); ++i) {
+        const auto &placement = atlasPlacements.at(i);
+        const float x = float(placement.x) / float(atlasPageSize);
+        const float y = float(placement.y) / float(atlasPageSize);
+        const float uvScale = float(entrySize) / float(atlasPageSize);
+        atlasEntries.append({placement.pageIndex, x, y, uvScale});
+    }
+    return atlasEntries;
 }
 
-static quint32 indexToMapSize(quint8 index)
-{
-    Q_ASSERT(index < NUM_TEXTURE_SIZES);
-    return 1 << (index + 8);
-}
 
 QSSGRenderShadowMap::QSSGRenderShadowMap(const QSSGRenderContextInterface &inContext)
     : m_context(inContext)
@@ -68,11 +195,16 @@ void QSSGRenderShadowMap::releaseCachedResources()
     for (QSSGShadowMapEntry &entry : m_shadowMapList)
         entry.destroyRhiResources();
 
-    for (auto &hash : m_depthTextureArrays) {
-        for (auto &textureArray : hash)
-            delete textureArray;
-        hash.clear();
-    }
+    if (m_shadowMapAtlasTexture)
+        m_shadowMapAtlasTexture.reset();
+
+    qDeleteAll(m_layerDepthStencilBuffers);
+    m_layerDepthStencilBuffers.clear();
+    qDeleteAll(m_layerRenderTargets);
+    m_layerRenderTargets.clear();
+    qDeleteAll(m_layerRenderPassDescriptors);
+    m_layerRenderPassDescriptors.clear();
+
     m_shadowMapList.clear();
 }
 
@@ -83,67 +215,150 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
     if (!rhi)
         return;
 
-    constexpr quint32 MAX_SPLITS = 4;
     const quint32 numLights = renderableLights.size();
     qsizetype numShadows = 0;
-    std::array<std::array<quint8, NUM_TEXTURE_SIZES>, 2> textureSizeLayerCount = {}; // 0: 16 bit, 1: 32bit
-    QVarLengthArray<quint8, 16> lightIndexToLayerStartIndex;
-    lightIndexToLayerStartIndex.resize(numLights * MAX_SPLITS);
-
-    // NOTE: This is a quite ugly workaround. If 32bit is not supported then go through all lights and disable it.
     const bool supports32BitTextures = rhi->isTextureFormatSupported(QRhiTexture::R32F);
-    if (!supports32BitTextures) {
-        bool any32bit = false;
-        for (quint32 lightIndex = 0; lightIndex < numLights; ++lightIndex) {
-            QSSGRenderLight *light = renderableLights.at(lightIndex).light;
-            any32bit = any32bit || light->m_use32BitShadowmap;
-            light->m_use32BitShadowmap = false;
-        }
-        static bool warned32bit = false;
-        if (!warned32bit && any32bit) {
-            qWarning() << "WARN: 32 bit shadow maps are unsupported, falling back to 16 bit.";
-            warned32bit = true;
-        }
-    }
+    QRhiTexture::Format format = QRhiTexture::R16F;
+    quint32 mapSize = 0;
+    QHash<quint32, QVector<QSSGShadowMapEntry::AtlasEntry>> lightIndexToAtlasEntries;
 
+    // Get format and maximum texture size needed
     for (quint32 lightIndex = 0; lightIndex < numLights; ++lightIndex) {
         const QSSGShaderLight &shaderLight = renderableLights.at(lightIndex);
-        ShadowMapModes mapMode = (shaderLight.light->type == QSSGRenderLight::Type::PointLight) ? ShadowMapModes::CUBE
-                                                                                                : ShadowMapModes::VSM;
-        if (shaderLight.shadows)
-            numShadows += 1;
-        if (!shaderLight.shadows || mapMode == ShadowMapModes::CUBE)
+        if (!shaderLight.shadows)
             continue;
 
-        quint32 mapSize = shaderLight.light->m_shadowMapRes;
-        quint8 &layerCount = textureSizeLayerCount[shaderLight.light->m_use32BitShadowmap ? 1 : 0][mapSizeToIndex(mapSize)];
-        quint8 layerIndex = layerCount;
-        layerCount += shaderLight.light->m_csmNumSplits + 1;
-        lightIndexToLayerStartIndex[lightIndex] = layerIndex;
+        // Force R32F format if any light requests it
+        if (shaderLight.light->m_use32BitShadowmap && supports32BitTextures)
+            format = QRhiTexture::R32F;
+
+        // Find the largest shadow map size needed
+        if (mapSize < shaderLight.light->m_shadowMapRes)
+            mapSize = shaderLight.light->m_shadowMapRes;
+
+        numShadows += 1;
     }
 
-    // Only recreate shadow assets if something has changed
+    auto atlasPacker = AtlasHelpers::ShelfPacker(mapSize, mapSize);
+
+
+    // Figure out the number of layers needed for the atlas
+    // including where everthing will go in the atlas
+    for (quint32 lightIndex = 0; lightIndex < numLights; ++lightIndex) {
+        const QSSGShaderLight &shaderLight = renderableLights.at(lightIndex);
+        if (!shaderLight.shadows)
+            continue;
+
+        quint8 mapsNeeded = 0;
+
+        if (shaderLight.light->type == QSSGRenderLight::Type::DirectionalLight)
+            mapsNeeded = shaderLight.light->m_csmNumSplits + 1;
+        else if (shaderLight.light->type == QSSGRenderLight::Type::SpotLight)
+            mapsNeeded = 1;
+        else if (shaderLight.light->type == QSSGRenderLight::Type::PointLight)
+            mapsNeeded = 2;
+
+        QVarLengthArray<AtlasHelpers::ShelfPacker::AtlasPlacement, 4> atlasPlacements;
+        for (quint8 i = 0; i < mapsNeeded; ++i) {
+            const int size = shaderLight.light->m_shadowMapRes;
+            auto result = atlasPacker.addRectangle(size);
+            if (result.success)
+                atlasPlacements.push_back(result);
+        }
+        lightIndexToAtlasEntries.insert(lightIndex, createAtlasEntries(atlasPlacements, shaderLight.light->m_shadowMapRes, mapSize));
+    }
+    const QSize texSize = QSize(mapSize, mapSize);
+    const quint32 layersNeeded = atlasPacker.pagesNeeded();
+
+    // Check if we need a rebuild
     bool needsRebuild = numShadows != shadowMapEntryCount();
+    if (!m_shadowMapAtlasTexture ||
+        m_shadowMapAtlasTexture->pixelSize() != texSize ||
+        m_shadowMapAtlasTexture->arraySize() != int(layersNeeded) ||
+        m_shadowMapAtlasTexture->format() != format) {
+
+        // If we need a new texture as well
+        if (m_shadowMapAtlasTexture) {
+            m_shadowMapAtlasTexture.reset();
+        }
+
+        m_shadowMapAtlasTexture.reset(allocateRhiShadowTexture(rhi, format, texSize, layersNeeded, QRhiTexture::RenderTarget | QRhiTexture::TextureArray));
+
+        qDeleteAll(m_layerDepthStencilBuffers);
+        m_layerDepthStencilBuffers.clear();
+        qDeleteAll(m_layerRenderTargets);
+        m_layerRenderTargets.clear();
+        qDeleteAll(m_layerRenderPassDescriptors);
+        m_layerRenderPassDescriptors.clear();
+
+        for (quint32 i = 0; i < layersNeeded; ++i) {
+            // Recreate per layer RenderBuffers, TextureRenderTarget, and RenderPassDescriptors
+            QRhiRenderBuffer *depthStencilBuffer = allocateRhiShadowRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, texSize);
+            QRhiTextureRenderTargetDescription rtDesc;
+            QRhiColorAttachment attachment(m_shadowMapAtlasTexture.get());
+            attachment.setLayer(i);
+            rtDesc.setColorAttachments({ attachment });
+            rtDesc.setDepthStencilBuffer(depthStencilBuffer);
+            QRhiTextureRenderTarget *rt = rhi->newTextureRenderTarget(rtDesc);
+            rt->setDescription(rtDesc);
+            rt->setFlags(QRhiTextureRenderTarget::PreserveColorContents); // Don't clear between passes since this is an atlas
+            QRhiRenderPassDescriptor *rpDesc = rt->newCompatibleRenderPassDescriptor();
+            rt->setRenderPassDescriptor(rpDesc);
+            if (!rt->create())
+                qWarning("Failed to build shadow map render target");
+            rt->setName(QByteArrayLiteral("shadow map atlas layer") + QByteArray::number(i));
+            m_layerDepthStencilBuffers.append(depthStencilBuffer);
+            m_layerRenderTargets.append(rt);
+            m_layerRenderPassDescriptors.append(rpDesc);
+        }
+
+        needsRebuild = true;
+    }
+
+    // If we need to allocate the RHI resources
+    if (!m_sharedFrontCubeToAtlasUniformBuffer || !m_sharedBackCubeToAtlasUniformBuffer) {
+        const quint32 uniformValueFront = 0;
+        const quint32 uniformValueBack = 1;
+
+        QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+        if (!m_sharedFrontCubeToAtlasUniformBuffer) {
+            m_sharedFrontCubeToAtlasUniformBuffer.reset(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, sizeof(uint32_t)));
+            m_sharedFrontCubeToAtlasUniformBuffer->create();
+            rub->updateDynamicBuffer(m_sharedFrontCubeToAtlasUniformBuffer.get(), 0, sizeof(quint32), &uniformValueFront);
+        }
+
+        if (!m_sharedBackCubeToAtlasUniformBuffer) {
+            m_sharedBackCubeToAtlasUniformBuffer.reset(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, sizeof(uint32_t)));
+            m_sharedBackCubeToAtlasUniformBuffer->create();
+            rub->updateDynamicBuffer(m_sharedBackCubeToAtlasUniformBuffer.get(), 0, sizeof(quint32), &uniformValueBack);
+        }
+        QRhiCommandBuffer *cb = m_context.rhiContext()->commandBuffer();
+        cb->resourceUpdate(rub);
+    }
+    if (!m_sharedCubeToAtlasSampler) {
+        m_sharedCubeToAtlasSampler.reset(rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge));
+        m_sharedCubeToAtlasSampler->create();
+    }
+    if (!m_shadowClearSrb) {
+        m_shadowClearSrb.reset(rhi->newShaderResourceBindings());
+        m_shadowClearSrb->create();
+    }
+
+
     if (!needsRebuild) {
         // Check if relevant shadow properties has changed
         for (quint32 lightIndex = 0; lightIndex < numLights; ++lightIndex) {
             const QSSGShaderLight &shaderLight = renderableLights.at(lightIndex);
             if (!shaderLight.shadows)
                 continue;
-
             QSSGShadowMapEntry *pEntry = shadowMapEntry(lightIndex);
             if (!pEntry) {
                 needsRebuild = true;
                 break;
             }
 
-            QRhiTexture::Format textureFormat = getShadowMapTextureFormat(rhi, shaderLight.light->m_use32BitShadowmap);
-            ShadowMapModes mapMode = (shaderLight.light->type == QSSGRenderLight::Type::PointLight) ? ShadowMapModes::CUBE
-                                                                                                    : ShadowMapModes::VSM;
-            quint32 mapSize = shaderLight.light->m_shadowMapRes;
-            quint32 csmNumSplits = shaderLight.light->m_csmNumSplits;
-            quint32 layerIndex = mapMode == ShadowMapModes::VSM ? lightIndexToLayerStartIndex[lightIndex] : 0;
-            if (!pEntry->isCompatible(QSize(mapSize, mapSize), layerIndex, csmNumSplits, mapMode, textureFormat)) {
+            const auto &atlasEntires = lightIndexToAtlasEntries.value(lightIndex);
+            if (!checkCompatibility(pEntry, atlasEntires)) {
                 needsRebuild = true;
                 break;
             }
@@ -153,137 +368,106 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
     if (!needsRebuild)
         return;
 
-    releaseCachedResources();
+    // Rebuild then
+    for (QSSGShadowMapEntry &entry : m_shadowMapList)
+        entry.destroyRhiResources();
+    m_shadowMapList.clear();
 
-    // Create VSM texture arrays
-    for (quint32 hashI = 0; hashI < 2; ++hashI) {
-        const bool use32bit = hashI == 1;
-        QRhiTexture::Format rhiFormat = getShadowMapTextureFormat(rhi, use32bit);
-        for (quint32 sizeI = 0; sizeI < NUM_TEXTURE_SIZES; sizeI++) {
-            const quint32 numLayers = textureSizeLayerCount[hashI][sizeI];
-            if (numLayers == 0)
-                continue;
-
-            const quint32 mapSize = indexToMapSize(sizeI);
-            QSize texSize = QSize(mapSize, mapSize);
-            auto texture = allocateRhiShadowTexture(rhi, rhiFormat, texSize, numLayers, QRhiTexture::RenderTarget | QRhiTexture::TextureArray);
-            m_depthTextureArrays[hashI].insert(texSize, texture);
-        }
-    }
-
-    // Setup render targets
-    for (quint32 lightIdx = 0; lightIdx < numLights; ++lightIdx) {
-        const auto &shaderLight = renderableLights.at(lightIdx);
+    for (quint32 lightIndex = 0; lightIndex < numLights; ++lightIndex) {
+        const QSSGShaderLight &shaderLight = renderableLights.at(lightIndex);
         if (!shaderLight.shadows)
             continue;
-
-        const bool use32bit = shaderLight.light->m_use32BitShadowmap;
-        QSize mapSize = QSize(shaderLight.light->m_shadowMapRes, shaderLight.light->m_shadowMapRes);
-        ShadowMapModes mapMode = (shaderLight.light->type == QSSGRenderLight::Type::PointLight) ? ShadowMapModes::CUBE
-                                                                                                : ShadowMapModes::VSM;
-        switch (mapMode) {
-        case ShadowMapModes::VSM: {
-            quint32 layerStartIndex = lightIndexToLayerStartIndex.value(lightIdx);
-            quint32 csmNumSplits = shaderLight.light->m_csmNumSplits;
-            addDirectionalShadowMap(lightIdx, mapSize, use32bit, layerStartIndex, csmNumSplits, shaderLight.light->debugObjectName);
-            break;
-        }
-        case ShadowMapModes::CUBE: {
-            addCubeShadowMap(lightIdx, mapSize, use32bit, shaderLight.light->debugObjectName);
-            break;
-        }
-        default:
-            Q_UNREACHABLE();
-            break;
-        }
+        addShadowMap(lightIndex,
+                     texSize,
+                     lightIndexToAtlasEntries.value(lightIndex),
+                     shaderLight.light->m_csmNumSplits,
+                     format,
+                     shaderLight.light->type == QSSGRenderLight::Type::PointLight,
+                     shaderLight.light->debugObjectName);
     }
+
 }
 
-QSSGShadowMapEntry *QSSGRenderShadowMap::addDirectionalShadowMap(qint32 lightIdx,
-                                                                 QSize size,
-                                                                 bool use32bit,
-                                                                 quint32 layerStartIndex,
-                                                                 quint32 csmNumSplits,
-                                                                 const QString &renderNodeObjName)
+QSSGShadowMapEntry *QSSGRenderShadowMap::addShadowMap(quint32 lightIdx,
+                                                      QSize size,
+                                                      QVector<QSSGShadowMapEntry::AtlasEntry> atlasEntries,
+                                                      quint32 csmNumSplits,
+                                                      QRhiTexture::Format rhiFormat,
+                                                      bool isPointLight,
+                                                      const QString &renderNodeObjName)
 {
     QRhi *rhi = m_context.rhiContext()->rhi();
     QSSGShadowMapEntry *pEntry = shadowMapEntry(lightIdx);
 
     Q_ASSERT(rhi);
     Q_ASSERT(!pEntry);
+    Q_ASSERT(!atlasEntries.isEmpty());
 
-    auto texture = m_depthTextureArrays[use32bit ? 1 : 0].value(size);
-    Q_ASSERT(texture);
-    m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthMap(lightIdx, ShadowMapModes::VSM, texture));
+    m_shadowMapList.push_back(QSSGShadowMapEntry::withAtlas(lightIdx));
 
     pEntry = &m_shadowMapList.back();
     pEntry->m_csmNumSplits = csmNumSplits;
 
-    // Additional graphics resources: samplers, render targets.
-    for (quint32 splitIndex = 0; splitIndex < csmNumSplits + 1; splitIndex++) {
-        QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[splitIndex]);
-        Q_ASSERT(!rt);
-
-        pEntry->m_rhiDepthStencil[splitIndex] = allocateRhiShadowRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, size);
-
-        QRhiTextureRenderTargetDescription rtDesc;
-        QRhiColorAttachment attachment(pEntry->m_rhiDepthTextureArray);
-        attachment.setLayer(layerStartIndex + splitIndex);
-        rtDesc.setColorAttachments({ attachment });
-        rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil[splitIndex]);
-        rt = rhi->newTextureRenderTarget(rtDesc);
-        rt->setDescription(rtDesc);
-        // The same renderpass descriptor can be reused since the
-        // format, load/store ops are the same regardless of the shadow mode.
-        if (!pEntry->m_rhiRenderPassDesc[splitIndex])
-            pEntry->m_rhiRenderPassDesc[splitIndex] = rt->newCompatibleRenderPassDescriptor();
-        rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc[splitIndex]);
-        if (!rt->create())
-            qWarning("Failed to build shadow map render target");
-
+    if (isPointLight) {
+        const QSize localSize = size * atlasEntries.first().uvScale;
+        // First pass renders to depth cube map
         const QByteArray rtName = renderNodeObjName.toLatin1();
-        rt->setName(rtName + QByteArrayLiteral(" shadow map"));
+
+        pEntry->m_rhiDepthCube = allocateRhiShadowTexture(rhi, rhiFormat, localSize, 0, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
+        pEntry->m_rhiDepthStencilCube = allocateRhiShadowRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, localSize);
+
+
+        for (const auto face : QSSGRenderTextureCubeFaces) {
+            QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargetCube[quint8(face)]);
+            Q_ASSERT(!rt);
+            QRhiColorAttachment att(pEntry->m_rhiDepthCube);
+            att.setLayer(quint8(face)); // 6 render targets, each referencing one face of the cubemap
+            QRhiTextureRenderTargetDescription rtDesc;
+            rtDesc.setColorAttachments({ att });
+            rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencilCube);
+            rt = rhi->newTextureRenderTarget(rtDesc);
+            rt->setDescription(rtDesc);
+            if (!pEntry->m_rhiRenderPassDescCube)
+                pEntry->m_rhiRenderPassDescCube = rt->newCompatibleRenderPassDescriptor();
+            rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDescCube);
+            if (!rt->create())
+                qWarning("Failed to build shadow map render target");
+            rt->setName(rtName + QByteArrayLiteral(" shadow cube face: ") + QSSGBaseTypeHelpers::displayName(face));
+        }
+
+        if (!pEntry->m_cubeToAtlasFrontSrb) {
+            pEntry->m_cubeToAtlasFrontSrb = rhi->newShaderResourceBindings();
+            pEntry->m_cubeToAtlasFrontSrb->setBindings({
+                QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, m_sharedFrontCubeToAtlasUniformBuffer.get()),
+                QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, pEntry->m_rhiDepthCube, m_sharedCubeToAtlasSampler.get())
+            });
+            pEntry->m_cubeToAtlasFrontSrb->create();
+        }
+
+        if (!pEntry->m_cubeToAtlasBackSrb) {
+            pEntry->m_cubeToAtlasBackSrb = rhi->newShaderResourceBindings();
+            pEntry->m_cubeToAtlasBackSrb->setBindings({
+                    QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, m_sharedBackCubeToAtlasUniformBuffer.get()),
+                    QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, pEntry->m_rhiDepthCube, m_sharedCubeToAtlasSampler.get())
+            });
+            pEntry->m_cubeToAtlasBackSrb->create();
+        }
     }
 
+
+    // Additional graphics resources: samplers, render targets.
+    const quint32 entriesCount = atlasEntries.size();
+    for (quint32 splitIndex = 0; splitIndex < entriesCount; splitIndex++) {
+        pEntry->m_atlasInfo[splitIndex].layerIndex = atlasEntries.at(splitIndex).layerIndex;
+        pEntry->m_atlasInfo[splitIndex].uOffset = atlasEntries.at(splitIndex).uOffset;
+        pEntry->m_atlasInfo[splitIndex].vOffset = atlasEntries.at(splitIndex).vOffset;
+        pEntry->m_atlasInfo[splitIndex].uvScale = atlasEntries.at(splitIndex).uvScale;
+
+        quint32 layerId = atlasEntries.at(splitIndex).layerIndex;
+        pEntry->m_rhiRenderTargets[splitIndex] = m_layerRenderTargets[layerId];
+        pEntry->m_rhiRenderPassDesc[splitIndex] = m_layerRenderPassDescriptors[layerId];
+    }
     pEntry->m_lightIndex = lightIdx;
-    pEntry->m_depthArrayIndex = layerStartIndex;
-
-    return pEntry;
-}
-
-QSSGShadowMapEntry *QSSGRenderShadowMap::addCubeShadowMap(qint32 lightIdx, QSize size, bool use32bit, const QString &renderNodeObjName)
-{
-    QRhi *rhi = m_context.rhiContext()->rhi();
-    QSSGShadowMapEntry *pEntry = shadowMapEntry(lightIdx);
-
-    Q_ASSERT(rhi);
-    Q_ASSERT(!pEntry);
-
-    QRhiTexture::Format rhiFormat = getShadowMapTextureFormat(rhi, use32bit);
-    QRhiTexture *depthMap = allocateRhiShadowTexture(rhi, rhiFormat, size, 0, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
-    QRhiRenderBuffer *depthStencil = allocateRhiShadowRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, size);
-    m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthCubeMap(lightIdx, ShadowMapModes::CUBE, depthMap, depthStencil));
-    pEntry = &m_shadowMapList.back();
-
-    const QByteArray rtName = renderNodeObjName.toLatin1();
-
-    for (const auto face : QSSGRenderTextureCubeFaces) {
-        QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[quint8(face)]);
-        Q_ASSERT(!rt);
-        QRhiColorAttachment att(pEntry->m_rhiDepthCube);
-        att.setLayer(quint8(face)); // 6 render targets, each referencing one face of the cubemap
-        QRhiTextureRenderTargetDescription rtDesc;
-        rtDesc.setColorAttachments({ att });
-        rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil[0]);
-        rt = rhi->newTextureRenderTarget(rtDesc);
-        rt->setDescription(rtDesc);
-        if (!pEntry->m_rhiRenderPassDesc[0])
-            pEntry->m_rhiRenderPassDesc[0] = rt->newCompatibleRenderPassDescriptor();
-        rt->setRenderPassDescriptor(pEntry->m_rhiRenderPassDesc[0]);
-        if (!rt->create())
-            qWarning("Failed to build shadow map render target");
-        rt->setName(rtName + QByteArrayLiteral(" shadow cube face: ") + QSSGBaseTypeHelpers::displayName(face));
-    }
 
     return pEntry;
 }
@@ -301,72 +485,54 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::shadowMapEntry(int lightIdx)
     return nullptr;
 }
 
+QRhiTextureRenderTarget *QSSGRenderShadowMap::layerRenderTarget(int layerIndex)
+{
+    if (layerIndex < 0 || layerIndex >= m_layerRenderTargets.size())
+        return nullptr;
+    return m_layerRenderTargets.at(layerIndex);
+}
+
+QRhiRenderPassDescriptor *QSSGRenderShadowMap::layerRenderPassDescriptor(int layerIndex)
+{
+    if (layerIndex < 0 || layerIndex >= m_layerRenderPassDescriptors.size())
+        return nullptr;
+    return m_layerRenderPassDescriptors.at(layerIndex);
+}
+
+QRhiTexture *QSSGRenderShadowMap::shadowMapAtlasTexture() const
+{
+    return m_shadowMapAtlasTexture.get();
+}
+
 QSSGShadowMapEntry::QSSGShadowMapEntry()
     : m_lightIndex(std::numeric_limits<quint32>::max())
-    , m_shadowMapMode(ShadowMapModes::VSM)
 {
 }
 
-QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthMap(quint32 lightIdx, ShadowMapModes mode, QRhiTexture *textureArray)
+QSSGShadowMapEntry QSSGShadowMapEntry::withAtlas(quint32 lightIdx)
 {
     QSSGShadowMapEntry e;
     e.m_lightIndex = lightIdx;
-    e.m_shadowMapMode = mode;
-    e.m_rhiDepthTextureArray = textureArray;
     return e;
-}
-
-QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthCubeMap(quint32 lightIdx, ShadowMapModes mode, QRhiTexture *depthCube, QRhiRenderBuffer *depthStencil)
-{
-    QSSGShadowMapEntry e;
-    e.m_lightIndex = lightIdx;
-    e.m_shadowMapMode = mode;
-    e.m_rhiDepthCube = depthCube;
-    e.m_rhiDepthStencil[0] = depthStencil;
-    return e;
-}
-
-bool QSSGShadowMapEntry::isCompatible(QSize mapSize, quint32 layerIndex, quint32 csmNumSplits, ShadowMapModes mapMode, QRhiTexture::Format textureFormat)
-{
-    if (csmNumSplits != m_csmNumSplits)
-        return false;
-
-    if (mapMode != m_shadowMapMode)
-        return false;
-
-    switch (mapMode) {
-    case ShadowMapModes::CUBE: {
-        if (mapSize != m_rhiDepthCube->pixelSize()) {
-            return false;
-        }
-        break;
-    }
-    case ShadowMapModes::VSM: {
-        if (mapSize != m_rhiDepthTextureArray->pixelSize() || int(layerIndex) >= m_rhiDepthTextureArray->arraySize()
-            || textureFormat != m_rhiDepthTextureArray->format()) {
-            return false;
-        }
-        break;
-    }
-    default:
-        Q_UNREACHABLE();
-        break;
-    }
-
-    return true;
 }
 
 void QSSGShadowMapEntry::destroyRhiResources()
 {
-    m_rhiDepthTextureArray = nullptr;
-
     delete m_rhiDepthCube;
     m_rhiDepthCube = nullptr;
-    qDeleteAll(m_rhiDepthStencil);
-    m_rhiDepthStencil.fill(nullptr);
-    qDeleteAll(m_rhiRenderTargets);
+    delete m_rhiDepthStencilCube;
+    m_rhiDepthStencilCube = nullptr;
+    qDeleteAll(m_rhiRenderTargetCube);
+    m_rhiRenderTargetCube.fill(nullptr);
+    delete m_rhiRenderPassDescCube;
+    m_rhiRenderPassDescCube = nullptr;
+    delete m_cubeToAtlasFrontSrb;
+    m_cubeToAtlasFrontSrb = nullptr;
+    delete m_cubeToAtlasBackSrb;
+    m_cubeToAtlasBackSrb = nullptr;
+
+    // un-owned references
     m_rhiRenderTargets.fill(nullptr);
-    qDeleteAll(m_rhiRenderPassDesc);
     m_rhiRenderPassDesc.fill(nullptr);
 }
 

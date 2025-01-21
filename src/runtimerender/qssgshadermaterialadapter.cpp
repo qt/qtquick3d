@@ -428,7 +428,7 @@ bool QSSGShaderCustomMaterialAdapter::usesCustomMorphing()
 
 QSSGRenderDefaultMaterial::MaterialSpecularModel QSSGShaderCustomMaterialAdapter::specularModel()
 {
-    return QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
+    return QSSGRenderDefaultMaterial::MaterialSpecularModel::SchlickGGX;
 }
 
 QSSGRenderDefaultMaterial::MaterialAlphaMode QSSGShaderCustomMaterialAdapter::alphaMode()

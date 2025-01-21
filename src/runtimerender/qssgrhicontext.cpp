@@ -449,7 +449,7 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
               -1);
 }
 
-int QSSGRhiShaderPipeline::ub0ShadowDataOffset() const
+int QSSGRhiShaderPipeline::ub0DirectionalLightDataOffset() const
 {
     return m_ub0NextUBufOffset + m_context.rhi()->ubufAligned(sizeof(QSSGShaderLightsUniformData));
 }
@@ -996,8 +996,8 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
 void QSSGRhiShaderPipeline::ensureCombinedUniformBuffer(QRhiBuffer **ubuf)
 {
     const quint32 alignedLightsSize = m_context.rhi()->ubufAligned(sizeof(QSSGShaderLightsUniformData));
-    const quint32 alignedShadowsSize = m_context.rhi()->ubufAligned(sizeof(QSSGShaderShadowsUniformData));
-    const quint32 totalBufferSize = m_ub0NextUBufOffset + alignedLightsSize + alignedShadowsSize;
+    const quint32 alignedDirectionalLightsSize = m_context.rhi()->ubufAligned(sizeof(QSSGShaderDirectionalLightsUniformData));
+    const quint32 totalBufferSize = m_ub0NextUBufOffset + alignedLightsSize + alignedDirectionalLightsSize;
     if (!*ubuf) {
         *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalBufferSize);
         (*ubuf)->create();

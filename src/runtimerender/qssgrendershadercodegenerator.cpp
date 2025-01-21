@@ -65,6 +65,7 @@ void QSSGStageGeneratorBase::begin(QSSGShaderGeneratorStageFlags inEnabledStages
     m_enabledStages = inEnabledStages;
     m_addedFunctions.clear();
     m_addedDefinitions.clear();
+    m_addedTypeDeclarations.clear();
     // the shared buffers will be cleared elsewhere.
 }
 
@@ -256,6 +257,11 @@ void QSSGStageGeneratorBase::buildShaderSourcePass1(QSSGShaderResourceMergeConte
         m_finalBuilder.append("\n#endif\n");
     }
 
+    for (const auto& value : std::as_const(m_addedTypeDeclarations)) {
+        m_finalBuilder.append(value);
+        m_finalBuilder.append("\n");
+    }
+
     // Sort for deterministic shader text when printing/debugging
     QList<QByteArray> sortedIncludes(m_includes.begin(), m_includes.end());
     std::sort(sortedIncludes.begin(), sortedIncludes.end());
@@ -373,6 +379,13 @@ void QSSGStageGeneratorBase::addFunction(const QByteArray &functionName)
 void QSSGStageGeneratorBase::addDefinition(const QByteArray &name, const QByteArray &value)
 {
     m_addedDefinitions.insert(name, value);
+}
+
+void QSSGStageGeneratorBase::addTypeDeclaration(const QByteArray &typeName, const QByteArray &snippet)
+{
+    if (snippet.isEmpty())
+        return;
+    m_addedTypeDeclarations.insert(typeName, snippet);
 }
 
 void QSSGProgramGenerator::linkStages()

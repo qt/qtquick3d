@@ -178,12 +178,6 @@ void QSSGShaderLibraryManager::loadPregeneratedShaderInfo()
     }
 }
 
-static int calcLightPoint(const QSSGShaderDefaultMaterialKey &key, int i) {
-    QSSGShaderDefaultMaterialKeyProperties prop;
-    return prop.m_lightFlags[i].getValue(key) + prop.m_lightSpotFlags[i].getValue(key) * 2
-            + prop.m_lightAreaFlags[i].getValue(key) * 4 + prop.m_lightShadowFlags[i].getValue(key) * 8;
-};
-
 bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1, const QSSGShaderDefaultMaterialKey &key2)
 {
     QSSGShaderDefaultMaterialKeyProperties props;
@@ -192,7 +186,6 @@ bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1,
 
     COMPARE_PROP(m_hasLighting)
     COMPARE_PROP(m_hasIbl)
-    COMPARE_PROP(m_specularEnabled)
     COMPARE_PROP(m_fresnelEnabled)
     COMPARE_PROP(m_fresnelScaleBiasEnabled)
     COMPARE_PROP(m_clearcoatFresnelScaleBiasEnabled)
@@ -206,7 +199,6 @@ bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1,
     COMPARE_PROP(m_vertexColorGreenMask)
     COMPARE_PROP(m_vertexColorBlueMask)
     COMPARE_PROP(m_vertexColorAlphaMask)
-    COMPARE_PROP(m_specularModel)
     COMPARE_PROP(m_vertexAttributes)
     COMPARE_PROP(m_alphaMode)
 
@@ -215,13 +207,6 @@ bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1,
     }
     for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::SingleChannelImageCount; i++) {
         COMPARE_PROP(m_textureChannels[i])
-    }
-    COMPARE_PROP(m_lightCount)
-    for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::LightCount; i++) {
-        int lp1 = calcLightPoint(key1, i);
-        int lp2 = calcLightPoint(key2, i);
-        if (lp1 < lp2)
-            return true;
     }
 #undef COMPARE_PROP
     return false;
