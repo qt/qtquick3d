@@ -51,16 +51,53 @@ XrView {
     XrOrigin {
         id: theOrigin
         z: 100
-
+        //! [picking]
         XrController {
             id: rightController
             controller: XrController.RightController
             poseSpace: XrController.AimPose
 
+            property QtObject hitObject
+
+            onRotationChanged: {
+                const pickResult = xrView.rayPick(scenePosition, forward)
+                if (pickResult.hitType !== PickResult.Null) {
+                    pickRay.hit = true
+                    pickRay.length = pickResult.distance
+                    hitObject = pickResult.objectHit
+                    cursorSphere.position = pickResult.scenePosition
+                    cursorSphere.visible = true
+                } else {
+                    pickRay.hit = false
+                    pickRay.length = 50
+                    hitObject = null
+                    cursorSphere.visible = false
+                }
+            }
+
             Node {
+                id: pickRay
+                property real length: 50
+                property bool hit: false
+
                 Model {
-                    scale: Qt.vector3d(0.02, 0.02, 0.02)
-                    source: "#Sphere"
+                    eulerRotation.x: -90
+                    scale: Qt.vector3d(0.005, pickRay.length/100, 0.005)
+                    source: "#Cone"
+                    materials: PrincipledMaterial {
+                        baseColor: rightTrigger.pressed ? "#99aaff" : "#cccccc"
+                        lighting: PrincipledMaterial.NoLighting
+                    }
+                    opacity: 0.8
+                }
+            }
+
+            Node {
+                z: 5
+                Model {
+                    eulerRotation.x: 90
+                    scale: Qt.vector3d(0.05, 0.10, 0.05)
+                    source: "#Cylinder"
                     materials: PrincipledMaterial {
                         baseColor: "black"
                         roughness: 0.2
@@ -68,17 +105,20 @@ XrView {
                 }
             }
         }
+        //! [picking]
     }
 
-    //! [picking]
-    RayPointer {
-        id: pickRay
-        rayPicker: xrView
-        beamHandle: rightController
-        pressed: rightTrigger.pressed
-        pointerSize: 5.0
+    Model {
+        id: cursorSphere
+        source: "#Sphere"
+        materials: PrincipledMaterial {
+            baseColor: "#777777"
+            lighting: PrincipledMaterial.NoLighting
+        }
+        opacity: 0.4
+        scale: Qt.vector3d(0.05, 0.05, 0.05)
+        visible: false
     }
-    //! [picking]
 
     //! [trigger input]
     XrInputAction {
@@ -86,7 +126,7 @@ XrView {
         hand: XrInputAction.RightHand
         actionId: [XrInputAction.TriggerPressed, XrInputAction.TriggerValue, XrInputAction.IndexFingerPinch]
         onTriggered: {
-            const button = pickRay.hitObject as ExampleButton
+            const button = rightController.hitObject as ExampleButton
             if (button && button !== panel.activeButton) {
                 panel.activeButton = button
             }

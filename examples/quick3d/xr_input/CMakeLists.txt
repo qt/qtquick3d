@@ -37,14 +37,10 @@ qt_add_qml_module(xr_input
         ExampleButton.qml
         Teacup.qml
         ColorView.qml
-        RayPointer.qml
     RESOURCES
         meshes/teapot.mesh
         meshes/cup.mesh
         meshes/handle.mesh
-        shaders/ray_pointer.vert
-        shaders/ray_pointer_indicator.frag
-        shaders/ray_pointer_target.frag
     NO_RESOURCE_TARGET_PATH
 )
 

@@ -20,19 +20,15 @@
 
     \snippet xr_input/main.qml picking
 
-    This item performs three functions:
-    \list 1
-    \li If we hit anything, we change the color of the picking ray to green and set its length so it
-        touches the thing we hit.
-    \li If we press the trigger while the ray is hitting something, we change the color of the picking ray
-        to blue, and scale down the circular target cursor. The \c pickRay is a component
-        consists of a semi-transparent cylinder with a custom material that shows where
-        the user is aiming, and a rectangle with a custom material that also shows
-        the exact point where the user is going to interact on the surface.
-    \li We set the property \c hitObject to the object that we hit.
-
+    This performs the following functions:
+    \list
+        \li If we hit anything, we change the length of the \c pickRay to so it touches the
+            thing we hit. The \c pickRay is a semi-transparent cone (a tapered cylinder)
+            that shows where the user is aiming. We also move \c cursorSphere to the point
+            where the ray hits. (\c cursorSphere is a semi-transparent sphere which is a child of the XrView).
+        \li We set the property \c hitObject to the object that we hit.
     \endlist
-    We also use a black sphere as a generic representation of the controller.
+    We also use a black cylinder as a generic representation of the controller.
 
     For this example, we have made a simple 3D push button in the file \c ExampleButton.qml.
     (The details of how the button works are not explained here.) We create an XrInputAction
