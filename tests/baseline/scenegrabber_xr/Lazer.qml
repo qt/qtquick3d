@@ -40,6 +40,6 @@ Model {
     ]
 
     Beam {
-        visible: enableBeam
+        visible: lazer.enableBeam
     }
 }

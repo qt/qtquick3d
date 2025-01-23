@@ -29,7 +29,7 @@ path = ["tests/**.png", "tests/**.jpg", "tests/**.mesh", "tests/**.frag",
         "tests/**.bin",
         "tests/baseline/data/lighting/lightmaps/qlm_box.exr",
         "tests/baseline/data/particles3d/qt_logo_in_4096.cbor",
-        "tests/manual/qmlxr/testscenes/maps/oulu_2.jpeg",
+        "tests/baseline/scenegrabber_xr/testscenes/maps/oulu_2.jpeg",
         "tests/baseline/data/shared/maps/oulu_2.jpeg"]
 precedence = "closest"
 comment = "test"
@@ -165,7 +165,7 @@ SPDX-License-Identifier = "CC0-1.0"
 [[annotations]]
 path = ["tests/baseline/data/shared/maps/TestEnvironment-512.hdr",
         "tests/baseline/data/shared/maps/TestEnvironment-512.exr",
-        "tests/manual/qmlxr/testscenes/maps/TestEnvironment-512.hdr",
+        "tests/baseline/scenegrabber_xr/testscenes/maps/TestEnvironment-512.hdr",
         "tests/baseline/data/lighting/maps/TestEnvironment-512_R.exr",
         "tests/baseline/data/lighting/maps/TestEnvironment-512_tiled.exr"]
 precedence = "override"
@@ -174,8 +174,8 @@ SPDX-FileCopyrightText = "Unknown"
 SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
-path = ["tests/manual/qmlxr/testscenes/maps/skybox/skybox-image.txt",
-        "tests/manual/qmlxr/testscenes/maps/skybox/*.jpg"]
+path = ["tests/baseline/scenegrabber_xr/testscenes/maps/skybox/skybox-image.txt",
+        "tests/baseline/scenegrabber_xr/testscenes/maps/skybox/*.jpg"]
 precedence = "override"
 SPDX-FileCopyrightText = "https://learnopengl.com/About"
 SPDX-License-Identifier = "CC-BY-4.0"

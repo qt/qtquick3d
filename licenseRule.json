@@ -130,7 +130,7 @@
                 "file type": "3rd party",
                 "spdx": ["MIT"]
             },
-            "tests/manual/qmlxr/testscenes/maps/skybox/" : {
+            "tests/baseline/scenegrabber_xr/testscenes/maps/skybox" : {
                 "comment" : "",
                 "file type" : "3rd party",
                 "spdx" : ["CC-BY-4.0"]

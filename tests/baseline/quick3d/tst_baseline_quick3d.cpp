@@ -14,6 +14,40 @@
 // qmlscenegrabber's default timeout, in ms
 #define SCENE_TIMEOUT 6000
 
+static bool hasXrEnvironment()
+{
+    static bool val = qEnvironmentVariableIntValue("LANCELOT_XR_ENVIRONMENT") != 0;
+    return val;
+}
+
+static quint16 checksumFileOrDir(const QString &path)
+{
+    QFileInfo fi(path);
+    if (!fi.exists() || !fi.isReadable())
+        return 0;
+    if (fi.isFile()) {
+        QFile f(path);
+        bool isBinary = path.endsWith(".png") || path.endsWith(".jpg");
+        if (!f.open(isBinary ? QIODevice::ReadOnly : QIODevice::ReadOnly | QIODevice::Text)) {
+            qCritical() << "Failed to open file" << path << f.errorString();
+            return 0;
+        }
+
+        QByteArray contents = f.readAll();
+        return qChecksum(contents);
+    }
+    if (fi.isDir()) {
+        static const QStringList nameFilters = QStringList() << "*.qml" << "*.cpp" << "*.png" << "*.jpg";
+        quint16 cs = 0;
+        const auto entryList = QDir(fi.filePath()).entryList(nameFilters,
+                                                             QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
+        for (const QString &item : entryList)
+            cs ^= checksumFileOrDir(path + QLatin1Char('/') + item);
+        return cs;
+    }
+    return 0;
+}
+
 class tst_Quick3D : public QObject
 {
     Q_OBJECT
@@ -27,19 +61,30 @@ private Q_SLOTS:
     void cleanupTestCase();
     void testRendering_data();
     void testRendering();
+    void xrTestRendering_data();
+    void xrTestRendering();
 
 private:
-    void setupTestSuite(const QByteArray& filter = QByteArray());
-    void runTest(const QStringList& extraArgs = QStringList());
-    bool renderAndGrab(const QString& qmlFile, const QStringList& extraArgs, QImage *screenshot, QString *errMsg);
+    void runTest(const QString &qmlFile, const QString &grabber, const QStringList& extraArgs = QStringList());
+    bool renderAndGrab(const QString& qmlFile, const QString &grabber, const QStringList& extraArgs, QImage *screenshot, QString *errMsg);
     quint16 checksumFileOrDir(const QString &path);
 
     QString testSuitePath;
+    QString testSuitePathXr;
     int grabberTimeout;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
 };
 
+enum class TestData : size_t {
+    QmlFile,
+    QmlFileXr,
+};
+
+static const char testDataTags[][10] = {
+    "qmlFile",
+    "qmlFileXr",
+};
 
 tst_Quick3D::tst_Quick3D()
     : consecutiveErrors(0), aborted(false)
@@ -50,16 +95,27 @@ tst_Quick3D::tst_Quick3D()
     grabberTimeout = (sceneTimeout * 4) / 3; // Include some slack
 }
 
-
 void tst_Quick3D::initTestCase()
 {
-    QString dataDir = QFINDTESTDATA("../data/.");
-    if (dataDir.isEmpty())
-        dataDir = QStringLiteral("data");
-    QFileInfo fi(dataDir);
-    if (!fi.exists() || !fi.isDir() || !fi.isReadable())
-        QSKIP("Test suite data directory missing or unreadable: " + fi.canonicalFilePath().toLatin1());
-    testSuitePath = fi.canonicalFilePath();
+    {
+        QString dataDir = QFINDTESTDATA("../data/.");
+        if (dataDir.isEmpty())
+            dataDir = QStringLiteral("data");
+        QFileInfo fi(dataDir);
+        if (!fi.exists() || !fi.isDir() || !fi.isReadable())
+            QSKIP("Test suite data directory missing or unreadable: " + fi.canonicalFilePath().toLatin1());
+        testSuitePath = fi.canonicalFilePath();
+    }
+
+    if (hasXrEnvironment()) {
+        QString dataDirXr = QFINDTESTDATA("../data_xr/.");
+        if (dataDirXr.isEmpty())
+            dataDirXr = QStringLiteral("data_xr");
+        QFileInfo fiXr(dataDirXr);
+        if (!fiXr.exists() || !fiXr.isDir() || !fiXr.isReadable())
+            QSKIP("XR test suite data directory missing or unreadable: " + fiXr.canonicalFilePath().toLatin1());
+        testSuitePathXr = fiXr.canonicalFilePath();
+    }
 
 #if defined(Q_OS_WIN)
     const char *defaultRhiBackend = "d3d11";
@@ -90,23 +146,11 @@ void tst_Quick3D::cleanupTestCase()
     QBaselineTest::finalizeAndDisconnect();
 }
 
-void tst_Quick3D::testRendering_data()
+template <TestData Selector>
+void setupTestSuite(const QString &testSuitePath, const QByteArray& filter = {})
 {
-    setupTestSuite();
-    consecutiveErrors = 0;
-    aborted = false;
-}
-
-
-void tst_Quick3D::testRendering()
-{
-    runTest();
-}
-
-
-void tst_Quick3D::setupTestSuite(const QByteArray& filter)
-{
-    QTest::addColumn<QString>("qmlFile");
+    const char *columnTag = testDataTags[static_cast<size_t>(Selector)];
+    QTest::addColumn<QString>(columnTag);
     int numItems = 0;
 
     QStringList ignoreItems;
@@ -141,22 +185,56 @@ void tst_Quick3D::setupTestSuite(const QByteArray& filter)
         QSKIP("No .qml test files found in " + testSuitePath.toLatin1());
 }
 
+void tst_Quick3D::testRendering_data()
+{
+    setupTestSuite<TestData::QmlFile>(testSuitePath);
+    consecutiveErrors = 0;
+    aborted = false;
+}
 
-void tst_Quick3D::runTest(const QStringList& extraArgs)
+
+void tst_Quick3D::testRendering()
+{
+    QString grabber("qquick3d_qmlscenegrabber");
+    QFETCH(QString, qmlFile);
+    runTest(qmlFile, grabber);
+}
+
+void tst_Quick3D::xrTestRendering_data()
+{
+    if (!hasXrEnvironment())
+        QSKIP("XR test environment not set up for this test run.");
+
+    setupTestSuite<TestData::QmlFileXr>(testSuitePathXr);
+    consecutiveErrors = 0;
+    aborted = false;
+}
+
+void tst_Quick3D::xrTestRendering()
+{
+    QString grabber("qquick3d_qmlscenegrabber_xr");
+    QFETCH(QString, qmlFileXr);
+    // NOTE: Set scale to avoid creating large images. Unlike the regular test,
+    //       we're more interested in the XR rendering itself than the image quality or
+    //       fine details.
+    // NOTE: Aspect ratio is preserved, so this migth differ slightly from the
+    //       actual resolution of the output.
+    runTest(qmlFileXr, grabber, {"-s", "800x600"});
+}
+
+void tst_Quick3D::runTest(const QString &qmlFile, const QString &grabber, const QStringList& extraArgs)
 {
     // qDebug() << "Rendering" << QTest::currentDataTag();
 
     if (aborted)
         QSKIP("System too unstable.");
 
-    QFETCH(QString, qmlFile);
-
     QImage screenShot;
     QString errorMessage;
-    if (renderAndGrab(qmlFile, extraArgs, &screenShot, &errorMessage)) {
+
+    if (renderAndGrab(qmlFile, grabber, extraArgs, &screenShot, &errorMessage)) {
         consecutiveErrors = 0;
-    }
-    else {
+    } else {
         if (++consecutiveErrors >= 3 && QBaselineTest::shouldAbortIfUnstable())
             aborted = true;                   // Just give up if screen grabbing fails 3 times in a row
         QFAIL(qPrintable("QuickView grabbing failed: " + errorMessage));
@@ -166,7 +244,7 @@ void tst_Quick3D::runTest(const QStringList& extraArgs)
 }
 
 
-bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extraArgs, QImage *screenshot, QString *errMsg)
+bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QString &grabberExec, const QStringList& extraArgs, QImage *screenshot, QString *errMsg)
 {
     bool usePipe = true;  // Whether to transport the grabbed image using temp. file or pipe. TBD: cmdline option
 #if defined(Q_OS_WIN)
@@ -174,7 +252,7 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extra
 #endif
     QProcess grabber;
     grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
-    QString cmd = QCoreApplication::applicationDirPath() + "/qquick3d_qmlscenegrabber";
+    QString cmd = QCoreApplication::applicationDirPath() + QDir::separator() + grabberExec;
     QStringList args = extraArgs;
 #if defined(Q_OS_WIN)
     args << "-platform" << "windows:fontengine=freetype";
@@ -207,31 +285,6 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extra
     if (!usePipe)
         QFile::remove(tmpfile);
     return true;
-}
-
-
-quint16 tst_Quick3D::checksumFileOrDir(const QString &path)
-{
-    QFileInfo fi(path);
-    if (!fi.exists() || !fi.isReadable())
-        return 0;
-    if (fi.isFile()) {
-        QFile f(path);
-        bool isBinary = path.endsWith(".png") || path.endsWith(".jpg");
-        f.open(isBinary ? QIODevice::ReadOnly : QIODevice::ReadOnly | QIODevice::Text);
-        QByteArray contents = f.readAll();
-        return qChecksum(contents);
-    }
-    if (fi.isDir()) {
-        static const QStringList nameFilters = QStringList() << "*.qml" << "*.cpp" << "*.png" << "*.jpg";
-        quint16 cs = 0;
-        const auto entryList = QDir(fi.filePath()).entryList(nameFilters,
-                                                             QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
-        for (const QString &item : entryList)
-            cs ^= checksumFileOrDir(path + QLatin1Char('/') + item);
-        return cs;
-    }
-    return 0;
 }
 
 QBASELINETEST_MAIN(tst_Quick3D)
