@@ -11,6 +11,9 @@ import QtQuick3D.Xr
 XrView {
     id: xrView
 
+    property bool showControllers: false
+    property bool showRuntimeDialog: false
+
     XrErrorDialog { id: err }
     onInitializeFailed: (errorString) => err.run("XRView", errorString)
     referenceSpace: XrView.ReferenceSpaceLocal
@@ -24,16 +27,19 @@ XrView {
     XrOrigin {
         id: origin
         objectName: "xrorigin"
+        position: Qt.vector3d(0, 0, 100)
         XrController {
             id: leftController
             controller: XrController.ControllerLeft
             poseSpace: XrController.AimPose
             Lazer {
+                visible: xrView.showControllers
                 enableBeam: true
             }
             Node {
                 y: rect.height
                 x: -rect.width / 2
+                visible: xrView.showRuntimeDialog
                 Rectangle {
                     id: rect
                     opacity: 0.7
@@ -63,9 +69,11 @@ XrView {
         }
         XrController {
             id: rightController
+            visible: xrView.showControllers
             controller: XrController.ControllerRight
             poseSpace: XrController.AimPose
             Lazer {
+                visible: xrView.showControllers
                 enableBeam: true
             }
         }
