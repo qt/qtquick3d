@@ -37,7 +37,6 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DSceneManager;
 class QQuick3DViewport;
-struct QSSGRenderLayer;
 
 class QQuick3DSceneRenderer
 {
