@@ -57,7 +57,11 @@ Q_TRACE_POINT(qtquick3d, QSSG_synchronize_exit);
 Q_TRACE_POINT(qtquick3d, QSSG_renderPass_entry, const QString &renderPass);
 Q_TRACE_POINT(qtquick3d, QSSG_renderPass_exit);
 
-static bool dumpRenderTimes = false;
+static bool dumpRenderTimes()
+{
+    static bool val = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
+    return val;
+}
 
 #if QT_CONFIG(qml_debug)
 
@@ -167,7 +171,7 @@ void SGFramebufferObjectNode::render()
         emit textureChanged();
 
         if (renderer->renderStats())
-            renderer->renderStats()->endRender(dumpRenderTimes);
+            renderer->renderStats()->endRender(dumpRenderTimes());
 
         if (renderer->m_requestedFramesCount > 0) {
             scheduleRender();
@@ -189,7 +193,6 @@ void SGFramebufferObjectNode::handleScreenChange()
 QQuick3DSceneRenderer::QQuick3DSceneRenderer(const std::shared_ptr<QSSGRenderContextInterface> &rci)
     : m_sgContext(rci)
 {
-    dumpRenderTimes = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
 }
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
@@ -1090,7 +1093,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     }
 
     if (m_renderStats)
-        m_renderStats->endSync(dumpRenderTimes);
+        m_renderStats->endSync(dumpRenderTimes());
 
     Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DSynchronizeFrame, quint64(m_surfaceSize.width()) | quint64(m_surfaceSize.height()) << 32, profilingId);
 }
@@ -1705,7 +1708,7 @@ void QQuick3DSGDirectRenderer::render()
             m_renderer->endFrame();
 
             if (m_renderer->renderStats())
-                m_renderer->renderStats()->endRender(dumpRenderTimes);
+                m_renderer->renderStats()->endRender(dumpRenderTimes());
         }
     }
 }
