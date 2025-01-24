@@ -112,7 +112,7 @@ private:
     QRhiRenderBuffer *m_depthStencilBuffer = nullptr;
     QRhiTexture *m_multiViewDepthStencilBuffer = nullptr;
     bool m_textureNeedsFlip = true;
-    QSSGRenderLayer::Background m_backgroundMode;
+    QSSGRenderLayer::Background m_backgroundMode = QSSGRenderLayer::Background::Unspecified;
     QColor m_userBackgroundColor = Qt::black;
     QColor m_linearBackgroundColor = Qt::black;
     QColor m_tonemappedBackgroundColor = Qt::black;
