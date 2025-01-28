@@ -1866,7 +1866,7 @@ bool QQuick3DViewport::singlePointPick(QSinglePointEvent *event, const QVector3D
     for (const auto &pickResult : pickResults) {
         auto [item, position] = getItemAndPosition(pickResult);
         if (!item)
-            continue;
+            break;
         if (item == m_prevMouseItem && (position - m_prevMousePos).manhattanLength() < jitterLimit && !event->button()) {
             withinJitterLimit = true;
             break;
