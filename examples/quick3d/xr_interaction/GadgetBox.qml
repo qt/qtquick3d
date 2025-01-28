@@ -15,7 +15,7 @@ Node {
     property XrGadget activeGadget: null
     readonly property bool gadgetActive: !!activeGadget
 
-    visible: selectedObject
+    visible: !!selectedObject
     position: selectedObject?.scenePosition || Qt.vector3d(0, 0, 0)
     rotation: selectedObject?.sceneRotation || Qt.quaternion(1, 0, 0, 0)
 
@@ -31,6 +31,12 @@ Node {
     function handleHover(obj: Model) {
         const gadget = obj as XrGadget
         selectGadget(gadget)
+    }
+
+    enum Type {
+        Translate,
+        Rotate,
+        Resize
     }
 
     property int gadgetType: 0
@@ -93,7 +99,7 @@ Node {
             z: selectionModel.max.z
             controlledObject: selectionBox.selectedObject
         }
-        visible: selectionBox.gadgetType === 0
+        visible: selectionBox.gadgetType === GadgetBox.Type.Translate
     }
 
     Node {
@@ -113,8 +119,9 @@ Node {
             z: selectionModel.max.z + 1.5
             controlledObject: selectionBox.selectedObject
         }
-        visible: selectionBox.gadgetType === 1
+        visible: selectionBox.gadgetType === GadgetBox.Type.Rotate
     }
+
     Node {
         id: resizors
         ResizeGadget {
@@ -132,8 +139,6 @@ Node {
             z: selectionModel.max.z
             controlledObject: selectionBox.selectedObject
         }
-        visible: selectionBox.gadgetType === 2
+        visible: selectionBox.gadgetType === GadgetBox.Type.Resize
     }
-
-
 }

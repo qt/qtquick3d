@@ -143,7 +143,7 @@ Window {
             id: controller
             z: 100
             x: -30
-            eulerRotation.x: -30
+            eulerRotation.x: 0
 
             view: view
             xrCursor: cursor
@@ -176,12 +176,11 @@ Window {
         XrCursor {
             id: cursor
             cameraNode: cameraNode
-            size: 4
+            size: 3
             opacity: 0.7
-            sphere: controller.pickStatus === PickResult.Model
+            cursorStyle: controller.pickStatus === PickResult.Model ? XrGadget.CursorStyle.Sphere : XrGadget.CursorStyle.Flat
         }
     } // View3D
-
 
     OrbitCameraController {
         id: occ

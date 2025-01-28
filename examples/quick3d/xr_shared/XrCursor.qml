@@ -6,21 +6,29 @@ import QtQuick3D
 
 Model {
     id: root
-    source: sphere ? "#Sphere" : "#Rectangle"
-    property real size: 2
+    source: isSphere() ? "#Sphere" : "#Rectangle"
+    property real size: 1
+    property real contrast: 0.5
 
     property Node cameraNode: null
-    property real scaleDistance: 100 // Reference distance
-
-    property alias radius: targetMaterial.radius // TODO: handle antialiasing in vertex shader
+    property real scaleDistance: 100 // Cursor is scaled up when further away than this distance
 
     property real sf: size / 100 // private property
 
-    opacity: 0.5
+    opacity:  0.5
 
-    scale: sphere ? Qt.vector3d(sf * radius * 2, sf * radius * 2, sf * radius * 2) : Qt.vector3d(sf, sf, sf)
+    scale: Qt.vector3d(sf, sf, sf)
 
-    property bool sphere: false
+    enum CursorStyle {
+        Hidden,
+        Flat,
+        Sphere
+    }
+    property int cursorStyle: XrCursor.CursorStyle.Flat
+
+    function isSphere() : bool {
+        return cursorStyle === XrCursor.CursorStyle.Sphere
+    }
 
     CustomMaterial {
         id: targetMaterial
@@ -29,19 +37,19 @@ Model {
         vertexShader: "shaders/cursor.vert"
         fragmentShader: "shaders/cursor.frag"
 
-        property real radius: 0.3
-        property real opacity: root.opacity
+        property real opacity: root.cursorStyle === XrCursor.CursorStyle.Hidden ? 0.0 : root.opacity
+        property real contrast: root.contrast
     }
 
     PrincipledMaterial {
-        id: testMaterial
+        id: sphereMaterial
         baseColor: "white"
     }
 
-    materials: sphere ? testMaterial : targetMaterial
+    materials: isSphere() ? sphereMaterial : targetMaterial
 
     function setPositionAndOrientation(scenePos : vector3d, sceneNormal : vector3d) {
-        if (sphere) {
+        if (isSphere()) {
             position = scenePos
         } else {
             const newPos = scenePos.minus(sceneNormal.normalized().times(-0.1))

@@ -12,11 +12,20 @@ Model {
     property vector3d pressPos
     property vector3d originalPos
 
+    property bool grabbable: true
 
     property vector3d delta
 
-    property Model controlledObject
+    property Node controlledObject
     property bool selected: false
+
+    enum CursorStyle {
+        Hidden,
+        Flat,
+        Sphere
+    }
+
+    property int cursorStyle: XrGadget.CursorStyle.Hidden
 
     signal pressed(pos: vector3d, dir: vector3d)
     signal moved(delta: vector3d, dir: vector3d)

@@ -17,13 +17,15 @@ XrController {
     property XrCursor xrCursor: null
     property int pickStatus: PickResult.Null
 
-    property real yeetDistance: 400
+    property bool enableVirtualMouse: false
+    property bool enableThumbstickMove: true
 
+    property real yeetDistance: 400
     property real emptyRayLength: 400
 
     //! [signals]
+    property Model hoveredObject: null
     signal objectPressed(obj: Model, pos: vector3d, direction: vector3d)
-    signal objectHovered(obj: Model)
     signal moved(pos: vector3d, direction: vector3d)
     signal released()
     signal objectGrabbed(obj: Model)
@@ -43,7 +45,7 @@ XrController {
             theController.objectGrabbed(hitObject as Model)
         }
 
-        function doGrab(obj: Model) {
+        function doGrab(obj: Node) {
             grabbedObject = obj
             if (grabbedObject) {
                 const scenePos = grabbedObject.scenePosition
@@ -98,9 +100,7 @@ XrController {
             offset = yeetOffset.plus(localForward.times(pickRay.length))
         }
 
-        function findObject() {
-            const dir = theController.mapDirectionToScene(pickDirection)
-            const pickResult = theController.view.rayPick(scenePosition, dir)
+        function findObject(pickResult : var) {
 
             const didHit = pickResult.hitType !== PickResult.Null
             theController.pickStatus = pickResult.hitType
@@ -109,31 +109,34 @@ XrController {
                 pickRay.hit = true
                 pickRay.length = pickResult.distance * 0.75
                 hitObject = pickResult.objectHit
-                if (xrCursor) {
-                    xrCursor.setPositionAndOrientation(pickResult.scenePosition, pickResult.sceneNormal)
-                    xrCursor.visible = true
-                }
             } else {
                 pickRay.hit = false
                 pickRay.length = theController.emptyRayLength
                 hitObject = null
-                if (xrCursor)
-                    xrCursor.visible = false
             }
-            theController.objectHovered(hitObject)
+            theController.hoveredObject = hitObject
         }
 
         function handleMove() {
+            const dir = theController.mapDirectionToScene(pickDirection)
+            const pickResult = theController.view.rayPick(scenePosition, dir)
+            if (xrCursor) {
+                const didHit = pickResult.hitType !== PickResult.Null
+                xrCursor.visible = didHit && !priv.isGrabbing
+                if (didHit)
+                    xrCursor.setPositionAndOrientation(pickResult.scenePosition, pickResult.sceneNormal)
+            }
+
             if (isInteracting)
-                theController.moved(theController.scenePosition, theController.forward) //### sceneFwd
+                theController.moved(theController.scenePosition, theController.forward)
             else if (isGrabbing)
                 moveObject()
             else
-                findObject()
+                findObject(pickResult)
         }
     }
 
-    function startGrab(obj: Model) {
+    function startGrab(obj: Node) {
         priv.doGrab(obj)
     }
 
@@ -174,7 +177,7 @@ XrController {
 
     XrInputAction {
         id: yeetAction
-        enabled: theController.yeetDistance > 0
+        enabled: theController.enableThumbstickMove
         hand: theController.controller
         actionId: XrInputAction.ThumbstickY
     }
@@ -183,5 +186,12 @@ XrController {
         id: yeetAnimation
         running: priv.isGrabbing && Math.abs(yeetAction.value) > 0.1
         onTriggered: priv.yeet(yeetAction.value * frameTime * 30)
+    }
+
+    XrVirtualMouse {
+        enabled: theController.enableVirtualMouse
+        source: theController
+        view: theController.view as XrView
+        leftMouseButton: triggerAction.pressed
     }
 }

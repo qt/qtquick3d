@@ -8,10 +8,10 @@ import QtQuick3D.Helpers
 Node {
     InstanceRepeater {
         instancingTable: RandomInstancing {
-            instanceCount: 61
+            instanceCount: 61 // '@'..'~'
             position: InstanceRange {
-                from: Qt.vector3d(-150, 50, -50)
-                to: Qt.vector3d(150, 200, -100)
+                from: Qt.vector3d(-50, 75, -50)
+                to: Qt.vector3d(150, 175, 50)
             }
             rotation: InstanceRange {
                 from: Qt.vector3d(0, 0, 0)
@@ -48,11 +48,12 @@ Node {
     }
 
     Model {
-        position: Qt.vector3d(0, 0, 0)
-        source: "#Cylinder"
-        scale: Qt.vector3d(2, 0.2, 2)
-        materials: [ DefaultMaterial {
-                diffuseColor: "red"
+        id: floor
+        source: "#Rectangle"
+        eulerRotation.x: -90
+        scale: Qt.vector3d(5,5,5)
+        materials: [ PrincipledMaterial {
+                baseColor: "green"
             }
         ]
     }

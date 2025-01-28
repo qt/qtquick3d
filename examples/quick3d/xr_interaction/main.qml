@@ -3,12 +3,9 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Shapes
 import QtQuick.Layouts
-
 import QtQuick3D
 import QtQuick3D.Helpers
-
 import QtQuick3D.Xr
 
 import xr_shared
@@ -65,13 +62,15 @@ XrView {
             id: rightAim
             controller: XrController.RightController
             view: xrView
+            enableVirtualMouse: true
+            enableThumbstickMove: thumbCheckBox.checked
 
             onObjectPressed: (obj, pos, dir) => {
                 gadgetBox.handlePress(obj, pos, dir)
             }
-            onObjectHovered: (obj) => {
-                gadgetBox.handleHover(obj)
-                hapticFeedback.handleHover(obj)
+            onHoveredObjectChanged: {
+                gadgetBox.handleHover(hoveredObject)
+                hapticFeedback.handleHover(hoveredObject)
             }
             onMoved: (pos, dir) => {
                 gadgetBox.handleMove(pos, dir)
@@ -80,8 +79,13 @@ XrView {
                 gadgetBox.handleRelease()
             }
             onObjectGrabbed: (obj) => {
-                if (!(obj instanceof XrGadget))
+                if (!grabCheckBox.checked)
+                    return
+                const gadget = obj as XrGadget
+                if (!gadget)
                     startGrab(obj)
+                else if (gadget.grabbable)
+                    startGrab(gadget.controlledObject)
             }
             Model {
                 source: "#Cylinder"
@@ -100,16 +104,21 @@ XrView {
             id: camera
         }
 
-        Node {
-            // Separate node to turn off cursor for gadgets. We can't bind to
-            // XrCursor.visible, since AimController assigns to it.
-            visible: !gadgetBox.gadgetActive
-            XrCursor {
-                id: cursor
-                cameraNode: camera
-                size: 2
-                sphere: rightAim.pickStatus === PickResult.Model
+        XrCursor {
+            id: cursor
+            cameraNode: camera
+            size: cursorSlider.value
+            function style() : int {
+                if (rightAim.pickStatus === PickResult.Item)
+                    return XrCursor.CursorStyle.Flat
+                if (rightAim.pickStatus === PickResult.Null)
+                    return XrCursor.CursorStyle.Hidden
+                const gadget = rightAim.hoveredObject as XrGadget
+                if (gadget)
+                    return gadget.cursorStyle
+                return sphereButton.checked ? XrCursor.CursorStyle.Sphere : XrCursor.CursorStyle.Flat
             }
+            cursorStyle: style()
         }
     }
 
@@ -117,5 +126,60 @@ XrView {
         id: gadgetBox
     }
 
-    Scene {}
+    Scene {
+        z: -100
+    }
+
+    XrItem {
+        y: height + 75
+        x: -125
+        z: -75
+        width: 60
+        height: 80
+        eulerRotation.y: 30
+        color: "transparent"
+        contentItem: Rectangle {
+            width: 300
+            height: 400
+            opacity: 0.99
+            color: "#aafff7f0"
+            radius: 20
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 20
+                CheckBox {
+                    id: grabCheckBox
+                    text: "Enable grab"
+                    checked: true
+                }
+                CheckBox {
+                    id: thumbCheckBox
+                    text: "Thumbstick move"
+                    checked: true
+                    enabled: grabCheckBox.checked
+                }
+                Slider {
+                    id: cursorSlider
+                    from: 0.5
+                    value: 2.0
+                    to: 5
+                }
+                Text {
+                    text: "Cursor size: " + cursorSlider.value.toFixed(1)
+                }
+                Frame {
+                    ColumnLayout {
+                        anchors.fill: parent
+                        Text { text: "Cursor style for 3D objects" }
+                        RadioButton { id: sphereButton; text: "Sphere"; checked: true }
+                        RadioButton { text: "Flat" }
+                    }
+                    Layout.alignment: Qt.AlignBottom
+                }
+            }
+        }
+        XrItemHandle {
+            visible: grabCheckBox.checked
+        }
+    }
 }

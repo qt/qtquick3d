@@ -23,8 +23,8 @@ AxisGadget {
 
     onPressed: (pos, dir) => {
         originalScale = controlledObject.scale
-        const min = controlledObject.bounds.minimum.times(originalScale)
-        const max = controlledObject.bounds.maximum.times(originalScale)
+        const min = objectBounds.minimum.times(originalScale)
+        const max = objectBounds.maximum.times(originalScale)
         switch (axis) {
             case 0:
                 minExtent = min.x

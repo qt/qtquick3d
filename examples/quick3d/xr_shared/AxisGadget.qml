@@ -9,6 +9,7 @@ pragma ComponentBehavior: Bound
 XrGadget {
     id: root
     required property int axis // x == 0, y == 1, z == 2
+    readonly property var objectBounds: (controlledObject as Model)?.bounds
     materials: PrincipledMaterial {
         property color axisColor: axis === 0 ? "red" : axis === 1 ? "lime" : "deepskyblue"
         baseColor: root.selected ? axisColor : Qt.darker(axisColor)

@@ -18,6 +18,7 @@ qt_add_qml_module(${PROJECT_NAME}_shared
         ValueFader.qml
         XrCursor.qml
         XrGadget.qml
+        XrItemHandle.qml
     RESOURCES
         shaders/target_indicator.frag
         shaders/target_indicator.vert

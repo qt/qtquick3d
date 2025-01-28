@@ -3,18 +3,11 @@
 
 VARYING vec2 texcoord;
 
-// Parameters as smoothstep
+// Linear interpolation, parameters as smoothstep: returns 0 at upper and 1 at lower
 
 float interpolate(float lower, float upper, float x)
 {
-#if 1
-//smoothstep
-    return smoothstep(lower, upper, x);
-#else
-//linear
-    float n =  (min(upper, max(lower, x)) - lower) / (upper - lower);
-    return n;
-#endif
+    return (min(upper, max(lower, x)) - lower) / (upper - lower);
 }
 
 void MAIN()
@@ -25,10 +18,10 @@ void MAIN()
     float dy = dFdy(dist);
     float df = length(vec2(dx, dy));
 
-    float alphaval =  1.0 - interpolate(radius - df, radius + df, dist);
+    const float radius = 0.5;
+    float alpha =  (1.0 - interpolate(radius - df, radius, dist)) * opacity;
+    float dark = interpolate(radius - 2*df, radius - df, dist);
+    float light = (1.0 - dark * contrast) * alpha;
 
-    const float contrast = 0.6;
-    float light = 1.0 - contrast * interpolate(radius - 2*df, radius - df, dist);
-
-    FRAGCOLOR = vec4(light, light, light, 1) * alphaval * opacity;
+    FRAGCOLOR = vec4(light, light, light, alpha);
 }

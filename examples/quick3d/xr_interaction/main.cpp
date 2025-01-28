@@ -4,8 +4,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include <QtCore/qfileselector.h>
-
 int main(int argc, char *argv[])
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
