@@ -7,7 +7,7 @@ import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.Helpers
 
-Window {
+ApplicationWindow {
     id: window
     visible: true
     width: 1200

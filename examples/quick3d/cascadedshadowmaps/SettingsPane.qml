@@ -66,24 +66,31 @@ Item {
             }
         }
 
-        ScrollView {
+        Page {
             anchors.fill: parent
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-            padding: 10
-            background: Rectangle {
-                color: "white"
+
+            header: ToolBar {
+                width: parent.width
+                Label {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Settings"
+                    font.pointSize: 17
+                }
             }
 
-            Flickable {
-                clip: true
-                contentWidth: settingsArea.width
-                contentHeight: settingsArea.height
+            ScrollView {
+                anchors.fill: parent
+                ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                padding: 10
+                contentHeight: settingsArea.implicitHeight
 
-                Column {
+                ColumnLayout {
                     id: settingsArea
+                    width: parent.width
                     spacing: 5
 
                     component SliderWithValue : RowLayout {
+                        id: sliderWithValue
                         property alias value: slider.value
                         property alias from: slider.from
                         property alias to: slider.to
@@ -98,17 +105,13 @@ Item {
                         }
                         Label {
                             id: valueText
-                            text: slider.value.toFixed(numDecimals)
+                            text: slider.value.toFixed(sliderWithValue.numDecimals)
                             Layout.minimumWidth: 80
                             Layout.maximumWidth: 80
                         }
                     }
 
-                    Label {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Settings"
-                        font.pointSize: 17
-                    }
+
 
                     Label {
                         text: "Camera Clip Far"
@@ -288,3 +291,4 @@ Item {
         }
     }
 }
+
