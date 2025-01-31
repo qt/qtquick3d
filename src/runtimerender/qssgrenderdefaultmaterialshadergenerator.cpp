@@ -631,6 +631,9 @@ static void handleDirectionalLight(QSSGStageGeneratorBase &fragmentShader,
         }
     }
 
+    // Since handleSpecularLight uses qt_lightAttenuation make sure to reset it
+    fragmentShader << "    qt_lightAttenuation = 1.0;\n";
+
     handleSpecularLight(fragmentShader,
                         lightVarNames,
                         materialAdapter,
