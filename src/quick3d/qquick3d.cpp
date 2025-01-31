@@ -62,6 +62,8 @@ Q_STATIC_LOGGING_CATEGORY(lcQuick3D, "qt.quick3d.general")
         return app.exec();
     }
     \endcode
+
+    \sa {Qt Quick 3D Graphics Requirements} {OpenGL specifics}
 */
 
 QT_BEGIN_NAMESPACE
