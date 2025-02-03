@@ -2337,10 +2337,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             QSSGShadowMapEntry *pEntry = inRenderProperties.getShadowMapManager()->shadowMapEntry(lightIdx);
             Q_ASSERT(pEntry);
 
+            const int shadowMapIdx = shadowsUniformData.count;
             const bool is32bit = theLight->m_use32BitShadowmap;
-            const auto& names = setupShadowMapVariableNames(lightIdx, theLight->m_shadowMapRes, is32bit);
+            const auto& names = setupShadowMapVariableNames(shadowMapIdx, theLight->m_shadowMapRes, is32bit);
 
-            QSSGShaderShadowData &shadowData(shadowsUniformData.shadowData[shadowsUniformData.count]);
+            QSSGShaderShadowData &shadowData(shadowsUniformData.shadowData[shadowMapIdx]);
 
             if (theLight->type == QSSGRenderLight::Type::DirectionalLight ||
                 theLight->type == QSSGRenderLight::Type::SpotLight) {
