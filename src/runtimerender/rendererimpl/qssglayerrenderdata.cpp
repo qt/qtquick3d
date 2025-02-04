@@ -407,20 +407,8 @@ const QSSGLayerRenderData::RenderableItem2DEntries &QSSGLayerRenderData::getRend
             return lhsCameraDistanceSq > rhsCameraDistanceSq;
         };
 
-        const auto isItemZOrderLessThan = []
-                (const QSSGRenderItem2D *lhs, const QSSGRenderItem2D *rhs) {
-            if (lhs->parent && rhs->parent && lhs->parent == rhs->parent) {
-                // Same parent nodes, so sort with item z-ordering
-                return lhs->zOrder < rhs->zOrder;
-            }
-            return false;
-        };
-
         // Render furthest to nearest items (parent nodes).
         std::stable_sort(renderedItem2Ds.begin(), renderedItem2Ds.end(), isItemNodeDistanceGreatThan);
-        // Render items inside same node by item z-order.
-        // Note: stable_sort so item order in QML file is respected.
-        std::stable_sort(renderedItem2Ds.begin(), renderedItem2Ds.end(), isItemZOrderLessThan);
     }
 
     return renderedItem2Ds;
