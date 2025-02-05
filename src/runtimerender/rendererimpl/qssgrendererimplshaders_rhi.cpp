@@ -213,9 +213,9 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiLightmapDilateShader()
     return getBuiltinRhiShader(QByteArrayLiteral("lightmapdilate"), m_cache.lightmapDilateShader);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiDebugObjectShader()
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiDebugObjectShader(int viewCount)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("debugobject"), m_cache.debugObjectShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("debugobject"), m_cache.debugObjectShader, viewCount);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiReflectionprobePreFilterShader()

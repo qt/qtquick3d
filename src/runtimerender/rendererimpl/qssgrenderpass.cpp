@@ -1081,8 +1081,10 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     QSSG_ASSERT(data.renderedCameras.count() == data.layer.viewCount, return);
 
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    debugObjectShader = shaderCache->getBuiltInRhiShaders().getRhiDebugObjectShader();
+    debugObjectShader = shaderCache->getBuiltInRhiShaders().getRhiDebugObjectShader(data.layer.viewCount);
     ps = data.getPipelineState();
+    ps.samples = rhiCtx->mainPassSampleCount();
+    ps.viewCount = data.layer.viewCount;
 
     // debug objects
     const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
