@@ -7,7 +7,6 @@
 
 QT_BEGIN_NAMESPACE
 
-
 /*!
     \qmltype InstanceModel
     \inherits Object3D
@@ -42,30 +41,6 @@ QT_BEGIN_NAMESPACE
     \sa InstanceRepeater
 */
 
-
-/*
- \table
-    \header
-        \li Qt Core Feature
-        \li Brief Description
-    \row
-        \li \l {Signal and Slots}
-        \li Signals and slots are used for communication
-           between objects.
-    \row
-        \li \l {Layout Management}
-        \li The Qt layout system provides a simple
-           and powerful way of specifying the layout
-           of child widgets.
-    \row
-        \li \l {Drag and Drop}
-        \li Drag and drop provides a simple visual
-           mechanism which users can use to transfer
-           information between and within applications.
-    \endtable
-
-   */
-
 /*!
     \qmlproperty Instancing InstanceModel::instancingTable
 
@@ -83,11 +58,10 @@ QVariant InstanceModel::data(const QModelIndex &index, int role) const
         return QVariant();
     ensureTable();
 
-
     int idx = index.row();
 
     if (idx >= m_count) {
-        qWarning("That's not supposed to happen...");
+        qWarning("InstanceModel: index out of range");
         return QVariant();
     }
 
