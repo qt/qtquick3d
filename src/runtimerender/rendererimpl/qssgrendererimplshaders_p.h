@@ -55,7 +55,7 @@ public:
     QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
     QSSGRhiShaderPipelinePtr getRhiLightmapDilateShader();
-    QSSGRhiShaderPipelinePtr getRhiDebugObjectShader();
+    QSSGRhiShaderPipelinePtr getRhiDebugObjectShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiReflectionprobePreFilterShader();
     QSSGRhiShaderPipelinePtr getRhienvironmentmapPreFilterShader(bool isRGBE);
     QSSGRhiShaderPipelinePtr getRhiEnvironmentmapShader();
