@@ -1046,6 +1046,7 @@ void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     ps.samples = rhiCtx->mainPassSampleCount();
     ps.viewCount = data.layer.viewCount;
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
+    ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
     RenderHelpers::rhiPrepareGrid(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
 }
