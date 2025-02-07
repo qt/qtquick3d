@@ -24,7 +24,7 @@
 */
 
 /*!
-    \qmlproperty QUrl HeightFieldGeometry::heightMap
+    \qmlproperty url HeightFieldGeometry::heightMap
     \obsolete
 
     This property defines the URL of the height map image.
@@ -33,7 +33,7 @@
 */
 
 /*!
-    \qmlproperty QUrl HeightFieldGeometry::source
+    \qmlproperty url HeightFieldGeometry::source
     This property defines the URL of the height map image.
 */
 
