@@ -1347,7 +1347,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader.addFunction("sampleNormalTexture");
                     fragmentShader << "    float qt_clearcoat_normal_strength = qt_material_clearcoat_normal_strength;\n";
                     maskVariableByVertexColorChannel( "qt_clearcoat_normal_strength", QSSGRenderDefaultMaterial::ClearcoatNormalStrengthMask  );
-                    fragmentShader << "    qt_clearcoatNormal = qt_sampleNormalTexture3(" << names.imageSampler << ", qt_clearcoat_normal_strength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
+                    fragmentShader << "    qt_clearcoatNormal = qt_sampleNormalTexture(" << names.imageSampler << ", qt_clearcoat_normal_strength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
 
                 } else {
                     // same as qt_world_normal then
@@ -1380,7 +1380,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    float qt_normalStrength = qt_material_properties2.y;\n");
             maskVariableByVertexColorChannel( "qt_normalStrength", QSSGRenderDefaultMaterial::NormalStrengthMask );
             fragmentShader.addFunction("sampleNormalTexture");
-            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture3(" << names.imageSampler << ", qt_normalStrength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
+            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture(" << names.imageSampler << ", qt_normalStrength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
         }
 
         fragmentShader.append("    vec3 tmp_light_color;");
