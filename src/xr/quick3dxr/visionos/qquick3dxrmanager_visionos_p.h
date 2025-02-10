@@ -34,6 +34,7 @@ class QQuickRenderControl;
 class QQuick3DXrAnimationDriver;
 class QRhiTexture;
 class QRhiShadingRateMap;
+class QRhiRenderPassDescriptor;
 
 class CompositorLayer;
 
@@ -123,10 +124,15 @@ private:
     static void updateCamera(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i);
     static void updateCameraMultiview(QQuick3DViewport *xrViewport, simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin);
 
+    void setupShadingRateMap(QQuickWindow *window, QRhiShadingRateMap *srm);
+    // Called from the render thread
+    void releaseResources();
+
     QQuick3DXrManager *q_ptr = nullptr;
     CompositorLayer *m_compositorLayer = nullptr;
     QRhiTexture *m_rhiDepthTexture = nullptr;
     std::array<QRhiShadingRateMap *, 2> m_srm { nullptr, nullptr };
+    QRhiRenderPassDescriptor *m_srmRenderPassDesc = nullptr;
     QThread *m_renderThread = nullptr;
     QPointer<QQuick3DXrInputManager> m_inputManager;
     QPointer<QQuick3DXrAnchorManager> m_anchorManager;

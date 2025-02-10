@@ -185,9 +185,9 @@ public:
         return m_waitCondition.wait(&m_mutex);
     }
 
-    Q_INVOKABLE static void destroy(QQuickWindow *window, CompositorLayer *compositorLayer)
+    Q_INVOKABLE static void destroy(QQuick3DXrManagerPrivate *mngr, QQuickWindow *window, CompositorLayer *compositorLayer)
     {
-        QSSG_ASSERT(window != nullptr, return);
+        QSSG_ASSERT(window != nullptr && mngr != nullptr, return);
 
         qCDebug(lcQuick3DXr) << "Destroying compositor layer";
 
@@ -203,10 +203,13 @@ public:
         // but it's what we have for now...
         auto *d = QQuickWindowPrivate::get(window);
         d->cleanupNodesOnShutdown();
+        mngr->releaseResources();
         if (auto *rc = d->renderControl)
             rc->invalidate();
 
-        delete compositorLayer;
+        // We're holding onto the lock, so defer the delete until we're done here.
+        // All reasources should be released at this point anyways.
+        compositorLayer->deleteLater();
     }
 
 Q_SIGNALS:
@@ -225,6 +228,10 @@ protected:
 
             if (m_teardown) {
                 qCDebug(lcQuick3DXr) << "Teardown in progress, skipping event handling";
+                // If we're tearing down we're about to be destroyed, so we don't want to
+                // ensure that the mutex is unlocked, as we're going to be destroyed anyways.
+                if (event->type() == QEvent::DeferredDelete)
+                    locker.unlock();
                 return QObject::event(event);
             }
 
@@ -390,6 +397,8 @@ private:
     void cleanup()
     {
         qCDebug(lcQuick3DXr, "Cleaning up");
+        if (m_xrManager)
+            m_xrManager->releaseResources();
     }
 
     [[nodiscard]] bool renderFrame(QMutexLocker<QMutex> &locker)
@@ -695,7 +704,7 @@ void QQuick3DXrManagerPrivate::teardown()
 
         Qt::ConnectionType connection = (m_compositorLayer->thread() == QThread::currentThread())
                                         ? Qt::DirectConnection : Qt::BlockingQueuedConnection;
-        QMetaObject::invokeMethod(m_compositorLayer, &CompositorLayer::destroy, connection, q->m_quickWindow, m_compositorLayer);
+        QMetaObject::invokeMethod(m_compositorLayer, &CompositorLayer::destroy, connection, this, q->m_quickWindow, m_compositorLayer);
         m_compositorLayer = nullptr;
     }
 }
@@ -822,12 +831,15 @@ QString QQuick3DXrManagerPrivate::errorString() const
     return QString();
 }
 
-static inline void setupShadingRateMap(QQuickWindow *window, QRhiShadingRateMap *srm)
+void QQuick3DXrManagerPrivate::setupShadingRateMap(QQuickWindow *window, QRhiShadingRateMap *srm)
 {
     if (QRhiSwapChain *swapchain = window->swapChain()) {
         swapchain->setShadingRateMap(srm);
-        QRhiRenderPassDescriptor *rpd = swapchain->newCompatibleRenderPassDescriptor();
-        swapchain->setRenderPassDescriptor(rpd);
+        if (!m_srmRenderPassDesc) {
+            qCDebug(lcQuick3DXr) << "Creating render pass descriptor suitable for shading rate map use";
+            m_srmRenderPassDesc = swapchain->newCompatibleRenderPassDescriptor();
+            swapchain->setRenderPassDescriptor(m_srmRenderPassDesc);
+        }
     } else {
         QSGRendererInterface *rif = window->rendererInterface();
         QRhiTextureRenderTarget *rt = static_cast<QRhiTextureRenderTarget *>(rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
@@ -835,10 +847,28 @@ static inline void setupShadingRateMap(QQuickWindow *window, QRhiShadingRateMap 
             QRhiTextureRenderTargetDescription desc = rt->description();
             desc.setShadingRateMap(srm);
             rt->setDescription(desc);
-            QRhiRenderPassDescriptor *rpd = rt->renderPassDescriptor();
-            rt->setRenderPassDescriptor(rpd->newCompatibleRenderPassDescriptor());
-            rt->create();
+            if (!m_srmRenderPassDesc) {
+                qCDebug(lcQuick3DXr) << "Creating render pass descriptor suitable for shading rate map use";
+                QRhiRenderPassDescriptor *rpd = rt->renderPassDescriptor();
+                m_srmRenderPassDesc = rpd->newCompatibleRenderPassDescriptor();
+                rt->setRenderPassDescriptor(m_srmRenderPassDesc);
+                rt->create();
+            }
         }
+    }
+}
+
+void QQuick3DXrManagerPrivate::releaseResources()
+{
+    qCDebug(lcQuick3DXr) << "Releasing resources";
+    Q_ASSERT(QThread::currentThread() == m_renderThread);
+    delete m_srmRenderPassDesc;
+    m_srmRenderPassDesc = nullptr;
+    delete m_rhiDepthTexture;
+    m_rhiDepthTexture = nullptr;
+    for (size_t i = 0, end = std::size(m_srm); i < end; ++i) {
+        delete m_srm[i];
+        m_srm[i] = nullptr;
     }
 }
 
