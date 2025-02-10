@@ -707,6 +707,11 @@ void QQuick3DXrManagerPrivate::teardown()
         QMetaObject::invokeMethod(m_compositorLayer, &CompositorLayer::destroy, connection, this, q->m_quickWindow, m_compositorLayer);
         m_compositorLayer = nullptr;
     }
+
+    m_renderThread->quit();
+    m_renderThread->wait();
+    delete m_renderThread;
+    m_renderThread = nullptr;
 }
 
 void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
