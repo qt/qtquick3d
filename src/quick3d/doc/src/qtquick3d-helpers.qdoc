@@ -552,9 +552,10 @@
 
     \default 100
 */
-/*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldBlurAmount Sets the
-    amount of blur applied to objects outside the focus range. Sensible values are
-    in the range \b 0 to \b 10. A value of 0 applies no additional blur.
+/*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldBlurAmount
+    Sets the amount of blur applied to objects outside the focus range.
+    Sensible values are in the range \b 0 to \b 10. A value of 0 applies
+    no additional blur.
 
     \default 4.0
 

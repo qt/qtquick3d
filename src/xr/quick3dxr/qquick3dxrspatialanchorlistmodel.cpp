@@ -212,14 +212,13 @@ void QQuick3DXrSpatialAnchorListModel::setClassificationFilter(ClassificationFla
     \brief Holds the classification strings used for filtering spatial anchors.
     \internal
 
-    If the \l FilterMode is set to \c Classification, this property can be used to provide a
+    If the \l filterMode is set to \c Classification, this property can be used to provide a
     list of additional classification string to filter on. These labels will then be matched against
     the same value as reported by \l {XrSpatialAnchor::classificationString} property
     of the spatial anchor.
 
     \note Only \l {XrSpatialAnchor}{spatial anchors} that are classified as
-    \l {XrSpatialAnchor::Classification::Other}{Other}
-    will be checked against this filter.
+    \l {XrSpatialAnchor::Classification}{Other} will be checked against this filter.
  */
 QStringList QQuick3DXrSpatialAnchorListModel::classificationStringFilter() const
 {
