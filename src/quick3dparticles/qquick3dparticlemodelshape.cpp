@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ParticleModelShape3D
-    \inherits ParticleAbtractShape3D
+    \inherits ParticleAbstractShape3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Offers particle shape from model for emitters and affectors.
     \since 6.2

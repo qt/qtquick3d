@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ParticleCustomShape3D
-    \inherits ParticleAbtractShape3D
+    \inherits ParticleAbstractShape3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Loads custom particle shapes for emitters and affectors.
     \since 6.3
