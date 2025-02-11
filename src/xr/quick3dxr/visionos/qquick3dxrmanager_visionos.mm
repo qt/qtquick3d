@@ -1052,8 +1052,12 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
                             0,
                             renderSize.width(),
                             renderSize.height());
-        window->contentItem()->setSize(QSizeF(renderSize.width(),
-                                              renderSize.height()));
+        window->contentItem()->setSize(renderSize);
+        // NOTE: We set the size here as we need to make sure the window size is correct before
+        // the sync, or the xrView's size will be incorrect. This happens because we're on the
+        // render thread (GUI thread is blocked) and any updates to the contentItem size will
+        // not be updated (see: QQuick3DXrView::init)...
+        xrViewport->setSize(renderSize);
 
         // Update the camera pose
         if (QSSG_GUARD(xrOrigin)) {
