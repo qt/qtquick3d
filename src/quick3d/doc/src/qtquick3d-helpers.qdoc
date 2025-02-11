@@ -329,8 +329,8 @@
     \default true
 
     Enables automatic updating of the \l{Camera}{camera}'s
-    \l{Camera::}{clipNear} and \{Camera::}{clipFar} properties based on the
-    \l{Camera}{camera}'s z position.
+    \l{PerspectiveCamera::}{clipNear} and l\{PerspectiveCamera::}{clipFar}
+    properties based on the camera's z position.
 */
 /*! \qmlproperty Qt::MouseButtons OrbitCameraController::acceptedButtons
     \since 6.9
@@ -594,9 +594,10 @@
 
     \default 100
 */
-/*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldBlurAmount Sets the
-    amount of blur applied to objects outside the focus range. Sensible values are
-    in the range \b 0 to \b 10. A value of 0 applies no additional blur.
+/*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldBlurAmount
+    Sets the amount of blur applied to objects outside the focus range.
+    Sensible values are in the range \b 0 to \b 10. A value of 0 applies
+    no additional blur.
 
     \default 4.0
 

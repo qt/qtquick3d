@@ -88,7 +88,7 @@ It supports hard shadows with no softness as well as percentage-close filtering 
 
 \image{shadows-hard-soft.webp}
 
-The above image shows a scene with a \l{Light}{softShadowQuality} \c{Light.Hard} shadow  on the left and a scene with a \l{Light}{softShadowQuality} \c{Light.PCF32} and \l{Light::}{pcfRadius} \c{10} on the right.
+The above image shows a scene with a \l{Light}{softShadowQuality} \c{Light.Hard} shadow  on the left and a scene with a \l{Light}{softShadowQuality} \c{Light.PCF32} and \l{Light::}{pcfFactor} \c{10} on the right.
 
 \section2 Shadowmap far distance
 
