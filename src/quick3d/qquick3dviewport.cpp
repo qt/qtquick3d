@@ -188,7 +188,7 @@ public:
 
 /*!
     \qmltype View3D
-    \inherits QQuickItem
+    \inherits Item
     \inqmlmodule QtQuick3D
     \brief Provides a viewport on which to render a 3D scene.
 
