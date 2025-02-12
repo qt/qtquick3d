@@ -102,8 +102,8 @@ QT_BEGIN_NAMESPACE
     these settings can also be controlled interactively when a \l DebugView
     item is added to the scene.
 
-    \li Fog settings. To enable fog, set an appropriately configured \l Fog
-    object in the \l fog property.
+    \li Fog settings. To enable fog, set an appropriately configured
+    \l [QML] Fog object in the \l [QML] fog property.
 
     \li Lightmap baking settings. When pre-baked lightmaps are used for some
     models in the scene, the \l Lightmapper object set in the \l lightmapper
