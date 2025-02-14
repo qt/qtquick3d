@@ -1027,6 +1027,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool hasReflectionProbe = featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe);
     bool enableBumpNormal = normalImage || bumpImage;
     bool genBumpNormalImageCoords = false;
+    bool genClearcoatNormalImageCoords = false;
     bool enableParallaxMapping = heightImage != nullptr;
     const bool enableClearcoat = materialAdapter->isClearcoatEnabled();
     const bool enableTransmission = materialAdapter->isTransmissionEnabled();
@@ -1168,21 +1169,30 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             bool genBinormal = false;
             vertexShader.generateVarTangentAndBinormal(inKey, genTangent, genBinormal);
 
-            if (enableBumpNormal && !genTangent) {
-                // Generate imageCoords for bump/normal map first.
-                // Some operations needs to use the TBN transform and if the
-                // tangent vector is not provided, it is necessary.
-                auto *bumpNormalImage = bumpImage != nullptr ? bumpImage : normalImage;
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpNormalImage, true, bumpNormalImage->m_imageNode.m_indexUV);
-                genBumpNormalImageCoords = true;
-
-                int id = (bumpImage != nullptr) ? int(QSSGRenderableImage::Type::Bump) : int(QSSGRenderableImage::Type::Normal);
-                const auto &names = imageStringTable[id];
-                fragmentShader << "    vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
-                               << "    vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
-                fragmentShader << "    qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
-                               << "    qt_tangent = qt_tangent - dot(qt_world_normal, qt_tangent) * qt_world_normal;\n"
-                               << "    qt_tangent = normalize(qt_tangent);\n";
+            if (!genTangent) {
+                int id = 0;
+                if (enableBumpNormal) {
+                    // Generate imageCoords for bump/normal map first.
+                    // Some operations needs to use the TBN transform and if the
+                    // tangent vector is not provided, it is necessary.
+                    auto *bumpNormalImage = bumpImage != nullptr ? bumpImage : normalImage;
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpNormalImage, true, bumpNormalImage->m_imageNode.m_indexUV);
+                    genBumpNormalImageCoords = true;
+                    id = (bumpImage != nullptr) ? int(QSSGRenderableImage::Type::Bump) : int(QSSGRenderableImage::Type::Normal);
+                } else if (clearcoatNormalImage) {
+                    // For the corner case that there is only a clearcoat normal map
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatNormalImage, true, clearcoatNormalImage->m_imageNode.m_indexUV);
+                    genClearcoatNormalImageCoords = true;
+                    id = int(QSSGRenderableImage::Type::ClearcoatNormal);
+                }
+                if (id > 0) {
+                    const auto &names = imageStringTable[id];
+                    fragmentShader << "    vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
+                                   << "    vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
+                    fragmentShader << "    qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
+                                   << "    qt_tangent = qt_tangent - dot(qt_world_normal, qt_tangent) * qt_world_normal;\n"
+                                   << "    qt_tangent = normalize(qt_tangent);\n";
+                }
             }
             if (!genBinormal)
                 fragmentShader << "    qt_binormal = cross(qt_world_normal, qt_tangent);\n";
@@ -1335,7 +1345,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_clearcoatNormal = qt_customClearcoatNormal;\n";
             } else {
                 if (clearcoatNormalImage) {
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatNormalImage, enableParallaxMapping, clearcoatNormalImage->m_imageNode.m_indexUV);
+                    if (enableParallaxMapping || !genClearcoatNormalImageCoords)
+                        generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatNormalImage, enableParallaxMapping, clearcoatNormalImage->m_imageNode.m_indexUV);
                     const auto &names = imageStringTable[int(QSSGRenderableImage::Type::ClearcoatNormal)];
                     fragmentShader.addFunction("sampleNormalTexture");
                     fragmentShader << "    float qt_clearcoat_normal_strength = qt_material_clearcoat_normal_strength;\n";
