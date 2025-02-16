@@ -1739,7 +1739,7 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
             if (maybeDebugDraw && debugDrawSystem->isEnabled(QSSGDebugDrawSystem::Mode::MeshLodNormal))
                 debugDrawSystem->debugNormals(*bufferManager, theModelContext, theSubset, subsetLevelOfDetail, (theModelCenter - allCameras[0]->getGlobalPos()).length() * 0.01);
 
-            static auto checkF32TypeIndex = [&rhiCtx](QRhiVertexInputAttribute::Format f) {
+            auto checkF32TypeIndex = [&rhiCtx](QRhiVertexInputAttribute::Format f) {
                 if ((f ==  QRhiVertexInputAttribute::Format::Float4)
                         || (f == QRhiVertexInputAttribute::Format::Float3)
                         || (f == QRhiVertexInputAttribute::Format::Float2)
