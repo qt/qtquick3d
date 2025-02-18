@@ -23,10 +23,28 @@ QT_BEGIN_NAMESPACE
 
     XrHandModel is only visible when hand tracking is active.
 
-    \note XrHandModel depends on hand tracking data from the underlying
-    system and is therefore not available on all platforms. In particular,
-    the Apple Vision Pro will overlay video of the user's hands directly,
+    \note XrHandModel depends on hand-tracking data from the underlying
+    system and is, therefore, not available on all platforms.
+
+    \section1 Platform Notes
+
+    \section2 Apple Vision Pro
+
+    The Apple Vision Pro will overlay video of the user's hands directly,
     and the XrHandModel will not have any content.
+
+    \section2 Meta devices
+
+    This required the following feature and permission lines to be added
+    in the AndroidManifest.qml file of your project.
+
+    \badcode
+        <uses-permission android:name="com.oculus.permission.HAND_TRACKING" />
+        <uses-feature android:name="oculus.software.handtracking" android:required="false" />
+    \endcode
+
+    Use \c true instead of \c false in the \c uses-feature tag if your app's interaction
+    is implemented only for hands.
 */
 
 QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)

@@ -26,6 +26,18 @@ Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 
     \quotefromfile xr_simple/main.qml
     \printto XrOrigin
+
+    \section1 Platform notes
+
+    \section2 Meta Quest Devices
+
+    To \l{XrView::passthroughEnabled}{enable passthrough} you need to add the
+    following permisson your app's \c AndroidManifest.xml file:
+
+    \badcode
+    <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="false"/>
+    \endcode
+
 */
 
 QQuick3DXrView::QQuick3DXrView()
