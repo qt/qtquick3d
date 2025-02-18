@@ -76,7 +76,7 @@ XrView {
             poseSpace: XrController.AimPose
 
             XrInputAction {
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.Button2Pressed, XrInputAction.MiddleFingerPinch]
                 onTriggered: xrView.preferPassthrough = !xrView.preferPassthrough
             }

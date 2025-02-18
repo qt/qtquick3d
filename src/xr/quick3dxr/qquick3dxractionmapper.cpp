@@ -10,12 +10,12 @@ QQuick3DXrActionMapper::QQuick3DXrActionMapper(QObject *parent) : QObject(parent
 {
 }
 
-static inline quint32 actionIntKey(const QQuick3DXrInputAction::Action id, const QQuick3DXrInputAction::Hand hand)
+static inline quint32 actionIntKey(const QQuick3DXrInputAction::Action id, const QQuick3DXrInputAction::Controller hand)
 {
     return quint16(id) | (quint32(hand) << 16);
 }
 
-static inline QString actionStringKey(const QString &name, const QQuick3DXrInputAction::Hand hand)
+static inline QString actionStringKey(const QString &name, const QQuick3DXrInputAction::Controller hand)
 {
     return QString::number(hand) + name;
 }
@@ -26,7 +26,7 @@ QQuick3DXrActionMapper *QQuick3DXrActionMapper::instance()
     return &instance;
 }
 
-void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuick3DXrInputAction::Hand hand, const char *shortName, float value)
+void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuick3DXrInputAction::Controller hand, const char *shortName, float value)
 {
     auto *that = instance();
     auto set = [](auto action, auto value) {
@@ -50,7 +50,7 @@ void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuic
             set(action, value);
 }
 
-QList<QPointer<QQuick3DXrHapticFeedback>> QQuick3DXrActionMapper::getHapticEffects(QQuick3DXrInputAction::Hand hand)
+QList<QPointer<QQuick3DXrHapticFeedback>> QQuick3DXrActionMapper::getHapticEffects(QQuick3DXrInputAction::Controller hand)
 {
     auto *that = instance();
     return that->m_hapticData[hand].m_hapticEffects;
@@ -286,7 +286,8 @@ void QQuick3DXrInputAction::setActionId(const QList<Action> &newActionId)
 
 /*!
     \qmlproperty enumeration QtQuick3D.Xr::XrInputAction::hand
-    \brief The Hand that this input action will apply to.
+    \deprecated [6.10] This property is deprecated, use \l{XrInputAction::}{controller} instead.
+    \brief The Controller that this input action will apply to.
 
     Specifies the hand ro react to.
 
@@ -297,16 +298,45 @@ void QQuick3DXrInputAction::setActionId(const QList<Action> &newActionId)
     \value XrInputAction.Unknown
  */
 
-QQuick3DXrInputAction::Hand QQuick3DXrInputAction::hand() const
+QQuick3DXrInputAction::Controller QQuick3DXrInputAction::hand() const
 {
-    return m_hand;
+    return m_controller;
 }
 
-void QQuick3DXrInputAction::setHand(Hand newHand)
+void QQuick3DXrInputAction::setHand(Controller newHand)
 {
-    if (m_hand == newHand)
+    setController(newHand);
+}
+
+/*!
+    \qmlproperty enumeration QtQuick3D.Xr::XrInputAction::controller
+    \brief The Controller that this input action will apply to.
+    \since 6.10
+
+    Specifies the controller to react to.
+
+    It can be one of:
+
+    \value XrInputAction.LeftController
+    \value XrInputAction.RightController
+    \value XrInputAction.Unknown
+    \value XrInputAction.LeftHand (alias for \c LeftController)
+    \value XrInputAction.RightHand (alias for \c RightController)
+
+    \note In Qt 6.9, this property was called "hand"
+ */
+
+QQuick3DXrInputAction::Controller QQuick3DXrInputAction::controller() const
+{
+    return m_controller;
+}
+
+void QQuick3DXrInputAction::setController(Controller newController)
+{
+    if (m_controller == newController)
         return;
-    m_hand = newHand;
+    m_controller = newController;
+    emit controllerChanged();
     emit handChanged();
 }
 

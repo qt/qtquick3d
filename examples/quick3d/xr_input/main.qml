@@ -123,7 +123,7 @@ XrView {
     //! [trigger input]
     XrInputAction {
         id: rightTrigger
-        hand: XrInputAction.RightHand
+        controller: XrInputAction.RightController
         actionId: [XrInputAction.TriggerPressed, XrInputAction.TriggerValue, XrInputAction.IndexFingerPinch]
         onTriggered: {
             const button = rightController.hitObject as ExampleButton
@@ -137,12 +137,12 @@ XrView {
     //! [mouse input]
     XrInputAction {
         id: rightThumbstickX
-        hand: XrInputAction.RightHand
+        controller: XrInputAction.RightController
         actionId: [XrInputAction.ThumbstickX]
     }
     XrInputAction {
         id: rightThumbstickY
-        hand: XrInputAction.RightHand
+        controller: XrInputAction.RightController
         actionId: [XrInputAction.ThumbstickY]
     }
 

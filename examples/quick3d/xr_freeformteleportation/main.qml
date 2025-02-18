@@ -45,38 +45,38 @@ XrView {
 
             XrInputAction {
                 id: thumbstickX
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.ThumbstickX]
             }
 
             XrInputAction {
                 id: thumbstickY
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.ThumbstickY]
             }
 
             XrInputAction {
                 id: trackpadX
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.TrackpadX]
             }
 
             XrInputAction {
                 id: trackpadY
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.TrackpadY]
             }
 
             XrInputAction {
                 id: trackpadPressed
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.TrackpadPressed]
             }
 
             XrInputAction {
                 id: indexFingerPinch
                 property bool active: false
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.IndexFingerPinch]
                 onTriggered: teleporter.toggleTeleport()
             }
@@ -84,14 +84,14 @@ XrView {
             // Rotate left/right by pinching the middle fingers
             XrInputAction {
                 id: leftMiddleFingerPinch
-                hand: XrInputAction.LeftHand
+                controller: XrInputAction.LeftController
                 actionId: [XrInputAction.MiddleFingerPinch]
                 onTriggered: teleporter.rotateLeft()
             }
 
             XrInputAction {
                 id: rightMiddleFingerPinch
-                hand: XrInputAction.RightHand
+                controller: XrInputAction.RightController
                 actionId: [XrInputAction.MiddleFingerPinch]
                 onTriggered: teleporter.rotateRight()
             }

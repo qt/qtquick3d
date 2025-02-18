@@ -41,17 +41,21 @@ class QQuick3DXrInputAction : public QObject, public QQmlParserStatus
     Q_PROPERTY(QList<Action> actionId READ actionId WRITE setActionId NOTIFY actionIdChanged FINAL)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION(6, 9))
 
-    Q_PROPERTY(Hand hand READ hand WRITE setHand NOTIFY handChanged FINAL)
+    Q_PROPERTY(Controller hand READ hand WRITE setHand NOTIFY handChanged FINAL)
+    Q_PROPERTY(Controller controller READ controller WRITE setController NOTIFY controllerChanged FINAL REVISION(6, 10))
 
 public:
 
     // Same values as XrController and XrHandModel enums
-    enum Hand : quint8 {
+    enum Controller : quint8 {
         LeftHand = 0,
         RightHand,
         Unknown,
+        LeftController = LeftHand,
+        RightController = RightHand,
+        UnknownController = Unknown
     };
-    Q_ENUM(Hand)
+    Q_ENUM(Controller)
 
     enum Action : qint16 {
         CustomAction = -1,
@@ -105,11 +109,14 @@ public:
     void classBegin() override;
     void componentComplete() override;
 
-    Hand hand() const;
-    void setHand(Hand newHand);
+    Controller hand() const;
+    void setHand(Controller newHand);
 
     bool enabled() const;
     void setEnabled(bool newEnabled);
+
+    Controller controller() const;
+    void setController(Controller newController);
 
 Q_SIGNALS:
     void valueChanged();
@@ -123,13 +130,15 @@ Q_SIGNALS:
 
     void enabledChanged();
 
+    void controllerChanged();
+
 private:
     QString m_actionName;
     float m_value = 0;
     bool m_pressed = false;
     bool m_componentComplete = false;
     bool m_enabled = true;
-    Hand m_hand;
+    Controller m_controller;
 
     QList<Action> m_actionIds;
 };
@@ -208,9 +217,9 @@ class QQuick3DXrActionMapper : public QObject
 public:
     static QQuick3DXrActionMapper *instance();
 
-    static QList<QPointer<QQuick3DXrHapticFeedback>> getHapticEffects(QQuick3DXrInputAction::Hand hand);
+    static QList<QPointer<QQuick3DXrHapticFeedback>> getHapticEffects(QQuick3DXrInputAction::Controller hand);
 
-    static void handleInput(QQuick3DXrInputAction::Action id, QQuick3DXrInputAction::Hand hand, const char *shortName, float value);
+    static void handleInput(QQuick3DXrInputAction::Action id, QQuick3DXrInputAction::Controller hand, const char *shortName, float value);
     static void registerAction(QQuick3DXrInputAction *action);
     static void registerHapticEffect(QPointer<QQuick3DXrHapticFeedback>);
     static void removeAction(QQuick3DXrInputAction *action);

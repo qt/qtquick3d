@@ -33,7 +33,7 @@ QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
 static inline void setInputValue(QtQuick3DXr::Hand hand, int id, const char *shortName, float value)
 {
     QSSG_ASSERT(hand < 2, hand = QtQuick3DXr::Hand::LeftHand);
-    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Hand>(hand), shortName, value);
+    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Controller>(hand), shortName, value);
 }
 
 

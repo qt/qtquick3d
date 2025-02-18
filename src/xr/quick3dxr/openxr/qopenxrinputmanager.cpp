@@ -518,7 +518,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
     //    XrAction aimPoseAction{XR_NULL_HANDLE};
     //    XrAction hapticAction{XR_NULL_HANDLE};
 
-        const QList<QPointer<QQuick3DXrHapticFeedback>> hapticOutputData = QQuick3DXrActionMapper::getHapticEffects(static_cast<QQuick3DXrInputAction::Hand>(hand));
+        const QList<QPointer<QQuick3DXrHapticFeedback>> hapticOutputData = QQuick3DXrActionMapper::getHapticEffects(static_cast<QQuick3DXrInputAction::Controller>(hand));
 
         for (auto &hapticFeedback : hapticOutputData) {
             const bool triggered = hapticFeedback->testAndClear();
@@ -923,7 +923,7 @@ void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPo
 void QQuick3DXrInputManagerPrivate::setInputValue(Hand hand, int id, const char *shortName, float value)
 {
     QSSG_ASSERT(hand < 2, hand = Hand::LeftHand);
-    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Hand>(hand), shortName, value);
+    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Controller>(hand), shortName, value);
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const

@@ -45,6 +45,8 @@ public:
         ControllerNone = 2,
         LeftController = ControllerLeft,
         RightController = ControllerRight,
+        LeftHand = ControllerLeft,
+        RightHand = ControllerRight,
         UnknownController = ControllerNone,
     };
     Q_ENUM(Controller)

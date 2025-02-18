@@ -152,7 +152,7 @@ XrController {
 
     XrInputAction {
         id: grabAction
-        hand: theController.controller
+        controller: theController.controller
         actionId: [XrInputAction.SqueezeValue, XrInputAction.SqueezePressed]
         onPressedChanged: {
             if (pressed) {
@@ -165,7 +165,7 @@ XrController {
 
     XrInputAction {
         id: triggerAction
-        hand: theController.controller
+        controller: theController.controller
         actionId: [XrInputAction.TriggerValue, XrInputAction.TriggerPressed, XrInputAction.IndexFingerPinch]
         onPressedChanged:  {
             if (pressed)
@@ -178,7 +178,7 @@ XrController {
     XrInputAction {
         id: yeetAction
         enabled: theController.enableThumbstickMove
-        hand: theController.controller
+        controller: theController.controller
         actionId: XrInputAction.ThumbstickY
     }
 

@@ -41,6 +41,8 @@ QQuick3DXrController::QQuick3DXrController()
     \value XrController.LeftController
     \value XrController.RightController
     \value XrController.UnknownController
+    \value XrController.LeftHand (alias for \c LeftController)
+    \value XrController.RightHand (alias for \c RightController)
 */
 
 QQuick3DXrController::Controller QQuick3DXrController::controller() const
