@@ -23,9 +23,24 @@ QT_BEGIN_NAMESPACE
 
     Spatial anchors are accessed through an \l XrSpatialAnchorListModel.
 
-    \note Anchor objects are provided by the system. They cannot be created in QML.
+    \note The system provides Anchor objects. They cannot be created in QML.
 
     See the \l{Qt Quick 3D - XR Spatial Anchors Example} for how to use this type.
+
+    \section1 Platform notes
+
+    \section2 Meta Quest Devices
+
+    This API makes use of the Meta Quest Scene and Spatial Anchor APIs.
+    You need to add the following permissions to your app's \c AndroidManifest.xml file:
+
+    \badcode
+        <uses-permission android:name="com.oculus.permission.USE_ANCHOR_API"/>
+        <uses-permission android:name="com.oculus.permission.USE_SCENE"/>
+    \endcode
+
+    \note You need to manually set up a Space before running an app, or anchors will
+    not be available.
  */
 
 /*!
