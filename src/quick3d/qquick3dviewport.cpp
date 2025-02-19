@@ -291,6 +291,8 @@ QQuick3DViewport::~QQuick3DViewport()
     delete m_sceneRoot;
     m_sceneRoot = nullptr;
 
+    delete m_builtInEnvironment;
+
     // m_renderStats is tightly coupled with the render thread, so can't delete while we
     // might still be rendering.
     m_renderStats->deleteLater();
@@ -376,7 +378,12 @@ QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 {
     if (!m_environment) {
         if (!m_builtInEnvironment) {
-            m_builtInEnvironment = new QQuick3DSceneEnvironment(m_sceneRoot);
+            m_builtInEnvironment = new QQuick3DSceneEnvironment;
+            // Check that we are on the "correct" thread, and move the environment to the
+            // correct thread if not. This can happen when environment() is called from the
+            // sync and no scene environment has been set.
+            if (QThread::currentThread() != m_sceneRoot->thread())
+                m_builtInEnvironment->moveToThread(m_sceneRoot->thread());
             m_builtInEnvironment->setParentItem(m_sceneRoot);
         }
 
