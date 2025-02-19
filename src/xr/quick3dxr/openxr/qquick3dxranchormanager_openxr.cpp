@@ -570,70 +570,67 @@ void QQuick3DXrAnchorManager::addAnchor(XrSpace space, XrUuidEXT uuid)
 
 XrResult QQuick3DXrAnchorManager::enumerateSpaceSupportedComponents(XrSpace space, uint32_t componentTypeCapacityInput, uint32_t *componentTypeCountOutput, XrSpaceComponentTypeFB *componentTypes)
 {
-    return xrEnumerateSpaceSupportedComponentsFB(space, componentTypeCapacityInput, componentTypeCountOutput, componentTypes);
+    return OpenXRHelpers::safeCall(xrEnumerateSpaceSupportedComponentsFB, space, componentTypeCapacityInput, componentTypeCountOutput, componentTypes);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceComponentStatus(XrSpace space, XrSpaceComponentTypeFB componentType, XrSpaceComponentStatusFB *status)
 {
-    return xrGetSpaceComponentStatusFB(space, componentType, status);
+    return OpenXRHelpers::safeCall(xrGetSpaceComponentStatusFB, space, componentType, status);
 }
 
 XrResult QQuick3DXrAnchorManager::setSpaceComponentStatus(XrSpace space, const XrSpaceComponentStatusSetInfoFB *info, XrAsyncRequestIdFB *requestId)
 {
-    return xrSetSpaceComponentStatusFB(space, info, requestId);
+    return OpenXRHelpers::safeCall(xrSetSpaceComponentStatusFB, space, info, requestId);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceUuid(XrSpace space, XrUuidEXT *uuid)
 {
-    return xrGetSpaceUuidFB(space, uuid);
+    return OpenXRHelpers::safeCall(xrGetSpaceUuidFB, space, uuid);
 }
 
 XrResult QQuick3DXrAnchorManager::querySpaces(const XrSpaceQueryInfoBaseHeaderFB *info, XrAsyncRequestIdFB *requestId)
 {
-    return xrQuerySpacesFB(m_session, info, requestId);
+    return OpenXRHelpers::safeCall(xrQuerySpacesFB, m_session, info, requestId);
 }
 
 XrResult QQuick3DXrAnchorManager::retrieveSpaceQueryResults(XrAsyncRequestIdFB requestId, XrSpaceQueryResultsFB *results)
 {
-    return xrRetrieveSpaceQueryResultsFB(m_session, requestId, results);
+    return OpenXRHelpers::safeCall(xrRetrieveSpaceQueryResultsFB, m_session, requestId, results);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceBoundingBox2D(XrSpace space, XrRect2Df *boundingBox2DOutput)
 {
-    return xrGetSpaceBoundingBox2DFB(m_session, space, boundingBox2DOutput);
+    return OpenXRHelpers::safeCall(xrGetSpaceBoundingBox2DFB, m_session, space, boundingBox2DOutput);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceBoundingBox3D(XrSpace space, XrRect3DfFB *boundingBox3DOutput)
 {
-    return xrGetSpaceBoundingBox3DFB(m_session, space, boundingBox3DOutput);
+    return OpenXRHelpers::safeCall(xrGetSpaceBoundingBox3DFB, m_session, space, boundingBox3DOutput);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceSemanticLabels(XrSpace space, XrSemanticLabelsFB *semanticLabelsOutput)
 {
-    return xrGetSpaceSemanticLabelsFB(m_session, space, semanticLabelsOutput);
+    return OpenXRHelpers::safeCall(xrGetSpaceSemanticLabelsFB, m_session, space, semanticLabelsOutput);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceBoundary2D(XrSpace space, XrBoundary2DFB *boundary2DOutput)
 {
-    return xrGetSpaceBoundary2DFB(m_session, space, boundary2DOutput);
+    return OpenXRHelpers::safeCall(xrGetSpaceBoundary2DFB, m_session, space, boundary2DOutput);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceRoomLayout(XrSpace space, XrRoomLayoutFB *roomLayoutOutput)
 {
-    return xrGetSpaceRoomLayoutFB(m_session, space, roomLayoutOutput);
+    return OpenXRHelpers::safeCall(xrGetSpaceRoomLayoutFB, m_session, space, roomLayoutOutput);
 }
 
 XrResult QQuick3DXrAnchorManager::getSpaceContainer(XrSpace space, XrSpaceContainerFB *spaceContainerOutput)
 {
-    return xrGetSpaceContainerFB(m_session, space, spaceContainerOutput);
+    return OpenXRHelpers::safeCall(xrGetSpaceContainerFB, m_session, space, spaceContainerOutput);
 }
 
 XrResult QQuick3DXrAnchorManager::requestSceneCapture(const XrSceneCaptureRequestInfoFB *info, XrAsyncRequestIdFB *requestId)
 {
-    if (xrRequestSceneCaptureFB)
-        return xrRequestSceneCaptureFB(m_session, info, requestId);
-    else
-        return XR_ERROR_FUNCTION_UNSUPPORTED;
+    return OpenXRHelpers::safeCall(xrRequestSceneCaptureFB, m_session, info, requestId);
 }
 
 bool QQuick3DXrAnchorManager::checkXrResult(const XrResult &result)
