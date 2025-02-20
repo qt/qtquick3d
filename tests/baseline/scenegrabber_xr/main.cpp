@@ -12,6 +12,11 @@
 #include <private/qquick3dsceneenvironment_p.h>
 #include <rhi/qrhi.h>
 
+#ifdef Q_OS_WIN
+#  include <fcntl.h>
+#  include <io.h>
+#endif // Q_OS_WIN
+
 // A valid screen grab requires the scene to not change
 // for SCENE_STABLE_TIME ms
 #define SCENE_STABLE_TIME 200
