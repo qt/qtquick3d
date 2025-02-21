@@ -11,7 +11,7 @@ import QtQuick3D.Xr
 
 XrView {
     id: xrView
-    referenceSpace: XrView.ReferenceSpaceStage
+    referenceSpace: XrView.ReferenceSpaceLocalFloor
 
     depthSubmissionEnabled: true
 
