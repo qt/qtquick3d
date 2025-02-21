@@ -510,9 +510,20 @@ QVariantMap QQuick3DXrView::touchpointState(int pointId) const
 
      It can be one of:
      \value XrView.ReferenceSpaceUnknown
-     \value XrView.ReferenceSpaceLocal
-     \value XrView.ReferenceSpaceStage
-     \value XrView.ReferenceSpaceLocalFloor
+     \value XrView.ReferenceSpaceLocal Origin is at the default view position (typically defined by a "reset view" operation).
+     \value XrView.ReferenceSpaceStage Origin is at floor height in the center of the user's defined area.
+     \value XrView.ReferenceSpaceLocalFloor Origin is at floor height, below the default view position.
+
+    \c ReferenceSpaceLocal is mainly useful for seated applications where the content is not positioned
+    relative to the floor, for example floating menus. The content will move when the user resets the view.
+
+    \c ReferenceSpaceStage is mainly useful for room-scale applications where the user will move freely within the
+    playing area. The content will not move when the user resets the view.
+
+    \c ReferenceSpaceLocalFloor is mainly useful for stationary applications (seated or standing) where the content is
+    positioned relative to the floor. The content will move when the user resets the view.
+
+    \default XrView.ReferenceSpaceLocal
 */
 
 QQuick3DXrView::ReferenceSpace QQuick3DXrView::referenceSpace() const

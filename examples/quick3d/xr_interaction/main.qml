@@ -14,7 +14,7 @@ pragma ComponentBehavior: Bound
 
 XrView {
     id: xrView
-    referenceSpace: XrView.ReferenceSpaceStage
+    referenceSpace: XrView.ReferenceSpaceLocalFloor
 
     depthSubmissionEnabled: true
 

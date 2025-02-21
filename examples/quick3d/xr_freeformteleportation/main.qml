@@ -12,7 +12,7 @@ XrView {
     id: xrView
     XrErrorDialog { id: err }
     onInitializeFailed: (errorString) => err.run("XR freeform teleportation", errorString)
-    referenceSpace: XrView.ReferenceSpaceStage
+    referenceSpace: XrView.ReferenceSpaceLocalFloor
 
     environment: ExtendedSceneEnvironment {
         id: extendedSceneEnvironment
