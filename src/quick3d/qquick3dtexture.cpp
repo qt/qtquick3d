@@ -100,12 +100,6 @@ QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
 QQuick3DTexture::QQuick3DTexture(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
     : QQuick3DObject(dd, parent)
 {
-    const QMetaObject *mo = metaObject();
-    const int updateSlotIdx = mo->indexOfSlot("update()");
-    if (updateSlotIdx >= 0)
-        m_updateSlot = mo->method(updateSlotIdx);
-    if (!m_updateSlot.isValid())
-        qWarning("QQuick3DTexture: Failed to find update() slot");
 }
 
 QQuick3DTexture::~QQuick3DTexture()
@@ -1199,7 +1193,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                     // end up in a situation where the 3D scene does not update
                     // due to nothing else changing, even though the source
                     // texture is now different.
-                    m_updateSlot.invoke(this, Qt::AutoConnection);
+                    QMetaObject::invokeMethod(this, &QQuick3DTexture::update, Qt::AutoConnection);
                 }, Qt::DirectConnection);
 
                 disconnect(m_textureUpdateConnection);
