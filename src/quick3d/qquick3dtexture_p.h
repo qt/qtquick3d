@@ -235,7 +235,6 @@ private:
     QQuick3DTextureData *m_textureData = nullptr;
     bool m_generateMipmaps = false;
     bool m_autoOrientation = true;
-    QMetaMethod m_updateSlot;
     QQuick3DRenderExtension *m_renderExtension = nullptr;
 };
 
