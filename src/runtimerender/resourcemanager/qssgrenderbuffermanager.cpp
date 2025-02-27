@@ -2009,6 +2009,10 @@ static inline quint64 textureMemorySize(QRhiTexture *texture)
         R16F,
         R32F,
         RGB10A2,
+        R8SI,
+        R32SI,
+        RG32SI,
+        RGBA32SI,
         R8UI,
         R32UI,
         RG32UI,
@@ -2018,7 +2022,7 @@ static inline quint64 textureMemorySize(QRhiTexture *texture)
         D24S8,
         D32F,
         D32FS8*/
-    static const quint64 pixelSizes[] = {0, 4, 4, 1, 2, 2, 4, 1, 2, 4, 2, 4, 4, 1, 4, 8, 16, 2, 4, 4, 4, 8};
+    static const quint64 pixelSizes[] = {0, 4, 4, 1, 2, 2, 4, 1, 2, 4, 2, 4, 4, 1, 4, 8, 16, 1, 4, 8, 16, 2, 4, 4, 4, 8};
     /*
         BC1,
         BC2,
@@ -2031,7 +2035,7 @@ static inline quint64 textureMemorySize(QRhiTexture *texture)
         ETC2_RGB8A1,
         ETC2_RGBA8,*/
     static const quint64 blockSizes[] = {8, 16, 16, 8, 16, 16, 16, 8, 8, 16};
-    Q_STATIC_ASSERT_X(QRhiTexture::BC1 == 22 && QRhiTexture::ETC2_RGBA8 == 31,
+    Q_STATIC_ASSERT_X(QRhiTexture::BC1 == 26 && QRhiTexture::ETC2_RGBA8 == 35,
                       "QRhiTexture format constant value missmatch.");
     if (format < QRhiTexture::BC1)
         s *= pixelSizes[format];
