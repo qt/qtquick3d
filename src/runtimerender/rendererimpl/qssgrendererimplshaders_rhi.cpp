@@ -39,29 +39,9 @@ void QSSGBuiltInRhiShaderCache::releaseCachedResources()
     m_cache = {};
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiCubemapShadowBlurXShader()
-{
-    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblurx"), m_cache.cubemapShadowBlurXRhiShader);
-}
-
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiCubemapShadowBlurYShader()
-{
-    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblury"), m_cache.cubemapShadowBlurYRhiShader);
-}
-
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiGridShader(int viewCount)
 {
     return getBuiltinRhiShader(QByteArrayLiteral("grid"), m_cache.gridShader, viewCount);
-}
-
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOrthographicShadowBlurXShader()
-{
-    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblurx"), m_cache.orthographicShadowBlurXRhiShader);
-}
-
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOrthographicShadowBlurYShader()
-{
-    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblury"), m_cache.orthographicShadowBlurYRhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSsaoShader(int viewCount)

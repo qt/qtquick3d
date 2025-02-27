@@ -41,11 +41,7 @@ public:
         UvTangent
     };
 
-    QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurXShader();
-    QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurYShader();
     QSSGRhiShaderPipelinePtr getRhiGridShader(int viewCount);
-    QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurXShader();
-    QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurYShader();
     QSSGRhiShaderPipelinePtr getRhiSsaoShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSkyBoxCubeShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE, int viewCount);
@@ -78,11 +74,7 @@ private:
     static constexpr int particleShaderCount = 2;
     static constexpr int compositeShaderCount = 2;
     struct {
-        BuiltinShader cubemapShadowBlurXRhiShader;
-        BuiltinShader cubemapShadowBlurYRhiShader;
         BuiltinShader gridShader;
-        BuiltinShader orthographicShadowBlurXRhiShader;
-        BuiltinShader orthographicShadowBlurYRhiShader;
         BuiltinShader ssaoRhiShader;
         BuiltinShader skyBoxRhiShader[QSSGRenderLayer::TonemapModeCount * 2 /* rgbe+hdr */];
         BuiltinShader skyBoxCubeRhiShader;
