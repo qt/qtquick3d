@@ -1004,7 +1004,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
         if (m_layer->viewCount >= 2) {
             if (!m_multiViewDepthStencilBuffer) {
-                m_multiViewDepthStencilBuffer = rhi->newTextureArray(QRhiTexture::D24S8, m_layer->viewCount, renderSize,
+                const auto format = rhi->isTextureFormatSupported(QRhiTexture::D24S8) ? QRhiTexture::D24S8 : QRhiTexture::D32FS8;
+                m_multiViewDepthStencilBuffer = rhi->newTextureArray(format, m_layer->viewCount, renderSize,
                                                                      m_samples, QRhiTexture::RenderTarget);
                 m_multiViewDepthStencilBuffer->create();
             }
