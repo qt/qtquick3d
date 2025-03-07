@@ -4,9 +4,9 @@
 /*!
 \page qtquick3d-tool-balsam.html
 \title Balsam Asset Import Tool
-\brief Command line tool for importing assets for use with Qt Quick 3D
+\brief Tool for importing assets for use with Qt Quick 3D
 
-The Balsam tool is a command line application that is part of Qt Quick 3D's
+The Balsam tool is an application that is part of Qt Quick 3D's
 asset conditioning pipeline. The purpose is to take assets created in digital
 content creation tools like
 \l{https://www.autodesk.com/products/maya/overview}{Maya},
@@ -19,12 +19,14 @@ is usable for realtime rendering. Instead the interchange formats can be
 converted via the Balsam tool into QML Components and resources like geometry and
 textures.
 
-Usage:
+\section1 Balsam Command Line Tool
+
+To run Balsam through the command line, call the \c balsam executable like
+this:
+
 \code
 balsam [options] sourceFilename
 \endcode
-
-\section1 Example Usage
 
 To convert a 3D asset contained in the file \c testModel.fbx with \c balsam
 the following command would be used:
@@ -47,6 +49,15 @@ TestModel {
    id: modelInstance
 }
 \endcode
+
+\section1 Balsam UI
+
+There is also a GUI frontend for Balsam called \c balsamui that is shipped
+alongside the \c balsam executable. In \c balsamui you can select your input
+files and output directory and the command-line options of the \c balsam
+executable are mapped to interactive elements:
+
+\image balsamui.webp "A screenshot of the Balsam UI application."
 
 \section1 Supported 3D Asset Types
 
