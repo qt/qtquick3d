@@ -59,6 +59,11 @@ QQuick3DParticleCustomShape::QQuick3DParticleCustomShape(QObject *parent)
     \qmlproperty url ParticleCustomShape3D::source
 
     This property holds the location of the shape file.
+
+     \warning \a source is expected to contain trusted content. Application
+     developers are advised to carefully consider the potential implications
+     before passing in user-provided source files that are not part of the
+     application.
 */
 
 QUrl QQuick3DParticleCustomShape::source() const
