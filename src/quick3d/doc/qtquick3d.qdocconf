@@ -58,6 +58,7 @@ headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/spheregeometry_p.h \
            ../../helpers/planegeometry_p.h \
            ../../helpers/cuboidgeometry_p.h \
+           ../../helpers/capsulegeometry_p.h \
            ../../assetutils/qquick3druntimeloader_p.h \
            ../../runtimerender/qssgrendercontextcore.h \
            ../../runtimerender/qssgrhicontext.h \
@@ -85,6 +86,7 @@ sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/spheregeometry.cpp \
            ../../helpers/planegeometry.cpp \
            ../../helpers/cuboidgeometry.cpp \
+           ../../helpers/capsulegeometry.cpp \
            ../../assetutils/qquick3druntimeloader.cpp \
            ../../runtimerender/qssgrendercontextcore.cpp \
            ../../runtimerender/qssgrhicontext.cpp

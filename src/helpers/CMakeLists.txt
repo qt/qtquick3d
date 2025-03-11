@@ -32,6 +32,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         spheregeometry_p.h spheregeometry.cpp
         planegeometry_p.h planegeometry.cpp
         cuboidgeometry_p.h cuboidgeometry.cpp
+        capsulegeometry_p.h capsulegeometry.cpp
         qtquick3dhelpersglobal_p.h
     QML_FILES
         AxisHelper.qml

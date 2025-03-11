@@ -110,6 +110,16 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                            RadioButton {
+                                id: capsuleRadioButton
+                                text: "Capsule"
+                                onCheckedChanged: {
+                                    if (checked) {
+                                        testModel.geometry = capsuleGeometry
+                                        propertyEditor.setSource("CapsuleSettings.qml", {target: capsuleGeometry})
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -192,6 +202,10 @@ ApplicationWindow {
 
             CuboidGeometry {
                 id: cuboidGeometry
+            }
+
+            CapsuleGeometry {
+                id: capsuleGeometry
             }
 
             Texture {
