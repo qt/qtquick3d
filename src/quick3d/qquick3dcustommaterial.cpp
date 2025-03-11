@@ -1257,6 +1257,11 @@ QT_BEGIN_NAMESPACE
     (without a scheme) are also accepted, in which case the file is treated as
     relative to the component (the \c{.qml} file).
 
+    \warning Shader snippets are assumed to be trusted content. Application
+    developers are advised to carefully consider the potential implications
+    before allowing the loading of user-provided content that is not part of the
+    application.
+
     \sa fragmentShader
 */
 
@@ -1269,6 +1274,11 @@ QT_BEGIN_NAMESPACE
     access files embedded via the Qt resource system. Relative file paths
     (without a scheme) are also accepted, in which case the file is treated as
     relative to the component (the \c{.qml} file).
+
+    \warning Shader snippets are assumed to be trusted content. Application
+    developers are advised to carefully consider the potential implications
+    before allowing the loading of user-provided content that is not part of the
+    application.
 
     \sa vertexShader
 */
