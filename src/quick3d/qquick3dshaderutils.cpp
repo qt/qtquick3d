@@ -31,6 +31,11 @@ QT_BEGIN_NAMESPACE
     \qmlproperty url Shader::shader
     Specifies the name of the shader source file. For details on how to write shader code,
     see the \l Effect documentation.
+
+    \warning Shader snippets are assumed to be trusted content. Application
+    developers are advised to carefully consider the potential implications
+    before allowing the loading of user-provided content that is not part of the
+    application.
 */
 /*!
     \qmlproperty enumeration Shader::stage
