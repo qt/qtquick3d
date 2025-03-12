@@ -75,7 +75,7 @@ void BenchFrustumCulling::initTestCase()
     camera.setClipNear(95.0f);
     camera.setClipFar(105.0f);
     cameraNode.reset(static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::updateSpatialNode(&camera, nullptr)));
-    cameraNode->calculateGlobalVariables(viewport);
+    QSSGRenderCamera::calculateProjectionInternal(*cameraNode, viewport);
 
     QMatrix4x4 viewProjectionMatrix = QMatrix4x4(Qt::Uninitialized);
     QSSGClipPlane nearPlane;
@@ -89,7 +89,7 @@ void BenchFrustumCulling::initTestCase()
         QVector3D dir(QSSGUtils::mat33::transform(theUpper33, QVector3D(0, 0, -1)));
         dir.normalize();
         nearPlane.normal = dir;
-        QVector3D theGlobalPos = camera.getGlobalPos() + camera.clipNear * dir;
+        QVector3D theGlobalPos = camera.getGlobalPos() + camera.clipPlanes.clipNear() * dir;
         nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
     }
     // the near plane's bbox edges are calculated in the clipping frustum's

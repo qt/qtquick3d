@@ -29,7 +29,7 @@ class QSSGRenderer;
 class QSSGRenderShadowMap;
 class QSSGRenderReflectionMap;
 class QSSGLayerRenderData;
-struct QSSGRenderCamera;
+class QSSGRenderCamera;
 struct QSSGRenderItem2D;
 
 class QSSGRenderPass

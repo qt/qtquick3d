@@ -264,7 +264,7 @@ static QSSGRenderCameraData getCameraDataImpl(const QSSGRenderCamera *camera)
             QVector3D dir(QSSGUtils::mat33::transform(theUpper33, QVector3D(0, 0, -1)));
             dir.normalize();
             nearPlane.normal = dir;
-            QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;
+            QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipPlanes.clipNear() * dir;
             nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
             // the near plane's bbox edges are calculated in the clipping frustum's
             // constructor.
@@ -692,7 +692,10 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
     QSSG_ASSERT_X(extContext.camera != nullptr, "No camera set!", return {});
 
     const auto vp = contextInterface.renderer()->viewport();
-    extContext.camera->calculateGlobalVariables(vp);
+    const float dpr = contextInterface.renderer()->dpr();
+    const float ssaaMultiplier = layer.isSsaaEnabled() ? layer.ssaaMultiplier : 1.0f;
+
+    QSSGRenderCamera::calculateProjectionInternal(*extContext.camera, vp, { dpr, ssaaMultiplier } );
 
     auto &renderables = renderableModelStore[index];
 
@@ -2361,20 +2364,26 @@ void QSSGLayerRenderData::prepareForRender()
     // 1. If there's an explicit camera set and it's active (visible) we'll use that.
     // 2. ... if the explicitly set camera is not visible, no further attempts will be done.
     // 3. If no explicit camera is set, we'll search and pick the first active camera.
+    QSSGRenderCamera::Configuration cameraConfig { renderer->dpr(), layer.isSsaaEnabled() ? layer.ssaaMultiplier : 1.0f };
     renderedCameras.clear();
     if (!layer.explicitCameras.isEmpty()) {
         for (QSSGRenderCamera *cam : std::as_const(layer.explicitCameras)) {
-            // 1.
-            wasDataDirty = wasDataDirty || cam->isDirty();
-            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*cam, renderer->dpr());
-            wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-            if (!theResult.m_computeFrustumSucceeded)
-                qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+            // The Camera's global variables should already have been update at this point!
+            if (static_cast<QSSGRenderNode *>(cam)->isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty)) {
+                const bool globalStateDirty = cam->calculateGlobalVariables();
+                wasDataDirty |= cam->getGlobalState(QSSGRenderCamera::GlobalState::Active) && globalStateDirty;
+            }
 
-            // 2.
-            if (cam->getGlobalState(QSSGRenderCamera::GlobalState::Active))
-                renderedCameras.append(cam);
+            // 1.
+            if (cam->getGlobalState(QSSGRenderCamera::GlobalState::Active)) {
+                const bool computeFrustumSucceeded = cam->calculateProjection(theViewport, cameraConfig);
+                if (Q_LIKELY(computeFrustumSucceeded))
+                    renderedCameras.append(cam);
+                else
+                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+            }
         }
+        // 2.
     } else if (QSSG_GUARD_X(layer.viewCount == 1, "Multiview rendering requires explicit cameras to be set!.")) {
         // NOTE: This path can never be hit with multiview, hence the guard.
         // (Multiview will always have explicit cameras set.)
@@ -2382,18 +2391,20 @@ void QSSGLayerRenderData::prepareForRender()
         // 3.
         for (auto iter = cameras.cbegin(); renderedCameras.isEmpty() && iter != cameras.cend(); iter++) {
             QSSGRenderCamera *theCamera = *iter;
-            wasDataDirty = wasDataDirty || theCamera->isDirty();
-            QSSGCameraGlobalCalculationResult theResult = layerPrepResult.setupCameraForRender(*theCamera, renderer->dpr());
-            wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-            if (!theResult.m_computeFrustumSucceeded)
-                qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
-            if (theCamera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
-                renderedCameras.append(theCamera);
+            if (static_cast<QSSGRenderNode *>(theCamera)->isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty)) {
+                const bool globalStateDirty = theCamera->calculateGlobalVariables();
+                wasDataDirty |= theCamera->getGlobalState(QSSGRenderCamera::GlobalState::Active) && globalStateDirty;
+            }
+
+            if (theCamera->getGlobalState(QSSGRenderCamera::GlobalState::Active)) {
+                const bool computeFrustumSucceeded = theCamera->calculateProjection(theViewport, cameraConfig);
+                if (Q_LIKELY(computeFrustumSucceeded))
+                    renderedCameras.append(theCamera);
+                else
+                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+            }
         }
     }
-
-    for (QSSGRenderCamera *cam : renderedCameras)
-        cam->dpr = renderer->dpr();
 
     float meshLodThreshold = 1.0f;
     if (!renderedCameras.isEmpty())
@@ -2750,25 +2761,6 @@ QSize QSSGLayerRenderPreparationResult::textureDimensions() const
 {
     const auto size = viewport.size().toSize();
     return QSize(QSSGRendererUtil::nextMultipleOf4(size.width()), QSSGRendererUtil::nextMultipleOf4(size.height()));
-}
-
-QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraForRender(QSSGRenderCamera &inCamera, float dpr)
-{
-    // When using ssaa we need to zoom with the ssaa multiplier since otherwise the
-    // orthographic camera will be zoomed out due to the bigger viewport. We therefore
-    // scale the magnification before calulating the camera variables and then revert.
-    // Since the same camera can be used in several View3Ds with or without ssaa we
-    // cannot store the magnification permanently.
-    const float horizontalMagnification = inCamera.horizontalMagnification;
-    const float verticalMagnification = inCamera.verticalMagnification;
-    inCamera.dpr = dpr;
-    const float ssaaMultiplier = layer->isSsaaEnabled() ? layer->ssaaMultiplier : 1.0f;
-    inCamera.horizontalMagnification *= ssaaMultiplier;
-    inCamera.verticalMagnification *= ssaaMultiplier;
-    const auto result = inCamera.calculateGlobalVariables(viewport);
-    inCamera.horizontalMagnification = horizontalMagnification;
-    inCamera.verticalMagnification = verticalMagnification;
-    return result;
 }
 
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer &inRenderer)

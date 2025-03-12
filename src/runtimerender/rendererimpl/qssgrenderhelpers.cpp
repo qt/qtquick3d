@@ -255,15 +255,14 @@ static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QM
     QRectF theViewport(0.0f, 0.0f, boundsDims.x(), boundsDims.y());
 
     auto camera = std::make_unique<QSSGRenderCamera>(QSSGRenderGraphObject::Type::OrthographicCamera);
-    camera->clipNear = -0.5f * boundsDims.z();
-    camera->clipFar = 0.5f * boundsDims.z();
-    camera->fov = qDegreesToRadians(90.f);
+    camera->clipPlanes = QSSGRenderCamera::ClipPlanes{-0.5f * boundsDims.z(), 0.5f * boundsDims.z()};
+    camera->fov = QSSGRenderCamera::FieldOfView::fromDegrees(90.f);
     camera->parent = nullptr;
     camera->localTransform = QSSGRenderNode::calculateTransformMatrix(boundsCenterWorld,
                                                                       QSSGRenderNode::initScale,
                                                                       lightPivot,
                                                                       QQuaternion::fromDirection(lightForward, lightUp));
-    camera->calculateGlobalVariables(theViewport);
+    QSSGRenderCamera::calculateProjectionInternal(*camera, theViewport);
 
     return camera;
 }
@@ -303,7 +302,7 @@ static QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> setupCascadingCamer
     lightMatrix.setRow(3, QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
     QMatrix4x4 lightMatrixInverted = lightMatrix.inverted();
 
-    const float farScale = (clipFar - clipNear) / (inCamera.clipFar - inCamera.clipNear);
+    const float farScale = (clipFar - clipNear) / (inCamera.clipPlanes.clipFar() - inCamera.clipPlanes.clipNear());
 
     QMatrix4x4 viewProjection(Qt::Uninitialized);
     inCamera.calculateViewProjectionMatrix(viewProjection);
@@ -412,12 +411,11 @@ static void setupCubeReflectionCameras(const QSSGRenderReflectionProbe *inProbe,
 
     for (int i = 0; i < 6; ++i) {
         inCameras[i].parent = nullptr;
-        inCameras[i].clipNear = 1.0f;
-        inCameras[i].clipFar = qMax<float>(2.0f, 10000.0f);
-        inCameras[i].fov = qDegreesToRadians(90.f);
+        inCameras[i].clipPlanes = {1.0f, qMax<float>(2.0f, 10000.0f)};
+        inCameras[i].fov = QSSGRenderCamera::FieldOfView::fromDegrees(90.f);
 
         inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inProbePos, QSSGRenderNode::initScale, inProbePivot, rotOfs[i]);
-        inCameras[i].calculateGlobalVariables(theViewport);
+        QSSGRenderCamera::calculateProjectionInternal(inCameras[i], theViewport);
     }
 }
 
@@ -537,11 +535,10 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, float shadowM
 
     for (int i = 0; i < 6; ++i) {
         inCameras[i].parent = nullptr;
-        inCameras[i].clipNear = 1.0f;
-        inCameras[i].clipFar = shadowMapFar;
-        inCameras[i].fov = qDegreesToRadians(90.f);
+        inCameras[i].clipPlanes = {1.0f, shadowMapFar};
+        inCameras[i].fov = QSSGRenderCamera::FieldOfView::fromDegrees(90.f);
         inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inLightPos, QSSGRenderNode::initScale, lightPivot, rotOfs[i]);
-        inCameras[i].calculateGlobalVariables(theViewport);
+        QSSGRenderCamera::calculateProjectionInternal(inCameras[i], theViewport);
     }
 
     /*
@@ -1441,8 +1438,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             // This is just a way to store the old camera so we can use it for debug
             // drawing. There are probably cleaner ways to do this
             if (!disableShadowCameraUpdate && debugCamera) {
-                debugCamera->clipNear = camera.clipNear;
-                debugCamera->clipFar = camera.clipFar;
+                debugCamera->clipPlanes = camera.clipPlanes;
                 debugCamera->projection = camera.projection;
                 debugCamera->globalTransform = camera.globalTransform;
             }
@@ -1450,8 +1446,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             QVarLengthArray<std::unique_ptr<QSSGRenderCamera>, 4> cascades;
             if (light->type == QSSGRenderLight::Type::DirectionalLight) {
                 const float pcfRadius = light->m_softShadowQuality == QSSGRenderLight::SoftShadowQuality::Hard ? 0.f : light->m_pcfFactor;
-                const float clipNear = camera.clipNear;
-                const float clipFar = qMin(light->m_shadowMapFar, camera.clipFar);
+                const float clipNear = camera.clipPlanes.clipNear();
+                const float clipFar = qMin(light->m_shadowMapFar, camera.clipPlanes.clipFar());
                 const float clipRange = clipFar - clipNear;
                 cascades = setupCascadingCamerasForShadowMap(disableShadowCameraUpdate ? *debugCamera : camera,
                                                              light,
@@ -1474,11 +1470,10 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 pEntry->m_shadowMapFar = clipFar;
             } else if (light->type == QSSGRenderLight::Type::SpotLight) {
                 auto spotlightCamera = std::make_unique<QSSGRenderCamera>(QSSGRenderCamera::Type::PerspectiveCamera);
-                spotlightCamera->fov = qDegreesToRadians(light->m_coneAngle * 2.0f);
-                spotlightCamera->clipNear = 1.0f;
-                spotlightCamera->clipFar = light->m_shadowMapFar;
+                spotlightCamera->fov = QSSGRenderCamera::FieldOfView::fromDegrees(light->m_coneAngle * 2.0f);
+                spotlightCamera->clipPlanes = { 1.0f, light->m_shadowMapFar };
                 const QVector3D lightDir = light->getDirection();
-                const QVector3D lightPos = light->getGlobalPos() - lightDir * spotlightCamera->clipNear;
+                const QVector3D lightPos = light->getGlobalPos() - lightDir * spotlightCamera->clipPlanes.clipNear();
                 const QVector3D lightPivot = light->pivot;
                 const QVector3D forward = lightDir.normalized();
                 const QVector3D right = qFuzzyCompare(qAbs(forward.y()), 1.0f)
@@ -1490,7 +1485,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                                                                            lightPivot,
                                                                                            QQuaternion::fromDirection(forward, up));
                 QRectF theViewport(0.0f, 0.0f, (float)light->m_shadowMapRes, (float)light->m_shadowMapRes);
-                spotlightCamera->calculateGlobalVariables(theViewport);
+                QSSGRenderCamera::calculateProjectionInternal(*spotlightCamera, theViewport);
                 cascades.push_back(std::move(spotlightCamera));
                 pEntry->m_shadowMapFar = light->m_shadowMapFar;
             } else {
@@ -1790,7 +1785,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     const QSize textureSize = rhiAoTexture.texture->pixelSize();
     const float rw = float(textureSize.width());
     const float rh = float(textureSize.height());
-    const float fov = camera.verticalFov(rw / rh);
+    const float fov = camera.fov.asVerticalFov(rw / rh).radians();
     const float tanHalfFovY = tanf(0.5f * fov * (rh / rw));
     const float invFocalLenX = tanHalfFovY * (rw / rh);
 
@@ -1798,7 +1793,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     const QVector4D aoProps2(float(ao.aoSamplerate), (ao.aoDither) ? 1.0f : 0.0f, 0.0f, 0.0f);
     const QVector4D aoScreenConst(1.0f / R2, rh / (2.0f * tanHalfFovY), 1.0f / rw, 1.0f / rh);
     const QVector4D uvToEyeConst(2.0f * invFocalLenX, -2.0f * tanHalfFovY, -invFocalLenX, tanHalfFovY);
-    const QVector2D cameraProps(camera.clipNear, camera.clipFar);
+    const QVector2D cameraProps = camera.clipPlanes;
 
     //    layout(std140, binding = 0) uniform buf {
     //        vec4 aoProperties;
@@ -1935,8 +1930,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
     }
 
     // Param
-    const float nearF = cameras[0]->clipNear;
-    const float farF = cameras[0]->clipFar;
+    const auto clipPlanes = cameras[0]->clipPlanes;
     const float scale = layer.gridScale;
     const quint32 gridFlags = layer.gridFlags;
 
@@ -1956,10 +1950,8 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
     }
     ubufOffset += (64 + 64) * cameras.count();
 
-    memcpy(ubufData + ubufOffset, &nearF, 4);
-    ubufOffset += 4;
-    memcpy(ubufData + ubufOffset, &farF, 4);
-    ubufOffset += 4;
+    memcpy(ubufData + ubufOffset, &clipPlanes, 8);
+    ubufOffset += 8;
     memcpy(ubufData + ubufOffset, &scale, 4);
     ubufOffset += 4;
     memcpy(ubufData + ubufOffset, &yFactor, 4);

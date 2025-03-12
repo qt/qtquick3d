@@ -44,21 +44,21 @@ void tst_QQuick3DPerspectiveCamera::testClipAndFov()
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
-    QCOMPARE(clipNear, node->clipNear);
+    QCOMPARE(clipNear, node->clipPlanes.clipNear());
 
     const float clipFar = 0.4f;
     camera.setClipFar(clipFar);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
-    QCOMPARE(clipFar, node->clipFar);
+    QCOMPARE(clipFar, node->clipPlanes.clipFar());
 
     const float fov = 6.2f;
     camera.setFieldOfView(fov);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
-    QCOMPARE(fov, qRadiansToDegrees(node->fov)); // It gets converted inside, so we convert back
+    QCOMPARE(fov, node->fov.degrees()); // fov is in degrees in the front-end API.
 
     const QQuick3DPerspectiveCamera::FieldOfViewOrientation fovOrientation
             = QQuick3DPerspectiveCamera::FieldOfViewOrientation::Horizontal;
@@ -66,10 +66,10 @@ void tst_QQuick3DPerspectiveCamera::testClipAndFov()
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
-    QVERIFY(node->fovHorizontal == true);
+    QVERIFY(node->fov.orientation() == QSSGRenderCamera::FieldOfView::Orientation::Horizontal);
     camera.setFieldOfViewOrientation(QQuick3DPerspectiveCamera::FieldOfViewOrientation::Vertical);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
-    QVERIFY(node->fovHorizontal == false);
+    QVERIFY(node->fov.orientation() == QSSGRenderCamera::FieldOfView::Orientation::Vertical);
 }
 
 void tst_QQuick3DPerspectiveCamera::testLookAt()

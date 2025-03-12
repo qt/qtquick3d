@@ -83,7 +83,7 @@ void picking::benchImpl(int count, bool hit)
     QSSGRenderCamera dummyCamera(QSSGRenderCamera::Type::OrthographicCamera);
     dummyCamera.localTransform.translate(QVector3D(0.0f, 0.0f, 600.0f));
     static_cast<QSSGRenderNode &>(dummyCamera).markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
-    dummyCamera.calculateGlobalVariables(QRectF(QPointF(), QSizeF(viewportDim.x(), viewportDim.y())));
+    QSSGRenderCamera::calculateProjectionInternal(dummyCamera, QRectF(QPointF(), QSizeF(viewportDim.x(), viewportDim.y())));
     dummyCamera.calculateViewProjectionMatrix(globalTransform);
 
     dummyLayer.renderedCameras = { &dummyCamera };

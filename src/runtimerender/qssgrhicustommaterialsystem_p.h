@@ -34,7 +34,7 @@ class QSSGLayerRenderData;
 struct QSSGRenderableImage;
 struct QSSGRenderLayer;
 struct QSSGRenderLight;
-struct QSSGRenderCamera;
+class QSSGRenderCamera;
 struct QSSGReflectionMapEntry;
 class QRhiTexture;
 

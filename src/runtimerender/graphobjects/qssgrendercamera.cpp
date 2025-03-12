@@ -15,37 +15,36 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-
-float getAspectRatio(const QRectF &inViewport)
+static inline float getAspectRatio(const QRectF &inViewport)
 {
     return inViewport.height() != 0 ? inViewport.width() / inViewport.height() : 0.0f;
 }
 
-}
-
 QSSGRenderCamera::QSSGRenderCamera(QSSGRenderGraphObject::Type type)
     : QSSGRenderNode(type)
-    , clipNear(10)
-    , clipFar(10000)
-    , fov(qDegreesToRadians(60.0f))
-    , fovHorizontal(false)
-    , enableFrustumClipping(true)
 {
     Q_ASSERT(QSSGRenderCamera::isCamera(type));
     markDirty(DirtyFlag::CameraDirty);
 }
 
-// Code for testing
-QSSGCameraGlobalCalculationResult QSSGRenderCamera::calculateGlobalVariables(const QRectF &inViewport)
+QSSGCameraGlobalCalculationResult QSSGRenderCamera::calculateProjectionInternal(QSSGRenderCamera &camera,
+                                                                                const QRectF &inViewport,
+                                                                                Configuration config)
 {
-    bool wasDirty = QSSGRenderNode::calculateGlobalVariables();
-    return QSSGCameraGlobalCalculationResult{ wasDirty, calculateProjection(inViewport) };
+    // For convenience we ensure that the global variables are up to date, as this function
+    // is intended to be used with internally set-up cameras.
+    bool wasDirty = camera.calculateGlobalVariables();
+    return QSSGCameraGlobalCalculationResult{ wasDirty, camera.calculateProjection(inViewport, config) };
 }
 
-bool QSSGRenderCamera::calculateProjection(const QRectF &inViewport)
+bool QSSGRenderCamera::calculateProjection(const QRectF &inViewport, Configuration config)
 {
     bool retval = false;
+
+    // NOTE: We always update the dpr, under normal surcumstances it won't change, but we have at least
+    //       one broken use-cases (front-end camera class) where we depend on the dpr being available from
+    //       here...
+    dpr = config.dpr;
 
     const bool argumentsChanged = inViewport != previousInViewport;
     if (!argumentsChanged && !isDirty(DirtyFlag::CameraDirty))
@@ -55,16 +54,16 @@ bool QSSGRenderCamera::calculateProjection(const QRectF &inViewport)
 
     switch (type) {
     case QSSGRenderGraphObject::Type::OrthographicCamera:
-        retval = computeFrustumOrtho(inViewport);
+        retval = computeFrustumOrtho(inViewport, clipPlanes, magnification, config, projection);
         break;
     case QSSGRenderGraphObject::Type::PerspectiveCamera:
-        retval = computeFrustumPerspective(inViewport);
+        retval = computeFrustumPerspective(inViewport, fov, clipPlanes, projection);
         break;
     case QSSGRenderGraphObject::Type::CustomCamera:
         retval = true; // Do nothing
         break;
     case QSSGRenderGraphObject::Type::CustomFrustumCamera:
-        retval = computeCustomFrustum(inViewport);
+        retval = computeCustomFrustum(customFrustum, clipPlanes, projection);
         break;
     default:
         Q_UNREACHABLE();
@@ -80,21 +79,27 @@ bool QSSGRenderCamera::calculateProjection(const QRectF &inViewport)
 
 //==============================================================================
 /**
- *	Compute the projection matrix for a perspective camera
- *	@return true if the computed projection matrix is valid
+ *    Compute the projection matrix for a perspective camera
+ *    @return true if the computed projection matrix is valid
  */
-bool QSSGRenderCamera::computeFrustumPerspective(const QRectF &inViewport)
+bool QSSGRenderCamera::computeFrustumPerspective(QRectF inViewport,
+                                                 QSSGRenderCamera::FieldOfView fov,
+                                                 QSSGRenderCamera::ClipPlanes clipPlane,
+                                                 QMatrix4x4 &outProjection)
 {
-    projection = QMatrix4x4();
-    projection.perspective(qRadiansToDegrees(verticalFov(inViewport)), getAspectRatio(inViewport), clipNear, clipFar);
+    outProjection.setToIdentity();
+    const float aspectRatio = getAspectRatio(inViewport);
+    const auto vfov = fov.asVerticalFov(aspectRatio);
+    outProjection.perspective(vfov.degrees(), aspectRatio, clipPlane.clipNear(), clipPlane.clipFar());
     return true;
 }
 
-bool QSSGRenderCamera::computeCustomFrustum(const QRectF &inViewport)
+bool QSSGRenderCamera::computeCustomFrustum(QSSGRenderCamera::Frustum frustum,
+                                            QSSGRenderCamera::ClipPlanes clipPlanes,
+                                            QMatrix4x4 &outProjection)
 {
-    Q_UNUSED(inViewport);
-    projection.setToIdentity();
-    projection.frustum(left, right, bottom, top, clipNear, clipFar);
+    outProjection.setToIdentity();
+    outProjection.frustum(frustum.left, frustum.right, frustum.bottom, frustum.top, clipPlanes.clipNear(), clipPlanes.clipFar());
     return true;
 }
 
@@ -110,42 +115,30 @@ void QSSGRenderCamera::calculateViewProjectionMatrix(const QMatrix4x4 &globalTra
     outMatrix = projection * nonScaledGlobal.inverted();
 }
 
-void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix, float clipNear, float clipFar) const
-{
-    if (qFuzzyIsNull(clipFar - clipNear)) {
-        qWarning() << "QSSGRenderCamera::calculateViewProjection: far == near";
-        return;
-    }
-
-    QMatrix4x4 proj = projection;
-    proj(2, 2) = -(clipFar + clipNear) / (clipFar - clipNear);
-    proj(2, 3) = -2 * clipFar * clipNear / (clipFar - clipNear);
-    QMatrix4x4 nonScaledGlobal(Qt::Uninitialized);
-    nonScaledGlobal.setColumn(0, 0.5f * globalTransform.column(0).normalized());
-    nonScaledGlobal.setColumn(1, 0.5f * globalTransform.column(1).normalized());
-    nonScaledGlobal.setColumn(2, 0.5f * globalTransform.column(2).normalized());
-    nonScaledGlobal.setColumn(3, 0.5f * globalTransform.column(3));
-    outMatrix = proj * nonScaledGlobal.inverted();
-}
-
 //==============================================================================
 /**
- *	Compute the projection matrix for a orthographic camera
- *	@return true if the computed projection matrix is valid
+ *    Compute the outProjection matrix for a orthographic camera
+ *    @return true if the computed outProjection matrix is valid
  */
-bool QSSGRenderCamera::computeFrustumOrtho(const QRectF &inViewport)
+bool QSSGRenderCamera::computeFrustumOrtho(QRectF inViewport,
+                                           QSSGRenderCamera::ClipPlanes clipPlanes,
+                                           QSSGRenderCamera::Magnification magnification,
+                                           Configuration config,
+                                           QMatrix4x4 &outProjection)
 {
-    projection = QMatrix4x4();
-    float halfWidth = inViewport.width() / 2.0f / horizontalMagnification / dpr;
-    float halfHeight = inViewport.height() / 2.0f / verticalMagnification / dpr;
-    projection.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, clipNear, clipFar);
-    return true;
-}
 
-float QSSGRenderCamera::getOrthographicScaleFactor(const QRectF &inViewport) const
-{
-    Q_UNUSED(inViewport);
-    return qMax(horizontalMagnification, verticalMagnification);
+
+    outProjection.setToIdentity();
+    // When using ssaa we need to zoom with the ssaa multiplier since otherwise the
+    // orthographic camera will be zoomed out due to the bigger viewport. We therefore
+    // scale the magnification before calulating the projection.
+    // Since the same camera can be used in several View3Ds with or without ssaa we
+    // cannot store the magnification permanently.
+    magnification *= config.ssaaMultiplier;
+    const float halfWidth = inViewport.width() / 2.0f / magnification.horizontal() / config.dpr;
+    const float halfHeight = inViewport.height() / 2.0f / magnification.vertical() / config.dpr;
+    outProjection.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, clipPlanes.clipNear(), clipPlanes.clipFar());
+    return true;
 }
 
 static QQuaternion rotationQuaternionForLookAt(const QVector3D &sourcePosition,
@@ -204,7 +197,7 @@ void QSSGRenderCamera::calculateViewProjectionWithoutTranslation(float clipNear,
 }
 
 QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoords,
-                                              const QRectF &inViewport) const
+                                          const QRectF &inViewport) const
 {
     QSSGRenderRay theRay;
     QVector2D normalizedCoords = QSSGUtils::rect::relativeToNormalizedCoordinates(inViewport, inViewportRelativeCoords);
@@ -238,25 +231,6 @@ QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoo
     outDir.normalize();
 
     return theRay;
-}
-
-QVector3D QSSGRenderCamera::unprojectToPosition(const QVector3D &inGlobalPos, const QSSGRenderRay &inRay) const
-{
-    QVector3D theCameraDir = getDirection();
-    QVector3D theObjGlobalPos = inGlobalPos;
-    float theDistance = -1.0f * QVector3D::dotProduct(theObjGlobalPos, theCameraDir);
-    QSSGPlane theCameraPlane(theCameraDir, theDistance);
-    return QSSGRenderRay::intersect(theCameraPlane, inRay).value_or(QVector3D{});
-}
-
-float QSSGRenderCamera::verticalFov(float aspectRatio) const
-{
-    return fovHorizontal ? float(2.0 * qAtan(qTan(qreal(fov) / 2.0) / qreal(aspectRatio))) : fov;
-}
-
-float QSSGRenderCamera::verticalFov(const QRectF &inViewport) const
-{
-    return verticalFov(getAspectRatio(inViewport));
 }
 
 void QSSGRenderCamera::markDirty(DirtyFlag dirtyFlag)

@@ -178,10 +178,18 @@ QSSGRenderGraphObject *QQuick3DPerspectiveCamera::updateSpatialNode(QSSGRenderGr
 {
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
     if (camera) {
-        const bool changed = ((int(qUpdateIfNeeded(camera->clipNear, m_clipNear))
-                               | int(qUpdateIfNeeded(camera->clipFar, m_clipFar))
-                               | int(qUpdateIfNeeded(camera->fov, qDegreesToRadians(m_fieldOfView)))
-                               | int(qUpdateIfNeeded(camera->fovHorizontal, m_fieldOfViewOrientation == QQuick3DPerspectiveCamera::FieldOfViewOrientation::Horizontal))) != 0);
+        QSSGRenderCamera::FieldOfView fov;
+        switch (m_fieldOfViewOrientation) {
+        case QQuick3DPerspectiveCamera::Vertical:
+            fov = QSSGRenderCamera::FieldOfView::fromDegrees(m_fieldOfView);
+            break;
+        case QQuick3DPerspectiveCamera::Horizontal:
+            fov = QSSGRenderCamera::FieldOfView::fromDegrees<QSSGRenderCamera::FieldOfView::Orientation::Horizontal>(m_fieldOfView);
+            break;
+        }
+
+        const bool changed = ((int(qUpdateIfNeeded(camera->clipPlanes, {m_clipNear, m_clipFar}))
+                               | int(qUpdateIfNeeded(camera->fov, fov))) != 0);
         if (changed)
             camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }

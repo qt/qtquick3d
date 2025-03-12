@@ -64,7 +64,7 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &sha
     const QMatrix4x4 &modelMatrix = renderable.globalTransform;
     shaders.setUniform(ubufData, "qt_modelMatrix", modelMatrix.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
-    const QVector2D camProperties(cameras[0]->clipNear, cameras[0]->clipFar);
+    const QVector2D camProperties(cameras[0]->clipPlanes);
     shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
     QVector2D oneOverSize = QVector2D(1.0f, 1.0f);

@@ -157,10 +157,7 @@ QSSGRenderGraphObject *QQuick3DFrustumCamera::updateSpatialNode(QSSGRenderGraphO
     // NOTE: The frustum camera extends the perspective camera!
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DPerspectiveCamera::updateSpatialNode(node));
     if (camera) {
-        const bool changed = ((int(qUpdateIfNeeded(camera->top, m_top))
-                              | int(qUpdateIfNeeded(camera->bottom, m_bottom))
-                              | int(qUpdateIfNeeded(camera->right, m_right))
-                              | int(qUpdateIfNeeded(camera->left, m_left))) != 0);
+        const bool changed = ((int(qUpdateIfNeeded(camera->customFrustum, { m_top, m_bottom, m_left, m_right }))) != 0);
         if (changed)
             camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }

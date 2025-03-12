@@ -136,21 +136,18 @@ QSSGRenderGraphObject *QQuick3DXrEyeCamera::updateSpatialNode(QSSGRenderGraphObj
         bool changed = false;
         if (m_dirtyFlags & DirtyFlag::ProjectionChanged) {
             camera->projection = m_projection;
-            qUpdateIfNeeded(camera->clipNear, m_clipNear);
-            qUpdateIfNeeded(camera->clipFar, m_clipFar);
+            qUpdateIfNeeded(camera->clipPlanes, { m_clipNear, m_clipFar });
             m_dirtyFlags &= ~DirtyFlag::ProjectionChanged;
             changed = true;
         } else if (m_dirtyFlags & DirtyFlag::ProjectionDirty) {
             maybeUpdateProjection();
             changed |= qUpdateIfNeeded(camera->projection, m_projection);
-            changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
-            changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
+            qUpdateIfNeeded(camera->clipPlanes, { m_clipNear, m_clipFar });
             m_dirtyFlags &= ~DirtyFlag::ProjectionDirty;
         }
 
         if (m_dirtyFlags & DirtyFlag::ClipChanged) {
-            changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
-            changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
+            qUpdateIfNeeded(camera->clipPlanes, { m_clipNear, m_clipFar });
             m_dirtyFlags &= ~DirtyFlag::ClipChanged;
         }
 

@@ -2150,7 +2150,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
     materialAdapter->setCustomPropertyUniforms(ubufData, shaders, renderContext);
 
-    const QVector2D camProperties(inCameras[0]->clipNear, inCameras[0]->clipFar);
+    const QVector2D camProperties(inCameras[0]->clipPlanes);
     shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
     const int viewCount = inCameras.count();

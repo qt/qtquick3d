@@ -33,14 +33,14 @@ void tst_QQuick3DOrthographicCamera::testClip()
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
-    QCOMPARE(clipNear, node->clipNear);
+    QCOMPARE(clipNear, node->clipPlanes.clipNear());
 
     const float clipFar = 0.4f;
     camera.setClipFar(clipFar);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
-    QCOMPARE(clipFar, node->clipFar);
+    QCOMPARE(clipFar, node->clipPlanes.clipFar());
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DOrthographicCamera)

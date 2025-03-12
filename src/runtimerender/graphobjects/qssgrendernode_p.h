@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRenderModel;
 struct QSSGRenderLight;
-struct QSSGRenderCamera;
+class QSSGRenderCamera;
 struct QSSGRenderText;
 struct QSSGRenderNode;
 class QSSGBufferManager;

@@ -163,7 +163,6 @@ struct QSSGLayerRenderPreparationResult
     bool isNull() const { return !layer; }
     bool isLayerVisible() const;
     QSize textureDimensions() const;
-    QSSGCameraGlobalCalculationResult setupCameraForRender(QSSGRenderCamera &inCamera, float dpr = 1.0f);
 };
 
 struct QSSGDefaultMaterialPreparationResult
