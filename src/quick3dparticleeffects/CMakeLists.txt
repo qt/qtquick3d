@@ -15,6 +15,7 @@ qt_internal_add_qml_module(Quick3DParticleEffects
         QtQuick3D/auto
         QtQuick3D.Particles3D/auto
     NO_SYNC_QT
+    NO_PRIVATE_MODULE
     DEFINES
         QT_BUILD_QUICK3DPARTICLEEFFECTS_LIB
     PUBLIC_LIBRARIES

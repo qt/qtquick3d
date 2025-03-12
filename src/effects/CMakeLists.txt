@@ -39,6 +39,7 @@ qt_internal_add_qml_module(Quick3DEffects
         QtQuick3D/auto
         QtQuick.Window/auto
     NO_SYNC_QT
+    NO_PRIVATE_MODULE
     QML_FILES
         ${qml_files}
     PUBLIC_LIBRARIES
