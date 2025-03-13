@@ -28,6 +28,12 @@ struct QSSGLightmapBakerPrivate;
 class QSSGLightmapBaker
 {
 public:
+    enum class Status {
+        Preparing,
+        Running,
+        Finished
+    };
+
     struct Context {
         struct Environment {
             QSSGRhiContext *rhiCtx = nullptr;
@@ -43,11 +49,13 @@ public:
 
         struct Callbacks {
             QSSGLightmapper::Callback lightmapBakingOutput;
+            std::function<void(bool)> triggerNewFrame;
+            std::function<void(bool)> disableLightmaps;
         } callbacks;
     };
 
     QSSGLightmapBaker(const Context &ctx);
-    void process();
+    Status process();
 
 private:
     QSSGLightmapBakerPrivate *d;

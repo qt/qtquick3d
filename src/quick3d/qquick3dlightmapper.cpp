@@ -12,9 +12,20 @@ QT_BEGIN_NAMESPACE
     \brief Specifies lightmap baking settings for a scene.
     \since 6.4
 
-    Used when baking direct and indirect lighting. These settings are not
+    Used when baking direct and indirect lighting. Most of these settings are not
     relevant at other times, such as when using already generated lightmaps to
-    render a scene.
+    render a scene. The exception is \l source, though this has a sensible default
+    for development.
+
+    On a successfull bake a single file will be generated at the value specified by
+    \l source. This binary file contains the results of the bake, including the
+    per-model lightmaps and the mesh files with lightmap-compatible UVs.
+    The individual model data is accessed via \l BakedLightmap::key.
+
+    The data contained in the resulting lightmap file is all tightly coupled
+    to each other and to the current scene state. This means that any modifications
+    to the original mesh files, Lightmapper settings or other scene changes will
+    require a new bake to be executed to see the updated result.
 
     \note As of Qt 6.4, lightmap baking is in an early technical preview state.
     Changes to features, quality, and API are likely to happen in future releases.
@@ -123,6 +134,51 @@ QT_BEGIN_NAMESPACE
     The default value is 1.
  */
 
+/*!
+    \qmlproperty string Lightmapper::source
+    \since 6.10
+    \default lightmaps.bin
+
+    The path to where to save the generated lightmap file on a successful bake
+    and where to load the file at runtime.
+
+    When baking, the path needs to be set up to be a regular file location which
+    is writable. By default the value is \c{lightmaps.bin}, meaning the current
+    working directory, in a file called exactly that. This location is also
+    readable, which makes the final result instantly appear on a successful bake.
+
+    When loading a bake it will try to look at an actual file location on disk,
+    falling back to looking at files embedded in the executable via the Qt
+    resource system if not found. To control the value more explicitly it can be
+    prefixed, with for example \c{qrc:/} and the Lightmapper will always look for
+    a file in resources.
+
+    The following example always tries to load the lightmap file embedded via
+    resources. First set the value to a writable location and bake. Then copy the
+    generated file into the source directoy. Then by listing the file in the
+    application's CMake project as a resource under the \c{/lightmaps} PREFIX,
+    lets the build process pick up the file and include it in the executable.
+
+    \qml
+    Lightmapper {
+        source: "qrc:/lightmaps/lightmaps.bin"
+        // will attempt to load from :/lightmaps/lightmaps.bin at runtime.
+        // this will result in a "Location not writable" when initiating a bake.
+    }
+    \endqml
+
+    Note that just omitting the prefix will still make the Lightmapper try to
+    load the lightmap file from resources at runtime if the file is not found
+    on disk. This is a convenience during development. If a bake is then
+    initiated and is successful, the same path is converted to absolute and the
+    generated file will be saved to that location. Now the results will insantly
+    appear. Then it's just a matter of copying this file to the source directory
+    and adding back the prefix to start explicitly loading from resources again.
+
+    \note It is not possible to write to the resource system, so an error is given
+    when a bake is initiated and the path is explicitly set up to point there.
+ */
+
 float QQuick3DLightmapper::opacityThreshold() const
 {
     return m_opacityThreshold;
@@ -161,6 +217,11 @@ int QQuick3DLightmapper::bounces() const
 float QQuick3DLightmapper::indirectLightFactor() const
 {
     return m_indirectFactor;
+}
+
+QString QQuick3DLightmapper::source() const
+{
+    return m_source;
 }
 
 void QQuick3DLightmapper::setOpacityThreshold(float opacity)
@@ -240,6 +301,16 @@ void QQuick3DLightmapper::setIndirectLightFactor(float factor)
 
     m_indirectFactor = factor;
     emit indirectLightFactorChanged();
+    emit changed();
+}
+
+void QQuick3DLightmapper::setSource(const QString &source)
+{
+    if (m_source == source)
+        return;
+
+    m_source = source;
+    emit sourceChanged();
     emit changed();
 }
 

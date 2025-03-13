@@ -794,8 +794,11 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     int dirtyAttribute = 0;
 
     auto modelNode = static_cast<QSSGRenderModel *>(node);
-    if (m_dirtyAttributes & SourceDirty)
-        modelNode->meshPath = QSSGRenderPath(translateMeshSource(m_source, this));
+    if (m_dirtyAttributes & SourceDirty) {
+        const QString path = translateMeshSource(m_source, this);
+        const QString lightmapKey = m_bakedLightmap ? m_bakedLightmap->key() : QString();
+        modelNode->meshPath = QSSGRenderPath(path, lightmapKey);
+    }
     if (m_dirtyAttributes & PickingDirty)
         modelNode->setState(QSSGRenderModel::LocalState::Pickable, m_pickable);
 
@@ -927,15 +930,12 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         modelNode->lightmapBaseResolution = uint(m_lightmapBaseResolution);
         if (m_bakedLightmap && m_bakedLightmap->isEnabled()) {
             modelNode->lightmapKey = m_bakedLightmap->key();
-            const QString srcPrefix = m_bakedLightmap->loadPrefix();
-            const QString srcPath = srcPrefix.isEmpty() ? QStringLiteral(".") : srcPrefix;
-            const QQmlContext *context = qmlContext(m_bakedLightmap);
-            const QUrl resolvedUrl = context ? context->resolvedUrl(srcPath) : srcPath;
-            modelNode->lightmapLoadPath = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
         } else {
             modelNode->lightmapKey.clear();
-            modelNode->lightmapLoadPath.clear();
         }
+        // Need new hash if lightmapKey has changed
+        const QString path = translateMeshSource(m_source, this);
+        modelNode->meshPath = QSSGRenderPath(path, modelNode->lightmapKey);
         modelNode->levelOfDetailBias = m_levelOfDetailBias;
     }
 

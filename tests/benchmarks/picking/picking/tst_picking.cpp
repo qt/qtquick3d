@@ -107,7 +107,7 @@ void picking::benchImpl(int count, bool hit)
     }
 
     // Since we're using the same mesh for each model, we only need to call loadMesh() once.
-    bufferManager->loadMesh(models);
+    bufferManager->loadMesh(models[0]);
 
     QVarLengthArray<QSSGRenderPickResult, 20> res;
     QSSGRenderRay ray = hit ? QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 0.0f, 0.0f, 1.0f } } : QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 1.0f, 0.0f, 0.0f } };

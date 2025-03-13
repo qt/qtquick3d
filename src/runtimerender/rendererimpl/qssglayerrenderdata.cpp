@@ -1473,7 +1473,7 @@ void QSSGLayerRenderData::prepareModelMeshes(const QSSGRenderContextInterface &c
         const auto &renderable = renderableModels.at(idx);
         const QSSGRenderModel &model = *static_cast<QSSGRenderModel *>(renderable.node);
         // Ensure we have a mesh
-        if (auto *theMesh = bufferManager->loadMesh(&model)) {
+        if (auto *theMesh = bufferManager->loadMesh(model)) {
             renderable.mesh = theMesh;
             // Completely transparent models cannot be pickable.  But models with completely
             // transparent materials still are.  This allows the artist to control pickability
@@ -1484,7 +1484,11 @@ void QSSGLayerRenderData::prepareModelMeshes(const QSSGRenderContextInterface &c
             if (canModelBePickable) {
                 // Check if there is BVH data, if not generate it
                 if (!theMesh->bvh) {
-                    if (!model.meshPath.isNull())
+                    const QSSGMesh::Mesh mesh = bufferManager->loadRawMesh(model);
+
+                    if (mesh.isValid())
+                        theMesh->bvh = bufferManager->loadMeshBVH(mesh);
+                    else if (!model.meshPath.isNull())
                         theMesh->bvh = bufferManager->loadMeshBVH(model.meshPath);
                     else if (model.geometry)
                         theMesh->bvh = bufferManager->loadMeshBVH(model.geometry);
@@ -2943,7 +2947,11 @@ void QSSGLayerRenderData::initializeLightmapBaking(const LightmapBakingInitParam
     ctx.settings.bakeRequested = params.bakeRequested;
     ctx.settings.quitWhenFinished = params.quitWhenFinished;
 
+    ctx.callbacks.disableLightmaps = [this](bool value) {
+        layer.disableLightmaps = value;
+    };
     ctx.callbacks.lightmapBakingOutput = params.lightmapBakingOutputCallback;
+    ctx.callbacks.triggerNewFrame = params.triggerNewFrameCallback;
 
     lightmapBaker = std::make_unique<QSSGLightmapBaker>(ctx);
 }
@@ -2951,8 +2959,9 @@ void QSSGLayerRenderData::initializeLightmapBaking(const LightmapBakingInitParam
 void QSSGLayerRenderData::maybeProcessLightmapBaking()
 {
     if (lightmapBaker) {
-        lightmapBaker->process();
-        lightmapBaker.reset();
+        const QSSGLightmapBaker::Status status = lightmapBaker->process();
+        if (status == QSSGLightmapBaker::Status::Finished)
+            lightmapBaker.reset();
     }
 }
 

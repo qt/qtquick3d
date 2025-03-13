@@ -96,6 +96,7 @@ public:
     static QSSGLoadedTexture *loadCompressedImage(const QString &inPath);
     static QSSGLoadedTexture *loadHdrImage(const QSharedPointer<QIODevice> &source, const QSSGRenderTextureFormat &inFormat);
     static QSSGLoadedTexture *loadTextureData(QSSGRenderTextureData *textureData);
+    static QSSGLoadedTexture *loadLightmapImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, const QString &key);
 };
 QT_END_NAMESPACE
 

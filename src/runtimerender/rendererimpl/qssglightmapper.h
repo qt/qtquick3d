@@ -14,6 +14,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/qtquick3druntimerenderexports.h>
+#include <QString>
 
 QT_BEGIN_NAMESPACE
 
@@ -27,6 +28,7 @@ struct QSSGLightmapperOptions
     int indirectLightWorkgroupSize = 32;
     int indirectLightBounces = 3;
     float indirectLightFactor = 1.0f;
+    QString source = QStringLiteral("lightmaps.bin");
 };
 
 QT_END_NAMESPACE

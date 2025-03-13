@@ -49,7 +49,6 @@ Window {
             bakedLightmap: BakedLightmap {
                 enabled: root.lmEnabled
                 key: "box"
-                loadPrefix: "file:"
             }
             scale: Qt.vector3d(100, 100, 100)
         }

@@ -12,6 +12,7 @@ struct QSSGLightmapBakerPrivate
 {
     QSSGLightmapBaker::Context ctx;
     std::unique_ptr<QSSGLightmapper> lightmapper = nullptr;
+    QSSGLightmapBaker::Status currentStatus = QSSGLightmapBaker::Status::Preparing;
 };
 
 QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
@@ -22,6 +23,7 @@ QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
     auto &env = d->ctx.env;
     auto &cb = d->ctx.callbacks;
 
+    d->currentStatus = QSSGLightmapBaker::Status::Preparing;
     d->lightmapper = std::make_unique<QSSGLightmapper>(env.rhiCtx, env.renderer);
     d->lightmapper->setOptions(env.lmOptions);
     d->lightmapper->setOutputCallback(cb.lightmapBakingOutput);
@@ -35,22 +37,42 @@ QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
         d->lightmapper->add(env.bakedLightingModels[i]);
 }
 
-void QSSGLightmapBaker::process()
+QSSGLightmapBaker::Status QSSGLightmapBaker::process()
 {
     auto &env = d->ctx.env;
     auto &settings = d->ctx.settings;
+    auto &cb = d->ctx.callbacks;
 
-    QRhiCommandBuffer *cb = env.rhiCtx->commandBuffer();
-    cb->debugMarkBegin("Quick3D lightmap baking");
-    if (settings.bakeRequested) {
-        d->lightmapper->bake();
-    }
-    cb->debugMarkEnd();
+    if (d->currentStatus == Status::Preparing) {
+        // We need to prepare for lightmap baking by doing another frame so that
+        // we can reload all meshes to use the original one and NOT the baked one.
+        // When disableLightmaps is set on the layer, the mesh loader will always load the
+        // original mesh and not the lightmap mesh.
+        cb.disableLightmaps(true);
+        cb.triggerNewFrame(true);
 
-    if (settings.quitWhenFinished) {
-        qDebug("Lightmap baking done, exiting application");
-        QMetaObject::invokeMethod(qApp, "quit");
+        d->currentStatus = Status::Running;
+    } else if (d->currentStatus == Status::Running) {
+        {
+            QRhiCommandBuffer *cb = env.rhiCtx->commandBuffer();
+            cb->debugMarkBegin("Quick3D lightmap baking");
+            if (settings.bakeRequested) {
+                d->lightmapper->bake();
+            }
+            cb->debugMarkEnd();
+        }
+
+        if (settings.quitWhenFinished) {
+            qDebug("Lightmap baking done, exiting application");
+            QMetaObject::invokeMethod(qApp, "quit");
+        } else {
+            cb.disableLightmaps(false);
+            cb.triggerNewFrame(true);
+            d->currentStatus = Status::Finished;
+        }
     }
+
+    return d->currentStatus;
 }
 
 QT_END_NAMESPACE

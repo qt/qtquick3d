@@ -1268,6 +1268,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QSSGRenderLayer &layerNode,
         layerNode.lmOptions.indirectLightWorkgroupSize = lightmapper->indirectLightWorkgroupSize();
         layerNode.lmOptions.indirectLightBounces = lightmapper->bounces();
         layerNode.lmOptions.indirectLightFactor = lightmapper->indirectLightFactor();
+        layerNode.lmOptions.source = lightmapper->source();
     } else {
         layerNode.lmOptions = {};
     }
@@ -1387,6 +1388,16 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
                 };
             params.lightmapBakingOutputCallback = callback;
         }
+
+        // Both the QQuick3DLightmapBaker and cmd / env variant needs this
+        params.triggerNewFrameCallback = [view3D](bool releaseResources) {
+            if (releaseResources) {
+                QMetaObject::invokeMethod(view3D->window(),
+                                            &QQuickWindow::releaseResources,
+                                            Qt::QueuedConnection);
+            }
+            QMetaObject::invokeMethod(view3D, &QQuick3DViewport::update, Qt::QueuedConnection);
+        };
 
         m_layer->renderData->initializeLightmapBaking(params);
     } else {

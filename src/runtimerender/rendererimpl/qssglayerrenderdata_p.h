@@ -342,6 +342,7 @@ public:
         bool bakeRequested = false;
         bool quitWhenFinished = false;
         QSSGLightmapper::Callback lightmapBakingOutputCallback;
+        std::function<void(bool)> triggerNewFrameCallback;
     };
 
     void initializeLightmapBaking(const LightmapBakingInitParams &params);

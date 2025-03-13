@@ -21,6 +21,7 @@
 #define TINYEXR_USE_THREAD 1
 #include <zlib.h>
 #include <tinyexr.h>
+#include "qssglightmapio_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -28,7 +29,13 @@ QT_BEGIN_NAMESPACE
 QSharedPointer<QIODevice> QSSGInputUtil::getStreamForFile(const QString &inPath, bool inQuiet, QString *outPath)
 {
     QFile *file = nullptr;
-    QString tryPath = inPath.startsWith(QLatin1String("qrc:/")) ? inPath.mid(3) : inPath;
+    QString tryPath = inPath;
+    if (tryPath.startsWith(QLatin1String("qrc:/"))) {
+        tryPath = inPath.mid(3);
+    } else if (tryPath.startsWith(QLatin1String("file://"))) {
+        tryPath = inPath.mid(7);
+    }
+
     QFileInfo fi(tryPath);
     bool found = fi.exists();
     if (!found && fi.isNativePath()) {
@@ -700,6 +707,13 @@ QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRe
     return imageData;
 
 }
+}
+
+QSSGLoadedTexture *QSSGLoadedTexture::loadLightmapImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, const QString &key)
+{
+    if (auto stream = QSSGInputUtil::getStreamForFile(inPath))
+        return QSSGLightmapLoader::createTexture(stream, inFormat, key);
+    return nullptr;
 }
 
 QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevice> &source, const QSSGRenderTextureFormat &inFormat)

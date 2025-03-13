@@ -15,7 +15,9 @@
 #include <QRandomGenerator>
 #include <qsimd.h>
 #include <embree3/rtcore.h>
-#include <tinyexr.h>
+#include <QtQuick3DRuntimeRender/private/qssglightmapio_p.h>
+#include <QDir>
+#include <QBuffer>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -104,9 +106,10 @@ struct QSSGLightmapperPrivate
         QRhiVertexInputAttribute::Format tangentFormat = QRhiVertexInputAttribute::Float;
         quint32 binormalOffset = UINT_MAX;
         QRhiVertexInputAttribute::Format binormalFormat = QRhiVertexInputAttribute::Float;
-        QSSGMesh::Mesh meshWithLightmapUV; // only set when model->hasLightmap() == true
+        int meshIndex = -1; // Maps to an index in meshInfos;
     };
     QVector<DrawInfo> drawInfos;
+    QVector<QByteArray> meshes;
 
     struct Light {
         enum {
@@ -364,6 +367,16 @@ static void embreeFilterFunc(const RTCFilterFunctionNArguments *args)
     }
 }
 
+static QByteArray meshToByteArray(const QSSGMesh::Mesh &mesh)
+{
+    QByteArray meshData;
+    QBuffer buffer(&meshData);
+    buffer.open(QIODevice::WriteOnly);
+    mesh.save(&buffer);
+
+    return meshData;
+}
+
 bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporter)
 {
     if (bakedLightingModels.isEmpty()) {
@@ -450,22 +463,34 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
             return false;
         }
 
-        if (!mesh.hasLightmapUVChannel()) {
-            QElapsedTimer unwrapTimer;
-            unwrapTimer.start();
-            if (!mesh.createLightmapUVChannel(lm.model->lightmapBaseResolution)) {
-                sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to do lightmap UV unwrapping for model %1").
-                                                                     arg(lm.model->lightmapKey));
-                return false;
-            }
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap UV unwrap done for model %1 in %2").
-                                                                  arg(lm.model->lightmapKey).
-                                                                  arg(formatDuration(unwrapTimer.elapsed())));
+        QElapsedTimer unwrapTimer;
+        unwrapTimer.start();
+        if (!mesh.createLightmapUVChannel(lm.model->lightmapBaseResolution)) {
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to do lightmap UV unwrapping for model %1").
+                                                                 arg(lm.model->lightmapKey));
+            return false;
+        }
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap UV unwrap done for model %1 in %2").
+                                                              arg(lm.model->lightmapKey).
+                                                              arg(formatDuration(unwrapTimer.elapsed())));
 
-            if (lm.model->hasLightmap())
-                drawInfo.meshWithLightmapUV = mesh;
-        } else {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Model %1 already has a lightmap UV channel").arg(lm.model->lightmapKey));
+        if (lm.model->hasLightmap()) {
+            QByteArray meshData = meshToByteArray(mesh);
+
+            int meshIndex = -1;
+            bool doAdd = true;
+            for (int i = 0; i < meshes.size(); ++i) {
+                if (meshData == meshes[i]) {
+                    doAdd = false;
+                    meshIndex = i;
+                }
+            }
+
+            if (doAdd) {
+                meshes.push_back(meshData);
+                meshIndex = meshes.size() - 1;
+            }
+            drawInfo.meshIndex = meshIndex;
         }
 
         drawInfo.lightmapSize = mesh.subsets().first().lightmapSizeHint;
@@ -1764,13 +1789,37 @@ bool QSSGLightmapperPrivate::postProcess(const StageProgressReporter &reporter)
     return true;
 }
 
+static bool isValidSavePath(const QString &path) {
+    const QFileInfo info = QFileInfo(path);
+    if (!info.exists()) {
+        return QFileInfo(info.dir().path()).isWritable();
+    }
+    return info.isWritable() && !info.isDir();
+}
+
+static inline QString indexToMeshKey(int index)
+{
+    return QStringLiteral("_mesh_%1").arg(index);
+}
+
 bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporter)
 {
     const int bakedLightingModelCount = bakedLightingModels.size();
-    QByteArray listContents;
 
+    if (!isValidSavePath(options.source)) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Source path %1 is not a writable location").
+                                                                arg(options.source));
+        return false;
+    }
+    const QString outputPath = QFileInfo(options.source).absoluteFilePath();
+    QSharedPointer<QSSGLightmapWriter> outputFile = QSSGLightmapWriter::open(outputPath);
     QElapsedTimer totalWriteTimer;
     totalWriteTimer.start();
+
+    // Write meshes
+    for (int i = 0; i < meshes.size(); ++i) {
+        outputFile->writeData(indexToMeshKey(i), meshes[i]);
+    }
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
@@ -1778,65 +1827,31 @@ bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporte
         if (!lm.model->hasLightmap())
             continue;
 
-        QElapsedTimer writeTimer;
-        writeTimer.start();
-
-        // An empty outputFolder equates to working directory
-        QString outputFolder;
-        if (!lm.model->lightmapLoadPath.startsWith(QStringLiteral(":/")))
-            outputFolder = lm.model->lightmapLoadPath;
-
-        const QString fn = QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::LightmapImage, outputFolder);
-        const QByteArray fns = fn.toUtf8();
-
-        listContents += QFileInfo(fn).absoluteFilePath().toUtf8();
-        listContents += '\n';
-
         const Lightmap &lightmap(lightmaps[lmIdx]);
+        const DrawInfo &drawInfo(drawInfos[lmIdx]);
 
-        if (SaveEXR(reinterpret_cast<const float *>(lightmap.imageFP32.constData()),
-                    lightmap.pixelSize.width(), lightmap.pixelSize.height(),
-                    4, false, fns.constData(), nullptr) < 0)
-        {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to write out lightmap"));
-            return false;
-        }
+        QVariantMap metadata;
+        metadata[QStringLiteral("width")] = lightmap.pixelSize.width();
+        metadata[QStringLiteral("height")] = lightmap.pixelSize.height();
+        metadata[QStringLiteral("mesh_key")] = indexToMeshKey(drawInfo.meshIndex);
 
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap saved for model %1 to %2 in %3").
-                                                              arg(lm.model->lightmapKey).
-                                                              arg(fn).
-                                                              arg(formatDuration(writeTimer.elapsed())));
-        const DrawInfo &bakeModelDrawInfo(drawInfos[lmIdx]);
-        if (bakeModelDrawInfo.meshWithLightmapUV.isValid()) {
-            writeTimer.start();
-            QFile f(QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::MeshWithLightmapUV, outputFolder));
-            if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-                bakeModelDrawInfo.meshWithLightmapUV.save(&f);
-            } else {
-                sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to write mesh with lightmap UV data to '%1'").
-                                                                     arg(f.fileName()));
-                return false;
-            }
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap-compatible mesh saved for model %1 to %2 in %3").
-                                                                  arg(lm.model->lightmapKey).
-                                                                  arg(f.fileName()).
-                                                                  arg(formatDuration(writeTimer.elapsed())));
-        } // else the mesh had a lightmap uv channel to begin with, no need to save another version of it
+        outputFile->writeMetadata(lm.model->lightmapKey, metadata);
+        outputFile->writeF32Image(lm.model->lightmapKey + "_final", lightmap.imageFP32);
 
-         reporter.report(((lmIdx + 1) / (double)bakedLightingModelCount) * 0.8); // 80% of the work
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                       QStringLiteral("Lightmap saved for model %1").arg(lm.model->lightmapKey));
+
+        reporter.report(((lmIdx + 1) / (double)bakedLightingModelCount) * 0.8); // 80% of the work
     }
 
-    QFile listFile(QSSGLightmapper::lightmapAssetPathForSave(QSSGLightmapper::LightmapAsset::LightmapImageList));
-    if (!listFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create lightmap list file %1").
-                                                             arg(listFile.fileName()));
+    if (!outputFile->close()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Failed to save lightmap to %1").arg(outputPath));
         return false;
     }
-    listFile.write(listContents);
 
-    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Saving took %1").
+    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap saved to %1 in %2").
+                                                            arg(outputPath).
                                                             arg(formatDuration(totalWriteTimer.elapsed())));
-
     reporter.report(1);
     return true;
 }
@@ -1900,6 +1915,13 @@ bool QSSGLightmapper::bake()
     d->totalTimer.start();
 
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Bake starting..."));
+
+    if (!isValidSavePath(d->options.source)) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Source path %1 is not a writable location").
+                                                                arg(d->options.source));
+        return false;
+    }
+
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Total models registered: %1").arg(d->bakedLightingModels.size()));
 
     if (d->bakedLightingModels.isEmpty()) {
@@ -2010,63 +2032,6 @@ bool QSSGLightmapper::bake()
 }
 
 #endif // QT_QUICK3D_HAS_LIGHTMAPPER
-
-QString QSSGLightmapper::lightmapAssetPathForLoad(const QSSGRenderModel &model, LightmapAsset asset)
-{
-    QString result;
-    if (!model.lightmapLoadPath.isEmpty()) {
-        result += model.lightmapLoadPath;
-        if (!result.endsWith(QLatin1Char('/')))
-            result += QLatin1Char('/');
-    }
-    switch (asset) {
-    case LightmapAsset::LightmapImage:
-        result += QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
-        break;
-    case LightmapAsset::MeshWithLightmapUV:
-        result += QStringLiteral("qlm_%1.mesh").arg(model.lightmapKey);
-        break;
-    default:
-        return QString();
-    }
-    return result;
-}
-
-QString QSSGLightmapper::lightmapAssetPathForSave(const QSSGRenderModel &model, LightmapAsset asset, const QString& outputFolder)
-{
-    QString result = outputFolder;
-    if (!result.isEmpty() && !result.endsWith(QLatin1Char('/')))
-        result += QLatin1Char('/');
-
-    switch (asset) {
-    case LightmapAsset::LightmapImage:
-        result += QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
-        break;
-    case LightmapAsset::MeshWithLightmapUV:
-        result += QStringLiteral("qlm_%1.mesh").arg(model.lightmapKey);
-        break;
-    default:
-        result += lightmapAssetPathForSave(asset, outputFolder);
-        break;
-    }
-    return result;
-}
-
-QString QSSGLightmapper::lightmapAssetPathForSave(LightmapAsset asset, const QString& outputFolder)
-{
-    QString result = outputFolder;
-    if (!result.isEmpty() && !result.endsWith(QLatin1Char('/')))
-        result += QLatin1Char('/');
-
-    switch (asset) {
-    case LightmapAsset::LightmapImageList:
-        result += QStringLiteral("qlm_list.txt");
-        break;
-    default:
-        break;
-    }
-    return result;
-}
 
 QT_END_NAMESPACE
 

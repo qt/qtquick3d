@@ -64,34 +64,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty string BakedLightmap::loadPrefix
-
-    When non-empty, the value is prepended as a path to the value of \l key
-    when loading the lightmap for the Model. This allows shipping the generated
-    lightmaps in different location than they were written to, for example as
-    embedded resources via the Qt resource system.
-
-    For example, the following enables lightmap generation for a static model,
-    using a unique key for identifying the lightmap data between baking and
-    real runs of the application. Once baking is performed, the generated file
-    can be listed in the application's CMake project as a resource under the
-    \c{/lightmaps} PREFIX, letting the build process pick up the file and
-    include it in the executable.
-
-    \qml
-    Model {
-        source: "model.mesh"
-        y: 10
-        bakedLightmap: BakedLightmap {
-            key: "model34156"
-            loadPrefix: "qrc:/lightmaps"
-            // will attempt to load from :/lightmaps/qlm_model34156.exr at run time
-        }
-    }
-    \endqml
-
-    The default value is empty.
-
-    \sa key
+    \deprecated [6.10] This has no effect. See \l Lightmapper documentation.
  */
 
 bool QQuick3DBakedLightmap::isEnabled() const

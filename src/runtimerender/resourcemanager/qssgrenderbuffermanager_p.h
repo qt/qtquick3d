@@ -56,23 +56,14 @@ class QQuick3DRenderExtension;
 
 struct QSSGMeshProcessingOptions
 {
-    bool wantsLightmapUVs = false;
-    uint lightmapBaseResolution = 0;
-    QString meshFileOverride;
+    QString lightmapPath;
+    QString lightmapKey;
 
     inline bool isCompatible(const QSSGMeshProcessingOptions &other) const
     {
-        // a mesh postprocessing request with no-lightmap-UVs is compatible
-        // with a previously processed mesh regardless of having generated
-        // lightmap UVs or not
-        if (!wantsLightmapUVs)
-            return true;
-
         // if lightmap UVs are wanted, the request can only use other's data
-        // if that generated lightmap UVs with the matching resolution
-        return other.wantsLightmapUVs && lightmapBaseResolution == other.lightmapBaseResolution;
-
-        // meshFileOverride plays no role here
+        // if the lightmap key is identical
+        return lightmapPath == other.lightmapPath && lightmapKey == other.lightmapKey;
     }
 };
 
@@ -96,6 +87,7 @@ public:
         QSSGRenderPath path;
         int mipMode;
         int type;
+        QString key;
     };
 
     struct CustomImageCacheKey {
@@ -140,7 +132,8 @@ public:
     QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model) const;
     QSSGBounds3 getModelBounds(const QSSGRenderModel *model) const;
 
-    QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
+    QSSGRenderMesh *loadMesh(const QSSGRenderModel &model);
+    QSSGMesh::Mesh loadRawMesh(const QSSGRenderModel &model);
 
     // Called at the end of the frame to release unreferenced geometry and textures
     void cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *layer);
@@ -157,6 +150,7 @@ public:
 
     static std::unique_ptr<QSSGMeshBVH> loadMeshBVH(const QSSGRenderPath &inSourcePath);
     static std::unique_ptr<QSSGMeshBVH> loadMeshBVH(QSSGRenderGeometry *geometry);
+    static std::unique_ptr<QSSGMeshBVH> loadMeshBVH(const QSSGMesh::Mesh &mesh);
 
     static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
     QSSGMesh::Mesh loadMeshData(const QSSGRenderGeometry *geometry);
@@ -235,12 +229,12 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)
 
 inline size_t qHash(const QSSGBufferManager::ImageCacheKey &k, size_t seed) Q_DECL_NOTHROW
 {
-    return qHash(k.path, seed) ^ k.mipMode ^ k.type;
+    return qHash(k.path, seed) ^ k.mipMode ^ k.type ^ qHash(k.key, seed);
 }
 
 inline bool operator==(const QSSGBufferManager::ImageCacheKey &a, const QSSGBufferManager::ImageCacheKey &b) Q_DECL_NOTHROW
 {
-    return a.path == b.path && a.mipMode == b.mipMode && a.type == b.type;
+    return a.path == b.path && a.mipMode == b.mipMode && a.type == b.type && a.key == b.key;
 }
 
 size_t qHash(const QSSGBufferManager::CustomImageCacheKey &k, size_t seed) noexcept;

@@ -46,6 +46,7 @@ void QQuick3DLightmapBaker::bake()
     Q_ASSERT(m_view);
     if (m_currentlyBaking)
         return;
+
     m_bakingRequested = true;
     m_bakingControl->reset();
 
@@ -77,8 +78,6 @@ void QQuick3DLightmapBaker::bake()
 
         QQuickWindow *window = m_view->window();
         if (status == BakingStatus::Complete) {
-            QMetaObject::invokeMethod(window, "releaseResources", Qt::QueuedConnection);
-            updateView();
             m_currentlyBaking = false;
             QQuickWindowPrivate::get(window)->updatesEnabled = true;
         } else if (status != BakingStatus::None) {

@@ -1,1 +1,0 @@
-qlm_box.exr

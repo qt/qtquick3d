@@ -211,6 +211,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     // Lightmapper config
     QSSGLightmapperOptions lmOptions;
+    bool disableLightmaps = false;
 
     // Scissor
     QRect scissorRect;
