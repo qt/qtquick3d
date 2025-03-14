@@ -667,6 +667,8 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                              bool generateLevelsOfDetail,
                                              float normalMergeAngle,
                                              float normalSplitAngle,
+                                             bool generateLightmapUV,
+                                             int lightmapBaseResolution,
                                              QString &errorString)
 {
     Q_UNUSED(errorString);
@@ -811,9 +813,17 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
         return num;
     };
 
-    return QSSGMesh::Mesh::fromAssetData(entries, indexBufferData, indexType,
-                                         subsets, requirments.numMorphTargets,
-                                         numTargetComponents(requirments));
+    QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromAssetData(entries,
+                                                        indexBufferData,
+                                                        indexType,
+                                                        subsets,
+                                                        requirments.numMorphTargets,
+                                                        numTargetComponents(requirments));
+
+    if (generateLightmapUV && mesh.isValid())
+        mesh.createLightmapUVChannel(lightmapBaseResolution);
+
+    return mesh;
 }
 
 QT_END_NAMESPACE
