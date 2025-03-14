@@ -26,6 +26,8 @@ QSSGMesh::Mesh generateMeshData(const aiScene &scene,
                                 bool generateLevelsOfDetail,
                                 float normalMergeAngle,
                                 float normalSplitAngle,
+                                bool generateLightmapUV,
+                                int lightmapBaseResolution,
                                 QString &errorString);
 
 }

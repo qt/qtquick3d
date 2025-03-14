@@ -633,6 +633,8 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                              bool generateLevelsOfDetail,
                                              float normalMergeAngle,
                                              float normalSplitAngle,
+                                             bool generateLightmapUV,
+                                             int lightmapBaseResolution,
                                              QString &errorString)
 {
     // All Mesh subsets are stored in the same Vertex Buffer so we need to make
@@ -756,7 +758,15 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                        });
     }
 
-    return QSSGMesh::Mesh::fromAssetData(entries, indexBufferData, indexType, subsets);
+    QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromAssetData(entries,
+                                                        indexBufferData,
+                                                        indexType,
+                                                        subsets);
+
+    if (generateLightmapUV && mesh.isValid())
+        mesh.createLightmapUVChannel(lightmapBaseResolution);
+
+    return mesh;
 }
 
 QT_END_NAMESPACE
