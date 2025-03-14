@@ -1297,6 +1297,8 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
                                                       sceneInfo.opt.generateMeshLODs,
                                                       sceneInfo.opt.lodNormalMergeAngle,
                                                       sceneInfo.opt.lodNormalSplitAngle,
+                                                      sceneInfo.opt.generateLightmapUV,
+                                                      sceneInfo.opt.lightmapBaseResolution,
                                                       errorString);
         meshStorage.push_back(std::move(meshData));
 
