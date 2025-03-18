@@ -11,24 +11,32 @@ Node {
     required property Node cameraNode
     required property Node beamHandle
     property real cameraSnapRotation: 30
-    property real xStickValue: 0
-    property real yStickValue: 0
+    property real rotationTriggerValue: 0
+    property real teleportTriggerValue: 0
     property alias screenVisibility: screenValueFader.value
     property bool targetValid: false
     property color rayHitColor: "green"
     property color rayMissColor: "red"
-    property bool teleporting: false
     property int blinkSpeed: 150
 
-    function teleportTo(position) {
-        teleporter.teleporting = true
-        let offset = cameraNode.scenePosition.minus(originNode.scenePosition)
-        let cameraOriginPosition = position.minus(offset)
-        cameraOriginPosition.y = position.y
+    property bool teleporting: false
 
-        screenValueFader.blink(()=>{
-                                   teleporter.doTeleportation(cameraOriginPosition)
-                               },()=>{teleporter.teleporting = false}, teleporter.blinkSpeed)
+    QtObject { // private properties
+        id: d
+        property bool teleportToggle: false
+        property bool teleportAim: teleporter.teleportTriggerValue > 0.7 || teleportToggle
+
+        readonly property bool xPlusRotation: teleporter.rotationTriggerValue > 0.5
+        onXPlusRotationChanged: {
+            if (xPlusRotation)
+                teleporter.rotateRight()
+        }
+
+        readonly property bool xMinusRotation: teleporter.rotationTriggerValue < -0.5
+        onXMinusRotationChanged: {
+            if (xMinusRotation)
+                teleporter.rotateLeft()
+        }
     }
 
     function rotateBy(degrees) {
@@ -42,6 +50,17 @@ Node {
         doRotation(originNode.rotation.times(r), originNode.position.minus(delta))
     }
 
+    function teleportTo(position) {
+        teleporter.teleporting = true
+        let offset = cameraNode.scenePosition.minus(originNode.scenePosition)
+        let cameraOriginPosition = position.minus(offset)
+        cameraOriginPosition.y = position.y
+
+        screenValueFader.blink(()=>{
+                                   teleporter.doTeleportation(cameraOriginPosition)
+                               },()=>{teleporter.teleporting = false}, teleporter.blinkSpeed)
+    }
+
     function rotateRight() {
         rotateBy(-cameraSnapRotation)
     }
@@ -50,21 +69,15 @@ Node {
         rotateBy(cameraSnapRotation)
     }
 
+    function toggleTeleport() {
+        d.teleportToggle = !d.teleportToggle
+    }
+
     signal doTeleportation(var cameraOriginPosition)
 
     signal doRotation(var cameraOriginRotation, var cameraOriginPosition)
 
-    readonly property bool xPlusRotation: xStickValue > 0.5
-    onXPlusRotationChanged: {
-        if (xPlusRotation)
-            rotateRight()
-    }
-
-    readonly property bool xMinusRotation: xStickValue < -0.5
-    onXMinusRotationChanged: {
-        if (xMinusRotation)
-            rotateLeft()
-    }
+    onTeleportTriggerValueChanged: d.teleportToggle = false // Reset handtracking state when using controllers
 
     ValueFader {
         id: screenValueFader
@@ -80,14 +93,14 @@ Node {
     }
 
     FrameAnimation {
-        running: teleporter.yStickValue > 0.7
+        running: d.teleportAim
         onTriggered: {
             teleporter.updateTarget()
         }
         onRunningChanged: {
             if (running) {
                 beamModel.show()
-            }else {
+            } else {
                 beamModel.hide()
                 targetIndicator.hide()
                 if (teleporter.targetValid)

@@ -78,16 +78,7 @@ XrView {
                 property bool active: false
                 hand: XrInputAction.RightHand
                 actionId: [XrInputAction.IndexFingerPinch]
-                onTriggered: {
-                    // Mimic teleportation as done by the thumbstick
-                    if (active) {
-                        teleporter.yStickValue = 0
-                        active = false
-                    } else {
-                        active = true
-                        teleporter.yStickValue = 1
-                    }
-                }
+                onTriggered: teleporter.toggleTeleport()
             }
 
             // Rotate left/right by pinching the middle fingers
@@ -128,8 +119,8 @@ XrView {
         cameraNode: xrOrigin.camera
         beamHandle: xrRightController
 
-        xStickValue: xrRightController.xValue
-        yStickValue: xrRightController.yValue
+        rotationTriggerValue: xrRightController.xValue
+        teleportTriggerValue: xrRightController.yValue
 
         onDoTeleportation: (cameraOriginPosition)=> {
                                xrOrigin.position = cameraOriginPosition
