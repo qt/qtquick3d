@@ -16,6 +16,7 @@ qt_add_qml_module(${PROJECT_NAME}_shared
         ResizeGadget.qml
         RotateGadget.qml
         TeleportTargetIndicator.qml
+        TouchHand.qml
         TranslateGadget.qml
         ValueFader.qml
         XrCursor.qml

@@ -14,10 +14,10 @@
     interact with 2D and 3D objects in the scene. It follows the basic structure of
     the \l{Qt Quick 3D - XR Simple Example}{xr_simple} example.
 
-    Since we need to support two hands, we start by creating a component that encapsulates
-    all the logic that we need for each hand to avoid repetition:
+    We start by creating a reusable component \c TouchHand that encapsulates all the logic that we need for each hand.
+    This is located in the separate sub-project \c xr_shared, so you can easily re-use it in other projects.
 
-    \snippet xr_touch/main.qml hand component
+    \quotefile xr_shared/TouchHand.qml
 
     The component contains an XrController, giving us the 3D position of the index finger, and an
     XrHandModel to show where the hand is. The \c onTouchPositionChanged handler is where the magic happens.
@@ -29,14 +29,14 @@
     \note This effect will not work on the Apple Vision Pro since the system shows the real hands of the user,
     and the XrHandModel is not shown.
 
-    Finally, we do the 3D interaction. Here, \c buttons is a group of 3D buttons that has a \c handleTouch function.
-    (The implementation is not XR specific, so the details are not documented here.)
-
-    We create two instances of the hand component inside the XrOrigin, one for each hand:
+    We create two instances of the TouchHand  component inside the XrOrigin, one for each hand:
 
     \snippet xr_touch/main.qml origin
 
-    We also position the origin 50 centimeters from the origin of the scene, which should be a comfortable
+    Here, \c buttons is a group of 3D buttons that has a \c handleTouch function.
+    (The implementation is not XR specific, so the details are not documented here.)
+
+    We position the XrOrigin 50 centimeters from the origin of the scene, which should be a comfortable
     touching distance.
 
     The rest of the scene contains some 3D models and an XrItem that reacts to touch events.

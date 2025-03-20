@@ -10,6 +10,8 @@ find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
 
 qt6_policy(SET QTP0002 NEW)
 
+add_subdirectory("../xr_shared" "xr_shared")
+
 qt_add_executable(xr_touch
     MANUAL_FINALIZATION
     main.cpp
