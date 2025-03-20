@@ -53,6 +53,7 @@ qt_internal_add_plugin(AssimpImporterPlugin
         Qt::Quick3DAssetImportPrivate
         Qt::Quick3DAssetUtilsPrivate
         Qt::Quick3DPrivate
+        Qt::Quick3DUtilsPrivate
         Qt::Quick3DRuntimeRenderPrivate
     NO_UNITY_BUILD
 )

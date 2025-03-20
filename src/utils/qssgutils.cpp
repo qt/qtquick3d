@@ -158,6 +158,15 @@ const char *nonNull(const char *src)
     return src == nullptr ? "" : src;
 }
 
+QColor QSSGUtils::color::linearTosRGB(const QVector4D &linearColorFactor)
+{
+    const QVector3D S1 = QVector3D(::sqrtf(linearColorFactor.x()), ::sqrtf(linearColorFactor.y()), ::sqrtf(linearColorFactor.z()));
+    const QVector3D S2 = QVector3D(::sqrtf(S1.x()), ::sqrtf(S1.y()), ::sqrtf(S1.z()));
+    const QVector3D S3 = QVector3D(::sqrtf(S2.x()), ::sqrtf(S2.y()), ::sqrtf(S2.z()));
+    const QVector3D result(0.585122381 * S1 + 0.783140355 * S2 - 0.368262736 * S3);
+    return QColor::fromRgbF(result.x(), result.y(), result.z(), linearColorFactor.w());
+}
+
 QVector4D QSSGUtils::color::sRGBToLinear(const QColor &color)
 {
     const QVector3D rgb(color.redF(), color.greenF(), color.blueF());

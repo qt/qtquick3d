@@ -15,6 +15,8 @@
 #include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
 #include <QtQuick3DAssetUtils/private/qssgsceneedit_p.h>
 
+#include <QtQuick3DUtils/private/qssgutils_p.h>
+
 // ASSIMP INC
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -529,8 +531,9 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
             aiColor4D baseColorFactor;
             result = source.Get(AI_MATKEY_BASE_COLOR, baseColorFactor);
             if (result == aiReturn_SUCCESS) {
-                QSSGSceneDesc::setProperty(target, "baseColor", &QQuick3DPrincipledMaterial::setBaseColor, aiColorToQColor(baseColorFactor));
-
+                // Some special handling required since baseColorFactor's are stored as linear factors and need to be converted for Qt Quick
+                const QColor sRGBBaseColorFactor = QSSGUtils::color::linearTosRGB(QVector4D(baseColorFactor.r, baseColorFactor.g, baseColorFactor.b, baseColorFactor.a));
+                QSSGSceneDesc::setProperty(target, "baseColor", &QQuick3DPrincipledMaterial::setBaseColor, sRGBBaseColorFactor);
             } else {
                 // Also try diffuse color as a fallback
                 aiColor3D diffuseColor;

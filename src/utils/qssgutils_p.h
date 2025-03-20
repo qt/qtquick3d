@@ -105,6 +105,7 @@ QVector3D Q_QUICK3DUTILS_EXPORT inverseRotated(const QQuaternion &q, const QVect
 }
 
 namespace color {
+QColor Q_QUICK3DUTILS_EXPORT linearTosRGB(const QVector4D &linearColorFactor);
 QVector4D Q_QUICK3DUTILS_EXPORT sRGBToLinear(const QColor &color);
 QColor Q_QUICK3DUTILS_EXPORT sRGBToLinearColor(const QColor &color);
 }
