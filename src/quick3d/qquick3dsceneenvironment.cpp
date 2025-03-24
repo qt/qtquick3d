@@ -1580,6 +1580,9 @@ void QQuick3DSceneEnvironment::setFog(QQuick3DFog *fog)
     and the result is different from the correct result, however this method works also on
     older hardware and is faster than the other more rigorous methods.
 
+    \note OIT might not work with MSAA on devices with GLES 3.1 or lower. It is recommended
+    not to use MSAA if oit is wanted on such devices.
+
     \note Order independent transparenty is only applicaple to source-over blend mode.
     If scene contains objects with other blending modes, OIT is disabled.
 */

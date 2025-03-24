@@ -2250,7 +2250,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (layer.oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
         orderIndependentTransparencyEnabled = rhiCtx->rhi()->isFeatureSupported(QRhi::PerRenderTargetBlending);
         if (rhiCtx->mainPassSampleCount() > 1)
-            orderIndependentTransparencyEnabled |= rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch);
+            orderIndependentTransparencyEnabled |= rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
     }
     if (layer.oitMethodDirty) {
         oitRenderContext.reset();
