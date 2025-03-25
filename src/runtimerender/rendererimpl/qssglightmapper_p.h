@@ -45,7 +45,15 @@ public:
         bool cancelled = false;
     };
 
-    typedef std::function<void(BakingStatus, std::optional<QString>, BakingControl*)> Callback;
+    /*
+     * Payload:
+     *  int status                  (BakingStatus)
+     *  string message              (Might be empty)
+     *  qint64 totalTimeRemaining   (in ms)
+     *  double totalProgress        (Range 0 - 1)
+     *  qint64 totalTimeElapsed     (in ms)
+     */
+    typedef std::function<void(const QVariantMap &payload, BakingControl*)> Callback;
 
     QSSGLightmapper(QSSGRhiContext *rhiCtx, QSSGRenderer *renderer);
     ~QSSGLightmapper();

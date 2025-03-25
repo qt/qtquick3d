@@ -69,12 +69,11 @@ void QQuick3DLightmapBaker::bake()
         QMetaObject::invokeMethod(rootObject, "clearText");
     }
 
-    m_callback = [this] (
-            BakingStatus status,
-            std::optional<QString> msg,
-            BakingControl *bakingControl) {
+    m_callback = [this] (const QVariantMap &payload, BakingControl *bakingControl) {
         if (m_windowCancelRequested && !bakingControl->isCancelled())
             bakingControl->requestCancel();
+
+        const BakingStatus status = static_cast<BakingStatus>(payload[QStringLiteral("status")].toInt());
 
         QQuickWindow *window = m_view->window();
         if (status == BakingStatus::Complete) {
@@ -90,17 +89,22 @@ void QQuick3DLightmapBaker::bake()
                 m_currentlyBaking = false;
             }
 
-            if (m_lmWindow && msg.has_value()) {
-                QString result = msg.value();
-                if (status == BakingStatus::Warning)
-                    result.prepend(QStringLiteral("Warning: "));
-                else if (status == BakingStatus::Error)
-                    result.prepend(QStringLiteral("Error: "));
-
+            if (m_lmWindow) {
                 QObject *rootObject = m_lmWindow->rootObject();
-                QMetaObject::invokeMethod(rootObject,
-                                          "appendText",
-                                          Q_ARG(QString, result));
+
+                QString msg;
+                if (payload.contains(QStringLiteral("message"))) {
+                    msg = payload[QStringLiteral("message")].toString();
+                }
+                if (!msg.isEmpty()) {
+                    if (status == BakingStatus::Warning)
+                        msg.prepend(QStringLiteral("Warning: "));
+                    else if (status == BakingStatus::Error)
+                        msg.prepend(QStringLiteral("Error: "));
+
+                }
+
+                QMetaObject::invokeMethod(rootObject, "update", Q_ARG(QVariant, payload));
             }
         }
     };

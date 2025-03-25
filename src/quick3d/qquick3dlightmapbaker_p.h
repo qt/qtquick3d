@@ -45,7 +45,7 @@ public:
         bool cancelFlag = false;
     };
 
-    typedef std::function<void(BakingStatus, std::optional<QString>, BakingControl*)> Callback;
+    typedef std::function<void(const QVariantMap &, BakingControl*)> Callback;
 
     explicit QQuick3DLightmapBaker(QQuick3DViewport *view);
     ~QQuick3DLightmapBaker();
