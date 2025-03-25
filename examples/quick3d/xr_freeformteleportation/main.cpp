@@ -2,15 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQuickWindow>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-
-#ifdef Q_OS_ANDROID
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-#endif
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));

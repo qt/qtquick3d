@@ -3,7 +3,6 @@
 
 #include <QtGui/QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQuickWindow>
 
 int main(int argc, char *argv[])
 {
@@ -12,10 +11,6 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("Qt Simple Anchors Example");
     QCoreApplication::setOrganizationName("The Qt Company");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-
-#ifdef Q_OS_ANDROID
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-#endif
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));
