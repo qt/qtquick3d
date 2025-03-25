@@ -173,6 +173,10 @@ public:
 
         if (m_arSession) {
             qCDebug(lcQuick3DXr, "Stopping AR session");
+            // NOTE: We're stopping the AR session, so we need to ensure that the AR session
+            //       doesn't get posted at some later point, so we change the dispatch queue to
+            //       use the main queue (which is the GUI thread) before calling stop.
+            ar_session_set_data_provider_state_change_handler_f(m_arSession, dispatch_get_main_queue(), this, &onArStateChanged);
             ar_session_stop(m_arSession);
             m_arSession = nullptr;
             m_arTrackingState = QQuick3DXrManagerPrivate::ArTrackingState::Uninitialized;
@@ -187,7 +191,7 @@ public:
 
     Q_INVOKABLE static void destroy(QQuick3DXrManagerPrivate *mngr, QQuickWindow *window, CompositorLayer *compositorLayer)
     {
-        QSSG_ASSERT(window != nullptr && mngr != nullptr, return);
+        QSSG_ASSERT(mngr != nullptr, return);
 
         qCDebug(lcQuick3DXr) << "Destroying compositor layer";
 
@@ -201,11 +205,13 @@ public:
         // thread and resources created on it. Instead we just invalidate the render
         // control and cleanup the nodes on the render thread. This is not ideal,
         // but it's what we have for now...
-        auto *d = QQuickWindowPrivate::get(window);
-        d->cleanupNodesOnShutdown();
-        mngr->releaseResources();
-        if (auto *rc = d->renderControl)
-            rc->invalidate();
+        if (window) { // If we never got past the setup we don't have a window.
+            auto *d = QQuickWindowPrivate::get(window);
+            d->cleanupNodesOnShutdown();
+            mngr->releaseResources();
+            if (auto *rc = d->renderControl)
+                rc->invalidate();
+        }
 
         // We're holding onto the lock, so defer the delete until we're done here.
         // All reasources should be released at this point anyways.
@@ -282,6 +288,9 @@ private:
         auto *that = reinterpret_cast<CompositorLayer *>(context);
 
         QMutexLocker lock(&that->m_arSessionMtx);
+
+        // If the ar session is null we're called after we tore down the session.
+        QSSG_ASSERT_X(that->m_arSession != nullptr, "AR session is not running, skipping state change!", return);
 
         const auto oldState = that->m_arTrackingState;
         switch (new_state) {
@@ -708,10 +717,12 @@ void QQuick3DXrManagerPrivate::teardown()
         m_compositorLayer = nullptr;
     }
 
-    m_renderThread->quit();
-    m_renderThread->wait();
-    delete m_renderThread;
-    m_renderThread = nullptr;
+    if (m_renderThread) {
+        m_renderThread->quit();
+        m_renderThread->wait();
+        delete m_renderThread;
+        m_renderThread = nullptr;
+    }
 }
 
 void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
@@ -866,7 +877,7 @@ void QQuick3DXrManagerPrivate::setupShadingRateMap(QQuickWindow *window, QRhiSha
 void QQuick3DXrManagerPrivate::releaseResources()
 {
     qCDebug(lcQuick3DXr) << "Releasing resources";
-    Q_ASSERT(QThread::currentThread() == m_renderThread);
+    Q_ASSERT((m_renderThread == nullptr) || QThread::currentThread() == m_renderThread);
     delete m_srmRenderPassDesc;
     m_srmRenderPassDesc = nullptr;
     delete m_rhiDepthTexture;
