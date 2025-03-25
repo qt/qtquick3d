@@ -24,6 +24,8 @@
 #include <QtCore/qoperatingsystemversion.h>
 #include <QtCore/qloggingcategory.h>
 
+#include <TargetConditionals.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
@@ -1110,6 +1112,15 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
             renderControl->render();
             renderControl->endFrame();
         }
+
+#if TARGET_OS_SIMULATOR == 1
+        // With multiview this indicates that the frame with both eyes is ready from
+        // the 3D APIs perspective. Without multiview this is done - and so the
+        // signal is emitted - multiple times (twice) per "frame" (eye).
+        QRhiRenderTarget *rt = QQuickWindowPrivate::get(window)->activeCustomRhiRenderTarget();
+        if (rt->resourceType() == QRhiResource::TextureRenderTarget && static_cast<QRhiTextureRenderTarget *>(rt)->description().colorAttachmentAt(0)->texture())
+            emit q->frameReady();
+#endif // TARGET_OS_SIMULATOR
     }
 
     id<MTLCommandBuffer> commandBuffer = [static_cast<const QRhiMetalNativeHandles*>(renderControl->rhi()->nativeHandles())->cmdQueue commandBuffer];
