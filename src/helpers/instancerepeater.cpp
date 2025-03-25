@@ -113,7 +113,9 @@ void InstanceModel::ensureTable() const
 
 void InstanceModel::reset()
 {
+    beginResetModel();
     m_instanceData.clear();
+    endResetModel();
 }
 
 /*!
