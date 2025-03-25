@@ -100,7 +100,6 @@ private:
 
     bool setupGraphics();
 
-    void processXrEvents();
     void renderFrame();
 
     void preSetupQuickScene();
