@@ -105,7 +105,7 @@ public:
 
     QString errorString() const;
 
-    void doRenderFrame();
+    void doRenderFrame() { /* Unused */ }
 
 Q_SIGNALS:
     void initialized();
