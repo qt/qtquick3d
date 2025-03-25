@@ -1382,7 +1382,7 @@ void OITCompositePass::renderPass(QSSGRenderer &renderer)
         QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, compositeShaderPipeline.get());
         ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
         renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rhiCtx->mainRenderPassDescriptor(),
-                                                     { QSSGRhiQuadRenderer::UvCoords | QSSGRhiQuadRenderer::DepthTest});
+                                                     { QSSGRhiQuadRenderer::UvCoords | QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::PremulBlend});
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("revealage"));
         cb->debugMarkEnd();
     }
