@@ -1216,7 +1216,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         customMaterialSystem.rhiPrepareRenderable(ps, passKey, subsetRenderable, featureSet,
                                                   material, inData, renderPassDescriptor, samples, viewCount,
-                                                  alteredCamera, cubeFace, alteredModelViewProjection, entry);
+                                                  alteredCamera, cubeFace, alteredModelViewProjection, entry, oit);
         break;
     }
     case QSSGRenderableObject::Type::Particles:
