@@ -12,6 +12,8 @@
 #include <private/qquick3dsceneenvironment_p.h>
 #include <rhi/qrhi.h>
 
+#include <QtCore/qloggingcategory.h>
+
 #ifdef Q_OS_WIN
 #  include <fcntl.h>
 #  include <io.h>
@@ -136,6 +138,8 @@ int main(int argc, char *argv[])
 
     QUnifiedTimer::instance()->setConsistentTiming(true);
 
+    QElapsedTimer elapsedTimer;
+
     QCommandLineParser cmdLineParser;
     // NOTE: Keep the same behavior as the non-XR scenegrabber which uses single dash word options.
     cmdLineParser.setSingleDashWordOptionMode(QCommandLineParser::SingleDashWordOptionMode::ParseAsLongOptions);
@@ -258,6 +262,7 @@ int main(int argc, char *argv[])
     if (devOptSet) {
         qputenv("QSG_INFO", "1");
         qputenv("QSG_RHI_PROFILE", "1");
+        QLoggingCategory::setFilterRules(QStringLiteral("qt.quick3d.xr=true"));
     }
 
 #ifdef Q_OS_WIN
@@ -403,8 +408,6 @@ int main(int argc, char *argv[])
         const bool grab = !cmdLineParser.isSet(viewonlyOption) && !cmdLineParser.isSet(captureOption);
 
         if (grab) {
-            QElapsedTimer elapsedTimer;
-
             QObject::connect(xrView, &QQuick3DXrView::frameReady, xrView, [&]() {
                 if (!elapsedTimer.isValid())
                     elapsedTimer.start();
