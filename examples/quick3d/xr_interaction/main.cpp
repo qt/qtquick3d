@@ -3,17 +3,12 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQuickWindow>
 
 int main(int argc, char *argv[])
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
 
     QGuiApplication app(argc, argv);
-
-#ifdef Q_OS_ANDROID
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-#endif
 
     QQmlApplicationEngine engine;
     QObject::connect(
