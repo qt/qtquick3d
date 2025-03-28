@@ -9,6 +9,10 @@ Item {
     id: root
     anchors.fill: parent
 
+    function clearText() {
+        textArea.clear();
+    }
+
     function appendText(text: string) {
         textArea.insert(textArea.length, text + "\n")
     }
