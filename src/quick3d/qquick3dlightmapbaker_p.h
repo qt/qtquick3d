@@ -41,7 +41,7 @@ public:
         bool isCancelled() const;
 
     private:
-        std::atomic_int cancelFlag = 0;
+        bool cancelFlag = false;
     };
 
     typedef std::function<void(BakingStatus, std::optional<QString>, BakingControl*)> Callback;
@@ -60,7 +60,8 @@ private:
     void updateView();
 
     bool m_bakingRequested = false;
-    BakingControl *m_bakingControl;
+    bool m_currentlyBaking = false;
+    BakingControl *m_bakingControl = nullptr;
     QQuick3DViewport *m_view = nullptr;
     Callback m_callback;
 
