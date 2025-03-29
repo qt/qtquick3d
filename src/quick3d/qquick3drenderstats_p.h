@@ -17,6 +17,7 @@
 
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <QtCore/qobject.h>
+#include <QtCore/qelapsedtimer.h>
 #include <ssg/qssgrendercontextcore.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
