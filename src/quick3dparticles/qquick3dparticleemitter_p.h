@@ -46,6 +46,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
     Q_PROPERTY(QVector3D particleRotationVelocity READ particleRotationVelocity WRITE setParticleRotationVelocity NOTIFY particleRotationVelocityChanged)
     Q_PROPERTY(QVector3D particleRotationVelocityVariation READ particleRotationVelocityVariation WRITE setParticleRotationVelocityVariation NOTIFY particleRotationVariationVelocityChanged)
     Q_PROPERTY(float depthBias READ depthBias WRITE setDepthBias NOTIFY depthBiasChanged)
+    Q_PROPERTY(bool reversed READ reversed WRITE setReversed NOTIFY reversedChanged REVISION(6, 10))
 
     QML_NAMED_ELEMENT(ParticleEmitter3D)
     QML_ADDED_IN_VERSION(6, 2)
@@ -71,6 +72,7 @@ public:
     QVector3D particleRotationVelocity() const;
     QVector3D particleRotationVelocityVariation() const;
     float depthBias() const;
+    Q_REVISION(6, 10) bool reversed() const;
 
     QQmlListProperty<QQuick3DParticleEmitBurst> emitBursts();
 
@@ -96,6 +98,7 @@ public Q_SLOTS:
     void setParticleRotationVelocity(const QVector3D &particleRotationVelocity);
     void setParticleRotationVelocityVariation(const QVector3D &particleRotationVelocityVariation);
     void setDepthBias(float bias);
+    Q_REVISION(6, 10) void setReversed(bool reversed);
 
 Q_SIGNALS:
     void velocityChanged();
@@ -115,6 +118,7 @@ Q_SIGNALS:
     void particleRotationVariationVelocityChanged();
     void enabledChanged();
     void depthBiasChanged();
+    Q_REVISION(6, 10) void reversedChanged();
 
 protected:
     friend class QQuick3DParticleSystem;
@@ -187,6 +191,7 @@ private:
     // This list contains all emit bursts (both QQuick3DParticleEmitBurst and QQuick3DParticleDynamicBurst)
     QList<QQuick3DParticleEmitBurst *> m_emitBursts;
     QList<BurstEmitData> m_burstEmitData;
+    bool m_reversed = false;
 };
 
 QT_END_NAMESPACE

@@ -57,7 +57,7 @@ void tst_QQuick3DParticlePointRotator::testAffectParticle()
 {
     PointRotator *rotator = new PointRotator();
 
-    QQuick3DParticleData particleData = {{}, {}, {}, {}, {}, 0.0f, 1.0f, 1.0f, 0};
+    QQuick3DParticleData particleData = {{}, {}, {}, {}, {}, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, false};
     QQuick3DParticleDataCurrent particleDataCurrent = {QVector3D(0, 0, 1.0f), {}, {}, {}, {}};
 
     rotator->setMagnitude(0.0f);

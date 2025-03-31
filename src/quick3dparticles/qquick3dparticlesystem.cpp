@@ -597,12 +597,15 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
             continue;
         }
 
-        const float particleTimeS = timeS - d->startTime;
         QQuick3DParticleDataCurrent currentData;
         if (timeS >= d->startTime && d->lifetime <= 0.0f) {
             for (auto trailEmit : std::as_const(trailEmits))
                 trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart);
         }
+
+        // Adjust time for reversed particles
+        const float particleTimeS = d->reversed ? particleTimeEnd - timeS : timeS - d->startTime;
+
         // Process features shared for both model & sprite particles
         processParticleCommon(currentData, d, particleTimeS);
 
@@ -687,12 +690,14 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
             continue;
         }
 
-        const float particleTimeS = timeS - d->startTime;
         QQuick3DParticleDataCurrent currentData;
         if (timeS >= d->startTime && d->lifetime <= 0.0f) {
             for (auto trailEmit : std::as_const(trailEmits))
                 trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart);
         }
+
+        // Adjust time for reversed particles
+        const float particleTimeS = d->reversed ? particleTimeEnd - timeS : timeS - d->startTime;
 
         // Process features shared for both model & sprite particles
         processParticleCommon(currentData, d, particleTimeS);
@@ -761,12 +766,16 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
             spriteParticle->resetParticleData(i);
             continue;
         }
-        const float particleTimeS = timeS - d->startTime;
+
         QQuick3DParticleDataCurrent currentData;
         if (timeS >= d->startTime && timeS < particleTimeEnd && particleData.age == 0.0f) {
             for (auto trailEmit : std::as_const(trailEmits))
                 trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart);
         }
+
+        // Adjust time for reversed particles
+        const float particleTimeS = d->reversed ? particleTimeEnd - timeS : timeS - d->startTime;
+
         // Process features shared for both model & sprite particles
         processParticleCommon(currentData, d, particleTimeS);
 

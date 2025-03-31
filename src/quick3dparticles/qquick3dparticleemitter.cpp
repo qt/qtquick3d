@@ -532,6 +532,26 @@ void QQuick3DParticleEmitter::setDepthBias(float bias)
     emit depthBiasChanged();
 }
 
+/*!
+    \qmlproperty bool ParticleEmitter3D::reversed
+    \since 6.10
+
+    This property reverses the particle time i.e. emitted particles are run from
+    the end time to the start time.
+    \default false
+*/
+bool QQuick3DParticleEmitter::reversed() const
+{
+    return m_reversed;
+}
+
+void QQuick3DParticleEmitter::setReversed(bool reversed)
+{
+    if (m_reversed == reversed)
+        return;
+    m_reversed = reversed;
+    emit reversedChanged();
+}
 // Called to reset when system stop/continue
 void QQuick3DParticleEmitter::reset()
 {
@@ -757,6 +777,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
             d->animationTime = d->lifetime;
         }
     }
+    d->reversed = m_reversed;
 }
 
 int QQuick3DParticleEmitter::getEmitAmountFromDynamicBursts(int triggerType)

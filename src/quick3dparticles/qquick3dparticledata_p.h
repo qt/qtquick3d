@@ -67,6 +67,7 @@ struct QQuick3DParticleData
     // Might not be necessary, check later
     int index = 0;
     // Size: 12+12+3+3+4+4+4+4+4+4 = 54 bytes
+    bool reversed = false;
 };
 
 // Data structure for storing bursts
