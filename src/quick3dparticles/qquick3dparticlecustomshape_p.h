@@ -16,6 +16,7 @@
 //
 
 #include "qquick3dparticleabstractshape_p.h"
+#include <QVector3D>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,6 +35,7 @@ public:
 
     // Returns point inside this shape
     QVector3D getPosition(int particleIndex) override;
+    Q_REVISION(6, 10) QVector3D getSurfaceNormal(int particleIndex) override;
 
 public Q_SLOTS:
     void setSource(const QUrl &source);
@@ -51,6 +53,7 @@ private:
     bool m_random = false;
     bool m_randomizeDirty = false;
     QList<QVector3D> m_positions;
+    QVector3D m_center;
 };
 
 QT_END_NAMESPACE

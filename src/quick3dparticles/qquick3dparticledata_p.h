@@ -49,8 +49,10 @@ struct QQuick3DParticleData
 {
     QVector3D startPosition;
     QVector3D startVelocity;
+    QVector3D surfaceNormal;
     // Use Vector3b to reduce the memory usage, rotations work with less accuracy.
     // These need to be qint8 and not quint8 as rotations can go either direction.
+
     Vector3b startRotation;
     Vector3b startRotationVelocity;
     Color4ub startColor;

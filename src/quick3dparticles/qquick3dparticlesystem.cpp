@@ -590,8 +590,9 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
 
         if (timeS < d->startTime || timeS > particleTimeEnd) {
             if (timeS > particleTimeEnd && d->lifetime > 0.0f) {
+                const auto pos = d->reversed ? d->startPosition : d->startPosition + (d->startVelocity * (particleTimeEnd - d->startTime));
                 for (auto trailEmit : std::as_const(trailEmits))
-                    trailEmit.emitter->emitTrailParticles(d->startPosition + (d->startVelocity * (particleTimeEnd - d->startTime)), 0, QQuick3DParticleDynamicBurst::TriggerEnd);
+                    trailEmit.emitter->emitTrailParticles(pos, 0, QQuick3DParticleDynamicBurst::TriggerEnd, d->surfaceNormal, d->startVelocity.normalized());
             }
             // Particle not alive currently
             continue;
@@ -600,7 +601,7 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
         QQuick3DParticleDataCurrent currentData;
         if (timeS >= d->startTime && d->lifetime <= 0.0f) {
             for (auto trailEmit : std::as_const(trailEmits))
-                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart);
+                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart, d->surfaceNormal, d->startVelocity.normalized());
         }
 
         // Adjust time for reversed particles
@@ -632,7 +633,7 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
 
         // Emit new particles from trails
         for (auto trailEmit : std::as_const(trailEmits))
-            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleDynamicBurst::TriggerTime);
+            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleDynamicBurst::TriggerTime, d->surfaceNormal, d->startVelocity.normalized());
 
         const QColor color(currentData.color.r, currentData.color.g, currentData.color.b, currentData.color.a);
         // Set current particle properties
@@ -657,8 +658,9 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
 
         if (timeS < d->startTime || timeS > particleTimeEnd) {
             if (timeS > particleTimeEnd && d->lifetime > 0.0f) {
+                const auto pos = d->reversed ? d->startPosition : d->startPosition + (d->startVelocity * (particleTimeEnd - d->startTime));
                 for (auto trailEmit : std::as_const(trailEmits))
-                    trailEmit.emitter->emitTrailParticles(d->startPosition + (d->startVelocity * (particleTimeEnd - d->startTime)), 0, QQuick3DParticleDynamicBurst::TriggerEnd);
+                    trailEmit.emitter->emitTrailParticles(pos, 0, QQuick3DParticleDynamicBurst::TriggerEnd, d->surfaceNormal, d->startVelocity.normalized());
             }
             // Particle not alive currently
             float age = 0.0f;
@@ -693,7 +695,7 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
         QQuick3DParticleDataCurrent currentData;
         if (timeS >= d->startTime && d->lifetime <= 0.0f) {
             for (auto trailEmit : std::as_const(trailEmits))
-                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart);
+                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart, d->surfaceNormal, d->startVelocity.normalized());
         }
 
         // Adjust time for reversed particles
@@ -722,7 +724,7 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
 
         // Emit new particles from trails
         for (auto trailEmit : std::as_const(trailEmits))
-            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleDynamicBurst::TriggerTime);
+            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleDynamicBurst::TriggerTime, d->surfaceNormal, d->startVelocity.normalized());
 
         // Set current particle properties
         const QVector4D color(float(currentData.color.r) / 255.0f,
@@ -756,8 +758,9 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
         auto &particleData = spriteParticle->m_spriteParticleData[i];
         if (timeS < d->startTime || timeS > particleTimeEnd) {
             if (timeS > particleTimeEnd && particleData.age > 0.0f) {
+                const auto pos = d->reversed ? d->startPosition : d->startPosition + (d->startVelocity * (particleTimeEnd - d->startTime));
                 for (auto trailEmit : std::as_const(trailEmits))
-                    trailEmit.emitter->emitTrailParticles(particleData.position, 0, QQuick3DParticleDynamicBurst::TriggerEnd);
+                    trailEmit.emitter->emitTrailParticles(pos, 0, QQuick3DParticleDynamicBurst::TriggerEnd, d->surfaceNormal, d->startVelocity.normalized());
                 auto *lineParticle = qobject_cast<QQuick3DParticleLineParticle *>(spriteParticle);
                 if (lineParticle)
                     lineParticle->saveLineSegment(i, timeS);
@@ -770,7 +773,7 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
         QQuick3DParticleDataCurrent currentData;
         if (timeS >= d->startTime && timeS < particleTimeEnd && particleData.age == 0.0f) {
             for (auto trailEmit : std::as_const(trailEmits))
-                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart);
+                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleDynamicBurst::TriggerStart, d->surfaceNormal, d->startVelocity.normalized());
         }
 
         // Adjust time for reversed particles
@@ -826,7 +829,7 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
 
         // Emit new particles from trails
         for (auto trailEmit : std::as_const(trailEmits))
-            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleDynamicBurst::TriggerTime);
+            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleDynamicBurst::TriggerTime, d->surfaceNormal, d->startVelocity.normalized());
 
 
         // Set current particle properties

@@ -45,7 +45,7 @@ Q_SIGNALS:
 
 protected:
     friend class QQuick3DParticleSystem;
-    void emitTrailParticles(const QVector3D &centerPos, int emitAmount, int triggerType);
+    void emitTrailParticles(const QVector3D &centerPos, int emitAmount, int triggerType, const QVector3D &normal, const QVector3D &velocity);
     bool hasBursts() const;
     void clearBursts();
 

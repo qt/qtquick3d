@@ -114,16 +114,69 @@ QVector3D QQuick3DParticleShape::getPosition(int particleIndex)
 {
     if (!parentNode() || !m_system)
         return QVector3D();
+    if (m_cachedIndex == particleIndex)
+        return m_cachedPosition;
 
     switch (m_type) {
     case QQuick3DParticleShape::ShapeType::Cube:
-        return randomPositionCube(particleIndex);
+        m_cachedPosition = randomPositionCube(particleIndex);
+        break;
     case QQuick3DParticleShape::ShapeType::Sphere:
-        return randomPositionSphere(particleIndex);
+        m_cachedPosition = randomPositionSphere(particleIndex);
+        break;
     case QQuick3DParticleShape::ShapeType::Cylinder:
-        return randomPositionCylinder(particleIndex);
+        m_cachedPosition = randomPositionCylinder(particleIndex);
+        break;
     }
-    Q_UNREACHABLE_RETURN(QVector3D());
+    m_cachedIndex = particleIndex;
+    return m_cachedPosition;
+}
+
+QVector3D QQuick3DParticleShape::getSurfaceNormal(int particleIndex)
+{
+    if (m_fill)
+        return QVector3D();
+
+    auto rand = m_system->rand();
+    QVector3D n;
+    switch (m_type) {
+    case QQuick3DParticleShape::ShapeType::Cube: {
+        int side = int(rand->get(particleIndex, QPRand::Shape4) * 6);
+        if (side == 0)
+            n.setX(-1.0f);
+        else if (side == 1)
+            n.setX(1.0f);
+        else if (side == 2)
+            n.setY(-1.0f);
+        else if (side == 3)
+            n.setY(1.0f);
+        else if (side == 4)
+            n.setZ(-1.0f);
+        else
+            n.setZ(1.0f);
+        QMatrix4x4 mat;
+        mat.rotate(m_parentNode->rotation());
+        n = mat.mapVector(n);
+    } break;
+    case QQuick3DParticleShape::ShapeType::Sphere:
+        if (particleIndex != m_cachedIndex)
+            getPosition(particleIndex);
+        n = m_cachedPosition.normalized();
+        break;
+    case QQuick3DParticleShape::ShapeType::Cylinder:
+        QVector3D scale = m_parentNode->scale();
+        float theta = rand->get(particleIndex, QPRand::Shape3) * float(M_PI) * 2.0f;
+        float x = QPCOS(theta);
+        float z = QPSIN(theta);
+        x = x * scale.x();
+        z = z * scale.z();
+        QVector3D normal(x, 0.0, z);
+        QMatrix4x4 mat;
+        mat.rotate(m_parentNode->rotation());
+        n = mat.mapVector(normal.normalized());
+        break;
+    }
+    return n;
 }
 
 QVector3D QQuick3DParticleShape::randomPositionCube(int particleIndex) const

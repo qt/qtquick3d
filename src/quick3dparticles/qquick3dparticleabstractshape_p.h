@@ -37,6 +37,7 @@ public:
     explicit QQuick3DParticleAbstractShape(QObject *parent = nullptr);
     // Returns position inside the shape
     virtual QVector3D getPosition(int particleIndex) = 0;
+    Q_REVISION(6, 10) virtual QVector3D getSurfaceNormal(int particleIndex) = 0;
 
 protected:
     // These need access to m_system

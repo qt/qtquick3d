@@ -44,6 +44,7 @@ public Q_SLOTS:
 
     // Returns point inside this shape
     QVector3D getPosition(int particleIndex) override;
+    QVector3D getSurfaceNormal(int particleIndex) override;
 
 Q_SIGNALS:
     void fillChanged();
@@ -61,6 +62,8 @@ private:
     float m_modelTriangleAreasSum = 0;
     QVector<float> m_modelTriangleAreas;
     QVector3D m_modelTriangleCenter;
+    QVector3D m_cachedNormal;
+    int m_cachedIndex = -1;
     bool m_fill = true;
 };
 

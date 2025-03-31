@@ -50,6 +50,7 @@ public:
 
     // Returns point inside this shape
     QVector3D getPosition(int particleIndex) override;
+    Q_REVISION(6, 10) QVector3D getSurfaceNormal(int particleIndex) override;
 
 public Q_SLOTS:
     void setFill(bool fill);
@@ -69,6 +70,8 @@ private:
     bool m_fill = true;
     ShapeType m_type = ShapeType::Cube;
     QVector3D m_extents = QVector3D(50, 50, 50);
+    QVector3D m_cachedPosition;
+    int m_cachedIndex = -1;
 };
 
 QT_END_NAMESPACE

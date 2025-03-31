@@ -102,6 +102,13 @@ QVector3D QQuick3DParticleModelShape::getPosition(int particleIndex)
     return randomPositionModel(particleIndex);
 }
 
+QVector3D QQuick3DParticleModelShape::getSurfaceNormal(int particleIndex)
+{
+    if (m_cachedIndex != particleIndex)
+        getPosition(particleIndex);
+    return m_cachedNormal;
+}
+
 static QSSGMesh::Mesh loadModelShapeMesh(const QString &source)
 {
     QString src = source;
@@ -193,12 +200,17 @@ QVector3D QQuick3DParticleModelShape::randomPositionModel(int particleIndex)
                 const float lambda = 5.0f;
                 const float alpha = -qLn(1 - (1 - qExp(-lambda)) * uniform) / lambda;
                 pos += (m_modelTriangleCenter - pos) * alpha;
+            } else {
+                m_cachedIndex = particleIndex;
+                m_cachedNormal = QVector3D::crossProduct(v2 - v1, v3 - v2).normalized();
             }
 
             auto *parent = parentNode();
             if (parent) {
                 QMatrix4x4 mat;
                 mat.rotate(parent->rotation() * m_model->rotation());
+                if (!m_fill)
+                    m_cachedNormal = mat.mapVector(m_cachedNormal);
                 return mat.mapVector(pos * parent->sceneScale() * m_model->scale());
             }
         }

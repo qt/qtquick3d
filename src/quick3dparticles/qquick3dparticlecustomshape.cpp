@@ -134,10 +134,14 @@ void QQuick3DParticleCustomShape::loadFromSource()
     // Start positions array
     reader.enterContainer();
 
+    m_center = QVector3D();
     while (reader.lastError() == QCborError::NoError && reader.hasNext()) {
         QVector3D pos = QQuick3DParticleShapeDataUtils::readValue(reader, QMetaType::QVector3D).value<QVector3D>();
         m_positions.append(pos);
+        m_center += pos;
     }
+    if (!m_positions.isEmpty())
+        m_center *= 1.0f / float(m_positions.size());
 
     // Leave positions array
     reader.leaveContainer();
@@ -172,6 +176,19 @@ QVector3D QQuick3DParticleCustomShape::getPosition(int particleIndex)
 
     int index = particleIndex % m_positions.size();
     return m_positions.at(index) * parent->scale();
+}
+
+QVector3D QQuick3DParticleCustomShape::getSurfaceNormal(int particleIndex)
+{
+    auto *parent = parentNode();
+    if (!parent || m_positions.isEmpty())
+        return QVector3D();
+
+    if (m_randomizeDirty)
+        doRandomizeData();
+
+    int index = particleIndex % m_positions.size();
+    return (m_positions.at(index) - m_center).normalized();
 }
 
 QT_END_NAMESPACE

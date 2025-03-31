@@ -87,7 +87,7 @@ void tst_QQuick3DParticleWander::testAffectParticle()
     system->init();
     wander->setSystem(system);
 
-    QQuick3DParticleData particleData = {{}, {}, {}, {}, {}, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, false};
+    QQuick3DParticleData particleData = {{}, {}, {}, {}, {}, {}, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, false};
     QQuick3DParticleDataCurrent particleDataCurrent = {{}, {}, {}, {}, {}};
 
     wander->testAffectParticle(particleData, &particleDataCurrent, 0.5f);

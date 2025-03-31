@@ -55,7 +55,7 @@ void tst_QQuick3DParticleGravity::testGravityAffect()
 {
     Gravity *gravity = new Gravity();
 
-    QQuick3DParticleData particleData = {{}, {}, {}, {}, {}, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, false};
+    QQuick3DParticleData particleData = {{}, {}, {}, {}, {}, {}, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, false};
     QQuick3DParticleDataCurrent particleDataCurrent = {{}, {}, {}, {}, {}};
 
     gravity->setMagnitude(0.0f);
