@@ -47,6 +47,7 @@ public:
     ~CompositorLayer() final
     {
         m_xrManager = nullptr;
+        [m_layerRenderer release];
         m_layerRenderer = nullptr;
         m_worldTrackingProvider = nullptr;
         m_arSession = nullptr;
@@ -121,6 +122,10 @@ public:
 
         if (m_layerRenderer) {
             QMutexLocker locker(&m_mutex);
+            // NOTE: The layer renderer is our handle to the compositor layer, so we need to ensure that
+            //       we need to ensure that it stays alive long enough for us to know if we should tear down
+            //       the compositor layer or not.
+            [m_layerRenderer retain];
             checkRenderState();
             emit layerRendererReady();
         }
