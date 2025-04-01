@@ -47,7 +47,7 @@ void QQuick3DXrInputManagerPrivate::prepareHandtracking(ar_data_providers_t data
         m_handTrackingProvider = ar_hand_tracking_provider_create(handTrackingConfiguration);
         ar_data_providers_add_data_provider(dataProviders, m_handTrackingProvider);
     } else {
-        qWarning("Hand tracking is not supported on this device.");
+        qCWarning(lcQuick3DXr, "Handtracking is not supported on this device!");
     }
 
     qCDebug(lcQuick3DXr) << Q_FUNC_INFO << ", Handtracking supported: " << m_isHandTrackingSupported;
@@ -66,7 +66,6 @@ void QQuick3DXrInputManagerPrivate::initHandtracking()
 
 void QQuick3DXrInputManagerPrivate::teardown()
 {
-    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
 void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation)
@@ -127,7 +126,6 @@ QQuick3DXrInputManagerPrivate *QQuick3DXrInputManagerPrivate::get(QQuick3DXrInpu
 void QQuick3DXrInputManagerPrivate::setupHandModel(QQuick3DXrHandModel *model)
 {
     Q_UNUSED(model);
-    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
 }
 
 static bool setupJoint(ar_hand_skeleton_joint_name_t jointName, const ar_hand_skeleton_t handSkeleton, const simd_float4x4 handTransform, QVector3D &jointPosition, QQuaternion &jointRotation)

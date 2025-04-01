@@ -12,6 +12,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
+
 QQuick3DXrAnchorManager *QQuick3DXrAnchorManager::instance()
 {
     static QQuick3DXrAnchorManager instance;
@@ -260,7 +262,7 @@ void QQuick3DXrAnchorManager::prepareAnchorManager(ar_data_providers_t dataProvi
         ar_plane_detection_provider_set_update_handler_f(m_planeDetectionProvider, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), this, &planeUpdateHandler);
         ar_data_providers_add_data_provider(dataProviders, m_planeDetectionProvider);
     } else {
-        qWarning("Plane detection is not supported on this platform.");
+        qCWarning(lcQuick3DXr, "Plane detection is not supported on this device.");
     }
 }
 
@@ -273,7 +275,8 @@ void QQuick3DXrAnchorManager::initAnchorManager()
 
 void QQuick3DXrAnchorManager::requestSceneCapture()
 {
-    Q_UNIMPLEMENTED();
+    // Scene is continuously captured in the background,
+    // no need to request it explicitly.
 }
 
 bool QQuick3DXrAnchorManager::queryAllAnchors()

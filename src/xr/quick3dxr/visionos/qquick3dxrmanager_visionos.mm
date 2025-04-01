@@ -735,7 +735,7 @@ void QQuick3DXrManagerPrivate::teardown()
 void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
 {
     Q_UNUSED(enable);
-    qWarning() << "Changing multiview rendering is not supported at runtime on VisionOS!";
+    qCWarning(lcQuick3DXr) << "Changing multiview rendering is not supported at runtime on visionOS!";
 }
 
 bool QQuick3DXrManagerPrivate::isMultiViewRenderingEnabled() const
@@ -746,7 +746,7 @@ bool QQuick3DXrManagerPrivate::isMultiViewRenderingEnabled() const
 void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
     Q_UNUSED(enable);
-    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
+    qCWarning(lcQuick3DXr) << "Changing passthrough is not supported at runtime on visionOS!";
 }
 
 QtQuick3DXr::ReferenceSpace QQuick3DXrManagerPrivate::getReferenceSpace() const
@@ -757,16 +757,14 @@ QtQuick3DXr::ReferenceSpace QQuick3DXrManagerPrivate::getReferenceSpace() const
 
 void QQuick3DXrManagerPrivate::setReferenceSpace(QtQuick3DXr::ReferenceSpace newReferenceSpace)
 {
-    // FIXME: Not sure if it's possible to set a reference space on VisionOS
     Q_UNUSED(newReferenceSpace);
-    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
+    qCWarning(lcQuick3DXr) << "Changing reference space is not supported at runtime on visionOS!";
 }
 
 void QQuick3DXrManagerPrivate::setDepthSubmissionEnabled(bool enable)
 {
-    Q_UNUSED(enable);
     if (!enable)
-        qWarning("Depth submission is required on VisionOS");
+        qCWarning(lcQuick3DXr, "Depth submission is required on visionOS");
 }
 
 void QQuick3DXrManagerPrivate::update()
@@ -835,7 +833,7 @@ void QQuick3DXrManagerPrivate::initInputManager(QQuick3DXrInputManager *im)
 void QQuick3DXrManagerPrivate::setSamples(int samples)
 {
     Q_UNUSED(samples);
-    qWarning("Setting samples is not supported");
+    qCWarning(lcQuick3DXr) << "Changing sample count is not supported on visionOS!";
 }
 
 QString QQuick3DXrManagerPrivate::runtimeName() const
