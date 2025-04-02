@@ -53,6 +53,8 @@ if(QT_FEATURE_quick3dxr_openxr)
     set(reused_dir_targets
         xr_interaction_shared
         xr_interaction_shared_init
+        xr_touch_shared
+        xr_touch_shared_init
     )
 endif()
 
