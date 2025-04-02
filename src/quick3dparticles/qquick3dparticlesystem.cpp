@@ -516,7 +516,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
     m_particlesUsed = 0;
     m_updates++;
 
-    m_perfTimer.restart();
+    m_perfTimer.start();
 
     // Emit new particles
     for (auto emitter : std::as_const(m_emitters))
