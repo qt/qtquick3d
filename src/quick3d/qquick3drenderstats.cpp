@@ -223,7 +223,7 @@ void QQuick3DRenderStats::onFrameSwapped()
     }
 
     // Always reset the frame timer
-    m_frameTimer.restart();
+    m_frameTimer.start();
 }
 
 void QQuick3DRenderStats::setRhiContext(QSSGRhiContext *ctx, QSSGRenderLayer *layer)
