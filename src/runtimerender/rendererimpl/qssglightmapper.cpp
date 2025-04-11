@@ -1403,15 +1403,21 @@ static void blendLine(const QVector2D &from, const QVector2D &to,
 
     QVector2D pixel = startPixel;
 
+    const auto clampedXY = [s = lightmapPixelSize](QVector2D xy) -> std::array<int, 2> {
+        return { qBound(0, int(xy.x()), s.width() - 1), qBound(0, int(xy.y()), s.height() - 1) };
+    };
+
     while (startPixel.distanceToPoint(pixel) < lineLength + 1.0f) {
         const QVector2D point = projectPointToLine(pixel + QVector2D(0.5f, 0.5f), line);
         const float t = line[0].distanceToPoint(point) / lineLength;
         const QVector2D uvInterp = uvFrom * (1.0 - t) + uvTo * t;
-        const QVector2D sampledPixel = flooredVec(QVector2D(uvInterp.x(), 1.0f - uvInterp.y()) * size);
-
-        const int sampOfs = (int(sampledPixel.x()) + int(sampledPixel.y()) * lightmapPixelSize.width()) * 4;
+        const auto sampledPixelXY = clampedXY(flooredVec(QVector2D(uvInterp.x(), 1.0f - uvInterp.y()) * size));
+        const int sampOfs = (sampledPixelXY[0] + sampledPixelXY[1] * lightmapPixelSize.width()) * 4;
+        Q_ASSERT(sampOfs + 2 < int(readBuf.size() / sizeof(float)));
         const QVector3D sampledColor(fpR[sampOfs], fpR[sampOfs + 1], fpR[sampOfs + 2]);
-        const int pixOfs = (int(pixel.x()) + int(pixel.y()) * lightmapPixelSize.width()) * 4;
+        const auto pixelXY = clampedXY(pixel);
+        const int pixOfs = (pixelXY[0] + pixelXY[1] * lightmapPixelSize.width()) * 4;
+        Q_ASSERT(pixOfs + 2 < int(writeBuf.size() / sizeof(float)));
         QVector3D currentColor(fpW[pixOfs], fpW[pixOfs + 1], fpW[pixOfs + 2]);
         currentColor = currentColor * 0.6f + sampledColor * 0.4f;
         fpW[pixOfs] = currentColor.x();
