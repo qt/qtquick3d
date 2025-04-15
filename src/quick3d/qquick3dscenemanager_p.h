@@ -53,7 +53,7 @@ public:
 
     Q_INVOKABLE void preSync();
     Q_INVOKABLE void cleanupResources();
-    Q_INVOKABLE SyncResult synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders);
+    Q_INVOKABLE SyncResult synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders, QSet<QSSGRenderGraphObject *> &textureProviderExtensions);
     Q_INVOKABLE void requestUpdate();
     Q_INVOKABLE void evaluateEol();
 
@@ -185,6 +185,7 @@ public:
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
     QHash<QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
     QSet<QSSGRenderGraphObject *> resourceLoaders;
+    QSet<QSSGRenderGraphObject *> textureProviderExtensions;
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;
     int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.

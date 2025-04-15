@@ -7,6 +7,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick/QQuickWindow>
 
+#include <QtQuick3D/QQuick3DTextureProviderExtension>
+
 #include "qquick3dobject_p.h"
 #include "qquick3dviewport_p.h"
 #include "qquick3dscenemanager_p.h"
@@ -1843,12 +1845,35 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             } // else already connected
 
             QQuick3DTexture *tex = texture.texture(); // may be null if the TextureInput has no 'texture' set
-            if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube)
+            if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube) {
                 uniforms.append({ QByteArrayLiteral("samplerCube"), textureData.name });
-            else if (tex && tex->textureData() && tex->textureData()->depth() > 0)
+            } else if (tex && tex->textureData() && tex->textureData()->depth() > 0) {
                 uniforms.append({ QByteArrayLiteral("sampler3D"), textureData.name });
-            else
+            } else if (tex && tex->textureProvider() && QQuick3DObjectPrivate::get(tex->textureProvider())->type == QQuick3DObjectPrivate::Type::TextureProvider) {
+                auto textureProvider = static_cast<QQuick3DTextureProviderExtension *>(tex->textureProvider());
+                switch (textureProvider->samplerHint()) {
+                case QQuick3DTextureProviderExtension::SamplerHint::Sampler2D:
+                    uniforms.append({ QByteArrayLiteral("sampler2D"), textureData.name });
+                    break;
+                case QQuick3DTextureProviderExtension::SamplerHint::Sampler2DArray:
+                    uniforms.append({ QByteArrayLiteral("sampler2DArray"), textureData.name });
+                    break;
+                case QQuick3DTextureProviderExtension::SamplerHint::Sampler3D:
+                    uniforms.append({ QByteArrayLiteral("sampler3D"), textureData.name });
+                    break;
+                case QQuick3DTextureProviderExtension::SamplerHint::SamplerCube:
+                    uniforms.append({ QByteArrayLiteral("samplerCube"), textureData.name });
+                    break;
+                case QQuick3DTextureProviderExtension::SamplerHint::SamplerCubeArray:
+                    uniforms.append({ QByteArrayLiteral("samplerCubeArray"), textureData.name });
+                    break;
+                case QQuick3DTextureProviderExtension::SamplerHint::SamplerBuffer:
+                    uniforms.append({ QByteArrayLiteral("samplerBuffer"), textureData.name });
+                    break;
+                }
+            } else {
                 uniforms.append({ QByteArrayLiteral("sampler2D"), textureData.name });
+            }
 
             customMaterial->m_textureProperties.push_back(textureData);
         };

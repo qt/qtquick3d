@@ -7,8 +7,6 @@ import QtQuick3D.Helpers
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import ProceduralTextureExample
-
 ApplicationWindow {
     id: window
     width: 480
@@ -22,7 +20,7 @@ ApplicationWindow {
         property color startColor: "#00dbde"
         property color endColor: "#fc00ff"
         property int filterMode: size === 256 ? Texture.Linear : Texture.Nearest
-        property Texture texture: cppModeRadio.checked ? textureFromCpp : textureFromQML
+        property Texture texture: cppModeRadio.checked ? textureFromCpp : qmlModeRadio.checked ? textureFromQML : textureFromGPU
 
         function randomColor() : color {
             return Qt.rgba(Math.random(),
@@ -110,6 +108,20 @@ ApplicationWindow {
         }
         //! [qmlTexture]
 
+        //! [gpuTexture]
+        Texture {
+            id: textureFromGPU
+            minFilter: applicationState.filterMode
+            magFilter: applicationState.filterMode
+            textureProvider: GradientTextureProvider {
+                startColor: applicationState.startColor
+                endColor: applicationState.endColor
+                width: applicationState.size
+                height: width
+            }
+        }
+        //! [gpuTexture]
+
         Model {
             source: "#Cube"
 
@@ -172,6 +184,12 @@ ApplicationWindow {
                     RadioButton {
                         id: qmlModeRadio
                         text: "QML"
+                        checked: false
+                        ButtonGroup.group: backendGroup
+                    }
+                    RadioButton {
+                        id: gpuModeRadio
+                        text: "GPU"
                         checked: false
                         ButtonGroup.group: backendGroup
                     }

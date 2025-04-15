@@ -378,6 +378,8 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::cleanupNodes()
             wattached->queueForCleanup(node);
             if (node->type == QSSGRenderGraphObject::Type::ResourceLoader)
                 resourceLoaders.remove(node);
+            else if (QSSGRenderGraphObjectUtils::isTextureProvider(node->type))
+                textureProviderExtensions.remove(node);
         } else {
             delete node;
         }
@@ -464,8 +466,15 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateExtensions(QQuick3D
         //       so we need to set it here.
         po->spatialNode = newNode;
 
-        if (po->spatialNode)
+        if (po->spatialNode) {
             m_nodeMap.insert(po->spatialNode, extension);
+            // We need to keep track of texture provider extensions, so we can
+            // update the textures when the extension changes.
+            if (QSSGRenderGraphObjectUtils::isTextureProvider(po->type) && backendNodeChanged) {
+                textureProviderExtensions.remove(oldNode);
+                textureProviderExtensions.insert(po->spatialNode);
+            }
+        }
     };
 
     // Detach the current list head first, and consume all reachable entries.
@@ -656,7 +665,8 @@ void QQuick3DWindowAttachment::onInvalidated()
     }
 }
 
-QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders)
+QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders,
+                                                                           QSet<QSSGRenderGraphObject *> &textureProviderExtensions)
 {
     // Terminate old scene managers
     for (auto manager: sceneManagerCleanupQueue) {
@@ -692,6 +702,10 @@ QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<
     // Resource Loaders
     for (auto &sceneManager : std::as_const(sceneManagers))
         resourceLoaders.unite(sceneManager->resourceLoaders);
+
+    // Texture Provider Extensions
+    for (auto &sceneManager : std::as_const(sceneManagers))
+        textureProviderExtensions.unite(sceneManager->textureProviderExtensions);
 
     if ((syncResult & SyncResultFlag::SharedResourcesDirty)) {
         // We know there are shared resources in the scene, so notify the "world".

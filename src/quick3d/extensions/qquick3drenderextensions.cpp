@@ -38,9 +38,14 @@ QT_BEGIN_NAMESPACE
     \sa QQuick3DRenderExtension, QSSGRenderExtension, QQuick3DViewport::extensions()
 */
 
+QQuick3DRenderExtension::QQuick3DRenderExtension(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
+    : QQuick3DObject(dd, parent)
+{
+
+}
 
 QQuick3DRenderExtension::QQuick3DRenderExtension(QQuick3DObject *parent)
-    : QQuick3DObject(*new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::RenderExtension), parent)
+    : QQuick3DRenderExtension(*new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::RenderExtension), parent)
 {
 
 }
@@ -58,6 +63,11 @@ QQuick3DRenderExtension::~QQuick3DRenderExtension()
     The function should return a QSSGRenderExtension instance that contains the code that should be
     run during QtQuick3D's rendering pipeline execution.
 
+    The \a node parameter is the previous QSSGRenderExtension instance that was returned from this
+    function, or null if this is the first time the function is called. The function can return the
+    same instance, a different instance, or null. If the function returns null, the extension will
+    be removed from the rendering pipeline.
+
     \note The QSSGRenderExtension instance is a resource object and will be owned by the QtQuick3D
           scene graph. If a different instance, or null, is returned, the previous instance will be
           queued for deletion by the renderer.
@@ -69,6 +79,8 @@ QSSGRenderGraphObject *QQuick3DRenderExtension::updateSpatialNode(QSSGRenderGrap
 {
     return QQuick3DObject::updateSpatialNode(node);
 }
+
+
 
 
 

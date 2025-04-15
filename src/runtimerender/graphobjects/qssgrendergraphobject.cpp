@@ -46,6 +46,7 @@ static const char *asString(QSSGRenderGraphObject::Type type)
         RETURN_AS_STRING(Type::Image2D)
         RETURN_AS_STRING(Type::ImageCube)
         RETURN_AS_STRING(Type::RenderExtension)
+        RETURN_AS_STRING(Type::TextureProvider)
     }
 #undef RETURN_AS_STRING
     return nullptr;

@@ -107,6 +107,16 @@ protected:
     QSSGRenderExtension(Type inType, FlagT inFlags);
 };
 
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderTextureProviderExtension : public QSSGRenderExtension
+{
+public:
+    QSSGRenderTextureProviderExtension();
+    ~QSSGRenderTextureProviderExtension() override;
+
+    RenderMode mode() const final;
+    RenderStage stage() const final;
+};
+
 QT_END_NAMESPACE
 
 #endif // QSSGRENDEREXTENSIIONS_H

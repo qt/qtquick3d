@@ -665,6 +665,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     // Synchronize scene managers under this window
     QSet<QSSGRenderGraphObject *> resourceLoaders;
+    QSet<QSSGRenderGraphObject *> textureProviderExtensions;
     QQuick3DWindowAttachment::SyncResult requestSharedUpdate = QQuick3DWindowAttachment::SyncResultFlag::None;
     if (auto window = view3D->window()) {
         if (!winAttacment || winAttacment->window() != window)
@@ -682,7 +683,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         }
 
         if (winAttacment)
-            requestSharedUpdate |= winAttacment->synchronize(resourceLoaders);
+            requestSharedUpdate |= winAttacment->synchronize(resourceLoaders, textureProviderExtensions);
     }
 
     // Import scenes used in a multi-window application...
@@ -699,10 +700,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 if (inlineSync) {
                     // Given that we're on the same thread, we can do an immediate sync
                     // (rhi instances can differ, e.g., basic renderloop).
-                    winAttacment->synchronize(resourceLoaders);
+                    winAttacment->synchronize(resourceLoaders, textureProviderExtensions);
                 } else if (rci && !window->isExposed()) { // Forced sync of non-exposed windows
                     // Not exposed, so not rendering (playing with fire here)...
-                    winAttacment->synchronize(resourceLoaders);
+                    winAttacment->synchronize(resourceLoaders, textureProviderExtensions);
                 } else if (!rci || (requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::SharedResourcesDirty)) {
                     // If there's no RCI for the importscene we'll request an update, which should
                     // mean we only get here once. It also means the update to any secondary windows
@@ -749,9 +750,19 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_renderStats->setRhiContext(rhiCtx, m_layer);
 
     // if the list is dirty we rebuild (assumption is that this won't happen frequently).
-    if ((requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::ExtensionsDiry) || view3D->extensionListDirty()) {
+    if ((requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::ExtensionsDiry) || view3D->extensionListDirty() || !textureProviderExtensions.isEmpty()) {
         for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionStage::Count); ++i)
             m_layer->renderExtensions[i].clear();
+        // Insert the texture provider extensions first
+        // Texture extensions are added to the render extensions list
+        for (auto *ext : std::as_const(textureProviderExtensions)) {
+            auto renderExt = static_cast<QSSGRenderExtension *>(ext);
+            const auto stage = renderExt->stage();
+            QSSG_ASSERT(size_t(stage) < std::size(m_layer->renderExtensions), continue);
+            auto &list = m_layer->renderExtensions[size_t(stage)];
+            list.push_back(renderExt);
+        }
+
         // All items in the extension list are root items,
         const auto &extensions = view3D->extensionList();
         for (const auto &ext : extensions) {

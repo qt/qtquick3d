@@ -96,6 +96,7 @@ public:
         Image2D = BaseType::Texture | BaseType::Resource, // Resource
         ImageCube, // Resource
         RenderExtension = BaseType::Extension, // Extension
+        TextureProvider, // Extension
         // User types E.g.: (User | Node) + 1)
     };
     using TypeT = std::underlying_type_t<Type>;

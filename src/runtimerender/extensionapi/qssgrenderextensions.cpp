@@ -284,4 +284,33 @@ QSSGRenderExtension::RenderStage QSSGRenderExtension::stage() const
     return RenderStage::PostColor;
 }
 
+/*!
+    \class QSSGRenderTextureProviderExtension
+    \inmodule QtQuick3D
+    \since 6.11
+
+    \brief Base class for texture providers backend node implementations.
+
+    \note This class is meant to be used together with \l QQuick3DTextureProviderExtension.
+    and the \l mode and \l stage is always \c Standalone and \c PostColor respectively.
+
+    \sa QQuick3DTextureProviderExtension
+*/
+
+
+QSSGRenderTextureProviderExtension::QSSGRenderTextureProviderExtension()
+    : QSSGRenderExtension(QSSGRenderGraphObject::Type::TextureProvider, FlagT(Flags::HasGraphicsResources))
+{
+
+}
+
+QSSGRenderTextureProviderExtension::~QSSGRenderTextureProviderExtension()
+{
+
+}
+
+QSSGRenderExtension::RenderStage QSSGRenderTextureProviderExtension::stage() const { return QSSGRenderExtension::RenderStage::PreColor; }
+
+QSSGRenderExtension::RenderMode QSSGRenderTextureProviderExtension::mode() const { return QSSGRenderExtension::RenderMode::Standalone; }
+
 QT_END_NAMESPACE

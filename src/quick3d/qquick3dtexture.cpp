@@ -1137,7 +1137,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
             // NOTE: We don't clear if we haven't gotten the spatial node yet, as
             // we'll be called once _again_ when the extensions have been processed.
             extDirty = (sn == nullptr);
-            if (sn && QSSG_GUARD(sn->type == QSSGRenderGraphObject::Type::RenderExtension))
+            if (sn && QSSG_GUARD(QSSGRenderGraphObject::isExtension(sn->type)))
                 imageNode->m_extensionsSource = static_cast<QSSGRenderExtension *>(sn);
         }
 
@@ -1419,6 +1419,15 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
                 QQuick3DObjectPrivate::refSceneManager(m_textureData, *sceneManager);
             else
                 QQuick3DObjectPrivate::derefSceneManager(m_textureData);
+        }
+
+        // Texture Providers
+        if (m_renderExtension) {
+            const auto &sceneManager = value.sceneManager;
+            if (sceneManager)
+                QQuick3DObjectPrivate::refSceneManager(m_renderExtension, *sceneManager);
+            else
+                QQuick3DObjectPrivate::derefSceneManager(m_renderExtension);
         }
     }
 }

@@ -6,7 +6,7 @@ project(proceduraltexture LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Quick3D)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui GuiPrivate Qml Quick Quick3D Quick3DPrivate)
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(proceduraltexture
@@ -23,6 +23,8 @@ target_link_libraries(proceduraltexture PUBLIC
     Qt::Gui
     Qt::Quick
     Qt::Quick3D
+    Qt::GuiPrivate
+    Qt::Quick3DPrivate
 )
 
 qt_add_qml_module(proceduraltexture
@@ -32,8 +34,20 @@ qt_add_qml_module(proceduraltexture
         Main.qml
     SOURCES
         gradienttexture.cpp gradienttexture.h
+        gradienttextureprovider.cpp gradienttextureprovider.h
     IMPORTS
         QtQuick3D
+)
+
+qt_add_shaders(proceduraltexture "shaders"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/shaders"
+    FILES
+        gradient.vert
+        gradient.frag
 )
 
 install(TARGETS proceduraltexture

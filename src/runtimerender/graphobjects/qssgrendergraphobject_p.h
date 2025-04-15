@@ -80,6 +80,13 @@ constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }
     return static_cast<QSSGRenderGraphObject::BaseType>(QSSGRenderGraphObject::TypeT(type) & BaseTypeMask);
 }
 
+// The TextureProvider type is not a BaseType but it's a special type of Extension that is user
+// facing and requires special handling in some places, so we keep this helper here for convenience.
+[[nodiscard]] static constexpr bool isTextureProvider(QSSGRenderGraphObject::Type type) noexcept
+{
+    return (QSSGRenderGraphObject::TypeT(type) & QSSGRenderGraphObject::TypeT(QSSGRenderGraphObject::Type::TextureProvider));
+}
+
 }
 
 #endif // QSSGRENDERGRAPHOBJECT_P_H

@@ -11,6 +11,7 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderer;
 class QSSGLayerRenderData;
+class QQuick3DObjectPrivate;
 
 class Q_QUICK3D_EXPORT QQuick3DRenderExtension : public QQuick3DObject
 {
@@ -23,6 +24,9 @@ public:
     virtual ~QQuick3DRenderExtension();
 
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+
+protected:
+    explicit QQuick3DRenderExtension(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
 };
 
 QT_END_NAMESPACE
