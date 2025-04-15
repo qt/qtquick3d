@@ -38,4 +38,5 @@ qt_add_qml_module(manual_test_shaderPoker
         images/TreeUnexpanded@2x.png
         images/TreeUnexpanded@3x.png
         images/TreeUnexpanded@4x.png
+    NO_CACHEGEN
 )
