@@ -283,6 +283,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+        QRhiTexture *dummyTexture3D = rhiCtx->dummyTexture(QRhiTexture::ThreeDimensional, resourceUpdates);
         QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
         rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
 
@@ -532,7 +533,13 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
             for (const QShaderDescription::InOutVariable &var : samplerVars) {
                 if (!samplerBindingsSpecified.testBit(var.binding)) {
-                    QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
+                    QRhiTexture *t = nullptr;
+                    if (var.type == QShaderDescription::SamplerCube)
+                        t = dummyCubeTexture;
+                    else if (var.type == QShaderDescription::Sampler3D)
+                        t = dummyTexture3D;
+                    else
+                        t = dummyTexture;
                     bindings.addTexture(var.binding, CUSTOM_MATERIAL_VISIBILITY_ALL, t, dummySampler);
                 }
             }
