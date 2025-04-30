@@ -34,7 +34,8 @@ struct ParticleLightData
     float spotLightInnerConeAngle[4] = {0.0f};
 };
 
-void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &shaders,
+void QSSGParticleRenderer::updateUniformsForParticles(const QSSGLayerRenderData &inData,
+                                                      QSSGRhiShaderPipeline &shaders,
                                                       QSSGRhiContext *rhiCtx,
                                                       char *ubufData,
                                                       QSSGParticlesRenderable &renderable,
@@ -45,17 +46,27 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &sha
     QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders.commonUniformIndices;
 
     const int viewCount = cameras.count();
+
+    // Pull the camera transforms from the render data once.
+    QMatrix4x4 camGlobalTransforms[2] { QMatrix4x4{Qt::Uninitialized}, QMatrix4x4{Qt::Uninitialized} };
+    if (viewCount < 2) {
+        camGlobalTransforms[0] = inData.getGlobalTransform(*cameras[0]);
+    } else {
+        for (size_t viewIndex = 0; viewIndex != std::size(camGlobalTransforms); ++viewIndex)
+            camGlobalTransforms[viewIndex] = inData.getGlobalTransform(*cameras[viewIndex]);
+    }
+
     if (viewCount < 2) {
         const QMatrix4x4 projection = clipSpaceCorrMatrix * cameras[0]->projection;
         shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
-        const QMatrix4x4 viewMatrix = cameras[0]->globalTransform.inverted();
+        const QMatrix4x4 viewMatrix = camGlobalTransforms[0].inverted();
         shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
     } else {
         QVarLengthArray<QMatrix4x4, 2> projectionMatrices(viewCount);
         QVarLengthArray<QMatrix4x4, 2> viewMatrices(viewCount);
         for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
             projectionMatrices[viewIndex] = clipSpaceCorrMatrix * cameras[viewIndex]->projection;
-            viewMatrices[viewIndex] = cameras[viewIndex]->globalTransform.inverted();
+            viewMatrices[viewIndex] = camGlobalTransforms[viewIndex].inverted();
         }
         shaders.setUniformArray(ubufData, "qt_projectionMatrix", projectionMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.projectionMatrixIdx);
         shaders.setUniformArray(ubufData, "qt_viewMatrix", viewMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewMatrixIdx);
@@ -101,18 +112,21 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &sha
             // Ignore lights which are not specified for the particle
             if (!renderable.particles.m_lights.contains(theLight))
                 continue;
+
+            const QMatrix4x4 lightGlobalTransform = inData.getGlobalTransform(*theLight);
+
             if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
                 theLightAmbientTotal += theLight->m_diffuseColor * theLight->m_brightness;
             } else if (theLight->type == QSSGRenderLight::Type::PointLight && pointLight < 4) {
                 lightData.pointLightColor[pointLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
-                lightData.pointLightPos[pointLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
+                lightData.pointLightPos[pointLight] = QVector4D(QSSGRenderNode::getGlobalPos(lightGlobalTransform), 1.0f);
                 lightData.pointLightConstantAtt[pointLight] = QSSGUtils::aux::translateConstantAttenuation(theLight->m_constantFade);
                 lightData.pointLightLinearAtt[pointLight] = QSSGUtils::aux::translateLinearAttenuation(theLight->m_linearFade);
                 lightData.pointLightQuadAtt[pointLight] = QSSGUtils::aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
                 pointLight++;
             } else if (theLight->type == QSSGRenderLight::Type::SpotLight && spotLight < 4) {
                 lightData.spotLightColor[spotLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
-                lightData.spotLightPos[spotLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
+                lightData.spotLightPos[spotLight] = QVector4D(QSSGRenderNode::getGlobalPos(lightGlobalTransform), 1.0f);
                 lightData.spotLightDir[spotLight] = QVector4D(lights[lightIdx].direction, 0.0f);
                 lightData.spotLightConstantAtt[spotLight] = QSSGUtils::aux::translateConstantAttenuation(theLight->m_constantFade);
                 lightData.spotLightLinearAtt[spotLight] = QSSGUtils::aux::translateLinearAttenuation(theLight->m_linearFade);
@@ -196,11 +210,12 @@ static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend &targetBlend, QSSG
     }
 }
 
-static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
+static void sortParticles(const QSSGLayerRenderData &renderData, QByteArray &result, QList<QSSGRhiSortData> &sortData,
                           const QSSGParticleBuffer &buffer, const QSSGRenderParticles &particles,
                           const QVector3D &cameraDirection, bool animatedParticles)
 {
-    const QMatrix4x4 &invModelMatrix = particles.globalTransform.inverted();
+    const QMatrix4x4 &modelMatrix = renderData.getGlobalTransform(particles);
+    const QMatrix4x4 &invModelMatrix = modelMatrix.inverted();
     QVector3D dir = invModelMatrix.map(cameraDirection);
     QVector3D n = dir.normalized();
     const auto segments = buffer.segments();
@@ -357,10 +372,10 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
 
     char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     if (!alteredCamera) {
-        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, inData.renderedCameras);
+        updateUniformsForParticles(inData, shaderPipeline, rhiCtx, ubufData, renderable, inData.renderedCameras);
     } else {
         QSSGRenderCameraList cameras({ alteredCamera });
-        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, cameras);
+        updateUniformsForParticles(inData, shaderPipeline, rhiCtx, ubufData, renderable, cameras);
     }
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
@@ -390,10 +405,12 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
 
     if (renderable.particles.m_depthSorting) {
         bool animatedParticles = renderable.particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::Animated;
-        if (!alteredCamera)
-            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, inData.renderedCameraData.value()[0].direction, animatedParticles);
-        else
-            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, alteredCamera->getScalingCorrectDirection(), animatedParticles);
+        if (!alteredCamera) {
+            sortParticles(inData, particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, inData.renderedCameraData.value()[0].direction, animatedParticles);
+        } else {
+            const QMatrix4x4 globalTransform = inData.getGlobalTransform(*alteredCamera);
+            sortParticles(inData, particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, QSSGRenderNode::getScalingCorrectDirection(globalTransform), animatedParticles);
+        }
         uploadData = convertParticleData(particleData.convertData, particleData.sortedData, needsConversion);
     } else {
         uploadData = convertParticleData(particleData.convertData, particleBuffer.data(), needsConversion);

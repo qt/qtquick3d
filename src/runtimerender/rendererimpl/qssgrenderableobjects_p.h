@@ -34,6 +34,7 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderer;
 class QSSGRenderableObject;
+struct QSSGRenderItem2D;
 
 enum class QSSGRenderableObjectFlag : quint32
 {
@@ -193,19 +194,22 @@ struct QSSGRenderableNodeEntry
     };
 
     QSSGRenderNode *node = nullptr;
-    // TODO: We should have an index here for look-up and store the data in a table,
-    // er already have the index from when we collect the nodes. We might cull some items at a later
-    // stage but that should be fine. The sort data can be just a float and the index to this...
-    mutable QMatrix4x4 globalTransform;
-    mutable QSSGRenderMesh *mesh = nullptr;
-    mutable QVector<QSSGRenderGraphObject *> materials;
     mutable QSSGShaderLightListView lights;
-    mutable float globalOpacity { 1.0f };
     mutable quint16 overridden { Original };
+
+    // FIXME: This is just for the extension API and
+    // should be removed in the future.
+    struct ExtensionOverrides
+    {
+        QMatrix4x4 globalTransform;
+        QVector<QSSGRenderGraphObject *> materials;
+        float globalOpacity { 1.0f };
+    } mutable extOverrides;
 
     bool isNull() const { return (node == nullptr); }
     QSSGRenderableNodeEntry() = default;
     QSSGRenderableNodeEntry(QSSGRenderNode &inNode) : node(&inNode) {}
+    QSSGRenderableNodeEntry(QSSGRenderNode *inNode) : node(inNode) {}
 };
 
 // Used for sorting
@@ -235,7 +239,6 @@ public:
     };
 
     // Variables used for picking
-    const QMatrix4x4 &globalTransform;
     const QSSGBounds3 &bounds;
     QSSGBounds3 globalBounds;
 
@@ -255,14 +258,12 @@ public:
     QSSGRenderableObject(Type ty,
                          QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
-                         const QMatrix4x4 &inGlobalTransform,
                          const QSSGBounds3 &inBounds,
                          float inDepthBias,
                          float inMinThreshold = -1,
                          float inMaxThreshold = -1)
 
-        : globalTransform(inGlobalTransform)
-        , bounds(inBounds)
+        : bounds(inBounds)
         , globalBounds(inBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
@@ -299,27 +300,13 @@ class QSSGModelContext
 public:
     QSSGModelContext(const QSSGRenderModel &inModel,
                      const QMatrix4x4 &globalTransform,
-                     const QSSGRenderCameraDataList &allCameraData)
-        : model(inModel)
-    {
-        Q_ASSERT_X(allCameraData.size() <= qsizetype(modelViewProjections.size()), __FUNCTION__, "QSSGModelContext has no space for all MVPs");
-        int mvpCount = 0;
-        // For skinning, node's global transformation will be ignored and
-        // an identity matrix will be used for the normalMatrix
-        if (model.usesBoneTexture()) {
-            for (const QSSGRenderCameraData &cameraData : allCameraData) {
-                modelViewProjections[mvpCount++] = cameraData.viewProjection;
-                normalMatrix = QMatrix3x3();
-            }
-        } else {
-            for (const QSSGRenderCameraData &cameraData : allCameraData)
-                QSSGRenderNode::calculateMVPAndNormalMatrix(globalTransform, cameraData.viewProjection, modelViewProjections[mvpCount++], normalMatrix);
-        }
-    }
+                     const QMatrix3x3 &inNormalMatrix,
+                     const QSSGRenderMvpArray &inModelViewProjections);
 
     const QSSGRenderModel &model;
+    const QMatrix4x4 globalTransform;
+    const QMatrix3x3 normalMatrix;
     QSSGRenderMvpArray modelViewProjections;
-    QMatrix3x3 normalMatrix;
     QSSGDataRef<QSSGSubsetRenderable> subsets;
 };
 
@@ -400,6 +387,7 @@ public:
     QSSGRenderableImage *firstImage;
     QSSGRenderableImage *colorTable;
     const QSSGShaderLightListView &lights;
+    QMatrix4x4 globalTransform;
     float opacity;
 
     struct {
@@ -427,6 +415,7 @@ public:
     QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
                             const QVector3D &inWorldCenterPt,
                             QSSGRenderer *rendr,
+                            const QMatrix4x4 &inGlobalTransform,
                             const QSSGRenderParticles &inParticles,
                             QSSGRenderableImage *inFirstImage,
                             QSSGRenderableImage *inColorTable,
@@ -435,6 +424,14 @@ public:
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGParticlesRenderable>::value);
+
+
+using QSSGModelsView = QSSGDataView<QSSGRenderModel *>;
+using QSSGParticlesView = QSSGDataView<QSSGRenderParticles *>;
+using QSSGItem2DsView = QSSGDataView<QSSGRenderItem2D *>;
+using QSSGCamerasView = QSSGDataView<QSSGRenderCamera *>;
+using QSSGLightsView = QSSGDataView<QSSGRenderLight *>;
+using QSSGReflectionProbesView = QSSGDataView<QSSGRenderReflectionProbe *>;
 
 QT_END_NAMESPACE
 

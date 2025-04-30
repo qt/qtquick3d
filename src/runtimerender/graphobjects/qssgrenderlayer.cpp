@@ -5,9 +5,22 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
-#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+#include "../rendererimpl/qssglayerrenderdata_p.h"
+#include "qssgrenderroot_p.h"
 
 QT_BEGIN_NAMESPACE
+
+void QSSGRenderLayer::markDirty(DirtyFlag dirtyFlag)
+{
+    m_layerDirtyFlags |= FlagT(dirtyFlag);
+    QSSGRenderNode::markDirty(QSSGRenderNode::DirtyFlag::SubNodeDirty);
+}
+
+void QSSGRenderLayer::clearDirty(DirtyFlag dirtyFlag)
+{
+    m_layerDirtyFlags &= ~FlagT(dirtyFlag);
+    QSSGRenderNode::clearDirty(QSSGRenderNode::DirtyFlag::SubNodeDirty);
+}
 
 QSSGRenderLayer::QSSGRenderLayer()
     : QSSGRenderNode(QSSGRenderNode::Type::Layer)
@@ -25,11 +38,23 @@ QSSGRenderLayer::QSSGRenderLayer()
     flags = { FlagT(LocalState::Active) | FlagT(GlobalState::Active) }; // The layer node is alway active and not dirty.
 }
 
-QSSGRenderLayer::~QSSGRenderLayer()
+void QSSGRenderLayer::release()
 {
     delete importSceneNode;
     importSceneNode = nullptr;
     delete renderData;
+    renderData = nullptr;
+}
+
+QSSGRenderLayer::~QSSGRenderLayer()
+{
+    if (rootNode)
+        rootNode->removeChild(*this);
+
+    rootNode = nullptr;
+    rootNodeRef = nullptr;
+
+    release();
 }
 
 void QSSGRenderLayer::setProbeOrientation(const QVector3D &angles)

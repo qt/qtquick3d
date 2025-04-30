@@ -79,19 +79,19 @@ void picking::benchImpl(int count, bool hit)
     QVector2D viewportDim(400.0f, 400.0f);
     QSSGRenderLayer dummyLayer;
     QMatrix4x4 globalTransform;
+    QMatrix4x4 viewProjection;
 
     QSSGRenderCamera dummyCamera(QSSGRenderCamera::Type::OrthographicCamera);
     dummyCamera.localTransform.translate(QVector3D(0.0f, 0.0f, 600.0f));
     static_cast<QSSGRenderNode &>(dummyCamera).markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
     QSSGRenderCamera::calculateProjectionInternal(dummyCamera, QRectF(QPointF(), QSizeF(viewportDim.x(), viewportDim.y())));
-    dummyCamera.calculateViewProjectionMatrix(globalTransform);
+    dummyCamera.calculateViewProjectionMatrix(globalTransform, viewProjection);
 
     dummyLayer.renderedCameras = { &dummyCamera };
 
     static const auto setModelPosition = [](QSSGRenderModel &model, const QVector3D &pos) {
         model.localTransform.translate(pos);
         model.markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
-        model.calculateGlobalVariables();
     };
 
     QSSGRenderModel models[1000];

@@ -150,11 +150,11 @@ public:
                                       const QSSGRenderRay &ray,
                                       bool inPickEverything,
                                       PickResultList &outIntersectionResult);
-    static void intersectRayWithSubsetRenderable(QSSGBufferManager &bufferManager,
+    static void intersectRayWithSubsetRenderable(const QSSGRenderLayer &layer, QSSGBufferManager &bufferManager,
                                                  const QSSGRenderRay &inRay,
                                                  const QSSGRenderNode &node,
                                                  PickResultList &outIntersectionResultList);
-    static void intersectRayWithItem2D(const QSSGRenderRay &inRay,
+    static void intersectRayWithItem2D(const QSSGRenderLayer &layer, const QSSGRenderRay &inRay,
                                        const QSSGRenderItem2D &item2D,
                                        PickResultList &outIntersectionResultList);
 
@@ -178,6 +178,10 @@ public:
     static void setGlobalPickingEnabled(QSSGRenderer &renderer, bool isEnabled);
 
     static void setRenderContextInterface(QSSGRenderer &renderer, QSSGRenderContextInterface *ctx);
+
+    static QSSGLayerRenderData *getCurrentRenderData(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
+
+    static constexpr float minimumRenderOpacity = .01f;
 };
 
 QT_END_NAMESPACE

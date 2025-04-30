@@ -69,6 +69,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
 
     float levelOfDetailBias = 1.0f; // values < 1.0 will decrease usage of LODs, values > 1.0 will increase usage of LODs
 
+    QSSGRenderModelHandle mh;
+
     QSSGRenderModel();
 };
 QT_END_NAMESPACE

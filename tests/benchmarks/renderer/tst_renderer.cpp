@@ -15,6 +15,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 #include <QtQuick3D/private/qquick3dscenemanager_p.h>
 
 class tst_renderer : public QObject
@@ -28,6 +29,8 @@ public:
 private Q_SLOTS:
     void initTestCase();
     void bench_prep();
+    void bench_dynamic_remove();
+    void bench_dynamic_add();
 
 private:
     QRhi *rhi = nullptr;
@@ -39,6 +42,15 @@ private:
     int modelCount = 0;
     QSSGRenderCamera camera{ QSSGRenderCamera::Type::OrthographicCamera };
     QSSGRenderLayer layer;
+
+    struct AddPair
+    {
+        QSSGRenderNode *parent = nullptr;
+        QSSGRenderNode *child = nullptr;
+    };
+
+    std::vector<QSSGRenderNode *> remove;
+    std::vector<AddPair> add;
 };
 
 tst_renderer::tst_renderer()
@@ -68,6 +80,9 @@ void tst_renderer::initTestCase()
     wa->setRci(renderContext);
     sceneManager->wattached = wa;
 
+    wa->rootNode()->addChild(layer);
+    layer.rootNode = wa->rootNode();
+
     meshPath = qEnvironmentVariable("tst_mesh", "#Cube");
 
     bool ok = true;
@@ -90,11 +105,26 @@ void tst_renderer::initTestCase()
     renderer->setViewport(viewport);
     renderer->setScissorRect(viewport);
 
+    QSSGRenderNode *parent = &layer;
+    size_t counter = 0;
     for (int x = 0; x != n; ++x) {
         for (int y = 0; y != n; ++y) {
             for (int z = 0; z != n; ++z) {
+                ++counter;
                 // Set-up model
                 QSSGRenderModel *model = new QSSGRenderModel;
+                // Each 4th model we'll change the parent
+                if (counter % 4 == 0) {
+                    parent->addChild(*model);
+                    parent = model;
+                } else {
+                    parent->addChild(*model);
+                }
+
+                // Every 50th model we'll put in the remove list
+                if (counter % 50 == 0)
+                    remove.push_back(model);
+
                 model->meshPath = QSSGRenderPath("#Cube");
                 model->localTransform.translate(QVector3D((float(x) + offset) * spacing,
                                                           (float(y) + offset) * spacing,
@@ -107,10 +137,12 @@ void tst_renderer::initTestCase()
                 mat->lighting = QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
 
                 model->materials.push_back(mat);
-                layer.addChild(*model);
             }
         }
     }
+
+    // Manually mark the layer dirty (The layers are marked dirty during sync)
+    layer.markDirty(QSSGRenderLayer::DirtyFlag::TreeDirty);
 }
 
 void tst_renderer::bench_prep()
@@ -118,6 +150,52 @@ void tst_renderer::bench_prep()
     QVERIFY(!layer.children.isEmpty());
     const auto &renderer = renderContext->renderer();
     QBENCHMARK {
+        renderer->beginFrame(layer);
+        renderer->prepareLayerForRender(layer);
+        renderer->endFrame(layer);
+    }
+}
+
+void tst_renderer::bench_dynamic_remove()
+{
+    // Here we'll benchmark what the cost is when the
+    // the scene is adding a node each frame.
+    QVERIFY(!layer.children.isEmpty());
+    const auto &renderer = renderContext->renderer();
+    QBENCHMARK {
+        // Remove a model
+        if (remove.size() > 0) {
+            QSSGRenderNode *model = remove.back();
+            remove.pop_back();
+            QSSGRenderNode *parent = model->parent;
+            parent->removeChild(*model);
+            add.push_back({parent, model});
+            // Manually mark the layer dirty (The layers are marked dirty during sync)
+            layer.markDirty(QSSGRenderLayer::DirtyFlag::TreeDirty);
+        }
+
+        renderer->beginFrame(layer);
+        renderer->prepareLayerForRender(layer);
+        renderer->endFrame(layer);
+    }
+}
+
+void tst_renderer::bench_dynamic_add()
+{
+    // Here we'll benchmark what the cost is when the
+    // the scene is removing a node each frame.
+    QVERIFY(!layer.children.isEmpty());
+    const auto &renderer = renderContext->renderer();
+    QBENCHMARK {
+        // Add a model back
+        if (add.size() > 0) {
+            auto [parent, child] = add.back();
+            add.pop_back();
+            parent->addChild(*child);
+            // Manually mark the layer dirty (The layers are marked dirty during sync)
+            layer.markDirty(QSSGRenderLayer::DirtyFlag::TreeDirty);
+        }
+
         renderer->beginFrame(layer);
         renderer->prepareLayerForRender(layer);
         renderer->endFrame(layer);

@@ -36,6 +36,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrendermorphtarget.cpp graphobjects/qssgrendermorphtarget_p.h
         graphobjects/qssgrenderresourceloader.cpp graphobjects/qssgrenderresourceloader_p.h
         graphobjects/qssgrenderreflectionprobe.cpp graphobjects/qssgrenderreflectionprobe_p.h
+        graphobjects/qssgrenderroot_p.h graphobjects/qssgrenderroot.cpp
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
@@ -77,6 +78,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         rendererimpl/qssgrenderpass_p.h rendererimpl/qssgrenderpass.cpp
         rendererimpl/qssgrenderhelpers_p.h rendererimpl/qssgrenderhelpers.cpp
         rendererimpl/qssgshadowmaphelpers_p.h rendererimpl/qssgshadowmaphelpers.cpp
+        rendererimpl/qssgrenderdata_p.h rendererimpl/qssgrenderdata.cpp
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
         resourcemanager/qssgrendershaderlibrarymanager.cpp resourcemanager/qssgrendershaderlibrarymanager_p.h

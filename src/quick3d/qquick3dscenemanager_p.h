@@ -32,6 +32,8 @@ class QSGDynamicTexture;
 class QQuickWindow;
 class QSSGBufferManager;
 class QSSGRenderContextInterface;
+class QSSGRenderRoot;
+struct QSSGRenderLayer;
 
 class Q_QUICK3D_EXPORT QQuick3DWindowAttachment : public QObject
 {
@@ -57,6 +59,8 @@ public:
 
     QQuickWindow *window() const;
 
+    QSSGRenderRoot *rootNode() const { return m_rootNode; }
+
     const std::shared_ptr<QSSGRenderContextInterface> &rci() const { return m_rci; }
     void setRci(const std::shared_ptr<QSSGRenderContextInterface> &rciptr);
 
@@ -65,6 +69,7 @@ public:
 
     void queueForCleanup(QSSGRenderGraphObject *obj);
     void queueForCleanup(QQuick3DSceneManager *manager);
+    void queueForCleanup(QSSGRenderLayer *layer);
 
 Q_SIGNALS:
     void releaseCachedResources();
@@ -75,11 +80,13 @@ private:
     Q_INVOKABLE void onInvalidated();
 
     QPointer<QQuickWindow> m_window;
+    QSSGRenderRoot *m_rootNode = nullptr;
     std::shared_ptr<QSSGRenderContextInterface> m_rci;
     QList<QQuick3DSceneManager *> sceneManagers;
     QList<QQuick3DSceneManager *> sceneManagerCleanupQueue;
     QList<QSSGRenderGraphObject *> pendingResourceCleanupQueue;
     QSet<QSSGRenderGraphObject *> resourceCleanupQueue;
+    QList<QSSGRenderLayer *> pendingLayerCleanupQueue;
 };
 
 class Q_QUICK3D_EXPORT QQuick3DSceneManager : public QObject

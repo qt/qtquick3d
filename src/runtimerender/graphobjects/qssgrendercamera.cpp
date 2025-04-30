@@ -27,14 +27,11 @@ QSSGRenderCamera::QSSGRenderCamera(QSSGRenderGraphObject::Type type)
     markDirty(DirtyFlag::CameraDirty);
 }
 
-QSSGCameraGlobalCalculationResult QSSGRenderCamera::calculateProjectionInternal(QSSGRenderCamera &camera,
-                                                                                const QRectF &inViewport,
-                                                                                Configuration config)
+bool QSSGRenderCamera::calculateProjectionInternal(QSSGRenderCamera &camera,
+                                                   const QRectF &inViewport,
+                                                   Configuration config)
 {
-    // For convenience we ensure that the global variables are up to date, as this function
-    // is intended to be used with internally set-up cameras.
-    bool wasDirty = camera.calculateGlobalVariables();
-    return QSSGCameraGlobalCalculationResult{ wasDirty, camera.calculateProjection(inViewport, config) };
+    return camera.calculateProjection(inViewport, config);
 }
 
 bool QSSGRenderCamera::calculateProjection(const QRectF &inViewport, Configuration config)
@@ -163,12 +160,12 @@ static QQuaternion rotationQuaternionForLookAt(const QVector3D &sourcePosition,
 
 void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos, const QVector3D &pivot)
 {
-    QQuaternion rotation = rotationQuaternionForLookAt(inCameraPos, getScalingCorrectDirection(), inTargetPos, inUpDir.normalized());
-    globalTransform = localTransform = QSSGRenderNode::calculateTransformMatrix(inCameraPos, QSSGRenderNode::initScale, pivot, rotation);
+    QQuaternion rotation = rotationQuaternionForLookAt(inCameraPos, getScalingCorrectDirection(localTransform), inTargetPos, inUpDir.normalized());
+    localTransform = QSSGRenderNode::calculateTransformMatrix(inCameraPos, QSSGRenderNode::initScale, pivot, rotation);
     QSSGRenderNode::markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
 }
 
-void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const
+void QSSGRenderCamera::calculateViewProjectionMatrix(const QMatrix4x4 &globalTransform, QMatrix4x4 &outMatrix) const
 {
     QMatrix4x4 nonScaledGlobal(Qt::Uninitialized);
     nonScaledGlobal.setColumn(0, globalTransform.column(0).normalized());
@@ -178,7 +175,7 @@ void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) cons
     outMatrix = projection * nonScaledGlobal.inverted();
 }
 
-void QSSGRenderCamera::calculateViewProjectionWithoutTranslation(float clipNear, float clipFar, QMatrix4x4 &outMatrix) const
+void QSSGRenderCamera::calculateViewProjectionWithoutTranslation(const QMatrix4x4 &globalTransform, float clipNear, float clipFar, QMatrix4x4 &outMatrix) const
 {
     if (qFuzzyIsNull(clipFar - clipNear)) {
         qWarning() << "QSSGRenderCamera::calculateViewProjection: far == near";
@@ -196,7 +193,8 @@ void QSSGRenderCamera::calculateViewProjectionWithoutTranslation(float clipNear,
     outMatrix = proj * nonScaledGlobal.inverted();
 }
 
-QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoords,
+QSSGRenderRay QSSGRenderCamera::unproject(const QMatrix4x4 &globalTransform,
+                                          const QVector2D &inViewportRelativeCoords,
                                           const QRectF &inViewport) const
 {
     QSSGRenderRay theRay;
@@ -225,7 +223,7 @@ QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoo
     }
 
     outOrigin = QSSGUtils::mat44::transform(globalTransform, outOrigin);
-    QMatrix3x3 theNormalMatrix = calculateNormalMatrix();
+    QMatrix3x3 theNormalMatrix = globalTransform.normalMatrix();
 
     outDir = QSSGUtils::mat33::transform(theNormalMatrix, outDir);
     outDir.normalize();

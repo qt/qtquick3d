@@ -455,6 +455,12 @@ static QMatrix4x4 extractScaleMatrix(const QMatrix4x4 &transform)
 
 bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporter)
 {
+    QSSGLayerRenderData *renderData = QSSGRendererPrivate::getCurrentRenderData(*renderer);
+    if (!renderData) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("lm: No render data, cannot bake lightmaps"));
+        return false;
+    }
+
     if (bakedLightingModels.isEmpty()) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No models with usedInBakedLighting, cannot bake"));
         return false;
@@ -522,7 +528,7 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
         QMatrix4x4 worldTransform;
         QMatrix3x3 normalMatrix;
         QSSGSubsetRenderable *renderableObj = static_cast<QSSGSubsetRenderable *>(lm.renderables.first().obj);
-        worldTransform = renderableObj->globalTransform;
+        worldTransform = renderableObj->modelContext.globalTransform;
         normalMatrix = renderableObj->modelContext.normalMatrix;
         const QMatrix4x4 scaleTransform = extractScaleMatrix(worldTransform);
 
@@ -727,7 +733,8 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
         if (sl.light->type == QSSGRenderLight::Type::PointLight
                 || sl.light->type == QSSGRenderLight::Type::SpotLight)
         {
-            light.worldPos = sl.light->getGlobalPos();
+            const QMatrix4x4 lightGlobalTransform = renderData->getGlobalTransform(*sl.light);
+            light.worldPos = QSSGRenderNode::getGlobalPos(lightGlobalTransform);
             if (sl.light->type == QSSGRenderLight::Type::SpotLight) {
                 light.type = Light::Spot;
                 light.cosConeAngle = qCos(qDegreesToRadians(sl.light->m_coneAngle));

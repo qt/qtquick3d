@@ -58,6 +58,7 @@ public:
         Unknown = 0,
         // Nodes
         Node = BaseType::Node,
+        Root, // Node
         Layer, // Node
         Joint, // Node
         Skeleton, // Node (A resource to the model node)

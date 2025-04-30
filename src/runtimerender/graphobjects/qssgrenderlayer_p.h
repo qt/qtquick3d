@@ -133,6 +133,34 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         WeightedBlended
     };
 
+    enum class DirtyFlag : quint8
+    {
+        TreeDirty = 0x1
+    };
+    using FlagT = std::underlying_type_t<DirtyFlag>;
+
+    static constexpr DirtyFlag DirtyMask { std::numeric_limits<FlagT>::max() };
+
+    [[nodiscard]] bool isDirty(DirtyFlag dirtyFlag = DirtyMask) const
+    {
+        return ((m_layerDirtyFlags & FlagT(dirtyFlag)) != 0)
+        || ((dirtyFlag == DirtyMask) && QSSGRenderNode::isDirty());
+    }
+    void markDirty(DirtyFlag dirtyFlag);
+    void clearDirty(DirtyFlag dirtyFlag);
+
+    void ref(QSSGRenderRoot *inRootNode)
+    {
+        rootNode = inRootNode;
+        rootNodeRef = &rootNode;
+    }
+
+    void release();
+
+    QSSGRenderRoot *rootNode = nullptr;
+
+    QSSGRenderLayerHandle lh;
+
     // First effect in a list of effects.
     QSSGRenderEffect *firstEffect;
     QSSGLayerRenderData *renderData = nullptr;
@@ -145,6 +173,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGRenderLayer::Background background;
     QVector3D clearColor;
 
+    FlagT m_layerDirtyFlags = FlagT(DirtyFlag::TreeDirty);
     quint8 viewCount = 1;
 
     // Ambient occlusion

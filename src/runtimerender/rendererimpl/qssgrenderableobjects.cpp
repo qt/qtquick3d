@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qssgrenderableobjects_p.h"
+#include "qssglayerrenderdata_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
@@ -12,6 +13,18 @@
 QT_BEGIN_NAMESPACE
 struct QSSGRenderableImage;
 class QSSGSubsetRenderable;
+
+QSSGModelContext::QSSGModelContext(const QSSGRenderModel &inModel,
+                                   const QMatrix4x4 &inGlobalTransform,
+                                   const QMatrix3x3 &inNormalMatrix,
+                                   const QSSGRenderMvpArray &inModelViewProjections)
+    : model(inModel)
+    , globalTransform(inGlobalTransform)
+    , normalMatrix(inNormalMatrix)
+    , modelViewProjections(inModelViewProjections)
+{
+
+}
 
 QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                                            QSSGRenderableObjectFlags inFlags,
@@ -29,7 +42,6 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
     : QSSGRenderableObject(type,
                            inFlags,
                            inWorldCenterPt,
-                           inModelContext.model.globalTransform,
                            inSubset.bounds,
                            inModelContext.model.m_depthBiasSq,
                            inModelContext.model.instancingLodMin,
@@ -54,7 +66,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
     if (modelBlendParticle)
         globalBounds = inModelContext.model.particleBuffer->bounds();
     else
-        globalBounds.transform(globalTransform);
+        globalBounds.transform(inModelContext.globalTransform);
 
     // Do we need instanced bounds
     const QSSGRenderInstanceTable *instanceTable = inModelContext.model.instanceTable;
@@ -81,6 +93,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
 QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
                                                  const QVector3D &inWorldCenterPt,
                                                  QSSGRenderer *rendr,
+                                                 const QMatrix4x4 &inGlobalTransform,
                                                  const QSSGRenderParticles &inParticles,
                                                  QSSGRenderableImage *inFirstImage,
                                                  QSSGRenderableImage *inColorTable,
@@ -89,7 +102,6 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
     : QSSGRenderableObject(Type::Particles,
                            inFlags,
                            inWorldCenterPt,
-                           inParticles.globalTransform,
                            inParticles.m_particleBuffer.bounds(),
                            inParticles.m_depthBiasSq)
     , renderer(rendr)
@@ -97,12 +109,13 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
     , firstImage(inFirstImage)
     , colorTable(inColorTable)
     , lights(inLights)
+    , globalTransform(inGlobalTransform)
     , opacity(inOpacity)
 {
     // Bounds are in global space for _model blend_ particles
     globalBounds = inParticles.m_particleBuffer.bounds();
     if (inParticles.type != QSSGRenderParticles::Type::ModelBlendParticle)
-        globalBounds.transform(globalTransform);
+        globalBounds.transform(inGlobalTransform);
 }
 
 QT_END_NAMESPACE

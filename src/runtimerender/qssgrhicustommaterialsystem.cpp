@@ -144,12 +144,11 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipe
     QRhiTexture *lightmapTexture = inData.getLightmapTexture(renderable.modelContext);
 
     const auto &modelNode = renderable.modelContext.model;
-    const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
-    const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
+    const auto &[localInstanceTransform, globalInstanceTransform] = inData.getInstanceTransforms(modelNode);
 
     const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
-    const QMatrix4x4 &modelMatrix(modelNode.usesBoneTexture() ? QMatrix4x4() : renderable.globalTransform);
+    const QMatrix4x4 &modelMatrix(modelNode.usesBoneTexture() ? QMatrix4x4() : renderable.modelContext.globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                           shaderPipeline,
@@ -250,7 +249,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             const QSSGRenderCameraDataList &cameraDatas(*layerData.renderedCameraData);
             instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, cameraDatas[0].direction, cameraDatas[0].position, renderable.instancingLodMin, renderable.instancingLodMax);
         } else {
-            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, alteredCamera->getScalingCorrectDirection(), alteredCamera->getGlobalPos(), renderable.instancingLodMin, renderable.instancingLodMax);
+            const auto &altCamTransform = layerData.getGlobalTransform(*alteredCamera);
+            instancing = QSSGLayerRenderData::prepareInstancing(rhiCtx, &renderable, QSSGRenderNode::getScalingCorrectDirection(altCamTransform), QSSGRenderNode::getGlobalPos(altCamTransform), renderable.instancingLodMin, renderable.instancingLodMax);
         }
 
         ps->samples = samples;

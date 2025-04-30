@@ -2154,8 +2154,19 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
     const int viewCount = inCameras.count();
+
+    // Pull the camera transforms from the render data once.
+    QMatrix4x4 camGlobalTransforms[2] { QMatrix4x4{Qt::Uninitialized}, QMatrix4x4{Qt::Uninitialized} };
     if (viewCount < 2) {
-        const QVector3D camGlobalPos = inCameras[0]->getGlobalPos();
+        camGlobalTransforms[0] = inRenderProperties.getGlobalTransform(*inCameras[0]);
+    } else {
+        for (size_t viewIndex = 0; viewIndex != std::size(camGlobalTransforms); ++viewIndex)
+            camGlobalTransforms[viewIndex] = inRenderProperties.getGlobalTransform(*inCameras[viewIndex]);
+    }
+
+    if (viewCount < 2) {
+        const QMatrix4x4 &camGlobalTransform = camGlobalTransforms[0];
+        const QVector3D camGlobalPos = QSSGRenderNode::getGlobalPos(camGlobalTransform);
         shaders.setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
         const QVector3D camDirection = QSSG_GUARD(inRenderProperties.renderedCameraData.has_value())
                                                   ? inRenderProperties.renderedCameraData.value()[0].direction
@@ -2164,8 +2175,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     } else {
         QVarLengthArray<QVector3D, 2> camGlobalPos(viewCount);
         QVarLengthArray<QVector3D> camDirection(viewCount);
-        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
-            camGlobalPos[viewIndex] = inCameras[viewIndex]->getGlobalPos();
+        for (size_t viewIndex = 0; viewIndex != std::size(camGlobalTransforms); ++viewIndex) {
+            const QMatrix4x4 &camGlobalTransform = camGlobalTransforms[viewIndex];
+            camGlobalPos[viewIndex] = QSSGRenderNode::getGlobalPos(camGlobalTransform);
             camDirection[viewIndex] = QSSG_GUARD(inRenderProperties.renderedCameraData.has_value())
                                                 ? inRenderProperties.renderedCameraData.value()[viewIndex].direction
                                                 : QVector3D{ 0.0f, 0.0f, -1.0f };
@@ -2216,7 +2228,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         } else {
             QVarLengthArray<QMatrix4x4, 2> projections(viewCount);
             QVarLengthArray<QMatrix4x4, 2> invertedProjections(viewCount);
-            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
+            for (size_t viewIndex = 0; viewIndex != std::size(camGlobalTransforms); ++viewIndex) {
                 projections[viewIndex] = clipSpaceCorrMatrix * inCameras[viewIndex]->projection;
                 if (usesInvProjectionMatrix)
                     invertedProjections[viewIndex] = projections[viewIndex].inverted();
@@ -2229,25 +2241,27 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     }
 
     if (viewCount < 2) {
-        const QMatrix4x4 viewMatrix = inCameras[0]->globalTransform.inverted();
+        const QMatrix4x4 viewMatrix = camGlobalTransforms[0].inverted();
         shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
     } else {
         QVarLengthArray<QMatrix4x4, 2> viewMatrices(viewCount);
-        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
-            viewMatrices[viewIndex] = inCameras[viewIndex]->globalTransform.inverted();
+        for (size_t viewIndex = 0; viewIndex != std::size(camGlobalTransforms); ++viewIndex)
+            viewMatrices[viewIndex] = camGlobalTransforms[viewIndex].inverted();
         shaders.setUniformArray(ubufData, "qt_viewMatrix", viewMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewMatrixIdx);
     }
 
     if (usesViewProjectionMatrix) {
         if (viewCount < 2) {
+            const QMatrix4x4 &camGlobalTransform = camGlobalTransforms[0];
             QMatrix4x4 viewProj(Qt::Uninitialized);
-            inCameras[0]->calculateViewProjectionMatrix(viewProj);
+            inCameras[0]->calculateViewProjectionMatrix(camGlobalTransform, viewProj);
             viewProj = clipSpaceCorrMatrix * viewProj;
             shaders.setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
         } else {
             QVarLengthArray<QMatrix4x4, 2> viewProjections(viewCount);
-            for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
-                inCameras[viewIndex]->calculateViewProjectionMatrix(viewProjections[viewIndex]);
+            for (size_t viewIndex = 0; viewIndex != std::size(camGlobalTransforms); ++viewIndex) {
+                const auto &camGlobalTransform = camGlobalTransforms[viewIndex];
+                inCameras[viewIndex]->calculateViewProjectionMatrix(camGlobalTransform, viewProjections[viewIndex]);
                 viewProjections[viewIndex] = clipSpaceCorrMatrix * viewProjections[viewIndex];
             }
             shaders.setUniformArray(ubufData, "qt_viewProjectionMatrix", viewProjections.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4, &cui.viewProjectionMatrixIdx);
@@ -2402,7 +2416,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
         if (theLight->type == QSSGRenderLight::Type::PointLight
                 || theLight->type == QSSGRenderLight::Type::SpotLight) {
-            const QVector3D globalPos = theLight->getGlobalPos();
+            const auto gt = inRenderProperties.getGlobalTransform(*theLight);
+            const QVector3D globalPos = QSSGRenderNode::getGlobalPos(gt);
             lightData.position[0] = globalPos.x();
             lightData.position[1] = globalPos.y();
             lightData.position[2] = globalPos.z();

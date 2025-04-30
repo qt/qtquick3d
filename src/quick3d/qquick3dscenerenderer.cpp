@@ -31,6 +31,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgcputonemapper_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -200,7 +201,18 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
     const auto &rhiCtx = m_sgContext->rhiContext();
     QSSGRhiContextStats::get(*rhiCtx).cleanupLayerInfo(m_layer);
     m_sgContext->bufferManager()->releaseResourcesForLayer(m_layer);
-    delete m_layer;
+
+    if (m_layer) {
+        // There might be nodes queued for cleanup that still reference the layer,
+        // so we schedule the layer for cleanup so that it is deleted after the nodes
+        // have been cleaned up.
+        m_layer->release();
+        if (winAttacment)
+            winAttacment->queueForCleanup(m_layer);
+        else
+            delete m_layer;
+        m_layer = nullptr;
+    }
 
     delete m_texture;
 
@@ -597,6 +609,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
     Q_ASSERT(rhiCtx != nullptr);
 
+    // Generate layer node
+    if (!m_layer)
+        m_layer = new QSSGRenderLayer();
+
     bool newRenderStats = false;
     if (!m_renderStats) {
         m_renderStats = view3D->renderStats();
@@ -621,6 +637,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
         if (winAttacment && winAttacment->rci() != m_sgContext)
             winAttacment->setRci(m_sgContext);
+
+        QSSGRenderRoot *rootNode = winAttacment->rootNode();
+        if (m_layer->rootNode != rootNode) {
+            Q_ASSERT(m_layer->rootNode == nullptr);
+            rootNode->addChild(*m_layer);
+            rootNode->setStartVersion(m_layer->h.version());
+            m_layer->ref(rootNode);
+        }
 
         if (winAttacment)
             requestSharedUpdate |= winAttacment->synchronize(resourceLoaders);
@@ -654,10 +678,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             }
         }
     }
-
-    // Generate layer node
-    if (!m_layer)
-        m_layer = new QSSGRenderLayer();
 
     // Update the layer node properties
     // Store the view count in the layer. If there are multiple, or nested views, sync is called multiple times and the view count
@@ -776,28 +796,31 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     m_layer->scissorRect = QRect(view3D->environment()->scissorRect().topLeft() * dpr,
                                  view3D->environment()->scissorRect().size() * dpr);
 
-    // Set the root item for the scene to the layer
-    auto rootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(view3D->scene())->spatialNode);
-    if (rootNode != m_sceneRootNode) {
+    // Add the scene root node for the scene to the layer
+    // NOTE: The scene root is not the same as THE root node.
+    // The scene root is the root of the scene in a view (There can be multiple views.)
+    // THE root node, which there's only one of, is the root for all nodes in the window.
+    auto sceneRootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(view3D->scene())->spatialNode);
+    if (sceneRootNode != m_sceneRootNode) {
         if (m_sceneRootNode)
             removeNodeFromLayer(m_sceneRootNode);
 
-        if (rootNode)
-            addNodeToLayer(rootNode);
+        if (sceneRootNode)
+            addNodeToLayer(sceneRootNode);
 
-        m_sceneRootNode = rootNode;
+        m_sceneRootNode = sceneRootNode;
     }
 
     // Add the referenced scene root node to the layer as well if available
-    QSSGRenderNode *importRootNode = nullptr;
+    QSSGRenderNode *importSceneRootNode = nullptr;
     if (importScene)
-        importRootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(importScene)->spatialNode);
+        importSceneRootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(importScene)->spatialNode);
 
-    if (importRootNode != m_importRootNode) {
-        if (m_importRootNode)
-            m_layer->removeImportScene(*m_importRootNode);
+    if (importSceneRootNode != m_importSceneRootNode) {
+        if (m_importSceneRootNode)
+            m_layer->removeImportScene(*m_importSceneRootNode);
 
-        if (importRootNode) {
+        if (importSceneRootNode) {
             // if importScene has the rendered viewport as ancestor, it probably means
             // "importScene: MyScene { }" type of inclusion.
             // In this case don't duplicate content by adding it again.
@@ -811,10 +834,25 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 sceneParent = sceneParent->parent();
             }
             if (!isEmbedded)
-                m_layer->setImportScene(*importRootNode);
+                m_layer->setImportScene(*importSceneRootNode);
         }
 
-        m_importRootNode = importRootNode;
+        m_importSceneRootNode = importSceneRootNode;
+    }
+
+    // If the tree is dirty, we need to mark all layers as dirty
+    // so that they get updated.
+    // The _layer_ dirty flag is cleared in the layer prep function and the reindex and
+    // root dirty flag is cleared right before the first layer is prepared (see: prepareLayerForRender().
+    {
+        QSSGRenderRoot *rootNode = winAttacment->rootNode();
+        if (rootNode->isDirty(QSSGRenderRoot::DirtyFlag::TreeDirty)) {
+            rootNode->reindex(); // Clears TreeDirty flag
+            for (QSSGRenderNode &layer : rootNode->children) {
+                if (QSSG_GUARD_X(layer.type == QSSGRenderGraphObject::Type::Layer, "Layer type mismatch"))
+                    static_cast<QSSGRenderLayer &>(layer).markDirty(QSSGRenderLayer::DirtyFlag::TreeDirty);
+            }
+        }
     }
 
     maybeSetupLightmapBaking(view3D);
@@ -1074,13 +1112,15 @@ void QQuick3DSceneRenderer::releaseCachedResources()
 
 std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
 {
-    if (!m_layer)
+    if (!m_layer || !m_layer->renderData)
         return std::nullopt;
 
     QMutexLocker locker(&m_layer->renderedCamerasMutex);
 
     if (m_layer->renderedCameras.isEmpty())
         return std::nullopt;
+
+    QMatrix4x4 globalTransform = m_layer->renderData->getGlobalTransform(*m_layer->renderedCameras[0]);
 
     const QVector2D viewportSize(m_surfaceSize.width(), m_surfaceSize.height());
     const QVector2D position(float(pos.x()), float(pos.y()));
@@ -1094,7 +1134,7 @@ std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const 
          || theLocalMouse.y() >= viewportSize.y()))
         return std::nullopt;
 
-    return m_layer->renderedCameras[0]->unproject(theLocalMouse, viewportRect);
+    return m_layer->renderedCameras[0]->unproject(globalTransform, theLocalMouse, viewportRect);
 }
 
 QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)

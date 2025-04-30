@@ -122,7 +122,7 @@ private:
     QPointer<QQuick3DRenderStats> m_renderStats;
 
     QSSGRenderNode *m_sceneRootNode = nullptr;
-    QSSGRenderNode *m_importRootNode = nullptr;
+    QSSGRenderNode *m_importSceneRootNode = nullptr;
 
     bool m_prepared = false;
 

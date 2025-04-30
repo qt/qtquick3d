@@ -13,6 +13,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -242,6 +244,13 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
 
 void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
 {
+    const auto prepNewSpatialNode = [this](QSSGRenderNode *node) {
+        if (node) {
+            node->rootNodeRef = wattached->rootNode()->rootNodeRef;
+            Q_ASSERT(QSSGRenderRoot::get(node->rootNodeRef) != nullptr);
+        }
+    };
+
     QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(spatialNode);
     quint32 dirty = itemPriv->dirtyAttributes;
     itemPriv->dirtyAttributes = 0;
@@ -257,6 +266,7 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
     // NOTE: cleanup() will remove the item from the node map and set the spatial node to nullptr.
     //       so we need to set it here.
     itemPriv->spatialNode = newNode;
+    prepNewSpatialNode(static_cast<QSSGRenderNode *>(itemPriv->spatialNode));
 
     // NOTE: We always update the node map, as we can end-up with the a node map where the mapping
     // has been 'disconnected', e.g., the front-end object removed from the scene only to be later
@@ -292,6 +302,7 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
                 if (parentNode->spatialNode)
                     m_nodeMap.insert(parentNode->spatialNode, nodeParent);
                 parentGraphNode = static_cast<QSSGRenderNode *>(parentNode->spatialNode);
+                prepNewSpatialNode(parentGraphNode);
             }
             if (parentGraphNode)
                 parentGraphNode->addChild(*graphNode);
@@ -302,8 +313,10 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
                 if (!sceneRoot->spatialNode) // must have a scene root spatial node first
                     sceneRoot->spatialNode = viewParent->scene()->updateSpatialNode(sceneRoot->spatialNode);
                 if (sceneRoot->spatialNode) {
-                    m_nodeMap.insert(sceneRoot->spatialNode, viewParent->scene());
-                    static_cast<QSSGRenderNode *>(sceneRoot->spatialNode)->addChild(*graphNode);
+                    auto *sceneRootNode = static_cast<QSSGRenderNode *>(sceneRoot->spatialNode);
+                    prepNewSpatialNode(sceneRootNode);
+                    m_nodeMap.insert(sceneRootNode, viewParent->scene());
+                    sceneRootNode->addChild(*graphNode);
                 }
             }
         }
@@ -509,6 +522,7 @@ void QQuick3DSceneManager::preSync()
 
 QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
     : m_window(window)
+    , m_rootNode(new QSSGRenderRoot)
 {
     if (window) {
         // Act when the application calls window->releaseResources() and the
@@ -559,6 +573,8 @@ QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
 
     if (m_window)
         m_window->setProperty(qtQQ3DWAPropName, QVariant());
+
+    delete m_rootNode;
 }
 
 void QQuick3DWindowAttachment::preSync()
@@ -652,6 +668,10 @@ QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<
     for (auto &sceneManager : std::as_const(sceneManagers))
         syncResult |= sceneManager->cleanupNodes();
 
+    for (QSSGRenderLayer *layers : std::as_const(pendingLayerCleanupQueue))
+        delete layers;
+    pendingLayerCleanupQueue.clear();
+
     // Resources
     for (auto &sceneManager : std::as_const(sceneManagers))
         syncResult |= sceneManager->updateDirtyResourceNodes();
@@ -731,6 +751,12 @@ void QQuick3DWindowAttachment::queueForCleanup(QQuick3DSceneManager *manager)
 {
     if (!sceneManagerCleanupQueue.contains(manager))
         sceneManagerCleanupQueue.push_back(manager);
+}
+
+void QQuick3DWindowAttachment::queueForCleanup(QSSGRenderLayer *layer)
+{
+    if (!pendingLayerCleanupQueue.contains(layer))
+        pendingLayerCleanupQueue.push_back(layer);
 }
 
 QT_END_NAMESPACE

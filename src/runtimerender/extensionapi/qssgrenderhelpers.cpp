@@ -257,7 +257,7 @@ QMatrix4x4 QSSGModelHelpers::getGlobalTransform(const QSSGFrameData &frameData,
     auto *renderModel = QSSGRenderGraphObjectUtils::getNode<QSSGRenderModel>(model);
     QSSG_ASSERT_X(renderModel && renderModel->type == QSSGRenderGraphObject::Type::Model, "Invalid model-id!", return {});
     return (prepId != QSSGPrepContextId::Invalid) ? layer->getGlobalTransform(prepId, *renderModel)
-                                                  : renderModel->globalTransform;
+                                                  : layer->getGlobalTransform(*renderModel);
 }
 
 /*!
@@ -280,10 +280,12 @@ QMatrix4x4 QSSGModelHelpers::getLocalTransform(const QSSGFrameData &frameData, Q
 */
 float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNodeId model)
 {
-    Q_UNUSED(frameData);
+    auto *ctx = frameData.contextInterface();
+    auto *layer = QSSGLayerRenderData::getCurrent(*ctx->renderer());
+    QSSG_ASSERT_X(layer, "No active layer for renderer!", return {});
     auto *renderModel = QSSGRenderGraphObjectUtils::getNode<QSSGRenderModel>(model);
     QSSG_ASSERT_X(renderModel && renderModel->type == QSSGRenderGraphObject::Type::Model, "Invalid model-id!", return {});
-    return renderModel->globalOpacity;
+    return layer->getGlobalOpacity(*renderModel);
 }
 
 /*!
@@ -301,8 +303,7 @@ float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNod
     QSSG_ASSERT_X(layer, "No active layer for renderer!", return {});
     auto *renderModel = QSSGRenderGraphObjectUtils::getNode<QSSGRenderModel>(model);
     QSSG_ASSERT_X(renderModel && renderModel->type == QSSGRenderGraphObject::Type::Model, "Invalid model-id!", return {});
-    return (prepId != QSSGPrepContextId::Invalid) ? layer->getGlobalOpacity(prepId, *renderModel)
-                                                  : renderModel->globalOpacity;
+    return (prepId != QSSGPrepContextId::Invalid) ? layer->getGlobalOpacity(prepId, *renderModel) : layer->getGlobalOpacity(*renderModel);
 }
 
 /*!
@@ -383,7 +384,7 @@ QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGCameraId cameraI
 
     QMatrix4x4 mat44{Qt::Uninitialized};
     const auto &projection = renderCamera->projection;
-    const auto &transform = (globalTransform != 0) ? *globalTransform : renderCamera->globalTransform;
+    const auto &transform = (globalTransform != 0) ? *globalTransform : renderCamera->localTransform;
     QSSGRenderCamera::calculateViewProjectionMatrix(transform, projection, mat44);
     return mat44;
 }

@@ -27,6 +27,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 
 #include <rhi/qshaderbaker.h>
 
@@ -95,6 +96,11 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     const QString outputFolder = outDir.canonicalPath() + QDir::separator() + resourceFolderRelative;
 
     QSSGRenderLayer layer;
+    if (!layer.rootNode) {
+        auto *rootNode = new QSSGRenderRoot;
+        rootNode->addChild(layer);
+        layer.rootNode = rootNode;
+    }
     renderContext->renderer()->setViewport(QRect(QPoint(), QSize(888,666)));
     const auto &renderer = renderContext->renderer();
     QSSGLayerRenderData layerData(layer, *renderer);
@@ -188,6 +194,15 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         nodes.append(node);
     }
 
+    // Ensure all spatial node types are in the render tree
+    for (auto *node : std::as_const(nodes)) {
+        if (QSSGRenderGraphObject::isNodeType(node->type)) {
+            QSSGRenderNode *n = static_cast<QSSGRenderNode *>(node);
+            if (!n->parent)
+                layer.addChild(*n);
+        }
+    }
+
     QQuick3DRenderLayerHelpers::updateLayerNodeHelper(*view3D, renderContext, layer, aaIsDirty, temporalIsDirty);
 
     const QString outCollectionFile = outputFolder + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile());
@@ -198,7 +213,9 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     QByteArray shaderString;
     const auto generateShaderForModel = [&](QSSGRenderModel &model) {
         layerData.resetForFrame();
-        layer.addChild(model);
+        if (!model.parent)
+            layer.addChild(model);
+        layerData.layer.rootNode->reindex();
         layerData.prepareForRender();
 
         const auto &features = layerData.getShaderFeatures();

@@ -164,12 +164,12 @@ public:
 
     /*!
      * Convenience function intended for use with internal cameras that's not part of the scene graph!
-     * This function will ensure that the camera's global transform and projection matrix
-     * is updated in one go.
+     * This function will NOT ensure that the camera's global transform, projection matrix, or state
+     * is updated!.
      */
-    static QSSGCameraGlobalCalculationResult calculateProjectionInternal(QSSGRenderCamera &camera,
-                                                                         const QRectF &inViewport,
-                                                                         Configuration config = {});
+    static bool calculateProjectionInternal(QSSGRenderCamera &camera,
+                                            const QRectF &inViewport,
+                                            Configuration config = {});
 
     /*!
      * \brief calculateProjection
@@ -204,12 +204,12 @@ public:
                                               const QMatrix4x4 &projection,
                                               QMatrix4x4 &outMatrix);
 
-    void calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const;
-    void calculateViewProjectionWithoutTranslation(float near, float far, QMatrix4x4 &outMatrix) const;
+    void calculateViewProjectionMatrix(const QMatrix4x4 &globalTransform, QMatrix4x4 &outMatrix) const;
+    void calculateViewProjectionWithoutTranslation(const QMatrix4x4 &globalTransform, float near, float far, QMatrix4x4 &outMatrix) const;
 
     // Unproject a point (x,y) in viewport relative coordinates meaning
     // left, bottom is 0,0 and values are increasing right,up respectively.
-    QSSGRenderRay unproject(const QVector2D &inLayerRelativeMouseCoords, const QRectF &inViewport) const;
+    QSSGRenderRay unproject(const QMatrix4x4 &globalTransform, const QVector2D &inLayerRelativeMouseCoords, const QRectF &inViewport) const;
 
     [[nodiscard]] inline bool isDirty(DirtyFlag dirtyFlag = DirtyMask) const
     {

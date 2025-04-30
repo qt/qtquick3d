@@ -49,7 +49,7 @@ private:
             globalBounds.transform(od.globalTransform);
             // NOTE: We pass in the global bounds, as that's the only thing we care about here.
             // In practice we never create the base type QSSGRenderableObject in the engine.
-            renderableObjects.push_back(new QSSGRenderableObject{ QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset, QSSGRenderableObjectFlags(), od.worldCenterPt, od.globalTransform, globalBounds, 0.0f });
+            renderableObjects.push_back(new QSSGRenderableObject{ QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset, QSSGRenderableObjectFlags(), od.worldCenterPt, globalBounds, 0.0f });
         }
     }
 
@@ -82,14 +82,14 @@ void BenchFrustumCulling::initTestCase()
 
     {
         auto &camera = *cameraNode;
-        camera.calculateViewProjectionMatrix(viewProjectionMatrix);
+        camera.calculateViewProjectionMatrix(camera.localTransform, viewProjectionMatrix);
 
-        QMatrix3x3 theUpper33(camera.globalTransform.normalMatrix());
+        QMatrix3x3 theUpper33(camera.localTransform.normalMatrix());
 
         QVector3D dir(QSSGUtils::mat33::transform(theUpper33, QVector3D(0, 0, -1)));
         dir.normalize();
         nearPlane.normal = dir;
-        QVector3D theGlobalPos = camera.getGlobalPos() + camera.clipPlanes.clipNear() * dir;
+        QVector3D theGlobalPos = QSSGRenderNode::getGlobalPos(camera.localTransform) + camera.clipPlanes.clipNear() * dir;
         nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
     }
     // the near plane's bbox edges are calculated in the clipping frustum's

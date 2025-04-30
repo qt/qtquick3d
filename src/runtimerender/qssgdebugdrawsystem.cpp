@@ -7,6 +7,7 @@
 #include "qssgrendermesh_p.h"
 #include "resourcemanager/qssgrenderbuffermanager_p.h"
 #include "rendererimpl/qssgrenderableobjects_p.h"
+#include "rendererimpl/qssglayerrenderdata_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -297,7 +298,7 @@ void QSSGDebugDrawSystem::debugNormals(QSSGBufferManager &bufferManager, const Q
         }
     }
 
-    const auto globalTransform = model.globalTransform;
+    const auto &globalTransform = theModelContext.globalTransform;
     // Draw original vertex normals as blue lines
     {
         // Get Indexes

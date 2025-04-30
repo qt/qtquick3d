@@ -149,7 +149,7 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
                   QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled,
                   QSSGRhiGraphicsPipelineState::Flag::BlendEnabled };
 
-    reflectionProbes = data.reflectionProbes;
+    reflectionProbes = { data.reflectionProbesView.begin(), data.reflectionProbesView.end() };
     reflectionMapManager = data.requestReflectionMapManager();
 
     const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
@@ -1099,9 +1099,11 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             dcd.ubuf->create();
         }
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+        QMatrix4x4 viewProjection(Qt::Uninitialized);
+        QMatrix4x4 cameraGlobalTransform(Qt::Uninitialized);
         for (qsizetype viewIdx = 0; viewIdx < data.renderedCameras.count(); ++viewIdx) {
-            QMatrix4x4 viewProjection(Qt::Uninitialized);
-            data.renderedCameras[viewIdx]->calculateViewProjectionMatrix(viewProjection);
+            cameraGlobalTransform = data.getGlobalTransform(*data.renderedCameras[viewIdx]);
+            data.renderedCameras[viewIdx]->calculateViewProjectionMatrix(cameraGlobalTransform, viewProjection);
             viewProjection = rhi->clipSpaceCorrMatrix() * viewProjection;
             memcpy(ubufData, viewProjection.constData() + viewIdx * 64, 64);
         }

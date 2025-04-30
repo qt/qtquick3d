@@ -14,6 +14,7 @@ static const char *asString(QSSGRenderGraphObject::Type type)
     switch (type) {
         RETURN_AS_STRING(Type::Unknown)
         RETURN_AS_STRING(Type::Node)
+        RETURN_AS_STRING(Type::Root)
         RETURN_AS_STRING(Type::Layer)
         RETURN_AS_STRING(Type::Joint)
         RETURN_AS_STRING(Type::Skeleton)
