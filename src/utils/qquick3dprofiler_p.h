@@ -93,14 +93,13 @@ private:
     static const uint s_numNestedTimings = 5;
     struct Timings {
         uint nesting = 0;
-        qint64 values[s_numNestedTimings][s_numSceneGraphTimings + 1];
+        qint64 values[s_numNestedTimings][s_numSceneGraphTimings + 1] = {};
     };
-    template<uint size>
     struct TimingData
     {
-        Timings timings[size];
+        Timings timings[MaximumQuick3DFrameType] = {};
     };
-    QThreadStorage<TimingData<MaximumQuick3DFrameType>> eventTimings;
+    QThreadStorage<TimingData> eventTimings;
 public:
     template<int type, bool inc>
     qint64 *timings()
