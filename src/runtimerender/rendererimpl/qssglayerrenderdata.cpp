@@ -2254,6 +2254,10 @@ void QSSGLayerRenderData::prepareForRender()
         orderIndependentTransparencyEnabled = rhiCtx->rhi()->isFeatureSupported(QRhi::PerRenderTargetBlending);
         if (rhiCtx->mainPassSampleCount() > 1)
             orderIndependentTransparencyEnabled |= rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
+        if (!orderIndependentTransparencyEnabled && !oitWarningUnsupportedShown) {
+            qCWarning(lcQuick3DRender) << "Order Independent Transparency is requested, but it is not supported.";
+            oitWarningUnsupportedShown = true;
+        }
     }
     if (layer.oitMethodDirty) {
         oitRenderContext.reset();
@@ -2566,6 +2570,11 @@ void QSSGLayerRenderData::prepareForRender()
             }
         } else {
             orderIndependentTransparencyEnabled = false;
+            if (!oitWarningInvalidBlendModeShown) {
+                qCWarning(lcQuick3DRender) << "Order Independent Transparency requested, but disabled due to invalid blend modes.";
+                qCWarning(lcQuick3DRender) << "Use SourceOver blend mode for Order Independent Transparency.";
+                oitWarningInvalidBlendModeShown = true;
+            }
         }
     }
     layer.oitMethodDirty = false;

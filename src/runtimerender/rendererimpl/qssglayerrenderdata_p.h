@@ -330,6 +330,8 @@ public:
 
     bool tooManyLightsWarningShown = false;
     bool tooManyShadowLightsWarningShown = false;
+    bool oitWarningUnsupportedShown = false;
+    bool oitWarningInvalidBlendModeShown = false;
     bool orderIndependentTransparencyEnabled = false;
 
     QSSGLightmapper *m_lightmapper = nullptr;
