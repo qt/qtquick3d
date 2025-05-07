@@ -188,7 +188,7 @@ struct QSSGRenderableNodeEntry
         Disabled = 0x1,
         GlobalTransform = 0x2,
         Materials = 0x4,
-        GlobalOpacity = 0x5
+        GlobalOpacity = 0x8,
     };
 
     QSSGRenderNode *node = nullptr;
