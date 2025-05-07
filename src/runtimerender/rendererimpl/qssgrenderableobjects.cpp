@@ -11,7 +11,7 @@
 
 QT_BEGIN_NAMESPACE
 struct QSSGRenderableImage;
-struct QSSGSubsetRenderable;
+class QSSGSubsetRenderable;
 
 QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                                            QSSGRenderableObjectFlags inFlags,

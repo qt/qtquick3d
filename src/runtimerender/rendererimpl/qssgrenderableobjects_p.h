@@ -32,6 +32,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSSGRenderer;
+class QSSGRenderableObject;
+
 enum class QSSGRenderableObjectFlag : quint32
 {
     HasTransparency = 1 << 0,
@@ -178,8 +181,6 @@ struct QSSGShaderReflectionProbe
 typedef QVarLengthArray<QSSGShaderLight, 16> QSSGShaderLightList;
 using QSSGShaderLightListView = QSSGDataView<QSSGShaderLight>;
 
-struct QSSGRenderableObject;
-
 struct QSSGRenderableNodeEntry
 {
     enum Overridden : quint16
@@ -222,8 +223,10 @@ Q_DECLARE_TYPEINFO(QSSGRenderableObjectHandle, Q_PRIMITIVE_TYPE);
 
 using QSSGRenderableObjectList = QVector<QSSGRenderableObjectHandle>;
 
-struct QSSGRenderableObject
+class QSSGRenderableObject
 {
+    Q_DISABLE_COPY_MOVE(QSSGRenderableObject)
+public:
     enum class Type : quint8
     {
         DefaultMaterialMeshSubset,
@@ -285,17 +288,15 @@ using QSSGRenderCameraList = QVarLengthArray<QSSGRenderCamera *, 2>;
 using QSSGRenderCameraDataList = QVarLengthArray<QSSGRenderCameraData, 2>;
 using QSSGRenderMvpArray = std::array<QMatrix4x4, 2>; // cannot be dynamic due to QSSGModelContext, must stick with 2 for now
 
-struct QSSGSubsetRenderable;
+class QSSGSubsetRenderable;
 
 // Different subsets from the same model will get the same
 // model context so we can generate the MVP and normal matrix once
 // and only once per subset.
-struct QSSGModelContext
+class QSSGModelContext
 {
-    const QSSGRenderModel &model;
-    QSSGRenderMvpArray modelViewProjections;
-    QMatrix3x3 normalMatrix;
-
+    Q_DISABLE_COPY_MOVE(QSSGModelContext)
+public:
     QSSGModelContext(const QSSGRenderModel &inModel,
                      const QMatrix4x4 &globalTransform,
                      const QSSGRenderCameraDataList &allCameraData)
@@ -316,6 +317,9 @@ struct QSSGModelContext
         }
     }
 
+    const QSSGRenderModel &model;
+    QSSGRenderMvpArray modelViewProjections;
+    QMatrix3x3 normalMatrix;
     QSSGDataRef<QSSGSubsetRenderable> subsets;
 };
 
@@ -325,8 +329,10 @@ class QSSGRenderer;
 class QSSGLayerRenderData;
 struct QSSGShadowMapEntry;
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderableObject
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderableObject
 {
+    Q_DISABLE_COPY_MOVE(QSSGSubsetRenderable)
+public:
     int reflectionProbeIndex = -1;
     float distanceFromReflectionProbe;
     quint32 subsetLevelOfDetail = 0;
@@ -385,8 +391,10 @@ Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
 /**
  * A renderable that corresponds to a particles.
  */
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
 {
+    Q_DISABLE_COPY_MOVE(QSSGParticlesRenderable)
+public:
     QSSGRenderer *renderer = nullptr;
     const QSSGRenderParticles &particles;
     QSSGRenderableImage *firstImage;

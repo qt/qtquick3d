@@ -31,7 +31,7 @@ class QSSGRenderContextInterface;
 struct QSSGRenderNode;
 struct QSSGRenderItem2D;
 struct QSSGRenderRay;
-struct QSSGSubsetRenderable;
+class QSSGSubsetRenderable;
 struct QSSGShaderDefaultMaterialKeyProperties;
 struct QSSGShaderFeatures;
 

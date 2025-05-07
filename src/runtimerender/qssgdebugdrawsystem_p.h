@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRenderSubset;
 class QSSGBufferManager;
-struct QSSGModelContext;
+class QSSGModelContext;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDebugDrawSystem
 {

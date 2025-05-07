@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGRenderableObject;
+class QSSGRenderableObject;
 
 enum class QSSGLayerRenderPreparationResultFlag
 {

@@ -67,7 +67,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableImage;
-struct QSSGSubsetRenderable;
+class QSSGSubsetRenderable;
 
 void QSSGRenderer::releaseCachedResources()
 {

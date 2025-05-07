@@ -39,7 +39,7 @@ private:
         return ObjectData{ {}, transform, bounds};
     }
 
-    static void populateRenderableList(const QList<ObjectData> &objects, QList<QSSGRenderableObject>&renderableObjects)
+    static void populateRenderableList(const QList<ObjectData> &objects, QList<QSSGRenderableObject *> &renderableObjects)
     {
         renderableObjects.clear();
         renderableObjects.reserve(objects.size());
@@ -49,7 +49,7 @@ private:
             globalBounds.transform(od.globalTransform);
             // NOTE: We pass in the global bounds, as that's the only thing we care about here.
             // In practice we never create the base type QSSGRenderableObject in the engine.
-            renderableObjects.push_back({ QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset, QSSGRenderableObjectFlags(), od.worldCenterPt, od.globalTransform, globalBounds, 0.0f });
+            renderableObjects.push_back(new QSSGRenderableObject{ QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset, QSSGRenderableObjectFlags(), od.worldCenterPt, od.globalTransform, globalBounds, 0.0f });
         }
     }
 
@@ -142,7 +142,7 @@ void BenchFrustumCulling::bench_outputlist()
 
     QCOMPARE(objects.size(), objectCount);
 
-    QList<QSSGRenderableObject> renderableObjects;
+    QList<QSSGRenderableObject *> renderableObjects;
 
     // List of renderables
     populateRenderableList(objects, renderableObjects);
@@ -154,8 +154,8 @@ void BenchFrustumCulling::bench_outputlist()
     QSSGRenderableObjectList culledrenderables;
     renderables.reserve(objects.size());
 
-    for (auto &ro : renderableObjects)
-        renderables.push_back({ &ro, 0.0f });
+    for (auto *ro : renderableObjects)
+        renderables.push_back({ ro, 0.0f });
 
     QVERIFY(!cameraNode->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
 
@@ -201,7 +201,7 @@ void BenchFrustumCulling::bench_inline()
 
     QCOMPARE(objects.size(), objectCount);
 
-    QList<QSSGRenderableObject> renderableObjects;
+    QList<QSSGRenderableObject *> renderableObjects;
 
     // List of renderables
     populateRenderableList(objects, renderableObjects);
@@ -210,8 +210,8 @@ void BenchFrustumCulling::bench_inline()
     QSSGRenderableObjectList renderables;
     renderables.reserve(objects.size());
 
-    for (auto &ro : renderableObjects)
-        renderables.push_back({ &ro, 0.0f });
+    for (auto *ro : renderableObjects)
+        renderables.push_back({ ro, 0.0f });
 
     QVERIFY(!cameraNode->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
 
