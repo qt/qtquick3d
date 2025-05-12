@@ -97,6 +97,7 @@ QQuick3DXrSpatialAnchorListModel::QQuick3DXrSpatialAnchorListModel(QObject *pare
         connect(m_anchorManager, &QQuick3DXrAnchorManager::anchorAdded, this, &QQuick3DXrSpatialAnchorListModel::handleAnchorAdded);
         connect(m_anchorManager, &QQuick3DXrAnchorManager::anchorUpdated, this, &QQuick3DXrSpatialAnchorListModel::handleAnchorUpdated);
         connect(m_anchorManager, &QQuick3DXrAnchorManager::anchorRemoved, this, &QQuick3DXrSpatialAnchorListModel::handleAnchorRemoved);
+        connect(m_anchorManager, &QQuick3DXrAnchorManager::sceneCaptureCompleted, this, [this]{queryAnchors();});
         queryAnchors();
     } else {
         qWarning("SpatialAnchorModel: Failed to get anchor manager instance");
@@ -139,6 +140,18 @@ QHash<int, QByteArray> QQuick3DXrSpatialAnchorListModel::roleNames() const
     roles[Anchor] = "anchor";
     return roles;
 }
+
+/*!
+    \qmlmethod void QQuick3DXrSpatialAnchorListModel::requestSceneCapture()
+    \brief  This method triggers a scan to capture or update spatial data for the current environment.
+
+    This method triggers the underlying XR system to perform a scene capture of the user's current physical environment,
+    to update or refine the spatial mesh, enabling more accurate placement and tracking of spatial anchors.
+
+    \note Some platforms do not perform this operation automatically.
+    For example, on Quest 3, if the user is in a previously uncaptured space, this method will not be called automatically,
+    resulting in no available anchors until a capture is manually triggered.
+ */
 
 void QQuick3DXrSpatialAnchorListModel::requestSceneCapture()
 {

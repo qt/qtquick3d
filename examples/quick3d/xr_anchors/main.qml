@@ -80,6 +80,13 @@ XrView {
                 actionId: [XrInputAction.Button2Pressed, XrInputAction.MiddleFingerPinch]
                 onTriggered: xrView.preferPassthrough = !xrView.preferPassthrough
             }
+            XrInputAction {
+                hand: XrInputAction.RightHand
+                actionId: [XrInputAction.Button1Pressed]
+                onTriggered: {
+                    spatialAnchors.model.requestSceneCapture()
+                }
+            }
 
             onRotationChanged: {
                 const pickResult = xrView.rayPick(scenePosition, forward)
@@ -161,7 +168,7 @@ XrView {
                     anchors.fill: parent
                     anchors.margins: 10
                     textFormat: Text.StyledText
-                    text: "Total anchors: " + labelNode.numAnchors + "<br>" + "Selected: " + labelNode.anchorInfo
+                    text: "Total anchors: " + labelNode.numAnchors + "<br>" + "Selected: " + labelNode.anchorInfo + "<br>" + "Press A to Capture/Update anchors"
                 }
             }
         }
@@ -171,6 +178,7 @@ XrView {
     Repeater3D {
         id: spatialAnchors
         model: XrSpatialAnchorListModel {
+
         }
         delegate: Node {
             id: anchorNode
