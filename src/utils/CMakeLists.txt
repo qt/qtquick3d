@@ -42,6 +42,8 @@ qt_internal_add_module(Quick3DUtils
         ../3rdparty/meshoptimizer/src/vertexfilter.cpp
         ../3rdparty/meshoptimizer/src/vfetchanalyzer.cpp
         ../3rdparty/meshoptimizer/src/vfetchoptimizer.cpp
+        ../3rdparty/meshoptimizer/src/partition.cpp
+        ../3rdparty/meshoptimizer/src/quantization.cpp
     NO_UNITY_BUILD_SOURCES
         ../3rdparty/xatlas/xatlas.cpp ../3rdparty/xatlas/xatlas.h
         ../3rdparty/meshoptimizer/src/allocator.cpp
@@ -60,6 +62,8 @@ qt_internal_add_module(Quick3DUtils
         ../3rdparty/meshoptimizer/src/vertexfilter.cpp
         ../3rdparty/meshoptimizer/src/vfetchanalyzer.cpp
         ../3rdparty/meshoptimizer/src/vfetchoptimizer.cpp
+        ../3rdparty/meshoptimizer/src/partition.cpp
+        ../3rdparty/meshoptimizer/src/quantization.cpp
     DEFINES
         QT_BUILD_QUICK3DUTILS_LIB
     INCLUDE_DIRECTORIES
