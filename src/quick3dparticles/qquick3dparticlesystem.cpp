@@ -303,6 +303,7 @@ void QQuick3DParticleSystem::setStartTime(int startTime)
         return;
 
     m_startTime = startTime;
+    m_updateAnimation->setDirty(true);
     Q_EMIT startTimeChanged();
 }
 
