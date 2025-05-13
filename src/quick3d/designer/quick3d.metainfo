@@ -408,7 +408,7 @@ MetaInfo {
         }
 
         ItemLibraryEntry {
-            name: "Group"
+            name: "Node"
             category: "Components"
             libraryIcon: "images/group.png"
             version: "6.0"
