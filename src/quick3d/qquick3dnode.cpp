@@ -827,7 +827,7 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
             transformIsDirty = true;
 
         if (transformIsDirty) {
-            spacialNode->localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);;
+            spacialNode->localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);
             spacialNode->markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
         }
     }
