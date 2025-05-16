@@ -1,0 +1,58 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#ifndef QSSGLIGHTMAPBAKER_P_H
+#define QSSGLIGHTMAPBAKER_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
+
+#include <QString>
+
+QT_BEGIN_NAMESPACE
+
+class QSSGLayerRenderData;
+struct QSSGLightmapBakerPrivate;
+
+class QSSGLightmapBaker
+{
+public:
+    struct Context {
+        struct Environment {
+            QSSGRhiContext *rhiCtx = nullptr;
+            QSSGRenderer *renderer = nullptr;
+            QVector<QSSGBakedLightingModel> bakedLightingModels;
+            QSSGLightmapperOptions lmOptions;
+        } env;
+
+        struct Settings {
+            bool bakeRequested = false;
+            bool quitWhenFinished = false;
+        } settings;
+
+        struct Callbacks {
+            QSSGLightmapper::Callback lightmapBakingOutput;
+        } callbacks;
+    };
+
+    QSSGLightmapBaker(const Context &ctx);
+    void process();
+
+private:
+    QSSGLightmapBakerPrivate *d;
+};
+
+QT_END_NAMESPACE
+
+#endif

@@ -116,7 +116,7 @@ void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
         ///
         QSSGRhiContext *rhiCtx = contextInterface()->rhiContext().get();
         QSSG_ASSERT(rhiCtx->isValid() && rhiCtx->rhi()->isRecordingFrame(), return);
-        theRenderData->maybeBakeLightmap();
+        theRenderData->maybeProcessLightmapBaking();
         beginLayerRender(*theRenderData);
         // Process active passes. "PreMain" passes are individual passes
         // that does can and should be done in the rhi prepare phase.

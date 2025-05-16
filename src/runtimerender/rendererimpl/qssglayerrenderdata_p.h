@@ -29,7 +29,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
-#include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglightmapbaker_p.h>
 #include <ssg/qssgrenderextensions.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
@@ -272,8 +272,6 @@ public:
 
     void resetForFrame();
 
-    void maybeBakeLightmap();
-
     QSSGFrameData &getFrameData();
 
     ShadowMapPass shadowMapPass;
@@ -334,13 +332,20 @@ public:
     bool oitWarningInvalidBlendModeShown = false;
     bool orderIndependentTransparencyEnabled = false;
 
-    QSSGLightmapper *m_lightmapper = nullptr;
+    std::unique_ptr<QSSGLightmapBaker> lightmapBaker = nullptr;
 
     QSSGShaderFeatures getShaderFeatures() const { return features; }
     QSSGRhiGraphicsPipelineState getPipelineState() const { return ps; }
 
-    bool interactiveLightmapBakingRequested = false;
-    QSSGLightmapper::Callback lightmapBakingOutputCallback;
+    struct LightmapBakingInitParams
+    {
+        bool bakeRequested = false;
+        bool quitWhenFinished = false;
+        QSSGLightmapper::Callback lightmapBakingOutputCallback;
+    };
+
+    void initializeLightmapBaking(const LightmapBakingInitParams &params);
+    void maybeProcessLightmapBaking();
 
     [[nodiscard]] QSSGRenderGraphObject *getCamera(QSSGCameraId id) const;
     [[nodiscard]] QSSGRenderCamera *activeCamera() const { return !renderedCameras.isEmpty() ? renderedCameras[0] : nullptr; }

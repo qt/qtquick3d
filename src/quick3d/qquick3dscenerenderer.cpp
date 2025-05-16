@@ -817,27 +817,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_importRootNode = importRootNode;
     }
 
-    if (auto lightmapBaker = view3D->maybeLightmapBaker()) {
-        if (lightmapBaker->m_bakingRequested) {
-            m_layer->renderData->interactiveLightmapBakingRequested = true;
-
-            QQuick3DLightmapBaker::Callback qq3dCallback = lightmapBaker->m_callback;
-            QQuick3DLightmapBaker::BakingControl *qq3dBakingControl = lightmapBaker->m_bakingControl;
-            QSSGLightmapper::Callback callback =
-                    [qq3dCallback, qq3dBakingControl](
-                    const QVariantMap &payload,
-                    QSSGLightmapper::BakingControl *qssgBakingControl)
-            {
-                qq3dCallback(payload, qq3dBakingControl);
-
-                if (qq3dBakingControl->isCancelled() && !qssgBakingControl->cancelled)
-                    qssgBakingControl->cancelled = true;
-            };
-
-            m_layer->renderData->lightmapBakingOutputCallback = callback;
-            lightmapBaker->m_bakingRequested = false;
-        }
-    }
+    maybeSetupLightmapBaking(view3D);
 
     if (m_useFBO && rhiCtx->isValid()) {
         QRhi *rhi = rhiCtx->rhi();
@@ -1367,6 +1347,67 @@ void QQuick3DSceneRenderer::removeNodeFromLayer(QSSGRenderNode *node)
         return;
 
     m_layer->removeChild(*node);
+}
+
+void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
+{
+    if (m_layer->renderData && m_layer->renderData->lightmapBaker)
+        return;
+
+    // Check if we have interactive bake requested or if we are coming in here the second
+    // time from cmd line request (needs to wait a frame before starting to bake).
+    bool bakeRequested = false;
+    bool fromCmd = false;
+    QQuick3DLightmapBaker *lightmapBaker = view3D->maybeLightmapBaker();
+    if (lightmapBaker && (lightmapBaker->m_bakingRequested)) {
+        bakeRequested = std::exchange(lightmapBaker->m_bakingRequested, false);
+    } else {
+        bakeRequested = m_lightmapBakingFromCmdRequested;
+        fromCmd = bakeRequested;
+    }
+
+    // Start the bake (we should have a valid layer render data at this point).
+    if (bakeRequested) {
+        QSSGLayerRenderData::LightmapBakingInitParams params;
+        params.bakeRequested = bakeRequested;
+        params.quitWhenFinished = fromCmd;
+
+        // We want the frontend callback in the case that a QQuick3DLightmapBaker is present
+        if (lightmapBaker) {
+            QQuick3DLightmapBaker::Callback qq3dCallback = lightmapBaker->m_callback;
+            QQuick3DLightmapBaker::BakingControl *qq3dBakingControl = lightmapBaker->m_bakingControl;
+            QSSGLightmapper::Callback callback =
+                [qq3dCallback,
+                 qq3dBakingControl](const QVariantMap &payload,
+                                    QSSGLightmapper::BakingControl *qssgBakingControl) {
+                    qq3dCallback(payload, qq3dBakingControl);
+
+                    if (qq3dBakingControl->isCancelled() && !qssgBakingControl->cancelled)
+                        qssgBakingControl->cancelled = true;
+                };
+            params.lightmapBakingOutputCallback = callback;
+        }
+
+        m_layer->renderData->initializeLightmapBaking(params);
+    } else {
+        // Check cmd line and env flags for request
+        static bool flagsChecked = false;
+        if (flagsChecked)
+            return;
+        flagsChecked = true;
+
+        auto isLightmapFlagSet = [](const char *flag, const char *envVar) {
+            return QCoreApplication::arguments().contains(flag)
+            || qEnvironmentVariableIntValue(envVar);
+        };
+
+        m_lightmapBakingFromCmdRequested = isLightmapFlagSet("--bake-lightmaps", "QT_QUICK3D_BAKE_LIGHTMAPS");
+
+        if (m_lightmapBakingFromCmdRequested) {
+            // Delay one frame so the render data is initialized
+            QMetaObject::invokeMethod(view3D, &QQuick3DViewport::update, Qt::QueuedConnection);
+        }
+    }
 }
 
 void QQuick3DSceneRenderer::addNodeToLayer(QSSGRenderNode *node)

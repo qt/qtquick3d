@@ -2784,7 +2784,6 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer 
 
 QSSGLayerRenderData::~QSSGLayerRenderData()
 {
-    delete m_lightmapper;
     for (auto &pass : activePasses)
         pass->resetForFrame();
 
@@ -2925,57 +2924,36 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
     return instanceBuffer;
 }
 
-void QSSGLayerRenderData::maybeBakeLightmap()
-{
-    if (!interactiveLightmapBakingRequested) {
-        static bool bakeRequested = false;
-        static bool bakeFlagChecked = false;
-        if (!bakeFlagChecked) {
-            bakeFlagChecked = true;
-            const bool cmdLineReq = QCoreApplication::arguments().contains(QStringLiteral("--bake-lightmaps"));
-            const bool envReq = qEnvironmentVariableIntValue("QT_QUICK3D_BAKE_LIGHTMAPS");
-            bakeRequested = cmdLineReq || envReq;
-        }
-        if (!bakeRequested)
-            return;
-    }
-
-    const auto &sortedBakedLightingModels = getSortedBakedLightingModels(); // front to back
-
-    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().get();
-
-    if (!m_lightmapper)
-        m_lightmapper = new QSSGLightmapper(rhiCtx, renderer);
-
-    // sortedBakedLightingModels contains all models with
-    // usedInBakedLighting: true. These, together with lights that
-    // have a bakeMode set to either Indirect or All, form the
-    // lightmapped scene. A lightmap is stored persistently only
-    // for models that have their lightmapKey set.
-
-    m_lightmapper->reset();
-    m_lightmapper->setOptions(layer.lmOptions);
-    m_lightmapper->setOutputCallback(lightmapBakingOutputCallback);
-
-    for (int i = 0, ie = sortedBakedLightingModels.size(); i != ie; ++i)
-        m_lightmapper->add(sortedBakedLightingModels[i]);
-
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->debugMarkBegin("Quick3D lightmap baking");
-    m_lightmapper->bake();
-    cb->debugMarkEnd();
-
-    if (!interactiveLightmapBakingRequested) {
-        qDebug("Lightmap baking done, exiting application");
-        QMetaObject::invokeMethod(qApp, "quit");
-    }
-
-    interactiveLightmapBakingRequested = false;
-}
-
 QSSGFrameData &QSSGLayerRenderData::getFrameData()
 {
     return frameData;
+}
+
+void QSSGLayerRenderData::initializeLightmapBaking(const LightmapBakingInitParams &params)
+{
+    lightmapBaker.reset();
+
+    QSSGLightmapBaker::Context ctx;
+
+    ctx.env.rhiCtx = renderer->contextInterface()->rhiContext().get();
+    ctx.env.renderer = renderer;
+    ctx.env.lmOptions = layer.lmOptions;
+    ctx.env.bakedLightingModels = getSortedBakedLightingModels();
+
+    ctx.settings.bakeRequested = params.bakeRequested;
+    ctx.settings.quitWhenFinished = params.quitWhenFinished;
+
+    ctx.callbacks.lightmapBakingOutput = params.lightmapBakingOutputCallback;
+
+    lightmapBaker = std::make_unique<QSSGLightmapBaker>(ctx);
+}
+
+void QSSGLayerRenderData::maybeProcessLightmapBaking()
+{
+    if (lightmapBaker) {
+        lightmapBaker->process();
+        lightmapBaker.reset();
+    }
 }
 
 QSSGRenderGraphObject *QSSGLayerRenderData::getCamera(QSSGCameraId id) const
