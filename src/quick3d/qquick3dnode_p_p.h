@@ -41,7 +41,6 @@ public:
     ~QQuick3DNodePrivate();
     void init();
 
-    QMatrix4x4 calculateLocalTransform();
     void calculateGlobalVariables();
     void markSceneTransformDirty();
 
