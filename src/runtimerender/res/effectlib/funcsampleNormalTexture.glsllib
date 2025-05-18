@@ -1,5 +1,5 @@
 // Copyright (C) 2025 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 vec3 qt_sampleNormalTexture(in sampler2D inSampler, in float factor, in vec2 texCoord, in vec3 tangent,
                             in vec3 binormal, in vec3 normal)

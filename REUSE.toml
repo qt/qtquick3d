@@ -20,7 +20,7 @@ path = ["src/quick3dparticles/designer/images/*.png",
 precedence = "closest"
 comment = "module and plugin"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
-SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"
+SPDX-License-Identifier = "LicenseRef-Qt-Commercial"
 
 [[annotations]]
 path = ["tests/**.png", "tests/**.jpg", "tests/**.mesh", "tests/**.frag",
@@ -42,7 +42,7 @@ path = ["tools/**.png", "tools/**.frag",
 precedence = "closest"
 comment = "tools and utils according to licenseRule.json"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
-SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0"
+SPDX-License-Identifier = "LicenseRef-Qt-Commercial"
 
 [[annotations]]
 path = ["**.pro", "**.qrc", "**CMakeLists.txt", ".cmake.conf", "**.yaml",
