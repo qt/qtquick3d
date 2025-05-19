@@ -7,6 +7,9 @@ buildversion            = Qt Quick 3D | Commercial or GPLv3
 
 examplesinstallpath     = quick3d
 url.examples            = "https://code.qt.io/cgit/qt/qtquick3d.git/tree/examples/\1?h=$QT_VER"
+url.sources             = "https://code.qt.io/cgit/qt/qtquick3d.git/tree/\1?h=$QT_VER#n\2"
+# Path to the root of qtquick3d (for automatic linking to source code)
+url.sources.rootdir     = ../../..
 
 qhp.projects            = QtQuick3D
 
