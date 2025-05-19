@@ -33,10 +33,11 @@ class QSSGLightmapper
 public:
     enum class BakingStatus {
         None,
-        Progress,
+        Info,
         Warning,
         Error,
         Cancelled,
+        Failed,
         Complete
     };
 

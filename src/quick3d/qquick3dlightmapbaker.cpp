@@ -83,9 +83,9 @@ void QQuick3DLightmapBaker::bake()
             m_currentlyBaking = false;
             QQuickWindowPrivate::get(window)->updatesEnabled = true;
         } else if (status != BakingStatus::None) {
-            if (status == BakingStatus::Progress)
+            if (status == BakingStatus::Info)
                 QQuickWindowPrivate::get(window)->updatesEnabled = false;
-            else if (status == BakingStatus::Cancelled) {
+            else if (status == BakingStatus::Cancelled || status == BakingStatus::Failed) {
                 QQuickWindowPrivate::get(window)->updatesEnabled = true;
                 m_currentlyBaking = false;
             }

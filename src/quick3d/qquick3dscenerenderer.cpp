@@ -834,8 +834,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 {
                 case QSSGLightmapper::BakingStatus::None:
                     break;
-                case QSSGLightmapper::BakingStatus::Progress:
-                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Progress;
+                case QSSGLightmapper::BakingStatus::Info:
+                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Info;
                     break;
                 case QSSGLightmapper::BakingStatus::Warning:
                     qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Warning;
@@ -845,6 +845,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                     break;
                 case QSSGLightmapper::BakingStatus::Cancelled:
                     qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Cancelled;
+                    break;
+                case QSSGLightmapper::BakingStatus::Failed:
+                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Failed;
                     break;
                 case QSSGLightmapper::BakingStatus::Complete:
                     qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Complete;

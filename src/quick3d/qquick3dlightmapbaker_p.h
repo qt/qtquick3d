@@ -28,10 +28,11 @@ class Q_QUICK3D_EXPORT QQuick3DLightmapBaker : public QObject
 public:
     enum class BakingStatus {
         None,
-        Progress,
+        Info,
         Warning,
         Error,
         Cancelled,
+        Failed,
         Complete
     };
 
