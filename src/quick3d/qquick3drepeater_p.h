@@ -17,6 +17,8 @@
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
 
+#include <QtQmlModels/private/qqmldelegatemodel_p.h>
+
 #include <QtCore/qvector.h>
 #include <QtCore/qpointer.h>
 
@@ -77,6 +79,9 @@ private:
     Q_DISABLE_COPY(QQuick3DRepeater)
 
     void requestItems();
+    void applyDelegateChange();
+    QQmlDelegateModel *createDelegateModel();
+
 
     QPointer<QQmlInstanceModel> m_model;
     QVariant m_dataSource;
@@ -85,6 +90,7 @@ private:
     bool m_ownModel : 1;
     bool m_dataSourceIsObject : 1;
     bool m_delegateValidated : 1;
+    bool m_explicitDelegate: 1;
 
     QVector<QPointer<QQuick3DNode> > m_deletables;
 };
