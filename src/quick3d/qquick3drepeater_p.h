@@ -82,6 +82,8 @@ private:
     void applyDelegateChange();
     QQmlDelegateModel *createDelegateModel();
 
+    void connectModel(QQmlDelegateModelPointer *model);
+    void disconnectModel(QQmlDelegateModelPointer *model);
 
     QPointer<QQmlInstanceModel> m_model;
     QVariant m_dataSource;
