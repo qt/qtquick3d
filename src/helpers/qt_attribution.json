@@ -8,6 +8,7 @@
 
         "Description": "Generates a procedural skymap.",
         "Homepage": "https://godotengine.org/",
+        "Comment": "no relevant PURL or CPE found",
         "License": "MIT License",
         "LicenseId": "MIT",
         "LicenseFile": "GODOT_LICENSE.txt",
