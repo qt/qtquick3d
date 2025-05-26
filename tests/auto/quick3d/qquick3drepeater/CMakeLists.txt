@@ -22,6 +22,7 @@ qt_internal_add_test(tst_qquick3drepeater
         tst_qquick3drepeater.cpp
     LIBRARIES
         Qt::Quick3DPrivate
+        Qt::QmlModelsPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )

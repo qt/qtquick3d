@@ -65,6 +65,7 @@ QQuick3DRepeater::QQuick3DRepeater(QQuick3DNode *parent)
     , m_dataSourceIsObject(false)
     , m_delegateValidated(false)
     , m_explicitDelegate(false)
+    , m_explicitDelegateModelAccess(false)
 {
 }
 
@@ -331,6 +332,80 @@ QQuick3DObject *QQuick3DRepeater::objectAt(int index) const
     if (index >= 0 && index < m_deletables.size())
         return m_deletables[index];
     return nullptr;
+}
+
+/*!
+    \qmlproperty enumeration QtQuick3D::Repeater3D::delegateModelAccess
+    \since 6.10
+
+    This property determines how delegates can access the model.
+
+    \value DelegateModel.ReadOnly
+        Prohibit delegates from writing the model via either context properties,
+        the \c model object, or required properties.
+
+    \value DelegateModel.ReadWrite
+        Allow delegates to write the model via either context properties,
+        the \c model object, or required properties.
+
+    \value DelegateModel.Qt5ReadWrite
+        Allow delegates to write the model via the \c model object and context
+        properties but \e not via required properties.
+
+    The default is \c DelegateModel.Qt5ReadWrite.
+
+    \sa {Models and Views in Qt Quick#Changing Model Data}
+*/
+QQmlDelegateModel::DelegateModelAccess QQuick3DRepeater::delegateModelAccess() const
+{
+    if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel *>(m_model))
+        return dataModel->delegateModelAccess();
+    return QQmlDelegateModel::Qt5ReadWrite;
+}
+
+void QQuick3DRepeater::setDelegateModelAccess(QQmlDelegateModel::DelegateModelAccess delegateModelAccess)
+{
+    const auto setExplicitDelegateModelAccess = [&](QQmlDelegateModel *delegateModel) {
+        delegateModel->setDelegateModelAccess(delegateModelAccess);
+        m_explicitDelegateModelAccess = true;
+    };
+
+    if (!m_model) {
+        if (delegateModelAccess == QQmlDelegateModel::Qt5ReadWrite) {
+            // Explicitly set delegateModelAccess to Legacy. We can do this without model.
+            m_explicitDelegateModelAccess = true;
+            return;
+        }
+
+        QQmlDelegateModel *delegateModel = new QQmlDelegateModel(qmlContext(this), this);
+        m_model = delegateModel;
+        m_ownModel = true;
+        if (isComponentComplete())
+            delegateModel->componentComplete();
+
+        setExplicitDelegateModelAccess(delegateModel);
+
+        // The new model is not connected to applyDelegateModelAccessChange, yet. We only do this
+        // once there is actual data, via an explicit setModel(). So we have to manually emit the
+        // delegateModelAccessChanged() here.
+        emit delegateModelAccessChanged();
+        return;
+    }
+
+    if (QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(m_model)) {
+        // Disable the warning in applyDelegateModelAccessChange since the new delegate model
+        // access is also explicit.
+        m_explicitDelegateModelAccess = false;
+        setExplicitDelegateModelAccess(delegateModel);
+        return;
+    }
+
+    if (delegateModelAccess == QQmlDelegateModel::Qt5ReadWrite) {
+        m_explicitDelegateModelAccess = true; // Explicitly set null delegate always works
+    } else {
+        qmlWarning(this) << "Cannot set a delegateModelAccess on an explicitly provided "
+                            "non-DelegateModel";
+    }
 }
 
 void QQuick3DRepeater::clear()
