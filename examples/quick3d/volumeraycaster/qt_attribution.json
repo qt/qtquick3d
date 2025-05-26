@@ -13,6 +13,10 @@
         "Description": "Volumetric rendering fragment shader",
         "Homepage": "https://github.com/m-pilia/volume-raycasting",
         "DownloadLocation": "https://github.com/m-pilia/volume-raycasting/blob/master/shaders/alpha_blending.frag",
+        "PURL": [
+            "pkg:github/m-pilia/volume-raycasting@$<VERSION>"
+        ],
+        "Comment": "No relevant CPE found",
         "Version": "4500c7f9cb7d569de5978094677e48722bc9133e",
         "LicenseId": "MIT",
         "License": "MIT License",

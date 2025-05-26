@@ -6,7 +6,11 @@
     "QtUsage": "Used to generate Level of Detail meshes for Models in Qt Quick 3D",
 
     "Homepage": "https://github.com/zeux/meshoptimizer",
-    "Version": "v0.23",
+    "PURL": [
+        "pkg:github/zeux/meshoptimizer@v$<VERSION>"
+    ],
+    "Comment": "No relevant CPE found",
+    "Version": "0.23",
     "License": "MIT License",
     "LicenseId": "MIT",
     "LicenseFile": "LICENSE.md",
