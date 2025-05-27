@@ -63,6 +63,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgshadermapkey_p.h
         qssgshadermaterialadapter.cpp qssgshadermaterialadapter_p.h
         qssgshaderresourcemergecontext_p.h
+        qssglightmapio.cpp qssglightmapio_p.h
         qtquick3druntimerenderglobal_p.h
         qtquick3druntimerenderglobal.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
