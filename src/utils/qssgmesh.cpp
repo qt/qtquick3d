@@ -1019,7 +1019,7 @@ bool Mesh::hasLightmapUVChannel() const
     return false;
 }
 
-bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
+bool Mesh::createLightmapUVChannel(float texelsPerUnit, const QMatrix4x4 &scale)
 {
     const char *posAttrName = MeshInternal::getPositionAttrName();
     const char *normalAttrName = MeshInternal::getNormalAttrName();
@@ -1079,9 +1079,17 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
     for (qsizetype i = 0; i < vertexCount; ++i) {
         const char *vertexBasePtr = srcVertexData + i * srcVertexStride;
         const float *srcPos = reinterpret_cast<const float *>(vertexBasePtr + positionOffset);
-        *posPtr++ = *srcPos++;
-        *posPtr++ = *srcPos++;
-        *posPtr++ = *srcPos++;
+        QVector3D srcV;
+        srcV.setX(*srcPos++);
+        srcV.setY(*srcPos++);
+        srcV.setZ(*srcPos++);
+        // We scale the positions here, but not on the source mesh, so that the uv unwrapper works on
+        // the positions that the model will have in the scene after its scaling has been applied. This
+        // way the texels-per-unit will be correct.
+        srcV = scale.map(srcV);
+        *posPtr++ = srcV.x();
+        *posPtr++ = srcV.y();
+        *posPtr++ = srcV.z();
     }
 
     QByteArray normalData;
@@ -1112,7 +1120,7 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
     QSSGLightmapUVGenerator uvGen;
     QSSGLightmapUVGeneratorResult r = uvGen.run(positionData, normalData, uvData,
                                                 m_indexBuffer.data, m_indexBuffer.componentType,
-                                                lightmapBaseResolution);
+                                                texelsPerUnit);
     if (!r.isValid())
         return false;
 

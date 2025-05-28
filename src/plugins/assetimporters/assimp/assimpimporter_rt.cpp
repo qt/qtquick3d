@@ -129,10 +129,8 @@ struct SceneInfo
         bool binaryKeyframes = false;
         bool forceMipMapGeneration = false;
         bool useFloatJointIndices = false;
-        bool generateLightmapUV = false;
         bool designStudioWorkarounds = false;
 
-        int lightmapBaseResolution = 1024;
         float globalScaleValue = 1.0;
 
         bool generateMeshLODs = false;
@@ -1300,8 +1298,6 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
                                                       sceneInfo.opt.generateMeshLODs,
                                                       sceneInfo.opt.lodNormalMergeAngle,
                                                       sceneInfo.opt.lodNormalSplitAngle,
-                                                      sceneInfo.opt.generateLightmapUV,
-                                                      sceneInfo.opt.lightmapBaseResolution,
                                                       errorString);
         meshStorage.push_back(std::move(meshData));
 
@@ -1658,13 +1654,6 @@ static SceneInfo::Options processSceneOptions(const QJsonObject &optionsObject) 
     sceneOptions.useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), options);
     sceneOptions.forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), options);
     sceneOptions.binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), options);
-
-    sceneOptions.generateLightmapUV = checkBooleanOption(QStringLiteral("generateLightmapUV"), options);
-    if (sceneOptions.generateLightmapUV) {
-        qreal v = getRealOption(QStringLiteral("lightmapBaseResolution"), options);
-        sceneOptions.lightmapBaseResolution = v == 0.0 ? 1024 : int(v);
-    }
-
     sceneOptions.generateMeshLODs = checkBooleanOption(QStringLiteral("generateMeshLevelsOfDetail"), options);
     if (sceneOptions.generateMeshLODs) {
         bool recalculateLODNormals = checkBooleanOption(QStringLiteral("recalculateLodNormals"), options);

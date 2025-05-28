@@ -667,8 +667,6 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                              bool generateLevelsOfDetail,
                                              float normalMergeAngle,
                                              float normalSplitAngle,
-                                             bool generateLightmapUV,
-                                             int lightmapBaseResolution,
                                              QString &errorString)
 {
     Q_UNUSED(errorString);
@@ -819,10 +817,6 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                                         subsets,
                                                         requirments.numMorphTargets,
                                                         numTargetComponents(requirments));
-
-    if (generateLightmapUV && mesh.isValid())
-        mesh.createLightmapUVChannel(lightmapBaseResolution);
-
     return mesh;
 }
 

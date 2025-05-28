@@ -472,34 +472,7 @@ bool QQuick3DModel::isUsedInBakedLighting() const
 /*!
     \qmlproperty int Model::lightmapBaseResolution
 
-    Defines the approximate size of the lightmap for this model. The default
-    value is 1024, indicating 1024x1024 as the base size. The actual size of
-    the lightmap texture is likely to be different, often bigger, depending on
-    the mesh.
-
-    For simpler, smaller meshes, or when it is known that using a bigger
-    lightmap is unnecessary, the value can be set to something smaller, for
-    example, 512 or 256.
-
-    The minimum value is 128.
-
-    This setting applies both to persistently stored and for intermediate,
-    partial lightmaps. When baking lightmaps, all models that have \l
-    usedInBakedLighting enabled are part of the path-traced scene. Thus all of
-    them need to have lightmap UV unwrapping performed and the rasterization
-    steps necessary to compute direct lighting which then can be taken into
-    account for indirect light bounces in the scene. However, for models that
-    just contribute to, but do not store a lightmap the default value is often
-    sufficient. Fine-tuning is more relevant for models that store and then use
-    the generated lightmaps.
-
-    This property is relevant only when baking lightmaps. It has no effect
-    afterwards, when using the generated lightmaps during rendering.
-
-    Models that have lightmap UV data pre-generated during asset import time
-    (e.g. via the balsam tool) will ignore this property because the lightmap
-    UV unwrapping and the lightmap size hint evaluation have already been done,
-    and will not be performed again during lightmap baking.
+    \deprecated [6.10] This has no effect. Use Model::texelsPerUnit instead.
  */
 int QQuick3DModel::lightmapBaseResolution() const
 {
@@ -748,6 +721,8 @@ void QQuick3DModel::setLightmapBaseResolution(int resolution)
     if (m_lightmapBaseResolution == resolution)
         return;
 
+    qWarning() << "Model::lightmapBaseResolution is deprecated and will have no effect.";
+
     m_lightmapBaseResolution = resolution;
     emit lightmapBaseResolutionChanged();
     markDirty(PropertyDirty);
@@ -927,7 +902,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     if (m_dirtyAttributes & PropertyDirty) {
         modelNode->m_depthBiasSq = QSSGRenderModel::signedSquared(m_depthBias);
         modelNode->usedInBakedLighting = m_usedInBakedLighting;
-        modelNode->lightmapBaseResolution = uint(m_lightmapBaseResolution);
+        modelNode->texelsPerUnit = m_texelsPerUnit;
         if (m_bakedLightmap && m_bakedLightmap->isEnabled()) {
             modelNode->lightmapKey = m_bakedLightmap->key();
         } else {
@@ -1196,6 +1171,32 @@ void QQuick3DModel::setLevelOfDetailBias(float newLevelOfDetailBias)
     m_levelOfDetailBias = newLevelOfDetailBias;
     emit levelOfDetailBiasChanged();
     markDirty(QQuick3DModel::PropertyDirty);
+}
+
+/*!
+    \qmlproperty real Model::texelsPerUnit
+    \since 6.10
+    \default 0.0
+
+    A value greater than zero means this value will override the
+    SceneEnvironment::texelsPerUnit value for this specific model during
+    lightmap baking.
+
+    \sa SceneEnvironment::texelsPerUnit
+*/
+
+float QQuick3DModel::texelsPerUnit() const
+{
+    return m_texelsPerUnit;
+}
+
+void QQuick3DModel::setTexelsPerUnit(float newTexelsPerUnit)
+{
+    if (qFuzzyCompare(m_texelsPerUnit, newTexelsPerUnit))
+        return;
+    m_texelsPerUnit = newTexelsPerUnit;
+    emit texelsPerUnitChanged();
+    markDirty(PropertyDirty);
 }
 
 QT_END_NAMESPACE

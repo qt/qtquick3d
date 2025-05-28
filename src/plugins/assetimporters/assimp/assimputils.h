@@ -26,10 +26,7 @@ QSSGMesh::Mesh generateMeshData(const aiScene &scene,
                                 bool generateLevelsOfDetail,
                                 float normalMergeAngle,
                                 float normalSplitAngle,
-                                bool generateLightmapUV,
-                                int lightmapBaseResolution,
                                 QString &errorString);
-
 }
 
 inline size_t qHash(const QVector3D &vector, size_t seed = 0) {

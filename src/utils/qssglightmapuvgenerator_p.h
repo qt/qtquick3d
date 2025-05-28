@@ -57,16 +57,16 @@ public:
     // data (position, normals, UVs, etc.) so that the count of their elements
     // matches the lightmap UV channel.
     //
-    // baseResolution sepecifies the approx. size on which the lightmap size
-    // calculation is based; the returned width and height are in the same
-    // ballpark as much as possible (but may be bigger, depending on the mesh).
+    // texelsPerUnit
+    // Unit to texel scale. e.g. a 1x1 quad with texelsPerUnit of 32 will take
+    // up approximately 32x32 texels in the atlas.
     //
     QSSGLightmapUVGeneratorResult run(const QByteArray &positions,
                                       const QByteArray &normals,
                                       const QByteArray &uv0,
                                       const QByteArray &index,
                                       QSSGMesh::Mesh::ComponentType indexComponentType,
-                                      uint baseResolution);
+                                      float texelsPerUnit);
 
     // source is of N elements of componentCount * sizeof(T) bytes each. The
     // returned data is M elements of componentCount * sizeof(T) bytes each, where

@@ -30,6 +30,7 @@ struct QSSGLightmapperOptions
     float indirectLightFactor = 1.0f;
     QString source = QStringLiteral("lightmaps.bin");
     float sigma = 8.f;
+    float texelsPerUnit = 1.f;
 };
 
 QT_END_NAMESPACE

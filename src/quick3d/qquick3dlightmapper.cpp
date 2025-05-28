@@ -34,7 +34,7 @@ QT_BEGIN_NAMESPACE
 
     \list
     \li \l Model::bakedLightmap and the associated \l BakedLightmap,
-    \li \l Model::usedInBakedLighting and \l Model::lightmapBaseResolution,
+    \li \l Model::usedInBakedLighting and \l Model::texelsPerUnit,
     \li \l Light::bakeMode,
     \li the engine's built-in lightmap baker.
     \endlist
@@ -190,6 +190,18 @@ QT_BEGIN_NAMESPACE
     while still removing the noise.
 */
 
+/*!
+    \qmlproperty real Lightmapper::texelsPerUnit
+    \since 6.10
+    \default 1
+
+    This property defines the unit to texel scale, meaning a \c{1x1} quad with
+    texelsPerUnit of \c{32} will take up approximately \c{32x32} texels in the
+    lightmap.
+
+    \sa Model::texelsPerUnit
+*/
+
 float QQuick3DLightmapper::opacityThreshold() const
 {
     return m_opacityThreshold;
@@ -336,6 +348,20 @@ void QQuick3DLightmapper::setDenoiseSigma(float newDenoiseSigma)
         return;
     m_denoiseSigma = newDenoiseSigma;
     emit denoiseSigmaChanged();
+    emit changed();
+}
+
+float QQuick3DLightmapper::texelsPerUnit() const
+{
+    return m_texelsPerUnit;
+}
+
+void QQuick3DLightmapper::setTexelsPerUnit(float newTexelsPerUnit)
+{
+    if (qFuzzyCompare(m_texelsPerUnit, newTexelsPerUnit))
+        return;
+    m_texelsPerUnit = newTexelsPerUnit;
+    emit texelsPerUnitChanged();
     emit changed();
 }
 

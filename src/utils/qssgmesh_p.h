@@ -165,7 +165,7 @@ public:
     quint32 save(QIODevice *device, quint32 id = 0) const;
 
     bool hasLightmapUVChannel() const;
-    bool createLightmapUVChannel(uint lightmapBaseResolution);
+    bool createLightmapUVChannel(float texelsPerUnit, const QMatrix4x4 &scale);
 
 private:
     DrawMode m_drawMode = DrawMode::Triangles;

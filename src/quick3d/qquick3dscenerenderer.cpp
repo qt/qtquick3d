@@ -1270,6 +1270,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QSSGRenderLayer &layerNode,
         layerNode.lmOptions.indirectLightFactor = lightmapper->indirectLightFactor();
         layerNode.lmOptions.source = lightmapper->source();
         layerNode.lmOptions.sigma = lightmapper->denoiseSigma();
+        layerNode.lmOptions.texelsPerUnit = lightmapper->texelsPerUnit();
     } else {
         layerNode.lmOptions = {};
     }

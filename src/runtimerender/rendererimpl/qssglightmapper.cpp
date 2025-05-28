@@ -431,6 +431,28 @@ static QByteArray meshToByteArray(const QSSGMesh::Mesh &mesh)
     return meshData;
 }
 
+// Function to extract a scale-only matrix from a transform matrix
+static QMatrix4x4 extractScaleMatrix(const QMatrix4x4 &transform)
+{
+    Q_ASSERT(transform.isAffine());
+
+    // Extract scale factors by computing the length of the basis vectors (columns)
+    const QVector4D col0 = transform.column(0);
+    const QVector4D col1 = transform.column(1);
+    const QVector4D col2 = transform.column(2);
+
+    const float scaleX = QVector3D(col0[0], col0[1], col0[2]).length(); // X column
+    const float scaleY = QVector3D(col1[0], col1[1], col1[2]).length(); // Y column
+    const float scaleZ = QVector3D(col2[0], col2[1], col2[2]).length(); // Z column
+
+    // Construct a scale-only matrix
+    QMatrix4x4 scaleMatrix;
+    scaleMatrix.data()[0 * 4 + 0] = scaleX;
+    scaleMatrix.data()[1 * 4 + 1] = scaleY;
+    scaleMatrix.data()[2 * 4 + 2] = scaleZ;
+    return scaleMatrix;
+}
+
 bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporter)
 {
     if (bakedLightingModels.isEmpty()) {
@@ -502,6 +524,7 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
         QSSGSubsetRenderable *renderableObj = static_cast<QSSGSubsetRenderable *>(lm.renderables.first().obj);
         worldTransform = renderableObj->globalTransform;
         normalMatrix = renderableObj->modelContext.normalMatrix;
+        const QMatrix4x4 scaleTransform = extractScaleMatrix(worldTransform);
 
         DrawInfo &drawInfo(drawInfos[lmIdx]);
         QSSGMesh::Mesh mesh;
@@ -519,7 +542,9 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
 
         QElapsedTimer unwrapTimer;
         unwrapTimer.start();
-        if (!mesh.createLightmapUVChannel(lm.model->lightmapBaseResolution)) {
+        // Use scene texelsPerUnit if the model's texelsPerUnit is unset (< 0)
+        const float texelsPerUnit = lm.model->texelsPerUnit <= 0.0f ? options.texelsPerUnit : lm.model->texelsPerUnit;
+        if (!mesh.createLightmapUVChannel(texelsPerUnit, scaleTransform)) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to do lightmap UV unwrapping for model %1").
                                                                  arg(lm.model->lightmapKey));
             return false;
@@ -548,12 +573,6 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
         }
 
         drawInfo.lightmapSize = mesh.subsets().first().lightmapSizeHint;
-        if (drawInfo.lightmapSize.isEmpty()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No lightmap size hint found for model %1, defaulting to 1024x1024").
-                                                                 arg(lm.model->lightmapKey));
-            drawInfo.lightmapSize = QSize(1024, 1024);
-        }
-
         drawInfo.vertexData = mesh.vertexBuffer().data;
         drawInfo.vertexStride = mesh.vertexBuffer().stride;
         drawInfo.indexData = mesh.indexBuffer().data;

@@ -11,7 +11,7 @@ QSSGLightmapUVGeneratorResult QSSGLightmapUVGenerator::run(const QByteArray &pos
                                                            const QByteArray &uv0,
                                                            const QByteArray &index,
                                                            QSSGMesh::Mesh::ComponentType indexComponentType,
-                                                           uint baseResolution)
+                                                           float texelsPerUnit)
 {
     QSSGLightmapUVGeneratorResult result;
 
@@ -60,7 +60,8 @@ QSSGLightmapUVGeneratorResult QSSGLightmapUVGenerator::run(const QByteArray &pos
     xatlas::PackOptions packOptions;
     packOptions.maxChartSize = 4096;
     packOptions.padding = 1;
-    packOptions.resolution = baseResolution;
+    packOptions.resolution = 0;
+    packOptions.texelsPerUnit = texelsPerUnit;
     packOptions.blockAlign = true;
 
     xatlas::ChartOptions chartOptions;

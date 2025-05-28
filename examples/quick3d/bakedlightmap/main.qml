@@ -45,7 +45,6 @@ Window {
         //! [model]
         Box {
             usedInBakedLighting: true
-            lightmapBaseResolution: 256
             bakedLightmap: BakedLightmap {
                 enabled: root.lmEnabled
                 key: "box"
