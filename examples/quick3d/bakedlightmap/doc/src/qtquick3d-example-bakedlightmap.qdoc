@@ -40,8 +40,8 @@
 
     \snippet bakedlightmap/main.qml model
 
-    This model both \c{participates} in the lightmapped scene, and has a
-    lightmap \c{baked for it}. The former is indicated by the
+    This model both \e{participates} in the lightmapped scene, and has a
+    lightmap \e{baked for it}. The former is indicated by the
     \l{Model::usedInBakedLighting}{usedInBakedLighting} property. This alone
     does not ensure our box miniscene gets a lightmap baked for it, only that
     it participates in lightmapping (i.e. the light rays can bounce off the
@@ -52,10 +52,9 @@
     set to \c true is set as well. The \l{BakedLightmap::key}{key} specifies a
     unique identifier.
 
-    For simple deployment, the application packs the generated lightmaps
-    (\c{.exr} files) into the execuatble via the Qt resource system. The
-    CMakeLists.txt lists \c{qlm_box.exr} to be added as a resource. When
-    rebaking the lightmap, the application needs to be built again so the
-    changed file is picked up. To ensure that the engine can find the file at
-    run time, the \l{BakedLightmap::loadPrefix}{loadPrefix} is set.
+    For simple deployment, the application can pack the generated lightmaps
+    (\c{lightmaps.bin} file) into the execuatble via the Qt resource system.
+    When rebaking the lightmap, the application needs to be built again so the
+    changed file is picked up. The source for the lightmaps file is set in
+    \l{Lightmapper} through the \l{Lightmapper::source}{source} property.
 */
