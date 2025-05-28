@@ -93,6 +93,7 @@ qt_internal_add_qml_module(Quick3D
         Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
+    QML_FILES LightmapperOutputWindow.qml
 )
 
 qt_internal_extend_target(qquick3dplugin

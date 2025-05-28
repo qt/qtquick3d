@@ -53,7 +53,7 @@ void QQuick3DLightmapBaker::bake()
 
     if (!m_lmWindow) {
         m_lmWindow = new QQuickView();
-        m_lmWindow->setSource(QUrl::fromLocalFile(QStringLiteral(":/qt-project.org/imports/QtQuick3D/Helpers/impl/LightmapperOutputWindow.qml")));
+        m_lmWindow->setSource(QUrl::fromLocalFile(QStringLiteral(":/qt-project.org/imports/QtQuick3D/LightmapperOutputWindow.qml")));
         m_lmWindow->show();
         m_lmWindow->setProperty("width", 400);
         m_lmWindow->setProperty("height", 400);
