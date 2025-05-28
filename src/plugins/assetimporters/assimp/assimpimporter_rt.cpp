@@ -1518,7 +1518,6 @@ static qreal getRealOption(const QString &optionName, const QJsonObject &options
 
 #define demonPostProcessPresets ( \
     aiProcess_CalcTangentSpace              |  \
-    aiProcess_GenSmoothNormals              |  \
     aiProcess_JoinIdenticalVertices         |  \
     aiProcess_ImproveCacheLocality          |  \
     aiProcess_RemoveRedundantMaterials      |  \
