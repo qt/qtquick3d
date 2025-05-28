@@ -8,6 +8,9 @@
 
 \section1 Introduction
 
+\note As of Qt 6.4, lightmap baking is in an early technical preview state.
+Changes to features, quality, and API are likely to happen in future releases.
+
 Baked lightmaps allow pre-generating the \b{direct lighting} from lights such
 as \l DirectionalLight, \l PointLight, and \l SpotLight, including the shadows
 cast by the lights. At run time, instead of performing the appropriate
@@ -15,10 +18,7 @@ calculations in the fragment shader, and, in case of shadows, generating the
 potentially costly shadow maps in real time, the pre-generated image map is
 sampled instead.
 
-\note As of Qt 6.4, lightmap baking is in an early technical preview state.
-Changes to features, quality, and API are likely to happen in future releases.
-
-A lightmap is generated per Model. Even if a Model has multiple submeshes, and
+A lightmap is generated per \l{Model}. Even if a \l{Model} has multiple submeshes, and
 is therefore associated with multiple materials, there will be one single
 lightmap image generated for the entire model.
 
@@ -31,12 +31,12 @@ a solution for global illumination. This takes light rays reflected from other
 surfaces in the scene into account.
 
 Below is a simple example. The scene contains four Rectangle and a Sphere
-model, with a DirectionLight pointing downwards and a PointLight. The rectangle
+model, with a \l{DirectionalLight} pointing downwards and a PointLight. The rectangle
 models are rotated 0 and 90 degrees, which exaggerates the limitations of the
 real-time lighting calculations because they are all either parallel or
-perpendicular to the DirectionalLight's direction.
+perpendicular to the \l{DirectionalLight}'s direction.
 
-On the right, the scene is rendered with lightmapping enabled, after having
+On the second image, the scene is rendered with lightmapping enabled, after having
 lightmaps baked for all five models. Both lights are set to fully baked,
 meaning both direct and indirect illumination is baked. Indirect lighting uses
 256 \l{Lightmapper::}{samples} and a maximum of 3 \l{Lightmapper::}{bounces}.
@@ -55,7 +55,7 @@ Below is a snippet that shows how the lightmapped results were achieved. The
 difference lies in the \l{Model::usedInBakedLighting}{usedInBakedLighting},
 \l{Light::bakeMode}{bakeMode}, and \l{Model::bakedLightmap}{bakedLightmap}
 properties. For this example, the lightmap size has been reduced using the
-\l{Model::lightmapBaseResolution}{lightmapBaseResolution} property, to save
+\l{Lightmapper::texelsPerUnit}{texelsPerUnit} property, to save
 disk space and reduce application load times.
 
 \qml
@@ -78,7 +78,6 @@ PointLight {
 }
 Model {
     usedInBakedLighting: true
-    lightmapBaseResolution: 256
     bakedLightmap: BakedLightmap {
         enabled: true
         key: "sphere1"
@@ -90,7 +89,6 @@ Model {
 }
 Model {
     usedInBakedLighting: true
-    lightmapBaseResolution: 256
     bakedLightmap: BakedLightmap {
         enabled: true
         key: "rect1"
@@ -110,8 +108,8 @@ The above example used fully baked lights. A light can also be configured to
 only use baked lighting for indirect illumination, while performing direct
 lighting and shadow mapping in real time. In the below scene there are 5 point
 lights, all of which are set to \l{Light::bakeMode}{BakeModeIndirect} for the
-right screenshot. While the direct lighting and shadows look identical, the
-right image looks significantly better due to a degree of global illumination
+second screenshot. While the direct lighting and shadows look identical, the
+second image looks significantly better due to a degree of global illumination
 added.
 
 \b{Real-time lighting}
@@ -125,22 +123,22 @@ added.
 \section2 Important considerations when working with lightmaps
 
 Lights contributing to baked lighting have their \l{Light::bakeMode}{bakeMode}
-property set to either BakeModeIndirect or BakeModeAll. The latter indicates
+property set to either  \l{Light::bakeMode}{Light.BakeModeIndirect} or \l{Light::bakeMode}{Light.BakeModeAll}. The latter indicates
 that both the direct and indirect contribution for that particular light is
 coming from the lightmap. The direct contribution always includes shadows as
 well. On the other hand, if the intention with the lightmap is only to add
 indirect illumination to the scene for a particular light, while still having
 direct lighting calculated (and perform shadow mapping) in real time, then the
-light should use BakeModeIndirect instead.
+light should use  \l{Light::bakeMode}{Light.BakeModeIndirect} instead.
 
 \note Lightmaps are, generally speaking, suitable for models that are static
 when it comes to transform, geometry, and materials. The same applies to the
 lights participating in the baked lighting.
 
-For example, a scene that rotates a Model by animating the
+For example, a scene that rotates a \l{Model} by animating the
 \l{Node::eulerRotation}{eulerRotation} property will give visually incorrect
-results when applying a lightmap to that Model. The rendering results for that
-particular Model will be incorrect, as the pre-generated lightmap only captures
+results when applying a lightmap to that \l{Model}. The rendering results for that
+particular \l{Model} will be incorrect, as the pre-generated lightmap only captures
 one single rotation state for the object. The same would be true, taking
 another example, if the material for one of the model's submeshes dynamically
 changes its \l{PrincipledMaterial::baseColor}{baseColor} property based on time
@@ -204,9 +202,12 @@ Whenever the command line argument \c{--bake-lightmaps} is present, or the
 environment variable \c{QT_QUICK3D_BAKE_LIGHTMAPS} is set to \c 1 (or another
 non-zero value), the engine will work in baking mode and exit the application
 once baking has completed. The steps of the baking process can be followed by
-checking the messages printed on the debug output. The result is a set of
-\c{.exr} files written to the current directory, where the filenames each have
-a \c{qlm_} prefix, followed by the unique key from \l BakedLightmap::key.
+checking the messages printed on the debug output. The result is a binary file
+(\c{lightmaps.bin} by default) written to the current working directory
+containing all the baked lightmaps in the scene. There will also be a \c{.tmp}
+file created that contains the whole lightmap and some extra data that is needed
+for denoising. Each lightmap is uniquely identified in the file by the unique
+key from \l{BakedLightmap::key}.
 
 Preparing a lightmapped scene takes the following main steps:
 
@@ -218,8 +219,8 @@ should set \l Model::usedInBakedLighting to true. Models that are lightmapped
 (i.e., a lightmap is to be baked for them) should in addition set \l
 Model::bakedLightmap to an enabled \l BakedLightmap object, that provides a
 unique key that will persistently identify the particular Model object
-instance. (this is because Qt needs a key to identify the model data in
-persistent disk storage) Only models with static geometry, transformation, and
+instance (this is because Qt needs a key to identify the model data in
+persistent disk storage). Only models with static geometry, transformation, and
 materials are guaranteed to have correct results when lightmapped at run-time.
 Most commonly, anything that leads to a non-static world transform over time,
 such as a dynamically changed or animated position, rotation, or scale, will
@@ -274,8 +275,8 @@ lightmaps loaded. The tuning can then begin:
     \list
 
     \li For some models it will make sense to reduce
-    \l{Model::lightmapBaseResolution}{lightmapBaseResolution} from the default
-    1024 to something smaller. This applies especially to the built-in
+    \l{Model::texelsPerUnit}{texelsPerUnit} from the default value
+    to something smaller. This applies especially to the built-in
     primitives and anything with simple enough geometry. This leads to smaller
     lightmaps and faster bake times. When baking the first time, the default
     should be sufficient, the value can be tuned afterwards.
@@ -296,7 +297,7 @@ lightmaps loaded. The tuning can then begin:
     but increases the time needed to generate the lightmap. Regardless of the
     sample count, it will almost always make sense to run a denoiser on the
     generated lightmaps, which are 32-bit RGBA floating point images stored
-    in as .exr files.
+    in a binary file.
 
     \endlist
 
@@ -306,18 +307,15 @@ As of Qt 6.5, a runtime solution is provided interactively through the DebugView
 Under Tools there is now a button that when pressed will trigger the baking process.
 A window will pop up showing the current process. Canceling can be done by
 either hitting the cancel button or closing this window. When complete, it will
-try to overwrite the existing .exr files if possible using the loadPrefix, else
-they will be written to the current directory.
-For now, Denoising is still a manual process even when using the runtime solution.
+write the lightmap binary to the current directory.
 
 \section2 Denoising
 
 Below is an example of a \l{https://en.wikipedia.org/wiki/Cornell_box}{Cornell
 box} scene, rendered first using the lightmap baked with 256
 \l {Lightmapper::}{samples} and a maximum of 3 \l {Lightmapper::}{bounces}. In
-the second example, the generated image file has been run through a denoiser
-using the \l{https://www.openimagedenoise.org/}{Open Image Denoise} library.
-The results look significantly better, with the noise mostly gone.
+the second example, the generated image file has been denoised, and the results
+look significantly better, with the noise mostly gone.
 
 \b{Original}
 
@@ -327,10 +325,12 @@ The results look significantly better, with the noise mostly gone.
 
 \image lightmap_noise_denoised.jpg "Cornell box scene with the lightmaps denoised"
 
-A simple, Qt-based command-line wrapper for OIDN that works with the Qt Quick
-3D-generated \c{qlm_*.exr} images is available at
-\l{https://git.qt.io/laagocs/qlmdenoiser}. It currently needs to be built from
-source and no pre-built binaries are available.
+Denoising is done automatically on every baked lightmap. It is possible to do
+just denoising, if an existing baked \c{.tmp} lightmap file exists in the working
+directory, by clicking the \c{Denoise} button in the DebugView. It is also possible to
+denoise by calling the application with the \c{--denoise-lightmaps} argument.
+To tweak the strength of the denoising, the \l{Lightmapper::}{denoiseSigma} property
+can be used.
 
 \section2 Lightmap UVs
 
@@ -344,32 +344,10 @@ and one may very well want to use the same U and V coordinates for more than
 one vertex.
 
 The process of generating a suitable UV set is called lightmap UV unwrapping. Qt
-is always able to perform this at run (load) time, both when baking lightmaps
-and also when rendering a scene normally.
-
-In order to improve mesh load times by avoiding generating lightmap UV data for
-lightmapped models at run time, there are two options:
-
-\list
-
-\li For models without lightmap UV data available the lightmap baking process
-also outputs a set of \c{qlm_*.mesh} files, the names generated based on the \l
-BakedLightmap::key, similarly to the with the \c{.exr} images. If the
-application wishes to, it can ship these extra \c{.mesh} files together with
-the \c{.exr} assets. When present, these mesh files will be used in place of
-the regular model data, with the lightmapping related data readily available.
-This is completely optional, however. When no qlm_\c{key}.mesh is found at run
-time, the UV unwrapping is done at run time, transparently to the application.
-
-\li Alternatively, the \l{Balsam Asset Import Tool}{balsam} tool offers the
-option to pre-generate the lightmap UV data at asset import time. This means
-that the model's \c{.mesh} file will contain the necessary data right from the
-start, and no extra meshes will be generated during lightmap baking time, and
-so there are no extra assets to ship with the application (apart from the
-lightmap images, of course). To do this, pass \c{--generateLightmapUV} to
-balsam.
-
-\endlist
+will perform this when baking lightmaps and store the resulting mesh in the lightmaps
+file so that a compatible mesh is always loaded and used for the generated lightmap.
+This means that, if a model will always use baked lighting, then the source mesh
+file does not need to be shipped with the application.
 
 \section2 Lightmap texture size
 
@@ -384,11 +362,10 @@ with medium to high complexity.
 For very simple models it may be desirable to manually reduce the size,
 however, because a smaller lightmap size could still provide visually good
 looking results, while reducing the asset (lightmap image) sizes saves both
-disk space and memory. To do this, set the
-\l{Model::lightmapBaseResolution}{lightmapBaseResolution} to a suitably small
-number. Common choices are 256, 512, or 1024, but it could be another number as
-well, with 128 as the minimum. The actual lightmap width and height will likely
-be different, but in approximately the same ballpark as the specified size.
+disk space and memory. To do this, set the \l{Model::texelsPerUnit}{texelsPerUnit}
+to a suitably small number. The actual lightmap width and height will then,
+depending on the size and the geometry of the model, try to approximate the
+texel density so that it matches \l{Model::texelsPerUnit}{texelsPerUnit}.
 
 When changing the value, one should always rebake the lightmaps and visually
 inspect the results in order to evaluate the effects of the changed lightmap
@@ -408,22 +385,13 @@ Once the baking has successfully completed, running the application normally
 up the generated lightmap images and render correctly, which is not possible
 until the lightmaps have been baked first. If desired, the application can
 place those in a different location, or ship them as part of the executable via
-the Qt Resource System. This is enabled by the \l BakedLightmap::loadPrefix
+the Qt Resource System. This is enabled by the \l{Lightmapper::}{source}
 property.
 
 Taking the example code with the sphere and four rectangles from above, the
-baking process generates five \c{.exr} files (\c{qlm_sphere1.exr},
-\c{qlm_rect1.exr}, \c{qml_rect2.exr}, etc.), and a list file \c{qlm_list.txt}
-which is useful as input for denoising utilities that support processing
-multiple files in one go but is not used at runtime otherwise. The application
-needs to ship the \c{.exr} files, so that they can be found by the engine,
-either in the same directory as the containing component, or in the location
-specified by the \l{BakedLightmap::loadPrefix}{loadPrefix}.
-
-The loading rules also apply to the optional \c{.mesh} files, such as
-\c{qlm_sphere1.mesh} or \c {qlm_rect1.mesh}. If the application wishes to
-accelerate the scene load times, it should ship these extra \c{.mesh} files
-next to the \c{.exr} lightmap images.
+baking process generates a \c{lightmaps.bin} file containing all the baked
+meshes and lightmaps. The application needs to ship this file, so that it can be
+found by the engine, in the location specified by \l{Lightmapper::}{source}.
 
 \sa {Qt Quick 3D - Baked Lightmap Example}
 
