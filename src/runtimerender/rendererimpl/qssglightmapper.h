@@ -29,6 +29,7 @@ struct QSSGLightmapperOptions
     int indirectLightBounces = 3;
     float indirectLightFactor = 1.0f;
     QString source = QStringLiteral("lightmaps.bin");
+    float sigma = 8.f;
 };
 
 QT_END_NAMESPACE

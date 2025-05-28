@@ -295,6 +295,19 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
         res/rhishaders/grid.frag
         res/rhishaders/grid.vert
 )
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_compute"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "310es,430"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/nlm_denoise.comp
+    OUTPUTS
+        res/rhishaders/nlm_denoise.comp.qsb
+
+)
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_lightprobe_rgbe"
     SILENT
     PRECOMPILE

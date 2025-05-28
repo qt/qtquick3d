@@ -44,6 +44,7 @@ public:
 
         struct Settings {
             bool bakeRequested = false;
+            bool denoiseRequested = false;
             bool quitWhenFinished = false;
         } settings;
 

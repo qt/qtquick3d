@@ -340,6 +340,7 @@ public:
     struct LightmapBakingInitParams
     {
         bool bakeRequested = false;
+        bool denoiseRequested = false;
         bool quitWhenFinished = false;
         QSSGLightmapper::Callback lightmapBakingOutputCallback;
         std::function<void(bool)> triggerNewFrameCallback;

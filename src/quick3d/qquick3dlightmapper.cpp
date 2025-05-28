@@ -179,6 +179,17 @@ QT_BEGIN_NAMESPACE
     when a bake is initiated and the path is explicitly set up to point there.
  */
 
+/*!
+    \qmlproperty real Lightmapper::denoiseSigma
+    \since 6.10
+    \default 8
+
+    This property defines the sigma value of the Non-local means based denoiser.
+    This means that the higher this value is the stronger the blurring will be.
+    Try to keep this value as low as possible to avoid losing visual features
+    while still removing the noise.
+*/
+
 float QQuick3DLightmapper::opacityThreshold() const
 {
     return m_opacityThreshold;
@@ -311,6 +322,20 @@ void QQuick3DLightmapper::setSource(const QString &source)
 
     m_source = source;
     emit sourceChanged();
+    emit changed();
+}
+
+float QQuick3DLightmapper::denoiseSigma() const
+{
+    return m_denoiseSigma;
+}
+
+void QQuick3DLightmapper::setDenoiseSigma(float newDenoiseSigma)
+{
+    if (qFuzzyCompare(m_denoiseSigma, newDenoiseSigma))
+        return;
+    m_denoiseSigma = newDenoiseSigma;
+    emit denoiseSigmaChanged();
     emit changed();
 }
 

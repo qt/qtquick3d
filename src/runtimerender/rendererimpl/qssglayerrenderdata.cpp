@@ -2945,6 +2945,7 @@ void QSSGLayerRenderData::initializeLightmapBaking(const LightmapBakingInitParam
     ctx.env.bakedLightingModels = getSortedBakedLightingModels();
 
     ctx.settings.bakeRequested = params.bakeRequested;
+    ctx.settings.denoiseRequested = params.denoiseRequested;
     ctx.settings.quitWhenFinished = params.quitWhenFinished;
 
     ctx.callbacks.disableLightmaps = [this](bool value) {

@@ -377,6 +377,10 @@ Pane {
                                 text: "Bake lightmap"
                                 onClicked: root.source.bakeLightmap()
                             }
+                            Button {
+                                text: "Denoise lightmap"
+                                onClicked: root.source.denoiseLightmap()
+                            }
                         }
                         RowLayout {
                             Label {

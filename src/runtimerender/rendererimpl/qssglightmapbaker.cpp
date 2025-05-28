@@ -55,15 +55,17 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
     } else if (d->currentStatus == Status::Running) {
         {
             QRhiCommandBuffer *cb = env.rhiCtx->commandBuffer();
-            cb->debugMarkBegin("Quick3D lightmap baking");
+            cb->debugMarkBegin("Quick3D lightmap baking/denoising");
             if (settings.bakeRequested) {
                 d->lightmapper->bake();
+            } else if (settings.denoiseRequested) {
+                d->lightmapper->denoise();
             }
             cb->debugMarkEnd();
         }
 
         if (settings.quitWhenFinished) {
-            qDebug("Lightmap baking done, exiting application");
+            qDebug("Lightmap baking/denoising done, exiting application");
             QMetaObject::invokeMethod(qApp, "quit");
         } else {
             cb.disableLightmaps(false);

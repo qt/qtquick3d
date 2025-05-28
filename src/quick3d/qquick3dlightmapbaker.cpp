@@ -112,6 +112,78 @@ void QQuick3DLightmapBaker::bake()
     updateView();
 }
 
+void QQuick3DLightmapBaker::denoise()
+{
+    Q_ASSERT(m_view);
+    if (m_currentlyBaking)
+        return;
+    m_denoisingRequested = true;
+    m_bakingControl->reset();
+
+    m_windowCancelRequested = false;
+
+    if (!m_lmWindow) {
+        m_lmWindow = new QQuickView();
+        m_lmWindow->setSource(QUrl::fromLocalFile(QStringLiteral(":/qt-project.org/imports/QtQuick3D/LightmapperOutputWindow.qml")));
+        m_lmWindow->show();
+        m_lmWindow->setProperty("width", 400);
+        m_lmWindow->setProperty("height", 400);
+
+        QObject *rootObject = m_lmWindow->rootObject();
+        QObject *cancelButton = rootObject->findChild<QObject *>(QStringLiteral("cancelButton"));
+        if (cancelButton)
+            QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(onLmCancelButtonClicked()));
+
+        QObject::connect(m_lmWindow, &QQuickWindow::closing, this, &QQuick3DLightmapBaker::onLmWindowClosing);
+    } else {
+        QObject *rootObject = m_lmWindow->rootObject();
+        QMetaObject::invokeMethod(rootObject, "clearText");
+    }
+
+    m_callback = [this] (const QVariantMap &payload, BakingControl *bakingControl) {
+        if (m_windowCancelRequested && !bakingControl->isCancelled())
+            bakingControl->requestCancel();
+
+        const BakingStatus status = static_cast<BakingStatus>(payload[QStringLiteral("status")].toInt());
+
+        QQuickWindow *window = m_view->window();
+        if (status == BakingStatus::Complete) {
+            QMetaObject::invokeMethod(window, "releaseResources", Qt::QueuedConnection);
+            updateView();
+            m_currentlyBaking = false;
+            QQuickWindowPrivate::get(window)->updatesEnabled = true;
+        } else if (status != BakingStatus::None) {
+            if (status == BakingStatus::Info)
+                QQuickWindowPrivate::get(window)->updatesEnabled = false;
+            else if (status == BakingStatus::Cancelled || status == BakingStatus::Failed) {
+                QQuickWindowPrivate::get(window)->updatesEnabled = true;
+                m_currentlyBaking = false;
+            }
+
+            if (m_lmWindow) {
+                QObject *rootObject = m_lmWindow->rootObject();
+
+                QString msg;
+                if (payload.contains(QStringLiteral("message"))) {
+                    msg = payload[QStringLiteral("message")].toString();
+                }
+                if (!msg.isEmpty()) {
+                    if (status == BakingStatus::Warning)
+                        msg.prepend(QStringLiteral("Warning: "));
+                    else if (status == BakingStatus::Error)
+                        msg.prepend(QStringLiteral("Error: "));
+
+                }
+
+                QMetaObject::invokeMethod(rootObject, "update", Q_ARG(QVariant, payload));
+            }
+        }
+    };
+
+    m_currentlyBaking = true;
+    updateView();
+}
+
 void QQuick3DLightmapBaker::updateView()
 {
     QMetaObject::invokeMethod(m_view, "update", Qt::QueuedConnection);

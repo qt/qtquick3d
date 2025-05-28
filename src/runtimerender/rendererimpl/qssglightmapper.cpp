@@ -37,6 +37,52 @@ QT_BEGIN_NAMESPACE
 
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER
 
+static constexpr int DIRECT_MAP_UPSCALE_FACTOR = 3;
+static constexpr quint32 PIXEL_VOID = 0;
+static constexpr quint32 PIXEL_UNSET = -1;
+
+static void floodFill(quint32 *maskUintPtr, const int rows, const int cols)
+{
+    quint32 targetColor = 1;
+    QList<std::array<int, 2>> stack;
+    stack.reserve(rows * cols);
+    for (int y0 = 0; y0 < rows; y0++) {
+        for (int x0 = 0; x0 < cols; x0++) {
+            bool filled = false;
+            stack.push_back({ x0, y0 });
+            while (!stack.empty()) {
+                const auto [x, y] = stack.takeLast();
+                const int idx = cols * y + x;
+                const quint32 value = maskUintPtr[idx];
+
+                // If the target color is already the same as the replacement color, no need to proceed
+                if (value == PIXEL_VOID || value != PIXEL_UNSET)
+                    continue;
+
+                // Fill the current cell with the replacement color
+                maskUintPtr[idx] = targetColor;
+                filled = true;
+
+                // Push the neighboring cells onto the stack
+                if (x + 1 < cols)
+                    stack.push_back({ x + 1, y });
+                if (x > 0)
+                    stack.push_back({ x - 1, y });
+                if (y + 1 < rows)
+                    stack.push_back({ x, y + 1 });
+                if (y > 0)
+                    stack.push_back({ x, y - 1 });
+            }
+
+            if (filled) {
+                do {
+                    targetColor++;
+                } while (targetColor == PIXEL_VOID || targetColor == PIXEL_UNSET);
+            }
+        }
+    }
+}
+
 static QString formatDuration(quint64 milliseconds, bool showMilliseconds = true)
 {
     const quint64 partMilliseconds = milliseconds % 1000;
@@ -133,14 +179,16 @@ struct QSSGLightmapperPrivate
     RTCScene rscene = nullptr;
 
     struct LightmapEntry {
-        QSize pixelSize;
         QVector3D worldPos;
         QVector3D normal;
         QVector4D baseColor; // static color * texture map value (both linear)
         QVector3D emission; // static factor * emission map value
         bool isValid() const { return !worldPos.isNull() && !normal.isNull(); }
+        // This contains the direct light of all lights regardless if they are indirect only.
+        // It is only used for computation of indirectLight.
+        QVector3D directLightAll;
         QVector3D directLight;
-        QVector3D allLight;
+        QVector3D indirectLight;
     };
     struct Lightmap {
         Lightmap(const QSize &pixelSize) : pixelSize(pixelSize) {
@@ -148,7 +196,9 @@ struct QSSGLightmapperPrivate
         }
         QSize pixelSize;
         QVector<LightmapEntry> entries;
-        QByteArray imageFP32;
+        QByteArray indirectFP32;
+        QByteArray directFP32;
+        QByteArray chartsMask;
         bool hasBaseColorTransparency = false;
     };
     QVector<Lightmap> lightmaps;
@@ -199,6 +249,7 @@ struct QSSGLightmapperPrivate
         ComputeIndirectLight,
         PostProcess,
         StoreLightmaps,
+        DenoiseLightmaps,
 
         Count
     };
@@ -217,6 +268,9 @@ struct QSSGLightmapperPrivate
     void computeIndirectLight(const StageProgressReporter &reporter);
     bool postProcess(const StageProgressReporter &reporter);
     bool storeLightmaps(const StageProgressReporter &reporter);
+    bool denoiseLightmaps(const StageProgressReporter &reporter);
+
+    std::pair<QVector3D, QVector3D> sampleDirectLight(QVector3D worldPos, QVector3D normal) const;
 };
 
 // Used to output progress ETA during baking.
@@ -458,8 +512,8 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
             mesh = bufferManager->loadMeshData(lm.model->meshPath);
 
         if (!mesh.isValid()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load geometry for model %1").
-                                                                 arg(lm.model->lightmapKey));
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning,
+                           QStringLiteral("Failed to load geometry for model %1").arg(lm.model->lightmapKey));
             return false;
         }
 
@@ -1188,6 +1242,311 @@ static inline QVector3D vectorAbs(const QVector3D &v)
                      std::abs(v.z()));
 }
 
+QList<QVector3D> downscaleImage(const QList<QVector3D> &image, int oldWidth, int oldHeight, int newWidth, int newHeight)
+{
+    Q_ASSERT(oldWidth % newWidth == 0);
+    Q_ASSERT(oldHeight % newHeight == 0);
+    Q_ASSERT(oldWidth / newWidth == DIRECT_MAP_UPSCALE_FACTOR);
+    Q_ASSERT(oldWidth / newWidth == DIRECT_MAP_UPSCALE_FACTOR);
+
+    QList<QVector3D> output(newHeight * newWidth, QVector3D(0, 0, 0));
+
+    // Loop through each pixel in the output image
+    for (int y = 0; y < newHeight; ++y) {
+        for (int x = 0; x < newWidth; ++x) {
+            const int outputIdx = y * newWidth + x;
+            QVector3D average = QVector3D(0,0,0);
+            for (int dy = 0; dy < DIRECT_MAP_UPSCALE_FACTOR; ++dy) {
+                for (int dx = 0; dx < DIRECT_MAP_UPSCALE_FACTOR; ++dx) {
+                    const int idx = (y * DIRECT_MAP_UPSCALE_FACTOR + dy) * oldWidth + (x * DIRECT_MAP_UPSCALE_FACTOR) + dx;
+                    average += image[idx];
+                }
+            }
+            output[outputIdx] = average / (DIRECT_MAP_UPSCALE_FACTOR*DIRECT_MAP_UPSCALE_FACTOR);
+        }
+    }
+
+    return output;
+}
+
+// Function to apply a Gaussian blur to an image
+QList<QVector3D> applyGaussianBlur(const QList<QVector3D>& image, const QList<quint32>& mask, int width, int height, float sigma) {
+    // Create a Gaussian kernel
+    constexpr int halfKernelSize = 3;
+    constexpr int kernelSize = halfKernelSize * 2 + 1;
+    constexpr int kernelSizeSq = kernelSize * kernelSize;
+
+    double sum = 0.0;
+    double kernel[kernelSize][kernelSize];
+    double mean = kernelSize / 2;
+    for (int y = 0; y < kernelSize; ++y) {
+        for (int x = 0; x < kernelSize; ++x) {
+            kernel[y][x] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0))) / (2 * M_PI * sigma * sigma);
+
+            // Accumulate the kernel values
+            sum += kernel[y][x];
+        }
+    }
+
+    // Normalize the kernel
+    for (int x = 0; x < kernelSize; ++x)
+        for (int y = 0; y < kernelSize; ++y)
+            kernel[y][x] /= sum;
+
+    // Create a copy of the image for the output
+    QList<QVector3D> output(image.size(), QVector3D(0, 0, 0));
+
+    // Apply the kernel to each pixel
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            const quint32 outputIdx = y * width + x;
+            const quint32 maskID = mask[outputIdx];
+            if (maskID == PIXEL_VOID)
+                continue;
+
+            QVector3D vYX(0, 0, 0);
+            int numHits = 0;
+
+            // Convolve the kernel with the image
+            for (int ky = -halfKernelSize; ky <= halfKernelSize; ++ky) {
+                for (int kx = -halfKernelSize; kx <= halfKernelSize; ++kx) {
+                    const int px = x + kx;
+                    const int py = y + ky;
+                    const int idx = (py * width + px);
+
+                    // Make sure we don't go out of bounds
+                    if (px >= 0 && px < width && py >= 0 && py < height && mask[idx] == maskID) {
+                        float weight = kernel[ky + halfKernelSize][kx + halfKernelSize];
+                        vYX += image[idx] * weight;
+                        numHits += 1;
+                    }
+                }
+            }
+
+            // Set the output pixel
+            output[outputIdx] = vYX * float(kernelSizeSq)/numHits;
+        }
+    }
+
+    return output;
+}
+
+static inline float dot(const QVector2D &a, const QVector2D &b)
+{
+    return a.x() * b.x() + a.y() * b.y();
+}
+
+// Function to check if point P lies inside the triangle ABC using Barycentric Coordinates
+static std::tuple<bool, float, float, float> isPointInsideTriangle(const QVector2D &a, const QVector2D &b, const QVector2D &c, const QVector2D &p)
+{
+
+    QVector2D v0 = b - a;
+    QVector2D v1 = c - a;
+    QVector2D v2 = p - a;
+    float d00 = dot(v0, v0);
+    float d01 = dot(v0, v1);
+    float d11 = dot(v1, v1);
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.0f - v - w;
+    bool inside = (u >= 0.f) && (v >= 0.f) && (w >= 0.f) && qFuzzyCompare(u + v + w, 1.f);
+    return { inside, u, v, w };
+}
+
+struct Edge
+{
+    std::array<QVector3D, 2> pos;
+    std::array<QVector3D, 2> normal;
+};
+
+inline bool operator==(const Edge &a, const Edge &b)
+{
+    return qFuzzyCompare(a.pos[0], b.pos[0]) && qFuzzyCompare(a.pos[1], b.pos[1])
+            && qFuzzyCompare(a.normal[0], b.normal[0]) && qFuzzyCompare(a.normal[1], b.normal[1]);
+}
+
+inline size_t qHash(const Edge &e, size_t seed) Q_DECL_NOTHROW
+{
+    return qHash(e.pos[0].x(), seed) ^ qHash(e.pos[0].y()) ^ qHash(e.pos[0].z()) ^ qHash(e.pos[1].x())
+            ^ qHash(e.pos[1].y()) ^ qHash(e.pos[1].z());
+}
+
+struct EdgeUV
+{
+    std::array<QVector2D, 2> uv;
+    bool seam = false;
+};
+
+struct SeamUV
+{
+    std::array<std::array<QVector2D, 2>, 2> uv;
+};
+
+static inline bool vectorLessThan(const QVector3D &a, const QVector3D &b)
+{
+    if (a.x() == b.x()) {
+        if (a.y() == b.y())
+            return a.z() < b.z();
+        else
+            return a.y() < b.y();
+    }
+    return a.x() < b.x();
+}
+
+static inline float floatSign(float f)
+{
+    return f > 0.0f ? 1.0f : (f < 0.0f ? -1.0f : 0.0f);
+}
+
+static inline QVector2D flooredVec(const QVector2D &v)
+{
+    return QVector2D(std::floor(v.x()), std::floor(v.y()));
+}
+
+static inline QVector2D projectPointToLine(const QVector2D &point, const std::array<QVector2D, 2> &line)
+{
+    const QVector2D p = point - line[0];
+    const QVector2D n = line[1] - line[0];
+    const float lengthSquared = n.lengthSquared();
+    if (!qFuzzyIsNull(lengthSquared)) {
+        const float d = (n.x() * p.x() + n.y() * p.y()) / lengthSquared;
+        return d <= 0.0f ? line[0] : (d >= 1.0f ? line[1] : line[0] + n * d);
+    }
+    return line[0];
+}
+
+static void blendLine(const QVector2D &from,
+                      const QVector2D &to,
+                      const QVector2D &uvFrom,
+                      const QVector2D &uvTo,
+                      const float *readBuf,
+                      float *writeBuf,
+                      const QSize &lightmapPixelSize,
+                      const int stride = 4)
+{
+    const QVector2D size(lightmapPixelSize.width(), lightmapPixelSize.height());
+    const std::array<QVector2D, 2> line = { QVector2D(from.x(), 1.0f - from.y()) * size, QVector2D(to.x(), 1.0f - to.y()) * size };
+    const float lineLength = line[0].distanceToPoint(line[1]);
+    if (qFuzzyIsNull(lineLength))
+        return;
+
+    const QVector2D startPixel = flooredVec(line[0]);
+    const QVector2D endPixel = flooredVec(line[1]);
+
+    const QVector2D dir = (line[1] - line[0]).normalized();
+    const QVector2D tStep(1.0f / std::abs(dir.x()), 1.0f / std::abs(dir.y()));
+    const QVector2D pixelStep(floatSign(dir.x()), floatSign(dir.y()));
+
+    QVector2D nextT(std::fmod(line[0].x(), 1.0f), std::fmod(line[0].y(), 1.0f));
+    if (pixelStep.x() == 1.0f)
+        nextT.setX(1.0f - nextT.x());
+    if (pixelStep.y() == 1.0f)
+        nextT.setY(1.0f - nextT.y());
+
+    if (!qFuzzyIsNull(dir.x()))
+        nextT.setX(nextT.x() / std::abs(dir.x()));
+    else
+        nextT.setX(std::numeric_limits<float>::max());
+
+    if (!qFuzzyIsNull(dir.y()))
+        nextT.setY(nextT.y() / std::abs(dir.y()));
+    else
+        nextT.setY(std::numeric_limits<float>::max());
+
+    QVector2D pixel = startPixel;
+
+    const auto clampedXY = [s = lightmapPixelSize](QVector2D xy) -> std::array<int, 2> {
+        return { qBound(0, int(xy.x()), s.width() - 1), qBound(0, int(xy.y()), s.height() - 1) };
+    };
+
+    while (startPixel.distanceToPoint(pixel) < lineLength + 1.0f) {
+        const QVector2D point = projectPointToLine(pixel + QVector2D(0.5f, 0.5f), line);
+        const float t = line[0].distanceToPoint(point) / lineLength;
+        const QVector2D uvInterp = uvFrom * (1.0 - t) + uvTo * t;
+        const auto sampledPixelXY = clampedXY(flooredVec(QVector2D(uvInterp.x(), 1.0f - uvInterp.y()) * size));
+        const int sampOfs = (sampledPixelXY[0] + sampledPixelXY[1] * lightmapPixelSize.width()) * stride;
+        const QVector3D sampledColor(readBuf[sampOfs], readBuf[sampOfs + 1], readBuf[sampOfs + 2]);
+        const auto pixelXY = clampedXY(pixel);
+        const int pixOfs = (pixelXY[0] + pixelXY[1] * lightmapPixelSize.width()) * stride;
+        QVector3D currentColor(writeBuf[pixOfs], writeBuf[pixOfs + 1], writeBuf[pixOfs + 2]);
+        currentColor = currentColor * 0.6f + sampledColor * 0.4f;
+        writeBuf[pixOfs] = currentColor.x();
+        writeBuf[pixOfs + 1] = currentColor.y();
+        writeBuf[pixOfs + 2] = currentColor.z();
+
+        if (pixel != endPixel) {
+            if (nextT.x() < nextT.y()) {
+                pixel.setX(pixel.x() + pixelStep.x());
+                nextT.setX(nextT.x() + tStep.x());
+            } else {
+                pixel.setY(pixel.y() + pixelStep.y());
+                nextT.setY(nextT.y() + tStep.y());
+            }
+        } else {
+            break;
+        }
+    }
+}
+
+std::pair<QVector3D, QVector3D> QSSGLightmapperPrivate::sampleDirectLight(QVector3D worldPos, QVector3D normal) const
+{
+    QVector3D allDirectLight = QVector3D(0.f, 0.f, 0.f);
+    QVector3D directLight = QVector3D(0.f, 0.f, 0.f);
+
+    if (options.useAdaptiveBias)
+        worldPos += vectorSign(normal) * vectorAbs(worldPos * 0.0000002f);
+
+    // 'lights' should have all lights that are either BakeModeIndirect or BakeModeAll
+    for (const Light &light : lights) {
+        QVector3D lightWorldPos;
+        float dist = std::numeric_limits<float>::infinity();
+        float attenuation = 1.0f;
+        if (light.type == Light::Directional) {
+            lightWorldPos = worldPos - light.direction;
+        } else {
+            lightWorldPos = light.worldPos;
+            dist = (worldPos - lightWorldPos).length();
+            attenuation = 1.0f
+                    / (light.constantAttenuation + light.linearAttenuation * dist + light.quadraticAttenuation * dist * dist);
+            if (light.type == Light::Spot) {
+                const float spotAngle = QVector3D::dotProduct((worldPos - lightWorldPos).normalized(), light.direction.normalized());
+                if (spotAngle > light.cosConeAngle) {
+                    // spotFactor = smoothstep(light.cosConeAngle, light.cosInnerConeAngle, spotAngle);
+                    const float edge0 = light.cosConeAngle;
+                    const float edge1 = light.cosInnerConeAngle;
+                    const float x = spotAngle;
+                    const float t = qBound(0.0f, (x - edge0) / (edge1 - edge0), 1.0f);
+                    const float spotFactor = t * t * (3.0f - 2.0f * t);
+                    attenuation *= spotFactor;
+                } else {
+                    attenuation = 0.0f;
+                }
+            }
+        }
+
+        const QVector3D L = (lightWorldPos - worldPos).normalized();
+        const float energy = qMax(0.0f, QVector3D::dotProduct(normal, L)) * attenuation;
+        if (qFuzzyIsNull(energy))
+            continue;
+
+        // trace a ray from this point towards the light, and see if something is hit on the way
+        RayHit ray(worldPos, L, options.bias, dist);
+        const bool lightReachable = !ray.intersect(rscene);
+        if (lightReachable) {
+            // direct light must always be stored because indirect computation will need it
+            allDirectLight += light.color * energy;
+            // but we take it into account in the final result only for lights that have BakeModeAll
+            if (!light.indirectOnly)
+                directLight += light.color * energy;
+        }
+    }
+
+    return { directLight, allDirectLight };
+}
+
 void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &reporter)
 {
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Computing direct lighting..."));
@@ -1200,77 +1559,219 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
     QVector<QFuture<void>> futures;
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
+        // direct lighting is relatively fast to calculate, so parallelize per model
+        futures << QtConcurrent::run([this, &fullDirectLightTimer, lmIdx] {
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
+
+        // While Light.castsShadow and Model.receivesShadows are irrelevant for
+        // baked lighting (they are effectively ignored, shadows are always
+        // there with baked direct lighting), Model.castsShadows is something
+        // we can and should take into account.
+        if (!lm.model->castsShadows)
+            return;
+
+        const auto elapsedStart = fullDirectLightTimer.elapsed();
+
         Lightmap &lightmap(lightmaps[lmIdx]);
 
-        // direct lighting is relatively fast to calculate, so parallelize per model
-        futures << QtConcurrent::run([this, &lm, &lightmap] {
-            QElapsedTimer directLightTimer;
-            directLightTimer.start();
+        const DrawInfo &drawInfo(drawInfos[lmIdx]);
+        const char *vbase = drawInfo.vertexData.constData();
+        const quint32 *ibase = reinterpret_cast<const quint32 *>(drawInfo.indexData.constData());
 
-            const int lightCount = lights.size();
-            for (LightmapEntry &lmPix : lightmap.entries) {
-                if (!lmPix.isValid())
-                    continue;
+        const QSize sz = lightmap.pixelSize * DIRECT_MAP_UPSCALE_FACTOR;
+        const int w = sz.width();
+        const int h = sz.height();
+        const int numPixelsUpscaled = w * h;
 
-                QVector3D worldPos = lmPix.worldPos;
-                if (options.useAdaptiveBias)
-                    worldPos += vectorSign(lmPix.normal) * vectorAbs(worldPos * 0.0000002f);
+        QVector<QVector3D> gridAll(numPixelsUpscaled);
+        QVector<QVector3D> gridDirect(numPixelsUpscaled);
+        QVector<int> hits(numPixelsUpscaled, 0);
+        QVector<quint32> mask(numPixelsUpscaled, PIXEL_VOID);
 
-                // 'lights' should have all lights that are either BakeModeIndirect or BakeModeAll
-                for (int i = 0; i < lightCount; ++i) {
-                    const Light &light(lights[i]);
+        // NOTE: We compute the edge blending here so it is a part of the gaussian blur
+        QHash<Edge, EdgeUV> edgeUVMap;
+        QVector<SeamUV> seams;
 
-                    QVector3D lightWorldPos;
-                    float dist = std::numeric_limits<float>::infinity();
-                    float attenuation = 1.0f;
-                    if (light.type == Light::Directional) {
-                        lightWorldPos = worldPos - light.direction;
-                    } else {
-                        lightWorldPos = light.worldPos;
-                        dist = (worldPos - lightWorldPos).length();
-                        attenuation = 1.0f / (light.constantAttenuation
-                                              + light.linearAttenuation * dist
-                                              + light.quadraticAttenuation * dist * dist);
-                        if (light.type == Light::Spot) {
-                            const float spotAngle = QVector3D::dotProduct((worldPos - lightWorldPos).normalized(),
-                                                                          light.direction.normalized());
-                            if (spotAngle > light.cosConeAngle) {
-                                // spotFactor = smoothstep(light.cosConeAngle, light.cosInnerConeAngle, spotAngle);
-                                const float edge0 = light.cosConeAngle;
-                                const float edge1 = light.cosInnerConeAngle;
-                                const float x = spotAngle;
-                                const float t = qBound(0.0f, (x - edge0) / (edge1 - edge0), 1.0f);
-                                const float spotFactor = t * t * (3.0f - 2.0f * t);
-                                attenuation *= spotFactor;
-                            } else {
-                                attenuation = 0.0f;
-                            }
-                        }
+        for (SubMeshInfo &subMeshInfo : subMeshInfos[lmIdx]) {
+            QVector<std::array<quint32, 3>> triangles;
+            QVector<QVector3D> positions;
+            QVector<QVector3D> normals;
+            QVector<QVector2D> uvs;
+
+            triangles.reserve(subMeshInfo.count / 3);
+            positions.reserve(subMeshInfo.count);
+            normals.reserve(subMeshInfo.count);
+            uvs.reserve(subMeshInfo.count);
+
+            for (quint32 i = 0; i < subMeshInfo.count / 3; ++i)
+                triangles.push_back({ i * 3, i * 3 + 1, i * 3 + 2 });
+
+            for (quint32 i = 0; i < subMeshInfo.count; ++i) {
+                const quint32 idx = *(ibase + subMeshInfo.offset + i);
+                const float *src = reinterpret_cast<const float *>(vbase + idx * drawInfo.vertexStride + drawInfo.positionOffset);
+                float x = *src++;
+                float y = *src++;
+                float z = *src++;
+                positions.push_back(QVector3D(x, y, z));
+            }
+
+            for (quint32 i = 0; i < subMeshInfo.count; ++i) {
+                const quint32 idx = *(ibase + subMeshInfo.offset + i);
+                const float *src = reinterpret_cast<const float *>(vbase + idx * drawInfo.vertexStride + drawInfo.normalOffset);
+                float x = *src++;
+                float y = *src++;
+                float z = *src++;
+                normals.push_back(QVector3D(x, y, z));
+            }
+
+            for (quint32 i = 0; i < subMeshInfo.count; ++i) {
+                const quint32 idx = *(ibase + subMeshInfo.offset + i);
+                const float *src = reinterpret_cast<const float *>(vbase + idx * drawInfo.vertexStride + drawInfo.lightmapUVOffset);
+                float x = *src++;
+                float y = *src++;
+                uvs.push_back(QVector2D(x, 1.0f - y)); // NOTE: Flip y
+            }
+
+            for (auto [i0, i1, i2] : triangles) {
+                QVector2D minMapUV = QVector2D(qMin(uvs[i0].x(), qMin(uvs[i1].x(), uvs[i2].x())),
+                                               qMin(uvs[i0].y(), qMin(uvs[i1].y(), uvs[i2].y())));
+                QVector2D maxMapUV = QVector2D(qMax(uvs[i0].x(), qMax(uvs[i1].x(), uvs[i2].x())),
+                                               qMax(uvs[i0].y(), qMax(uvs[i1].y(), uvs[i2].y())));
+                const int minX = qMax(0, int(minMapUV.x() * w) - 1);
+                const int maxX = qMin(w - 1, int(maxMapUV.x() * w) + 1);
+                const int minY = qMax(0, int(minMapUV.y() * h) - 1);
+                const int maxY = qMin(h - 1, int(maxMapUV.y() * h) + 1);
+
+                const QVector3D triVert[3] = { positions[i0], positions[i1], positions[i2] };
+                const QVector3D triNorm[3] = { normals[i0], normals[i1], normals[i2] };
+                const QVector2D triUV[3] = { uvs[i0], uvs[i1], uvs[i2] };
+
+                for (int x = minX; x <= maxX; ++x) {
+                    for (int y = minY; y <= maxY; ++y) {
+                        QVector2D uvP = QVector2D((x + 0.5f) / w, (y + 0.5f) / h);
+                        const auto [inside, l0, l1, l2] = isPointInsideTriangle(triUV[0], triUV[1], triUV[2], uvP);
+                        if (!inside)
+                            continue;
+
+                        QVector3D worldPos = l0 * positions[i0] + l1 * positions[i1] + l2 * positions[i2];
+                        const QVector3D normal = l0 * normals[i0] + l1 * normals[i1] + l2 * normals[i2];
+                        auto [directLight, allLight] = sampleDirectLight(worldPos, normal);
+
+                        const int entryIdx = x + y * w;
+                        gridAll[entryIdx] += allLight;
+                        gridDirect[entryIdx] += directLight;
+                        hits[entryIdx]++;
                     }
+                }
 
-                    const QVector3D N = lmPix.normal;
-                    const QVector3D L = (lightWorldPos - worldPos).normalized();
-                    const float energy = qMax(0.0f, QVector3D::dotProduct(N, L)) * attenuation;
-                    if (qFuzzyIsNull(energy))
-                        continue;
+                for (int i = 0; i < 3; ++i) {
+                    int i0 = i;
+                    int i1 = (i + 1) % 3;
+                    if (vectorLessThan(triVert[i1], triVert[i0]))
+                        std::swap(i0, i1);
 
-                    // trace a ray from this point towards the light, and see if something is hit on the way
-                    RayHit ray(worldPos, L, options.bias, dist);
-                    const bool lightReachable = !ray.intersect(rscene);
-                    if (lightReachable) {
-                        // direct light must always be stored because indirect computation will need it
-                        lmPix.directLight += light.color * energy;
-                        // but we take it into account in the final result only for lights that have BakeModeAll
-                        if (!light.indirectOnly)
-                            lmPix.allLight += light.color * energy;
+                    const Edge e = { { triVert[i0], triVert[i1] }, { triNorm[i0], triNorm[i1] } };
+                    const EdgeUV edgeUV = { { triUV[i0], triUV[i1] } };
+                    auto it = edgeUVMap.find(e);
+                    if (it == edgeUVMap.end()) {
+                        edgeUVMap.insert(e, edgeUV);
+                    } else if (!qFuzzyCompare(it->uv[0], edgeUV.uv[0]) || !qFuzzyCompare(it->uv[1], edgeUV.uv[1])) {
+                        if (!it->seam) {
+                            std::array<QVector2D, 2> eUV = {QVector2D(edgeUV.uv[0][0], 1.0f - edgeUV.uv[0][1]), QVector2D(edgeUV.uv[1][0], 1.0f - edgeUV.uv[1][1])};
+                            std::array<QVector2D, 2> itUV = {QVector2D(it->uv[0][0], 1.0f - it->uv[0][1]), QVector2D(it->uv[1][0], 1.0f - it->uv[1][1])};
+
+                            seams.append(SeamUV({ { eUV, itUV } }));
+                            it->seam = true;
+                        }
                     }
                 }
             }
+        }
 
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Direct light computed for model %1 in %2").
-                                                                  arg(lm.model->lightmapKey).
-                                                                  arg(formatDuration(directLightTimer.elapsed())));
+        // Fill grid to make sure pixels outside triangles have default values, important for downscaling
+        for (int y = 0; y < lightmap.pixelSize.height(); ++y) {
+            for (int x = 0; x < lightmap.pixelSize.width(); ++x) {
+                const int outputIdx = y * lightmap.pixelSize.width() + x;
+                const auto& lmPix = lightmap.entries[outputIdx];
+                if (!lmPix.isValid())
+                    continue;
+                auto [directLight, allLight] = sampleDirectLight(lmPix.worldPos, lmPix.normal);
+
+                for (int dy = 0; dy < DIRECT_MAP_UPSCALE_FACTOR; ++dy) {
+                    for (int dx = 0; dx < DIRECT_MAP_UPSCALE_FACTOR; ++dx) {
+                        const int idx = (y * DIRECT_MAP_UPSCALE_FACTOR + dy) * w + (x * DIRECT_MAP_UPSCALE_FACTOR) + dx;
+                        if (hits[idx] == 0) {
+                            gridAll[idx] = allLight;
+                            gridDirect[idx] = directLight;
+                            hits[idx]++;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < numPixelsUpscaled; ++i) {
+            gridAll[i] /= qMax(1, hits[i]);
+            gridDirect[i] /= qMax(1, hits[i]);
+            mask[i] = hits[i] > 0 ? PIXEL_UNSET : PIXEL_VOID;
+        }
+
+        // Flood fill mask in place
+        floodFill(reinterpret_cast<quint32 *>(mask.data()), h, w);
+
+        // Blend edges
+        // NOTE: We compute the edge blending here so it is a part of the gaussian blur
+        // NOTE: We only need to blend 'gridDirect' since that is the resulting lightmap for direct light
+        {
+            QByteArray workBuf(gridDirect.size() * sizeof(QVector3D), Qt::Uninitialized);
+            for (int blendIter = 0; blendIter < LM_SEAM_BLEND_ITER_COUNT; ++blendIter) {
+                memcpy(workBuf.data(), gridDirect.constData(), gridDirect.size() * sizeof(QVector3D));
+                for (int seamIdx = 0, end = seams.size(); seamIdx != end; ++seamIdx) {
+                    const SeamUV &seam(seams[seamIdx]);
+                    blendLine(seam.uv[0][0],
+                              seam.uv[0][1],
+                              seam.uv[1][0],
+                              seam.uv[1][1],
+                              reinterpret_cast<const float *>(workBuf.data()),
+                              reinterpret_cast<float *>(gridDirect.data()),
+                              QSize(w, h),
+                              3);
+                    blendLine(seam.uv[1][0],
+                              seam.uv[1][1],
+                              seam.uv[0][0],
+                              seam.uv[0][1],
+                              reinterpret_cast<const float *>(workBuf.data()),
+                              reinterpret_cast<float *>(gridDirect.data()),
+                              QSize(w, h),
+                              3);
+                }
+            }
+        }
+
+        // Apply the Gaussian blur
+        gridAll = applyGaussianBlur(gridAll, mask, w, h, 3.f);
+        gridDirect = applyGaussianBlur(gridDirect, mask, w, h, 3.f);
+        gridAll = downscaleImage(gridAll, w, h, lightmap.pixelSize.width(), lightmap.pixelSize.height());
+        gridDirect = downscaleImage(gridDirect, w, h, lightmap.pixelSize.width(), lightmap.pixelSize.height());
+
+        // Copy values to lightmap entries
+        for (int i = 0, n = lightmap.entries.size(); i < n; ++i) {
+            QVector3D v = gridDirect[i];
+            QVector3D v1 = gridAll[i];
+            Q_ASSERT(v.x() >= 0.f && !std::isnan(v.x()));
+            Q_ASSERT(v.y() >= 0.f && !std::isnan(v.y()));
+            Q_ASSERT(v.z() >= 0.f && !std::isnan(v.z()));
+            Q_ASSERT(v1.x() >= 0.f && !std::isnan(v1.x()));
+            Q_ASSERT(v1.y() >= 0.f && !std::isnan(v1.y()));
+            Q_ASSERT(v1.z() >= 0.f && !std::isnan(v1.z()));
+            lightmap.entries[i].directLightAll = gridAll[i];
+            lightmap.entries[i].directLight = gridDirect[i];
+        }
+
+        const auto elapsed = fullDirectLightTimer.elapsed() - elapsedStart;
+
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                       QStringLiteral("Direct light computed for model %1 in %2").arg(lm.model->lightmapKey).arg(formatDuration(elapsed)));
         });
     }
 
@@ -1442,7 +1943,7 @@ void QSSGLightmapperPrivate::computeIndirectLight(const StageProgressReporter &r
                             // calculate result for this bounce
                             sampleResult += throughput * hitEntry.emission;
                             throughput *= brdf * NdotL / pdf;
-                            sampleResult += throughput * hitEntry.directLight;
+                            sampleResult += throughput * hitEntry.directLightAll;
 
                             // stop if we guess there's no point in bouncing further
                             // (low throughput path wouldn't contribute much)
@@ -1468,7 +1969,7 @@ void QSSGLightmapperPrivate::computeIndirectLight(const StageProgressReporter &r
             for (const auto &future : wg)
                 totalIndirect += future.result();
 
-            lmPix.allLight += totalIndirect * options.indirectLightFactor / options.indirectLightSamples;
+            lmPix.indirectLight += totalIndirect * options.indirectLightFactor / options.indirectLightSamples;
 
             if (bakingControl.cancelled)
                 return;
@@ -1482,206 +1983,54 @@ void QSSGLightmapperPrivate::computeIndirectLight(const StageProgressReporter &r
                                                           arg(formatDuration(fullIndirectLightTimer.elapsed())));
 }
 
-struct Edge {
-    std::array<QVector3D, 2> pos;
-    std::array<QVector3D, 2> normal;
-};
-
-inline bool operator==(const Edge &a, const Edge &b)
-{
-    return qFuzzyCompare(a.pos[0], b.pos[0])
-            && qFuzzyCompare(a.pos[1], b.pos[1])
-            && qFuzzyCompare(a.normal[0], b.normal[0])
-            && qFuzzyCompare(a.normal[1], b.normal[1]);
-}
-
-inline size_t qHash(const Edge &e, size_t seed) Q_DECL_NOTHROW
-{
-    return qHash(e.pos[0].x(), seed) ^ qHash(e.pos[0].y()) ^ qHash(e.pos[0].z())
-            ^ qHash(e.pos[1].x()) ^ qHash(e.pos[1].y()) ^ qHash(e.pos[1].z());
-}
-
-struct EdgeUV {
-    std::array<QVector2D, 2> uv;
-    bool seam = false;
-};
-
-struct SeamUV {
-    std::array<std::array<QVector2D, 2>, 2> uv;
-};
-
-static inline bool vectorLessThan(const QVector3D &a, const QVector3D &b)
-{
-    if (a.x() == b.x()) {
-        if (a.y() == b.y())
-            return a.z() < b.z();
-        else
-            return a.y() < b.y();
-    }
-    return a.x() < b.x();
-}
-
-static inline float floatSign(float f)
-{
-    return f > 0.0f ? 1.0f : (f < 0.0f ? -1.0f : 0.0f);
-}
-
-static inline QVector2D flooredVec(const QVector2D &v)
-{
-    return QVector2D(std::floor(v.x()), std::floor(v.y()));
-}
-
-static inline QVector2D projectPointToLine(const QVector2D &point, const std::array<QVector2D, 2> &line)
-{
-    const QVector2D p = point - line[0];
-    const QVector2D n = line[1] - line[0];
-    const float lengthSquared = n.lengthSquared();
-    if (!qFuzzyIsNull(lengthSquared)) {
-        const float d = (n.x() * p.x() + n.y() * p.y()) / lengthSquared;
-        return d <= 0.0f ? line[0] : (d >= 1.0f ? line[1] : line[0] + n * d);
-    }
-    return line[0];
-}
-
-static void blendLine(const QVector2D &from, const QVector2D &to,
-                      const QVector2D &uvFrom, const QVector2D &uvTo,
-                      const QByteArray &readBuf, QByteArray &writeBuf,
-                      const QSize &lightmapPixelSize)
-{
-    const QVector2D size(lightmapPixelSize.width(), lightmapPixelSize.height());
-    const std::array<QVector2D, 2> line = { QVector2D(from.x(), 1.0f - from.y()) * size,
-                                            QVector2D(to.x(), 1.0f - to.y()) * size };
-    const float lineLength = line[0].distanceToPoint(line[1]);
-    if (qFuzzyIsNull(lineLength))
-        return;
-
-    const QVector2D startPixel = flooredVec(line[0]);
-    const QVector2D endPixel = flooredVec(line[1]);
-
-    const QVector2D dir = (line[1] - line[0]).normalized();
-    const QVector2D tStep(1.0f / std::abs(dir.x()), 1.0f / std::abs(dir.y()));
-    const QVector2D pixelStep(floatSign(dir.x()), floatSign(dir.y()));
-
-    QVector2D nextT(std::fmod(line[0].x(), 1.0f), std::fmod(line[0].y(), 1.0f));
-    if (pixelStep.x() == 1.0f)
-        nextT.setX(1.0f - nextT.x());
-    if (pixelStep.y() == 1.0f)
-        nextT.setY(1.0f - nextT.y());
-
-    if (!qFuzzyIsNull(dir.x()))
-        nextT.setX(nextT.x() / std::abs(dir.x()));
-    else
-        nextT.setX(std::numeric_limits<float>::max());
-
-    if (!qFuzzyIsNull(dir.y()))
-        nextT.setY(nextT.y() / std::abs(dir.y()));
-    else
-        nextT.setY(std::numeric_limits<float>::max());
-
-    float *fpW = reinterpret_cast<float *>(writeBuf.data());
-    const float *fpR = reinterpret_cast<const float *>(readBuf.constData());
-
-    QVector2D pixel = startPixel;
-
-    const auto clampedXY = [s = lightmapPixelSize](QVector2D xy) -> std::array<int, 2> {
-        return { qBound(0, int(xy.x()), s.width() - 1), qBound(0, int(xy.y()), s.height() - 1) };
-    };
-
-    while (startPixel.distanceToPoint(pixel) < lineLength + 1.0f) {
-        const QVector2D point = projectPointToLine(pixel + QVector2D(0.5f, 0.5f), line);
-        const float t = line[0].distanceToPoint(point) / lineLength;
-        const QVector2D uvInterp = uvFrom * (1.0 - t) + uvTo * t;
-        const auto sampledPixelXY = clampedXY(flooredVec(QVector2D(uvInterp.x(), 1.0f - uvInterp.y()) * size));
-        const int sampOfs = (sampledPixelXY[0] + sampledPixelXY[1] * lightmapPixelSize.width()) * 4;
-        Q_ASSERT(sampOfs + 2 < int(readBuf.size() / sizeof(float)));
-        const QVector3D sampledColor(fpR[sampOfs], fpR[sampOfs + 1], fpR[sampOfs + 2]);
-        const auto pixelXY = clampedXY(pixel);
-        const int pixOfs = (pixelXY[0] + pixelXY[1] * lightmapPixelSize.width()) * 4;
-        Q_ASSERT(pixOfs + 2 < int(writeBuf.size() / sizeof(float)));
-        QVector3D currentColor(fpW[pixOfs], fpW[pixOfs + 1], fpW[pixOfs + 2]);
-        currentColor = currentColor * 0.6f + sampledColor * 0.4f;
-        fpW[pixOfs] = currentColor.x();
-        fpW[pixOfs + 1] = currentColor.y();
-        fpW[pixOfs + 2] = currentColor.z();
-
-        if (pixel != endPixel) {
-            if (nextT.x() < nextT.y()) {
-                pixel.setX(pixel.x() + pixelStep.x());
-                nextT.setX(nextT.x() + tStep.x());
-            } else {
-                pixel.setY(pixel.y() + pixelStep.y());
-                nextT.setY(nextT.y() + tStep.y());
-            }
-        } else {
-            break;
-        }
-    }
-}
-
 bool QSSGLightmapperPrivate::postProcess(const StageProgressReporter &reporter)
 {
+    constexpr quint32 PIXEL_VOID = 0;
+    constexpr quint32 PIXEL_UNSET = -1;
+
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    const int bakedLightingModelCount = bakedLightingModels.size();
-
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Post-processing..."));
-    for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
-        QElapsedTimer postProcessTimer;
-        postProcessTimer.start();
 
-        const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
-        // only care about the ones that will store the lightmap image persistently
-        if (!lm.model->hasLightmap())
-            continue;
+    // Dilate
+    const auto dilate = [&](QSize pixelSize, const QByteArray &image) -> std::optional<QByteArray> {
+        const QRhiViewport viewport(0, 0, float(pixelSize.width()), float(pixelSize.height()));
 
-        Lightmap &lightmap(lightmaps[lmIdx]);
-
-        // Assemble the RGBA32F image from the baker data structures
-        QByteArray lightmapFP32(lightmap.entries.size() * 4 * sizeof(float), Qt::Uninitialized);
-        float *lightmapFloatPtr = reinterpret_cast<float *>(lightmapFP32.data());
-        for (const LightmapEntry &lmPix : std::as_const(lightmap.entries)) {
-            *lightmapFloatPtr++ = lmPix.allLight.x();
-            *lightmapFloatPtr++ = lmPix.allLight.y();
-            *lightmapFloatPtr++ = lmPix.allLight.z();
-            *lightmapFloatPtr++ = lmPix.isValid() ? 1.0f : 0.0f;
-        }
-
-        // Dilate
-        const QRhiViewport viewport(0, 0, float(lightmap.pixelSize.width()), float(lightmap.pixelSize.height()));
-
-        std::unique_ptr<QRhiTexture> lightmapTex(rhi->newTexture(QRhiTexture::RGBA32F, lightmap.pixelSize));
+        std::unique_ptr<QRhiTexture> lightmapTex(rhi->newTexture(QRhiTexture::RGBA32F, pixelSize));
         if (!lightmapTex->create()) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for postprocessing"));
-            return false;
+            return std::nullopt;
         }
-        std::unique_ptr<QRhiTexture> dilatedLightmapTex(rhi->newTexture(QRhiTexture::RGBA32F, lightmap.pixelSize, 1,
-                                                                        QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+        std::unique_ptr<QRhiTexture> dilatedLightmapTex(
+                rhi->newTexture(QRhiTexture::RGBA32F, pixelSize, 1, QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
         if (!dilatedLightmapTex->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 dest. texture for postprocessing"));
-            return false;
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning,
+                           QStringLiteral("Failed to create FP32 dest. texture for postprocessing"));
+            return std::nullopt;
         }
         QRhiTextureRenderTargetDescription rtDescDilate(dilatedLightmapTex.get());
         std::unique_ptr<QRhiTextureRenderTarget> rtDilate(rhi->newTextureRenderTarget(rtDescDilate));
         std::unique_ptr<QRhiRenderPassDescriptor> rpDescDilate(rtDilate->newCompatibleRenderPassDescriptor());
         rtDilate->setRenderPassDescriptor(rpDescDilate.get());
         if (!rtDilate->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create postprocessing texture render target"));
-            return false;
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning,
+                           QStringLiteral("Failed to create postprocessing texture render target"));
+            return std::nullopt;
         }
         QRhiResourceUpdateBatch *resUpd = rhi->nextResourceUpdateBatch();
-        QRhiTextureSubresourceUploadDescription lightmapTexUpload(lightmapFP32.constData(), lightmapFP32.size());
+        QRhiTextureSubresourceUploadDescription lightmapTexUpload(image.constData(), image.size());
         resUpd->uploadTexture(lightmapTex.get(), QRhiTextureUploadDescription({ 0, 0, lightmapTexUpload }));
         QSSGRhiShaderResourceBindingList bindings;
-        QRhiSampler *nearestSampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
-                                                        QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+        QRhiSampler *nearestSampler = rhiCtx->sampler(
+                { QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
         bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, lightmapTex.get(), nearestSampler);
         renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, resUpd);
         const auto &shaderCache = renderer->contextInterface()->shaderCache();
         const auto &lmDilatePipeline = shaderCache->getBuiltInRhiShaders().getRhiLightmapDilateShader();
         if (!lmDilatePipeline) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load shaders"));
-            return false;
+            return std::nullopt;
         }
         QSSGRhiGraphicsPipelineState dilatePs;
         dilatePs.viewport = viewport;
@@ -1695,7 +2044,85 @@ bool QSSGLightmapperPrivate::postProcess(const StageProgressReporter &reporter)
         // Submit and wait for completion.
         rhi->finish();
 
-        lightmap.imageFP32 = dilateReadResult.data;
+        return dilateReadResult.data;
+    };
+
+    const int bakedLightingModelCount = bakedLightingModels.size();
+    for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
+        QElapsedTimer postProcessTimer;
+        postProcessTimer.start();
+
+        const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
+        // only care about the ones that will store the lightmap image persistently
+        if (!lm.model->hasLightmap())
+            continue;
+
+        Lightmap &lightmap(lightmaps[lmIdx]);
+
+        // Charts mask
+        QByteArray mask(lightmap.entries.size() * sizeof(quint32), Qt::Uninitialized);
+        quint32 *maskUIntPtr = reinterpret_cast<quint32 *>(mask.data());
+
+        // lightmap
+        QByteArray indirectFP32(lightmap.entries.size() * 4 * sizeof(float), Qt::Uninitialized);
+        float *indirectFloatPtr = reinterpret_cast<float *>(indirectFP32.data());
+
+        // lightmap
+        QByteArray directFP32(lightmap.entries.size() * 4 * sizeof(float), Qt::Uninitialized);
+        float *directFloatPtr = reinterpret_cast<float *>(directFP32.data());
+
+        // Assemble the images from the baker data structures
+        for (const LightmapEntry &lmPix : std::as_const(lightmap.entries)) {
+            if (lmPix.isValid()) {
+                *indirectFloatPtr++ = lmPix.indirectLight.x();
+                *indirectFloatPtr++ = lmPix.indirectLight.y();
+                *indirectFloatPtr++ = lmPix.indirectLight.z();
+                *indirectFloatPtr++ = 1.0f;
+
+                *directFloatPtr++ = lmPix.directLight.x();
+                *directFloatPtr++ = lmPix.directLight.y();
+                *directFloatPtr++ = lmPix.directLight.z();
+                *directFloatPtr++ = 1.0f;
+
+                *maskUIntPtr++ = PIXEL_UNSET;
+            } else {
+                *indirectFloatPtr++ = 0.0f;
+                *indirectFloatPtr++ = 0.0f;
+                *indirectFloatPtr++ = 0.0f;
+                *indirectFloatPtr++ = 0.0f;
+
+                *directFloatPtr++ = 0.0f;
+                *directFloatPtr++ = 0.0f;
+                *directFloatPtr++ = 0.0f;
+                *directFloatPtr++ = 0.0f;
+
+                *maskUIntPtr++ = PIXEL_VOID;
+            }
+        }
+
+        { // Fill mask
+            const int rows = lightmap.pixelSize.height();
+            const int cols = lightmap.pixelSize.width();
+
+            // Use flood fill so each chart has its own "color" which
+            // can then be used in the denoise shader to only take into account
+            // pixels in the same chart.
+            floodFill(reinterpret_cast<quint32 *>(mask.data()), rows, cols);
+
+            lightmap.chartsMask = mask;
+        }
+
+        if (auto dilated = dilate(lightmap.pixelSize, indirectFP32); dilated.has_value()) {
+            lightmap.indirectFP32 = dilated.value();
+        } else {
+            return false;
+        }
+
+        if (auto dilated = dilate(lightmap.pixelSize, directFP32); dilated.has_value()) {
+            lightmap.directFP32 = dilated.value();
+        } else {
+            return false;
+        }
 
         // Reduce UV seams by collecting all edges (going through all
         // triangles), looking for (fuzzy)matching ones, then drawing lines
@@ -1765,17 +2192,21 @@ bool QSSGLightmapperPrivate::postProcess(const StageProgressReporter &reporter)
         }
         qDebug() << "lm:" << seams.size() << "UV seams in" << lm.model;
 
-        QByteArray workBuf(lightmap.imageFP32.size(), Qt::Uninitialized);
+        QByteArray workBuf(lightmap.indirectFP32.size(), Qt::Uninitialized);
         for (int blendIter = 0; blendIter < LM_SEAM_BLEND_ITER_COUNT; ++blendIter) {
-            memcpy(workBuf.data(), lightmap.imageFP32.constData(), lightmap.imageFP32.size());
+            memcpy(workBuf.data(), lightmap.indirectFP32.constData(), lightmap.indirectFP32.size());
             for (int seamIdx = 0, end = seams.size(); seamIdx != end; ++seamIdx) {
                 const SeamUV &seam(seams[seamIdx]);
                 blendLine(seam.uv[0][0], seam.uv[0][1],
                           seam.uv[1][0], seam.uv[1][1],
-                          workBuf, lightmap.imageFP32, lightmap.pixelSize);
+                          reinterpret_cast<const float *>(workBuf.data()),
+                          reinterpret_cast<float *>(lightmap.indirectFP32.data()),
+                          lightmap.pixelSize);
                 blendLine(seam.uv[1][0], seam.uv[1][1],
                           seam.uv[0][0], seam.uv[0][1],
-                          workBuf, lightmap.imageFP32, lightmap.pixelSize);
+                          reinterpret_cast<const float *>(workBuf.data()),
+                          reinterpret_cast<float *>(lightmap.indirectFP32.data()),
+                          lightmap.pixelSize);
             }
         }
 
@@ -1811,14 +2242,29 @@ bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporte
                                                                 arg(options.source));
         return false;
     }
-    const QString outputPath = QFileInfo(options.source).absoluteFilePath();
-    QSharedPointer<QSSGLightmapWriter> outputFile = QSSGLightmapWriter::open(outputPath);
+
     QElapsedTimer totalWriteTimer;
     totalWriteTimer.start();
 
+    const QString finalPath = QFileInfo(options.source).absoluteFilePath();
+    const QString tmpPath = QFileInfo(options.source).absoluteFilePath() + ".tmp";
+    QSharedPointer<QSSGLightmapWriter> tmpFile = QSSGLightmapWriter::open(tmpPath);
+    QSharedPointer<QSSGLightmapWriter> finalFile = QSSGLightmapWriter::open(finalPath);
+
+    if (!finalFile) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Failed to open final file"));
+        return false;
+    }
+
+    if (!tmpFile) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Failed to open tmp file"));
+        return false;
+    }
+
     // Write meshes
     for (int i = 0; i < meshes.size(); ++i) {
-        outputFile->writeData(indexToMeshKey(i), meshes[i]);
+        tmpFile->writeData(indexToMeshKey(i), meshes[i]);
+        finalFile->writeData(indexToMeshKey(i), meshes[i]);
     }
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
@@ -1835,8 +2281,29 @@ bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporte
         metadata[QStringLiteral("height")] = lightmap.pixelSize.height();
         metadata[QStringLiteral("mesh_key")] = indexToMeshKey(drawInfo.meshIndex);
 
-        outputFile->writeMetadata(lm.model->lightmapKey, metadata);
-        outputFile->writeF32Image(lm.model->lightmapKey + "_final", lightmap.imageFP32);
+        finalFile->writeMetadata(lm.model->lightmapKey, metadata);
+        tmpFile->writeMetadata(lm.model->lightmapKey, metadata);
+
+        tmpFile->writeF32Image(lm.model->lightmapKey + "_indirect", lightmap.indirectFP32);
+        tmpFile->writeF32Image(lm.model->lightmapKey + "_direct", lightmap.directFP32);
+        tmpFile->writeU32Image(lm.model->lightmapKey + "_mask", lightmap.chartsMask);
+
+        { // Add direct light
+            const int numPixels = lightmap.pixelSize.width() * lightmap.pixelSize.height();
+            std::array<float, 4> *imagePtr = reinterpret_cast<std::array<float, 4> *>(
+                    const_cast<char *>(lightmap.indirectFP32.data()));
+            std::array<float, 4> *directPtr = reinterpret_cast<std::array<float, 4>*>(const_cast<char*>(lightmap.directFP32.data()));
+            for (int i = 0; i < numPixels; ++i) {
+                imagePtr[i][0] += directPtr[i][0];
+                imagePtr[i][1] += directPtr[i][1];
+                imagePtr[i][2] += directPtr[i][2];
+                // skip alpha, always 0 or 1
+                Q_ASSERT(imagePtr[i][3] == directPtr[i][3]);
+                Q_ASSERT(imagePtr[i][3] == 1.f || imagePtr[i][3] == 0.f);
+            }
+        }
+
+        finalFile->writeF32Image(lm.model->lightmapKey + "_final", lightmap.indirectFP32);
 
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                        QStringLiteral("Lightmap saved for model %1").arg(lm.model->lightmapKey));
@@ -1844,15 +2311,258 @@ bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporte
         reporter.report(((lmIdx + 1) / (double)bakedLightingModelCount) * 0.8); // 80% of the work
     }
 
-    if (!outputFile->close()) {
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Failed to save lightmap to %1").arg(outputPath));
+    if (!finalFile->close()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Failed to save lightmaps to %1").
+                                                             arg(finalPath));
+        return false;
+    }
+
+    if (!tmpFile->close()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Failed to save lightmaps to %1").
+                                                             arg(tmpPath));
         return false;
     }
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap saved to %1 in %2").
-                                                            arg(outputPath).
+                                                            arg(finalPath).
                                                             arg(formatDuration(totalWriteTimer.elapsed())));
     reporter.report(1);
+    return true;
+}
+
+bool QSSGLightmapperPrivate::denoiseLightmaps(const StageProgressReporter &reporter)
+{
+    QElapsedTimer denoiseTimer;
+    denoiseTimer.start();
+
+    // Tmp file
+    const QString inPath = QFileInfo(options.source + ".tmp").absoluteFilePath();
+    QSharedPointer<QSSGLightmapLoader> tmpFile = QSSGLightmapLoader::open(inPath);
+    if (!tmpFile) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Could not read file '%1'").arg(inPath));
+        return false;
+    }
+
+    // Final file
+    const QString outPath = QFileInfo(options.source).absoluteFilePath();
+    QSharedPointer<QSSGLightmapWriter> finalFile = QSSGLightmapWriter::open(outPath);
+    if (!finalFile) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Could not read file '%1'").arg(outPath));
+        return false;
+    }
+
+    // Clone meshes and metadata for final file
+    for (const QString &key : tmpFile->getKeys()) {
+        if (!key.endsWith(QStringLiteral("_direct")) &&
+            !key.endsWith(QStringLiteral("_indirect")) &&
+            !key.endsWith(QStringLiteral("_mask"))) {
+
+            finalFile->writeData(key, tmpFile->readData(key));
+        }
+    }
+
+    Q_UNUSED(reporter);
+    QRhi *rhi = rhiCtx->rhi();
+    Q_ASSERT(rhi);
+    if (!rhi->isFeatureSupported(QRhi::Compute)) {
+        qFatal("Compute is not supported, denoising disabled");
+        return false;
+    }
+
+    const int bakedLightingModelCount = bakedLightingModels.size();
+    if (bakedLightingModelCount == 0)
+        return true;
+
+    QShader shader;
+    if (QFile f(QStringLiteral(":/res/rhishaders/nlm_denoise.comp.qsb")); f.open(QIODevice::ReadOnly)) {
+        shader = QShader::fromSerialized(f.readAll());
+    } else {
+        qFatal() << "Could not find denoise shader";
+        return false;
+    }
+    Q_ASSERT(shader.isValid());
+
+    for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
+        const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
+
+        if (!lm.model->hasLightmap())
+            continue;
+
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                       QStringLiteral("[%2/%3] denoising '%1'").arg(lm.model->lightmapKey).arg(lmIdx + 1).arg(bakedLightingModelCount));
+
+        const QString key = lm.model->lightmapKey;
+        const QString keyFinal = lm.model->lightmapKey + "_final";
+        const QString keyDirect = lm.model->lightmapKey + "_direct";
+        const QString keyIndirect = lm.model->lightmapKey + "_indirect";
+        const QString keyMask = lm.model->lightmapKey + "_mask";
+
+        QVariantMap metadata = tmpFile->readMetadata(key);
+        QByteArray indirect = tmpFile->readF32Image(keyIndirect);
+        QByteArray direct = tmpFile->readF32Image(keyDirect);
+        QByteArray mask = tmpFile->readU32Image(keyMask);
+
+        if (!metadata.contains(QStringLiteral("width")) || !metadata.contains(QStringLiteral("height"))
+            || indirect.isEmpty() || direct.isEmpty() || mask.isEmpty()) {
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Error,
+                           QStringLiteral("[%2/%3] Failed to denoise '%1'").arg(lm.model->lightmapKey).arg(lmIdx + 1).arg(bakedLightingModelCount));
+            continue;
+        }
+
+        QRhiCommandBuffer *cb = nullptr;
+        cb = rhiCtx->commandBuffer();
+        Q_ASSERT(cb);
+
+        QRhiResourceUpdateBatch *u = rhi->nextResourceUpdateBatch();
+        Q_ASSERT(u);
+
+        const int w = metadata[QStringLiteral("width")].toInt();
+        const int h = metadata[QStringLiteral("height")].toInt();
+        const QSize size(w, h);
+        const int numPixels = w * h;
+
+        Q_ASSERT(qsizetype(numPixels * sizeof(float) * 4) == indirect.size());
+        Q_ASSERT(qsizetype(numPixels * sizeof(float) * 4) == direct.size());
+        Q_ASSERT(qsizetype(numPixels * sizeof(quint32)) == mask.size());
+
+        QScopedPointer<QRhiBuffer> buffIn(rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, 3 * numPixels * sizeof(float)));
+        QScopedPointer<QRhiBuffer> buffCount(rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, numPixels * sizeof(quint32)));
+        QScopedPointer<QRhiBuffer> buffOut(rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, 3 * numPixels * sizeof(quint32)));
+        QScopedPointer<QRhiTexture> texMask(rhi->newTexture(QRhiTexture::RGBA8, size, 1, QRhiTexture::UsedWithLoadStore));
+
+        buffIn->create();
+        buffCount->create();
+        buffOut->create();
+        texMask->create();
+
+        u->uploadTexture(texMask.data(), QImage(reinterpret_cast<const uchar *>(mask.constData()), w, h, QImage::Format_RGBA8888));
+
+        // fill and upload input and count buffers
+        {
+            QByteArray inArray(3 * numPixels * sizeof(float), 0);
+            QByteArray count(numPixels * sizeof(quint32), 0);
+            QByteArray outArray(3 * numPixels * sizeof(float), 0);
+
+            QVector3D* inDst = reinterpret_cast<QVector3D*>(inArray.data());
+            const QVector4D* indirectSrc = reinterpret_cast<const QVector4D*>(indirect.data());
+            for (int i = 0; i < numPixels; ++i) {
+                inDst[i][0] = indirectSrc[i][0] * 256.f;
+                inDst[i][1] = indirectSrc[i][1] * 256.f;
+                inDst[i][2] = indirectSrc[i][2] * 256.f;
+            }
+            u->uploadStaticBuffer(buffIn.data(), inArray);
+            u->uploadStaticBuffer(buffCount.data(), count);
+            u->uploadStaticBuffer(buffOut.data(), outArray);
+        }
+
+        struct Settings
+        {
+            float sigma;
+            float width; // int
+            float height; // int
+        } settings;
+
+        settings.sigma = options.sigma;
+        settings.width = w;
+        settings.height = h;
+
+        QScopedPointer<QRhiBuffer> settingsBuffer(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, sizeof(settings)));
+        settingsBuffer->create();
+
+        u->updateDynamicBuffer(settingsBuffer.data(), 0, sizeof(settings), &settings);
+
+        QScopedPointer<QRhiShaderResourceBindings> srb(rhi->newShaderResourceBindings());
+        srb->setBindings(
+                {
+                  QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::ComputeStage, settingsBuffer.data()),
+                  QRhiShaderResourceBinding::bufferLoad(1, QRhiShaderResourceBinding::ComputeStage, buffIn.data()),
+                  QRhiShaderResourceBinding::imageLoad(2, QRhiShaderResourceBinding::ComputeStage, texMask.data(), 0),
+                  QRhiShaderResourceBinding::bufferLoadStore(3, QRhiShaderResourceBinding::ComputeStage, buffOut.data()),
+                  QRhiShaderResourceBinding::bufferLoadStore(4, QRhiShaderResourceBinding::ComputeStage, buffCount.data())
+                });
+        srb->create();
+
+        QScopedPointer<QRhiComputePipeline> pipeline(rhi->newComputePipeline());
+        pipeline->setShaderStage({ QRhiShaderStage::Compute, shader });
+        pipeline->setShaderResourceBindings(srb.data());
+        pipeline->create();
+
+        cb->beginComputePass(u);
+        cb->setComputePipeline(pipeline.data());
+        cb->setShaderResources();
+        constexpr int local_size_x = 8;
+        constexpr int local_size_y = 8;
+        constexpr int local_size_z = 1;
+        cb->dispatch((w + local_size_x - 1) / local_size_x, (h + local_size_y - 1) / local_size_y, local_size_z);
+
+        u = rhi->nextResourceUpdateBatch();
+        Q_ASSERT(u);
+
+        QByteArray final;
+        QByteArray outOut;
+        QByteArray outCount;
+
+        QRhiReadbackResult readResultOut;
+            readResultOut.completed = [&] {
+            outOut = readResultOut.data;
+            Q_ASSERT(outOut.size() == qsizetype(numPixels * sizeof(quint32) * 3));
+        };
+        QRhiReadbackResult readResultCount;
+        readResultCount.completed = [&] {
+            outCount = readResultCount.data;
+            Q_ASSERT(outCount.size() == qsizetype(numPixels * sizeof(quint32)));
+        };
+
+        u->readBackBuffer(buffOut.get(), 0, 3 * numPixels *sizeof(quint32), &readResultOut);
+        u->readBackBuffer(buffCount.get(), 0, numPixels * sizeof(quint32), &readResultCount);
+
+        cb->endComputePass(u);
+        rhi->finish();
+
+        // Write back to image.data variable
+        final.resize(indirect.size());
+        memcpy(final.data(), indirect.data(), indirect.size());
+
+        QVector4D* res = reinterpret_cast<QVector4D*>(final.data());
+        quint32* ptrRGB = reinterpret_cast<quint32*>(outOut.data());
+        quint32* ptrCount = reinterpret_cast<quint32*>(outCount.data());
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                const int idxDst = y * w + x;
+                const int idxDst1 = 3 * idxDst;
+                Q_ASSERT(idxDst1 < numPixels * 3);
+                quint32 cnt = ptrCount[idxDst];
+                //Q_ASSERT(cnt);
+                float r = (ptrRGB[idxDst1] / 256.f) / 1000.f;
+                float g = (ptrRGB[idxDst1 + 1] / 256.f) / 1000.f;
+                float b = (ptrRGB[idxDst1 + 2] / 256.f) / 1000.f;
+                if (cnt > 0) {
+                    res[idxDst][0] = r / cnt;
+                    res[idxDst][1] = g / cnt;
+                    res[idxDst][2] = b / cnt;
+                }
+            }
+        }
+
+        std::array<float, 4> *imagePtr = reinterpret_cast<std::array<float, 4>*>(const_cast<char*>(final.data()));
+        std::array<float, 4> *directPtr = reinterpret_cast<std::array<float, 4>*>(const_cast<char*>(direct.data()));
+        for (int i = 0; i < numPixels; ++i) {
+            imagePtr[i][0] += directPtr[i][0];
+            imagePtr[i][1] += directPtr[i][1];
+            imagePtr[i][2] += directPtr[i][2];
+            // skip alpha, always 0 or 1
+            Q_ASSERT(imagePtr[i][3] == directPtr[i][3]);
+            Q_ASSERT(imagePtr[i][3] == 1.f || imagePtr[i][3] == 0.f);
+        }
+
+        finalFile->writeF32Image(keyFinal, final);
+    }
+
+    if (!finalFile->close()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Could not save file '%1'").arg(outPath));
+        return false;
+    }
+
     return true;
 }
 
@@ -1992,8 +2702,33 @@ bool QSSGLightmapper::bake()
         }
     }
 
+    {
+        auto reporter = d->createReporter(QSSGLightmapperPrivate::Stage::DenoiseLightmaps);
+        if (!d->denoiseLightmaps(reporter)) {
+            d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Denoising failed"));
+            return false;
+        }
+    }
+
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                       QStringLiteral("Baking took %1").arg(formatDuration(d->totalTimer.elapsed())));
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Complete, std::nullopt);
+    return true;
+}
+
+bool QSSGLightmapper::denoise() {
+    QElapsedTimer totalTimer;
+    totalTimer.start();
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Denoise starting..."));
+
+    auto reporter = d->createReporter(QSSGLightmapperPrivate::Stage::DenoiseLightmaps);
+    if (!d->denoiseLightmaps(reporter)) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Denoising failed"));
+        return false;
+    }
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Denoising took %1 ms").arg(totalTimer.elapsed()));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Complete, std::nullopt);
     return true;
 }
@@ -2028,6 +2763,11 @@ qsizetype QSSGLightmapper::add(const QSSGBakedLightingModel &)
 bool QSSGLightmapper::bake()
 {
     qWarning("Qt Quick 3D was built without the lightmapper; cannot bake lightmaps");
+    return false;
+}
+
+bool QSSGLightmapper::denoise() {
+    qWarning("Qt Quick 3D was built without the lightmapper; cannot denoise lightmaps");
     return false;
 }
 

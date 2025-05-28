@@ -62,6 +62,7 @@ public:
     void setOutputCallback(Callback callback);
     qsizetype add(const QSSGBakedLightingModel &model);
     bool bake();
+    bool denoise();
 
 private:
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER

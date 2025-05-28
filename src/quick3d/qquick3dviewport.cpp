@@ -1399,6 +1399,15 @@ void QQuick3DViewport::bakeLightmap()
     lightmapBaker()->bake();
 }
 
+/*!
+    \internal
+*/
+void QQuick3DViewport::denoiseLightmap()
+{
+    lightmapBaker()->denoise();
+}
+
+
 void QQuick3DViewport::setGlobalPickingEnabled(bool isEnabled)
 {
     QQuick3DSceneRenderer *renderer = getRenderer();

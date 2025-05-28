@@ -127,6 +127,7 @@ private:
     bool m_prepared = false;
 
     bool m_lightmapBakingFromCmdRequested = false;
+    bool m_lightmapDenoisingFromCmdRequested = false;
 
     int m_requestedFramesCount = 0;
     bool m_postProcessingStack = false;

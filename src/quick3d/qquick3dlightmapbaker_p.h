@@ -53,6 +53,8 @@ public:
     void bake(Callback callback);
     void bake();
 
+    void denoise();
+
 private slots:
     void onLmCancelButtonClicked();
     void onLmWindowClosing(QQuickCloseEvent *event);
@@ -61,6 +63,7 @@ private:
     void updateView();
 
     bool m_bakingRequested = false;
+    bool m_denoisingRequested = false;
     bool m_currentlyBaking = false;
     BakingControl *m_bakingControl = nullptr;
     QQuick3DViewport *m_view = nullptr;

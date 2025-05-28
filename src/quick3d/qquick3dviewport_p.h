@@ -115,6 +115,7 @@ public:
     QQuick3DLightmapBaker *lightmapBaker();
 
     Q_INVOKABLE void bakeLightmap();
+    Q_REVISION(6, 10) Q_INVOKABLE void denoiseLightmap();
 
     QQmlListProperty<QQuick3DObject> extensions();
 

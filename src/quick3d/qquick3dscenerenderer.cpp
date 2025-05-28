@@ -1269,6 +1269,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QSSGRenderLayer &layerNode,
         layerNode.lmOptions.indirectLightBounces = lightmapper->bounces();
         layerNode.lmOptions.indirectLightFactor = lightmapper->indirectLightFactor();
         layerNode.lmOptions.source = lightmapper->source();
+        layerNode.lmOptions.sigma = lightmapper->denoiseSigma();
     } else {
         layerNode.lmOptions = {};
     }
@@ -1358,19 +1359,23 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
     // Check if we have interactive bake requested or if we are coming in here the second
     // time from cmd line request (needs to wait a frame before starting to bake).
     bool bakeRequested = false;
+    bool denoiseRequested = false;
     bool fromCmd = false;
     QQuick3DLightmapBaker *lightmapBaker = view3D->maybeLightmapBaker();
-    if (lightmapBaker && (lightmapBaker->m_bakingRequested)) {
+    if (lightmapBaker && (lightmapBaker->m_bakingRequested || lightmapBaker->m_denoisingRequested)) {
         bakeRequested = std::exchange(lightmapBaker->m_bakingRequested, false);
+        denoiseRequested = std::exchange(lightmapBaker->m_denoisingRequested, false);
     } else {
         bakeRequested = m_lightmapBakingFromCmdRequested;
+        denoiseRequested = m_lightmapDenoisingFromCmdRequested;
         fromCmd = bakeRequested;
     }
 
     // Start the bake (we should have a valid layer render data at this point).
-    if (bakeRequested) {
+    if (bakeRequested || denoiseRequested) {
         QSSGLayerRenderData::LightmapBakingInitParams params;
         params.bakeRequested = bakeRequested;
+        params.denoiseRequested = denoiseRequested;
         params.quitWhenFinished = fromCmd;
 
         // We want the frontend callback in the case that a QQuick3DLightmapBaker is present
@@ -1413,8 +1418,9 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
         };
 
         m_lightmapBakingFromCmdRequested = isLightmapFlagSet("--bake-lightmaps", "QT_QUICK3D_BAKE_LIGHTMAPS");
+        m_lightmapDenoisingFromCmdRequested = isLightmapFlagSet("--denoise-lightmaps", "QT_QUICK3D_DENOISE_LIGHTMAPS");
 
-        if (m_lightmapBakingFromCmdRequested) {
+        if (m_lightmapBakingFromCmdRequested || m_lightmapDenoisingFromCmdRequested) {
             // Delay one frame so the render data is initialized
             QMetaObject::invokeMethod(view3D, &QQuick3DViewport::update, Qt::QueuedConnection);
         }
