@@ -96,6 +96,7 @@ qt_internal_add_qml_module(Quick3D
     PLUGIN_TARGET qquick3dplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
+    QML_FILES LightmapperOutputWindow.qml
 )
 
 qt_internal_extend_target(qquick3dplugin
