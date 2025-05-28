@@ -17,7 +17,6 @@ qt_internal_add_qml_module(Quick3DHelpersImpl
     QML_FILES
         DepthOfFieldBlur.qml
         SceneEffect.qml
-        LightmapperOutputWindow.qml
     LIBRARIES
         Qt::Qml
         Qt::Quick
