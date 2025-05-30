@@ -1,6 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick3D
 
@@ -49,41 +50,30 @@ Item {
                     opacity: 1
                 }
             }
-            Model {
-                id: s1
+
+            component CircleModel : Model {
+                property alias baseColor: circleMaterial.diffuseColor
+
                 source: "#Sphere"
                 scale: Qt.vector3d(3.0, 3.0, 0.01)
+                materials: DefaultMaterial {
+                    id: circleMaterial
+                    lighting: DefaultMaterial.NoLighting
+                    opacity: 0.5
+                    diffuseMap: textureCheckBox.checked ? modelTexture : noTexture
+                }
+            }
+            CircleModel {
                 position: Qt.vector3d(-50, 50, -200)
-                materials: DefaultMaterial {
-                    diffuseColor: "red"
-                    lighting: DefaultMaterial.NoLighting
-                    opacity: 0.5
-                    diffuseMap: textureCheckBox.checked ? modelTexture : noTexture
-                }
+                baseColor: "red"
             }
-            Model {
-                id: s2
-                source: "#Sphere"
-                scale: Qt.vector3d(3.0, 3.0, 0.01)
+            CircleModel {
                 position: Qt.vector3d(50, 50, -150)
-                materials: DefaultMaterial {
-                    diffuseColor: "green"
-                    lighting: DefaultMaterial.NoLighting
-                    opacity: 0.5
-                    diffuseMap: textureCheckBox.checked ? modelTexture : noTexture
-                }
+                baseColor: "green"
             }
-            Model {
-                id: s3
-                source: "#Sphere"
-                scale: Qt.vector3d(3.0, 3.0, 0.01)
+            CircleModel {
                 position: Qt.vector3d(0, -50, -100)
-                materials: DefaultMaterial {
-                    diffuseColor: "blue"
-                    lighting: DefaultMaterial.NoLighting
-                    opacity: 0.5
-                    diffuseMap: textureCheckBox.checked ? modelTexture : noTexture
-                }
+                baseColor: "blue"
             }
         }
     }
