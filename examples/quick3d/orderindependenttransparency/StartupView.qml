@@ -80,60 +80,47 @@ Item {
             }
         }
 
-        // Qt Cube model
-        Model {
+        component QtCubeModel : Model {
+            property alias xRotationDuration: cubeXAnim.duration
+            property alias yRotationDuration: cubeYAnim.duration
+            property alias materialOpacity: cubeMaterial.opacity
+
             source: "#Cube"
             position: Qt.vector3d(0, 0, 100)
-            scale: Qt.vector3d(2.0, 2.0, 2.0)
             NumberAnimation on eulerRotation.y {
+                id: cubeYAnim
                 loops: Animation.Infinite
                 from: 0
                 to: 360
-                duration: 10000
             }
             NumberAnimation on eulerRotation.x {
+                id: cubeXAnim
                 loops: Animation.Infinite
                 from: 0
                 to: 360
-                duration: 8000
             }
             materials: PrincipledMaterial {
+                id: cubeMaterial
                 baseColorMap: Texture {
                     source: "images/qt_logo2.png"
                 }
                 normalMap: Texture {
                     source: "images/qt_logo2_n.png"
                 }
-                opacity: 0.5
                 cullMode: Material.NoCulling
             }
         }
-        Model {
-            source: "#Cube"
-            position: Qt.vector3d(0, 0, 100)
+        QtCubeModel {
+            scale: Qt.vector3d(2.0, 2.0, 2.0)
+            xRotationDuration: 8000
+            yRotationDuration: 10000
+            materialOpacity: 0.5
+        }
+        QtCubeModel {
             scale: Qt.vector3d(1.0, 1.0, 1.0)
-            NumberAnimation on eulerRotation.y {
-                loops: Animation.Infinite
-                from: 0
-                to: 360
-                duration: 20000
-            }
-            NumberAnimation on eulerRotation.x {
-                loops: Animation.Infinite
-                from: 0
-                to: 360
-                duration: 14000
-            }
-            materials: PrincipledMaterial {
-                baseColorMap: Texture {
-                    source: "images/qt_logo2.png"
-                }
-                normalMap: Texture {
-                    source: "images/qt_logo2_n.png"
-                }
-                opacity: 0.7
-                cullMode: Material.NoCulling
-            }
+            xRotationDuration: 14000
+            yRotationDuration: 20000
+            materialOpacity: 0.7
         }
     }
 
