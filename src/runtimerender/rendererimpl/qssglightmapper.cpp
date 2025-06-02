@@ -38,8 +38,8 @@ QT_BEGIN_NAMESPACE
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER
 
 static constexpr int DIRECT_MAP_UPSCALE_FACTOR = 3;
-static constexpr quint32 PIXEL_VOID = 0;
-static constexpr quint32 PIXEL_UNSET = -1;
+static constexpr quint32 PIXEL_VOID = 0; // Pixel not part of any mask
+static constexpr quint32 PIXEL_UNSET = -1; // Pixel part of mask, but not yet set
 
 static void floodFill(quint32 *maskUintPtr, const int rows, const int cols)
 {
@@ -56,7 +56,7 @@ static void floodFill(quint32 *maskUintPtr, const int rows, const int cols)
                 const quint32 value = maskUintPtr[idx];
 
                 // If the target color is already the same as the replacement color, no need to proceed
-                if (value == PIXEL_VOID || value != PIXEL_UNSET)
+                if (value != PIXEL_UNSET)
                     continue;
 
                 // Fill the current cell with the replacement color
@@ -1304,7 +1304,7 @@ QList<QVector3D> applyGaussianBlur(const QList<QVector3D>& image, const QList<qu
 
     double sum = 0.0;
     double kernel[kernelSize][kernelSize];
-    double mean = kernelSize / 2;
+    double mean = kernelSize * 0.5;
     for (int y = 0; y < kernelSize; ++y) {
         for (int x = 0; x < kernelSize; ++x) {
             kernel[y][x] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0))) / (2 * M_PI * sigma * sigma);
@@ -2011,9 +2011,6 @@ void QSSGLightmapperPrivate::computeIndirectLight(const StageProgressReporter &r
 
 bool QSSGLightmapperPrivate::postProcess(const StageProgressReporter &reporter)
 {
-    constexpr quint32 PIXEL_VOID = 0;
-    constexpr quint32 PIXEL_UNSET = -1;
-
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
