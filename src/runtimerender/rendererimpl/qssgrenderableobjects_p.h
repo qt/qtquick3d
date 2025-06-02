@@ -294,7 +294,7 @@ class QSSGSubsetRenderable;
 // Different subsets from the same model will get the same
 // model context so we can generate the MVP and normal matrix once
 // and only once per subset.
-class QSSGModelContext
+class Q_AUTOTEST_EXPORT QSSGModelContext
 {
     Q_DISABLE_COPY_MOVE(QSSGModelContext)
 public:
@@ -316,7 +316,7 @@ class QSSGRenderer;
 class QSSGLayerRenderData;
 struct QSSGShadowMapEntry;
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderableObject
+class Q_AUTOTEST_EXPORT QSSGSubsetRenderable : public QSSGRenderableObject
 {
     Q_DISABLE_COPY_MOVE(QSSGSubsetRenderable)
 public:
@@ -378,7 +378,7 @@ Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
 /**
  * A renderable that corresponds to a particles.
  */
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
+class Q_AUTOTEST_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
 {
     Q_DISABLE_COPY_MOVE(QSSGParticlesRenderable)
 public:
