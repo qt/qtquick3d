@@ -81,7 +81,7 @@ void ShaderPoker::generateShader()
 
     QSSGRenderModel renderModel;
     QSSGRenderSubset renderSubset;
-    QSSGModelContext modelContext(renderModel, QMatrix4x4(), QSSGRenderCameraDataList());
+    QSSGModelContext modelContext(renderModel, QMatrix4x4(), QMatrix3x3(), QSSGRenderMvpArray());
     QSSGShaderLightListView lights;
     QSSGRenderableImage *images = nullptr;
 
