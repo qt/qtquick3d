@@ -1612,8 +1612,6 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
         } else if (model.skeleton) {
             auto boneTexture = bufferManager->loadSkinmap(&(model.skeleton->boneTexData));
             setBonemapTexture(theModelContext, boneTexture.m_texture);
-        } else {
-            setBonemapTexture(theModelContext, nullptr);
         }
 
         // many renderableFlags are the same for all the subsets
