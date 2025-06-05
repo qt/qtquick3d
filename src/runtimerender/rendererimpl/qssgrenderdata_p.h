@@ -34,7 +34,7 @@ class QSGRenderContext;
 class QSGRenderer;
 
 // Per window node data
-class QSSGGlobalRenderNodeData
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGGlobalRenderNodeData
 {
     Q_DISABLE_COPY_MOVE(QSSGGlobalRenderNodeData)
 public:

@@ -474,21 +474,50 @@ public:
                                                                float lodThreshold);
 
     // Convenience wrappers for getting values from the node, model store.
-    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h, QMatrix4x4 defaultValue) const;
-    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h) const;
-    [[nodiscard]] QMatrix4x4 getGlobalTransform(const QSSGRenderNode &node) const;
-
-    [[nodiscard]] QMatrix3x3 getNormalMatrix(QSSGRenderModelHandle h) const;
-    [[nodiscard]] QMatrix3x3 getNormalMatrix(const QSSGRenderModel &model) const;
-
-    [[nodiscard]] ModelViewProjections getModelMvps(QSSGRenderModelHandle h) const;
-    [[nodiscard]] ModelViewProjections getModelMvps(const QSSGRenderModel &model) const;
-
-    [[nodiscard]] InstanceTransforms getInstanceTransforms(QSSGRenderNodeHandle h) const;
-    [[nodiscard]] InstanceTransforms getInstanceTransforms(const QSSGRenderNode &node) const;
-
-    [[nodiscard]] float getGlobalOpacity(QSSGRenderNodeHandle h, float defaultValue = 1.0f) const;
-    [[nodiscard]] float getGlobalOpacity(const QSSGRenderNode &node) const;
+    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h, QMatrix4x4 defaultValue) const
+    {
+        return nodeData->getGlobalTransform(h, defaultValue);
+    }
+    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h) const
+    {
+        return nodeData->getGlobalTransform(h, QMatrix4x4());
+    }
+    [[nodiscard]] QMatrix4x4 getGlobalTransform(const QSSGRenderNode &node) const
+    {
+        return nodeData->getGlobalTransform(node.h, node.localTransform);
+    }
+    [[nodiscard]] QMatrix3x3 getNormalMatrix(QSSGRenderModelHandle h) const
+    {
+        return modelData->getNormalMatrix(h, QMatrix3x3(Qt::Uninitialized));
+    }
+    [[nodiscard]] QMatrix3x3 getNormalMatrix(const QSSGRenderModel &model) const
+    {
+        return modelData->getNormalMatrix(model);
+    }
+    [[nodiscard]] ModelViewProjections getModelMvps(QSSGRenderModelHandle h) const
+    {
+        return modelData->getModelViewProjection(h);
+    }
+    [[nodiscard]] ModelViewProjections getModelMvps(const QSSGRenderModel &model) const
+    {
+        return modelData->getModelViewProjection(model);
+    }
+    [[nodiscard]] InstanceTransforms getInstanceTransforms(QSSGRenderNodeHandle h) const
+    {
+        return nodeData->getInstanceTransforms(h);
+    }
+    [[nodiscard]] InstanceTransforms getInstanceTransforms(const QSSGRenderNode &node) const
+    {
+        return nodeData->getInstanceTransforms(node.h);
+    }
+    [[nodiscard]] float getGlobalOpacity(QSSGRenderNodeHandle h, float defaultValue = 1.0f) const
+    {
+        return nodeData->getGlobalOpacity(h, defaultValue);
+    }
+    [[nodiscard]] float getGlobalOpacity(const QSSGRenderNode &node) const
+    {
+        return nodeData->getGlobalOpacity(node.h);
+    }
 
     //
     [[nodiscard]] QSSGRenderItem2DData::Item2DRenderer getItem2DRenderer(const QSSGRenderItem2D &item) const

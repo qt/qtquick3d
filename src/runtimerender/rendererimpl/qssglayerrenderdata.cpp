@@ -748,61 +748,6 @@ QSSGPrepResultId QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextIn
     return static_cast<QSSGPrepResultId>(prepId);
 }
 
-QMatrix4x4 QSSGLayerRenderData::getGlobalTransform(QSSGRenderNodeHandle h, QMatrix4x4 defaultValue) const
-{
-    return nodeData->getGlobalTransform(h, defaultValue);
-}
-
-QMatrix4x4 QSSGLayerRenderData::getGlobalTransform(QSSGRenderNodeHandle h) const
-{
-    return nodeData->getGlobalTransform(h, QMatrix4x4());
-}
-
-QMatrix4x4 QSSGLayerRenderData::getGlobalTransform(const QSSGRenderNode &node) const
-{
-    return nodeData->getGlobalTransform(node.h, node.localTransform);
-}
-
-QMatrix3x3 QSSGLayerRenderData::getNormalMatrix(QSSGRenderModelHandle h) const
-{
-    return modelData->getNormalMatrix(h, QMatrix3x3(Qt::Uninitialized));
-}
-
-QMatrix3x3 QSSGLayerRenderData::getNormalMatrix(const QSSGRenderModel &model) const
-{
-    return modelData->getNormalMatrix(model);
-}
-
-QSSGLayerRenderData::ModelViewProjections QSSGLayerRenderData::getModelMvps(QSSGRenderModelHandle h) const
-{
-    return modelData->getModelViewProjection(h);
-}
-
-QSSGLayerRenderData::ModelViewProjections QSSGLayerRenderData::getModelMvps(const QSSGRenderModel &model) const
-{
-    return modelData->getModelViewProjection(model);
-}
-
-QSSGLayerRenderData::InstanceTransforms QSSGLayerRenderData::getInstanceTransforms(QSSGRenderNodeHandle h) const
-{
-    return nodeData->getInstanceTransforms(h);
-}
-
-QSSGLayerRenderData::InstanceTransforms QSSGLayerRenderData::getInstanceTransforms(const QSSGRenderNode &node) const
-{
-    return nodeData->getInstanceTransforms(node.h);
-}
-
-float QSSGLayerRenderData::getGlobalOpacity(QSSGRenderNodeHandle h, float defaultValue) const
-{
-    return nodeData->getGlobalOpacity(h, defaultValue);
-}
-
-float QSSGLayerRenderData::getGlobalOpacity(const QSSGRenderNode &node) const
-{
-    return nodeData->getGlobalOpacity(node.h);
-}
-
 static constexpr size_t pipelineStateIndex(QSSGRenderablesFilter filter)
 {
     switch (filter) {
