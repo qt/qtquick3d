@@ -159,7 +159,7 @@ QSSGRenderDataHelpers::GlobalStateResult QSSGRenderDataHelpers::updateGlobalNode
         const bool hasParent = (parent != nullptr);
         const bool globallyActive = node->getLocalState(LocalState::Active) && (!hasParent || parent->getGlobalState(GlobalState::Active));
         node->flags = globallyActive ? (node->flags | FlagT(GlobalState::Active)) : (node->flags & ~FlagT(GlobalState::Active));
-        const bool globallyPickable = node->getLocalState(LocalState::Pickable) || (!hasParent || parent->getGlobalState(GlobalState::Pickable));
+        const bool globallyPickable = node->getLocalState(LocalState::Pickable) || (hasParent && parent->getGlobalState(GlobalState::Pickable));
         node->flags = globallyPickable ? (node->flags | FlagT(GlobalState::Pickable)) : (node->flags & ~FlagT(GlobalState::Pickable));
 
         // Clear dirty flags (Transform, Opacity, Active, Pickable)
