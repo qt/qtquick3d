@@ -1201,7 +1201,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel &model)
     return theMesh;
 }
 
-QSSGMesh::Mesh QSSGBufferManager::loadRawMesh(const QSSGRenderModel &model)
+QSSGMesh::Mesh QSSGBufferManager::loadLightmapMesh(const QSSGRenderModel &model)
 {
 
     // When baking lightmaps we need to make sure that the original mesh is loaded instead of the already baked mesh.
@@ -1213,14 +1213,7 @@ QSSGMesh::Mesh QSSGBufferManager::loadRawMesh(const QSSGRenderModel &model)
             return meshLightmap;
     }
 
-    QSSGMesh::Mesh mesh;
-    if (model.meshPath.isNull() && model.geometry) {
-        mesh = QSSGMesh::Mesh::fromRuntimeData(model.geometry->meshData(), nullptr);
-    } else {
-        mesh = loadMeshData(model.meshPath);
-    }
-
-    return mesh;
+    return {};
 }
 
 QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model) const

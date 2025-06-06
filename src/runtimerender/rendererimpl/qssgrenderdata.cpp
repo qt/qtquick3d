@@ -497,14 +497,14 @@ void QSSGRenderModelData::prepareMeshData(const QSSGModelsView &models, QSSGRend
             if (canModelBePickable) {
                 // Check if there is BVH data, if not generate it
                 if (!theMesh->bvh) {
-                    const QSSGMesh::Mesh mesh = bufferManager->loadRawMesh(*model);
+                    const QSSGMesh::Mesh mesh = bufferManager->loadLightmapMesh(*model);
 
                     if (mesh.isValid())
                         theMesh->bvh = bufferManager->loadMeshBVH(mesh);
-                    else if (!model->meshPath.isNull())
-                        theMesh->bvh = bufferManager->loadMeshBVH(model->meshPath);
                     else if (model->geometry)
                         theMesh->bvh = bufferManager->loadMeshBVH(model->geometry);
+                    else if (!model->meshPath.isNull())
+                        theMesh->bvh = bufferManager->loadMeshBVH(model->meshPath);
 
                     if (theMesh->bvh) {
                         const auto &roots = theMesh->bvh->roots();
