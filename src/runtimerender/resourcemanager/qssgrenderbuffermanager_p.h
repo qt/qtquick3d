@@ -133,7 +133,7 @@ public:
     QSSGBounds3 getModelBounds(const QSSGRenderModel *model) const;
 
     QSSGRenderMesh *loadMesh(const QSSGRenderModel &model);
-    QSSGMesh::Mesh loadRawMesh(const QSSGRenderModel &model);
+    QSSGMesh::Mesh loadLightmapMesh(const QSSGRenderModel &model);
 
     // Called at the end of the frame to release unreferenced geometry and textures
     void cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *layer);
