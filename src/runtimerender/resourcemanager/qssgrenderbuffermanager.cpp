@@ -335,7 +335,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
     Q_ASSERT(currentLayer);
 
     static const QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA16F;
-    const QString &lightmapSource = currentLayer->lmOptions.source;
     QSSGRenderImageTexture result;
     if (lightmapSource.isEmpty()) {
         qCWarning(WARNING, "Path to lightmap image is empty");
@@ -1180,15 +1179,13 @@ QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath)
 
 QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel &model)
 {
-
     // When baking lightmaps we need to make sure that the original mesh is loaded instead of the already baked mesh.
-    const bool disableLightmaps = currentLayer ? currentLayer->disableLightmaps : true;
 
     QSSGMeshProcessingOptions options;
     QSSGRenderMesh *theMesh = nullptr;
 
-    if (!disableLightmaps && model.hasLightmap()) {
-        options.lightmapPath = currentLayer->lmOptions.source;
+    if (!currentlyLightmapBaking && model.hasLightmap()) {
+        options.lightmapPath = lightmapSource;
         options.lightmapKey = model.lightmapKey;
     }
 
@@ -1203,12 +1200,9 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel &model)
 
 QSSGMesh::Mesh QSSGBufferManager::loadLightmapMesh(const QSSGRenderModel &model)
 {
-
     // When baking lightmaps we need to make sure that the original mesh is loaded instead of the already baked mesh.
-    const bool disableLightmaps = currentLayer ? currentLayer->disableLightmaps : true;
-
-    if (!disableLightmaps && model.hasLightmap()) {
-        auto [meshLightmap, _] = loadFromLightmapFile(currentLayer->lmOptions.source, model.lightmapKey);
+    if (!currentlyLightmapBaking && model.hasLightmap()) {
+        auto [meshLightmap, _] = loadFromLightmapFile(lightmapSource, model.lightmapKey);
         if (meshLightmap.isValid())
             return meshLightmap;
     }
@@ -1219,6 +1213,20 @@ QSSGMesh::Mesh QSSGBufferManager::loadLightmapMesh(const QSSGRenderModel &model)
 QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model) const
 {
     QSSGBounds3 retval;
+
+    if (!currentlyLightmapBaking && model->hasLightmap()) {
+        auto [meshLightmap, _] = loadFromLightmapFile(lightmapSource, model->lightmapKey);
+        if (meshLightmap.isValid()) {
+            const QVector<QSSGMesh::Mesh::Subset> subsets = meshLightmap.subsets();
+            for (const QSSGMesh::Mesh::Subset &subset : std::as_const(subsets)) {
+                retval.include(QSSGBounds3(subset.bounds.min, subset.bounds.max));
+            }
+            return retval;
+        } else {
+            qWarning() << "Could not load lightmap" << lightmapSource << model->lightmapKey;
+        }
+    }
+
     // Custom Geometry
     if (model->geometry) {
         retval = QSSGBounds3(model->geometry->boundsMin(), model->geometry->boundsMax());
@@ -2127,6 +2135,16 @@ void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
             + bufferMemorySize(mesh->subsets.at(0).rhi.indexBuffer);
     stats.meshDataSize = qMax(0u, stats.meshDataSize - s);
     QSSGRhiContextStats::get(*m_contextInterface->rhiContext()).meshDataSizeChanges(stats.meshDataSize);
+}
+
+void QSSGBufferManager::setLightmapSource(const QString &source)
+{
+    lightmapSource = source;
+}
+
+void QSSGBufferManager::setCurrentlyLightmapBaking(bool value)
+{
+    currentlyLightmapBaking = value;
 }
 
 size_t qHash(const QSSGBufferManager::CustomImageCacheKey &k, size_t seed) noexcept

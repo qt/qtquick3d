@@ -57,6 +57,7 @@ Window {
         }
 
         Model {
+            property string objectName: "Model 0"
             source: settings.shape0Source
             usedInBakedLighting: true
             bakedLightmap: BakedLightmap {
@@ -68,9 +69,11 @@ Window {
                 baseColor: "red"
             }
             scale: Qt.vector3d(3, 0.1, 3)
+            pickable: true
         }
 
         Model {
+            property string objectName: "Model 1"
             source: settings.shape1Source
             usedInBakedLighting: true
             bakedLightmap: BakedLightmap {
@@ -84,9 +87,11 @@ Window {
             position: Qt.vector3d(0, 100, 0)
             scale: Qt.vector3d(0.5, 0.5, 0.5)
             eulerRotation: Qt.vector3d(45, 0, 0)
+            pickable: true
         }
 
         Model {
+            property string objectName: "Model 2"
             source: settings.shape2Source
             usedInBakedLighting: true
             bakedLightmap: BakedLightmap {
@@ -100,9 +105,11 @@ Window {
             position: Qt.vector3d(100, 100, 0)
             scale: Qt.vector3d(0.5, 0.5, 0.5)
             eulerRotation: Qt.vector3d(45, 0, 0)
+            pickable: true
         }
 
         Model {
+            property string objectName: "Model 3"
             source: settings.shape3Source
             usedInBakedLighting: true
             bakedLightmap: BakedLightmap {
@@ -116,13 +123,38 @@ Window {
             position: Qt.vector3d(-100, 100, 100)
             scale: Qt.vector3d(0.5, 0.5, 0.5)
             eulerRotation: Qt.vector3d(45, 0, 0)
+            pickable: true
         }
+    }
+
+    Label {
+        anchors.top: parent.top
+        anchors.right: parent.right
+        id: pickLabel
+        color: "white"
+        text: "None"
+        font.pointSize: 14
     }
 
     WasdController {
         controlledObject: camera
         speed: 0.4
         shiftSpeed: 0.8
+    }
+
+    MouseArea {
+        anchors.fill: view3d
+
+        onClicked: (mouse) => {
+            var result = view3d.pick(mouse.x, mouse.y);
+            if (result.objectHit) {
+                var pickedObject = result.objectHit;
+                pickLabel.text = pickedObject.objectName;
+
+            } else {
+                pickLabel.text = "None";
+            }
+        }
     }
 
     SettingsPane {

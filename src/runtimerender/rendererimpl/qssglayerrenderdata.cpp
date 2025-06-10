@@ -3010,27 +3010,8 @@ QSSGFrameData &QSSGLayerRenderData::getFrameData()
     return frameData;
 }
 
-void QSSGLayerRenderData::initializeLightmapBaking(const LightmapBakingInitParams &params)
+void QSSGLayerRenderData::initializeLightmapBaking(const QSSGLightmapBaker::Context &ctx)
 {
-    lightmapBaker.reset();
-
-    QSSGLightmapBaker::Context ctx;
-
-    ctx.env.rhiCtx = renderer->contextInterface()->rhiContext().get();
-    ctx.env.renderer = renderer;
-    ctx.env.lmOptions = layer.lmOptions;
-    ctx.env.bakedLightingModels = getSortedBakedLightingModels();
-
-    ctx.settings.bakeRequested = params.bakeRequested;
-    ctx.settings.denoiseRequested = params.denoiseRequested;
-    ctx.settings.quitWhenFinished = params.quitWhenFinished;
-
-    ctx.callbacks.disableLightmaps = [this](bool value) {
-        layer.disableLightmaps = value;
-    };
-    ctx.callbacks.lightmapBakingOutput = params.lightmapBakingOutputCallback;
-    ctx.callbacks.triggerNewFrame = params.triggerNewFrameCallback;
-
     lightmapBaker = std::make_unique<QSSGLightmapBaker>(ctx);
 }
 

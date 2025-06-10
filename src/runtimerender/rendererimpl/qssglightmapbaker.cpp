@@ -48,7 +48,7 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
         // we can reload all meshes to use the original one and NOT the baked one.
         // When disableLightmaps is set on the layer, the mesh loader will always load the
         // original mesh and not the lightmap mesh.
-        cb.disableLightmaps(true);
+        cb.setCurrentlyBaking(true);
         cb.triggerNewFrame(true);
 
         d->currentStatus = Status::Running;
@@ -68,7 +68,7 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
             qDebug("Lightmap baking/denoising done, exiting application");
             QMetaObject::invokeMethod(qApp, "quit");
         } else {
-            cb.disableLightmaps(false);
+            cb.setCurrentlyBaking(false);
             cb.triggerNewFrame(true);
             d->currentStatus = Status::Finished;
         }
