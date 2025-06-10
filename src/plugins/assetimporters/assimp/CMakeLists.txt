@@ -210,7 +210,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/AssetLib/STL/STLLoader.cpp ../../../3rdparty/assimp/src/code/AssetLib/STL/STLLoader.h
         ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAsset.h ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAsset.inl
         ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAssetWriter.h ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFAssetWriter.inl
-        ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFCommon.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFCommon.h
+        ../../../3rdparty/assimp/src/code/AssetLib/glTFCommon/glTFCommon.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTFCommon/glTFCommon.h
         ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFImporter.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTF/glTFImporter.h
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.inl
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.inl
@@ -218,6 +218,8 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyLoader.cpp ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyLoader.h
         ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyParser.cpp ../../../3rdparty/assimp/src/code/AssetLib/Ply/PlyParser.h
         ../../../3rdparty/assimp/src/contrib/pugixml/src/pugixml.hpp
+        ../../../3rdparty/assimp/src/contrib/pugixml/src/pugiconfig.hpp
+        ../../../3rdparty/assimp/src/contrib/pugixml/src/pugixml.cpp
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/utils.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/advancing_front.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/sweep/advancing_front.h
