@@ -155,8 +155,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         rootNodeRef = &rootNode;
     }
 
-    void release();
-
     QSSGRenderRoot *rootNode = nullptr;
 
     QSSGRenderLayerHandle lh;

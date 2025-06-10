@@ -755,8 +755,15 @@ void QQuick3DWindowAttachment::queueForCleanup(QQuick3DSceneManager *manager)
 
 void QQuick3DWindowAttachment::queueForCleanup(QSSGRenderLayer *layer)
 {
-    if (!pendingLayerCleanupQueue.contains(layer))
+    if (QSSGRenderRoot *lr = QSSGRenderRoot::get(layer->rootNodeRef); lr != m_rootNode) {
+        qWarning("Attempted to queue layer for cleanup that is not part of the current window!");
+        return;
+    }
+
+    if (!pendingLayerCleanupQueue.contains(layer)) {
+        layer->removeFromGraph();
         pendingLayerCleanupQueue.push_back(layer);
+    }
 }
 
 QT_END_NAMESPACE

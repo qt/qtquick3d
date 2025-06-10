@@ -38,23 +38,15 @@ QSSGRenderLayer::QSSGRenderLayer()
     flags = { FlagT(LocalState::Active) | FlagT(GlobalState::Active) }; // The layer node is alway active and not dirty.
 }
 
-void QSSGRenderLayer::release()
+QSSGRenderLayer::~QSSGRenderLayer()
 {
+    rootNode = nullptr;
+    rootNodeRef = nullptr;
+
     delete importSceneNode;
     importSceneNode = nullptr;
     delete renderData;
     renderData = nullptr;
-}
-
-QSSGRenderLayer::~QSSGRenderLayer()
-{
-    if (rootNode)
-        rootNode->removeChild(*this);
-
-    rootNode = nullptr;
-    rootNodeRef = nullptr;
-
-    release();
 }
 
 void QSSGRenderLayer::setProbeOrientation(const QVector3D &angles)
