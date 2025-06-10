@@ -66,6 +66,7 @@ void tst_NodeIndexing::testIndexingWithChildren()
     QCOMPARE(nodeIndices.size(), initialNodeCount);
 
     removeFromLayer(layer, nodes);
+    rootNode.removeChild(layer);
     qDeleteAll(nodes);
 }
 
@@ -120,13 +121,11 @@ void tst_NodeIndexing::testIndexingWithMultipleViews()
     for (size_t i = 0; i < LayerCount; ++i) {
         removeFromLayer(layers[i], layerNodes[i]);
         QVERIFY(layers[i].children.isEmpty());
+        rootNode.removeChild(layers[i]);
     }
 
     for (auto &nodes : layerNodes)
         qDeleteAll(nodes);
-
-    // the layers remove themselves from the root node when they are
-    // destroyed.
 }
 
 void tst_NodeIndexing::testIndexingWithImportScene()
@@ -212,16 +211,13 @@ void tst_NodeIndexing::testIndexingWithImportScene()
     QVERIFY(mainLayer.children.isEmpty());
 
     // Ensure that the scene root isn't referenced by any layer
-    for (size_t i = 1; i < LayerCount; ++i) {
+    for (size_t i = 0; i < LayerCount; ++i) {
         auto &layer = layers[i];
         layer.children.clear(); // Clear the list (or the sceneRoot will be used after it's deleted)
+        rootNode.removeChild(layer);
     }
 
     qDeleteAll(mainLayerNodes);
-
-    // the layers remove themselves from the root node when they are
-    // destroyed.
-
 }
 
 void tst_NodeIndexing::removeFromLayer(QSSGRenderLayer &layer, std::vector<QSSGRenderNode *> &nodes)

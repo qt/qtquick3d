@@ -203,10 +203,15 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
     m_sgContext->bufferManager()->releaseResourcesForLayer(m_layer);
 
     if (m_layer) {
+        // The scene root is created by the scene manager and realeased by the
+        // the normal cleanup of scene nodes, since we're deleting the layer
+        // at a later point, we need to remove the scene root node from the layer now.
+        if (m_sceneRootNode)
+            removeNodeFromLayer(m_sceneRootNode);
+
         // There might be nodes queued for cleanup that still reference the layer,
         // so we schedule the layer for cleanup so that it is deleted after the nodes
         // have been cleaned up.
-        m_layer->release();
         if (winAttacment)
             winAttacment->queueForCleanup(m_layer);
         else
