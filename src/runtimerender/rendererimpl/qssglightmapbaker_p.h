@@ -51,7 +51,7 @@ public:
         struct Callbacks {
             QSSGLightmapper::Callback lightmapBakingOutput;
             std::function<void(bool)> triggerNewFrame;
-            std::function<void(bool)> disableLightmaps;
+            std::function<void(bool)> setCurrentlyBaking;
         } callbacks;
     };
 

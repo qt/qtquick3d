@@ -126,6 +126,7 @@ private:
 
     bool m_prepared = false;
 
+    QSSGLightmapperOptions lmOptions;
     bool m_lightmapBakingFromCmdRequested = false;
     bool m_lightmapDenoisingFromCmdRequested = false;
 

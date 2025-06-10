@@ -356,16 +356,7 @@ public:
     QSSGShaderFeatures getShaderFeatures() const { return features; }
     QSSGRhiGraphicsPipelineState getPipelineState() const { return ps; }
 
-    struct LightmapBakingInitParams
-    {
-        bool bakeRequested = false;
-        bool denoiseRequested = false;
-        bool quitWhenFinished = false;
-        QSSGLightmapper::Callback lightmapBakingOutputCallback;
-        std::function<void(bool)> triggerNewFrameCallback;
-    };
-
-    void initializeLightmapBaking(const LightmapBakingInitParams &params);
+    void initializeLightmapBaking(const QSSGLightmapBaker::Context &ctx);
     void maybeProcessLightmapBaking();
 
     [[nodiscard]] QSSGRenderGraphObject *getCamera(QSSGCameraId id) const;

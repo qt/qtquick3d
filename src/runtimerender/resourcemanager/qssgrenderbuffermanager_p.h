@@ -178,6 +178,9 @@ public:
     const QHash<QSSGRenderPath, MeshData> &getMeshMap() const { return meshMap; }
     const QHash<QSSGRenderGeometry *, MeshData> &getCustomMeshMap() const { return customMeshMap; }
 
+    void setLightmapSource(const QString &source);
+    void setCurrentlyLightmapBaking(bool value);
+
 private:
     void clear();
     QRhiResourceUpdateBatch *meshBufferUpdateBatch();
@@ -223,6 +226,9 @@ private:
     quint32 frameResetIndex = 0;
     QSSGRenderLayer *currentLayer = nullptr;
     MemoryStats stats;
+
+    QString lightmapSource;
+    bool currentlyLightmapBaking = false;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)

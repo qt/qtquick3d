@@ -633,6 +633,26 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     bool layerSizeIsDirty = m_surfaceSize != size;
     m_surfaceSize = size;
 
+    QQuick3DSceneEnvironment *environment = view3D->environment();
+    if (environment->lightmapper()) {
+        QQuick3DLightmapper *lightmapper = environment->lightmapper();
+        lmOptions.opacityThreshold = lightmapper->opacityThreshold();
+        lmOptions.bias = lightmapper->bias();
+        lmOptions.useAdaptiveBias = lightmapper->isAdaptiveBiasEnabled();
+        lmOptions.indirectLightEnabled = lightmapper->isIndirectLightEnabled();
+        lmOptions.indirectLightSamples = lightmapper->samples();
+        lmOptions.indirectLightWorkgroupSize = lightmapper->indirectLightWorkgroupSize();
+        lmOptions.indirectLightBounces = lightmapper->bounces();
+        lmOptions.indirectLightFactor = lightmapper->indirectLightFactor();
+        lmOptions.source = lightmapper->source();
+        lmOptions.sigma = lightmapper->denoiseSigma();
+        lmOptions.texelsPerUnit = lightmapper->texelsPerUnit();
+    } else {
+        lmOptions = {};
+    }
+
+    m_sgContext->bufferManager()->setLightmapSource(lmOptions.source);
+
     // Synchronize scene managers under this window
     QSet<QSSGRenderGraphObject *> resourceLoaders;
     QQuick3DWindowAttachment::SyncResult requestSharedUpdate = QQuick3DWindowAttachment::SyncResultFlag::None;
@@ -1303,23 +1323,6 @@ void QQuick3DSceneRenderer::updateLayerNode(QSSGRenderLayer &layerNode,
         layerNode.wireframeMode = false;
     }
 
-    if (environment->lightmapper()) {
-        QQuick3DLightmapper *lightmapper = environment->lightmapper();
-        layerNode.lmOptions.opacityThreshold = lightmapper->opacityThreshold();
-        layerNode.lmOptions.bias = lightmapper->bias();
-        layerNode.lmOptions.useAdaptiveBias = lightmapper->isAdaptiveBiasEnabled();
-        layerNode.lmOptions.indirectLightEnabled = lightmapper->isIndirectLightEnabled();
-        layerNode.lmOptions.indirectLightSamples = lightmapper->samples();
-        layerNode.lmOptions.indirectLightWorkgroupSize = lightmapper->indirectLightWorkgroupSize();
-        layerNode.lmOptions.indirectLightBounces = lightmapper->bounces();
-        layerNode.lmOptions.indirectLightFactor = lightmapper->indirectLightFactor();
-        layerNode.lmOptions.source = lightmapper->source();
-        layerNode.lmOptions.sigma = lightmapper->denoiseSigma();
-        layerNode.lmOptions.texelsPerUnit = lightmapper->texelsPerUnit();
-    } else {
-        layerNode.lmOptions = {};
-    }
-
     if (environment->fog() && environment->fog()->isEnabled()) {
         layerNode.fog.enabled = true;
         const QQuick3DFog *fog = environment->fog();
@@ -1419,10 +1422,10 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
 
     // Start the bake (we should have a valid layer render data at this point).
     if (bakeRequested || denoiseRequested) {
-        QSSGLayerRenderData::LightmapBakingInitParams params;
-        params.bakeRequested = bakeRequested;
-        params.denoiseRequested = denoiseRequested;
-        params.quitWhenFinished = fromCmd;
+        QSSGLightmapBaker::Context ctx;
+        ctx.settings.bakeRequested = bakeRequested;
+        ctx.settings.denoiseRequested = denoiseRequested;
+        ctx.settings.quitWhenFinished = fromCmd;
 
         // We want the frontend callback in the case that a QQuick3DLightmapBaker is present
         if (lightmapBaker) {
@@ -1437,11 +1440,11 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
                     if (qq3dBakingControl->isCancelled() && !qssgBakingControl->cancelled)
                         qssgBakingControl->cancelled = true;
                 };
-            params.lightmapBakingOutputCallback = callback;
+            ctx.callbacks.lightmapBakingOutput = callback;
         }
 
         // Both the QQuick3DLightmapBaker and cmd / env variant needs this
-        params.triggerNewFrameCallback = [view3D](bool releaseResources) {
+        ctx.callbacks.triggerNewFrame = [view3D](bool releaseResources) {
             if (releaseResources) {
                 QMetaObject::invokeMethod(view3D->window(),
                                             &QQuickWindow::releaseResources,
@@ -1449,8 +1452,17 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
             }
             QMetaObject::invokeMethod(view3D, &QQuick3DViewport::update, Qt::QueuedConnection);
         };
+        ctx.callbacks.setCurrentlyBaking = [this](bool value) {
+            m_sgContext->bufferManager()->setCurrentlyLightmapBaking(value);
+        };
 
-        m_layer->renderData->initializeLightmapBaking(params);
+        ctx.env.rhiCtx = m_sgContext->rhiContext().get();
+        ctx.env.renderer = m_sgContext->renderer().get();
+        ctx.env.lmOptions = lmOptions;
+        ctx.env.bakedLightingModels = m_layer->renderData->getSortedBakedLightingModels();
+
+        m_layer->renderData->initializeLightmapBaking(ctx);
+
     } else {
         // Check cmd line and env flags for request
         static bool flagsChecked = false;

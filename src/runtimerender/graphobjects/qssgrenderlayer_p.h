@@ -236,10 +236,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     quint32 gridFlags = 0;
     QRhiShaderResourceBindings *gridSrb = nullptr;
 
-    // Lightmapper config
-    QSSGLightmapperOptions lmOptions;
-    bool disableLightmaps = false;
-
     // Scissor
     QRect scissorRect;
 
