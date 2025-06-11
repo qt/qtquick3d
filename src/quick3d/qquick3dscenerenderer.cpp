@@ -1470,13 +1470,13 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
             return;
         flagsChecked = true;
 
-        auto isLightmapFlagSet = [](const char *flag, const char *envVar) {
+        auto isLightmapFlagSet = [](const QString &flag, const char *envVar) {
             return QCoreApplication::arguments().contains(flag)
             || qEnvironmentVariableIntValue(envVar);
         };
 
-        m_lightmapBakingFromCmdRequested = isLightmapFlagSet("--bake-lightmaps", "QT_QUICK3D_BAKE_LIGHTMAPS");
-        m_lightmapDenoisingFromCmdRequested = isLightmapFlagSet("--denoise-lightmaps", "QT_QUICK3D_DENOISE_LIGHTMAPS");
+        m_lightmapBakingFromCmdRequested = isLightmapFlagSet(QStringLiteral("--bake-lightmaps"), "QT_QUICK3D_BAKE_LIGHTMAPS");
+        m_lightmapDenoisingFromCmdRequested = isLightmapFlagSet(QStringLiteral("--denoise-lightmaps"), "QT_QUICK3D_DENOISE_LIGHTMAPS");
 
         if (m_lightmapBakingFromCmdRequested || m_lightmapDenoisingFromCmdRequested) {
             // Delay one frame so the render data is initialized
