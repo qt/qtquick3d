@@ -41,6 +41,29 @@ static constexpr int DIRECT_MAP_UPSCALE_FACTOR = 3;
 static constexpr quint32 PIXEL_VOID = 0; // Pixel not part of any mask
 static constexpr quint32 PIXEL_UNSET = -1; // Pixel part of mask, but not yet set
 
+enum class QSSGLightmapKeySuffix {
+    Final,
+    Direct,
+    Indirect,
+    Mask
+};
+
+QString getLightmapKeySuffix(QSSGLightmapKeySuffix suffix)
+{
+    switch (suffix) {
+    case QSSGLightmapKeySuffix::Final:
+        return QStringLiteral("_final");
+    case QSSGLightmapKeySuffix::Direct:
+        return QStringLiteral("_direct");
+    case QSSGLightmapKeySuffix::Indirect:
+        return QStringLiteral("_indirect");
+    case QSSGLightmapKeySuffix::Mask:
+        return QStringLiteral("_mask");
+    }
+
+    return QString();
+}
+
 static void floodFill(quint32 *maskUintPtr, const int rows, const int cols)
 {
     quint32 targetColor = 1;
@@ -2270,7 +2293,7 @@ bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporte
     totalWriteTimer.start();
 
     const QString finalPath = QFileInfo(options.source).absoluteFilePath();
-    const QString tmpPath = QFileInfo(options.source).absoluteFilePath() + ".tmp";
+    const QString tmpPath = QFileInfo(options.source).absoluteFilePath() + QStringLiteral(".tmp");
     QSharedPointer<QSSGLightmapWriter> tmpFile = QSSGLightmapWriter::open(tmpPath);
     QSharedPointer<QSSGLightmapWriter> finalFile = QSSGLightmapWriter::open(finalPath);
 
@@ -2307,9 +2330,9 @@ bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporte
         finalFile->writeMetadata(lm.model->lightmapKey, metadata);
         tmpFile->writeMetadata(lm.model->lightmapKey, metadata);
 
-        tmpFile->writeF32Image(lm.model->lightmapKey + "_indirect", lightmap.indirectFP32);
-        tmpFile->writeF32Image(lm.model->lightmapKey + "_direct", lightmap.directFP32);
-        tmpFile->writeU32Image(lm.model->lightmapKey + "_mask", lightmap.chartsMask);
+        tmpFile->writeF32Image(lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect), lightmap.indirectFP32);
+        tmpFile->writeF32Image(lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct), lightmap.directFP32);
+        tmpFile->writeU32Image(lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask), lightmap.chartsMask);
 
         { // Add direct light
             const int numPixels = lightmap.pixelSize.width() * lightmap.pixelSize.height();
@@ -2326,7 +2349,7 @@ bool QSSGLightmapperPrivate::storeLightmaps(const StageProgressReporter &reporte
             }
         }
 
-        finalFile->writeF32Image(lm.model->lightmapKey + "_final", lightmap.indirectFP32);
+        finalFile->writeF32Image(lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Final), lightmap.indirectFP32);
 
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                        QStringLiteral("Lightmap saved for model %1").arg(lm.model->lightmapKey));
@@ -2359,7 +2382,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps(const StageProgressReporter &repor
     denoiseTimer.start();
 
     // Tmp file
-    const QString inPath = QFileInfo(options.source + ".tmp").absoluteFilePath();
+    const QString inPath = QFileInfo(options.source + QStringLiteral(".tmp")).absoluteFilePath();
     QSharedPointer<QSSGLightmapLoader> tmpFile = QSSGLightmapLoader::open(inPath);
     if (!tmpFile) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Could not read file '%1'").arg(inPath));
@@ -2376,9 +2399,9 @@ bool QSSGLightmapperPrivate::denoiseLightmaps(const StageProgressReporter &repor
 
     // Clone meshes and metadata for final file
     for (const QString &key : tmpFile->getKeys()) {
-        if (!key.endsWith(QStringLiteral("_direct")) &&
-            !key.endsWith(QStringLiteral("_indirect")) &&
-            !key.endsWith(QStringLiteral("_mask"))) {
+        if (!key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct)) &&
+            !key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect)) &&
+            !key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask))) {
 
             finalFile->writeData(key, tmpFile->readData(key));
         }
@@ -2415,10 +2438,10 @@ bool QSSGLightmapperPrivate::denoiseLightmaps(const StageProgressReporter &repor
                        QStringLiteral("[%2/%3] denoising '%1'").arg(lm.model->lightmapKey).arg(lmIdx + 1).arg(bakedLightingModelCount));
 
         const QString key = lm.model->lightmapKey;
-        const QString keyFinal = lm.model->lightmapKey + "_final";
-        const QString keyDirect = lm.model->lightmapKey + "_direct";
-        const QString keyIndirect = lm.model->lightmapKey + "_indirect";
-        const QString keyMask = lm.model->lightmapKey + "_mask";
+        const QString keyFinal = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Final);
+        const QString keyDirect = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct);
+        const QString keyIndirect = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect);
+        const QString keyMask = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask);
 
         QVariantMap metadata = tmpFile->readMetadata(key);
         QByteArray indirect = tmpFile->readF32Image(keyIndirect);
