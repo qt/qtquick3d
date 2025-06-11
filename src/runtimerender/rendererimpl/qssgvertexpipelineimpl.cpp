@@ -4,6 +4,8 @@
 
 #include "qssgvertexpipelineimpl_p.h"
 
+#include <QtCore/qregularexpression.h>
+
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include "../qssgrendercontextcore.h"
