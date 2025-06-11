@@ -6,7 +6,6 @@ import QtQuick3D
 
 Node {
     property alias usedInBakedLighting: cornellBox_Original.usedInBakedLighting
-    property alias lightmapBaseResolution: cornellBox_Original.lightmapBaseResolution
     property alias bakedLightmap: cornellBox_Original.bakedLightmap
 
     // Materials
