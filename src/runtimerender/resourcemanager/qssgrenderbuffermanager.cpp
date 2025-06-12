@@ -334,6 +334,9 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
 {
     Q_ASSERT(currentLayer);
 
+    if (!lightmapFileValid)
+        return {};
+
     static const QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA16F;
     QSSGRenderImageTexture result;
     if (lightmapSource.isEmpty()) {
@@ -1198,7 +1201,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel &model)
     QSSGMeshProcessingOptions options;
     QSSGRenderMesh *theMesh = nullptr;
 
-    if (!currentlyLightmapBaking && model.hasLightmap()) {
+    if (lightmapFileValid && model.hasLightmap() && !currentlyLightmapBaking) {
         options.lightmapPath = lightmapSource;
         options.lightmapKey = model.lightmapKey;
     }
@@ -1215,7 +1218,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel &model)
 QSSGMesh::Mesh QSSGBufferManager::loadLightmapMesh(const QSSGRenderModel &model)
 {
     // When baking lightmaps we need to make sure that the original mesh is loaded instead of the already baked mesh.
-    if (!currentlyLightmapBaking && model.hasLightmap()) {
+    if (lightmapFileValid && model.hasLightmap() && !currentlyLightmapBaking) {
         auto [meshLightmap, _] = loadFromLightmapFile(lightmapSource, model.lightmapKey);
         if (meshLightmap.isValid())
             return meshLightmap;
@@ -1228,7 +1231,7 @@ QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model) cons
 {
     QSSGBounds3 retval;
 
-    if (!currentlyLightmapBaking && model->hasLightmap()) {
+    if (lightmapFileValid && model->hasLightmap() && !currentlyLightmapBaking) {
         auto [meshLightmap, _] = loadFromLightmapFile(lightmapSource, model->lightmapKey);
         if (meshLightmap.isValid()) {
             const QVector<QSSGMesh::Mesh::Subset> subsets = meshLightmap.subsets();
@@ -2153,6 +2156,10 @@ void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
 
 void QSSGBufferManager::setLightmapSource(const QString &source)
 {
+    QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(source);
+    lightmapFileValid = loader != nullptr;
+    if (!lightmapFileValid)
+        qCWarning(WARNING, "Lightmaps are disabled.");
     lightmapSource = source;
 }
 

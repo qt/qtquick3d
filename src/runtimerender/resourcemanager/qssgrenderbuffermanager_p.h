@@ -228,6 +228,7 @@ private:
     MemoryStats stats;
 
     QString lightmapSource;
+    bool lightmapFileValid = false;
     bool currentlyLightmapBaking = false;
 };
 
