@@ -428,32 +428,46 @@ QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat
     case QSSGRenderTextureFormat::RGBA8_ETC2_EAC:
         return QRhiTexture::ETC2_RGBA8;
     case QSSGRenderTextureFormat::RGBA_ASTC_4x4:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4:
         return QRhiTexture::ASTC_4x4;
     case QSSGRenderTextureFormat::RGBA_ASTC_5x4:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x4:
         return QRhiTexture::ASTC_5x4;
     case QSSGRenderTextureFormat::RGBA_ASTC_5x5:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_5x5:
         return QRhiTexture::ASTC_5x5;
     case QSSGRenderTextureFormat::RGBA_ASTC_6x5:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x5:
         return QRhiTexture::ASTC_6x5;
     case QSSGRenderTextureFormat::RGBA_ASTC_6x6:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_6x6:
         return QRhiTexture::ASTC_6x6;
     case QSSGRenderTextureFormat::RGBA_ASTC_8x5:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x5:
         return QRhiTexture::ASTC_8x5;
     case QSSGRenderTextureFormat::RGBA_ASTC_8x6:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x6:
         return QRhiTexture::ASTC_8x6;
     case QSSGRenderTextureFormat::RGBA_ASTC_8x8:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_8x8:
         return QRhiTexture::ASTC_8x8;
     case QSSGRenderTextureFormat::RGBA_ASTC_10x5:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x5:
         return QRhiTexture::ASTC_10x5;
     case QSSGRenderTextureFormat::RGBA_ASTC_10x6:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x6:
         return QRhiTexture::ASTC_10x6;
     case QSSGRenderTextureFormat::RGBA_ASTC_10x8:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x8:
         return QRhiTexture::ASTC_10x8;
     case QSSGRenderTextureFormat::RGBA_ASTC_10x10:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_10x10:
         return QRhiTexture::ASTC_10x10;
     case QSSGRenderTextureFormat::RGBA_ASTC_12x10:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x10:
         return QRhiTexture::ASTC_12x10;
     case QSSGRenderTextureFormat::RGBA_ASTC_12x12:
+    case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12:
         return QRhiTexture::ASTC_12x12;
 
 
