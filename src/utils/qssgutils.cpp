@@ -79,7 +79,7 @@ QVector3D QSSGUtils::mat44::rotate(const QMatrix4x4 &m, const QVector3D &v)
 }
 
 QVector4D QSSGUtils::mat44::rotate(const QMatrix4x4 &m, const QVector4D &v)
-{  
+{
     return m.column(0) * v.x() + m.column(1) * v.y() + m.column(2) * v.z();
 }
 
@@ -163,7 +163,7 @@ QColor QSSGUtils::color::linearTosRGB(const QVector4D &linearColorFactor)
     const QVector3D S1 = QVector3D(::sqrtf(linearColorFactor.x()), ::sqrtf(linearColorFactor.y()), ::sqrtf(linearColorFactor.z()));
     const QVector3D S2 = QVector3D(::sqrtf(S1.x()), ::sqrtf(S1.y()), ::sqrtf(S1.z()));
     const QVector3D S3 = QVector3D(::sqrtf(S2.x()), ::sqrtf(S2.y()), ::sqrtf(S2.z()));
-    const QVector3D result(0.585122381 * S1 + 0.783140355 * S2 - 0.368262736 * S3);
+    const QVector3D result(0.585122381f * S1 + 0.783140355f * S2 - 0.368262736f * S3);
     return QColor::fromRgbF(result.x(), result.y(), result.z(), linearColorFactor.w());
 }
 

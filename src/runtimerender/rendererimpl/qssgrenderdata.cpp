@@ -351,7 +351,7 @@ void QSSGGlobalRenderNodeData::collectNodes(QSSGRenderRoot *rootNode)
     layerNodes.clear();
 
     size_t idx = 0;
-    size_t layerIdx = 0;
+    quint32 layerIdx = 0;
     for (QSSGRenderNode &chld : rootNode->children) {
         Q_ASSERT(chld.type == QSSGRenderNode::Type::Layer);
         QSSGRenderLayer *layer = static_cast<QSSGRenderLayer *>(&chld);
@@ -556,7 +556,7 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     if (versionChanged || storageSizeChanged) {
         m_version = m_gnd->version();
 
-        for (size_t i = 0; i < modelCount; ++i) {
+        for (quint32 i = 0; i < modelCount; ++i) {
             QSSGRenderModel *model = models[i];
             model->mh = QSSGRenderModelHandle(model->h.context(), model->h.version(), i);
         }
