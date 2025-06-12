@@ -337,6 +337,11 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath)
             : retval->textureFileData.glFormat();
     retval->format = fromGLtoTextureFormat(glFormat);
 
+    // SRGB8 ASTC formats are always sRGB
+    if ((retval->format.format >= QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_4x4) &&
+        (retval->format.format <= QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12))
+        retval->isSRGB = true;
+
     delete reader;
     imageFile.close();
 
