@@ -387,7 +387,7 @@ QSSGLightmapLoader::~QSSGLightmapLoader()
 QSharedPointer<QSSGLightmapLoader> QSSGLightmapLoader::open(const QSharedPointer<QIODevice> &stream)
 {
     if (!stream) {
-        qWarning() << "Failed to open lightmap file";
+        qWarning() << "Failed to open lightmap: invalid stream";
         return nullptr;
     }
 
