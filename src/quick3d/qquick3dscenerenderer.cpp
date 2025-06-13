@@ -1318,6 +1318,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QSSGRenderLayer &layerNode,
         layerNode.drawCascades = debugSettings->drawCascades();
         layerNode.drawSceneCascadeIntersection = debugSettings->drawSceneCascadeIntersection();
         layerNode.disableShadowCameraUpdate = debugSettings->disableShadowCameraUpdate();
+        layerNode.drawCulledObjects = debugSettings->drawCulledObjects();
     } else {
         layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode::None;
         layerNode.wireframeMode = false;

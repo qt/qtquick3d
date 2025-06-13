@@ -316,6 +316,28 @@ void QQuick3DDebugSettings::setDisableShadowCameraUpdate(bool newDisableShadowCa
     emit disableShadowCameraUpdateChanged();
     update();
 }
+/*!
+    \internal
+    \qmlproperty bool QtQuick3D::DebugSettings::drawCulledObjects
+    \since 6.11
+
+    Draws a different-colored bounding box based on whether the model is culled.
+
+    The default value is \c false.
+*/
+bool QQuick3DDebugSettings::drawCulledObjects() const
+{
+    return m_drawCulledObjects;
+}
+
+void QQuick3DDebugSettings::setDrawCulledObjects(bool newDrawCulledObjects)
+{
+    if (m_drawCulledObjects == newDrawCulledObjects)
+        return;
+    m_drawCulledObjects = newDrawCulledObjects;
+    emit drawCulledObjectsChanged();
+    update();
+}
 
 QT_END_NAMESPACE
 

@@ -82,17 +82,6 @@ void ShadowmapHelpers::addDirectionalLightDebugBox(const QSSGBoxPoints &box, QSS
     debugDrawSystem->setEnabled(true);
 }
 
-void ShadowmapHelpers::addPointLightDebugBox(const QVector3D &lightPos, const float shadowMapFar, QSSGDebugDrawSystem *debugDrawSystem)
-{
-    if (!debugDrawSystem)
-        return;
-
-    QSSGBounds3 bounds;
-    bounds.include(lightPos - QVector3D(shadowMapFar, shadowMapFar, shadowMapFar));
-    bounds.include(lightPos + QVector3D(shadowMapFar, shadowMapFar, shadowMapFar));
-    addDebugBox(bounds.toQSSGBoxPoints(), QColorConstants::Yellow, debugDrawSystem);
-}
-
 static bool lineLineIntersection(QVector2D a, QVector2D b, QVector2D c, QVector2D d)
 {
     // Line AB represented as a1x + b1y = c1

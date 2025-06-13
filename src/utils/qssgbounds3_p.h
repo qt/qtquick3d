@@ -56,6 +56,11 @@ public:
     Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3(const QVector3D &minimum, const QVector3D &maximum);
 
     /**
+    \brief Construct from QSSGBoxPoints
+    */
+    Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3(const QSSGBoxPoints &points);
+
+    /**
     \brief returns the AABB containing v0 and v1.
     \param v0 first point included in the AABB.
     \param v1 second point included in the AABB.
@@ -204,6 +209,14 @@ Q_ALWAYS_INLINE QSSGBounds3::QSSGBounds3(Qt::Initialization)
 Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3::QSSGBounds3(const QVector3D &_minimum, const QVector3D &_maximum)
     : minimum(_minimum), maximum(_maximum)
 {
+}
+
+Q_DECL_CONSTEXPR Q_ALWAYS_INLINE QSSGBounds3::QSSGBounds3(const QSSGBoxPoints &points)
+    : minimum(QVector3D(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()))
+    , maximum(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max())
+{
+    for (const QVector3D &v : points)
+        include(v);
 }
 
 Q_ALWAYS_INLINE QSSGBounds3 QSSGBounds3::centerExtents(const QVector3D &center, const QVector3D &extent)

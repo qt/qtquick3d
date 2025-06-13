@@ -268,6 +268,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     bool drawCascades = false;
     bool drawSceneCascadeIntersection = false;
     bool disableShadowCameraUpdate = false;
+    bool drawCulledObjects = false;
 
     QSSGRenderLayer();
     ~QSSGRenderLayer();

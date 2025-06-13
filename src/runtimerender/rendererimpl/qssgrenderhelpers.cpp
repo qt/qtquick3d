@@ -1337,16 +1337,39 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                        const QSSGBounds3 &receivingObjectsBox)
 {
     const QSSGLayerRenderData &layerData = *QSSGLayerRenderData::getCurrent(renderer);
+    QSSGDebugDrawSystem *debugDrawSystem = renderer.contextInterface()->debugDrawSystem().get();
+    const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
+    const bool drawPointLightShadowBoxes = layerData.layer.drawPointLightShadowBoxes;
+    const bool drawShadowCastingBounds = layerData.layer.drawShadowCastingBounds;
+    const bool drawShadowReceivingBounds = layerData.layer.drawShadowReceivingBounds;
+    const bool drawCascades = layerData.layer.drawCascades;
+    const bool drawSceneCascadeIntersection = layerData.layer.drawSceneCascadeIntersection;
+    const bool disableShadowCameraUpdate = layerData.layer.disableShadowCameraUpdate;
+    const bool drawCulledObjects = layerData.layer.drawCulledObjects;
+    QVector<bool> debugIsObjectCulled = drawCulledObjects ? QVector<bool>(sortedOpaqueObjects.size(), true) : QVector<bool>();
 
     static const auto rhiRenderOneShadowMap = [](QSSGRhiContext *rhiCtx,
                                                  QSSGRhiGraphicsPipelineState *ps,
                                                  const QSSGRenderableObjectList &sortedOpaqueObjects,
-                                                 int cubeFace) {
+                                                 int cubeFace,
+                                                 const QSSGBounds3 cameraBounds,
+                                                 QVector<bool> &debugIsObjectCulled,
+                                                 bool drawCulledObjects) {
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         bool needsSetViewport = true;
 
-        for (const auto &handle : sortedOpaqueObjects) {
+        for (int i = 0, n = sortedOpaqueObjects.size(); i < n; ++i) {
+            const QSSGRenderableObjectHandle &handle = sortedOpaqueObjects[i];
             QSSGRenderableObject *theObject = handle.obj;
+            const QSSGBounds3 &globalBounds = !theObject->globalBoundsInstancing.isEmpty() ? theObject->globalBoundsInstancing
+                                                                                           : theObject->globalBounds;
+            if (!cameraBounds.intersects(globalBounds)) {
+                continue;
+            }
+
+            if (Q_UNLIKELY(drawCulledObjects))
+                debugIsObjectCulled[i] = false;
+
             QSSG_ASSERT(theObject->renderableFlags.castsShadows(), continue);
             if (theObject->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || theObject->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
                 QSSGSubsetRenderable *renderable(static_cast<QSSGSubsetRenderable *>(theObject));
@@ -1412,15 +1435,6 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         depthAdjust[0] = 1.0f;
         depthAdjust[1] = 0.5f;
     }
-
-    QSSGDebugDrawSystem *debugDrawSystem = renderer.contextInterface()->debugDrawSystem().get();
-    const bool drawDirectionalLightShadowBoxes = layerData.layer.drawDirectionalLightShadowBoxes;
-    const bool drawPointLightShadowBoxes = layerData.layer.drawPointLightShadowBoxes;
-    const bool drawShadowCastingBounds = layerData.layer.drawShadowCastingBounds;
-    const bool drawShadowReceivingBounds = layerData.layer.drawShadowReceivingBounds;
-    const bool drawCascades = layerData.layer.drawCascades;
-    const bool drawSceneCascadeIntersection = layerData.layer.drawSceneCascadeIntersection;
-    const bool disableShadowCameraUpdate = layerData.layer.disableShadowCameraUpdate;
 
     if (drawShadowCastingBounds)
         ShadowmapHelpers::addDebugBox(castingObjectsBox.toQSSGBoxPointsNoEmptyCheck(), QColorConstants::Red, debugDrawSystem);
@@ -1516,7 +1530,10 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
                 cascadeCameraGlobalTransforms = layerData.getGlobalTransform(*cascadeCamera);
                 pEntry->m_csmActive[cascadeIndex] = 1.f;
-                cascadeCamera->calculateViewProjectionMatrix(cascadeCameraGlobalTransforms, pEntry->m_lightViewProjection[cascadeIndex]);
+                QMatrix4x4 &viewProjection = pEntry->m_lightViewProjection[cascadeIndex];
+                cascadeCamera->calculateViewProjectionMatrix(cascadeCameraGlobalTransforms, viewProjection);
+                const QSSGBoxPoints frustumPoints = computeFrustumBounds(viewProjection);
+                const QSSGBounds3 bounds = QSSGBounds3(frustumPoints);
 
                 pEntry->m_lightView = cascadeCameraGlobalTransforms.inverted(); // pre-calculate this for the material
                 const bool isOrtho = cascadeCamera->type == QSSGRenderGraphObject::Type::OrthographicCamera;
@@ -1527,14 +1544,12 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
                 Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
-                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0);
+                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0, bounds, debugIsObjectCulled, drawCulledObjects);
                 cb->endPass();
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
 
                 if (drawDirectionalLightShadowBoxes) {
-                    QMatrix4x4 viewProjection(Qt::Uninitialized);
-                    cascadeCamera->calculateViewProjectionMatrix(cascadeCameraGlobalTransforms, viewProjection);
-                    ShadowmapHelpers::addDirectionalLightDebugBox(computeFrustumBounds(viewProjection), debugDrawSystem);
+                    ShadowmapHelpers::addDirectionalLightDebugBox(frustumPoints, debugDrawSystem);
                 }
             }
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map"));
@@ -1574,6 +1589,11 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                                 0);
             }
 
+            // The bounds should be the same for all view projections of the cube
+            const QVector3D center = QSSGRenderNode::getGlobalPos(layerData.getGlobalTransform(*light));
+            const QSSGBounds3 bounds = QSSGBounds3(center - QVector3D(shadowMapFar, shadowMapFar, shadowMapFar),
+                                                   center + QVector3D(shadowMapFar, shadowMapFar, shadowMapFar));
+
             for (const auto face : QSSGRenderTextureCubeFaces) {
                 // Render into one face of the cubemap texture pEntry->m_rhiDephCube, using
                 // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
@@ -1605,16 +1625,25 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
                 Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, quint8(face));
+                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, quint8(face), bounds, debugIsObjectCulled, drawCulledObjects);
                 cb->endPass();
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("shadow_cube", 0, outFace));
             }
 
             if (drawPointLightShadowBoxes) {
-                QMatrix4x4 lightGlobalTransform = layerData.getGlobalTransform(*light);
-                ShadowmapHelpers::addPointLightDebugBox(QSSGRenderNode::getGlobalPos(lightGlobalTransform), shadowMapFar, debugDrawSystem);
+                ShadowmapHelpers::addDebugBox(bounds.toQSSGBoxPoints(), QColorConstants::Yellow, debugDrawSystem);
             }
+        }
+    }
+
+    if (Q_UNLIKELY(drawCulledObjects)) {
+        for (int i = 0, n = sortedOpaqueObjects.size(); i < n; ++i) {
+            QSSGRenderableObject *theObject = sortedOpaqueObjects[i].obj;
+            const QSSGBounds3 &globalBounds = !theObject->globalBoundsInstancing.isEmpty() ? theObject->globalBoundsInstancing
+                                                                                           : theObject->globalBounds;
+            const QColor color = debugIsObjectCulled[i] ? QColorConstants::Red : QColorConstants::Green;
+            ShadowmapHelpers::addDebugBox(globalBounds.toQSSGBoxPointsNoEmptyCheck(), color, debugDrawSystem);
         }
     }
 }
