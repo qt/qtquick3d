@@ -130,7 +130,7 @@ public:
     QSSGRenderImageTexture loadSkinmap(QSSGRenderTextureData *skin);
 
     QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model) const;
-    QSSGBounds3 getModelBounds(const QSSGRenderModel *model) const;
+    QSSGBounds3 getModelBounds(const QSSGRenderModel *model);
 
     QSSGRenderMesh *loadMesh(const QSSGRenderModel &model);
     QSSGMesh::Mesh loadLightmapMesh(const QSSGRenderModel &model);
@@ -229,7 +229,9 @@ private:
 
     QString lightmapSource;
     bool lightmapFileValid = false;
+    bool lightmapSourceDirty = true;
     bool currentlyLightmapBaking = false;
+    bool validateLightmap();
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)
