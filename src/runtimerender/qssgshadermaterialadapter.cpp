@@ -863,15 +863,12 @@ Tokenizer::Token Tokenizer::next()
 }
 } // namespace
 
-QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData
-QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
-                                                     const QByteArray &shaderCode,
-                                                     QSSGShaderCache::ShaderType type,
-                                                     const StringPairList &baseUniforms,
-                                                     const StringPairList &baseInputs,
-                                                     const StringPairList &baseOutputs,
-                                                     bool multiViewCompatible,
-                                                     const StringPairList &multiViewDependentSamplers)
+void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
+    CustomShaderPrepWorkData *workData,
+    ShaderCodeAndMetaData *codeAndMetaData,
+    const QByteArray &shaderCode,
+    QSSGShaderCache::ShaderType type,
+    bool multiViewCompatible)
 {
     QByteArrayList inputs;
     QByteArrayList outputs;
@@ -1092,6 +1089,24 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
 
     result += '\n';
 
+    workData->inputs = inputs;
+    workData->outputs = outputs;
+
+    *codeAndMetaData = { result, md };
+}
+
+void QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
+    QByteArray *dst,
+    const CustomShaderPrepWorkData &workData,
+    const ShaderCodeAndMetaData &codeAndMetaData,
+    QSSGShaderCache::ShaderType type,
+    bool multiViewCompatible,
+    const StringPairList &baseUniforms,
+    const StringPairList &baseInputs,
+    const StringPairList &baseOutputs,
+    const StringPairList &multiViewDependentSamplers,
+    const StringPairList &multiViewDependentUniforms)
+{
     StringPairList allUniforms = baseUniforms;
 
     for (const StringPair &samplerTypeAndName : multiViewDependentSamplers) {
@@ -1100,6 +1115,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         else
             allUniforms.append(samplerTypeAndName);
     }
+
+    const QSSGCustomShaderMetaData &md(codeAndMetaData.second);
 
     // We either have qt_depthTexture or qt_depthTextureArray (or none of them),
     // but never both. We do not generally support binding a 2D texture to a
@@ -1142,20 +1159,32 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
 
     static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
     static const char *metaEnd = "  ]\n}*/\n#endif\n";
-    dst.append(metaStart);
+    dst->append(metaStart);
+
     for (int i = 0, count = allUniforms.size(); i < count; ++i) {
         const auto &typeAndName(allUniforms[i]);
-        dst.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
-        if (i < count - 1)
-            dst.append(",");
-        dst.append("\n");
+        dst->append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
+        if (i < count - 1 || !multiViewDependentUniforms.isEmpty())
+            dst->append(",");
+        dst->append("\n");
     }
-    dst.append(metaEnd);
+
+    // multiViewDependentUniforms are not in allUniforms. For these we leave it to the
+    // metadata processor to add an array suffix (e.g., qt_projectionMatrix[2]) when needed.
+    for (int i = 0, count = multiViewDependentUniforms.size(); i < count; ++i) {
+        const auto &typeAndName(multiViewDependentUniforms[i]);
+        dst->append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\", \"multiview_dependent\": true }");
+        if (i < count - 1)
+            dst->append(",");
+        dst->append("\n");
+    }
+
+    dst->append(metaEnd);
 
     const char *stageStr = type == QSSGShaderCache::ShaderType::Vertex ? "vertex" : "fragment";
     StringPairList allInputs = baseInputs;
     QVarLengthArray<bool, 16> inputIsFlat(allInputs.count(), false);
-    for (const QByteArray &inputTypeAndName : inputs) {
+    for (const QByteArray &inputTypeAndName : workData.inputs) {
         const QByteArrayList typeAndName = inputTypeAndName.split(' ');
         if (typeAndName.size() == 2) {
             allInputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
@@ -1168,23 +1197,23 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     if (!allInputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"inputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
-        dst.append(metaStart);
+        dst->append(metaStart);
         for (int i = 0, count = allInputs.size(); i < count; ++i) {
-            dst.append("    { \"type\": \"" + allInputs[i].first
+            dst->append("    { \"type\": \"" + allInputs[i].first
                     + "\", \"name\": \"" + allInputs[i].second
                     + "\", \"stage\": \"" + stageStr
                     + (inputIsFlat[i] ? "\", \"flat\": true" : "\"")
                     + " }");
             if (i < count - 1)
-                dst.append(",");
-            dst.append("\n");
+                dst->append(",");
+            dst->append("\n");
         }
-        dst.append(metaEnd);
+        dst->append(metaEnd);
     }
 
     StringPairList allOutputs = baseOutputs;
     QVarLengthArray<bool, 16> outputIsFlat(allOutputs.count(), false);
-    for (const QByteArray &outputTypeAndName : outputs) {
+    for (const QByteArray &outputTypeAndName : workData.outputs) {
         const QByteArrayList typeAndName = outputTypeAndName.split(' ');
         if (typeAndName.size() == 2) {
             allOutputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
@@ -1197,21 +1226,19 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     if (!allOutputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"outputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
-        dst.append(metaStart);
+        dst->append(metaStart);
         for (int i = 0, count = allOutputs.size(); i < count; ++i) {
-            dst.append("    { \"type\": \"" + allOutputs[i].first
+            dst->append("    { \"type\": \"" + allOutputs[i].first
                     + "\", \"name\": \"" + allOutputs[i].second
                     + "\", \"stage\": \"" + stageStr
                     + (outputIsFlat[i] ? "\", \"flat\": true" : "\"")
                     + " }");
             if (i < count - 1)
-                dst.append(",");
-            dst.append("\n");
+                dst->append(",");
+            dst->append("\n");
         }
-        dst.append(metaEnd);
+        dst->append(metaEnd);
     }
-
-    return { result, md };
 }
 
 QList<QByteArrayView> QtQuick3DEditorHelpers::CustomMaterial::preprocessorVars()

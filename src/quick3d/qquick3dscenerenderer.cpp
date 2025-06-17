@@ -387,12 +387,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
             Q_ASSERT(theRenderData);
             QRhiTexture *theDepthTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::DepthTexture)->texture;
-            QVector2D cameraClipRange(m_layer->renderedCameras[0]->clipPlanes);
-
             currentTexture = m_effectSystem->process(*m_layer,
                                                      currentTexture,
-                                                     theDepthTexture,
-                                                     cameraClipRange);
+                                                     theDepthTexture);
         }
 
         // The only difference between temporal and progressive AA at this point is that tempAA always

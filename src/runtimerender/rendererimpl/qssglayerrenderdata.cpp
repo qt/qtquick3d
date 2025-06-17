@@ -2235,7 +2235,7 @@ void QSSGLayerRenderData::prepareForRender()
             wasDirty = true;
             theEffect->clearDirty();
         }
-        if (theEffect->requiresDepthTexture)
+        if (theEffect->testFlag(QSSGRenderEffect::Flags::UsesDepthTexture))
             requiresDepthTexture = true;
     }
 

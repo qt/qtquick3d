@@ -38,7 +38,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     enum class Flags : quint8
     {
-        Dirty = 0x1u
+        Dirty = 0x1u,
+        UsesDepthTexture = 0x2u,
+        UsesProjectionMatrix = 0x4u,
+        UsesInverseProjectionMatrix = 0x8u
     };
     using FlagT = std::underlying_type_t<Flags>;
 
@@ -75,9 +78,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     QSSGRenderEffect *m_nextEffect = nullptr;
 
-    void markDirty();
-    void clearDirty();
-    [[nodiscard]] inline bool isDirty() const { return ((flags & FlagT(Flags::Dirty)) != 0); }
+    void markDirty() { setFlag(QSSGRenderEffect::Flags::Dirty); }
+    void clearDirty() { setFlag(QSSGRenderEffect::Flags::Dirty, false); }
+    [[nodiscard]] bool isDirty() const { return testFlag(QSSGRenderEffect::Flags::Dirty); }
+
+    void setFlag(QSSGRenderEffect::Flags flag, bool enabled = true);
+    [[nodiscard]] bool testFlag(QSSGRenderEffect::Flags flag) const { return (flags & FlagT(flag)) != 0; }
 
     struct Command {
         QSSGCommand *command;
@@ -89,7 +95,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     const char *className = nullptr;
     FlagT flags = FlagT(Flags::Dirty);
-    bool requiresDepthTexture = false;
     bool incompleteBuildTimeObject = false; // Used by the shadergen tool
     QSSGRenderTextureFormat::Format outputFormat = QSSGRenderTextureFormat::Unknown;
 

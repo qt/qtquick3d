@@ -366,6 +366,13 @@ QT_BEGIN_NAMESPACE
     rendering} enabled, this is the current view index, available in both vertex
     and fragment shaders. Always 0 when multiview rendering is not used.
 
+    \li \c PROJECTION_MATRIX - \c mat4, the projection matrix. Note that with
+    \l{Multiview Rendering}{multiview rendering}, this is an array of matrices.
+
+    \li \c INVERSE_PROJECTION_MATRIX - \c mat4, the inverse projection matrix.
+    Note that with \l{Multiview Rendering}{multiview rendering}, this is an array
+    of matrices.
+
     \endlist
 
     \section1 Building multi-pass effects
@@ -613,6 +620,23 @@ static inline void insertVertexMainArgs(QByteArray &snippet)
         snippet = snippet.left(argKeyPos) + QByteArrayLiteral("inout vec3 VERTEX") + snippet.mid(argKeyPos + argKeyLen);
 }
 
+static inline void resetShaderDependentEffectFlags(QSSGRenderEffect *effectNode)
+{
+    effectNode->setFlag(QSSGRenderEffect::Flags::UsesDepthTexture, false);
+    effectNode->setFlag(QSSGRenderEffect::Flags::UsesProjectionMatrix, false);
+    effectNode->setFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix, false);
+}
+
+static inline void accumulateEffectFlagsFromShader(QSSGRenderEffect *effectNode, const QSSGCustomShaderMetaData &meta)
+{
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+        effectNode->setFlag(QSSGRenderEffect::Flags::UsesDepthTexture);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix))
+        effectNode->setFlag(QSSGRenderEffect::Flags::UsesProjectionMatrix);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
+        effectNode->setFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix);
+}
+
 QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     using namespace QSSGShaderUtils;
@@ -838,6 +862,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         // fragOutput is added automatically by the program generator
 
+        resetShaderDependentEffectFlags(effectNode);
+
         if (!m_passes.isEmpty()) {
             const QQmlContext *context = qmlContext(this);
             effectNode->resetCommands();
@@ -896,47 +922,47 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                             code = default_effect_fragment_shader;
                     }
 
-                    QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result[2];
-                    if (type == QSSGShaderCache::ShaderType::Vertex) {
-                        QByteArray buf;
-                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
-                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs,
-                                                                                 false, multiViewDependentSamplers);
-                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].first += buf;
-                        buf.clear();
-                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
-                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexInputs, builtinVertexOutputs,
-                                                                                 true, multiViewDependentSamplers);
-                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex].first += buf;
-                    } else {
-                        QByteArray buf;
-                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] =
-                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexOutputs, {},
-                                                                                 false, multiViewDependentSamplers);
-                        result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].first += buf;
-                        buf.clear();
-                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex] =
-                            QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf, code, type,
-                                                                                 uniforms, builtinVertexOutputs, {},
-                                                                                 true, multiViewDependentSamplers);
-                        result[QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex].first += buf;
-                    }
+                    for (auto pathKeyIndex : { QSSGRenderCustomMaterial::RegularShaderPathKeyIndex, QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex }) {
+                        QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
+                        QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
 
-                    if (result[QSSGRenderCustomMaterial::RegularShaderPathKeyIndex].second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
-                        effectNode->requiresDepthTexture = true;
+                        QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
+                            &scratch,
+                            &result,
+                            code,
+                            type,
+                            pathKeyIndex == QSSGRenderCustomMaterial::RegularShaderPathKeyIndex ? false : true);
 
-                    for (int i : { QSSGRenderCustomMaterial::RegularShaderPathKeyIndex, QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex }) {
+                        QSSGShaderCustomMaterialAdapter::StringPairList multiViewDependentUniforms;
+                        if (result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix)
+                            || result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
+                        {
+                            multiViewDependentUniforms.append({ "mat4", "qt_projectionMatrix" });
+                            multiViewDependentUniforms.append({ "mat4", "qt_inverseProjectionMatrix" });
+                        }
+
+                        accumulateEffectFlagsFromShader(effectNode, result.second);
+
+                        QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
+                            &result.first, // effectively appends the QQ3D_SHADER_META block
+                            scratch,
+                            result,
+                            type,
+                            pathKeyIndex == QSSGRenderCustomMaterial::RegularShaderPathKeyIndex ? false : true,
+                            uniforms,
+                            type == QSSGShaderCache::ShaderType::Vertex ? builtinVertexInputs : builtinVertexOutputs,
+                            type == QSSGShaderCache::ShaderType::Vertex ? builtinVertexOutputs : QSSGShaderCustomMaterialAdapter::StringPairList(),
+                            multiViewDependentSamplers,
+                            multiViewDependentUniforms);
+
                         if (type == QSSGShaderCache::ShaderType::Vertex) {
                             // qt_customMain() has an argument list which gets injected here
-                            insertVertexMainArgs(result[i].first);
-                            passData.vertexShaderCode[i] = result[i].first;
-                            passData.vertexMetaData[i] = result[i].second;
+                            insertVertexMainArgs(result.first);
+                            passData.vertexShaderCode[pathKeyIndex] = result.first;
+                            passData.vertexMetaData[pathKeyIndex] = result.second;
                         } else {
-                            passData.fragmentShaderCode[i] = result[i].first;
-                            passData.fragmentMetaData[i] = result[i].second;
+                            passData.fragmentShaderCode[pathKeyIndex] = result.first;
+                            passData.fragmentMetaData[pathKeyIndex] = result.second;
                         }
                     }
                 }

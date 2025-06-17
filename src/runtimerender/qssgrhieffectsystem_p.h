@@ -69,8 +69,7 @@ public:
     void setup(QSize outputSize);
     QRhiTexture *process(const QSSGRenderLayer &layer,
                          QRhiTexture *inTexture,
-                         QRhiTexture *inDepthTexture,
-                         QVector2D cameraClipRange);
+                         QRhiTexture *inDepthTexture);
 
     static QSSGRenderTextureFormat::Format overriddenOutputFormat(const QSSGRenderEffect *inEffect);
 
@@ -91,9 +90,9 @@ private:
     void applyInstanceValueCmd(const QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect);
     void applyValueCmd(const QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect);
     void bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect, quint8 viewCount);
-    void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target, quint8 viewCount);
+    void renderCmd(const QSSGRenderEffect *inEffect, QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target, quint8 viewCount);
 
-    void addCommonEffectUniforms(const QSize &inputSize, const QSize &outputSize);
+    void addCommonEffectUniforms(const QSSGRenderEffect *inEffect, const QSize &inputSize, const QSize &outputSize, quint8 viewCount);
     void addTextureToShaderPipeline(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc);
 
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
@@ -108,6 +107,7 @@ private:
     QVector<QSSGRhiEffectTexture *> m_textures;
     QRhiTexture *m_depthTexture = nullptr;
     QVector2D m_cameraClipRange;
+    QVarLengthArray<QMatrix4x4, 2> m_projectionMatrices;
     int m_currentUbufIndex = 0;
     QHash<QSSGEffectSceneCacheKey, QSSGRhiShaderPipelinePtr> m_shaderPipelines;
     QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;

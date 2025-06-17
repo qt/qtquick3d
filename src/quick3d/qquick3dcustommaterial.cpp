@@ -1722,13 +1722,12 @@ static QByteArray prepareCustomShader(QSSGRenderCustomMaterial *customMaterial,
 
     QByteArray sourceCode = snippet;
     QByteArray buf;
-    auto result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(buf,
-                                                                        sourceCode,
-                                                                        shaderType,
-                                                                        uniforms,
-                                                                        {},
-                                                                        {},
-                                                                        multiViewCompatible);
+
+    QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
+    QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
+    QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(&scratch, &result, sourceCode, shaderType, multiViewCompatible);
+    QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(&buf, scratch, result, shaderType, multiViewCompatible, uniforms, {}, {}, {}, {});
+
     sourceCode = result.first;
     sourceCode.append(buf);
     meta = result.second;

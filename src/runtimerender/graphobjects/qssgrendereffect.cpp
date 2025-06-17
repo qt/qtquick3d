@@ -20,14 +20,12 @@ QSSGRenderEffect::~QSSGRenderEffect()
     resetCommands();
 }
 
-void QSSGRenderEffect::markDirty()
+void QSSGRenderEffect::setFlag(QSSGRenderEffect::Flags flag, bool enabled)
 {
-    flags |= FlagT(Flags::Dirty);
-}
-
-void QSSGRenderEffect::clearDirty()
-{
-    flags &= ~FlagT(Flags::Dirty);
+    if (enabled)
+        flags |= FlagT(flag);
+    else
+        flags &= ~FlagT(flag);
 }
 
 // Suffix snippets added to the end of the shader strings. These are appended
