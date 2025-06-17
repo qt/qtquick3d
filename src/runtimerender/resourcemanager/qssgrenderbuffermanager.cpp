@@ -334,15 +334,12 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
 {
     Q_ASSERT(currentLayer);
 
-    if (!lightmapFileValid)
+    if (model.lightmapKey.isEmpty() || currentlyLightmapBaking || !validateLightmap())
         return {};
 
+    Q_ASSERT(!lightmapSource.isEmpty());
     static const QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA16F;
     QSSGRenderImageTexture result;
-    if (lightmapSource.isEmpty()) {
-        qCWarning(WARNING, "Path to lightmap image is empty");
-        return result;
-    }
     const ImageCacheKey imageKey = { QSSGRenderPath(lightmapSource), MipModeDisable, int(QSSGRenderGraphObject::Type::Image2D), model.lightmapKey };
     auto foundIt = imageMap.find(imageKey);
     if (foundIt != imageMap.end()) {
@@ -1201,7 +1198,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel &model)
     QSSGMeshProcessingOptions options;
     QSSGRenderMesh *theMesh = nullptr;
 
-    if (lightmapFileValid && model.hasLightmap() && !currentlyLightmapBaking) {
+    if (model.hasLightmap() && !currentlyLightmapBaking && validateLightmap()) {
         options.lightmapPath = lightmapSource;
         options.lightmapKey = model.lightmapKey;
     }
@@ -1218,7 +1215,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel &model)
 QSSGMesh::Mesh QSSGBufferManager::loadLightmapMesh(const QSSGRenderModel &model)
 {
     // When baking lightmaps we need to make sure that the original mesh is loaded instead of the already baked mesh.
-    if (lightmapFileValid && model.hasLightmap() && !currentlyLightmapBaking) {
+    if (model.hasLightmap() && !currentlyLightmapBaking && validateLightmap() ) {
         auto [meshLightmap, _] = loadFromLightmapFile(lightmapSource, model.lightmapKey);
         if (meshLightmap.isValid())
             return meshLightmap;
@@ -1227,11 +1224,11 @@ QSSGMesh::Mesh QSSGBufferManager::loadLightmapMesh(const QSSGRenderModel &model)
     return {};
 }
 
-QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model) const
+QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model)
 {
     QSSGBounds3 retval;
 
-    if (lightmapFileValid && model->hasLightmap() && !currentlyLightmapBaking) {
+    if (model->hasLightmap() && !currentlyLightmapBaking && validateLightmap()) {
         auto [meshLightmap, _] = loadFromLightmapFile(lightmapSource, model->lightmapKey);
         if (meshLightmap.isValid()) {
             const QVector<QSSGMesh::Mesh::Subset> subsets = meshLightmap.subsets();
@@ -1548,6 +1545,18 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
         }
         imageMap.erase(imageItr);
     }
+}
+
+bool QSSGBufferManager::validateLightmap()
+{
+    if (lightmapSourceDirty) {
+        lightmapSourceDirty = false;
+        QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(lightmapSource);
+        lightmapFileValid = loader != nullptr;
+        if (!lightmapFileValid)
+            qCWarning(WARNING, "Lightmaps are disabled.");
+    }
+    return lightmapFileValid;
 }
 
 void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *currentLayer)
@@ -2015,6 +2024,9 @@ void QSSGBufferManager::clear()
     // Textures (QSG)
     // these don't have any owned objects to release so just clearing is fine.
     qsgImageMap.clear();
+
+    // To allow trying to read the lightmap file again
+    lightmapSourceDirty = true;
 }
 
 QRhiResourceUpdateBatch *QSSGBufferManager::meshBufferUpdateBatch()
@@ -2156,11 +2168,10 @@ void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
 
 void QSSGBufferManager::setLightmapSource(const QString &source)
 {
-    QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(source);
-    lightmapFileValid = loader != nullptr;
-    if (!lightmapFileValid)
-        qCWarning(WARNING, "Lightmaps are disabled.");
-    lightmapSource = source;
+    if (lightmapSource != source) {
+        lightmapSource = source;
+        lightmapSourceDirty = true;
+    }
 }
 
 void QSSGBufferManager::setCurrentlyLightmapBaking(bool value)
