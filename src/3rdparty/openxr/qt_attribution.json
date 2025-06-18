@@ -11,11 +11,11 @@
             "pkg:github/KhronosGroup/OpenXR-SDK@release-$<VERSION>"
         ],
         "Comment": "No relevant CPE found",
-        "Version": "1.1.42",
+        "Version": "1.1.49",
         "License": "Apache License 2.0",
         "LicenseId": "Apache-2.0",
         "LicenseFile": "LICENSE",
-        "Copyright": "Copyright (c) 2017-2024, The Khronos Group Inc.\nCopyright (c) 2017-2019, Valve Corporation\nCopyright (c) 2017-2019, LunarG, Inc."
+        "Copyright": "Copyright (c) 2017-2025, The Khronos Group Inc.\nCopyright (c) 2017-2019, Valve Corporation\nCopyright (c) 2017-2019, LunarG, Inc."
     },
     {
         "Id": "jsoncpp",
@@ -32,7 +32,7 @@
         "CPE": [
             "cpe:2.3:a:jsoncpp_project:jsoncpp:$<VERSION>:*:*:*:*:*:*:*"
         ],
-        "Version": "1.9.5",
+        "Version": "1.9.6",
         "License": "MIT License",
         "LicenseFile": "src/external/jsoncpp/LICENSE",
         "LicenseId": "MIT",

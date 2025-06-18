@@ -29,6 +29,7 @@ qt_internal_add_3rdparty_library(BundledOpenXR
         src/loader/xr_generated_loader.cpp
         src/xr_generated_dispatch_table_core.c
         src/common/hex_and_handles.h
+        src/common/android_logging.h
         src/common/object_info.cpp
         src/common/object_info.h
         src/common/platform_utils.hpp
