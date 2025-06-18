@@ -54,6 +54,7 @@ FILES="
     src/xr_generated_dispatch_table.c
     src/xr_generated_dispatch_table_core.h
     src/xr_generated_dispatch_table_core.c
+    src/common/android_logging.h
     src/common/extra_algorithms.h
     src/common/filesystem_utils.cpp
     src/common/filesystem_utils.hpp
