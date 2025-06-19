@@ -1361,10 +1361,14 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         for (int i = 0, n = sortedOpaqueObjects.size(); i < n; ++i) {
             const QSSGRenderableObjectHandle &handle = sortedOpaqueObjects[i];
             QSSGRenderableObject *theObject = handle.obj;
-            const QSSGBounds3 &globalBounds = !theObject->globalBoundsInstancing.isEmpty() ? theObject->globalBoundsInstancing
-                                                                                           : theObject->globalBounds;
-            if (!cameraBounds.intersects(globalBounds)) {
-                continue;
+
+            // Only attempt to cull models if both of its bounds are valid
+            if (theObject->globalBoundsInstancing.isFinite() && theObject->globalBounds.isFinite()) {
+                const QSSGBounds3 &globalBounds = !theObject->globalBoundsInstancing.isEmpty() ? theObject->globalBoundsInstancing
+                                                                                               : theObject->globalBounds;
+                if (!globalBounds.isEmpty() && !cameraBounds.intersects(globalBounds)) {
+                    continue;
+                }
             }
 
             if (Q_UNLIKELY(drawCulledObjects))
