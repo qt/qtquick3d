@@ -22,3 +22,6 @@ lighting/Box.qml
 
 # Misc
 view3d/SharedResources2.qml
+
+# MotionBlur
+effects/move.qml
