@@ -103,8 +103,6 @@ private:
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderHelpers
 {
 public:
-    using NodeList = QList<QSSGNodeId>;
-
     enum class CreateFlag : quint32
     {
         None,
@@ -116,7 +114,7 @@ public:
 
     [[nodiscard]] static QSSGRenderablesId createRenderables(const QSSGFrameData &frameData,
                                                              QSSGPrepContextId prepId,
-                                                             const NodeList &nodes,
+                                                             const QSSGNodeIdList &nodes,
                                                              CreateFlags flags = CreateFlag::None);
 
     [[nodiscard]] static QSSGPrepContextId prepareForRender(const QSSGFrameData &frameData,

@@ -542,6 +542,11 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     const bool versionChanged = m_version != m_gnd->version();
     const bool storageSizeChanged = (normalMatrices.size() < modelCount);
 
+    // If the version or storage size changed we need to re-index the models.
+    // NOTE: We always do this due to layer masking with shared scenes (import scene)
+    // in the future we should find a way to track when it is actually needed.
+    const bool reIndexNeeded = versionChanged || storageSizeChanged || true;
+
     const QMatrix3x3 defaultNormalMatrix;
     const QMatrix4x4 defaultModelViewProjection;
 
@@ -551,9 +556,8 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     meshes.resize(modelCount, nullptr);
     materials.resize(modelCount, {});
 
-    // If the version or storage size changed we need to re-index the models.
-    // NOTE: Node data's version is incremented when the node graph changes and starts at 1.
-    if (versionChanged || storageSizeChanged) {
+    if (reIndexNeeded) {
+        // NOTE: Node data's version is incremented when the node graph changes and starts at 1.
         m_version = m_gnd->version();
 
         for (quint32 i = 0; i < modelCount; ++i) {

@@ -45,6 +45,9 @@ public:
         QRhiRenderBuffer *buffer = nullptr;
     };
 
+    using TypeMask = QSSGRenderGraphObject::TypeT;
+    static constexpr TypeMask NodeMask = QSSGRenderGraphObject::BaseType::Node;
+
     Result getRenderResult(RenderResult id) const;
 
     [[nodiscard]] QSSGRhiGraphicsPipelineState getPipelineState() const;
@@ -52,6 +55,9 @@ public:
     [[nodiscard]] QSSGCameraId activeCamera() const;
 
     [[nodiscard]] QSSGRenderContextInterface *contextInterface() const;
+
+    [[nodiscard]] QSSGNodeIdList getLayerNodes(quint32 layerMask, TypeMask typeMask = NodeMask) const;
+    [[nodiscard]] QSSGNodeIdList getLayerNodes(QSSGCameraId cameraId, TypeMask typeMask = NodeMask) const;
 
 private:
     friend class QSSGLayerRenderData;

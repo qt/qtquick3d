@@ -15,12 +15,16 @@
 
 #include <QtCore/qtypes.h>
 
+#include <QtCore/qlist.h>
+
 QT_BEGIN_NAMESPACE
 
 enum class QSSGNodeId : quint64 { Invalid = 0 };
 enum class QSSGResourceId : quint64 { Invalid = 0 };
 enum class QSSGCameraId : quint64 { Invalid = 0 };
 enum class QSSGExtensionId : quint64 { Invalid = 0 };
+
+using QSSGNodeIdList = QList<QSSGNodeId>;
 
 QT_END_NAMESPACE
 

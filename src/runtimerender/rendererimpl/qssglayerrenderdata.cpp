@@ -101,12 +101,12 @@ struct LayerNodeStatResult
     }
 };
 
-static LayerNodeStatResult statLayerNodes(const QSSGLayerRenderData::LayerNodes &layerNodes) {
+static LayerNodeStatResult statLayerNodes(const QSSGLayerRenderData::LayerNodes &layerNodes, quint32 layerMask) {
 
     LayerNodeStatResult stat;
 
     for (auto *node : layerNodes) {
-        if (node->getGlobalState(QSSGRenderNode::GlobalState::Active)) {
+        if (node->getGlobalState(QSSGRenderNode::GlobalState::Active) && (node->tag.isSet(layerMask))) {
             if (node->type == QSSGRenderGraphObject::Type::Model)
                 ++stat.modelCount;
             else if (node->type == QSSGRenderGraphObject::Type::Particles)
@@ -536,7 +536,7 @@ static void createRenderablesHelper(QSSGLayerRenderData &layer, const QSSGRender
     }
 }
 
-QSSGRenderablesId QSSGLayerRenderData::createRenderables(QSSGPrepContextId prepId, const QList<QSSGNodeId> &nodes, QSSGRenderHelpers::CreateFlags createFlags)
+QSSGRenderablesId QSSGLayerRenderData::createRenderables(QSSGPrepContextId prepId, const QSSGNodeIdList &nodes, QSSGRenderHelpers::CreateFlags createFlags)
 {
     QSSG_ASSERT_X(verifyPrepContext(prepId, *renderer), "Expired or invalid prep id", return {});
 
@@ -2189,6 +2189,20 @@ static void updateDirtySkeletons(const QSSGLayerRenderData &renderData, const QS
     dirtySkeletons.clear();
 }
 
+QSSGNodeIdList QSSGLayerRenderData::filter(const QSSGGlobalRenderNodeData::LayerNodeView &layerNodes,
+                                           quint32 layerMask,
+                                           quint32 typeMask)
+{
+    QSSGNodeIdList res;
+    for (auto *n : layerNodes) {
+        // Check mask
+        if (((quint32(n->type) & typeMask) == typeMask) && n->tag.isSet(layerMask))
+            res.push_back(QSSGNodeId(reinterpret_cast<quintptr>(n)));
+    }
+
+    return res;
+}
+
 void QSSGLayerRenderData::prepareForRender()
 {
     QSSG_ASSERT_X(layerPrepResult.isNull(), "Prep-result was not reset for render!", layerPrepResult = {});
@@ -2349,7 +2363,20 @@ void QSSGLayerRenderData::prepareForRender()
         wasDataDirty |= transformAndOpacityDirty;
     }
 
-    const bool restatNodes = (layerTreeWasDirty || (globalStateResult & QSSGRenderDataHelpers::GlobalStateResult::ActiveChanged));
+    // Check if we have an explicit camera!
+    // NOTE: We only do layering if we have an explicit camera!!!
+
+    const bool hasExplicitCamera = (layer.explicitCameras.size() != 0);
+    bool cameraLayerMaskDirty = false;
+    quint32 layerMask = QSSGRenderCamera::LayerMaskAll;
+    if (hasExplicitCamera) {
+        QSSGRenderCamera *explicitCamera = layer.explicitCameras[0];
+        layerMask = explicitCamera->tag.value();
+        cameraLayerMaskDirty = explicitCamera->isDirty(QSSGRenderCamera::DirtyFlag::LayerMaskDirty);
+        explicitCamera->clearDirty(QSSGRenderCamera::DirtyFlag::LayerMaskDirty);
+    }
+
+    const bool restatNodes = (layerTreeWasDirty || (globalStateResult & QSSGRenderDataHelpers::GlobalStateResult::ActiveChanged) || cameraLayerMaskDirty);
 
     if (restatNodes) {
         modelsView.clear();
@@ -2358,10 +2385,11 @@ void QSSGLayerRenderData::prepareForRender()
         camerasView.clear();
         lightsView.clear();
         reflectionProbesView.clear();
+        nonCategorizedView.clear();
 
         enum NodeType : size_t { Model = 0, Particles, Item2D, Camera, Light, ReflectionProbe, Other, Inactive };
-        static const auto nodeType = [](QSSGRenderNode *node) -> NodeType {
-            if (!node->getGlobalState(QSSGRenderNode::GlobalState::Active))
+        const auto nodeType = [layerMask](QSSGRenderNode *node) -> NodeType {
+            if (!(node->getGlobalState(QSSGRenderNode::GlobalState::Active) && (node->tag.isSet(layerMask))))
                 return NodeType::Inactive;
             switch (node->type) {
             case QSSGRenderGraphObject::Type::Model: return NodeType::Model;
@@ -2390,13 +2418,13 @@ void QSSGLayerRenderData::prepareForRender()
             // which is stored based on the nodes' order in the world tree).
             layerNodesCategorized = { layerNodes.begin(), layerNodes.end() };
             // NOTE: Due to the ordering of item2ds, we need to use stable_sort.
-            std::stable_sort(layerNodesCategorized.begin(), layerNodesCategorized.end(), [](QSSGRenderNode *a, QSSGRenderNode *b) {
+            std::stable_sort(layerNodesCategorized.begin(), layerNodesCategorized.end(), [nodeType](QSSGRenderNode *a, QSSGRenderNode *b) {
                 return nodeType(a) < nodeType(b);
             });
         }
 
         // Group nodes by type inline and keep track of the individual parts using QSSGDataViews
-        const LayerNodeStatResult stat = statLayerNodes(layerNodesCategorized);
+        const LayerNodeStatResult stat = statLayerNodes(layerNodesCategorized, layerMask);
 
         // Go through the sorted nodes and create the views
         size_t next = 0;

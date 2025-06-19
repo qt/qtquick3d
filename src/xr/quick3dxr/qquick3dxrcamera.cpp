@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DXrEyeCamera::QQuick3DXrEyeCamera(QQuick3DXrOrigin *parent)
-    : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera)), parent)
+    : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera, QQuick3DContentLayer::LayerAll)), parent)
 {
 }
 

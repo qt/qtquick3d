@@ -65,6 +65,32 @@ QSSGRenderContextInterface *QSSGFrameData::contextInterface() const
     return m_ctx;
 }
 
+/*!
+  \return A list of layer nodes that match the \a layerMask and \a typeMask.
+ */
+QSSGNodeIdList QSSGFrameData::getLayerNodes(quint32 layerMask, TypeMask typeMask) const
+{
+    QSSG_ASSERT(m_ctx, return {});
+
+    auto *layer = getCurrent();
+    QSSG_ASSERT_X(layer, "No active layer for renderer!", return {});
+    const auto &layerNodes = layer->layerNodes;
+
+    return QSSGLayerRenderData::filter(layerNodes, layerMask, typeMask);;
+}
+
+/*!
+    \return A list of layer nodes for the given \a cameraId that match the \a typeMask.
+    If the camera does not have a layer mask, an empty list is returned.
+*/
+QSSGNodeIdList QSSGFrameData::getLayerNodes(QSSGCameraId cameraId, TypeMask typeMask) const
+{
+    auto *camera = QSSGRenderGraphObjectUtils::getNode<QSSGRenderCamera>(QSSGNodeId(cameraId));
+    const quint32 layerMask = camera ? camera->tag.value() : 0 /* LayerNone */;
+
+    return (layerMask != 0) ? getLayerNodes(layerMask, typeMask) : QSSGNodeIdList{};
+}
+
 void QSSGFrameData::clear()
 {
 

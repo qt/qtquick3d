@@ -351,6 +351,8 @@ QSSGRenderGraphObject *QQuick3DCamera::updateSpatialNode(QSSGRenderGraphObject *
         camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     if (qUpdateIfNeeded(camera->levelOfDetailPixelThreshold, m_levelOfDetailBias))
         camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
+    if (qUpdateIfNeeded(camera->layerMask, quint32(QQuick3DNodePrivate::get(this)->m_tag)))
+        camera->markDirty(QSSGRenderCamera::DirtyFlag::LayerMaskDirty);
 
     return node;
 }

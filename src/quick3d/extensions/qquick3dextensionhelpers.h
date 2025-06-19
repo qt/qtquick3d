@@ -15,6 +15,7 @@
 
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <ssg/qssgrenderbasetypes.h>
+#include <ssg/qssgrendergraphobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -36,6 +37,8 @@ public:
     [[nodiscard]] static QSSGResourceId getResourceId(const QQuick3DObject &resource);
     [[nodiscard]] static QSSGCameraId getCameraId(const QQuick3DObject &camera);
     [[nodiscard]] static QSSGExtensionId getExtensionId(const QQuick3DObject &extension);
+
+    [[nodiscard]] static QSSGRenderGraphObject::Type getNodeIdType(QSSGNodeId nodeId);
 
     template<typename QSSGTypeId>
     [[nodiscard]] static constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }

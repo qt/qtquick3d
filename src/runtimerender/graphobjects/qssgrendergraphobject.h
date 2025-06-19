@@ -51,7 +51,7 @@ public:
         Material = 0x20000,
         Texture = 0x40000,
         Extension = 0x80000,
-        User =   0x80000000
+        User =   0x80000000,
     };
 
     enum class Type : quint32 {

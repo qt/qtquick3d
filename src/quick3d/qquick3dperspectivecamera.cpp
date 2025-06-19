@@ -60,7 +60,7 @@ QQuick3DPerspectiveCamera::QQuick3DPerspectiveCamera(QQuick3DNodePrivate &dd, QQ
     \internal
 */
 QQuick3DPerspectiveCamera::QQuick3DPerspectiveCamera(QQuick3DNode *parent)
-    : QQuick3DPerspectiveCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::PerspectiveCamera)), parent)
+    : QQuick3DPerspectiveCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::PerspectiveCamera, QQuick3DContentLayer::LayerAll)), parent)
 {}
 
 /*!

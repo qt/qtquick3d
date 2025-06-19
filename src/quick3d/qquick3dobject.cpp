@@ -8,6 +8,7 @@
 #include "qquick3dmodel_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
+#include <ssg/qssgrenderextensions.h>
 
 #include <QtQml/private/qqmlglobal_p.h>
 #include <QtQuick/private/qquickstategroup_p.h>
@@ -257,6 +258,65 @@ bool QQuick3DObject::isComponentComplete() const
 }
 
 void QQuick3DObject::preSync()
+{
+
+}
+
+/*!
+    \class QQuick3DContentLayer
+    \inmodule QtQuick3D
+    \since 6.11
+    \brief Provides enumeration of content layers available in a QtQuick3D.
+
+    This class is used to represent a layer of content in a 3D scene. It can be used
+    to manage different layers of content, such as background, foreground, or UI elements.
+
+    The \l ContentLayer enumeration defines the available layer flags that can be used to
+    for example group scene nodes togheter or filter which nodes are rendered by the camera.
+
+    Consider a city scene where you have different layers for buildings, streets, and vehicles.
+    You can assign each of these layers a specific flag, such as \c LayerBuildings, \c LayerStreets,
+    and \c LayerVehicles by aliasing the \l ContentLayer enumeration values. Once the layers are defined,
+    you can assign these flags to the nodes in the scene and have the camera filter which layers to render
+    by setting the same \l {Node::layer}{layer} property on the \l Camera.
+
+    \note That some of the layers have special meanings:
+
+    \table
+    \header
+        \li Layer
+        \li Description
+    \row
+        \li LayerNone
+        \li No layer assigned, used to indicate that a node does not belong to any layer and should not be rendered.
+    \row
+        \li Layer0
+        \li The main layer, used for the primary content in the scene.
+    \row
+        \li Layer1-23
+        \li Freely assignable layers, used for grouping nodes together based on their purpose or functionality.
+    \row
+        \li Layer24 and up
+        \li Reserved layers, used for special purposes or future extensions.
+    \row
+        \li LayerAll
+        \li Indicates that a node belongs to all layers, used for nodes that should be rendered in every layer.
+    \endtable
+
+    \note The layers are defined as flags, which means that you can combine multiple layers
+
+    \note This class is not intended to be instantiated directly. Instead, it is used as a
+    singleton in QML to access the layer flags.
+
+*/
+
+QQuick3DContentLayer::QQuick3DContentLayer(QObject *parent)
+    : QObject(parent)
+{
+
+}
+
+QQuick3DContentLayer::~QQuick3DContentLayer()
 {
 
 }
@@ -1107,6 +1167,7 @@ quint64 QQuick3DObjectPrivate::_q_createJSWrapper(QQmlV4ExecutionEnginePtr engin
 }
 
 QQuick3DObjectPrivate::ExtraData::ExtraData() : hideRefCount(0) {}
+
 
 QT_END_NAMESPACE
 

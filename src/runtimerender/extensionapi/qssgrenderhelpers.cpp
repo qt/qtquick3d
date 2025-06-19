@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
  */
 QSSGRenderablesId QSSGRenderHelpers::createRenderables(const QSSGFrameData &frameData,
                                                        QSSGPrepContextId prepId,
-                                                       const NodeList &nodes,
+                                                       const QSSGNodeIdList &nodes,
                                                        CreateFlags flags)
 {
     QSSGRenderablesId rid { QSSGRenderablesId::Invalid };

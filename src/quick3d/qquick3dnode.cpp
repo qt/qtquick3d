@@ -12,8 +12,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuick3DNodePrivate::QQuick3DNodePrivate(QQuick3DObjectPrivate::Type t)
+QQuick3DNodePrivate::QQuick3DNodePrivate(QQuick3DObjectPrivate::Type t,
+                                         QQuick3DContentLayer::LayerFlag layerFlag)
     : QQuick3DObjectPrivate(t)
+    , m_tag(layerFlag)
 {
 
 }
@@ -832,6 +834,11 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         }
     }
 
+    if (d->m_tag != spacialNode->tag) {
+        spacialNode->tag = d->m_tag;
+        spacialNode->markDirty(QSSGRenderNode::DirtyFlag::TagDirty);
+    }
+
     spacialNode->staticFlags = d->m_staticFlags;
 
     // The Hidden in Editor flag overrides the visible value
@@ -1013,6 +1020,45 @@ void QQuick3DNode::itemChange(ItemChange change, const ItemChangeData &)
 {
     if (change == QQuick3DObject::ItemParentHasChanged)
         QQuick3DNodePrivate::get(this)->markSceneTransformDirty();
+}
+
+/*!
+    \qmlproperty int QtQuick3D::Node::layers
+
+    This property defines the content layers that this node belongs to.
+    The layers can be used to group nodes that belongs together, for example
+    to be rendered together or to be filtered out from rendering.
+    Setting this property on the active \l Camera will cause the camera to
+    only render nodes that belong to the specified layers.
+    The value is a bitmask, where each bit represents a layer.
+
+    By default nodes are assigned to the \c main layer, which is \l {ContentLayer.Layer0}{Layer0}.
+
+    \sa ContentLayer
+*/
+
+int QQuick3DNode::layers() const
+{
+    const Q_D(QQuick3DNode);
+
+    return QQuick3DContentLayer::LayerFlags::fromInt(d->m_tag.value());
+}
+
+void QQuick3DNode::setLayers(int newLayers)
+{
+    Q_D(QQuick3DNode);
+
+    if (newLayers < 0) {
+        qWarning("QQuick3DNode::setLayers: value must be non-negative");
+        return;
+    }
+
+    if (d->m_tag == quint32(newLayers))
+        return;
+
+    d->m_tag.setValue(newLayers);
+    emit layersChanged();
+    update();
 }
 
 QT_END_NAMESPACE

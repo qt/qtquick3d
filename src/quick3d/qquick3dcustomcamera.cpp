@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
  * \internal
  */
 QQuick3DCustomCamera::QQuick3DCustomCamera(QQuick3DNode *parent)
-    : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera)), parent){}
+    : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomCamera, QQuick3DContentLayer::LayerAll)), parent){}
 
 /*!
     \qmlproperty matrix4x4 CustomCamera::projection

@@ -433,7 +433,7 @@ public:
                                                   quint32 slot = 0);
 
     // Model API
-    QSSGRenderablesId createRenderables(QSSGPrepContextId prepId, const QList<QSSGNodeId> &nodes, QSSGRenderHelpers::CreateFlags createFlags);
+    QSSGRenderablesId createRenderables(QSSGPrepContextId prepId, const QSSGNodeIdList &nodes, QSSGRenderHelpers::CreateFlags createFlags);
     void setGlobalTransform(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, const QMatrix4x4 &mvp);
     QMatrix4x4 getGlobalTransform(QSSGPrepContextId prepId, const QSSGRenderModel &model);
     void setGlobalOpacity(QSSGRenderablesId renderablesId, const QSSGRenderModel &model, float opacity);
@@ -477,6 +477,10 @@ public:
                                          std::vector<float> &globalOpacities);
 
     QSSGRenderCameraData getCameraDataImpl(const QSSGRenderCamera *camera) const;
+
+    static QSSGNodeIdList filter(const QSSGGlobalRenderNodeData::LayerNodeView &layerNodes,
+                                 quint32 layerMask,
+                                 quint32 typeMask);
 
 private:
     friend class QSSGRenderer;

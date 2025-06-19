@@ -116,11 +116,14 @@ public:
 
     enum class DirtyFlag : quint8
     {
-        CameraDirty = 0x1
+        CameraDirty = 0x1,
+        LayerMaskDirty = 0x2,
     };
     using FlagT = std::underlying_type_t<DirtyFlag>;
 
     static constexpr DirtyFlag DirtyMask { std::numeric_limits<FlagT>::max() };
+
+    static constexpr quint32 LayerMaskAll = 0xFFFFFFFF; // Default to all layers
 
     class ClipPlanes : public QVector2D
     {
@@ -230,6 +233,7 @@ public:
     Magnification magnification;
     QMatrix4x4 projection;
     float levelOfDetailPixelThreshold = 1.0;
+    quint32 layerMask = LayerMaskAll;
     bool enableFrustumClipping = true;
 
 private:

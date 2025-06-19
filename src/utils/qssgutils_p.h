@@ -77,6 +77,59 @@ using QSSGRenderLayerHandle = QSSGRenderStorageHandle<HandleType::Layer>;
 using QSSGRenderNodeHandle = QSSGRenderStorageHandle<HandleType::Node>;
 using QSSGRenderModelHandle = QSSGRenderStorageHandle<HandleType::Model>;
 
+class QSSGRenderFlag
+{
+public:
+    QSSGRenderFlag() = default;
+    explicit QSSGRenderFlag(quint32 v)
+        : m_value(v)
+    {
+    }
+
+    [[nodiscard]] quint32 value() const { return m_value; }
+
+    void setValue(quint32 v)
+    {
+        m_value = v;
+    }
+
+    void clearFlags(quint32 v = 0xFFFFFFFF)
+    {
+        m_value &= ~v;
+    }
+
+    void setFlag(quint32 v, bool on = true)
+    {
+        if (on)
+            m_value |= v;
+        else
+            m_value &= ~v;
+    }
+
+    [[nodiscard]] bool isSet(quint32 v) const { return (m_value & v) != 0; }
+
+    friend bool operator==(const QSSGRenderFlag &a, const QSSGRenderFlag &b);
+    friend bool operator!=(const QSSGRenderFlag &a, const QSSGRenderFlag &b);
+
+    operator quint32() const noexcept { return m_value; }
+
+private:
+    quint32 m_value = 0;
+};
+
+inline bool operator==(const QSSGRenderFlag &a, const QSSGRenderFlag &b)
+{
+    return a.m_value == b.m_value;
+}
+
+inline bool operator!=(const QSSGRenderFlag &a, const QSSGRenderFlag &b)
+{
+    return !(a == b);
+}
+
+using QSSGRenderNodeTag = QSSGRenderFlag;
+
+
 namespace QSSGUtils {
 
 namespace aux {

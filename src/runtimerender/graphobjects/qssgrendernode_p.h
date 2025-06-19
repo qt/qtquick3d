@@ -57,7 +57,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
         OpacityDirty = 1 << 5,
         ActiveDirty = 1 << 6,
         PickableDirty = 1 << 7,
-        SubNodeDirty = 1 << 8, // Sub-nodes should set/unest this if they "extend" the dirty flags provided by the node
+        TagDirty = 1 << 8,
+        SubNodeDirty = 1 << 9, // Sub-nodes should set/unest this if they "extend" the dirty flags provided by the node
 
         GlobalValuesDirty = TransformDirty | OpacityDirty | ActiveDirty | PickableDirty,
         DirtyMask = GlobalValuesDirty | SubNodeDirty
@@ -89,6 +90,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
 
     // Handle(s) to the render data.
     QSSGRenderNodeHandle h;
+    QSSGRenderNodeTag tag;
 
     using ChildList = QSSGInvasiveLinkedList<QSSGRenderNode, &QSSGRenderNode::previousSibling, &QSSGRenderNode::nextSibling>;
     ChildList children;

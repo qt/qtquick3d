@@ -37,7 +37,8 @@ class Q_QUICK3D_EXPORT QQuick3DNodePrivate : public QQuick3DObjectPrivate
 
 public:
 
-    explicit QQuick3DNodePrivate(QQuick3DObjectPrivate::Type t);
+    explicit QQuick3DNodePrivate(QQuick3DObjectPrivate::Type t,
+                                 QQuick3DContentLayer::LayerFlag layerFlag = QQuick3DContentLayer::Layer0);
     ~QQuick3DNodePrivate();
     void init();
 
@@ -61,6 +62,7 @@ public:
     QVector3D m_position;
     QVector3D m_scale{ 1.0f, 1.0f, 1.0f };
     QVector3D m_pivot;
+    QSSGRenderNodeTag m_tag;
     float m_opacity = 1.0f;
     int m_staticFlags = 0;
     bool m_visible = true;
