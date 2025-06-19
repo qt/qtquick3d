@@ -64,13 +64,13 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
             cb->debugMarkEnd();
         }
 
+        cb.setCurrentlyBaking(false);
+        cb.triggerNewFrame(true);
+        d->currentStatus = Status::Finished;
+
         if (settings.quitWhenFinished) {
             qDebug("Lightmap baking/denoising done, exiting application");
             QMetaObject::invokeMethod(qApp, "quit");
-        } else {
-            cb.setCurrentlyBaking(false);
-            cb.triggerNewFrame(true);
-            d->currentStatus = Status::Finished;
         }
     }
 
