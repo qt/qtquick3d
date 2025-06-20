@@ -4,7 +4,7 @@
 qt_standard_project_setup(REQUIRES 6.8)
 
 if(NOT QT_FEATURE_developer_build)
-    message(SEND_ERROR "Skipping manual test shaderPoker, requires developer build")
+    message(WARNING "Skipping manual test shaderPoker, requires developer build")
     return()
 endif()
 
