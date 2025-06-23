@@ -201,6 +201,16 @@ struct QSSGLightmapperPrivate
     RTCDevice rdev = nullptr;
     RTCScene rscene = nullptr;
 
+    struct RasterResult {
+        bool success = false;
+        int width = 0;
+        int height = 0;
+        QByteArray worldPositions; // vec4
+        QByteArray normals; // vec4
+        QByteArray baseColors; // vec4, static color * texture map value (both linear)
+        QByteArray emissions; // vec4, static factor * emission map value
+    };
+
     struct LightmapEntry {
         QVector3D worldPos;
         QVector3D normal;
@@ -294,6 +304,7 @@ struct QSSGLightmapperPrivate
     bool denoiseLightmaps(const StageProgressReporter &reporter);
 
     std::pair<QVector3D, QVector3D> sampleDirectLight(QVector3D worldPos, QVector3D normal) const;
+    RasterResult rasterizeLightmap(int lmIdx, QSize outputSize);
 };
 
 // Used to output progress ETA during baking.
@@ -872,6 +883,318 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
     return true;
 }
 
+QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(int lmIdx, QSize outputSize)
+{
+    QSSGLightmapperPrivate::RasterResult result;
+
+    QRhi *rhi = rhiCtx->rhi();
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    const DrawInfo &bakeModelDrawInfo(drawInfos[lmIdx]);
+    const bool hasUV0 = bakeModelDrawInfo.uvOffset != UINT_MAX;
+    const bool hasTangentAndBinormal = bakeModelDrawInfo.tangentOffset != UINT_MAX
+            && bakeModelDrawInfo.binormalOffset != UINT_MAX;
+
+    QRhiVertexInputLayout inputLayout;
+    inputLayout.setBindings({ QRhiVertexInputBinding(bakeModelDrawInfo.vertexStride) });
+
+    std::unique_ptr<QRhiBuffer> vbuf(rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, bakeModelDrawInfo.vertexData.size()));
+    if (!vbuf->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create vertex buffer"));
+        return result;
+    }
+    std::unique_ptr<QRhiBuffer> ibuf(rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::IndexBuffer, bakeModelDrawInfo.indexData.size()));
+    if (!ibuf->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create index buffer"));
+        return result;
+    }
+    QRhiResourceUpdateBatch *resUpd = rhi->nextResourceUpdateBatch();
+    resUpd->uploadStaticBuffer(vbuf.get(), bakeModelDrawInfo.vertexData.constData());
+    resUpd->uploadStaticBuffer(ibuf.get(), bakeModelDrawInfo.indexData.constData());
+    QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resUpd);
+    cb->resourceUpdate(resUpd);
+
+    std::unique_ptr<QRhiTexture> positionData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
+                                                              QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    if (!positionData->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for positions"));
+        return result;
+    }
+    std::unique_ptr<QRhiTexture> normalData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
+                                                            QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    if (!normalData->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for normals"));
+        return result;
+    }
+    std::unique_ptr<QRhiTexture> baseColorData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
+                                                               QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    if (!baseColorData->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for base color"));
+        return result;
+    }
+    std::unique_ptr<QRhiTexture> emissionData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
+                                                              QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    if (!emissionData->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for emissive color"));
+        return result;
+    }
+
+    std::unique_ptr<QRhiRenderBuffer> ds(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, outputSize));
+    if (!ds->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create depth-stencil buffer"));
+        return result;
+    }
+
+    QRhiColorAttachment posAtt(positionData.get());
+    QRhiColorAttachment normalAtt(normalData.get());
+    QRhiColorAttachment baseColorAtt(baseColorData.get());
+    QRhiColorAttachment emissionAtt(emissionData.get());
+    QRhiTextureRenderTargetDescription rtDesc;
+    rtDesc.setColorAttachments({ posAtt, normalAtt, baseColorAtt, emissionAtt });
+    rtDesc.setDepthStencilBuffer(ds.get());
+
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    std::unique_ptr<QRhiRenderPassDescriptor> rpDesc(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rpDesc.get());
+    if (!rt->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create texture render target"));
+        return result;
+    }
+
+    static const int UBUF_SIZE = 48;
+    const int subMeshCount = subMeshInfos[lmIdx].size();
+    const int alignedUbufSize = rhi->ubufAligned(UBUF_SIZE);
+    const int totalUbufSize = alignedUbufSize * subMeshCount;
+    std::unique_ptr<QRhiBuffer> ubuf(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalUbufSize));
+    if (!ubuf->create()) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create uniform buffer of size %1").arg(totalUbufSize));
+        return result;
+    }
+
+    // Must ensure that the final image is identical with all graphics APIs,
+    // regardless of how the Y axis goes in the image and normalized device
+    // coordinate systems.
+    qint32 flipY = rhi->isYUpInFramebuffer() ? 0 : 1;
+    if (rhi->isYUpInNDC())
+        flipY = 1 - flipY;
+
+    char *ubufData = ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+    for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
+        const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
+        qint32 hasBaseColorMap = subMeshInfo.baseColorMap ? 1 : 0;
+        qint32 hasEmissiveMap = subMeshInfo.emissiveMap ? 1 : 0;
+        qint32 hasNormalMap = subMeshInfo.normalMap ? 1 : 0;
+        char *p = ubufData + subMeshIdx * alignedUbufSize;
+        memcpy(p, &subMeshInfo.baseColor, 4 * sizeof(float));
+        memcpy(p + 16, &subMeshInfo.emissiveFactor, 3 * sizeof(float));
+        memcpy(p + 28, &flipY, sizeof(qint32));
+        memcpy(p + 32, &hasBaseColorMap, sizeof(qint32));
+        memcpy(p + 36, &hasEmissiveMap, sizeof(qint32));
+        memcpy(p + 40, &hasNormalMap, sizeof(qint32));
+        memcpy(p + 44, &subMeshInfo.normalStrength, sizeof(float));
+    }
+    ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+    auto setupPipeline = [rhi, &rpDesc](QSSGRhiShaderPipeline *shaderPipeline,
+                                        QRhiShaderResourceBindings *srb,
+                                        const QRhiVertexInputLayout &inputLayout)
+    {
+        QRhiGraphicsPipeline *ps = rhi->newGraphicsPipeline();
+        ps->setTopology(QRhiGraphicsPipeline::Triangles);
+        ps->setDepthTest(true);
+        ps->setDepthWrite(true);
+        ps->setDepthOp(QRhiGraphicsPipeline::Less);
+        ps->setShaderStages(shaderPipeline->cbeginStages(), shaderPipeline->cendStages());
+        ps->setTargetBlends({ {}, {}, {}, {} });
+        ps->setRenderPassDescriptor(rpDesc.get());
+        ps->setVertexInputLayout(inputLayout);
+        ps->setShaderResourceBindings(srb);
+        return ps;
+    };
+
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+    QVector<QRhiGraphicsPipeline *> ps;
+    // Everything is going to be rendered twice (but note depth testing), first
+    // with polygon mode fill, then line.
+    QVector<QRhiGraphicsPipeline *> psLine;
+
+    for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
+        const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
+        QVarLengthArray<QRhiVertexInputAttribute, 6> vertexAttrs;
+        vertexAttrs << QRhiVertexInputAttribute(0, 0, bakeModelDrawInfo.positionFormat, bakeModelDrawInfo.positionOffset)
+                    << QRhiVertexInputAttribute(0, 1, bakeModelDrawInfo.normalFormat, bakeModelDrawInfo.normalOffset)
+                    << QRhiVertexInputAttribute(0, 2, bakeModelDrawInfo.lightmapUVFormat, bakeModelDrawInfo.lightmapUVOffset);
+
+        // Vertex inputs (just like the sampler uniforms) must match exactly on
+        // the shader and the application side, cannot just leave out or have
+        // unused inputs.
+        QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::Default;
+        if (hasUV0) {
+            shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::Uv;
+            if (hasTangentAndBinormal)
+                shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::UvTangent;
+        }
+
+        const auto &shaderCache = renderer->contextInterface()->shaderCache();
+        const auto &lmUvRastShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiLightmapUVRasterizationShader(shaderVariant);
+        if (!lmUvRastShaderPipeline) {
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load shaders"));
+            return result;
+        }
+
+        if (hasUV0) {
+            vertexAttrs << QRhiVertexInputAttribute(0, 3, bakeModelDrawInfo.uvFormat, bakeModelDrawInfo.uvOffset);
+            if (hasTangentAndBinormal) {
+                vertexAttrs << QRhiVertexInputAttribute(0, 4, bakeModelDrawInfo.tangentFormat, bakeModelDrawInfo.tangentOffset);
+                vertexAttrs << QRhiVertexInputAttribute(0, 5, bakeModelDrawInfo.binormalFormat, bakeModelDrawInfo.binormalOffset);
+            }
+        }
+
+        inputLayout.setAttributes(vertexAttrs.cbegin(), vertexAttrs.cend());
+
+        QSSGRhiShaderResourceBindingList bindings;
+        bindings.addUniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, ubuf.get(),
+                                  subMeshIdx * alignedUbufSize, UBUF_SIZE);
+        QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+        if (subMeshInfo.baseColorMap) {
+            const bool mipmapped = subMeshInfo.baseColorMap->flags().testFlag(QRhiTexture::MipMapped);
+            QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_minFilterType),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_magFilterType),
+                    mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_mipFilterType) : QRhiSampler::None,
+                    QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_horizontalTilingMode),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_verticalTilingMode),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_depthTilingMode)
+            });
+            bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.baseColorMap, sampler);
+        } else {
+            bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
+        }
+        if (subMeshInfo.emissiveMap) {
+            const bool mipmapped = subMeshInfo.emissiveMap->flags().testFlag(QRhiTexture::MipMapped);
+            QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_minFilterType),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_magFilterType),
+                    mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_mipFilterType) : QRhiSampler::None,
+                    QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_horizontalTilingMode),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_verticalTilingMode),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_depthTilingMode)
+            });
+            bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.emissiveMap, sampler);
+        } else {
+            bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
+        }
+        if (subMeshInfo.normalMap) {
+            const bool mipmapped = subMeshInfo.normalMap->flags().testFlag(QRhiTexture::MipMapped);
+            QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_minFilterType),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_magFilterType),
+                    mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_mipFilterType) : QRhiSampler::None,
+                    QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_horizontalTilingMode),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_verticalTilingMode),
+                    QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_depthTilingMode)
+            });
+            bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.normalMap, sampler);
+        } else {
+            bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
+        }
+        QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+
+        QRhiGraphicsPipeline *pipeline = setupPipeline(lmUvRastShaderPipeline.get(), srb, inputLayout);
+        if (!pipeline->create()) {
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create graphics pipeline (mesh %1 submesh %2)").
+                                                                   arg(lmIdx).
+                                                                   arg(subMeshIdx));
+            qDeleteAll(ps);
+            qDeleteAll(psLine);
+            return result;
+        }
+        ps.append(pipeline);
+        pipeline = setupPipeline(lmUvRastShaderPipeline.get(), srb, inputLayout);
+        pipeline->setPolygonMode(QRhiGraphicsPipeline::Line);
+        if (!pipeline->create()) {
+            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create graphics pipeline with line fill mode (mesh %1 submesh %2)").
+                                                                   arg(lmIdx).
+                                                                   arg(subMeshIdx));
+            qDeleteAll(ps);
+            qDeleteAll(psLine);
+            return result;
+        }
+        psLine.append(pipeline);
+    }
+
+    QRhiCommandBuffer::VertexInput vertexBuffers = { vbuf.get(), 0 };
+    const QRhiViewport viewport(0, 0, float(outputSize.width()), float(outputSize.height()));
+    bool hadViewport = false;
+
+    cb->beginPass(rt.get(), Qt::black, { 1.0f, 0 });
+    for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
+        const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
+        cb->setGraphicsPipeline(ps[subMeshIdx]);
+        if (!hadViewport) {
+            cb->setViewport(viewport);
+            hadViewport = true;
+        }
+        cb->setShaderResources();
+        cb->setVertexInput(0, 1, &vertexBuffers, ibuf.get(), 0, QRhiCommandBuffer::IndexUInt32);
+        cb->drawIndexed(subMeshInfo.count, 1, subMeshInfo.offset);
+        cb->setGraphicsPipeline(psLine[subMeshIdx]);
+        cb->setShaderResources();
+        cb->drawIndexed(subMeshInfo.count, 1, subMeshInfo.offset);
+    }
+
+    resUpd = rhi->nextResourceUpdateBatch();
+    QRhiReadbackResult posReadResult;
+    QRhiReadbackResult normalReadResult;
+    QRhiReadbackResult baseColorReadResult;
+    QRhiReadbackResult emissionReadResult;
+    resUpd->readBackTexture({ positionData.get() }, &posReadResult);
+    resUpd->readBackTexture({ normalData.get() }, &normalReadResult);
+    resUpd->readBackTexture({ baseColorData.get() }, &baseColorReadResult);
+    resUpd->readBackTexture({ emissionData.get() }, &emissionReadResult);
+    cb->endPass(resUpd);
+
+    // Submit and wait for completion.
+    rhi->finish();
+
+    qDeleteAll(ps);
+    qDeleteAll(psLine);
+
+    const int numPixels = outputSize.width() * outputSize.height();
+
+    result.worldPositions.resize(numPixels);
+    result.normals.resize(numPixels);
+    result.baseColors.resize(numPixels);
+    result.emissions.resize(numPixels);
+
+    // The readback results are tightly packed (which is supposed to be ensured
+    // by each rhi backend), so one line is 16 * width bytes.
+    if (posReadResult.data.size() < numPixels * 16) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Position data is smaller than expected"));
+        return result;
+    }
+    if (normalReadResult.data.size() < numPixels * 16) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Normal data is smaller than expected"));
+        return result;
+    }
+    if (baseColorReadResult.data.size() < numPixels * 16) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Base color data is smaller than expected"));
+        return result;
+    }
+    if (emissionReadResult.data.size() < numPixels * 16) {
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Emission data is smaller than expected"));
+        return result;
+    }
+
+    result.success = true;
+    result.width = outputSize.width();
+    result.height = outputSize.height();
+    result.worldPositions = posReadResult.data;
+    result.normals = normalReadResult.data;
+    result.baseColors = baseColorReadResult.data;
+    result.emissions = emissionReadResult.data;
+
+    return result;
+}
+
 bool QSSGLightmapperPrivate::prepareLightmaps(const StageProgressReporter &reporter)
 {
     QRhi *rhi = rhiCtx->rhi();
@@ -889,7 +1212,6 @@ bool QSSGLightmapperPrivate::prepareLightmaps(const StageProgressReporter &repor
     }
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Preparing lightmaps..."));
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     const int bakedLightingModelCount = bakedLightingModels.size();
     Q_ASSERT(drawInfos.size() == bakedLightingModelCount);
     Q_ASSERT(subMeshInfos.size() == bakedLightingModelCount);
@@ -899,302 +1221,22 @@ bool QSSGLightmapperPrivate::prepareLightmaps(const StageProgressReporter &repor
         rasterizeTimer.start();
 
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
+        const QSize lightmapSize = drawInfos[lmIdx].lightmapSize;
 
-        const DrawInfo &bakeModelDrawInfo(drawInfos[lmIdx]);
-        const bool hasUV0 = bakeModelDrawInfo.uvOffset != UINT_MAX;
-        const bool hasTangentAndBinormal = bakeModelDrawInfo.tangentOffset != UINT_MAX
-                && bakeModelDrawInfo.binormalOffset != UINT_MAX;
-        const QSize outputSize = bakeModelDrawInfo.lightmapSize;
-
-        QRhiVertexInputLayout inputLayout;
-        inputLayout.setBindings({ QRhiVertexInputBinding(bakeModelDrawInfo.vertexStride) });
-
-        std::unique_ptr<QRhiBuffer> vbuf(rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, bakeModelDrawInfo.vertexData.size()));
-        if (!vbuf->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create vertex buffer"));
+        const QSSGLightmapperPrivate::RasterResult raster = rasterizeLightmap(lmIdx, lightmapSize);
+        if (!raster.success)
             return false;
-        }
-        std::unique_ptr<QRhiBuffer> ibuf(rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::IndexBuffer, bakeModelDrawInfo.indexData.size()));
-        if (!ibuf->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create index buffer"));
-            return false;
-        }
-        QRhiResourceUpdateBatch *resUpd = rhi->nextResourceUpdateBatch();
-        resUpd->uploadStaticBuffer(vbuf.get(), bakeModelDrawInfo.vertexData.constData());
-        resUpd->uploadStaticBuffer(ibuf.get(), bakeModelDrawInfo.indexData.constData());
-        QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resUpd);
-        cb->resourceUpdate(resUpd);
+        Q_ASSERT(lightmapSize == QSize(raster.width, raster.height));
+        Lightmap lightmap(QSize(raster.width, raster.height));
+        const int numPixels = raster.width * raster.height;
 
-        std::unique_ptr<QRhiTexture> positionData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
-                                                                  QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
-        if (!positionData->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for positions"));
-            return false;
-        }
-        std::unique_ptr<QRhiTexture> normalData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
-                                                                QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
-        if (!normalData->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for normals"));
-            return false;
-        }
-        std::unique_ptr<QRhiTexture> baseColorData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
-                                                                   QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
-        if (!baseColorData->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for base color"));
-            return false;
-        }
-        std::unique_ptr<QRhiTexture> emissionData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
-                                                                  QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
-        if (!emissionData->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create FP32 texture for emissive color"));
-            return false;
-        }
+        const float *lmPosPtr = reinterpret_cast<const float *>(raster.worldPositions.constData());
+        const float *lmNormPtr = reinterpret_cast<const float *>(raster.normals.constData());
+        const float *lmBaseColorPtr = reinterpret_cast<const float *>(raster.baseColors.constData());
+        const float *lmEmissionPtr = reinterpret_cast<const float *>(raster.emissions.constData());
 
-        std::unique_ptr<QRhiRenderBuffer> ds(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, outputSize));
-        if (!ds->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create depth-stencil buffer"));
-            return false;
-        }
-
-        QRhiColorAttachment posAtt(positionData.get());
-        QRhiColorAttachment normalAtt(normalData.get());
-        QRhiColorAttachment baseColorAtt(baseColorData.get());
-        QRhiColorAttachment emissionAtt(emissionData.get());
-        QRhiTextureRenderTargetDescription rtDesc;
-        rtDesc.setColorAttachments({ posAtt, normalAtt, baseColorAtt, emissionAtt });
-        rtDesc.setDepthStencilBuffer(ds.get());
-
-        std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
-        std::unique_ptr<QRhiRenderPassDescriptor> rpDesc(rt->newCompatibleRenderPassDescriptor());
-        rt->setRenderPassDescriptor(rpDesc.get());
-        if (!rt->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create texture render target"));
-            return false;
-        }
-
-        static const int UBUF_SIZE = 48;
-        const int subMeshCount = subMeshInfos[lmIdx].size();
-        const int alignedUbufSize = rhi->ubufAligned(UBUF_SIZE);
-        const int totalUbufSize = alignedUbufSize * subMeshCount;
-        std::unique_ptr<QRhiBuffer> ubuf(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalUbufSize));
-        if (!ubuf->create()) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create uniform buffer of size %1").arg(totalUbufSize));
-            return false;
-        }
-
-        // Must ensure that the final image is identical with all graphics APIs,
-        // regardless of how the Y axis goes in the image and normalized device
-        // coordinate systems.
-        qint32 flipY = rhi->isYUpInFramebuffer() ? 0 : 1;
-        if (rhi->isYUpInNDC())
-            flipY = 1 - flipY;
-
-        char *ubufData = ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-        for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
-            const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
-            qint32 hasBaseColorMap = subMeshInfo.baseColorMap ? 1 : 0;
-            qint32 hasEmissiveMap = subMeshInfo.emissiveMap ? 1 : 0;
-            qint32 hasNormalMap = subMeshInfo.normalMap ? 1 : 0;
-            char *p = ubufData + subMeshIdx * alignedUbufSize;
-            memcpy(p, &subMeshInfo.baseColor, 4 * sizeof(float));
-            memcpy(p + 16, &subMeshInfo.emissiveFactor, 3 * sizeof(float));
-            memcpy(p + 28, &flipY, sizeof(qint32));
-            memcpy(p + 32, &hasBaseColorMap, sizeof(qint32));
-            memcpy(p + 36, &hasEmissiveMap, sizeof(qint32));
-            memcpy(p + 40, &hasNormalMap, sizeof(qint32));
-            memcpy(p + 44, &subMeshInfo.normalStrength, sizeof(float));
-        }
-        ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-
-        auto setupPipeline = [rhi, &rpDesc](QSSGRhiShaderPipeline *shaderPipeline,
-                QRhiShaderResourceBindings *srb,
-                const QRhiVertexInputLayout &inputLayout)
-        {
-            QRhiGraphicsPipeline *ps = rhi->newGraphicsPipeline();
-            ps->setTopology(QRhiGraphicsPipeline::Triangles);
-            ps->setDepthTest(true);
-            ps->setDepthWrite(true);
-            ps->setDepthOp(QRhiGraphicsPipeline::Less);
-            ps->setShaderStages(shaderPipeline->cbeginStages(), shaderPipeline->cendStages());
-            ps->setTargetBlends({ {}, {}, {}, {} });
-            ps->setRenderPassDescriptor(rpDesc.get());
-            ps->setVertexInputLayout(inputLayout);
-            ps->setShaderResourceBindings(srb);
-            return ps;
-        };
-
-        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-        QVector<QRhiGraphicsPipeline *> ps;
-        // Everything is going to be rendered twice (but note depth testing), first
-        // with polygon mode fill, then line.
-        QVector<QRhiGraphicsPipeline *> psLine;
-
-        for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
-            const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
-            QVarLengthArray<QRhiVertexInputAttribute, 6> vertexAttrs;
-            vertexAttrs << QRhiVertexInputAttribute(0, 0, bakeModelDrawInfo.positionFormat, bakeModelDrawInfo.positionOffset)
-                        << QRhiVertexInputAttribute(0, 1, bakeModelDrawInfo.normalFormat, bakeModelDrawInfo.normalOffset)
-                        << QRhiVertexInputAttribute(0, 2, bakeModelDrawInfo.lightmapUVFormat, bakeModelDrawInfo.lightmapUVOffset);
-
-            // Vertex inputs (just like the sampler uniforms) must match exactly on
-            // the shader and the application side, cannot just leave out or have
-            // unused inputs.
-            QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::Default;
-            if (hasUV0) {
-                shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::Uv;
-                if (hasTangentAndBinormal)
-                    shaderVariant = QSSGBuiltInRhiShaderCache::LightmapUVRasterizationShaderMode::UvTangent;
-            }
-
-            const auto &shaderCache = renderer->contextInterface()->shaderCache();
-            const auto &lmUvRastShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiLightmapUVRasterizationShader(shaderVariant);
-            if (!lmUvRastShaderPipeline) {
-                sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load shaders"));
-                return false;
-            }
-
-            if (hasUV0) {
-                vertexAttrs << QRhiVertexInputAttribute(0, 3, bakeModelDrawInfo.uvFormat, bakeModelDrawInfo.uvOffset);
-                if (hasTangentAndBinormal) {
-                    vertexAttrs << QRhiVertexInputAttribute(0, 4, bakeModelDrawInfo.tangentFormat, bakeModelDrawInfo.tangentOffset);
-                    vertexAttrs << QRhiVertexInputAttribute(0, 5, bakeModelDrawInfo.binormalFormat, bakeModelDrawInfo.binormalOffset);
-                }
-            }
-
-            inputLayout.setAttributes(vertexAttrs.cbegin(), vertexAttrs.cend());
-
-            QSSGRhiShaderResourceBindingList bindings;
-            bindings.addUniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, ubuf.get(),
-                                      subMeshIdx * alignedUbufSize, UBUF_SIZE);
-            QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
-                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-            if (subMeshInfo.baseColorMap) {
-                const bool mipmapped = subMeshInfo.baseColorMap->flags().testFlag(QRhiTexture::MipMapped);
-                QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_minFilterType),
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_magFilterType),
-                                                         mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_mipFilterType) : QRhiSampler::None,
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_horizontalTilingMode),
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_verticalTilingMode),
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.baseColorNode->m_depthTilingMode)
-                                                       });
-                bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.baseColorMap, sampler);
-            } else {
-                bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
-            }
-            if (subMeshInfo.emissiveMap) {
-                const bool mipmapped = subMeshInfo.emissiveMap->flags().testFlag(QRhiTexture::MipMapped);
-                QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_minFilterType),
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_magFilterType),
-                                                         mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_mipFilterType) : QRhiSampler::None,
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_horizontalTilingMode),
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_verticalTilingMode),
-                                                         QSSGRhiHelpers::toRhi(subMeshInfo.emissiveNode->m_depthTilingMode)
-                                                       });
-                bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.emissiveMap, sampler);
-            } else {
-                bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
-            }
-            if (subMeshInfo.normalMap) {
-                const bool mipmapped = subMeshInfo.normalMap->flags().testFlag(QRhiTexture::MipMapped);
-                QRhiSampler *sampler = rhiCtx->sampler({ QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_minFilterType),
-                        QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_magFilterType),
-                        mipmapped ? QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_mipFilterType) : QRhiSampler::None,
-                        QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_horizontalTilingMode),
-                        QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_verticalTilingMode),
-                        QSSGRhiHelpers::toRhi(subMeshInfo.normalMapNode->m_depthTilingMode)
-                });
-                bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.normalMap, sampler);
-            } else {
-                bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
-            }
-            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
-
-            QRhiGraphicsPipeline *pipeline = setupPipeline(lmUvRastShaderPipeline.get(), srb, inputLayout);
-            if (!pipeline->create()) {
-                sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create graphics pipeline (mesh %1 submesh %2)").
-                                                                     arg(lmIdx).
-                                                                     arg(subMeshIdx));
-                qDeleteAll(ps);
-                qDeleteAll(psLine);
-                return false;
-            }
-            ps.append(pipeline);
-            pipeline = setupPipeline(lmUvRastShaderPipeline.get(), srb, inputLayout);
-            pipeline->setPolygonMode(QRhiGraphicsPipeline::Line);
-            if (!pipeline->create()) {
-                sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create graphics pipeline with line fill mode (mesh %1 submesh %2)").
-                                                                     arg(lmIdx).
-                                                                     arg(subMeshIdx));
-                qDeleteAll(ps);
-                qDeleteAll(psLine);
-                return false;
-            }
-            psLine.append(pipeline);
-        }
-
-        QRhiCommandBuffer::VertexInput vertexBuffers = { vbuf.get(), 0 };
-        const QRhiViewport viewport(0, 0, float(outputSize.width()), float(outputSize.height()));
-        bool hadViewport = false;
-
-        cb->beginPass(rt.get(), Qt::black, { 1.0f, 0 });
-        for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
-            const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
-            cb->setGraphicsPipeline(ps[subMeshIdx]);
-            if (!hadViewport) {
-                cb->setViewport(viewport);
-                hadViewport = true;
-            }
-            cb->setShaderResources();
-            cb->setVertexInput(0, 1, &vertexBuffers, ibuf.get(), 0, QRhiCommandBuffer::IndexUInt32);
-            cb->drawIndexed(subMeshInfo.count, 1, subMeshInfo.offset);
-            cb->setGraphicsPipeline(psLine[subMeshIdx]);
-            cb->setShaderResources();
-            cb->drawIndexed(subMeshInfo.count, 1, subMeshInfo.offset);
-        }
-
-        resUpd = rhi->nextResourceUpdateBatch();
-        QRhiReadbackResult posReadResult;
-        QRhiReadbackResult normalReadResult;
-        QRhiReadbackResult baseColorReadResult;
-        QRhiReadbackResult emissionReadResult;
-        resUpd->readBackTexture({ positionData.get() }, &posReadResult);
-        resUpd->readBackTexture({ normalData.get() }, &normalReadResult);
-        resUpd->readBackTexture({ baseColorData.get() }, &baseColorReadResult);
-        resUpd->readBackTexture({ emissionData.get() }, &emissionReadResult);
-        cb->endPass(resUpd);
-
-        // Submit and wait for completion.
-        rhi->finish();
-
-        qDeleteAll(ps);
-        qDeleteAll(psLine);
-
-        Lightmap lightmap(outputSize);
-
-        // The readback results are tightly packed (which is supposed to be ensured
-        // by each rhi backend), so one line is 16 * width bytes.
-        if (posReadResult.data.size() < lightmap.entries.size() * 16) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Position data is smaller than expected"));
-            return false;
-        }
-        if (normalReadResult.data.size() < lightmap.entries.size() * 16) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Normal data is smaller than expected"));
-            return false;
-        }
-        if (baseColorReadResult.data.size() < lightmap.entries.size() * 16) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Base color data is smaller than expected"));
-            return false;
-        }
-        if (emissionReadResult.data.size() < lightmap.entries.size() * 16) {
-            sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Emission data is smaller than expected"));
-            return false;
-        }
-        const float *lmPosPtr = reinterpret_cast<const float *>(posReadResult.data.constData());
-        const float *lmNormPtr = reinterpret_cast<const float *>(normalReadResult.data.constData());
-        const float *lmBaseColorPtr = reinterpret_cast<const float *>(baseColorReadResult.data.constData());
-        const float *lmEmissionPtr = reinterpret_cast<const float *>(emissionReadResult.data.constData());
         int unusedEntries = 0;
-        for (qsizetype i = 0, ie = lightmap.entries.size(); i != ie; ++i) {
+        for (qsizetype i = 0; i < numPixels; ++i) {
             LightmapEntry &lmPix(lightmap.entries[i]);
 
             float x = *lmPosPtr++;
@@ -1233,7 +1275,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps(const StageProgressReporter &repor
                                                               arg(lightmap.entries.size() - unusedEntries).
                                                               arg(lightmap.entries.size()).
                                                               arg(lm.model->lightmapKey).
-                                                              arg(QStringLiteral("(%1, %2)").arg(outputSize.width()).arg(outputSize.height())).
+                                                              arg(QStringLiteral("(%1, %2)").arg(raster.width).arg(raster.height)).
                                                               arg(formatDuration(rasterizeTimer.elapsed())));
         lightmaps.append(lightmap);
 
