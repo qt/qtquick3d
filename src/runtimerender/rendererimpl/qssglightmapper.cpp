@@ -1323,11 +1323,10 @@ QList<QVector3D> applyGaussianBlur(const QList<QVector3D>& image, const QList<qu
     // Create a Gaussian kernel
     constexpr int halfKernelSize = 3;
     constexpr int kernelSize = halfKernelSize * 2 + 1;
-    constexpr int kernelSizeSq = kernelSize * kernelSize;
 
     double sum = 0.0;
     double kernel[kernelSize][kernelSize];
-    double mean = kernelSize * 0.5;
+    double mean = halfKernelSize;
     for (int y = 0; y < kernelSize; ++y) {
         for (int x = 0; x < kernelSize; ++x) {
             kernel[y][x] = exp(-0.5 * (pow((x - mean) / sigma, 2.0) + pow((y - mean) / sigma, 2.0))) / (2 * M_PI * sigma * sigma);
@@ -1348,32 +1347,37 @@ QList<QVector3D> applyGaussianBlur(const QList<QVector3D>& image, const QList<qu
     // Apply the kernel to each pixel
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            const quint32 outputIdx = y * width + x;
-            const quint32 maskID = mask[outputIdx];
+            const int centerIdx = y * width + x;
+            const quint32 maskID = mask[centerIdx];
             if (maskID == PIXEL_VOID)
                 continue;
 
-            QVector3D vYX(0, 0, 0);
-            int numHits = 0;
+            QVector3D blurredPixel(0, 0, 0);
+            float weightSum = 0.0f;
 
             // Convolve the kernel with the image
             for (int ky = -halfKernelSize; ky <= halfKernelSize; ++ky) {
                 for (int kx = -halfKernelSize; kx <= halfKernelSize; ++kx) {
-                    const int px = x + kx;
-                    const int py = y + ky;
-                    const int idx = (py * width + px);
+                    int px = x + kx;
+                    int py = y + ky;
+                    if (px < 0 || px >= width || py < 0 || py >= height)
+                        continue;
 
-                    // Make sure we don't go out of bounds
-                    if (px >= 0 && px < width && py >= 0 && py < height && mask[idx] == maskID) {
-                        float weight = kernel[ky + halfKernelSize][kx + halfKernelSize];
-                        vYX += image[idx] * weight;
-                        numHits += 1;
-                    }
+                    int idx = py * width + px;
+                    if (mask[idx] != maskID)
+                        continue;
+
+                    double weight = kernel[ky + halfKernelSize][kx + halfKernelSize];
+                    blurredPixel += image[idx] * weight;
+                    weightSum += weight;
                 }
             }
 
-            // Set the output pixel
-            output[outputIdx] = vYX * float(kernelSizeSq)/numHits;
+            // Normalize if needed to avoid darkening near edges
+            if (weightSum > 0.0f)
+                blurredPixel /= weightSum;
+
+            output[centerIdx] = blurredPixel;
         }
     }
 
