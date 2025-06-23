@@ -37,7 +37,8 @@ QT_BEGIN_NAMESPACE
 
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER
 
-static constexpr int DIRECT_MAP_UPSCALE_FACTOR = 3;
+static constexpr int GAUSS_HALF_KERNEL_SIZE = 3;
+static constexpr int DIRECT_MAP_UPSCALE_FACTOR = 4;
 static constexpr quint32 PIXEL_VOID = 0; // Pixel not part of any mask
 static constexpr quint32 PIXEL_UNSET = -1; // Pixel part of mask, but not yet set
 
@@ -304,7 +305,10 @@ struct QSSGLightmapperPrivate
     bool denoiseLightmaps(const StageProgressReporter &reporter);
 
     std::pair<QVector3D, QVector3D> sampleDirectLight(QVector3D worldPos, QVector3D normal) const;
-    RasterResult rasterizeLightmap(int lmIdx, QSize outputSize);
+    RasterResult rasterizeLightmap(int lmIdx,
+                                   QSize outputSize,
+                                   QVector2D minUVRegion = QVector2D(0, 0),
+                                   QVector2D maxUVRegion = QVector2D(1, 1));
 };
 
 // Used to output progress ETA during baking.
@@ -883,7 +887,7 @@ bool QSSGLightmapperPrivate::commitGeometry(const StageProgressReporter &reporte
     return true;
 }
 
-QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(int lmIdx, QSize outputSize)
+QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(int lmIdx, QSize outputSize, QVector2D minUVRegion, QVector2D maxUVRegion)
 {
     QSSGLightmapperPrivate::RasterResult result;
 
@@ -961,7 +965,7 @@ QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(i
         return result;
     }
 
-    static const int UBUF_SIZE = 48;
+    static const int UBUF_SIZE = 64;
     const int subMeshCount = subMeshInfos[lmIdx].size();
     const int alignedUbufSize = rhi->ubufAligned(UBUF_SIZE);
     const int totalUbufSize = alignedUbufSize * subMeshCount;
@@ -984,6 +988,10 @@ QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(i
         qint32 hasBaseColorMap = subMeshInfo.baseColorMap ? 1 : 0;
         qint32 hasEmissiveMap = subMeshInfo.emissiveMap ? 1 : 0;
         qint32 hasNormalMap = subMeshInfo.normalMap ? 1 : 0;
+        const float minRegionU = minUVRegion.x();
+        const float minRegionV = minUVRegion.y();
+        const float maxRegionU = maxUVRegion.x();
+        const float maxRegionV = maxUVRegion.y();
         char *p = ubufData + subMeshIdx * alignedUbufSize;
         memcpy(p, &subMeshInfo.baseColor, 4 * sizeof(float));
         memcpy(p + 16, &subMeshInfo.emissiveFactor, 3 * sizeof(float));
@@ -992,6 +1000,10 @@ QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(i
         memcpy(p + 36, &hasEmissiveMap, sizeof(qint32));
         memcpy(p + 40, &hasNormalMap, sizeof(qint32));
         memcpy(p + 44, &subMeshInfo.normalStrength, sizeof(float));
+        memcpy(p + 48, &minRegionU, sizeof(float));
+        memcpy(p + 52, &minRegionV, sizeof(float));
+        memcpy(p + 56, &maxRegionU, sizeof(float));
+        memcpy(p + 60, &maxRegionV, sizeof(float));
     }
     ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
@@ -1333,37 +1345,10 @@ static inline QVector3D vectorAbs(const QVector3D &v)
                      std::abs(v.z()));
 }
 
-QList<QVector3D> downscaleImage(const QList<QVector3D> &image, int oldWidth, int oldHeight, int newWidth, int newHeight)
-{
-    Q_ASSERT(oldWidth % newWidth == 0);
-    Q_ASSERT(oldHeight % newHeight == 0);
-    Q_ASSERT(oldWidth / newWidth == DIRECT_MAP_UPSCALE_FACTOR);
-    Q_ASSERT(oldWidth / newWidth == DIRECT_MAP_UPSCALE_FACTOR);
-
-    QList<QVector3D> output(newHeight * newWidth, QVector3D(0, 0, 0));
-
-    // Loop through each pixel in the output image
-    for (int y = 0; y < newHeight; ++y) {
-        for (int x = 0; x < newWidth; ++x) {
-            const int outputIdx = y * newWidth + x;
-            QVector3D average = QVector3D(0,0,0);
-            for (int dy = 0; dy < DIRECT_MAP_UPSCALE_FACTOR; ++dy) {
-                for (int dx = 0; dx < DIRECT_MAP_UPSCALE_FACTOR; ++dx) {
-                    const int idx = (y * DIRECT_MAP_UPSCALE_FACTOR + dy) * oldWidth + (x * DIRECT_MAP_UPSCALE_FACTOR) + dx;
-                    average += image[idx];
-                }
-            }
-            output[outputIdx] = average / (DIRECT_MAP_UPSCALE_FACTOR*DIRECT_MAP_UPSCALE_FACTOR);
-        }
-    }
-
-    return output;
-}
-
 // Function to apply a Gaussian blur to an image
 QList<QVector3D> applyGaussianBlur(const QList<QVector3D>& image, const QList<quint32>& mask, int width, int height, float sigma) {
     // Create a Gaussian kernel
-    constexpr int halfKernelSize = 3;
+    constexpr int halfKernelSize = GAUSS_HALF_KERNEL_SIZE;
     constexpr int kernelSize = halfKernelSize * 2 + 1;
 
     double sum = 0.0;
@@ -1424,31 +1409,6 @@ QList<QVector3D> applyGaussianBlur(const QList<QVector3D>& image, const QList<qu
     }
 
     return output;
-}
-
-static inline float dot(const QVector2D &a, const QVector2D &b)
-{
-    return a.x() * b.x() + a.y() * b.y();
-}
-
-// Function to check if point P lies inside the triangle ABC using Barycentric Coordinates
-static std::tuple<bool, float, float, float> isPointInsideTriangle(const QVector2D &a, const QVector2D &b, const QVector2D &c, const QVector2D &p)
-{
-
-    QVector2D v0 = b - a;
-    QVector2D v1 = c - a;
-    QVector2D v2 = p - a;
-    float d00 = dot(v0, v0);
-    float d01 = dot(v0, v1);
-    float d11 = dot(v1, v1);
-    float d20 = dot(v2, v0);
-    float d21 = dot(v2, v1);
-    float denom = d00 * d11 - d01 * d01;
-    float v = (d11 * d20 - d01 * d21) / denom;
-    float w = (d00 * d21 - d01 * d20) / denom;
-    float u = 1.0f - v - w;
-    bool inside = (u >= 0.f) && (v >= 0.f) && (w >= 0.f) && qFuzzyCompare(u + v + w, 1.f);
-    return { inside, u, v, w };
 }
 
 struct Edge
@@ -1644,6 +1604,7 @@ std::pair<QVector3D, QVector3D> QSSGLightmapperPrivate::sampleDirectLight(QVecto
 
 void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &reporter)
 {
+    Q_UNUSED(reporter);
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Computing direct lighting..."));
     QElapsedTimer fullDirectLightTimer;
     fullDirectLightTimer.start();
@@ -1651,11 +1612,8 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
     const int bakedLightingModelCount = bakedLightingModels.size();
     Q_ASSERT(lightmaps.size() == bakedLightingModelCount);
 
-    QVector<QFuture<void>> futures;
-
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
         // direct lighting is relatively fast to calculate, so parallelize per model
-        futures << QtConcurrent::run([this, &fullDirectLightTimer, lmIdx] {
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
 
         // While Light.castsShadow and Model.receivesShadows are irrelevant for
@@ -1663,7 +1621,7 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
         // there with baked direct lighting), Model.castsShadows is something
         // we can and should take into account.
         if (!lm.model->castsShadows)
-            return;
+            continue;
 
         const auto elapsedStart = fullDirectLightTimer.elapsed();
 
@@ -1673,17 +1631,138 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
         const char *vbase = drawInfo.vertexData.constData();
         const quint32 *ibase = reinterpret_cast<const quint32 *>(drawInfo.indexData.constData());
 
-        const QSize sz = lightmap.pixelSize * DIRECT_MAP_UPSCALE_FACTOR;
+        const QSize sz = lightmap.pixelSize;
         const int w = sz.width();
         const int h = sz.height();
-        const int numPixelsUpscaled = w * h;
+        constexpr int padding = GAUSS_HALF_KERNEL_SIZE;
+        const int numPixelsFinal = w * h;
 
-        QVector<QVector3D> gridAll(numPixelsUpscaled);
-        QVector<QVector3D> gridDirect(numPixelsUpscaled);
-        QVector<int> hits(numPixelsUpscaled, 0);
-        QVector<quint32> mask(numPixelsUpscaled, PIXEL_VOID);
+        QVector<QVector3D> gridAll(numPixelsFinal);
+        QVector<QVector3D> gridDirect(numPixelsFinal);
+        QVector<quint32> mask(numPixelsFinal, PIXEL_VOID);
 
-        // NOTE: We compute the edge blending here so it is a part of the gaussian blur
+        // Setup gridAll and mask
+        for (int pixelI = 0; pixelI < numPixelsFinal; ++pixelI) {
+            const auto &entry = lightmap.entries[pixelI];
+            if (!entry.isValid())
+                continue;
+            mask[pixelI] = PIXEL_UNSET;
+            auto [directLight, allLight] = sampleDirectLight(entry.worldPos, entry.normal);
+            gridAll[pixelI] = allLight;
+            // Write direct value here so we can fallback if the tile has no hits.
+            gridDirect[pixelI] = directLight;
+        }
+        floodFill(reinterpret_cast<quint32 *>(mask.data()), h, w);
+
+        // Compute ideal tile size
+        const int numTilesX = DIRECT_MAP_UPSCALE_FACTOR;
+        const int numTilesY = DIRECT_MAP_UPSCALE_FACTOR;
+
+        const int tileWidth = (w + DIRECT_MAP_UPSCALE_FACTOR - 1) / DIRECT_MAP_UPSCALE_FACTOR;
+        const int tileHeight = (h + DIRECT_MAP_UPSCALE_FACTOR - 1) / DIRECT_MAP_UPSCALE_FACTOR;
+
+        // Render upscaled tiles then blur and downscale to remove jaggies in output
+        for (int tileY = 0; tileY < numTilesY; ++tileY) {
+            for (int tileX = 0; tileX < numTilesX; ++tileX) {
+                const int contentTileWidth = tileWidth;
+                const int contentTileHeight = tileHeight;
+
+                const int currentTileWidth = contentTileWidth + 2 * padding;
+                const int currentTileHeight = contentTileHeight + 2 * padding;
+
+                const int wExp = currentTileWidth * DIRECT_MAP_UPSCALE_FACTOR;
+                const int hExp = currentTileHeight * DIRECT_MAP_UPSCALE_FACTOR;
+                const int numPixelsExpanded = wExp * hExp;
+
+                QVector<quint32> maskTile(numPixelsExpanded, PIXEL_VOID);
+                QVector<QVector3D> gridTile(numPixelsExpanded);
+
+                // Compute full-padded pixel bounds (including kernel padding)
+                const int pixelStartX = tileX * tileWidth - padding;
+                const int pixelStartY = tileY * tileHeight - padding;
+
+                const int pixelEndX = pixelStartX + contentTileWidth + 2 * padding;
+                const int pixelEndY = pixelStartY + contentTileHeight + 2 * padding;
+
+                const float minU = pixelStartX / double(w);
+                const float maxV = 1.0 - pixelStartY / double(h);
+                const float maxU = pixelEndX / double(w);
+                const float minV = 1.0f - pixelEndY / double(h);
+
+                // Temporary storage for rasterized, avoids copy
+                QByteArray worldPositionsBuffer;
+                QByteArray normalsBuffer;
+                {
+                    QSSGLightmapperPrivate::RasterResult raster = rasterizeLightmap(lmIdx,
+                                                                                    QSize(wExp, hExp),
+                                                                                    QVector2D(minU, minV),
+                                                                                    QVector2D(maxU, maxV));
+                    if (!raster.success)
+                        return;
+                    Q_ASSERT(raster.width * raster.height == numPixelsExpanded);
+                    worldPositionsBuffer = raster.worldPositions;
+                    normalsBuffer = raster.normals;
+                }
+
+                QVector4D *worldPositions = reinterpret_cast<QVector4D *>(worldPositionsBuffer.data());
+                QVector4D *normals = reinterpret_cast<QVector4D *>(normalsBuffer.data());
+
+                for (int pixelI = 0; pixelI < numPixelsExpanded; ++pixelI) {
+                    QVector3D position = worldPositions[pixelI].toVector3D();
+                    QVector3D normal = normals[pixelI].toVector3D();
+                    if (normal.isNull()) {
+                        maskTile[pixelI] = PIXEL_VOID;
+                        continue;
+                    }
+
+                    maskTile[pixelI] = PIXEL_UNSET;
+                    auto [directLight, _] = sampleDirectLight(position, normal);
+                    gridTile[pixelI] += directLight;
+                }
+
+                floodFill(reinterpret_cast<quint32 *>(maskTile.data()), hExp, wExp); // Flood fill mask in place
+                gridTile = applyGaussianBlur(gridTile, maskTile, wExp, hExp, 3.f);
+
+                const int startX = tileX * tileWidth;
+                const int endX = qMin(w, startX + tileWidth);
+                const int startY = tileY * tileHeight;
+                const int endY = qMin(h, startY + tileHeight);
+
+                // Downscale and put in the finished grid
+                // Loop through each pixel in the output image
+                for (int y = startY; y < endY; ++y) {
+                    const int ySrc = (padding + y - startY) * DIRECT_MAP_UPSCALE_FACTOR;
+                    Q_ASSERT(ySrc < hExp);
+                    for (int x = startX; x < endX; ++x) {
+                        const int xSrc = (padding + x - startX) * DIRECT_MAP_UPSCALE_FACTOR;
+                        Q_ASSERT(xSrc < wExp);
+
+                        if (mask[y * w + x] == PIXEL_VOID)
+                            continue;
+
+                        const int dstPixelI = y * w + x;
+                        QVector3D average;
+                        int hits = 0;
+                        for (int sY = 0; sY < DIRECT_MAP_UPSCALE_FACTOR; ++sY) {
+                            for (int sX = 0; sX < DIRECT_MAP_UPSCALE_FACTOR; ++sX) {
+                                int srcPixelI = (ySrc + sY) * wExp + (xSrc + sX);
+                                Q_ASSERT(srcPixelI < numPixelsExpanded);
+                                if (maskTile[srcPixelI] == PIXEL_VOID)
+                                    continue;
+                                average += gridTile[srcPixelI];
+                                ++hits;
+                            }
+                        }
+
+                        // Write value only if we have any hits. Due to sampling and precision differences it is
+                        // technically possible to miss hits. In this case we fallback to the original sampled value.
+                        if (hits > 0)
+                            gridDirect[dstPixelI] = average / hits;
+                    }
+                }
+            }
+        }
+
         QHash<Edge, EdgeUV> edgeUVMap;
         QVector<SeamUV> seams;
 
@@ -1728,36 +1807,9 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
             }
 
             for (auto [i0, i1, i2] : triangles) {
-                QVector2D minMapUV = QVector2D(qMin(uvs[i0].x(), qMin(uvs[i1].x(), uvs[i2].x())),
-                                               qMin(uvs[i0].y(), qMin(uvs[i1].y(), uvs[i2].y())));
-                QVector2D maxMapUV = QVector2D(qMax(uvs[i0].x(), qMax(uvs[i1].x(), uvs[i2].x())),
-                                               qMax(uvs[i0].y(), qMax(uvs[i1].y(), uvs[i2].y())));
-                const int minX = qMax(0, int(minMapUV.x() * w) - 1);
-                const int maxX = qMin(w - 1, int(maxMapUV.x() * w) + 1);
-                const int minY = qMax(0, int(minMapUV.y() * h) - 1);
-                const int maxY = qMin(h - 1, int(maxMapUV.y() * h) + 1);
-
                 const QVector3D triVert[3] = { positions[i0], positions[i1], positions[i2] };
                 const QVector3D triNorm[3] = { normals[i0], normals[i1], normals[i2] };
                 const QVector2D triUV[3] = { uvs[i0], uvs[i1], uvs[i2] };
-
-                for (int x = minX; x <= maxX; ++x) {
-                    for (int y = minY; y <= maxY; ++y) {
-                        QVector2D uvP = QVector2D((x + 0.5f) / w, (y + 0.5f) / h);
-                        const auto [inside, l0, l1, l2] = isPointInsideTriangle(triUV[0], triUV[1], triUV[2], uvP);
-                        if (!inside)
-                            continue;
-
-                        QVector3D worldPos = l0 * positions[i0] + l1 * positions[i1] + l2 * positions[i2];
-                        const QVector3D normal = l0 * normals[i0] + l1 * normals[i1] + l2 * normals[i2];
-                        auto [directLight, allLight] = sampleDirectLight(worldPos, normal);
-
-                        const int entryIdx = x + y * w;
-                        gridAll[entryIdx] += allLight;
-                        gridDirect[entryIdx] += directLight;
-                        hits[entryIdx]++;
-                    }
-                }
 
                 for (int i = 0; i < 3; ++i) {
                     int i0 = i;
@@ -1783,39 +1835,7 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
             }
         }
 
-        // Fill grid to make sure pixels outside triangles have default values, important for downscaling
-        for (int y = 0; y < lightmap.pixelSize.height(); ++y) {
-            for (int x = 0; x < lightmap.pixelSize.width(); ++x) {
-                const int outputIdx = y * lightmap.pixelSize.width() + x;
-                const auto& lmPix = lightmap.entries[outputIdx];
-                if (!lmPix.isValid())
-                    continue;
-                auto [directLight, allLight] = sampleDirectLight(lmPix.worldPos, lmPix.normal);
-
-                for (int dy = 0; dy < DIRECT_MAP_UPSCALE_FACTOR; ++dy) {
-                    for (int dx = 0; dx < DIRECT_MAP_UPSCALE_FACTOR; ++dx) {
-                        const int idx = (y * DIRECT_MAP_UPSCALE_FACTOR + dy) * w + (x * DIRECT_MAP_UPSCALE_FACTOR) + dx;
-                        if (hits[idx] == 0) {
-                            gridAll[idx] = allLight;
-                            gridDirect[idx] = directLight;
-                            hits[idx]++;
-                        }
-                    }
-                }
-            }
-        }
-
-        for (int i = 0; i < numPixelsUpscaled; ++i) {
-            gridAll[i] /= qMax(1, hits[i]);
-            gridDirect[i] /= qMax(1, hits[i]);
-            mask[i] = hits[i] > 0 ? PIXEL_UNSET : PIXEL_VOID;
-        }
-
-        // Flood fill mask in place
-        floodFill(reinterpret_cast<quint32 *>(mask.data()), h, w);
-
         // Blend edges
-        // NOTE: We compute the edge blending here so it is a part of the gaussian blur
         // NOTE: We only need to blend 'gridDirect' since that is the resulting lightmap for direct light
         {
             QByteArray workBuf(gridDirect.size() * sizeof(QVector3D), Qt::Uninitialized);
@@ -1843,12 +1863,6 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
             }
         }
 
-        // Apply the Gaussian blur
-        gridAll = applyGaussianBlur(gridAll, mask, w, h, 3.f);
-        gridDirect = applyGaussianBlur(gridDirect, mask, w, h, 3.f);
-        gridAll = downscaleImage(gridAll, w, h, lightmap.pixelSize.width(), lightmap.pixelSize.height());
-        gridDirect = downscaleImage(gridDirect, w, h, lightmap.pixelSize.width(), lightmap.pixelSize.height());
-
         // Copy values to lightmap entries
         for (int i = 0, n = lightmap.entries.size(); i < n; ++i) {
             QVector3D v = gridDirect[i];
@@ -1867,12 +1881,6 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
 
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                        QStringLiteral("Direct light computed for model %1 in %2").arg(lm.model->lightmapKey).arg(formatDuration(elapsed)));
-        });
-    }
-
-    for (int i = 0; i < futures.size(); ++i) {
-        futures[i].waitForFinished();
-        reporter.report(((i + 1) / (double)futures.size()));
     }
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Direct light computation completed in %1").

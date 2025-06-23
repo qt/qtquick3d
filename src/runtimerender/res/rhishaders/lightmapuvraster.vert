@@ -28,10 +28,17 @@ layout(std140, binding = 0) uniform buf {
     int hasEmissiveMap;
     int hasNormalMap;
     float bumpAmount;
+    float regionMinU;
+    float regionMinV;
+    float regionMaxU;
+    float regionMaxV;
 };
 
 void main()
 {
+    vec2 regionMin = vec2(regionMinU, regionMinV);
+    vec2 regionMax = vec2(regionMaxU, regionMaxV);
+
     v_pos = attr_pos;
     v_normal = attr_normal;
 #if defined(QSSG_LIGHTMAPUVRASTER_UV) || defined(QSSG_LIGHTMAPUVRASTER_UV_TANGENT)
@@ -47,9 +54,14 @@ void main()
     v_binormal = vec3(0.0);
 #endif
 
-    vec2 uv = vec2(attr_lightmap_uv.x * 2.0 - 1.0, attr_lightmap_uv.y * 2.0 - 1.0);
-    if (flipY != 0)
-        uv.y *= -1.0;
+    // Zoomed UV from lightmap subregion
+    vec2 uv = attr_lightmap_uv;
+    uv = (uv - regionMin) / (regionMax - regionMin); // Map region to [0, 1]
 
-    gl_Position = vec4(uv, 0.0, 1.0);
+    // Convert to NDC [-1, 1]
+    vec2 uv_ndc = vec2(uv.x * 2.0 - 1.0, uv.y * 2.0 - 1.0);
+    if (flipY != 0)
+        uv_ndc.y *= -1.0;
+
+    gl_Position = vec4(uv_ndc, 0.0, 1.0);
 }
