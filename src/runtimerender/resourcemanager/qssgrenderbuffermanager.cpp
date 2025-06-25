@@ -1806,26 +1806,29 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, 
     Q_TRACE_SCOPE(QSSG_customMeshLoad);
 
     auto [mesh, debugObjectName] = loadFromLightmapFile(options.lightmapPath, options.lightmapKey);
-    QString error;
 
-    if (!mesh.isValid()) {
-        mesh = QSSGMesh::Mesh::fromRuntimeData(geometry->meshData(), &error);
-        debugObjectName = geometry->debugObjectName;
+    // We have either a valid lightmap mesh or a geometry with data
+    if (!geometry->meshData().m_vertexBuffer.isEmpty() || mesh.isValid()) {
+        QString error;
+
+        if (!mesh.isValid()) {
+            mesh = QSSGMesh::Mesh::fromRuntimeData(geometry->meshData(), &error);
+            debugObjectName = geometry->debugObjectName;
+        }
+
+        if (mesh.isValid()) {
+            if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
+                qDebug() << "+ uploadGeometry: " << geometry << currentLayer;
+            meshIterator->mesh = createRenderMesh(mesh, debugObjectName);
+            meshIterator->usageCounts[currentLayer] = 1;
+            meshIterator->generationId = geometry->generationId();
+            meshIterator->options = options;
+            rhiCtxD->registerMesh(meshIterator->mesh);
+            increaseMemoryStat(meshIterator->mesh);
+        } else {
+            qWarning("Mesh building failed: %s", qPrintable(error));
+        }
     }
-
-    if (mesh.isValid()) {
-        if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
-            qDebug() << "+ uploadGeometry: " << geometry << currentLayer;
-        meshIterator->mesh = createRenderMesh(mesh, debugObjectName);
-        meshIterator->usageCounts[currentLayer] = 1;
-        meshIterator->generationId = geometry->generationId();
-        meshIterator->options = options;
-        rhiCtxD->registerMesh(meshIterator->mesh);
-        increaseMemoryStat(meshIterator->mesh);
-    } else {
-        qWarning("Mesh building failed: %s", qPrintable(error));
-    }
-
     // else an empty mesh is not an error, leave the QSSGRenderMesh null, it will not be rendered then
 
     Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DCustomMeshLoad,
