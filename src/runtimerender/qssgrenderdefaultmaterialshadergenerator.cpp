@@ -1025,6 +1025,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     const bool isOrthoShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::OrthoShadowPass);
     const bool isPerspectiveShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::PerspectiveShadowPass);
     const bool isOpaqueDepthPrePass = featureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
+    const bool isNormalPass = featureSet.isSet(QSSGShaderFeatures::Feature::NormalPass);
     const bool hasIblOrientation = featureSet.isSet(QSSGShaderFeatures::Feature::IblOrientation);
     bool enableShadowMaps = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
     bool enableSSAO = featureSet.isSet(QSSGShaderFeatures::Feature::Ssao);
@@ -1034,8 +1035,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool genBumpNormalImageCoords = false;
     bool genClearcoatNormalImageCoords = false;
     bool enableParallaxMapping = heightImage != nullptr;
-    const bool enableClearcoat = materialAdapter->isClearcoatEnabled();
-    const bool enableTransmission = materialAdapter->isTransmissionEnabled();
+    bool enableClearcoat = materialAdapter->isClearcoatEnabled();
+    bool enableTransmission = materialAdapter->isTransmissionEnabled();
     const bool enableFresnelScaleBias = materialAdapter->isFresnelScaleBiasEnabled();
     const bool enableClearcoatFresnelScaleBias = materialAdapter->isClearcoatFresnelScaleBiasEnabled();
 
@@ -1085,7 +1086,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 
     bool includeCustomFragmentMain = true;
-    if (isDepthPass || isOrthoShadowPass || isPerspectiveShadowPass) {
+    if (isDepthPass || isOrthoShadowPass || isPerspectiveShadowPass || isNormalPass) {
         hasLighting = false;
         enableSSAO = false;
         enableShadowMaps = false;
@@ -1093,6 +1094,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         metalnessEnabled = false;
         specularLightingEnabled = false;
+        enableClearcoat = false;
+        enableTransmission = false;
 
         oitMethod = QSSGRenderLayer::OITMethod::None;
 
@@ -1110,8 +1113,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     // Unshaded custom materials need no code in main (apart from calling qt_customMain)
     const bool hasCustomFrag = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
     const bool usesSharedVar = materialAdapter->usesSharedVariables();
-    if (hasCustomFrag && materialAdapter->isUnshaded())
-        return;
+    if (hasCustomFrag && materialAdapter->isUnshaded()) {
+        // Unlike the depth texture pass, the normal texture pass needs to
+        // output valid fragment values. The custom main is skipped in
+        // beginVertexGeneration if isNormalPass is true, but something must be
+        // written to gl_FragColor (the normals), so pretend we are shaded...
+        if (!isNormalPass)
+            return;
+    }
 
     // hasCustomFrag == Shaded custom material from this point on, for Unshaded we returned above
 
@@ -1147,7 +1156,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.append("    vec3 qt_vTransform;");
     }
 
-    if (hasLighting || hasCustomFrag) {
+    if (hasLighting || hasCustomFrag || isNormalPass) {
         // Do not move these three. These varyings are exposed to custom material shaders too.
         vertexShader.generateViewVector(inKey);
         if (keyProps.m_usesProjectionMatrix.getValue(inKey)) {
@@ -1305,7 +1314,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     // !hasLighting does not mean 'no light source'
     // it should be KHR_materials_unlit
     // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
-    if (hasLighting) {
+    if (hasLighting || isNormalPass) {
         if (includeSSAOVars)
             fragmentShader.addInclude("ssao.glsllib");
 
@@ -1456,6 +1465,35 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if ( materialAdapter->isInvertOpacityMapValue() )
             fragmentShader << "    qt_opacity_map_value = 1.0 - qt_opacity_map_value;\n";
         fragmentShader << "    qt_objectOpacity *= qt_opacity_map_value;\n";
+    }
+
+    if (isNormalPass) { // what we want is a normal-roughness texture, so replicate roughness calculations that would be skipped below
+        if (hasCustomFrag) {
+            addLocalVariable(fragmentShader, "qt_aoFactor", "float");
+            fragmentShader << "    float qt_roughnessAmount = qt_customSpecularRoughness;\n";
+            fragmentShader << "    qt_aoFactor *= qt_customOcclusionAmount;\n";
+        }
+        else {
+            fragmentShader << "    float qt_roughnessAmount = qt_material_properties.y;\n";
+        }
+
+        maskVariableByVertexColorChannel( "qt_roughnessAmount", QSSGRenderDefaultMaterial::RoughnessMask );
+
+        if (roughnessImage) {
+            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::RoughnessChannel];
+            const bool hasIdentityMap = identityImages.contains(roughnessImage);
+            if (hasIdentityMap)
+                generateImageUVSampler(vertexShader, fragmentShader, inKey, *roughnessImage, imageFragCoords, roughnessImage->m_imageNode.m_indexUV);
+            else
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, enableParallaxMapping, roughnessImage->m_imageNode.m_indexUV);
+
+            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Roughness)];
+            fragmentShader << "    qt_roughnessAmount *= texture2D(" << names.imageSampler << ", "
+                           << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+        }
+
+        if (materialAdapter->isSpecularGlossy())
+            fragmentShader << "    qt_roughnessAmount = clamp(1.0 - qt_roughnessAmount, 0.0, 1.0);\n";
     }
 
     if (hasLighting) {
@@ -1981,7 +2019,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << ");\n";
         }
 
-        Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isPerspectiveShadowPass);
+        Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isPerspectiveShadowPass && !isNormalPass);
 
         if (oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
             fragmentShader.addInclude("orderindependenttransparency.glsllib");
@@ -2064,6 +2102,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                            << "    float qt_shadowDist = length(qt_varShadowWorldPos - qt_shadowCamPos);\n"
                            << "    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);\n"
                            << "    fragOutput = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);\n";
+        } else if (isNormalPass) {
+            // world space normal in rgb, roughness in alpha
+            fragmentShader.append("    fragOutput = vec4(qt_world_normal, qt_roughnessAmount);\n");
         } else {
             if (oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
                 fragmentShader.addInclude("orderindependenttransparency.glsllib");
@@ -2450,10 +2491,12 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     }
 
     const QSSGRhiRenderableTexture *depthTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
+    const QSSGRhiRenderableTexture *normalTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::NormalTexture);
     const QSSGRhiRenderableTexture *ssaoTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
     const QSSGRhiRenderableTexture *screenTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
 
     shaders.setDepthTexture(depthTexture->texture);
+    shaders.setNormalTexture(normalTexture->texture);
     shaders.setSsaoTexture(ssaoTexture->texture);
     shaders.setScreenTexture(screenTexture->texture);
     shaders.setLightmapTexture(lightmapTexture);

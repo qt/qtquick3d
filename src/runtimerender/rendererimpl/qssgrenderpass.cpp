@@ -450,6 +450,132 @@ void DepthMapPass::resetForFrame()
     ps = {};
 }
 
+// NORMAL TEXTURE PASS
+
+void NormalPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    using namespace RenderHelpers;
+
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
+
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QRhi *rhi = rhiCtx->rhi();
+    QSSG_ASSERT(rhi->isRecordingFrame(), return);
+    const auto &layerPrepResult = data.layerPrepResult;
+
+    // the normal texture is not multiview-dependent and it is always a 2D texture
+    // (so not an array with multiview either)
+
+    // the normal texture is always non-MSAA
+
+    ps = data.getPipelineState();
+    ps.samples = 1;
+    ps.viewCount = 1;
+
+    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
+
+    // transparent objects are not included in the normal texture pass
+
+    QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
+    shaderFeatures.set(QSSGShaderFeatures::Feature::NormalPass, true);
+
+    normalTexture = data.getRenderResult(QSSGFrameData::RenderResult::NormalTexture);
+
+    const QSize size = layerPrepResult.textureDimensions();
+    bool needsBuild = false;
+
+    if (!normalTexture->texture) {
+        QRhiTexture::Format format = QRhiTexture::RGBA16F;
+        if (!rhi->isTextureFormatSupported(format)) {
+            qWarning("No float formats, not great");
+            format = QRhiTexture::RGBA8;
+        }
+        normalTexture->texture = rhiCtx->rhi()->newTexture(format, size, 1, QRhiTexture::RenderTarget);
+        needsBuild = true;
+        normalTexture->texture->setName(QByteArrayLiteral("Normal texture"));
+    } else if (normalTexture->texture->pixelSize() != size) {
+        normalTexture->texture->setPixelSize(size);
+        needsBuild = true;
+    }
+
+    if (!normalTexture->depthStencil) {
+        normalTexture->depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size);
+        needsBuild = true;
+    } else if (normalTexture->depthStencil->pixelSize() != size) {
+        normalTexture->depthStencil->setPixelSize(size);
+        needsBuild = true;
+    }
+
+    if (needsBuild) {
+        if (!normalTexture->texture->create()) {
+            qWarning("Failed to build normal texture (size %dx%d, format %d)",
+                     size.width(), size.height(), int(normalTexture->texture->format()));
+            normalTexture->reset();
+            return;
+        }
+
+        if (!normalTexture->depthStencil->create()) {
+            qWarning("Failed to build depth-stencil buffer for normal texture (size %dx%d)",
+                     size.width(), size.height());
+            normalTexture->reset();
+            return;
+        }
+
+        normalTexture->resetRenderTarget();
+
+        QRhiTextureRenderTargetDescription rtDesc;
+        QRhiColorAttachment colorAttachment(normalTexture->texture);
+        rtDesc.setColorAttachments({ colorAttachment });
+        rtDesc.setDepthStencilBuffer(normalTexture->depthStencil);
+
+        normalTexture->rt = rhi->newTextureRenderTarget(rtDesc);
+        normalTexture->rt->setName(QByteArrayLiteral("Normal texture RT"));
+        normalTexture->rpDesc = normalTexture->rt->newCompatibleRenderPassDescriptor();
+        normalTexture->rt->setRenderPassDescriptor(normalTexture->rpDesc);
+        if (!normalTexture->rt->create()) {
+            qWarning("Failed to build render target for normal texture");
+            normalTexture->reset();
+            return;
+        }
+    }
+
+    rhiPrepareNormalPass(rhiCtx.get(), this, ps, normalTexture->rpDesc, data, sortedOpaqueObjects);
+}
+
+void NormalPass::renderPass(QSSGRenderer &renderer)
+{
+    using namespace RenderHelpers;
+
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D normal texture"));
+
+    if (Q_LIKELY(normalTexture && normalTexture->isValid())) {
+         bool needsSetViewport = true;
+         cb->beginPass(normalTexture->rt, Qt::transparent, { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
+         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(normalTexture->rt));
+         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+
+        rhiRenderNormalPass(rhiCtx.get(), ps, sortedOpaqueObjects, &needsSetViewport);
+
+        cb->endPass();
+        QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("normal_texture"));
+    }
+
+    cb->debugMarkEnd();
+}
+
+void NormalPass::resetForFrame()
+{
+    normalTexture = nullptr;
+    depthBuffer = nullptr;
+    sortedOpaqueObjects.clear();
+    ps = {};
+}
+
 // SCREEN TEXTURE PASS
 
 void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)

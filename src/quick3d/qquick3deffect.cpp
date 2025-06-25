@@ -357,10 +357,16 @@ QT_BEGIN_NAMESPACE
 
     \li \c FRAME - \c float - A frame counter, incremented after each frame in the View3D.
 
-    \li \c DEPTH_TEXTURE - \c sampler2D - A depth texture with the depth buffer
-    contents with the opaque objects in the scene. Like with CustomMaterial, the
-    presence of this keyword in the shader triggers generating the depth texture
-    automatically.
+    \li \c DEPTH_TEXTURE - \c sampler2D or \c sampler2DArray - A depth texture
+    with the depth buffer contents with the opaque objects in the scene. Like
+    with CustomMaterial, the presence of this keyword in the shader triggers
+    generating the depth texture automatically.
+
+    \li \c NORMAL_ROUGHNESS_TEXTURE - \c sampler2D - A texture with the
+    world-space normals and material roughness of the opaque objects in the
+    currently visible portion of the scene. Like with CustomMaterial, the
+    presence of this keyword in the shader implies an additional render pass to
+    generate the normal texture.
 
     \li \c VIEW_INDEX - \c uint - With \l{Multiview Rendering}{multiview
     rendering} enabled, this is the current view index, available in both vertex
@@ -572,13 +578,13 @@ QT_BEGIN_NAMESPACE
     also means that many intermediate buffers, meaning color or depth textures,
     will need to become texture arrays in this mode. This then has implications
     for custom materials and postprocessing effects. Textures such as the input
-    texture (\c INPUT), the depth texture (\c DEPTH_TEXTURE), the screen texture
-    (\c SCREEN_TEXTURE), and some others becomes 2D texture arrays, exposed in
-    the shader as a \c sampler2DArray instead of \c sampler2D. This has
-    implications for GLSL functions such as texture(), textureLod(), or
-    textureSize(). The UV coordinate is then a vec3, not a vec2. Whereas
-    textureSize() returns a vec3, not a vec2. Effects intended to function
-    regardless of the rendering mode, can be written with an appropriate ifdef:
+    texture (\c INPUT) and the depth texture (\c DEPTH_TEXTURE) become 2D texture
+    arrays, exposed in the shader as a \c sampler2DArray instead of \c
+    sampler2D. This has implications for GLSL functions such as texture(),
+    textureLod(), or textureSize(). The UV coordinate is then a vec3, not a
+    vec2. Whereas textureSize() returns a vec3, not a vec2. Effects intended to
+    function regardless of the rendering mode, can be written with an
+    appropriate ifdef:
     \badcode
     #if QSHADER_VIEW_COUNT >= 2
         vec4 c = texture(INPUT, vec3(INPUT_UV, VIEW_INDEX));
@@ -586,6 +592,34 @@ QT_BEGIN_NAMESPACE
         vec4 c = texture(INPUT, INPUT_UV);
     #endif
     \endcode
+
+    It can also be useful to define macros that handle both cases. For example:
+    \badcode
+    #if QSHADER_VIEW_COUNT >= 2
+    #define SAMPLE_INPUT(uv) texture(INPUT, vec3(uv, VIEW_INDEX))
+    #define SAMPLE_DEPTH(uv) texture(DEPTH_TEXTURE, vec3(uv, VIEW_INDEX)).r
+    #define PROJECTION PROJECTION_MATRIX[VIEW_INDEX]
+    #define INVERSE_PROJECTION INVERSE_PROJECTION_MATRIX[VIEW_INDEX]
+    #else
+    #define SAMPLE_INPUT(uv) texture(INPUT, uv)
+    #define SAMPLE_DEPTH(uv) texture(DEPTH_TEXTURE, uv).r
+    #define PROJECTION PROJECTION_MATRIX
+    #define INVERSE_PROJECTION INVERSE_PROJECTION_MATRIX
+    #endif
+    \endcode
+
+    This does not apply to \c NORMAL_ROUGHNESS_TEXTURE that is always a 2D texture,
+    even when multiview rendering is active:
+    \badcode
+    #define SAMPLE_NORMAL(uv) normalize(texture(NORMAL_ROUGHNESS_TEXTURE, uv).rgb)
+    \endcode
+
+    \note The presence of keywords such as \c DEPTH_TEXTURE trigger additional
+    render passes, and uniforms such as \c INVERSE_PROJECTION_MATRIX are
+    calculated and set upon the presence of the keyword in the shader snippet
+    anywhere. This is more expensive, both when it comes to performance and
+    resource usage. Hence it is recommended to only add such #defines when the
+    textures and matrices will really be used in the effect.
 
     \sa Shader, Pass, Buffer, BufferInput, {Qt Quick 3D - Custom Effect Example}
 */
@@ -644,6 +678,7 @@ static inline void resetShaderDependentEffectFlags(QSSGRenderEffect *effectNode)
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesProjectionMatrix, false);
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix, false);
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesViewMatrix, false);
+    effectNode->setFlag(QSSGRenderEffect::Flags::UsesNormalTexture, false);
 }
 
 static inline void accumulateEffectFlagsFromShader(QSSGRenderEffect *effectNode, const QSSGCustomShaderMetaData &meta)
@@ -656,6 +691,8 @@ static inline void accumulateEffectFlagsFromShader(QSSGRenderEffect *effectNode,
         effectNode->setFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesViewMatrix))
         effectNode->setFlag(QSSGRenderEffect::Flags::UsesViewMatrix);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesNormalTexture))
+        effectNode->setFlag(QSSGRenderEffect::Flags::UsesNormalTexture);
 }
 
 QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *node)

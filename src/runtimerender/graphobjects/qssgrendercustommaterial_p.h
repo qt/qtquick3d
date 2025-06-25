@@ -110,6 +110,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         ClearcoatFresnelScaleBias = 1 << 15,
         FresnelScaleBias = 1 << 16,
         Transmission = 1 << 17,
+        NormalTexture = 1 << 18
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

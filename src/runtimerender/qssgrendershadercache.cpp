@@ -78,6 +78,7 @@ static constexpr DefineEntry DefineTable[] {
     { "QSSG_ENABLE_LIGHTMAP", QSSGShaderFeatures::Feature::Lightmap },
     { "QSSG_DISABLE_MULTIVIEW", QSSGShaderFeatures::Feature::DisableMultiView },
     { "QSSG_FORCE_IBL_EXPOSURE", QSSGShaderFeatures::Feature::ForceIblExposure },
+    { "QSSG_ENABLE_NORMAL_PASS", QSSGShaderFeatures::Feature::NormalPass }
 };
 
 static_assert(std::size(DefineTable) == QSSGShaderFeatures::Count, "Missing feature define?");

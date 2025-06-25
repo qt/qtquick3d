@@ -61,7 +61,8 @@ enum class QSSGRenderableObjectFlag : quint32
     UsedInBakedLighting = 1 << 17,
     RendersWithLightmap = 1 << 18,
     HasAttributeTexCoordLightmap = 1 << 19,
-    CastsReflections = 1 << 20
+    CastsReflections = 1 << 20,
+    RequiresNormalTexture = 1 << 21
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -146,6 +147,14 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     }
     bool requiresScreenTexture() const {
         return this->operator&(QSSGRenderableObjectFlag::RequiresScreenTexture);
+    }
+
+    void setRequiresNormalTexture(bool v)
+    {
+        setFlag(QSSGRenderableObjectFlag::RequiresNormalTexture, v);
+    }
+    bool requiresNormalTexture() const {
+        return this->operator&(QSSGRenderableObjectFlag::RequiresNormalTexture);
     }
 };
 
@@ -354,6 +363,10 @@ public:
             QRhiGraphicsPipeline *pipeline = nullptr;
             QRhiShaderResourceBindings *srb[6] = {};
         } reflectionPass;
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb = nullptr;
+        } normalPass;
     } rhiRenderData;
 
     QSSGSubsetRenderable(Type type,

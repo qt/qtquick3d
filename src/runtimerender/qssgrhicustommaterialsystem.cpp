@@ -418,15 +418,26 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 if (depthTextureBinding >= 0) {
                     samplerBindingsSpecified.setBit(depthTextureBinding);
                     bindings.addTexture(depthTextureBinding,
-                                        QRhiShaderResourceBinding::FragmentStage,
+                                        CUSTOM_MATERIAL_VISIBILITY_ALL,
                                         shaderPipeline->depthTexture(), sampler);
                 }
                 if (depthTextureArrayBinding >= 0) {
                     samplerBindingsSpecified.setBit(depthTextureArrayBinding);
                     bindings.addTexture(depthTextureArrayBinding,
-                                        QRhiShaderResourceBinding::FragmentStage,
+                                        CUSTOM_MATERIAL_VISIBILITY_ALL,
                                         shaderPipeline->depthTexture(), sampler);
                 }
+            } // else ignore, not an error
+        }
+
+        if (shaderPipeline->normalTexture()) {
+            const int normalTextureBinding = shaderPipeline->bindingForTexture("qt_normalTexture", int(QSSGRhiSamplerBindingHints::NormalTexture));
+            if (normalTextureBinding >= 0) {
+                // nearest min/mag, no mipmap
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                samplerBindingsSpecified.setBit(normalTextureBinding);
+                bindings.addTexture(normalTextureBinding, CUSTOM_MATERIAL_VISIBILITY_ALL, shaderPipeline->normalTexture(), sampler);
             } // else ignore, not an error
         }
 

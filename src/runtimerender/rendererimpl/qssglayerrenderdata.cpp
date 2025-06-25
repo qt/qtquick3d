@@ -1464,12 +1464,18 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture))
         ioFlags.setRequiresDepthTexture(true);
 
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::NormalTexture)) {
+        ioFlags.setRequiresNormalTexture(true);
+        renderableFlags |= QSSGRenderableObjectFlag::RequiresNormalTexture;
+    }
+
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture)) {
         ioFlags.setRequiresDepthTexture(true);
         ioFlags.setRequiresSsaoPass(true);
     }
     if (orderIndependentTransparencyEnabled && renderableFlags.hasTransparency())
         defaultMaterialShaderKeyProperties.m_orderIndependentTransparency.setValue(theGeneratedKey, int(layer.oitMethod));
+
     retval.firstImage = nullptr;
 
     if (retval.dirty || alreadyDirty)
@@ -2282,6 +2288,7 @@ void QSSGLayerRenderData::prepareForRender()
 
     // Effects
     bool requiresDepthTexture = SSAOEnabled;
+    bool requiresNormalTexture = false;
     for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
         if (theEffect->isDirty()) {
             wasDirty = true;
@@ -2289,6 +2296,8 @@ void QSSGLayerRenderData::prepareForRender()
         }
         if (theEffect->testFlag(QSSGRenderEffect::Flags::UsesDepthTexture))
             requiresDepthTexture = true;
+        if (theEffect->testFlag(QSSGRenderEffect::Flags::UsesNormalTexture))
+            requiresNormalTexture = true;
     }
 
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
@@ -2309,6 +2318,8 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     layerPrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
+
+    layerPrepResult.flags.setRequiresNormalTexture(requiresNormalTexture);
 
     // Tonemapping. Except when there are effects, then it is up to the
     // last pass of the last effect to perform tonemapping.
@@ -2776,12 +2787,15 @@ void QSSGLayerRenderData::prepareForRender()
     // Prepare passes
     QSSG_ASSERT(activePasses.isEmpty(), activePasses.clear());
     // If needed, generate a depth texture with the opaque objects. This
-    // and the SSAO texture must come first since other passes may want to
+    // and normal and the SSAO texture must come first since other passes may want to
     // expose these textures to their shaders.
     if (layerPrepResult.flags.requiresDepthTexture())
         activePasses.push_back(&depthMapPass);
     if (layerPrepResult.flags.requiresDepthTextureMS())
         activePasses.push_back(&depthMapPassMS);
+
+    if (layerPrepResult.flags.requiresNormalTexture())
+        activePasses.push_back(&normalPass);
 
     // Screen space ambient occlusion. Relies on the depth texture and generates an AO map.
     if (layerPrepResult.flags.requiresSsaoPass())

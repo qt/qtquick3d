@@ -36,7 +36,8 @@ public:
         DepthTextureMS,
         ScreenTexture,
         AccumTexture,
-        RevealageTexture
+        RevealageTexture,
+        NormalTexture
     };
     Q_DECLARE_FLAGS(RenderResults, RenderResult)
 

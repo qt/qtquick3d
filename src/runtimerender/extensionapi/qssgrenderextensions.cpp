@@ -67,6 +67,8 @@ void QSSGFrameData::scheduleRenderResults(RenderResults results) const
         prepResult.flags.setRequiresScreenTexture(true);
     if (results.testFlag(RenderResult::AoTexture))
         prepResult.flags.setRequiresSsaoPass(true);
+    if (results.testFlag(RenderResult::NormalTexture))
+        prepResult.flags.setRequiresNormalTexture(true);
 }
 
 /*!

@@ -136,6 +136,20 @@ public:
     bool m_multisampling = false;
 };
 
+class Q_QUICK3DRUNTIMERENDER_EXPORT NormalPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Standalone; }
+    void resetForFrame() final;
+
+    QSSGRenderableObjectList sortedOpaqueObjects;
+    QSSGRhiGraphicsPipelineState ps;
+    QSSGRhiRenderableTexture *normalTexture = nullptr;
+    QSSGRhiRenderableTexture *depthBuffer = nullptr;
+};
+
 class SkyboxPass : public QSSGRenderPass
 {
 public:

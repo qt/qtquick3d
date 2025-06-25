@@ -69,7 +69,8 @@ public:
     void setup(QSize outputSize);
     QRhiTexture *process(const QSSGRenderLayer &layer,
                          QRhiTexture *inTexture,
-                         QRhiTexture *inDepthTexture);
+                         QRhiTexture *inDepthTexture,
+                         QRhiTexture *inNormalTexture);
 
     static QSSGRenderTextureFormat::Format overriddenOutputFormat(const QSSGRenderEffect *inEffect);
 
@@ -106,6 +107,7 @@ private:
     std::shared_ptr<QSSGRenderContextInterface> m_sgContext;
     QVector<QSSGRhiEffectTexture *> m_textures;
     QRhiTexture *m_depthTexture = nullptr;
+    QRhiTexture *m_normalTexture = nullptr;
     QVector2D m_cameraClipRange;
     QVarLengthArray<QMatrix4x4, 2> m_projectionMatrices;
     QVarLengthArray<QMatrix4x4, 2> m_viewMatrices;

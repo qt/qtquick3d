@@ -42,7 +42,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
         UsesDepthTexture = 0x2u,
         UsesProjectionMatrix = 0x4u,
         UsesInverseProjectionMatrix = 0x8u,
-        UsesViewMatrix = 0x10u
+        UsesViewMatrix = 0x10u,
+        UsesNormalTexture = 0x20u
     };
     using FlagT = std::underlying_type_t<Flags>;
 

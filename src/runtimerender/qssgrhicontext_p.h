@@ -275,6 +275,7 @@ enum class QSSGRhiSamplerBindingHints
     DepthTextureArray,
     ScreenTextureArray,
     AoTextureArray,
+    NormalTexture,
 
     BindingMapSize
 };
@@ -499,6 +500,9 @@ public:
     void setDepthTexture(QRhiTexture *texture) { m_depthTexture = texture; }
     QRhiTexture *depthTexture() const { return m_depthTexture; }
 
+    void setNormalTexture(QRhiTexture *texture) { m_normalTexture = texture; }
+    QRhiTexture *normalTexture() const { return m_normalTexture; }
+
     void setSsaoTexture(QRhiTexture *texture) { m_ssaoTexture = texture; }
     QRhiTexture *ssaoTexture() const { return m_ssaoTexture; }
 
@@ -541,6 +545,7 @@ private:
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QRhiTexture *m_screenTexture = nullptr;
     QRhiTexture *m_depthTexture = nullptr;
+    QRhiTexture *m_normalTexture = nullptr;
     QRhiTexture *m_ssaoTexture = nullptr;
     QRhiTexture *m_lightmapTexture = nullptr;
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures;

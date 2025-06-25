@@ -72,6 +72,17 @@ void rhiRenderDepthPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineSta
                         const QSSGRenderableObjectList &sortedTransparentObjects,
                         bool *needsSetViewport);
 
+bool rhiPrepareNormalPass(QSSGRhiContext *rhiCtx,
+                          QSSGPassKey passKey,
+                          const QSSGRhiGraphicsPipelineState &basePipelineState,
+                          QRhiRenderPassDescriptor *rpDesc,
+                          QSSGLayerRenderData &inData,
+                          const QSSGRenderableObjectList &sortedOpaqueObjects);
+
+void rhiRenderNormalPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineState &ps,
+                         const QSSGRenderableObjectList &sortedOpaqueObjects,
+                         bool *needsSetViewport);
+
 bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx,
                          const QSize &size,
                          QSSGRhiRenderableTexture *renderableTex,

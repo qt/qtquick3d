@@ -83,6 +83,7 @@ enum class Feature : FlagType
     Lightmap = (1 << 23) + 15,
     DisableMultiView = (1 << 24) + 16,
     ForceIblExposure = (1 << 25) + 17,
+    NormalPass = (1 << 26) + 18,
 
     LastFeature
 };

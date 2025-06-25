@@ -651,9 +651,9 @@ static inline void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
             if (depthTextureBinding >= 0)
-                bindings.addTexture(depthTextureBinding, QRhiShaderResourceBinding::FragmentStage, shaderPipeline->depthTexture(), sampler);
+                bindings.addTexture(depthTextureBinding, RENDERER_VISIBILITY_ALL, shaderPipeline->depthTexture(), sampler);
             if (depthTextureArrayBinding >= 0)
-                bindings.addTexture(depthTextureBinding, QRhiShaderResourceBinding::FragmentStage, shaderPipeline->depthTexture(), sampler);
+                bindings.addTexture(depthTextureBinding, RENDERER_VISIBILITY_ALL, shaderPipeline->depthTexture(), sampler);
         } // else ignore, not an error
     }
 
@@ -675,6 +675,21 @@ static inline void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
                                     QRhiShaderResourceBinding::FragmentStage,
                                     shaderPipeline->ssaoTexture(), sampler);
             }
+        } // else ignore, not an error
+    }
+}
+
+static inline void addNormalTextureBindings(QSSGRhiContext *rhiCtx,
+                                            QSSGRhiShaderPipeline *shaderPipeline,
+                                            QSSGRhiShaderResourceBindingList &bindings)
+{
+    if (shaderPipeline->normalTexture()) {
+        const int normalTextureBinding = shaderPipeline->bindingForTexture("qt_normalTexture", int(QSSGRhiSamplerBindingHints::NormalTexture));
+        if (normalTextureBinding >= 0) {
+            // nearest min/mag, no mipmap
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+            bindings.addTexture(normalTextureBinding, RENDERER_VISIBILITY_ALL, shaderPipeline->normalTexture(), sampler);
         } // else ignore, not an error
     }
 }
@@ -780,8 +795,10 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
             bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
 
-                 // Depth and SSAO textures, in case a custom material's shader code does something with them.
+            // Depth and SSAO textures, in case a custom material's shader code does something with them.
             addDepthTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
+            // and the normal texture, if there is one.
+            addNormalTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
 
             if (isOpaqueDepthPrePass) {
                 addOpaqueDepthPrePassBindings(rhiCtx,
@@ -1151,6 +1168,9 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Depth and SSAO textures
             addDepthTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
+
+            // Normal texture
+            addNormalTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
 
             // Instead of always doing a QHash find in srb(), store the binding
             // list and the srb object in the per-model+material
@@ -2258,6 +2278,19 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                               (obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset));
             }
 
+            // There is no normal texture at this stage. But the shader from a
+            // custom material may rely on it. Bind a dummy texture then due to
+            // the lack of other options.
+            const int normalTextureBinding = shaderPipeline->bindingForTexture("qt_normalTexture", int(QSSGRhiSamplerBindingHints::NormalTexture));
+            if (normalTextureBinding >= 0) {
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                         QRhiSampler::Repeat, QRhiSampler::Repeat, QRhiSampler::Repeat });
+                QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+                rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                bindings.addTexture(normalTextureBinding, RENDERER_VISIBILITY_ALL, dummyTexture, sampler);
+            }
+
             // Skinning
             if (QRhiTexture *boneTexture = inData.getBonemapTexture(subsetRenderable.modelContext)) {
                 int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
@@ -2448,6 +2481,224 @@ bool RenderHelpers::rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx,
     }
 
     return true;
+}
+
+bool RenderHelpers::rhiPrepareNormalPass(QSSGRhiContext *rhiCtx,
+                                         QSSGPassKey passKey,
+                                         const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                         QRhiRenderPassDescriptor *rpDesc,
+                                         QSSGLayerRenderData &inData,
+                                         const QSSGRenderableObjectList &sortedOpaqueObjects)
+{
+    QSSGRhiGraphicsPipelineState ps = basePipelineState;
+    ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
+    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
+
+    for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects) {
+        QSSGRenderableObject *obj = handle.obj;
+        QSSGRhiShaderPipelinePtr shaderPipeline;
+        QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+
+        QSSGShaderFeatures featureSet;
+        featureSet.set(QSSGShaderFeatures::Feature::NormalPass, true);
+
+        QSSGRhiDrawCallData *dcd = nullptr;
+        if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
+            QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
+            const void *modelNode = &subsetRenderable.modelContext.model;
+            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, 0 });
+        }
+
+        if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
+            QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
+            const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
+            ps.cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
+
+            shaderPipeline = shadersForDefaultMaterial(&ps, subsetRenderable, featureSet);
+            if (shaderPipeline) {
+                shaderPipeline->ensureCombinedUniformBuffer(&dcd->ubuf);
+                char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, &ps, subsetRenderable, inData.renderedCameras, nullptr, nullptr);
+                dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+            }
+        } else if (obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
+            QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
+
+            const auto &customMaterial = static_cast<const QSSGRenderCustomMaterial &>(subsetRenderable.getMaterial());
+
+            ps.cullMode = QSSGRhiHelpers::toCullMode(customMaterial.m_cullMode);
+
+            const auto &customMaterialSystem = subsetRenderable.renderer->contextInterface()->customMaterialSystem();
+            shaderPipeline = customMaterialSystem->shadersForCustomMaterial(&ps, customMaterial, subsetRenderable, inData.getDefaultMaterialPropertyTable(), featureSet);
+
+            if (shaderPipeline) {
+                shaderPipeline->ensureCombinedUniformBuffer(&dcd->ubuf);
+                char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+                customMaterialSystem->updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, inData, ubufData, &ps, customMaterial, subsetRenderable,
+                                                                      inData.renderedCameras, nullptr, nullptr);
+                dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+            }
+        }
+
+        // the rest is common, only relying on QSSGSubsetRenderableBase, not the subclasses
+        if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
+            QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
+            auto &ia = QSSGRhiInputAssemblerStatePrivate::get(ps);
+            ia = subsetRenderable.subset.rhi.ia;
+
+            const QSSGRenderCameraDataList &cameraDatas(*inData.renderedCameraData);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, &ps, rhiCtx, cameraDatas[0].direction, cameraDatas[0].position);
+            QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
+
+            QSSGRhiShaderResourceBindingList bindings;
+            bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
+
+            // Texture maps
+            QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
+            while (renderableImage) {
+                const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
+                const int samplerHint = int(renderableImage->m_mapType);
+                int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
+                if (samplerBinding >= 0) {
+                    QRhiTexture *texture = renderableImage->m_texture.m_texture;
+                    if (samplerBinding >= 0 && texture) {
+                        const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                        QSSGRhiSamplerDescription samplerDesc = {
+                            QSSGRhiHelpers::toRhi(renderableImage->m_imageNode.m_minFilterType),
+                            QSSGRhiHelpers::toRhi(renderableImage->m_imageNode.m_magFilterType),
+                            mipmapped ? QSSGRhiHelpers::toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                            QSSGRhiHelpers::toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                            QSSGRhiHelpers::toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
+                            QSSGRhiHelpers::toRhi(renderableImage->m_imageNode.m_depthTilingMode)
+                        };
+                        rhiCtx->checkAndAdjustForNPoT(texture, &samplerDesc);
+                        QRhiSampler *sampler = rhiCtx->sampler(samplerDesc);
+                        bindings.addTexture(samplerBinding, RENDERER_VISIBILITY_ALL, texture, sampler);
+                    }
+                } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
+                renderableImage = renderableImage->m_nextImage;
+            }
+
+            addDepthTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
+
+            // There is no normal texture at this stage, obviously.
+            const int normalTextureBinding = shaderPipeline->bindingForTexture("qt_normalTexture", int(QSSGRhiSamplerBindingHints::NormalTexture));
+            if (normalTextureBinding >= 0) {
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                         QRhiSampler::Repeat, QRhiSampler::Repeat, QRhiSampler::Repeat });
+                QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+                rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                bindings.addTexture(normalTextureBinding, RENDERER_VISIBILITY_ALL, dummyTexture, sampler);
+            }
+
+            // Shadow maps are not needed since lighting-related shading is mostly skipped in the normal texture's pass
+
+            // Skinning
+            if (QRhiTexture *boneTexture = inData.getBonemapTexture(subsetRenderable.modelContext)) {
+                int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
+                if (binding >= 0) {
+                    QRhiSampler *boneSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                            QRhiSampler::Nearest,
+                            QRhiSampler::None,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::Repeat
+                    });
+                    bindings.addTexture(binding,
+                                        QRhiShaderResourceBinding::VertexStage,
+                                        boneTexture,
+                                        boneSampler);
+                }
+            }
+
+            // Morphing
+            auto *targetsTexture = subsetRenderable.subset.rhi.targetsTexture;
+            if (targetsTexture) {
+                int binding = shaderPipeline->bindingForTexture("qt_morphTargetTexture");
+                if (binding >= 0) {
+                    QRhiSampler *targetsSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                            QRhiSampler::Nearest,
+                            QRhiSampler::None,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge,
+                            QRhiSampler::ClampToEdge
+                    });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, subsetRenderable.subset.rhi.targetsTexture, targetsSampler);
+                }
+            }
+
+            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+
+            subsetRenderable.rhiRenderData.normalPass.pipeline = rhiCtxD->pipeline(ps,
+                                                                                   rpDesc,
+                                                                                   srb);
+            subsetRenderable.rhiRenderData.normalPass.srb = srb;
+        }
+    }
+
+    return true;
+}
+
+void RenderHelpers::rhiRenderNormalPass(QSSGRhiContext *rhiCtx,
+                                        const QSSGRhiGraphicsPipelineState &pipelineState,
+                                        const QSSGRenderableObjectList &sortedOpaqueObjects,
+                                        bool *needsSetViewport)
+{
+    for (const auto &oh : sortedOpaqueObjects) {
+        QSSGRenderableObject *obj = oh.obj;
+
+        // casts to SubsetRenderableBase so it works for both default and custom materials
+        if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
+            QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+            QSSGSubsetRenderable *subsetRenderable(static_cast<QSSGSubsetRenderable *>(obj));
+
+            QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.vertexBuffer->buffer();
+            QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.indexBuffer
+                    ? subsetRenderable->subset.rhi.indexBuffer->buffer()
+                    : nullptr;
+
+            QRhiGraphicsPipeline *graphicsPipeline = subsetRenderable->rhiRenderData.normalPass.pipeline;
+            if (!graphicsPipeline)
+                return;
+
+            QRhiShaderResourceBindings *srb = subsetRenderable->rhiRenderData.normalPass.srb;
+            if (!srb)
+                return;
+
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
+            cb->setGraphicsPipeline(graphicsPipeline);
+            cb->setShaderResources(srb);
+
+            if (needsSetViewport) {
+                cb->setViewport(pipelineState.viewport);
+                *needsSetViewport = false;
+            }
+
+            QRhiCommandBuffer::VertexInput vertexBuffers[2];
+            int vertexBufferCount = 1;
+            vertexBuffers[0] = QRhiCommandBuffer::VertexInput(vertexBuffer, 0);
+            quint32 instances = 1;
+            if (subsetRenderable->modelContext.model.instancing()) {
+                instances = subsetRenderable->modelContext.model.instanceCount();
+                vertexBuffers[1] = QRhiCommandBuffer::VertexInput(subsetRenderable->instanceBuffer, 0);
+                vertexBufferCount = 2;
+            }
+
+            if (indexBuffer) {
+                cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable->subset.rhi.indexBuffer->indexFormat());
+                cb->drawIndexed(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
+                QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable->subset.count, instances));
+            } else {
+                cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
+                cb->draw(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
+                QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable->subset.count, instances));
+            }
+            Q_QUICK3D_PROFILE_END_WITH_IDS(QQuick3DProfiler::Quick3DRenderCall, (subsetRenderable->subset.count | quint64(instances) << 32),
+                                                QVector<int>({subsetRenderable->modelContext.model.profilingId,
+                                                subsetRenderable->material.profilingId}));
+        }
+    }
 }
 
 QT_END_NAMESPACE

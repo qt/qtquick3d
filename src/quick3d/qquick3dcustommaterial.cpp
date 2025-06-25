@@ -1012,7 +1012,7 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
-    When sampling textures other than \c SCREEN_TEXTURE and \c DEPTH_TEXTURE,
+    When sampling textures other than \c SCREEN_TEXTURE, and \c DEPTH_TEXTURE,
     or when \c FRAGCOORD is used to calculate the texture coordinate (which
     would be the typical use case for accessing the screen and depth textures),
     such an adjustment is not necessary.
@@ -1194,6 +1194,14 @@ QT_BEGIN_NAMESPACE
         #else
             vec4 depthSample = texture(DEPTH_TEXTURE, uv);
         #endif
+    \endcode
+
+    \li \c NORMAL_ROUGHNESS_TEXTURE - When present, a texture (\c sampler2D)
+    with the world-space normals and the material roughness is exposed to the
+    shader under this name. Only opaque objects are included. The roughness is
+    stored in the alpha channel.
+    For example, a fragment shader could contain the following: \badcode
+        vec3 N = normalize(texture(NORMAL_ROUGHNESS_TEXTURE, uv).rgb);
     \endcode
 
     \li \c AO_TEXTURE - When present and screen space ambient occlusion is
@@ -1671,6 +1679,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesNormalTexture))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::NormalTexture, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::AoTexture, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesProjectionMatrix))

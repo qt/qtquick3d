@@ -272,12 +272,13 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     }
 
     // The custom fragment main should be skipped if this is a
-    // depth pass, but not if it is also a OpaqueDepthPrePass
+    // depth (or normal texture) pass, but not if it is also a OpaqueDepthPrePass
     // because then we need to know the real alpha values
     skipCustomFragmentSnippet = false;
     const bool isDepthPass = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DepthPass);
     const bool isOpaqueDepthPrePass = inFeatureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
-    skipCustomFragmentSnippet = (isDepthPass && !isOpaqueDepthPrePass);
+    const bool isNormalPass = inFeatureSet.isSet(QSSGShaderFeatures::Feature::NormalPass);
+    skipCustomFragmentSnippet = (isDepthPass && !isOpaqueDepthPrePass) || isNormalPass;
 
     if (hasCustomVertexShader || hasCustomFragmentShader) {
         // This is both for unshaded and shaded. Regardless of any other

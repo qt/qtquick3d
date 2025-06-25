@@ -74,7 +74,9 @@ enum class QSSGLayerRenderPreparationResultFlag
     MaterialHasCustomBlendMode = 1 << 7,
 
     // Set when multisampled depth texture is required
-    RequiresDepthTextureMS = 1 << 8
+    RequiresDepthTextureMS = 1 << 8,
+
+    RequiresNormalTexture = 1 << 9
 };
 
 struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPreparationResultFlag>
@@ -149,6 +151,15 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     void setHasCustomBlendMode(bool inValue)
     {
         setFlag(QSSGLayerRenderPreparationResultFlag::MaterialHasCustomBlendMode, inValue);
+    }
+
+    bool requiresNormalTexture() const
+    {
+        return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresNormalTexture);
+    }
+    void setRequiresNormalTexture(bool inValue)
+    {
+        setFlag(QSSGLayerRenderPreparationResultFlag::RequiresNormalTexture, inValue);
     }
 };
 
@@ -323,6 +334,7 @@ public:
     OITCompositePass oitCompositePass;
     InfiniteGridPass infiniteGridPass;
     DebugDrawPass debugDrawPass;
+    NormalPass normalPass;
 
     // Built-in passes
     QVarLengthArray<QSSGRenderPass *, 16> activePasses;
@@ -610,7 +622,7 @@ private:
     QSSGRenderReflectionMapPtr reflectionMapManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
     QHash<const QSSGModelContext *, QRhiTexture *> bonemapTextures;
-    QSSGRhiRenderableTexture renderResults[6] {};
+    QSSGRhiRenderableTexture renderResults[7] {};
     QSSGOITRenderContext oitRenderContext;
 };
 

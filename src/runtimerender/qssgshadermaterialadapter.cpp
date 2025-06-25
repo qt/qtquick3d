@@ -727,6 +727,7 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "AO_TEXTURE", "qt_aoTexture", true },
     { "IBL_TEXTURE", "qt_lightProbe", false },
     { "LIGHTMAP", "qt_lightmap", false },
+    { "NORMAL_ROUGHNESS_TEXTURE", "qt_normalTexture", false },
 
     // For shaded only: vertex outputs, for convenience and perf. (only those
     // that are always present when lighting is enabled) The custom vertex main
@@ -952,6 +953,8 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
                     md.flags |= QSSGCustomShaderMetaData::UsesScreenMipTexture;
                 else if (trimmedId == QByteArrayLiteral("DEPTH_TEXTURE"))
                     md.flags |= QSSGCustomShaderMetaData::UsesDepthTexture;
+                else if (trimmedId == QByteArrayLiteral("NORMAL_ROUGHNESS_TEXTURE"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesNormalTexture;
                 else if (trimmedId == QByteArrayLiteral("AO_TEXTURE"))
                     md.flags |= QSSGCustomShaderMetaData::UsesAoTexture;
                 else if (trimmedId == QByteArrayLiteral("POSITION"))
@@ -1147,6 +1150,9 @@ void QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
         else
             allUniforms.append({ "sampler2D", "qt_aoTexture" });
     }
+
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesNormalTexture))
+        allUniforms.append({ "sampler2D", "qt_normalTexture" });
 
     // Input texture for post-processing effects.
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesInputTexture)) {
