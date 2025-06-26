@@ -210,7 +210,7 @@ public:
     };
 
     using InstanceTransforms = QSSGGlobalRenderNodeData::InstanceTransforms;
-    using ModelViewProjections = QSSGGlobalRenderNodeData::ModelViewProjections;
+    using ModelViewProjections = QSSGRenderModelData::ModelViewProjections;
 
     using QSSGModelsView = QSSGDataView<QSSGRenderModel *>;
     using QSSGParticlesView = QSSGDataView<QSSGRenderParticles *>;
