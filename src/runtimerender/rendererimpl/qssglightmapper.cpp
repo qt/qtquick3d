@@ -1888,19 +1888,18 @@ void QSSGLightmapperPrivate::computeDirectLight(const StageProgressReporter &rep
 }
 
 // xorshift rng. this is called a lot -> rand/QRandomGenerator is out of question (way too slow)
-static inline float uniformRand()
+static inline float uniformRand(quint32 &state)
 {
-    static thread_local quint32 state = QRandomGenerator::global()->generate();
     state ^= state << 13;
     state ^= state >> 17;
     state ^= state << 5;
     return float(state) / float(UINT32_MAX);
 }
 
-static inline QVector3D cosWeightedHemisphereSample()
+static inline QVector3D cosWeightedHemisphereSample(quint32 &state)
 {
-    const float r1 = uniformRand();
-    const float r2 = uniformRand() * 2.0f * float(M_PI);
+    const float r1 = uniformRand(state);
+    const float r2 = uniformRand(state) * 2.0f * float(M_PI);
     const float sqr1 = std::sqrt(r1);
     const float sqr1m = std::sqrt(1.0f - r1);
     return QVector3D(sqr1 * std::cos(r2), sqr1 * std::sin(r2), sqr1m);
@@ -1992,8 +1991,9 @@ void QSSGLightmapperPrivate::computeIndirectLight(const StageProgressReporter &r
                 const int beginIdx = wgIdx * wgSizePerGroup;
                 const int endIdx = qMin(beginIdx + wgSizePerGroup, options.indirectLightSamples);
 
-                wg[wgIdx] = QtConcurrent::run([this, beginIdx, endIdx, &lmPix] {
+                wg[wgIdx] = QtConcurrent::run([this, wgIdx, beginIdx, endIdx, &lmPix] {
                     QVector3D wgResult;
+                    quint32 state = QRandomGenerator(wgIdx).generate();
                     for (int sampleIdx = beginIdx; sampleIdx < endIdx; ++sampleIdx) {
                         QVector3D position = lmPix.worldPos;
                         QVector3D normal = lmPix.normal;
@@ -2005,7 +2005,7 @@ void QSSGLightmapperPrivate::computeIndirectLight(const StageProgressReporter &r
                                 position += vectorSign(normal) * vectorAbs(position * 0.0000002f);
 
                             // get a sample using a cosine-weighted hemisphere sampler
-                            const QVector3D sample = cosWeightedHemisphereSample();
+                            const QVector3D sample = cosWeightedHemisphereSample(state);
 
                             // transform to the point's local coordinate system
                             const QVector3D v0 = qFuzzyCompare(qAbs(normal.z()), 1.0f)
@@ -2051,7 +2051,7 @@ void QSSGLightmapperPrivate::computeIndirectLight(const StageProgressReporter &r
                             // stop if we guess there's no point in bouncing further
                             // (low throughput path wouldn't contribute much)
                             const float p = qMax(qMax(throughput.x(), throughput.y()), throughput.z());
-                            if (p < uniformRand())
+                            if (p < uniformRand(state))
                                 break;
 
                             // was not terminated: boost the energy by the probability to be terminated
