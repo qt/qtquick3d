@@ -46,7 +46,6 @@ public:
         size_t size = 0;
     };
 
-    using ModelViewProjections = std::array<QMatrix4x4, 2>;
     using LayerNodeView = QSSGDataView<QSSGRenderNode *>;
 
     using GlobalTransformStore = std::vector<QMatrix4x4>;
