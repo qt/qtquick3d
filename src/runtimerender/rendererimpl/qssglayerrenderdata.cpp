@@ -3010,8 +3010,10 @@ QSSGFrameData &QSSGLayerRenderData::getFrameData()
     return frameData;
 }
 
-void QSSGLayerRenderData::initializeLightmapBaking(const QSSGLightmapBaker::Context &ctx)
+void QSSGLayerRenderData::initializeLightmapBaking(QSSGLightmapBaker::Context &ctx)
 {
+    ctx.callbacks.modelsToBake = [this]() { return getSortedBakedLightingModels(); };
+
     lightmapBaker = std::make_unique<QSSGLightmapBaker>(ctx);
 }
 

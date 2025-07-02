@@ -1459,8 +1459,6 @@ void QQuick3DSceneRenderer::maybeSetupLightmapBaking(QQuick3DViewport *view3D)
         ctx.env.rhiCtx = m_sgContext->rhiContext().get();
         ctx.env.renderer = m_sgContext->renderer().get();
         ctx.env.lmOptions = lmOptions;
-        ctx.env.bakedLightingModels = m_layer->renderData->getSortedBakedLightingModels();
-
         m_layer->renderData->initializeLightmapBaking(ctx);
 
     } else {
