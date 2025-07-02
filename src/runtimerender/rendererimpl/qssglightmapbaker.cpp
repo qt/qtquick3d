@@ -27,29 +27,21 @@ QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
     d->lightmapper = std::make_unique<QSSGLightmapper>(env.rhiCtx, env.renderer);
     d->lightmapper->setOptions(env.lmOptions);
     d->lightmapper->setOutputCallback(cb.lightmapBakingOutput);
-
-    // bakedLightingModels contains all models with
-    // usedInBakedLighting: true. These, together with lights that
-    // have a bakeMode set to either Indirect or All, form the
-    // lightmapped scene. A lightmap is stored persistently only
-    // for models that have their lightmapKey set.
-    for (int i = 0, ie = env.bakedLightingModels.size(); i != ie; ++i)
-        d->lightmapper->add(env.bakedLightingModels[i]);
 }
 
 QSSGLightmapBaker::Status QSSGLightmapBaker::process()
 {
     auto &env = d->ctx.env;
     auto &settings = d->ctx.settings;
-    auto &cb = d->ctx.callbacks;
+    auto &callbacks = d->ctx.callbacks;
 
     if (d->currentStatus == Status::Preparing) {
         // We need to prepare for lightmap baking by doing another frame so that
         // we can reload all meshes to use the original one and NOT the baked one.
         // When disableLightmaps is set on the layer, the mesh loader will always load the
         // original mesh and not the lightmap mesh.
-        cb.setCurrentlyBaking(true);
-        cb.triggerNewFrame(true);
+        callbacks.setCurrentlyBaking(true);
+        callbacks.triggerNewFrame(true);
 
         d->currentStatus = Status::Running;
     } else if (d->currentStatus == Status::Running) {
@@ -57,6 +49,15 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
             QRhiCommandBuffer *cb = env.rhiCtx->commandBuffer();
             cb->debugMarkBegin("Quick3D lightmap baking/denoising");
             if (settings.bakeRequested) {
+                // bakedLightingModels contains all models with
+                // usedInBakedLighting: true. These, together with lights that
+                // have a bakeMode set to either Indirect or All, form the
+                // lightmapped scene. A lightmap is stored persistently only
+                // for models that have their lightmapKey set.
+                const auto &bakedLightingModels = callbacks.modelsToBake();
+                for (int i = 0, ie = bakedLightingModels.size(); i != ie; ++i)
+                    d->lightmapper->add(bakedLightingModels[i]);
+
                 d->lightmapper->bake();
             } else if (settings.denoiseRequested) {
                 d->lightmapper->denoise();
@@ -64,8 +65,8 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
             cb->debugMarkEnd();
         }
 
-        cb.setCurrentlyBaking(false);
-        cb.triggerNewFrame(true);
+        callbacks.setCurrentlyBaking(false);
+        callbacks.triggerNewFrame(true);
         d->currentStatus = Status::Finished;
 
         if (settings.quitWhenFinished) {

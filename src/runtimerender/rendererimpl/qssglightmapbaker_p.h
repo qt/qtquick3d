@@ -38,7 +38,6 @@ public:
         struct Environment {
             QSSGRhiContext *rhiCtx = nullptr;
             QSSGRenderer *renderer = nullptr;
-            QVector<QSSGBakedLightingModel> bakedLightingModels;
             QSSGLightmapperOptions lmOptions;
         } env;
 
@@ -50,6 +49,7 @@ public:
 
         struct Callbacks {
             QSSGLightmapper::Callback lightmapBakingOutput;
+            std::function<QVector<QSSGBakedLightingModel>()> modelsToBake;
             std::function<void(bool)> triggerNewFrame;
             std::function<void(bool)> setCurrentlyBaking;
         } callbacks;

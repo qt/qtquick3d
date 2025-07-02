@@ -356,7 +356,7 @@ public:
     QSSGShaderFeatures getShaderFeatures() const { return features; }
     QSSGRhiGraphicsPipelineState getPipelineState() const { return ps; }
 
-    void initializeLightmapBaking(const QSSGLightmapBaker::Context &ctx);
+    void initializeLightmapBaking(QSSGLightmapBaker::Context &ctx);
     void maybeProcessLightmapBaking();
 
     [[nodiscard]] QSSGRenderGraphObject *getCamera(QSSGCameraId id) const;
