@@ -26,6 +26,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuaternion;
 class QQuick3DXrHandInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;

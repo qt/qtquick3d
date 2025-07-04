@@ -34,6 +34,8 @@
 
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 template<typename T, T *T::*N = &T::next>

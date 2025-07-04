@@ -7,6 +7,8 @@
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
+#include <QtGui/qquaternion.h>
+
 #include <QLoggingCategory>
 
 #if defined(Q_OS_ANDROID)

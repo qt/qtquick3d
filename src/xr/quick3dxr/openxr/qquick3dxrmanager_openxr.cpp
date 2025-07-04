@@ -20,6 +20,8 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickrendercontrol.h>
 
+#include <QtGui/qquaternion.h>
+
 #include <QtCore/qobject.h>
 
 #include <openxr/openxr_reflection.h>

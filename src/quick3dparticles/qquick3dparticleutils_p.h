@@ -22,6 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuaternion;
 class QQuick3DNode;
 
 // Define this to use C++ std::sinf & std::cosf for particles.
