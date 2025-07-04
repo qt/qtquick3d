@@ -15,6 +15,8 @@
 #include "rendererimpl/qssgshadowmaphelpers_p.h"
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
+#include <QtGui/qquaternion.h>
+
 #include <QtCore/qbitarray.h>
 
 #include <cmath>

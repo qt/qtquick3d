@@ -10,6 +10,8 @@
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 
+#include <QtGui/qquaternion.h>
+
 class BenchFrustumCulling : public QObject
 {
     Q_OBJECT

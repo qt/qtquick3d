@@ -23,6 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuaternion;
 class QQuick3DXrInputManager;
 
 class Q_QUICK3DXR_EXPORT QQuick3DXrController : public QQuick3DNode
