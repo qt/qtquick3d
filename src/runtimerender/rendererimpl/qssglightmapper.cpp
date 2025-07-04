@@ -259,6 +259,7 @@ struct QSSGLightmapperPrivate
                         std::optional<QString> msg,
                         bool outputToConsole = true,
                         bool outputConsoleTimeRemanining = false);
+    void updateStage(const QString &newStage);
     bool commitGeometry();
     bool prepareLightmaps();
     QVector<QVector3D> computeDirectLight(int lmIdx);
@@ -281,6 +282,8 @@ struct QSSGLightmapperPrivate
 
     QVector3D sampleDirectLight(QVector3D worldPos, QVector3D normal, bool allLight) const;
     QByteArray dilate(const QSize &pixelSize, const QByteArray &image);
+
+    QString stage = QStringLiteral("Initializing");
 };
 
 // Used to output progress ETA during baking.
@@ -2545,10 +2548,23 @@ void QSSGLightmapperPrivate::sendOutputInfo(QSSGLightmapper::BakingStatus type, 
     if (outputCallback) {
         QVariantMap payload;
         payload[QStringLiteral("status")] = (int)type;
+        payload[QStringLiteral("stage")] = stage;
         payload[QStringLiteral("message")] = msg.value_or(QString());
         payload[QStringLiteral("totalTimeRemaining")] = estimatedTimeRemaining;
         payload[QStringLiteral("totalProgress")] = totalProgress;
-        payload[QStringLiteral("totalTimeElapsed")] = totalTimer.elapsed();
+        outputCallback(payload, &bakingControl);
+    }
+}
+
+void QSSGLightmapperPrivate::updateStage(const QString &newStage)
+{
+    if (newStage == stage)
+        return;
+
+    stage = newStage;
+    if (outputCallback) {
+        QVariantMap payload;
+        payload[QStringLiteral("stage")] = stage;
         outputCallback(payload, &bakingControl);
     }
 }
@@ -2557,9 +2573,11 @@ bool QSSGLightmapper::bake()
 {
     d->totalTimer.start();
 
+    d->updateStage(QStringLiteral("Preparing"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Bake starting..."));
 
     if (!isValidSavePath(d->options.source)) {
+        d->updateStage(QStringLiteral("Failed"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Source path %1 is not a writable location").
                                                                 arg(d->options.source));
         return false;
@@ -2570,6 +2588,7 @@ bool QSSGLightmapper::bake()
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Total models registered: %1").arg(d->bakedLightingModels.size()));
 
     if (d->bakedLightingModels.isEmpty()) {
+        d->updateStage(QStringLiteral("Failed"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("No Models to bake"));
         return false;
     }
@@ -2577,22 +2596,28 @@ bool QSSGLightmapper::bake()
     // ------------- Commit geometry -------------
 
     if (!d->commitGeometry()) {
+        d->updateStage(QStringLiteral("Failed"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Baking failed"));
         return false;
     }
 
-    if (d->userCancelled())
+    if (d->userCancelled()) {
+        d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
 
     // ------------- Prepare lightmaps -------------
 
     if (!d->prepareLightmaps()) {
+        d->updateStage(QStringLiteral("Failed"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Baking failed"));
         return false;
     }
 
-    if (d->userCancelled())
+    if (d->userCancelled()) {
+        d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
 
     // indirect lighting is slow, so parallelize per groups of samples,
     // e.g. if sample count is 256 and workgroup size is 32, then do up to
@@ -2600,6 +2625,7 @@ bool QSSGLightmapper::bake()
     // are really done concurrently that's up to the thread pool to manage)
     const int wgSizePerGroup = qMax(1, d->options.indirectLightWorkgroupSize);
     const int wgCount = (d->options.indirectLightSamples / wgSizePerGroup) + (d->options.indirectLightSamples % wgSizePerGroup ? 1: 0);
+
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Sample count: %1, Workgroup size: %2, Max bounces: %3, Multiplier: %4").
                                                            arg(d->options.indirectLightSamples).
                                                            arg(wgSizePerGroup).
@@ -2625,16 +2651,20 @@ bool QSSGLightmapper::bake()
 
     // ------------- Store metadata -------------
 
+    d->updateStage(QStringLiteral("Storing Metadata"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Storing metadata..."));
     auto writer = QSSGLightmapWriter::open(workFile);
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
-        if (d->userCancelled())
+        if (d->userCancelled()) {
+            d->updateStage(QStringLiteral("Cancelled"));
             return false;
+        }
         QSSGBakedLightingModel &lm = d->bakedLightingModels[lmIdx];
         if (!lm.model->hasLightmap())
             continue;
 
         if (!d->storeMetadata(lmIdx, writer)) {
+            d->updateStage(QStringLiteral("Failed"));
             d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
                               QStringLiteral("[%1/%2] Failed to store metadata for '%3'")
                                   .arg(lmIdx + 1)
@@ -2648,13 +2678,16 @@ bool QSSGLightmapper::bake()
 
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Storing mask images..."));
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
-        if (d->userCancelled())
+        if (d->userCancelled()) {
+            d->updateStage(QStringLiteral("Cancelled"));
             return false;
+        }
         QSSGBakedLightingModel &lm = d->bakedLightingModels[lmIdx];
         if (!lm.model->hasLightmap())
             continue;
 
         if (!d->storeMaskImage(lmIdx, writer)) {
+            d->updateStage(QStringLiteral("Failed"));
             d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
                               QStringLiteral("[%1/%2] Failed to store mask for '%3'")
                                   .arg(lmIdx + 1)
@@ -2666,15 +2699,20 @@ bool QSSGLightmapper::bake()
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                       QStringLiteral("Took %1").arg(formatDuration(timer.restart())));
 
-    if (d->userCancelled())
+    if (d->userCancelled()) {
+        d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
 
     // ------------- Direct compute / store -------------
 
+    d->updateStage(QStringLiteral("Computing Direct Light"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Computing direct light..."));
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
-        if (d->userCancelled())
+        if (d->userCancelled()) {
+            d->updateStage(QStringLiteral("Cancelled"));
             return false;
+        }
         QSSGBakedLightingModel &lm = d->bakedLightingModels[lmIdx];
         if (!lm.model->hasLightmap())
             continue;
@@ -2707,8 +2745,10 @@ bool QSSGLightmapper::bake()
         }
     }
 
-    if (d->userCancelled())
+    if (d->userCancelled()) {
+        d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
 
     // ------------- Indirect compute / store -------------
 
@@ -2735,12 +2775,15 @@ bool QSSGLightmapper::bake()
             timeoutsSinceOutput = (timeoutsSinceOutput + 1) % consoleOutputInterval;
         });
         timerThread.start();
+        d->updateStage(QStringLiteral("Computing Indirect Light"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                           QStringLiteral("Computing indirect light..."));
         indirectTimer.start();
         for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
-            if (d->userCancelled())
+            if (d->userCancelled()) {
+                d->updateStage(QStringLiteral("Cancelled"));
                 return false;
+            }
             QSSGBakedLightingModel &lm = d->bakedLightingModels[lmIdx];
             if (!lm.model->hasLightmap())
                 continue;
@@ -2748,6 +2791,7 @@ bool QSSGLightmapper::bake()
             timer.restart();
             const QVector<QVector3D> indirectLight = d->computeIndirectLight(lmIdx, wgCount, wgSizePerGroup);
             if (indirectLight.empty()) {
+                d->updateStage(QStringLiteral("Failed"));
                 d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
                                   QStringLiteral("[%1/%2] Failed to compute '%3'")
                                       .arg(lmIdx + 1)
@@ -2763,10 +2807,13 @@ bool QSSGLightmapper::bake()
                                   .arg(lm.model->lightmapKey)
                                   .arg(formatDuration(timer.elapsed())));
 
-            if (d->userCancelled())
+            if (d->userCancelled()) {
+                d->updateStage(QStringLiteral("Cancelled"));
                 return false;
+            }
 
             if (!d->storeIndirectLightData(lmIdx, indirectLight, writer)) {
+                d->updateStage(QStringLiteral("Failed"));
                 d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
                                   QStringLiteral("[%1/%2] Failed to store data for '%3'")
                                       .arg(lmIdx + 1)
@@ -2780,12 +2827,15 @@ bool QSSGLightmapper::bake()
     // ------------- Store meshes -------------
 
     if (!d->storeMeshes(writer)) {
+        d->updateStage(QStringLiteral("Failed"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Failed to store meshes"));
         return false;
     }
 
-    if (d->userCancelled())
+    if (d->userCancelled()) {
+        d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
 
     // ------------- Copy file from tmp -------------
 
@@ -2805,25 +2855,33 @@ bool QSSGLightmapper::bake()
         return false;
     }
 
-    if (d->userCancelled())
+    if (d->userCancelled()) {
+        d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
 
     // ------------- Denoising -------------
 
+    d->updateStage(QStringLiteral("Denoising"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Denoising..."));
     timer.restart();
     if (!d->denoiseLightmaps()) {
+        d->updateStage(QStringLiteral("Failed"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Denoising failed"));
         return false;
     }
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Took %1").arg(formatDuration(timer.elapsed())));
 
-    if (d->userCancelled())
+    if (d->userCancelled()) {
+        d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
 
     // -------------------------------------
 
     d->totalProgress = 1.0;
+    d->estimatedTimeRemaining = -1;
+    d->updateStage(QStringLiteral("Done"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                       QStringLiteral("Baking took %1").arg(formatDuration(d->totalTimer.elapsed())));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Complete, std::nullopt);

@@ -10,25 +10,28 @@ Pane {
     anchors.fill: parent
 
     property double totalProgress: 0
-    property double totalTimeRemaining: 0
-    property double totalTimeElapsed: 0
+    property int totalTimeRemaining: -1
+    property string stage : "Preparing..."
 
     function clearText() {
         textArea.clear();
     }
 
     function update(payload) {
-        if (payload["message"]) {
-            textArea.insert(textArea.length, payload["message"] + "\n")
+        if ("message" in payload && typeof payload.message === "string" && payload.message) {
+            textArea.insert(textArea.length, payload.message + "\n");
         }
-        if (payload["totalProgress"]) {
-            root.totalProgress = payload["totalProgress"];
+
+        if ("totalProgress" in payload && typeof payload.totalProgress === "number") {
+            root.totalProgress = payload.totalProgress;
         }
-        if (payload["totalTimeRemaining"]) {
-            root.totalTimeRemaining = payload["totalTimeRemaining"];
+
+        if ("totalTimeRemaining" in payload && typeof payload.totalTimeRemaining === "number") {
+            root.totalTimeRemaining = payload.totalTimeRemaining;
         }
-        if (payload["totalTimeElapsed"]) {
-            root.totalTimeElapsed = payload["totalTimeElapsed"]
+
+        if ("stage" in payload && typeof payload.stage === "string") {
+            root.stage = payload.stage;
         }
     }
 
@@ -54,47 +57,51 @@ Pane {
     ColumnLayout {
         anchors.fill: parent
 
-        ScrollView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            TextArea {
-                id: textArea
-                readOnly: true
-                placeholderText: qsTr("Qt Lightmapper")
-                font.pixelSize: 12
-                wrapMode: Text.WordWrap
+        RowLayout {
+            Label {
+                padding: 0
+                text: root.stage
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            Label {
+                padding: 0
+                text: (root.totalProgress * 100).toFixed(0) + "%"
             }
         }
 
         ProgressBar {
             Layout.fillWidth: true
-            Layout.preferredHeight: 25
             value: root.totalProgress
         }
 
         RowLayout {
-            //Layout.fillWidth: true
-            Item {
-                Layout.preferredWidth: 10
-            }
             Label {
-                text: (root.totalProgress * 100).toFixed(0) + "% complete"
+                padding: 0
+                text: totalTimeRemaining > 0 ? "Remaining: " + root.formatDuration(root.totalTimeRemaining) : ""
             }
             Item {
                 Layout.fillWidth: true
             }
-            Label {
-                text: "Remaining: " + root.formatDuration(root.totalTimeRemaining)
-            }
-            Item {
-                Layout.fillWidth: true
-            }
-            Label {
-                Layout.alignment: Qt.AlignRight
-                text: "Elapsed: " + root.formatDuration(root.totalTimeElapsed)
-            }
-            Item {
-                Layout.preferredWidth: 10
+        }
+
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            ScrollView {
+                width: parent.width
+                height: parent.height
+                id: scroll
+                TextArea {
+                    id: textArea
+                    width: parent.width
+                    height: parent.height
+                    readOnly: true
+                    placeholderText: qsTr("Qt Lightmapper")
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
+                }
             }
         }
 
