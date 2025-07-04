@@ -8,6 +8,8 @@
 #include "../rendererimpl/qssglayerrenderdata_p.h"
 #include "qssgrenderroot_p.h"
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 void QSSGRenderLayer::markDirty(DirtyFlag dirtyFlag)
