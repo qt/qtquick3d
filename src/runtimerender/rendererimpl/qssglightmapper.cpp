@@ -39,6 +39,7 @@ QT_BEGIN_NAMESPACE
 
 static constexpr int GAUSS_HALF_KERNEL_SIZE = 3;
 static constexpr int DIRECT_MAP_UPSCALE_FACTOR = 4;
+static constexpr int MAX_TILE_SIZE = 1024;
 static constexpr quint32 PIXEL_VOID = 0; // Pixel not part of any mask
 static constexpr quint32 PIXEL_UNSET = -1; // Pixel part of mask, but not yet set
 
@@ -1210,62 +1211,83 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
         const QSize lightmapSize = drawInfos[lmIdx].lightmapSize;
 
-        const QSSGLightmapperPrivate::RasterResult raster = rasterizeLightmap(lmIdx, lightmapSize);
-        if (!raster.success)
-            return false;
-        Q_ASSERT(lightmapSize == QSize(raster.width, raster.height));
-        const int numPixels = raster.width * raster.height;
-
-        QVector<ModelTexel>& texels = modelTexels[lmIdx];
-        texels.resize(numPixels);
-
-        const float *lmPosPtr = reinterpret_cast<const float *>(raster.worldPositions.constData());
-        const float *lmNormPtr = reinterpret_cast<const float *>(raster.normals.constData());
-        const float *lmBaseColorPtr = reinterpret_cast<const float *>(raster.baseColors.constData());
-        const float *lmEmissionPtr = reinterpret_cast<const float *>(raster.emissions.constData());
+        const int w = lightmapSize.width();
+        const int h = lightmapSize.height();
+        const int numPixels = w * h;
 
         int unusedEntries = 0;
-        for (qsizetype i = 0; i < numPixels; ++i) {
-            ModelTexel &lmPix(texels[i]);
+        QVector<ModelTexel> &texels = modelTexels[lmIdx];
+        texels.resize(numPixels);
 
-            float x = *lmPosPtr++;
-            float y = *lmPosPtr++;
-            float z = *lmPosPtr++;
-            lmPosPtr++;
-            lmPix.worldPos = QVector3D(x, y, z);
+        // Dynamically compute number of tiles so that each tile is <= MAX_TILE_SIZE
+        constexpr int maxTileSize = MAX_TILE_SIZE;
+        const int numTilesX = (w + maxTileSize - 1) / maxTileSize;
+        const int numTilesY = (h + maxTileSize - 1) / maxTileSize;
 
-            x = *lmNormPtr++;
-            y = *lmNormPtr++;
-            z = *lmNormPtr++;
-            lmNormPtr++;
-            lmPix.normal = QVector3D(x, y, z);
+        // Render tiled to make sure enough GPU memory is available
+        for (int tileY = 0; tileY < numTilesY; ++tileY) {
+            for (int tileX = 0; tileX < numTilesX; ++tileX) {
+                // Compute actual tile size (may be less than maxTileSize on edges)
+                const int startX = tileX * maxTileSize;
+                const int startY = tileY * maxTileSize;
 
-            float r = *lmBaseColorPtr++;
-            float g = *lmBaseColorPtr++;
-            float b = *lmBaseColorPtr++;
-            float a = *lmBaseColorPtr++;
-            lmPix.baseColor = QVector4D(r, g, b, a);
-            if (a < 1.0f)
-                modelHasBaseColorTransparency[lmIdx] = true;
+                const int tileWidth = qMin(maxTileSize, w - startX);
+                const int tileHeight = qMin(maxTileSize, h - startY);
 
-            r = *lmEmissionPtr++;
-            g = *lmEmissionPtr++;
-            b = *lmEmissionPtr++;
-            lmEmissionPtr++;
-            lmPix.emission = QVector3D(r, g, b);
+                const int endX = startX + tileWidth;
+                const int endY = startY + tileHeight;
 
-            lmPix.isValid() ? ++numValidTexels[lmIdx] : ++unusedEntries;
+                const float minU = startX / double(w);
+                const float maxV = 1.0 - startY / double(h);
+                const float maxU = endX / double(w);
+                const float minV = 1.0 - endY / double(h);
+
+                QSSGLightmapperPrivate::RasterResult raster = rasterizeLightmap(lmIdx,
+                                                                                QSize(tileWidth, tileHeight),
+                                                                                QVector2D(minU, minV),
+                                                                                QVector2D(maxU, maxV));
+                if (!raster.success)
+                    return false;
+
+                QVector4D *worldPositions = reinterpret_cast<QVector4D *>(raster.worldPositions.data());
+                QVector4D *normals = reinterpret_cast<QVector4D *>(raster.normals.data());
+                QVector4D *baseColors = reinterpret_cast<QVector4D *>(raster.baseColors.data());
+                QVector4D *emissions = reinterpret_cast<QVector4D *>(raster.emissions.data());
+
+                for (int y = startY; y < endY; ++y) {
+                    const int ySrc = y - startY;
+                    Q_ASSERT(ySrc < tileHeight);
+                    for (int x = startX; x < endX; ++x) {
+                        const int xSrc = x - startX;
+                        Q_ASSERT(xSrc < tileWidth);
+
+                        const int dstPixelI = y * w + x;
+                        const int srcPixelI = ySrc * tileWidth + xSrc;
+
+                        ModelTexel &lmPix(texels[dstPixelI]);
+
+                        lmPix.worldPos = worldPositions[srcPixelI].toVector3D();
+                        lmPix.normal = normals[srcPixelI].toVector3D();
+                        lmPix.baseColor = baseColors[srcPixelI];
+                        if (lmPix.baseColor[3] < 1.0f)
+                            modelHasBaseColorTransparency[lmIdx] = true;
+                        lmPix.emission = emissions[srcPixelI].toVector3D();
+
+                        lmPix.isValid() ? ++numValidTexels[lmIdx] : ++unusedEntries;
+                    }
+                }
+            }
         }
 
         totalUnusedEntries += unusedEntries;
-
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Successfully rasterized %1/%2 lightmap texels for model %3, lightmap size %4 in %5").
-                                                              arg(texels.size() - unusedEntries).
-                                                              arg(texels.size()).
-                                                              arg(lm.model->lightmapKey).
-                                                              arg(QStringLiteral("(%1, %2)").arg(raster.width).arg(raster.height)).
-                                                              arg(formatDuration(rasterizeTimer.elapsed())));
-
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                       QStringLiteral(
+                               "Successfully rasterized %1/%2 lightmap texels for model %3, lightmap size %4 in %5")
+                               .arg(texels.size() - unusedEntries)
+                               .arg(texels.size())
+                               .arg(lm.model->lightmapKey)
+                               .arg(QStringLiteral("(%1, %2)").arg(w).arg(h))
+                               .arg(formatDuration(rasterizeTimer.elapsed())));
         for (const SubMeshInfo &subMeshInfo : std::as_const(subMeshInfos[lmIdx])) {
             if (!lm.model->castsShadows) // only matters if it's in the raytracer scene
                 continue;
@@ -1672,21 +1694,23 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeDirectLight(int lmIdx)
 
     floodFill(reinterpret_cast<quint32 *>(mask.data()), h, w);
 
-    // Compute ideal tile size
-    const int numTilesX = DIRECT_MAP_UPSCALE_FACTOR;
-    const int numTilesY = DIRECT_MAP_UPSCALE_FACTOR;
-
-    const int tileWidth = (w + DIRECT_MAP_UPSCALE_FACTOR - 1) / DIRECT_MAP_UPSCALE_FACTOR;
-    const int tileHeight = (h + DIRECT_MAP_UPSCALE_FACTOR - 1) / DIRECT_MAP_UPSCALE_FACTOR;
+    // Dynamically compute number of tiles so that each tile is <= MAX_TILE_SIZE
+    constexpr int maxTileSize = MAX_TILE_SIZE / DIRECT_MAP_UPSCALE_FACTOR;
+    const int numTilesX = (w + maxTileSize - 1) / maxTileSize;
+    const int numTilesY = (h + maxTileSize - 1) / maxTileSize;
 
     // Render upscaled tiles then blur and downscale to remove jaggies in output
     for (int tileY = 0; tileY < numTilesY; ++tileY) {
         for (int tileX = 0; tileX < numTilesX; ++tileX) {
-            const int contentTileWidth = tileWidth;
-            const int contentTileHeight = tileHeight;
+            // Compute actual tile size (may be less than maxTileSize on edges)
+            const int startX = tileX * maxTileSize;
+            const int startY = tileY * maxTileSize;
 
-            const int currentTileWidth = contentTileWidth + 2 * padding;
-            const int currentTileHeight = contentTileHeight + 2 * padding;
+            const int tileWidth = qMin(maxTileSize, w - startX);
+            const int tileHeight = qMin(maxTileSize, h - startY);
+
+            const int currentTileWidth = tileWidth + 2 * padding;
+            const int currentTileHeight = tileHeight + 2 * padding;
 
             const int wExp = currentTileWidth * DIRECT_MAP_UPSCALE_FACTOR;
             const int hExp = currentTileHeight * DIRECT_MAP_UPSCALE_FACTOR;
@@ -1696,16 +1720,15 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeDirectLight(int lmIdx)
             QVector<QVector3D> gridTile(numPixelsExpanded);
 
             // Compute full-padded pixel bounds (including kernel padding)
-            const int pixelStartX = tileX * tileWidth - padding;
-            const int pixelStartY = tileY * tileHeight - padding;
-
-            const int pixelEndX = pixelStartX + contentTileWidth + 2 * padding;
-            const int pixelEndY = pixelStartY + contentTileHeight + 2 * padding;
+            const int pixelStartX = startX - padding;
+            const int pixelStartY = startY - padding;
+            const int pixelEndX = startX + tileWidth + padding;
+            const int pixelEndY = startY + tileHeight + padding;
 
             const float minU = pixelStartX / double(w);
             const float maxV = 1.0 - pixelStartY / double(h);
             const float maxU = pixelEndX / double(w);
-            const float minV = 1.0f - pixelEndY / double(h);
+            const float minV = 1.0 - pixelEndY / double(h);
 
             // Temporary storage for rasterized, avoids copy
             QByteArray worldPositionsBuffer;
@@ -1740,9 +1763,7 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeDirectLight(int lmIdx)
             floodFill(reinterpret_cast<quint32 *>(maskTile.data()), hExp, wExp); // Flood fill mask in place
             gridTile = applyGaussianBlur(gridTile, maskTile, wExp, hExp, 3.f);
 
-            const int startX = tileX * tileWidth;
             const int endX = qMin(w, startX + tileWidth);
-            const int startY = tileY * tileHeight;
             const int endY = qMin(h, startY + tileHeight);
 
             // Downscale and put in the finished grid
