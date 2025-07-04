@@ -7,6 +7,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <QtGui/qquaternion.h>
+
 #include <limits>
 
 class tst_QQuick3DPerspectiveCamera : public QObject

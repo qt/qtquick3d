@@ -6,6 +6,8 @@
 
 #include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
 
+#include <QtGui/qquaternion.h>
+
 #ifdef __OBJC__
 #import <ARKit/ARKit.h>
 #else

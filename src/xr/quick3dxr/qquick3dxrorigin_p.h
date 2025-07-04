@@ -23,6 +23,8 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/qqml.h>
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuick3DXrView;

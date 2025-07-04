@@ -13,6 +13,8 @@
 
 #include <private/qquick3djoint_p.h>
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
