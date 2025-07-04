@@ -4,6 +4,8 @@
 #include "qquick3dparticleutils_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 const float qt_quick3d_sine_table[QT_QUICK3D_SINE_TABLE_SIZE] = {

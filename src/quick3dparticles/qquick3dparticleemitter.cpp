@@ -8,6 +8,8 @@
 #include "qquick3dparticlespritesequence_p.h"
 #include "qquick3dparticlemodelblendparticle_p.h"
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!

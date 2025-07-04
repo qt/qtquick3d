@@ -25,6 +25,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuaternion;
+
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
 {
     Q_OBJECT

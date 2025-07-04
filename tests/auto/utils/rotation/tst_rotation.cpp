@@ -5,6 +5,8 @@
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <QtGui/qquaternion.h>
+
 class tst_RotationDataClass : public QObject
 {
     Q_OBJECT

@@ -11,6 +11,8 @@
 #include <QtCore/QVariant>
 #include <qtquick3d_tracepoints_p.h>
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_TRACE_POINT(qtquick3d, QSSG_renderPass_entry, const QString &renderPass);
