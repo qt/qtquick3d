@@ -33,6 +33,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 struct QSSGBufferManagerStat
 {
 enum class Level
@@ -151,7 +153,7 @@ static QPair<QSSGMesh::Mesh, QString> loadFromLightmapFile(const QString &lightm
         QBuffer buffer(&meshData);
         buffer.open(QIODevice::ReadOnly);
         retVal.first = QSSGMesh::Mesh::loadMesh(&buffer, 1);
-        retVal.second = QFileInfo(lightmapPath).fileName() + " [" + lightmapKey + "]";
+        retVal.second = QFileInfo(lightmapPath).fileName() + " ["_L1 + lightmapKey + u']';
     }
 
     return retVal;
