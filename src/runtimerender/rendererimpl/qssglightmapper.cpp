@@ -22,6 +22,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 // References:
 //   https://ndotl.wordpress.com/2018/08/29/baking-artifact-free-lightmaps/
 //   https://www.scratchapixel.com/lessons/3d-basic-rendering/global-illumination-path-tracing/
@@ -2638,8 +2640,9 @@ bool QSSGLightmapper::bake()
     // the baking process is finished successfully, replace the .tmp file with it.
     // Put the work-file next to the destination file so we can just do a rename/move
     // of the file with hopefully no potential inter-filesystem issues.
-    QSharedPointer<QFile> workFile = QSharedPointer<QFile>(new QFile(QFileInfo(d->options.source).absoluteDir().path() + "/qt_lightmapper_work_file_"
-                                                                     + QString::number(QCoreApplication::applicationPid())));
+    const auto workFile = QSharedPointer<QFile>::create(QFileInfo(d->options.source).absoluteDir().path()
+                                                        + "/qt_lightmapper_work_file_"_L1
+                                                        + QString::number(QCoreApplication::applicationPid()));
     bool deleteWorkFile = true;
     auto cleanupWorkFile = qScopeGuard([workFile, &deleteWorkFile] {
         if (deleteWorkFile)
@@ -2845,7 +2848,7 @@ bool QSSGLightmapper::bake()
         return false;
     }
 
-    const QString tmpPath = QFileInfo(d->options.source).absoluteFilePath() + ".tmp";
+    const QString tmpPath = QFileInfo(d->options.source).absoluteFilePath() + ".tmp"_L1;
     QFile::remove(tmpPath);
     if (workFile->rename(tmpPath)) {
         deleteWorkFile = false;
