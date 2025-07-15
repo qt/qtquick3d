@@ -162,14 +162,12 @@ void QQuick3DXrView::setPassthroughEnabled(bool enable)
         return;
     }
 
+    const bool orgPassthroughEnabled = m_xrManager.isPassthroughEnabled();
     // bail if passthrough is not supported
-    if (enable && !m_xrManager.supportsPassthrough()) {
+    if (!m_xrManager.setPassthroughEnabled(enable)) {
         qWarning("Enabling Passthrough is not supported.");
         return;
     }
-
-    const bool orgPassthroughEnabled = m_xrManager.isPassthroughEnabled();
-    m_xrManager.setPassthroughEnabled(enable);
 
     if (orgPassthroughEnabled != m_xrManager.isPassthroughEnabled())
         emit passthroughEnabledChanged();
