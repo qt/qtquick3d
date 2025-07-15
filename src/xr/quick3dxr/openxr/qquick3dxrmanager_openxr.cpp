@@ -338,8 +338,6 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 
     QVector<XrCompositionLayerBaseHeader*> layers;
 
-    m_passthroughSupported = supportsPassthrough();
-
     XrCompositionLayerPassthroughFB passthroughCompLayer{};
     passthroughCompLayer.type = XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB;
     if (m_enablePassthrough && m_passthroughSupported) {
@@ -1147,11 +1145,12 @@ void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
     }
 }
 
-void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
+bool QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
-    m_enablePassthrough = enable;
+    m_passthroughSupported = supportsPassthrough();
 
     if (m_passthroughSupported) {
+        m_enablePassthrough = enable;
         if (m_enablePassthrough) {
             if (m_passthroughFeature == XR_NULL_HANDLE)
                 createMetaQuestPassthrough(); // Create and start
@@ -1171,6 +1170,7 @@ void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
                 pauseMetaQuestPassthrough();
         }
     }
+    return m_passthroughSupported;
 }
 
 void QQuick3DXrManagerPrivate::setDepthSubmissionEnabled(bool enable)
@@ -1994,8 +1994,7 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     // Passthrough extensions (require manifest feature to work)
     // <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
     uint32_t passthroughSpecVersion = 0;
-    m_passthroughSupported = isExtensionSupported(XR_FB_PASSTHROUGH_EXTENSION_NAME, extensionProperties, &passthroughSpecVersion);
-    if (m_passthroughSupported) {
+    if (isExtensionSupported(XR_FB_PASSTHROUGH_EXTENSION_NAME, extensionProperties, &passthroughSpecVersion)) {
         qCDebug(lcQuick3DXr, "Passthrough extension is supported, spec version %u", passthroughSpecVersion);
         enabledExtensions.append(XR_FB_PASSTHROUGH_EXTENSION_NAME);
     } else {
