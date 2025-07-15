@@ -91,10 +91,11 @@ bool QQuick3DXrManager::isValid() const
     return d->isValid();
 }
 
-void QQuick3DXrManager::setPassthroughEnabled(bool enabled)
+bool QQuick3DXrManager::setPassthroughEnabled(bool enabled)
 {
     Q_D(QQuick3DXrManager);
-    d->setPassthroughEnabled(enabled);
+    // Returns true if passthrough is supported
+    return d->setPassthroughEnabled(enabled);
 }
 
 bool QQuick3DXrManager::isPassthroughEnabled() const

@@ -78,7 +78,7 @@ public:
     void setMultiViewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const;
 
-    void setPassthroughEnabled(bool enable);
+    bool setPassthroughEnabled(bool enable);
     bool isPassthroughEnabled() const { return false; }
     bool supportsPassthrough() const { return false; }
 

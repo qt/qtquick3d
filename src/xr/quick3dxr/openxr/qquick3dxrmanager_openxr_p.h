@@ -78,7 +78,7 @@ public:
     void setMultiViewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const { return m_multiviewRendering; }
 
-    void setPassthroughEnabled(bool enable);
+    [[nodiscard]] bool setPassthroughEnabled(bool enable);
     bool isPassthroughEnabled() const { return m_enablePassthrough; }
 
     void setDepthSubmissionEnabled(bool enable);
