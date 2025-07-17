@@ -1396,7 +1396,14 @@ QQuick3DLightmapBaker *QQuick3DViewport::lightmapBaker()
 */
 void QQuick3DViewport::bakeLightmap()
 {
-    lightmapBaker()->bake();
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer || !renderer->m_layer->renderData)
+        return;
+
+    const bool currentlyBaking = renderer->m_layer->renderData->lightmapBaker != nullptr;
+
+    if (!currentlyBaking)
+        lightmapBaker()->bake();
 }
 
 /*!
@@ -1404,7 +1411,14 @@ void QQuick3DViewport::bakeLightmap()
 */
 void QQuick3DViewport::denoiseLightmap()
 {
-    lightmapBaker()->denoise();
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer || !renderer->m_layer->renderData)
+        return;
+
+    const bool currentlyBaking = renderer->m_layer->renderData->lightmapBaker != nullptr;
+
+    if (!currentlyBaking)
+        lightmapBaker()->denoise();
 }
 
 

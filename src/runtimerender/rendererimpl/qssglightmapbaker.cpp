@@ -4,7 +4,11 @@
 #include <QString>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglightmapbaker_p.h>
+#include <QThreadPool>
 #include "qssgrendercontextcore.h"
+#if QT_CONFIG(opengl)
+#include <QOffscreenSurface>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -13,20 +17,17 @@ struct QSSGLightmapBakerPrivate
     QSSGLightmapBaker::Context ctx;
     std::unique_ptr<QSSGLightmapper> lightmapper = nullptr;
     QSSGLightmapBaker::Status currentStatus = QSSGLightmapBaker::Status::Preparing;
+    // Use a local threadpool to be able to set highest thread priority on the bake thread
+    QThreadPool localThreadPool;
+    QOffscreenSurface *fallbackSurface = nullptr;
 };
 
 QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
     : d(new QSSGLightmapBakerPrivate)
 {
     d->ctx = ctx;
-
-    auto &env = d->ctx.env;
-    auto &cb = d->ctx.callbacks;
-
     d->currentStatus = QSSGLightmapBaker::Status::Preparing;
-    d->lightmapper = std::make_unique<QSSGLightmapper>(env.rhiCtx, env.renderer);
-    d->lightmapper->setOptions(env.lmOptions);
-    d->lightmapper->setOutputCallback(cb.lightmapBakingOutput);
+    d->localThreadPool.setMaxThreadCount(1);
 }
 
 QSSGLightmapBaker::Status QSSGLightmapBaker::process()
@@ -43,36 +44,71 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
         callbacks.setCurrentlyBaking(true);
         callbacks.triggerNewFrame(true);
 
+#if QT_CONFIG(opengl)
+        QMetaObject::invokeMethod(qApp, [this]() {
+            d->fallbackSurface = QRhiGles2InitParams::newFallbackSurface();
+            d->currentStatus = Status::Running;
+        },
+        Qt::QueuedConnection);
+#else
         d->currentStatus = Status::Running;
+#endif
     } else if (d->currentStatus == Status::Running) {
-        {
-            QRhiCommandBuffer *cb = env.rhiCtx->commandBuffer();
-            cb->debugMarkBegin("Quick3D lightmap baking/denoising");
-            if (settings.bakeRequested) {
-                // bakedLightingModels contains all models with
-                // usedInBakedLighting: true. These, together with lights that
-                // have a bakeMode set to either Indirect or All, form the
-                // lightmapped scene. A lightmap is stored persistently only
-                // for models that have their lightmapKey set.
-                const auto &bakedLightingModels = callbacks.modelsToBake();
-                for (int i = 0, ie = bakedLightingModels.size(); i != ie; ++i)
-                    d->lightmapper->add(bakedLightingModels[i]);
+        d->lightmapper = std::make_unique<QSSGLightmapper>();
+        d->lightmapper->setRhiBackend(env.rhiCtx->rhi()->backend());
+        d->lightmapper->setOptions(env.lmOptions);
+        d->lightmapper->setOutputCallback(callbacks.lightmapBakingOutput);
+        d->lightmapper->setDenoiseOnly(settings.denoiseRequested);
 
-                d->lightmapper->bake();
-            } else if (settings.denoiseRequested) {
-                d->lightmapper->denoise();
+        // bakedLightingModels contains all models with
+        // usedInBakedLighting: true. These, together with lights that
+        // have a bakeMode set to either Indirect or All, form the
+        // lightmapped scene. A lightmap is stored persistently only
+        // for models that have their lightmapKey set.
+        const auto &bakedLightingModels = callbacks.modelsToBake();
+        for (int i = 0, ie = bakedLightingModels.size(); i != ie; ++i)
+            d->lightmapper->add(bakedLightingModels[i]);
+
+        if (!d->lightmapper->setupLights(*env.renderer)) {
+            callbacks.setCurrentlyBaking(false);
+            callbacks.triggerNewFrame(true);
+            if (settings.quitWhenFinished) {
+                qDebug("Lightmap baking/denoising done, exiting application");
+                QMetaObject::invokeMethod(qApp, "quit");
             }
-            cb->debugMarkEnd();
+            return Status::Finished;
         }
 
-        callbacks.setCurrentlyBaking(false);
-        callbacks.triggerNewFrame(true);
-        d->currentStatus = Status::Finished;
+        QRhiCommandBuffer *cb = env.rhiCtx->commandBuffer();
+        cb->debugMarkBegin("Quick3D lightmap baking/denoising");
 
-        if (settings.quitWhenFinished) {
-            qDebug("Lightmap baking/denoising done, exiting application");
-            QMetaObject::invokeMethod(qApp, "quit");
-        }
+        d->currentStatus = Status::Baking;
+        d->localThreadPool.start([this, callbacks, settings] {
+            QThread::currentThread()->setPriority(QThread::HighestPriority);
+            d->lightmapper->run(d->fallbackSurface);
+
+            callbacks.setCurrentlyBaking(false);
+            callbacks.triggerNewFrame(true);
+
+#if QT_CONFIG(opengl)
+            QMetaObject::invokeMethod(qApp, [this]() {
+                delete d->fallbackSurface;
+                d->fallbackSurface = nullptr;
+                d->currentStatus = Status::Finished;
+            },
+            Qt::QueuedConnection);
+#else
+            d->currentStatus = Status::Finished;
+#endif
+            if (settings.quitWhenFinished) {
+                qDebug("Lightmap baking/denoising done, exiting application");
+                QMetaObject::invokeMethod(qApp, "quit");
+            }
+        });
+
+        // Wait until lightmapper is finished initializing
+        d->lightmapper->waitForInit();
+        cb->debugMarkEnd();
     }
 
     return d->currentStatus;
