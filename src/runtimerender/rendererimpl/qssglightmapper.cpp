@@ -2423,13 +2423,15 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         return false;
     }
 
-    // Clone meshes and metadata for final file
+    QSet<QString> lightmapKeys;
     for (const QString &key : tmpFile->getKeys()) {
         if (!key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct)) &&
             !key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect)) &&
             !key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask))) {
-
+            // Clone meshes and metadata for final file
             finalFile->writeData(key, tmpFile->readData(key));
+        } else if (key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct))) {
+            lightmapKeys.insert(key.chopped(7)); // chop "_direct"
         }
     }
 
@@ -2440,7 +2442,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         return false;
     }
 
-    const int bakedLightingModelCount = bakedLightingModels.size();
+    const int bakedLightingModelCount = lightmapKeys.size();
     if (bakedLightingModelCount == 0)
         return true;
 
@@ -2453,24 +2455,21 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     }
     Q_ASSERT(shader.isValid());
 
-    for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
+    int lmIdx = -1;
+    for (const QString &key : lightmapKeys) {
+        ++lmIdx;
         auto incrementTracker = QScopeGuard([this, lmIdx, bakedLightingModelCount]() {
             progressTracker.denoisedModelDone(lmIdx + 1, bakedLightingModelCount);
         });
 
-        const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
-
-        if (!lm.model->hasLightmap())
-            continue;
 
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
-                       QStringLiteral("[%2/%3] denoising '%1'").arg(lm.model->lightmapKey).arg(lmIdx + 1).arg(bakedLightingModelCount));
+                       QStringLiteral("[%2/%3] denoising '%1'").arg(key).arg(lmIdx + 1).arg(bakedLightingModelCount));
 
-        const QString key = lm.model->lightmapKey;
-        const QString keyFinal = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Final);
-        const QString keyDirect = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct);
-        const QString keyIndirect = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect);
-        const QString keyMask = lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask);
+        const QString keyFinal = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Final);
+        const QString keyDirect = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct);
+        const QString keyIndirect = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect);
+        const QString keyMask = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask);
 
         QVariantMap metadata = tmpFile->readMetadata(key);
         QByteArray indirect = tmpFile->readF32Image(keyIndirect);
@@ -2480,7 +2479,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         if (!metadata.contains(QStringLiteral("width")) || !metadata.contains(QStringLiteral("height"))
             || indirect.isEmpty() || direct.isEmpty() || mask.isEmpty()) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Error,
-                           QStringLiteral("[%2/%3] Failed to denoise '%1'").arg(lm.model->lightmapKey).arg(lmIdx + 1).arg(bakedLightingModelCount));
+                           QStringLiteral("[%2/%3] Failed to denoise '%1'").arg(key).arg(lmIdx + 1).arg(bakedLightingModelCount));
             continue;
         }
 
