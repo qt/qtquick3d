@@ -31,6 +31,7 @@ public:
     enum class Status {
         Preparing,
         Running,
+        Baking,
         Finished
     };
 

@@ -81,10 +81,7 @@ void QQuick3DLightmapBaker::bake()
             m_currentlyBaking = false;
             QQuickWindowPrivate::get(window)->updatesEnabled = true;
         } else if (status != BakingStatus::None) {
-            if (status == BakingStatus::Info)
-                QQuickWindowPrivate::get(window)->updatesEnabled = false;
-            else if (status == BakingStatus::Cancelled || status == BakingStatus::Failed) {
-                QQuickWindowPrivate::get(window)->updatesEnabled = true;
+            if (status == BakingStatus::Cancelled || status == BakingStatus::Failed) {
                 m_currentlyBaking = false;
             }
 
@@ -153,12 +150,8 @@ void QQuick3DLightmapBaker::denoise()
             m_currentlyBaking = false;
             QQuickWindowPrivate::get(window)->updatesEnabled = true;
         } else if (status != BakingStatus::None) {
-            if (status == BakingStatus::Info)
-                QQuickWindowPrivate::get(window)->updatesEnabled = false;
-            else if (status == BakingStatus::Cancelled || status == BakingStatus::Failed) {
-                QQuickWindowPrivate::get(window)->updatesEnabled = true;
+            if (status == BakingStatus::Cancelled || status == BakingStatus::Failed)
                 m_currentlyBaking = false;
-            }
 
             if (m_lmWindow) {
                 QObject *rootObject = m_lmWindow->rootObject();

@@ -18,6 +18,12 @@
 #include <QtQuick3DRuntimeRender/private/qssglightmapio_p.h>
 #include <QDir>
 #include <QBuffer>
+#include <QWaitCondition>
+#include <QMutex>
+#if QT_CONFIG(opengl)
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#endif
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -133,10 +139,18 @@ static QString formatDuration(quint64 milliseconds, bool showMilliseconds = true
 
 struct QSSGLightmapperPrivate
 {
+    explicit QSSGLightmapperPrivate() = default;
+
     QSSGLightmapperOptions options;
-    QSSGRhiContext *rhiCtx;
-    QSSGRenderer *renderer;
     QVector<QSSGBakedLightingModel> bakedLightingModels;
+    QRhi::Implementation rhiBackend = QRhi::Null;
+    std::unique_ptr<QSSGRenderContextInterface> rhiCtxInterface;
+    std::unique_ptr<QSSGRenderer> renderer;
+
+    // For the main thread to wait on the lightmapper being initialized
+    QWaitCondition initCondition;
+    QMutex initMutex;
+
     QSSGLightmapper::Callback outputCallback;
     QSSGLightmapper::BakingControl bakingControl;
     QElapsedTimer totalTimer;
@@ -228,6 +242,7 @@ struct QSSGLightmapperPrivate
     QVector<int> geomLightmapMap; // [geomId] -> index in lightmaps (NB lightmap is per-model, geomId is per-submesh)
     QVector<float> subMeshOpacityMap; // [geomId] -> opacity
 
+    bool denoiseOnly = false;
     int totalUnusedEntries = 0;
     double totalProgress = 0; // [0-1]
     qint64 estimatedTimeRemaining = -1; // ms
@@ -335,12 +350,8 @@ private:
 
 static const int LM_SEAM_BLEND_ITER_COUNT = 4;
 
-QSSGLightmapper::QSSGLightmapper(QSSGRhiContext *rhiCtx, QSSGRenderer *renderer)
-    : d(new QSSGLightmapperPrivate)
+QSSGLightmapper::QSSGLightmapper() : d(new QSSGLightmapperPrivate())
 {
-    d->rhiCtx = rhiCtx;
-    d->renderer = renderer;
-
 #ifdef __SSE2__
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
@@ -400,6 +411,16 @@ qsizetype QSSGLightmapper::add(const QSSGBakedLightingModel &model)
 {
     d->bakedLightingModels.append(model);
     return d->bakedLightingModels.size() - 1;
+}
+
+void QSSGLightmapper::setRhiBackend(QRhi::Implementation backend)
+{
+    d->rhiBackend = backend;
+}
+
+void QSSGLightmapper::setDenoiseOnly(bool value)
+{
+    d->denoiseOnly = value;
 }
 
 static void embreeErrFunc(void *, RTCError error, const char *str)
@@ -472,12 +493,6 @@ static QMatrix4x4 extractScaleMatrix(const QMatrix4x4 &transform)
 
 bool QSSGLightmapperPrivate::commitGeometry()
 {
-    QSSGLayerRenderData *renderData = QSSGRendererPrivate::getCurrentRenderData(*renderer);
-    if (!renderData) {
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("lm: No render data, cannot bake lightmaps"));
-        return false;
-    }
-
     if (bakedLightingModels.isEmpty()) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("No models with usedInBakedLighting, cannot bake"));
         return false;
@@ -734,44 +749,6 @@ bool QSSGLightmapperPrivate::commitGeometry()
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Found %1 models for the lightmapped scene").arg(bakedLightingModelCount));
 
-    // All subsets for a model reference the same QSSGShaderLight list,
-    // take the first one, but filter it based on the bake flag.
-    for (const QSSGShaderLight &sl : static_cast<QSSGSubsetRenderable *>(bakedLightingModels.first().renderables.first().obj)->lights) {
-        if (!sl.light->m_bakingEnabled)
-            continue;
-
-        Light light;
-        light.indirectOnly = !sl.light->m_fullyBaked;
-        light.direction = sl.direction;
-
-        const float brightness = sl.light->m_brightness;
-        light.color = QVector3D(sl.light->m_diffuseColor.x() * brightness,
-                                sl.light->m_diffuseColor.y() * brightness,
-                                sl.light->m_diffuseColor.z() * brightness);
-
-        if (sl.light->type == QSSGRenderLight::Type::PointLight
-                || sl.light->type == QSSGRenderLight::Type::SpotLight)
-        {
-            const QMatrix4x4 lightGlobalTransform = renderData->getGlobalTransform(*sl.light);
-            light.worldPos = QSSGRenderNode::getGlobalPos(lightGlobalTransform);
-            if (sl.light->type == QSSGRenderLight::Type::SpotLight) {
-                light.type = Light::Spot;
-                light.cosConeAngle = qCos(qDegreesToRadians(sl.light->m_coneAngle));
-                light.cosInnerConeAngle = qCos(qDegreesToRadians(
-                                                   qMin(sl.light->m_innerConeAngle, sl.light->m_coneAngle)));
-            } else {
-                light.type = Light::Point;
-            }
-            light.constantAttenuation = QSSGUtils::aux::translateConstantAttenuation(sl.light->m_constantFade);
-            light.linearAttenuation = QSSGUtils::aux::translateLinearAttenuation(sl.light->m_linearFade);
-            light.quadraticAttenuation = QSSGUtils::aux::translateQuadraticAttenuation(sl.light->m_quadraticFade);
-        } else {
-            light.type = Light::Directional;
-        }
-
-        lights.append(light);
-    }
-
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Found %1 lights enabled for baking").arg(lights.size()));
 
     rdev = rtcNewDevice(nullptr);
@@ -868,6 +845,7 @@ QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(i
 {
     QSSGLightmapperPrivate::RasterResult result;
 
+    QSSGRhiContext *rhiCtx = rhiCtxInterface->rhiContext().get();
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
@@ -1186,7 +1164,8 @@ QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(i
 
 bool QSSGLightmapperPrivate::prepareLightmaps()
 {
-    QRhi *rhi = rhiCtx->rhi();
+    QRhi *rhi = rhiCtxInterface->rhiContext()->rhi();
+    Q_ASSERT(rhi);
     if (!rhi->isTextureFormatSupported(QRhiTexture::RGBA32F)) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("FP32 textures not supported, cannot bake"));
         return false;
@@ -1299,6 +1278,74 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
     }
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap preparing done"));
+    return true;
+}
+
+bool QSSGLightmapper::setupLights(const QSSGRenderer &renderer)
+{
+    QSSGLayerRenderData *renderData = QSSGRendererPrivate::getCurrentRenderData(renderer);
+    if (!renderData) {
+        qWarning() << "lm: No render data, cannot bake lightmaps";
+        return false;
+    }
+
+    if (d->bakedLightingModels.isEmpty()) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                          QStringLiteral("No models provided, cannot bake lightmaps"));
+        return false;
+    }
+
+    // All subsets for a model reference the same QSSGShaderLight list,
+    // take the first one, but filter it based on the bake flag.
+    // also tracks seenLights, as multiple models might reference the same lights.
+    auto lights = static_cast<QSSGSubsetRenderable *>(d->bakedLightingModels.first().renderables.first().obj)->lights;
+    for (const QSSGShaderLight &sl : lights) {
+        if (!sl.light->m_bakingEnabled)
+            continue;
+
+        QSSGLightmapperPrivate::Light light;
+        light.indirectOnly = !sl.light->m_fullyBaked;
+        light.direction = sl.direction;
+
+        const float brightness = sl.light->m_brightness;
+        light.color = QVector3D(sl.light->m_diffuseColor.x() * brightness,
+                                sl.light->m_diffuseColor.y() * brightness,
+                                sl.light->m_diffuseColor.z() * brightness);
+
+        if (sl.light->type == QSSGRenderLight::Type::PointLight
+            || sl.light->type == QSSGRenderLight::Type::SpotLight) {
+            const QMatrix4x4 lightGlobalTransform = renderData->getGlobalTransform(*sl.light);
+            light.worldPos = QSSGRenderNode::getGlobalPos(lightGlobalTransform);
+            if (sl.light->type == QSSGRenderLight::Type::SpotLight) {
+                light.type = QSSGLightmapperPrivate::Light::Spot;
+                light.cosConeAngle = qCos(qDegreesToRadians(sl.light->m_coneAngle));
+                light.cosInnerConeAngle = qCos(
+                        qDegreesToRadians(qMin(sl.light->m_innerConeAngle, sl.light->m_coneAngle)));
+            } else {
+                light.type = QSSGLightmapperPrivate::Light::Point;
+            }
+            light.constantAttenuation = QSSGUtils::aux::translateConstantAttenuation(
+                    sl.light->m_constantFade);
+            light.linearAttenuation = QSSGUtils::aux::translateLinearAttenuation(
+                    sl.light->m_linearFade);
+            light.quadraticAttenuation = QSSGUtils::aux::translateQuadraticAttenuation(
+                    sl.light->m_quadraticFade);
+        } else {
+            light.type = QSSGLightmapperPrivate::Light::Directional;
+        }
+
+        d->lights.append(light);
+    }
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                      QStringLiteral("Total lights registered: %1").arg(d->lights.size()));
+
+    if (d->lights.isEmpty()) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
+                          QStringLiteral("No lights with baking enabled"));
+        return false;
+    }
+
     return true;
 }
 
@@ -1601,6 +1648,7 @@ QVector3D QSSGLightmapperPrivate::sampleDirectLight(QVector3D worldPos, QVector3
 
 QByteArray QSSGLightmapperPrivate::dilate(const QSize &pixelSize, const QByteArray &image)
 {
+    QSSGRhiContext *rhiCtx = rhiCtxInterface->rhiContext().get();
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -2288,7 +2336,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         }
     }
 
-    QRhi *rhi = rhiCtx->rhi();
+    QRhi *rhi = rhiCtxInterface->rhiContext()->rhi();
     Q_ASSERT(rhi);
     if (!rhi->isFeatureSupported(QRhi::Compute)) {
         qFatal("Compute is not supported, denoising disabled");
@@ -2336,7 +2384,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         }
 
         QRhiCommandBuffer *cb = nullptr;
-        cb = rhiCtx->commandBuffer();
+        cb = rhiCtxInterface->rhiContext()->commandBuffer();
         Q_ASSERT(cb);
 
         QRhiResourceUpdateBatch *u = rhi->nextResourceUpdateBatch();
@@ -2600,6 +2648,11 @@ bool QSSGLightmapper::bake()
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Baking failed"));
         return false;
     }
+
+    // Main thread can continue
+    d->initMutex.lock();
+    d->initCondition.wakeAll();
+    d->initMutex.unlock();
 
     if (d->userCancelled()) {
         d->updateStage(QStringLiteral("Cancelled"));
@@ -2904,9 +2957,153 @@ bool QSSGLightmapper::denoise() {
     return true;
 }
 
+void QSSGLightmapper::run(QOffscreenSurface *fallbackSurface)
+{
+    auto releaseMainThread = qScopeGuard([&] {
+        d->initMutex.lock();
+        d->initCondition.wakeAll();
+        d->initMutex.unlock();
+    });
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                      QStringLiteral("Total models registered: %1").arg(d->bakedLightingModels.size()));
+
+    if (d->bakedLightingModels.isEmpty()) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("No Models to bake"));
+        return;
+    }
+
+    if (!isValidSavePath(d->options.source)) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Source path %1 is not a writable location").
+                                                                 arg(d->options.source));
+        return;
+    }
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Source path: %1").arg(d->options.source));
+
+    const QRhi::Flags flags = QRhi::EnableTimestamps | QRhi::EnableDebugMarkers;
+#if QT_CONFIG(vulkan)
+    std::unique_ptr<QVulkanInstance> vulkanInstance; // Needs to live until rhi goes out of scope
+#endif
+    std::unique_ptr<QRhi> rhi;
+
+    switch (d->rhiBackend) {
+    case QRhi::Vulkan: {
+#if QT_CONFIG(vulkan)
+        vulkanInstance = std::make_unique<QVulkanInstance>();
+        vulkanInstance->create();
+        QRhiVulkanInitParams params;
+        params.inst = vulkanInstance.get();
+        rhi = std::unique_ptr<QRhi>(QRhi::create(d->rhiBackend, &params, flags));
+#endif
+        break;
+    }
+    case QRhi::OpenGLES2: {
+#if QT_CONFIG(opengl)
+        QRhiGles2InitParams params;
+        if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) {
+            // OpenGL 4.3 or higher
+            params.format.setProfile(QSurfaceFormat::CoreProfile);
+            params.format.setVersion(4, 3);
+        } else {
+            // OpenGL ES 3.1 or higher
+            params.format.setVersion(3, 1);
+        }
+        params.fallbackSurface = fallbackSurface;
+        rhi = std::unique_ptr<QRhi>(QRhi::create(d->rhiBackend, &params, flags));
+#endif
+        break;
+    }
+    case QRhi::D3D11: {
+#if defined(Q_OS_WIN)
+        QRhiD3D11InitParams params;
+        rhi = std::unique_ptr<QRhi>(QRhi::create(d->rhiBackend, &params, flags));
+#endif
+        break;
+    }
+    case QRhi::D3D12: {
+#if defined(Q_OS_WIN)
+        QRhiD3D12InitParams params;
+        rhi = std::unique_ptr<QRhi>(QRhi::create(d->rhiBackend, &params, flags));
+#endif
+        break;
+    }
+    case QRhi::Metal: {
+#if QT_CONFIG(metal)
+        QRhiMetalInitParams params;
+        rhi = std::unique_ptr<QRhi>(QRhi::create(d->rhiBackend, &params, flags));
+#endif
+        break;
+    }
+    case QRhi::Null:
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("QRhi backend is null"));
+        return;
+    default:
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Failed to initialize QRhi"));
+        return;
+    }
+
+    if (!rhi) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create QRhi, cannot bake"));
+        return;
+    }
+
+    if (!rhi->isTextureFormatSupported(QRhiTexture::RGBA32F)) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("FP32 textures not supported, cannot bake"));
+        return;
+    }
+    if (rhi->resourceLimit(QRhi::MaxColorAttachments) < 4) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Multiple render targets not supported, cannot bake"));
+        return;
+    }
+    if (!rhi->isFeatureSupported(QRhi::NonFillPolygonMode)) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Line polygon mode not supported, cannot bake"));
+        return;
+    }
+
+    if (!rhi->isFeatureSupported(QRhi::Compute)) {
+        qFatal("Compute is not supported, cannot bake");
+        return;
+    }
+
+    d->rhiCtxInterface = std::
+            unique_ptr<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhi.get()));
+    d->renderer = std::unique_ptr<QSSGRenderer>(new QSSGRenderer());
+
+    QSSGRendererPrivate::setRenderContextInterface(*d->renderer, d->rhiCtxInterface.get());
+
+    QRhiCommandBuffer *cb;
+    rhi->beginOffscreenFrame(&cb);
+
+    QSSGRhiContext *rhiCtx = d->rhiCtxInterface->rhiContext().get();
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+    rhiCtxD->setCommandBuffer(cb);
+
+    d->rhiCtxInterface->bufferManager()->setRenderContextInterface(d->rhiCtxInterface.get());
+
+    if (d->denoiseOnly) {
+        denoise();
+    } else {
+        bake();
+    }
+
+    rhi->endOffscreenFrame();
+    rhi->finish();
+
+    d->renderer.reset();
+    d->rhiCtxInterface.reset();
+}
+
+void QSSGLightmapper::waitForInit()
+{
+    d->initMutex.lock();
+    d->initCondition.wait(&d->initMutex);
+    d->initMutex.unlock();
+}
+
 #else
 
-QSSGLightmapper::QSSGLightmapper(QSSGRhiContext *, QSSGRenderer *)
+QSSGLightmapper::QSSGLightmapper()
 {
 }
 
@@ -2931,14 +3128,35 @@ qsizetype QSSGLightmapper::add(const QSSGBakedLightingModel &)
     return 0;
 }
 
-bool QSSGLightmapper::bake()
+void QSSGLightmapper::setRhiBackend(QRhi::Implementation)
 {
-    qWarning("Qt Quick 3D was built without the lightmapper; cannot bake lightmaps");
+}
+
+bool QSSGLightmapper::setupLights(const QSSGRenderer &)
+{
     return false;
 }
 
-bool QSSGLightmapper::denoise() {
-    qWarning("Qt Quick 3D was built without the lightmapper; cannot denoise lightmaps");
+void QSSGLightmapper::setDenoiseOnly(bool)
+{
+}
+
+void QSSGLightmapper::run(QOffscreenSurface *)
+{
+    qWarning("Qt Quick 3D was built without the lightmapper; cannot bake lightmaps");
+}
+
+void QSSGLightmapper::waitForInit()
+{
+}
+
+bool QSSGLightmapper::bake()
+{
+    return false;
+}
+
+bool QSSGLightmapper::denoise()
+{
     return false;
 }
 
