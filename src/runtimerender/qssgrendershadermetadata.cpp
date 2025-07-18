@@ -24,6 +24,8 @@
 // }*/
 // #endif // QQ3D_SHADER_META
 
+QT_BEGIN_NAMESPACE
+
 namespace QSSGRenderShaderMetadata {
 
 const char *shaderMetaStart() { return "#ifdef QQ3D_SHADER_META"; }
@@ -219,4 +221,6 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
     return result;
 }
 
-} // namespace
+} // namespace QSSGRenderShaderMetadata
+
+QT_END_NAMESPACE

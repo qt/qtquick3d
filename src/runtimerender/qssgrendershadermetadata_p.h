@@ -19,6 +19,8 @@
 #include <QtCore/qvector.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QSSGRenderShaderMetadata {
 
 struct Uniform
@@ -56,6 +58,8 @@ struct ShaderMetaData
 };
 
 ShaderMetaData getShaderMetaData(const QByteArray &data);
+
+QT_END_NAMESPACE
 
 } // namespace
 

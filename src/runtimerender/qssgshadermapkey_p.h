@@ -20,6 +20,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 
+QT_BEGIN_NAMESPACE
+
 struct QSSGShaderMapKey
 {
     QByteArray m_name;
@@ -62,5 +64,7 @@ inline size_t qHash(const QSSGShaderMapKey &key, size_t seed)
 {
     return key.m_hashCode ^ seed;
 }
+
+QT_END_NAMESPACE
 
 #endif
