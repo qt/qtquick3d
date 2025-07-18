@@ -102,12 +102,14 @@ void HeightFieldGeometry::setExtents(const QVector3D &newExtents)
     emit extentsChanged();
 }
 
+namespace {
 struct HeightFieldVertex
 {
     QVector3D position;
     QVector3D normal;
     QVector2D uv;
 };
+}
 
 void HeightFieldGeometry::updateData()
 {
