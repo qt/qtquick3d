@@ -139,6 +139,96 @@ static QString formatDuration(quint64 milliseconds, bool showMilliseconds = true
     return showMilliseconds ? QStringLiteral("%1ms").arg(partMilliseconds) : QStringLiteral("0s");
 }
 
+enum class Stage {
+    Direct = 0,
+    Indirect = 1,
+    Denoise = 2
+};
+
+struct ProgressTracker
+{
+    void initBake(quint32 numIndirectSamples, quint32 numIndirectBounces)
+    {
+        // Just guesstimating the relative work loads here
+        const double direct = 2;
+        const double indirect = numIndirectSamples * numIndirectBounces;
+        const double denoise = 1;
+        const double combined = direct + indirect + denoise;
+
+        fractionDirect = qMax(direct / combined, 0.02); // Make direct and denoise at least 2% for cosmetics
+        fractionDenoise = qMax(denoise / combined, 0.02);
+        fractionIndirect = qMax(1.0 - fractionDirect - fractionDenoise, 0.0);
+    }
+
+    void initDenoise()
+    {
+        fractionDirect = 0;
+        fractionDenoise = 1;
+        fractionIndirect = 0;
+    }
+
+    void setTotalDirectTiles(quint32 totalDirectTilesNew)
+    {
+        totalDirectTiles = totalDirectTilesNew;
+    }
+
+    void setStage(Stage stageNew)
+    {
+        if (stage == stageNew)
+            return;
+        stage = stageNew;
+        if (stage == Stage::Indirect)
+            indirectTimer.start();
+    }
+
+    double getEstimatedTimeRemaining()
+    {
+        double estimatedTimeRemaining = -1.0;
+        if (stage == Stage::Indirect && indirectTimer.isValid()) {
+            double totalElapsed = indirectTimer.elapsed();
+            double fullEstimate = static_cast<double>(totalElapsed) / progressIndirect;
+            estimatedTimeRemaining = (1.0 - progressIndirect) * fullEstimate;
+        }
+        return estimatedTimeRemaining;
+    }
+
+    double getProgress()
+    {
+        return progress;
+    }
+
+    void directTileDone()
+    {
+        Q_ASSERT(stage == Stage::Direct);
+        directTilesDone++;
+        progress = (fractionDirect * directTilesDone) / qMax(1u, totalDirectTiles);
+    }
+
+    void denoisedModelDone(int i, int n)
+    {
+        Q_ASSERT(stage == Stage::Denoise);
+        progress = fractionDirect + fractionIndirect + (fractionDenoise * double(i) / n);
+    }
+
+    void indirectTexelDone(qint64 i, qint64 n)
+    {
+        Q_ASSERT(stage == Stage::Indirect);
+        progressIndirect = double(i) / n;
+        progress = fractionDirect + (fractionIndirect * progressIndirect);
+    }
+
+private:
+    double fractionDirect = 0;
+    double fractionIndirect = 0;
+    double fractionDenoise = 0;
+    double progress = 0;
+    double progressIndirect = 0;
+    quint32 totalDirectTiles = 0;
+    quint32 directTilesDone = 0;
+    Stage stage = Stage::Direct;
+    QElapsedTimer indirectTimer;
+};
+
 struct QSSGLightmapperPrivate
 {
     explicit QSSGLightmapperPrivate() = default;
@@ -301,6 +391,8 @@ struct QSSGLightmapperPrivate
     QByteArray dilate(const QSize &pixelSize, const QByteArray &image);
 
     QString stage = QStringLiteral("Initializing");
+
+    ProgressTracker progressTracker;
 };
 
 // Used to output progress ETA during baking.
@@ -1851,6 +1943,9 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeDirectLight(int lmIdx)
                         grid[dstPixelI] = average / hits;
                 }
             }
+
+            // Update progress tracker
+            progressTracker.directTileDone();
         }
     }
 
@@ -2079,6 +2174,8 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeIndirectLight(int lmIdx, int w
 
         if (bakingControl.cancelled)
             return {};
+
+        progressTracker.indirectTexelDone(incrementsDone, totalIncrementsToBeMade);
     }
 
     return result;
@@ -2359,6 +2456,10 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     Q_ASSERT(shader.isValid());
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
+        auto incrementTracker = QScopeGuard([this, lmIdx, bakedLightingModelCount]() {
+            progressTracker.denoisedModelDone(lmIdx + 1, bakedLightingModelCount);
+        });
+
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
 
         if (!lm.model->hasLightmap())
@@ -2661,6 +2762,34 @@ bool QSSGLightmapper::bake()
         return false;
     }
 
+    // ------------- Init Progress Tracker ---------
+    const int bakedLightingModelCount = d->bakedLightingModels.size();
+
+    // Precompute the number of direct light tiles for progress tracking
+    quint32 numDirectTiles = 0;
+    for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
+        QSSGBakedLightingModel &lm = d->bakedLightingModels[lmIdx];
+        if (d->denoiseOnly)
+            break;
+        if (!lm.model->hasLightmap())
+            continue;
+        if (!lm.model->castsShadows)
+            continue;
+
+        const auto &drawInfo = d->drawInfos[lmIdx];
+        const QSize sz = drawInfo.lightmapSize;
+        const int w = sz.width();
+        const int h = sz.height();
+        constexpr int maxTileSize = MAX_TILE_SIZE / DIRECT_MAP_UPSCALE_FACTOR;
+        const int numTilesX = (w + maxTileSize - 1) / maxTileSize;
+        const int numTilesY = (h + maxTileSize - 1) / maxTileSize;
+
+        numDirectTiles += numTilesX * numTilesY;
+    }
+
+    d->progressTracker.initBake(d->options.indirectLightSamples, d->options.indirectLightBounces);
+    d->progressTracker.setTotalDirectTiles(numDirectTiles);
+
     // ------------- Prepare lightmaps -------------
 
     if (!d->prepareLightmaps()) {
@@ -2686,8 +2815,6 @@ bool QSSGLightmapper::bake()
                                                            arg(wgSizePerGroup).
                                                            arg(d->options.indirectLightBounces).
                                                            arg(d->options.indirectLightFactor));
-
-    const int bakedLightingModelCount = d->bakedLightingModels.size();
 
     // We use a work-file where we store the baked lightmaps accumulatively and when
     // the baking process is finished successfully, replace the .tmp file with it.
@@ -2810,31 +2937,10 @@ bool QSSGLightmapper::bake()
 
     if (d->options.indirectLightEnabled) {
         d->totalIncrementsToBeMade = std::accumulate(d->numValidTexels.begin(), d->numValidTexels.end(), 0);
-        QElapsedTimer indirectTimer;
-        constexpr int timerIntervalMs = 100;
-        TimerThread timerThread;
-        timerThread.setInterval(timerIntervalMs);
-        // Log ETA every 5 seconds to console
-        constexpr int consoleOutputInterval = 5000 / timerIntervalMs;
-        int timeoutsSinceOutput = consoleOutputInterval - 1;
-        timerThread.setCallback([&]() {
-            d->totalProgress = static_cast<double>(d->incrementsDone) / d->totalIncrementsToBeMade;
-            double totalElapsed = indirectTimer.elapsed();
-            if (totalElapsed < 500) {
-                d->estimatedTimeRemaining = -1;
-            } else {
-                double avgTimePerTexel = static_cast<double>(totalElapsed) / d->incrementsDone;
-                d->estimatedTimeRemaining = avgTimePerTexel * (d->totalIncrementsToBeMade - d->incrementsDone);
-            }
-            bool outputToConsole = timeoutsSinceOutput == consoleOutputInterval - 1;
-            d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, std::nullopt, outputToConsole, outputToConsole);
-            timeoutsSinceOutput = (timeoutsSinceOutput + 1) % consoleOutputInterval;
-        });
-        timerThread.start();
         d->updateStage(QStringLiteral("Computing Indirect Light"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                           QStringLiteral("Computing indirect light..."));
-        indirectTimer.start();
+        d->progressTracker.setStage(Stage::Indirect);
         for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
             if (d->userCancelled()) {
                 d->updateStage(QStringLiteral("Cancelled"));
@@ -2918,6 +3024,7 @@ bool QSSGLightmapper::bake()
 
     // ------------- Denoising -------------
 
+    d->progressTracker.setStage(Stage::Denoise);
     d->updateStage(QStringLiteral("Denoising"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Denoising..."));
     timer.restart();
@@ -2945,16 +3052,28 @@ bool QSSGLightmapper::bake()
 }
 
 bool QSSGLightmapper::denoise() {
+
+    // Main thread can continue
+    d->initMutex.lock();
+    d->initCondition.wakeAll();
+    d->initMutex.unlock();
+
     QElapsedTimer totalTimer;
     totalTimer.start();
 
+    d->progressTracker.initDenoise();
+    d->progressTracker.setStage(Stage::Denoise);
+    d->updateStage("Denoising"_L1);
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Denoise starting..."));
 
     if (!d->denoiseLightmaps()) {
+        d->updateStage("Failed"_L1);
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Denoising failed"));
         return false;
     }
 
+    d->totalProgress = 1;
+    d->updateStage("Done"_L1);
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Denoising took %1 ms").arg(totalTimer.elapsed()));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Complete, std::nullopt);
     return true;
@@ -3083,6 +3202,21 @@ void QSSGLightmapper::run(QOffscreenSurface *fallbackSurface)
     rhiCtxD->setCommandBuffer(cb);
 
     d->rhiCtxInterface->bufferManager()->setRenderContextInterface(d->rhiCtxInterface.get());
+
+    constexpr int timerIntervalMs = 100;
+    TimerThread timerThread;
+    timerThread.setInterval(timerIntervalMs);
+    // Log ETA every 5 seconds to console
+    constexpr int consoleOutputInterval = 5000 / timerIntervalMs;
+    int timeoutsSinceOutput = consoleOutputInterval - 1;
+    timerThread.setCallback([&]() {
+        d->totalProgress = d->progressTracker.getProgress();
+        d->estimatedTimeRemaining = d->progressTracker.getEstimatedTimeRemaining();
+        bool outputToConsole = timeoutsSinceOutput == consoleOutputInterval - 1;
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, std::nullopt, outputToConsole, outputToConsole);
+        timeoutsSinceOutput = (timeoutsSinceOutput + 1) % consoleOutputInterval;
+    });
+    timerThread.start();
 
     if (d->denoiseOnly) {
         denoise();
