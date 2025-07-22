@@ -49,11 +49,11 @@ public:
 
     /*
      * Payload:
-     *  int status                  (BakingStatus)
-     *  string message              (Might be empty)
+     *  int    status               (BakingStatus)
+     *  string stage
+     *  string message
      *  qint64 totalTimeRemaining   (in ms)
      *  double totalProgress        (Range 0 - 1)
-     *  qint64 totalTimeElapsed     (in ms)
      */
     typedef std::function<void(const QVariantMap &payload, BakingControl*)> Callback;
 
