@@ -54,6 +54,7 @@ struct QSSGCustomShaderMetaData
         UsesClearcoatFresnelScaleBias = 1 << 16,
         UsesFresnelScaleBias = 1 << 17,
         UsesTransmission = 1 << 18,
+        UsesViewMatrix = 1 << 19
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

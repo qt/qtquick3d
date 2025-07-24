@@ -6,6 +6,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+
 #include "qssgrendercontextcore.h"
 #include "qssgrendershadercodegenerator_p.h"
 #include <qtquick3d_tracepoints_p.h>
@@ -178,12 +180,15 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderLayer &layer,
     m_cameraClipRange = layer.renderedCameras[0]->clipPlanes;
 
     bool usesProjectionMatrix = false;
+    bool usesViewMatrix = false;
     for (const QSSGRenderEffect *eff = layer.firstEffect; eff; eff = eff->m_nextEffect) {
         if (eff->testFlag(QSSGRenderEffect::Flags::UsesProjectionMatrix)
             || eff->testFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix))
         {
             usesProjectionMatrix = true;
         }
+        if (eff->testFlag(QSSGRenderEffect::Flags::UsesViewMatrix))
+            usesViewMatrix = true;
     }
 
     if (usesProjectionMatrix) {
@@ -191,6 +196,15 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderLayer &layer,
         const QMatrix4x4 clipSpaceCorrMatrix = rhiContext->rhi()->clipSpaceCorrMatrix();
         for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
             m_projectionMatrices[viewIndex] = clipSpaceCorrMatrix * layer.renderedCameras[viewIndex]->projection;
+    }
+
+    if (usesViewMatrix) {
+        QMatrix4x4 camGlobalTransforms[2] { QMatrix4x4{Qt::Uninitialized}, QMatrix4x4{Qt::Uninitialized} };
+        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+            camGlobalTransforms[viewIndex] = layer.renderData->getGlobalTransform(*layer.renderedCameras[viewIndex]);
+        m_viewMatrices.resize(viewCount);
+        for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+            m_viewMatrices[viewIndex] = camGlobalTransforms[viewIndex].inverted();
     }
 
     m_currentUbufIndex = 0;
@@ -653,6 +667,13 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSSGRenderEffect *inEffe
                 m_currentShaderPipeline->setUniformArray(m_currentUBufData, "qt_inverseProjectionMatrix", invertedProjections.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4);
             }
         }
+    }
+
+    if (inEffect->testFlag(QSSGRenderEffect::Flags::UsesViewMatrix)) {
+        if (viewCount < 2)
+            m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_viewMatrix", m_viewMatrices[0], QSSGRenderShaderValue::Matrix4x4);
+        else
+            m_currentShaderPipeline->setUniformArray(m_currentUBufData, "qt_viewMatrix", m_viewMatrices.constData(), viewCount, QSSGRenderShaderValue::Matrix4x4);
     }
 
     QVector2D size(inputSize.width(), inputSize.height());

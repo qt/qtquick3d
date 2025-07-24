@@ -108,6 +108,7 @@ private:
     QRhiTexture *m_depthTexture = nullptr;
     QVector2D m_cameraClipRange;
     QVarLengthArray<QMatrix4x4, 2> m_projectionMatrices;
+    QVarLengthArray<QMatrix4x4, 2> m_viewMatrices;
     int m_currentUbufIndex = 0;
     QHash<QSSGEffectSceneCacheKey, QSSGRhiShaderPipelinePtr> m_shaderPipelines;
     QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;

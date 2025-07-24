@@ -373,6 +373,10 @@ QT_BEGIN_NAMESPACE
     Note that with \l{Multiview Rendering}{multiview rendering}, this is an array
     of matrices.
 
+    \li \c VIEW_MATRIX -> \c mat4, the view (camera) matrix.
+    Note that with \l{Multiview Rendering}{multiview rendering}, this is an array
+    of matrices.
+
     \endlist
 
     \section1 Building multi-pass effects
@@ -625,6 +629,7 @@ static inline void resetShaderDependentEffectFlags(QSSGRenderEffect *effectNode)
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesDepthTexture, false);
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesProjectionMatrix, false);
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix, false);
+    effectNode->setFlag(QSSGRenderEffect::Flags::UsesViewMatrix, false);
 }
 
 static inline void accumulateEffectFlagsFromShader(QSSGRenderEffect *effectNode, const QSSGCustomShaderMetaData &meta)
@@ -635,6 +640,8 @@ static inline void accumulateEffectFlagsFromShader(QSSGRenderEffect *effectNode,
         effectNode->setFlag(QSSGRenderEffect::Flags::UsesProjectionMatrix);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
         effectNode->setFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesViewMatrix))
+        effectNode->setFlag(QSSGRenderEffect::Flags::UsesViewMatrix);
 }
 
 QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -940,6 +947,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                             multiViewDependentUniforms.append({ "mat4", "qt_projectionMatrix" });
                             multiViewDependentUniforms.append({ "mat4", "qt_inverseProjectionMatrix" });
                         }
+
+                        multiViewDependentUniforms.append({ "mat4", "qt_viewMatrix" });
 
                         accumulateEffectFlagsFromShader(effectNode, result.second);
 

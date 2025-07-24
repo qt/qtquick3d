@@ -960,6 +960,8 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
                     md.flags |= QSSGCustomShaderMetaData::UsesProjectionMatrix;
                 else if (trimmedId == QByteArrayLiteral("INVERSE_PROJECTION_MATRIX"))
                     md.flags |= QSSGCustomShaderMetaData::UsesInverseProjectionMatrix;
+                else if (trimmedId == QByteArrayLiteral("VIEW_MATRIX"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesViewMatrix;
                 else if (trimmedId == QByteArrayLiteral("VAR_COLOR"))
                     md.flags |= QSSGCustomShaderMetaData::UsesVarColor;
                 else if (trimmedId == QByteArrayLiteral("SHARED_VARS"))
