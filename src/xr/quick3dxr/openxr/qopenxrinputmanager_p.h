@@ -134,6 +134,66 @@ private:
         XrAction hapticAction{XR_NULL_HANDLE};
     };
 
+    enum class ActionPaths {
+        leftGripPose, // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        leftAimPose, // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        leftHaptic, // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        rightGripPose, // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        rightAimPose, // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        rightHaptic // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    };
+    Q_ENUM(ActionPaths)
+
+    enum class InputNames {
+        AClick, // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+        BClick, // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+        ATouch, // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+        BTouch, // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+
+        XClick, // OCULUS_TOUCH (left)
+        YClick, // OCULUS_TOUCH (left)
+        XTouch, // OCULUS_TOUCH (left)
+        YTouch, // OCULUS_TOUCH (left)
+
+        MenuClick, // OCULUS_TOUCH (left) | MICROSOFT_MRM (right + left) | HTC_VIVE (right + left)
+        SystemClick, // OCULUS_TOUCH (right) | VALVE_INDEX (right + left) | HTC_VIVE (right + left)
+        SystemTouch, // VALVE_INDEX (right + left)
+
+        SqueezeValue, // right + left: OCULUS_TOUCH | VALVE_INDEX
+        SqueezeForce, // right + left: VALVE_INDEX
+        SqueezeClick, // right + left: MICROSOFT_MRM | HTC_VIVE
+
+        TriggerValue, // right + left: OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        TriggerTouch, // right + left: OCULUS_TOUCH | VALVE_INDEX
+        TriggerClick, // right + left: VALVE_INDEX | HTC_VIVE
+
+        ThumbstickX, // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+        ThumbstickY, // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+        ThumbstickClick, // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+        ThumbstickTouch, // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left)
+        ThumbrestTouch, // OCULUS_TOUCH (right + left)
+
+        TrackpadX, // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        TrackpadY, // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        TrackpadForce, // right + left:  VALVE_INDEX
+        TrackpadClick, // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+        TrackpadTouch // right + left:  MICROSOFT_MRM | HTC_VIVE
+    };
+    Q_ENUM(InputNames)
+
+    struct InputMapping {
+        QQuick3DXrInputAction::Action action;
+        InputNames handComponentPath;
+        SubPathSelector subPathSelector;
+    };
+
+    struct ControllerBindings {
+        QByteArray profileName;
+        QByteArray profilePath;
+        QList<InputMapping> profileMappingDefs;
+        QList<ActionPaths> supportedActionPaths;
+    };
+
     // Input State
     XrActionSet m_actionSet{XR_NULL_HANDLE};
     XrPath m_handSubactionPath[2] = {XR_NULL_PATH, XR_NULL_PATH};
@@ -150,6 +210,9 @@ private:
     uint m_aimStateFlags[2] = {};
     bool m_initialized = false;
     bool m_validAimStateFromUpdatePoses[2] = {false, false};
+
+    void loadBindings(QList<ControllerBindings>* controllerBindingsList);
+    void setUpBindings(QList<ControllerBindings>* controllerBindingsList, QMap<InputNames, QXRHandComponentPath>* handComponentPaths);
 
     // Hand Mesh Data
     struct HandMeshData {

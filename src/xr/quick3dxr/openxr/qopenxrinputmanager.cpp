@@ -175,6 +175,179 @@ QQuick3DGeometry *QQuick3DXrInputManagerPrivate::createHandMeshGeometry(const Ha
     return geometry;
 }
 
+void QQuick3DXrInputManagerPrivate::loadBindings(QList<ControllerBindings>* controllerBindingsList)
+{
+    // Oculus touch and HTC Vive Controllers
+    QList<ActionPaths> GripAimHapticSupported = {
+        ActionPaths::leftGripPose,
+        ActionPaths::leftAimPose,
+        ActionPaths::leftHaptic,
+        ActionPaths::rightGripPose,
+        ActionPaths::rightAimPose,
+        ActionPaths::rightHaptic
+    };
+
+    // Oculus Touch
+    QList<InputMapping> oculusTouchInputMapping = {
+        InputMapping{QQuick3DXrInputAction::Button1Pressed, InputNames::XClick, LeftHandSubPath},
+        InputMapping{QQuick3DXrInputAction::Button1Pressed, InputNames::AClick, RightHandSubPath},
+        InputMapping{QQuick3DXrInputAction::Button2Pressed, InputNames::YClick, LeftHandSubPath},
+        InputMapping{QQuick3DXrInputAction::Button2Pressed, InputNames::BClick, RightHandSubPath},
+        InputMapping{QQuick3DXrInputAction::Button1Touched, InputNames::XTouch, LeftHandSubPath},
+        InputMapping{QQuick3DXrInputAction::Button1Touched, InputNames::ATouch, RightHandSubPath},
+        InputMapping{QQuick3DXrInputAction::Button2Touched, InputNames::YTouch, LeftHandSubPath},
+        InputMapping{QQuick3DXrInputAction::Button2Touched, InputNames::BTouch, RightHandSubPath},
+        InputMapping{QQuick3DXrInputAction::ButtonMenuPressed, InputNames::MenuClick, LeftHandSubPath},
+        InputMapping{QQuick3DXrInputAction::ButtonSystemPressed, InputNames::SystemClick, RightHandSubPath},
+        InputMapping{QQuick3DXrInputAction::SqueezeValue, InputNames::SqueezeValue, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TriggerValue, InputNames::TriggerValue, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TriggerTouched, InputNames::TriggerTouch, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::ThumbstickX, InputNames::ThumbstickX, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::ThumbstickY, InputNames::ThumbstickY, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::ThumbstickPressed, InputNames::ThumbstickClick, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::ThumbstickTouched, InputNames::ThumbstickTouch, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::ThumbrestTouched, InputNames::ThumbrestTouch, BothHandsSubPath},
+    };
+
+    ControllerBindings oculusTouch{
+        "Oculus touch",
+        "/interaction_profiles/oculus/touch_controller",
+        oculusTouchInputMapping,
+        GripAimHapticSupported
+    };
+    controllerBindingsList->append(oculusTouch);
+
+    // HTC Vive controller
+    QList<InputMapping> viveControllerInputMapping {
+        InputMapping{QQuick3DXrInputAction::ButtonMenuPressed, InputNames::MenuClick, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::ButtonSystemPressed, InputNames::SystemClick, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::SqueezePressed, InputNames::SqueezeClick, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TriggerValue, InputNames::TriggerValue, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TriggerPressed, InputNames::TriggerClick, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TrackpadX, InputNames::TrackpadX, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TrackpadY, InputNames::TrackpadY, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TrackpadPressed, InputNames::TrackpadClick, BothHandsSubPath},
+        InputMapping{QQuick3DXrInputAction::TrackpadTouched, InputNames::TrackpadTouch, BothHandsSubPath},
+    };
+
+    ControllerBindings viveController {
+        "Vive controller",
+        "/interaction_profiles/htc/vive_controller",
+        viveControllerInputMapping,
+        GripAimHapticSupported
+    };
+    controllerBindingsList->append(viveController);
+
+    // Microsoft hand interaction extension as supported by Quest 3
+    // TODO: there are other, very similar, extensions: XR_HTC_HAND_INTERACTION_EXTENSION_NAME and XR_EXT_HAND_INTERACTION_EXTENSION_NAME
+    QList<InputMapping> microsoftHandInteractionExtensionInputMapping {
+        InputMapping{QQuick3DXrInputAction::SqueezeValue, InputNames::SqueezeValue, BothHandsSubPath},
+    };
+
+    QList<ActionPaths> microsoftHandInteractionExtensionActionPaths = {
+        ActionPaths::leftGripPose,
+        ActionPaths::leftAimPose,
+        ActionPaths::rightGripPose,
+        ActionPaths::rightAimPose
+    };
+
+    ControllerBindings microsoftHandInteractionExtension {
+        "microsoftHandInteractionExtension",
+        "/interaction_profiles/microsoft/hand_interaction",
+        microsoftHandInteractionExtensionInputMapping,
+        microsoftHandInteractionExtensionActionPaths
+    };
+    controllerBindingsList->append(microsoftHandInteractionExtension);
+
+    #if 0 // Unused
+    // Microsoft MRM ### TODO
+    QList<InputMapping> microsoftMRMInputMapping {};
+    QList<ActionPaths> microsoftMRMActionPaths;
+
+    ControllerBindings microsoftMRM{
+        "Microsoft MRM",
+        "/interaction_profiles/microsoft/motion_controller",
+        microsoftMRMInputMapping,
+        microsoftMRMActionPaths
+    };
+    controllerBindingsList->append(microsoftMRM);
+
+    // Valve Index ### TODO
+    QList<InputMapping> valveIndexInputMapping {};
+    QList<ActionPaths> valveIndexActionPaths;
+
+    ControllerBindings valveIndex{
+        "Valve Index",
+        "/interaction_profiles/valve/index_controller",
+        valveIndexInputMapping,
+        valveIndexActionPaths
+    };
+    controllerBindingsList->append(valveIndex);
+    #endif // Unused
+}
+
+void QQuick3DXrInputManagerPrivate::setUpBindings(QList<ControllerBindings>* controllerBindingsList, QMap<InputNames, QXRHandComponentPath>* handComponentPaths)
+{
+    QMap<ActionPaths, XrActionSuggestedBinding> actionPaths;
+
+    // Hand Left
+    XrPath leftGripPose;                  // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    XrPath leftAimPose;                   // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    XrPath leftHaptic;                    // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+
+    setPath(leftGripPose, "/user/hand/left/input/grip/pose");
+    setPath(leftAimPose, "/user/hand/left/input/aim/pose");
+    setPath(leftHaptic, "/user/hand/left/output/haptic");
+
+    actionPaths.insert(ActionPaths::leftGripPose, {m_handActions.gripPoseAction, leftGripPose});
+    actionPaths.insert(ActionPaths::leftAimPose, {m_handActions.aimPoseAction, leftAimPose});
+    actionPaths.insert(ActionPaths::leftHaptic, {m_handActions.hapticAction, leftHaptic});
+
+    // Hand Right
+    XrPath rightGripPose;                 // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    XrPath rightAimPose;                  // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    XrPath rightHaptic;                   // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+
+    setPath(rightGripPose, "/user/hand/right/input/grip/pose");
+    setPath(rightAimPose, "/user/hand/right/input/aim/pose");
+    setPath(rightHaptic, "/user/hand/right/output/haptic");
+
+    actionPaths.insert(ActionPaths::rightGripPose, {m_handActions.gripPoseAction, rightGripPose});
+    actionPaths.insert(ActionPaths::rightAimPose, {m_handActions.aimPoseAction, rightAimPose});
+    actionPaths.insert(ActionPaths::rightHaptic, {m_handActions.hapticAction, rightHaptic});
+
+    for (int i = 0; i < controllerBindingsList->size(); i++) {
+        ControllerBindings controllerBindings = controllerBindingsList->at(i);
+
+        if (controllerBindings.profileMappingDefs.size() == 0 || controllerBindings.supportedActionPaths.size() == 0)
+            continue;
+
+        XrPath profilePath;
+        setPath(profilePath, controllerBindings.profilePath);
+
+        std::vector<XrActionSuggestedBinding> bindings {};
+
+        for (const auto& path : controllerBindings.supportedActionPaths) {
+            bindings.push_back(actionPaths.value(path));
+        }
+
+        for (const auto &[actionId, path, selector] : controllerBindings.profileMappingDefs) {
+            if (selector & LeftHandSubPath)
+                bindings.push_back({m_inputActions[actionId], handComponentPaths->value(path).paths[Hand::LeftHand]});
+            if (selector & RightHandSubPath)
+                bindings.push_back({m_inputActions[actionId], handComponentPaths->value(path).paths[Hand::RightHand]});
+        }
+
+        XrInteractionProfileSuggestedBinding suggestedBindings{};
+        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
+        suggestedBindings.interactionProfile = profilePath;
+        suggestedBindings.suggestedBindings = bindings.data();
+        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
+        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
+            qWarning() << "Failed to get suggested interaction profile bindings for " << controllerBindings.profileName;
+    }
+}
+
 void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
 {
     if (m_initialized) {
@@ -189,193 +362,46 @@ void QQuick3DXrInputManagerPrivate::init(XrInstance instance, XrSession session)
 
     setupActions();
 
-    QXRHandComponentPath aClick = makeHandInputPaths("input/a/click"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
-    QXRHandComponentPath bClick = makeHandInputPaths("input/b/click"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
-    QXRHandComponentPath aTouch = makeHandInputPaths("input/a/touch"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
-    QXRHandComponentPath bTouch = makeHandInputPaths("input/b/touch"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+    QMap<InputNames, QXRHandComponentPath> handComponentPaths;
 
-    QXRHandComponentPath xClick = makeHandInputPaths("input/x/click"); // OCULUS_TOUCH (left)
-    QXRHandComponentPath yClick = makeHandInputPaths("input/y/click"); // OCULUS_TOUCH (left)
-    QXRHandComponentPath xTouch = makeHandInputPaths("input/x/touch"); // OCULUS_TOUCH (left)
-    QXRHandComponentPath yTouch = makeHandInputPaths("input/y/touch"); // OCULUS_TOUCH (left)
+    handComponentPaths.insert(InputNames::AClick, makeHandInputPaths("input/a/click")); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+    handComponentPaths.insert(InputNames::BClick, makeHandInputPaths("input/b/click")); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+    handComponentPaths.insert(InputNames::ATouch, makeHandInputPaths("input/a/touch")); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
+    handComponentPaths.insert(InputNames::BTouch, makeHandInputPaths("input/b/touch")); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left)
 
-    QXRHandComponentPath menuClick = makeHandInputPaths("input/menu/click"); // OCULUS_TOUCH (left) | MICROSOFT_MRM (right + left) | HTC_VIVE (right + left)
-    QXRHandComponentPath systemClick = makeHandInputPaths("input/system/click"); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left) | HTC_VIVE (right + left)
-    QXRHandComponentPath systemTouch = makeHandInputPaths("input/system/touch"); // VALVE_INDEX (right + left)
+    handComponentPaths.insert(InputNames::XClick, makeHandInputPaths("input/x/click")); // OCULUS_TOUCH (left)
+    handComponentPaths.insert(InputNames::YClick, makeHandInputPaths("input/y/click")); // OCULUS_TOUCH (left)
+    handComponentPaths.insert(InputNames::XTouch, makeHandInputPaths("input/x/touch")); // OCULUS_TOUCH (left)
+    handComponentPaths.insert(InputNames::YTouch, makeHandInputPaths("input/y/touch")); // OCULUS_TOUCH (left)
 
-    QXRHandComponentPath squeezeValue = makeHandInputPaths("input/squeeze/value"); // right + left: OCULUS_TOUCH | VALVE_INDEX
-    QXRHandComponentPath squeezeForce = makeHandInputPaths("input/squeeze/force"); // right + left: VALVE_INDEX
-    QXRHandComponentPath squeezeClick = makeHandInputPaths("input/squeeze/click"); // right + left: MICROSOFT_MRM | HTC_VIVE
+    handComponentPaths.insert(InputNames::MenuClick, makeHandInputPaths("input/menu/click")); // OCULUS_TOUCH (left) | MICROSOFT_MRM (right + left) | HTC_VIVE (right + left)
+    handComponentPaths.insert(InputNames::SystemClick, makeHandInputPaths("input/system/click")); // OCULUS_TOUCH (right) | VALVE_INDEX (right + left) | HTC_VIVE (right + left)
+    handComponentPaths.insert(InputNames::SystemTouch, makeHandInputPaths("input/system/touch")); // VALVE_INDEX (right + left)
 
-    QXRHandComponentPath triggerValue = makeHandInputPaths("input/trigger/value"); // right + left: OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    QXRHandComponentPath triggerTouch = makeHandInputPaths("input/trigger/touch"); // right + left: OCULUS_TOUCH | VALVE_INDEX
-    QXRHandComponentPath triggerClick = makeHandInputPaths("input/trigger/click"); // right + left: VALVE_INDEX | HTC_VIVE
+    handComponentPaths.insert(InputNames::SqueezeValue, makeHandInputPaths("input/squeeze/value")); // right + left: OCULUS_TOUCH | VALVE_INDEX
+    handComponentPaths.insert(InputNames::SqueezeForce, makeHandInputPaths("input/squeeze/force")); // right + left: VALVE_INDEX
+    handComponentPaths.insert(InputNames::SqueezeClick, makeHandInputPaths("input/squeeze/click")); // right + left: MICROSOFT_MRM | HTC_VIVE
 
-    QXRHandComponentPath thumbstickX = makeHandInputPaths("input/thumbstick/x"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
-    QXRHandComponentPath thumbstickY = makeHandInputPaths("input/thumbstick/y"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
-    QXRHandComponentPath thumbstickClick = makeHandInputPaths("input/thumbstick/click"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
-    QXRHandComponentPath thumbstickTouch = makeHandInputPaths("input/thumbstick/touch"); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left)
-    QXRHandComponentPath thumbrestTouch = makeHandInputPaths("input/thumbrest/touch"); // OCULUS_TOUCH (right + left)
+    handComponentPaths.insert(InputNames::TriggerValue, makeHandInputPaths("input/trigger/value")); // right + left: OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    handComponentPaths.insert(InputNames::TriggerTouch, makeHandInputPaths("input/trigger/touch")); // right + left: OCULUS_TOUCH | VALVE_INDEX
+    handComponentPaths.insert(InputNames::TriggerClick, makeHandInputPaths("input/trigger/click")); // right + left: VALVE_INDEX | HTC_VIVE
 
-    QXRHandComponentPath trackpadX = makeHandInputPaths("input/trackpad/x"); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    QXRHandComponentPath trackpadY = makeHandInputPaths("input/trackpad/y"); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    QXRHandComponentPath trackpadForce = makeHandInputPaths("input/trackpad/force"); // right + left:  VALVE_INDEX
-    QXRHandComponentPath trackpadClick = makeHandInputPaths("input/trackpad/click"); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    QXRHandComponentPath trackpadTouch = makeHandInputPaths("input/trackpad/touch"); // right + left:  MICROSOFT_MRM | HTC_VIVE
+    handComponentPaths.insert(InputNames::ThumbstickX, makeHandInputPaths("input/thumbstick/x")); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+    handComponentPaths.insert(InputNames::ThumbstickY, makeHandInputPaths("input/thumbstick/y")); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+    handComponentPaths.insert(InputNames::ThumbstickClick, makeHandInputPaths("input/thumbstick/click")); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left) | MICROSOFT_MRM (left)
+    handComponentPaths.insert(InputNames::ThumbstickTouch, makeHandInputPaths("input/thumbstick/touch")); // OCULUS_TOUCH (right + left) | VALVE_INDEX (right + left)
+    handComponentPaths.insert(InputNames::ThumbrestTouch, makeHandInputPaths("input/thumbrest/touch")); // OCULUS_TOUCH (right + left)
 
-    XrPath handLeftGripPose;                  // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftAimPose;                   // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handLeftHaptic;                    // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-
-    XrPath handRightGripPose;                 // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightAimPose;                  // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-    XrPath handRightHaptic;                   // OCULUS_TOUCH | VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
-
-    // Hand Left
-
-    setPath(handLeftGripPose, "/user/hand/left/input/grip/pose");
-    setPath(handLeftAimPose, "/user/hand/left/input/aim/pose");
-    setPath(handLeftHaptic, "/user/hand/left/output/haptic");
-
-    setPath(handRightGripPose, "/user/hand/right/input/grip/pose");
-    setPath(handRightAimPose, "/user/hand/right/input/aim/pose");
-    setPath(handRightHaptic, "/user/hand/right/output/haptic");
+    handComponentPaths.insert(InputNames::TrackpadX, makeHandInputPaths("input/trackpad/x")); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    handComponentPaths.insert(InputNames::TrackpadY, makeHandInputPaths("input/trackpad/y")); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    handComponentPaths.insert(InputNames::TrackpadForce, makeHandInputPaths("input/trackpad/force")); // right + left:  VALVE_INDEX
+    handComponentPaths.insert(InputNames::TrackpadClick, makeHandInputPaths("input/trackpad/click")); // right + left:  VALVE_INDEX | MICROSOFT_MRM | HTC_VIVE
+    handComponentPaths.insert(InputNames::TrackpadTouch, makeHandInputPaths("input/trackpad/touch")); // right + left:  MICROSOFT_MRM | HTC_VIVE
 
     // Bindings
-
-    using XrActionBindings = std::vector<XrActionSuggestedBinding>;
-    using HandInputMapping = std::vector<std::tuple<QQuick3DXrInputAction::Action, QXRHandComponentPath, SubPathSelector>>;
-    auto addToBindings = [this](XrActionBindings &bindings, const HandInputMapping &defs){
-        for (const auto &[actionId, path, selector] : defs) {
-            if (selector & LeftHandSubPath)
-                bindings.push_back({ m_inputActions[actionId], path.paths[Hand::LeftHand] });
-            if (selector & RightHandSubPath)
-                bindings.push_back({ m_inputActions[actionId], path.paths[Hand::RightHand] });
-        }
-    };
-
-    // Oculus Touch
-    {
-        HandInputMapping mappingDefs {
-            { QQuick3DXrInputAction::Button1Pressed, xClick, LeftHandSubPath },
-            { QQuick3DXrInputAction::Button1Pressed, aClick, RightHandSubPath },
-            { QQuick3DXrInputAction::Button2Pressed, yClick, LeftHandSubPath },
-            { QQuick3DXrInputAction::Button2Pressed, bClick, RightHandSubPath },
-            { QQuick3DXrInputAction::Button1Touched, xTouch, LeftHandSubPath },
-            { QQuick3DXrInputAction::Button1Touched, aTouch, RightHandSubPath },
-            { QQuick3DXrInputAction::Button2Touched, yTouch, LeftHandSubPath },
-            { QQuick3DXrInputAction::Button2Touched, bTouch, RightHandSubPath },
-            { QQuick3DXrInputAction::ButtonMenuPressed, menuClick, LeftHandSubPath },
-            { QQuick3DXrInputAction::ButtonSystemPressed, systemClick, RightHandSubPath },
-            { QQuick3DXrInputAction::SqueezeValue, squeezeValue, BothHandsSubPath },
-            { QQuick3DXrInputAction::TriggerValue, triggerValue, BothHandsSubPath },
-            { QQuick3DXrInputAction::TriggerTouched, triggerTouch, BothHandsSubPath },
-            { QQuick3DXrInputAction::ThumbstickX, thumbstickX, BothHandsSubPath },
-            { QQuick3DXrInputAction::ThumbstickY, thumbstickY, BothHandsSubPath },
-            { QQuick3DXrInputAction::ThumbstickPressed, thumbstickClick, BothHandsSubPath },
-            { QQuick3DXrInputAction::ThumbstickTouched, thumbstickTouch, BothHandsSubPath },
-            { QQuick3DXrInputAction::ThumbrestTouched, thumbrestTouch, BothHandsSubPath },
-        };
-
-        XrPath oculusTouchProfile;
-        setPath(oculusTouchProfile, "/interaction_profiles/oculus/touch_controller");
-        std::vector<XrActionSuggestedBinding> bindings {{
-                {m_handActions.gripPoseAction, handLeftGripPose},
-                {m_handActions.aimPoseAction, handLeftAimPose},
-                {m_handActions.hapticAction, handLeftHaptic},
-
-                {m_handActions.gripPoseAction, handRightGripPose},
-                {m_handActions.aimPoseAction, handRightAimPose},
-                {m_handActions.hapticAction, handRightHaptic},
-                                                        }};
-
-        addToBindings(bindings, mappingDefs);
-
-        XrInteractionProfileSuggestedBinding suggestedBindings{};
-        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-        suggestedBindings.interactionProfile = oculusTouchProfile;
-        suggestedBindings.suggestedBindings = bindings.data();
-        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
-            qWarning("Failed to get suggested interaction profile bindings for Oculus touch");
-    }
-
-    // Microsoft hand interaction extension as supported by Quest 3
-    // TODO: there are other, very similar, extensions: XR_HTC_HAND_INTERACTION_EXTENSION_NAME and XR_EXT_HAND_INTERACTION_EXTENSION_NAME
-    {
-        XrPath handInteractionProfile;
-        setPath(handInteractionProfile, "/interaction_profiles/microsoft/hand_interaction");
-        std::vector<XrActionSuggestedBinding> bindings {{
-                {m_handActions.gripPoseAction, handLeftGripPose},
-                {m_handActions.aimPoseAction, handLeftAimPose}, // ### Binding succeeds, but does not seem to work on the Quest 3
-                {m_handActions.gripPoseAction, handRightGripPose},
-                {m_handActions.aimPoseAction, handRightAimPose},
-        }};
-
-        HandInputMapping mappingDefs {
-            { QQuick3DXrInputAction::SqueezeValue, squeezeValue, BothHandsSubPath },
-        };
-
-        addToBindings(bindings, mappingDefs);
-
-        XrInteractionProfileSuggestedBinding suggestedBindings{};
-        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-        suggestedBindings.interactionProfile = handInteractionProfile;
-        suggestedBindings.suggestedBindings = bindings.data();
-        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-
-        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
-            qWarning("Failed to get suggested interaction profile bindings for MSFT hand interaction");
-    }
-
-    {
-        XrPath htcViveProfile;
-        setPath(htcViveProfile, "/interaction_profiles/htc/vive_controller");
-
-        HandInputMapping mappingDefs {
-            { QQuick3DXrInputAction::ButtonMenuPressed, menuClick, BothHandsSubPath },
-            { QQuick3DXrInputAction::ButtonSystemPressed, systemClick, BothHandsSubPath },
-            { QQuick3DXrInputAction::SqueezePressed, squeezeClick, BothHandsSubPath },
-            { QQuick3DXrInputAction::TriggerValue, triggerValue, BothHandsSubPath },
-            { QQuick3DXrInputAction::TriggerPressed, triggerClick, BothHandsSubPath },
-            { QQuick3DXrInputAction::TrackpadX, trackpadX, BothHandsSubPath },
-            { QQuick3DXrInputAction::TrackpadY, trackpadY, BothHandsSubPath },
-            { QQuick3DXrInputAction::TrackpadPressed, trackpadClick, BothHandsSubPath },
-            { QQuick3DXrInputAction::TrackpadTouched, trackpadTouch, BothHandsSubPath },
-        };
-
-        std::vector<XrActionSuggestedBinding> bindings {{
-                {m_handActions.gripPoseAction, handLeftGripPose},
-                {m_handActions.aimPoseAction, handLeftAimPose},
-                {m_handActions.hapticAction, handLeftHaptic},
-
-                {m_handActions.gripPoseAction, handRightGripPose},
-                {m_handActions.aimPoseAction, handRightAimPose},
-                {m_handActions.hapticAction, handRightHaptic},
-            }};
-
-        addToBindings(bindings, mappingDefs);
-
-        XrInteractionProfileSuggestedBinding suggestedBindings{};
-        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-        suggestedBindings.interactionProfile = htcViveProfile;
-        suggestedBindings.suggestedBindings = bindings.data();
-        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-        if (!checkXrResult(xrSuggestInteractionProfileBindings(m_instance, &suggestedBindings)))
-            qWarning("Failed to get suggested interaction profile bindings for Vive controller");
-    }
-
-    // Microsoft MRM ### TODO
-    {
-        XrPath microsoftMotionProfile;
-        setPath(microsoftMotionProfile, "/interaction_profiles/microsoft/motion_controller");
-    }
-
-    // Valve Index ### TODO
-    {
-        XrPath valveIndexProfile;
-        setPath(valveIndexProfile, "/interaction_profiles/valve/index_controller");
-    }
+    QList<ControllerBindings> controllerBindingsList;
+    loadBindings(&controllerBindingsList);
+    setUpBindings(&controllerBindingsList, &handComponentPaths);
 
     // Setup Action Spaces
 
