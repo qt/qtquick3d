@@ -102,7 +102,7 @@ The above image shows the same scene with the same directional light but two dif
 
 \section2 Shadowmap bit depth
 
-There are certain scenarios where you have a very big scene causing the shadowmap to cover a big area in its depth axis. For instance if you have many objects far away from the camera view that are still casting shadows and need to be part of the shadow map bounds. What can happen in this case is that even with a higher \{Light::}{shadowBias} the scene still has banding artifacts. One way of fixing this is by using 32-bit depth on the shadowmap. Setting the property \{Light::}{use32BitShadowmap} to \c{true} will enable this on the specific light.
+There are certain scenarios where you have a very big scene causing the shadowmap to cover a big area in its depth axis. For instance if you have many objects far away from the camera view that are still casting shadows and need to be part of the shadow map bounds. What can happen in this case is that even with a higher \l {Light::}{shadowBias} the scene still has banding artifacts. One way of fixing this is by using 32-bit depth on the shadowmap. Setting the property \l {Light::}{use32BitShadowmap} to \c{true} will enable this on the specific light.
 
 \image{shadows-32bit-vs-16bit.webp}
 
