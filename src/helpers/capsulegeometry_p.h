@@ -36,7 +36,7 @@ class CapsuleGeometry : public QQuick3DGeometry
     Q_PROPERTY(int rings READ rings WRITE setRings NOTIFY ringsChanged)
     Q_PROPERTY(float height READ height WRITE setHeight NOTIFY heightChanged)
     Q_PROPERTY(float diameter READ diameter WRITE setDiameter NOTIFY diameterChanged)
-    Q_PROPERTY(UvProfile uvProfile READ uvProfile WRITE setUvProfile NOTIFY uvProfileChanged FINAL)
+    Q_PROPERTY(UVProfile uvProfile READ uvProfile WRITE setUVProfile NOTIFY uvProfileChanged FINAL)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     QML_ELEMENT
@@ -44,8 +44,8 @@ class CapsuleGeometry : public QQuick3DGeometry
 public:
     enum Status { Null, Ready, Loading, Error };
     Q_ENUM(Status)
-    enum UvProfile { Fixed, Aspect, Uniform };
-    Q_ENUM(UvProfile)
+    enum UVProfile { Fixed, Aspect, Uniform };
+    Q_ENUM(UVProfile)
 
     explicit CapsuleGeometry(QQuick3DObject *parent = nullptr);
     ~CapsuleGeometry() override;
@@ -71,8 +71,8 @@ public:
     float diameter() const { return m_diameter; }
     void setDiameter(float diameter);
 
-    UvProfile uvProfile() const;
-    void setUvProfile(UvProfile newUvProfile);
+    UVProfile uvProfile() const;
+    void setUVProfile(UVProfile newUVProfile);
 
     bool asynchronous() const;
     void setAsynchronous(bool newAsynchronous);
@@ -119,7 +119,7 @@ private:
                                                                  int rings,
                                                                  float height,
                                                                  float diameter,
-                                                                 UvProfile uvProfile);
+                                                                 UVProfile uvProfile);
 #if QT_CONFIG(concurrent)
     static void generateCapsuleGeometryAsync(QPromise<CapsuleGeometry::GeometryData> &promise,
                                              bool enableNormals,
@@ -129,7 +129,7 @@ private:
                                              int rings,
                                              float height,
                                              float diameter,
-                                             UvProfile uvProfile);
+                                             UVProfile uvProfile);
 #endif
 
     void updateData();
@@ -142,7 +142,7 @@ private:
     int m_rings = 1;
     float m_height = 100.f;
     float m_diameter = 100.f;
-    UvProfile m_uvProfile = UvProfile::Fixed;
+    UVProfile m_uvProfile = UVProfile::Fixed;
 
     bool m_asynchronous = true;
     Status m_status = Null;

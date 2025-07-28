@@ -70,12 +70,12 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty UvProfile CapsuleGeometry::uvProfile
+    \qmlproperty UVProfile CapsuleGeometry::uvProfile
     \default CapsuleGeometry.Fixed
 
     Manner in which UV coordinates are distributed along the length of the capsule.
 
-    \value CapsuleGeometry.Fixed The upper third of the uv texture is the North
+    \value CapsuleGeometry.Fixed The upper third of the UV texture is the North
     hemisphere, the middle third is the cylinder and the last third is the
     South hemisphere.
     \value CapsuleGeometry.Aspect UVs match the height to radius ratio.
@@ -182,16 +182,16 @@ void CapsuleGeometry::setDiameter(float diameter)
     scheduleGeometryUpdate();
 }
 
-CapsuleGeometry::UvProfile CapsuleGeometry::uvProfile() const
+CapsuleGeometry::UVProfile CapsuleGeometry::uvProfile() const
 {
     return m_uvProfile;
 }
 
-void CapsuleGeometry::setUvProfile(UvProfile newUvProfile)
+void CapsuleGeometry::setUVProfile(UVProfile newUVProfile)
 {
-    if (m_uvProfile == newUvProfile)
+    if (m_uvProfile == newUVProfile)
         return;
-    m_uvProfile = newUvProfile;
+    m_uvProfile = newUVProfile;
     emit uvProfileChanged();
     scheduleGeometryUpdate();
 }
@@ -303,7 +303,7 @@ CapsuleGeometry::GeometryData CapsuleGeometry::generateCapsuleGeometry(bool enab
                                                                        int rings,
                                                                        float height,
                                                                        float diameter,
-                                                                       UvProfile uvProfile)
+                                                                       UVProfile uvProfile)
 {
     longitudes = qMax(3, longitudes);
     latitudes = qMax(2, latitudes + (latitudes % 2)); // make even
@@ -311,7 +311,7 @@ CapsuleGeometry::GeometryData CapsuleGeometry::generateCapsuleGeometry(bool enab
     height = qMax(0.00001f, height);
     diameter = qMax(0.00001f, diameter);
 
-    const UvProfile profile = uvProfile;
+    const UVProfile profile = uvProfile;
     const float radius = diameter / 2;
     const float depth = height;
 
@@ -350,15 +350,15 @@ CapsuleGeometry::GeometryData CapsuleGeometry::generateCapsuleGeometry(bool enab
     float vtAspectRatio = 1.0f;
     switch (profile)
     {
-    case UvProfile::Aspect:
+    case UVProfile::Aspect:
         vtAspectRatio = radius / (depth + radius + radius);
         break;
 
-    case UvProfile::Uniform:
+    case UVProfile::Uniform:
         vtAspectRatio = (float) halfLats / (ringsp1 + latitudes);
         break;
 
-    case UvProfile::Fixed:
+    case UVProfile::Fixed:
     default:
         vtAspectRatio = 1.0f / 3.0f;
         break;
@@ -695,7 +695,7 @@ void CapsuleGeometry::generateCapsuleGeometryAsync(QPromise<CapsuleGeometry::Geo
                                                    int rings,
                                                    float height,
                                                    float diameter,
-                                                   CapsuleGeometry::UvProfile uvProfile)
+                                                   CapsuleGeometry::UVProfile uvProfile)
 {
     auto output = generateCapsuleGeometry(enableNormals, enableUV, longitudes, latitudes, rings, height, diameter, uvProfile);
     promise.addResult(output);
