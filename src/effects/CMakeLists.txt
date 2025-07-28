@@ -42,7 +42,7 @@ qt_internal_add_qml_module(Quick3DEffects
     NO_PRIVATE_MODULE
     QML_FILES
         ${qml_files}
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Qml
         Qt::Quick
         Qt::Quick3DPrivate
