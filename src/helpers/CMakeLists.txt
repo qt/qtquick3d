@@ -47,9 +47,12 @@ qt_internal_add_qml_module(Quick3DHelpers
         QT_BUILD_QUICK3DHELPERS_LIB
     LIBRARIES
         Qt::Quick3D
+        Qt::Quick3DPrivate
+        Qt::GuiPrivate
     PUBLIC_LIBRARIES
         Qt::Qml
         Qt::Quick
+    PRIVATE_MODULE_INTERFACE
         Qt::Quick3DPrivate
         Qt::GuiPrivate
 )
