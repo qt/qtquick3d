@@ -13,7 +13,12 @@ set_property(CACHE INPUT_quick3d_assimp PROPERTY STRINGS undefined no qt system)
 
 #### Libraries
 
-qt_find_package(WrapQuick3DAssimp 5.1.6 PROVIDED_TARGETS WrapQuick3DAssimp::WrapQuick3DAssimp MODULE_NAME assetimporters QMAKE_LIB quick3d_assimp)
+qt_find_package(WrapQuick3DAssimp 5.1.6 PROVIDED_TARGETS WrapQuick3DAssimp::WrapQuick3DAssimp
+    MODULE_NAME assetimporters
+    QMAKE_LIB quick3d_assimp
+    VCPKG_PORT assimp
+    VCPKG_ADD_TO_FEATURE quick3d-assimp
+)
 
 # Work around QTBUG-115064
 # Assimp depends on draco_X, but only one of the two targets gets promoted by qt_find_package
