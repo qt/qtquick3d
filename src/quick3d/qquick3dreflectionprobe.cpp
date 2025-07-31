@@ -372,12 +372,8 @@ QSSGRenderGraphObject *QQuick3DReflectionProbe::updateSpatialNode(QSSGRenderGrap
 
 void QQuick3DReflectionProbe::markAllDirty()
 {
-    m_dirtyFlags = DirtyFlags(DirtyFlag::QualityDirty)
-            | DirtyFlags(DirtyFlag::ClearColorDirty)
-            | DirtyFlags(DirtyFlag::RefreshModeDirty)
-            | DirtyFlags(DirtyFlag::ParallaxCorrectionDirty)
-            | DirtyFlags(DirtyFlag::BoxDirty)
-            | DirtyFlags(DirtyFlag::TimeSlicingDirty);
+    m_dirtyFlags = QQuick3DReflectionProbe::AllDirty;
+
     QQuick3DNode::markAllDirty();
 }
 
