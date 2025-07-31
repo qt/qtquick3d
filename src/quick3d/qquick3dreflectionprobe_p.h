@@ -117,13 +117,15 @@ protected:
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
 
-    DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::QualityDirty)
-                              | DirtyFlags(DirtyFlag::ClearColorDirty)
-                              | DirtyFlags(DirtyFlag::RefreshModeDirty)
-                              | DirtyFlags(DirtyFlag::ParallaxCorrectionDirty)
-                              | DirtyFlags(DirtyFlag::BoxDirty)
-                              | DirtyFlags(DirtyFlag::TimeSlicingDirty)
-                              | DirtyFlags(DirtyFlag::TextureDirty);
+    static constexpr DirtyFlags AllDirty = DirtyFlags(DirtyFlag::QualityDirty)
+                                           | DirtyFlags(DirtyFlag::ClearColorDirty)
+                                           | DirtyFlags(DirtyFlag::RefreshModeDirty)
+                                           | DirtyFlags(DirtyFlag::ParallaxCorrectionDirty)
+                                           | DirtyFlags(DirtyFlag::BoxDirty)
+                                           | DirtyFlags(DirtyFlag::TimeSlicingDirty)
+                                           | DirtyFlags(DirtyFlag::TextureDirty);
+
+    DirtyFlags m_dirtyFlags = QQuick3DReflectionProbe::AllDirty;
 
 private:
     quint32 mapToReflectionResolution(ReflectionQuality quality);
