@@ -44,7 +44,14 @@ public:
     // rendercontext per QQuickWindow (and so scenegraph render thread).
     explicit QSSGRenderContextInterface(QRhi *rhi);
 
-    // This overload must only be used in special cases, e.g. by the genshaders tool.
+    // One of these overloads must only be used in special cases, e.g. by the genshaders tool.
+    QSSGRenderContextInterface(std::unique_ptr<QSSGBufferManager> bufferManager,
+                               std::unique_ptr<QSSGRenderer> renderer,
+                               std::shared_ptr<QSSGShaderLibraryManager> shaderLibraryManager,
+                               std::unique_ptr<QSSGShaderCache> shaderCache,
+                               std::unique_ptr<QSSGCustomMaterialSystem> customMaterialSystem,
+                               std::unique_ptr<QSSGProgramGenerator> shaderProgramGenerator,
+                               std::unique_ptr<QSSGRhiContext> ctx);
     QSSGRenderContextInterface(std::unique_ptr<QSSGBufferManager> bufferManager,
                                std::unique_ptr<QSSGRenderer> renderer,
                                std::shared_ptr<QSSGShaderLibraryManager> shaderLibraryManager,
@@ -52,7 +59,7 @@ public:
                                std::unique_ptr<QSSGCustomMaterialSystem> customMaterialSystem,
                                std::unique_ptr<QSSGProgramGenerator> shaderProgramGenerator,
                                std::unique_ptr<QSSGRhiContext> ctx,
-                               std::unique_ptr<QSSGDebugDrawSystem> debugDrawSystem = nullptr);
+                               std::unique_ptr<QSSGDebugDrawSystem> debugDrawSystem);
 
     ~QSSGRenderContextInterface();
 
