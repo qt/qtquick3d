@@ -85,6 +85,29 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(std::unique_ptr<QSSGBuffe
                                                        std::unique_ptr<QSSGShaderCache> shaderCache,
                                                        std::unique_ptr<QSSGCustomMaterialSystem> customMaterialSystem,
                                                        std::unique_ptr<QSSGProgramGenerator> shaderProgramGenerator,
+                                                       std::unique_ptr<QSSGRhiContext> ctx)
+    : QSSGRenderContextInterface {
+        std::move(bufferManager),
+        std::move(renderer),
+        std::move(shaderLibraryManager),
+        std::move(shaderCache),
+        std::move(customMaterialSystem),
+        std::move(shaderProgramGenerator),
+        std::move(ctx),
+        nullptr,
+    }
+{
+}
+
+/*!
+    \internal
+ */
+QSSGRenderContextInterface::QSSGRenderContextInterface(std::unique_ptr<QSSGBufferManager> bufferManager,
+                                                       std::unique_ptr<QSSGRenderer> renderer,
+                                                       std::shared_ptr<QSSGShaderLibraryManager> shaderLibraryManager,
+                                                       std::unique_ptr<QSSGShaderCache> shaderCache,
+                                                       std::unique_ptr<QSSGCustomMaterialSystem> customMaterialSystem,
+                                                       std::unique_ptr<QSSGProgramGenerator> shaderProgramGenerator,
                                                        std::unique_ptr<QSSGRhiContext> ctx,
                                                        std::unique_ptr<QSSGDebugDrawSystem> debugDrawSystem)
     : m_rhiContext(std::move(ctx))
