@@ -151,5 +151,5 @@ See \l {Qt Licensing} for further details.
 Furthermore, Qt Quick 3D potentially contains third party modules
 under the following permissive licenses:
 
-\generatelist{groupsbymodule attributions-qtquick3d}
+\annotatedlist attributions-qtquick3d
 */
