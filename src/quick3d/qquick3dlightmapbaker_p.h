@@ -53,6 +53,7 @@ public:
     void bake(Callback callback);
     void bake();
 
+    void denoise(Callback callback);
     void denoise();
 
 private slots:
