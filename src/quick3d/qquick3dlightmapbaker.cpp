@@ -109,6 +109,22 @@ void QQuick3DLightmapBaker::bake()
     updateView();
 }
 
+/*!
+    Triggers a new frame where lightmap denoising will take place.
+    Will call \a callback for feedback and handling.
+*/
+void QQuick3DLightmapBaker::denoise(Callback callback)
+{
+    Q_ASSERT(m_view);
+    m_denoisingRequested = true;
+    m_bakingControl->reset();
+    m_callback = callback;
+    updateView();
+}
+
+/*!
+    \internal
+*/
 void QQuick3DLightmapBaker::denoise()
 {
     Q_ASSERT(m_view);
