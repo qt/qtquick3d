@@ -696,6 +696,14 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSSGRenderEffect *inEffe
     const float nearClip = rhi->isClipDepthZeroToOne() ? 0.0f : -1.0f;
     m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_nearClipValue", nearClip, QSSGRenderShaderValue::Float);
 
+    const QVector4D rhiProperties(
+        rhi->isYUpInFramebuffer() ? 1.0f : -1.0f,
+        rhi->isYUpInNDC() ? 1.0f : -1.0f,
+        rhi->isClipDepthZeroToOne() ? 0.0f : -1.0f,
+        0.0f // unused
+    );
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_rhi_properties", rhiProperties, QSSGRenderShaderValue::Vec4);
+
     if (m_depthTexture) {
         static const QSSGRhiSamplerDescription depthSamplerDesc {
                     QRhiSampler::Nearest, QRhiSampler::Nearest,

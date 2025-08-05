@@ -377,6 +377,20 @@ QT_BEGIN_NAMESPACE
     Note that with \l{Multiview Rendering}{multiview rendering}, this is an array
     of matrices.
 
+    \li float \c NDC_Y_UP - The value is \c 1 when the Y axis points up in
+    normalized device coordinate space, and \c{-1} when the Y axis points down.
+    Y pointing down is the case when rendering happens with Vulkan.
+
+    \li float \c FRAMEBUFFER_Y_UP - The value is \c 1 when the Y axis points up
+    in the coordinate system for framebuffers (textures), meaning \c{(0, 0)} is
+    the bottom-left corner. The value is \c{-1} when the Y axis points down,
+    \c{(0, 0)} being the top-left corner.
+
+    \li float \c NEAR_CLIP_VALUE - The value is \c -1 for when the clipping plane
+    range's starts at \c -1 and goes to \c 1.  This is true when using OpenGL for
+    rendering. For other rendering backends the value of this property will be
+    \c 0 meaning the clipping plane range is \c 0 to \c 1.
+
     \endlist
 
     \section1 Building multi-pass effects
@@ -854,6 +868,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         uniforms.append({ "vec2", "qt_cameraProperties" });
         uniforms.append({ "float", "qt_normalAdjustViewportFactor" });
         uniforms.append({ "float", "qt_nearClipValue" });
+        uniforms.append({ "vec4", "qt_rhi_properties" });
 
         // qt_inputTexture is not listed in uniforms, will be added by prepareCustomShader()
         // since the name and type varies between non-multiview and multiview mode
