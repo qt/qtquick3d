@@ -142,7 +142,7 @@ QHash<int, QByteArray> QQuick3DXrSpatialAnchorListModel::roleNames() const
 }
 
 /*!
-    \qmlmethod void QQuick3DXrSpatialAnchorListModel::requestSceneCapture()
+    \qmlmethod void XrSpatialAnchorListModel::requestSceneCapture()
     \brief  This method triggers a scan to capture or update spatial data for the current environment.
 
     This method triggers the underlying XR system to perform a scene capture of the user's current physical environment,
