@@ -114,15 +114,14 @@ files the tool needs to process.
 
 The shadergen tools main output file is a .qsbc file. The .qsbc file contains a collection of
 \l {Qt Shader Tools} {.qsb} files plus some meta-data about the various material shaders,
-like the unique property string for each material.
-
-\sa {Qt Shader Tools} {QtShaderTools}
-
-The .qsbc file can be inspected by calling the shadergen tool with the \c -d argument:
+such as the unique property string for each material. To inspect the content of the .qsbc file
+you can use the \c -l argument with the shadergen tool, like this:
 
 \code
-shadergen -d qtappshaders.qsbc
+shadergen -l qtappshaders.qsbc
 \endcode
+
+\sa {Qt Shader Tools} {QtShaderTools}
 
 \section1 Dynamic properties
 
