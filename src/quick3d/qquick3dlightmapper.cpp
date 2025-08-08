@@ -135,24 +135,26 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlproperty string Lightmapper::source
+    \qmlproperty url Lightmapper::source
     \since 6.10
-    \default lightmaps.bin
+    \default file:lightmaps.bin
 
-    The path to where to save the generated lightmap file on a successful bake
-    and where to load the file at runtime.
+    The url for loading the lightmap file at runtime and the output file path
+    on a successful bake.
 
-    When baking, the path needs to be set up to be a regular file location which
-    is writable. By default the value is \c{lightmaps.bin}, meaning the current
-    working directory, in a file called exactly that. This location is also
-    readable, which makes the final result instantly appear on a successful bake.
+    When baking, the output path will be deduced from the url and it needs to
+    resolve to a regular file location that is writable. By default the value
+    is \c{file:lightmaps.bin}, which means the file will be put in the current
+    working directory and the final result will instantly appear on a successful
+    bake.
 
-    When loading a bake it will try to look at an actual file location on disk,
-    falling back to looking at files embedded in the executable via the Qt
-    resource system if not found. To control the value more explicitly it can be
-    prefixed, with for example \c{qrc:/} and the Lightmapper will always look for
-    a file in resources.
+    In the same directory as the output file, a \c{.raw} file is created that
+    contains extra lightmap data used before creating the final lightmap file.
+    This makes it possible to do just denoising without having to bake the whole
+    scene between runs, assuming the \c{.raw} file is present.
 
+    If you want to read the lightmap as a QRC resource you need to embed
+    it in the usual way and add a \c{:/} or \c{qrc:/} prefix to the url.
     The following example always tries to load the lightmap file embedded via
     resources. First set the value to a writable location and bake. Then copy the
     generated file into the source directoy. Then by listing the file in the
@@ -162,21 +164,10 @@ QT_BEGIN_NAMESPACE
     \qml
     Lightmapper {
         source: "qrc:/lightmaps/lightmaps.bin"
-        // will attempt to load from :/lightmaps/lightmaps.bin at runtime.
-        // this will result in a "Location not writable" when initiating a bake.
+        // will attempt to load from :/lightmaps/lightmaps.bin at runtime
+        // and write a file to lightmaps/lightmaps.bin when baking.
     }
     \endqml
-
-    Note that just omitting the prefix will still make the Lightmapper try to
-    load the lightmap file from resources at runtime if the file is not found
-    on disk. This is a convenience during development. If a bake is then
-    initiated and is successful, the same path is converted to absolute and the
-    generated file will be saved to that location. Now the results will insantly
-    appear. Then it's just a matter of copying this file to the source directory
-    and adding back the prefix to start explicitly loading from resources again.
-
-    \note It is not possible to write to the resource system, so an error is given
-    when a bake is initiated and the path is explicitly set up to point there.
  */
 
 /*!
@@ -242,7 +233,7 @@ float QQuick3DLightmapper::indirectLightFactor() const
     return m_indirectFactor;
 }
 
-QString QQuick3DLightmapper::source() const
+QUrl QQuick3DLightmapper::source() const
 {
     return m_source;
 }
@@ -327,7 +318,7 @@ void QQuick3DLightmapper::setIndirectLightFactor(float factor)
     emit changed();
 }
 
-void QQuick3DLightmapper::setSource(const QString &source)
+void QQuick3DLightmapper::setSource(const QUrl &source)
 {
     if (m_source == source)
         return;

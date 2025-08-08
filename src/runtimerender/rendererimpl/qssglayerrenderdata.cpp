@@ -2313,6 +2313,8 @@ void QSSGLayerRenderData::prepareForRender()
         features.set(QSSGShaderFeatures::Feature::ForceIblExposure, forceIblExposureValues);
     }
 
+    frameData.m_ctx->bufferManager()->setLightmapSource(layer.lightmapSource);
+
     // Update the node data version for this layer.
     // This version should only change if the world tree was re-indexed.
     version = nodeData->version();

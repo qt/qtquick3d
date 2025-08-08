@@ -644,14 +644,25 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         lmOptions.indirectLightWorkgroupSize = lightmapper->indirectLightWorkgroupSize();
         lmOptions.indirectLightBounces = lightmapper->bounces();
         lmOptions.indirectLightFactor = lightmapper->indirectLightFactor();
-        lmOptions.source = lightmapper->source();
         lmOptions.sigma = lightmapper->denoiseSigma();
         lmOptions.texelsPerUnit = lightmapper->texelsPerUnit();
     } else {
         lmOptions = {};
     }
 
-    m_sgContext->bufferManager()->setLightmapSource(lmOptions.source);
+    { // Resolve lightmaps source url
+        const QQmlContext *context = qmlContext(view3D);
+        const QUrl originalSource = environment->lightmapper() ? environment->lightmapper()->source()
+                                                               : QUrl::fromLocalFile(QStringLiteral("lightmaps.bin"));
+        const auto resolvedUrl = context ? context->resolvedUrl(originalSource) : originalSource;
+        const auto qmlSource = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
+        const QString lightmapSource = qmlSource.isEmpty() ? originalSource.path() : qmlSource;
+        lmOptions.source = lightmapSource;
+        m_layer->lightmapSource = lightmapSource;
+        // HACK: this is also set in the render layer but we need to set it here since
+        // it is needed below when calculating bounding boxes from the stored lightmap mesh
+        m_sgContext->bufferManager()->setLightmapSource(lightmapSource);
+    }
 
     // Synchronize scene managers under this window
     QSet<QSSGRenderGraphObject *> resourceLoaders;

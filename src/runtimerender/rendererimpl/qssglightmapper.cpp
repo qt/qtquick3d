@@ -235,6 +235,7 @@ struct QSSGLightmapperPrivate
     explicit QSSGLightmapperPrivate() = default;
 
     QSSGLightmapperOptions options;
+    QString outputPath;
     QVector<QSSGBakedLightingModel> bakedLightingModels;
     QRhi::Implementation rhiBackend = QRhi::Null;
     std::unique_ptr<QSSGRenderContextInterface> rhiCtxInterface;
@@ -2182,6 +2183,31 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeIndirectLight(int lmIdx, int w
     return result;
 }
 
+static QString stripQrcPrefix(const QString &path)
+{
+    QString result = path;
+    if (result.startsWith(QStringLiteral(":/")))
+        result.remove(0, 2);
+    return result;
+}
+
+// Creates all parent directories needed for the given file path.
+// Returns true on success, false if creation fails.
+static bool createDirectory(const QString &filePath)
+{
+    QFileInfo fileInfo(filePath);
+    QString dirPath = fileInfo.path();
+    QDir dir;
+
+    if (dir.exists(dirPath))
+        return true;
+
+    if (!dir.mkpath(dirPath))
+        return false;
+
+    return true;
+}
+
 static bool isValidSavePath(const QString &path) {
     const QFileInfo info = QFileInfo(path);
     if (!info.exists()) {
@@ -2197,10 +2223,9 @@ static inline QString indexToMeshKey(int index)
 
 bool QSSGLightmapperPrivate::storeMeshes(QSharedPointer<QSSGLightmapWriter> writer)
 {
-    if (!isValidSavePath(options.source)) {
+    if (!isValidSavePath(outputPath)) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
-                       QStringLiteral("Source path %1 is not a writable location")
-                           .arg(options.source));
+                       QStringLiteral("Source path %1 is not a writable location").arg(outputPath));
         return false;
     }
 
@@ -2411,7 +2436,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     denoiseTimer.start();
 
     // Tmp file
-    const QString inPath = QFileInfo(options.source + QStringLiteral(".tmp")).absoluteFilePath();
+    const QString inPath = QFileInfo(outputPath + QStringLiteral(".raw")).absoluteFilePath();
     QSharedPointer<QSSGLightmapLoader> tmpFile = QSSGLightmapLoader::open(inPath);
     if (!tmpFile) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Could not read file '%1'").arg(inPath));
@@ -2419,7 +2444,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     }
 
     // Final file
-    const QString outPath = QFileInfo(options.source).absoluteFilePath();
+    const QString outPath = QFileInfo(outputPath).absoluteFilePath();
     QSharedPointer<QSSGLightmapWriter> finalFile = QSSGLightmapWriter::open(outPath);
     if (!finalFile) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Could not read file '%1'").arg(outPath));
@@ -2727,15 +2752,15 @@ bool QSSGLightmapper::bake()
     d->updateStage(QStringLiteral("Preparing"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Bake starting..."));
 
-    if (!isValidSavePath(d->options.source)) {
+    if (!isValidSavePath(d->outputPath)) {
         d->updateStage(QStringLiteral("Failed"));
-        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Source path %1 is not a writable location").
-                                                                arg(d->options.source));
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
+                          QStringLiteral("Source path %1 is not a writable location").arg(d->outputPath));
         return false;
     }
 
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Source path: %1").arg(d->options.source));
-
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Output path: %1").arg(d->outputPath));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Total models registered: %1").arg(d->bakedLightingModels.size()));
 
     if (d->bakedLightingModels.isEmpty()) {
@@ -2817,7 +2842,7 @@ bool QSSGLightmapper::bake()
                                                            arg(d->options.indirectLightFactor));
 
     // We use a work-file where we store the baked lightmaps accumulatively and when
-    // the baking process is finished successfully, replace the .tmp file with it.
+    // the baking process is finished successfully, replace the .raw file with it.
     QSharedPointer<QTemporaryFile> workFile = QSharedPointer<QTemporaryFile>::create(QDir::tempPath() + "/qt_lightmapper_work_file_XXXXXX"_L1);
 
     QElapsedTimer timer;
@@ -2998,7 +3023,7 @@ bool QSSGLightmapper::bake()
         return false;
     }
 
-    const QString tmpPath = QFileInfo(d->options.source).absoluteFilePath() + ".tmp"_L1;
+    const QString tmpPath = QFileInfo(d->outputPath).absoluteFilePath() + ".raw"_L1;
     QFile::remove(tmpPath);
     if (!workFile->copy(tmpPath)) {
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Error,
@@ -3084,13 +3109,20 @@ void QSSGLightmapper::run(QOffscreenSurface *fallbackSurface)
         return;
     }
 
-    if (!isValidSavePath(d->options.source)) {
-        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Source path %1 is not a writable location").
-                                                                 arg(d->options.source));
+    d->outputPath = stripQrcPrefix(d->options.source);
+
+    if (!createDirectory(d->outputPath)) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed, QStringLiteral("Failed to create output directory"));
         return;
     }
 
-    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Source path: %1").arg(d->options.source));
+    if (!isValidSavePath(d->outputPath)) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
+                          QStringLiteral("Source path %1 is not a writable location").arg(d->outputPath));
+        return;
+    }
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Source path: %1").arg(d->outputPath));
 
     const QRhi::Flags flags = QRhi::EnableTimestamps | QRhi::EnableDebugMarkers;
 #if QT_CONFIG(vulkan)
