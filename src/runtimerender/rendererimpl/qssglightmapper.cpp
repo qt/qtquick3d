@@ -20,6 +20,7 @@
 #include <QBuffer>
 #include <QWaitCondition>
 #include <QMutex>
+#include <QTemporaryFile>
 #if QT_CONFIG(opengl)
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
@@ -2817,16 +2818,7 @@ bool QSSGLightmapper::bake()
 
     // We use a work-file where we store the baked lightmaps accumulatively and when
     // the baking process is finished successfully, replace the .tmp file with it.
-    // Put the work-file next to the destination file so we can just do a rename/move
-    // of the file with hopefully no potential inter-filesystem issues.
-    const auto workFile = QSharedPointer<QFile>::create(QFileInfo(d->options.source).absoluteDir().path()
-                                                        + "/qt_lightmapper_work_file_"_L1
-                                                        + QString::number(QCoreApplication::applicationPid()));
-    bool deleteWorkFile = true;
-    auto cleanupWorkFile = qScopeGuard([workFile, &deleteWorkFile] {
-        if (deleteWorkFile)
-            workFile->remove();
-    });
+    QSharedPointer<QTemporaryFile> workFile = QSharedPointer<QTemporaryFile>::create(QDir::tempPath() + "/qt_lightmapper_work_file_XXXXXX"_L1);
 
     QElapsedTimer timer;
     timer.start();
@@ -3008,9 +3000,7 @@ bool QSSGLightmapper::bake()
 
     const QString tmpPath = QFileInfo(d->options.source).absoluteFilePath() + ".tmp"_L1;
     QFile::remove(tmpPath);
-    if (workFile->rename(tmpPath)) {
-        deleteWorkFile = false;
-    } else {
+    if (!workFile->copy(tmpPath)) {
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Error,
                           QStringLiteral("Failed to copy temp file to %1").arg(tmpPath));
         return false;
