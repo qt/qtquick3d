@@ -270,6 +270,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     bool disableShadowCameraUpdate = false;
     bool drawCulledObjects = false;
 
+    // Would ideally be in QSSGLayerRenderData but it is created too late
+    // so needs to be set here.
+    QString lightmapSource;
+
     QSSGRenderLayer();
     ~QSSGRenderLayer();
 

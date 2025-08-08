@@ -8,8 +8,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QProcess>
 #include <QtGui/QImage>
-#include <QString>
-#include <QFileInfo>
 
 #include <algorithm>
 
@@ -253,7 +251,6 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QString &grabberEx
     usePipe = false;
 #endif
     QProcess grabber;
-    grabber.setWorkingDirectory(QFileInfo(qmlFile).absolutePath());
     grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     QString cmd = QCoreApplication::applicationDirPath() + QDir::separator() + grabberExec;
     QStringList args = extraArgs;
