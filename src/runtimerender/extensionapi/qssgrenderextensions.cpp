@@ -37,6 +37,39 @@ QSSGFrameData::Result QSSGFrameData::getRenderResult(RenderResult id) const
 }
 
 /*!
+    Schedule the given \a results to be made available for this frame.
+
+    This function should only be called during the prepare phase in \l QSSGRenderExtension::prepareData().
+
+    \note The requested results might not be available if the underlying layer does not support
+    them or if the layer does not contain any data that would make it necessary to produce the
+    requested results, in which case \l getRenderResult() will return a empty result.
+
+    \sa QSSGRenderExtension::getRenderResult()
+*/
+
+void QSSGFrameData::scheduleRenderResults(RenderResults results) const
+{
+    auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
+    QSSG_ASSERT(data, return);
+
+    auto &prepResult = data->layerPrepResult;
+
+    if (prepResult.getState() != QSSGLayerRenderPreparationResult::State::DataPrep) {
+        qWarning("QSSGFrameData::requestRenderResults: "
+                "Requesting render results should only be done during the prepare phase in prepareData().");
+        return;
+    }
+
+    if (results.testFlag(QSSGFrameData::RenderResult::DepthTexture))
+        prepResult.flags.setRequiresDepthTexture(true);
+    if (results.testFlag(QSSGFrameData::RenderResult::ScreenTexture))
+        prepResult.flags.setRequiresScreenTexture(true);
+    if (results.testFlag(RenderResult::AoTexture))
+        prepResult.flags.setRequiresSsaoPass(true);
+}
+
+/*!
     \return Base pipeline state for this frame
  */
 QSSGRhiGraphicsPipelineState QSSGFrameData::getPipelineState() const

@@ -163,7 +163,7 @@ bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
     theRenderData->resetForFrame();
     theRenderData->prepareForRender();
     endLayerRender();
-    return theRenderData->layerPrepResult.flags.wasDirty();
+    return theRenderData->layerPrepResult.getFlags().wasDirty();
 }
 
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.

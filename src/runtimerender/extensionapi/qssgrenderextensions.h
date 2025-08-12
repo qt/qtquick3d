@@ -38,6 +38,7 @@ public:
         AccumTexture,
         RevealageTexture
     };
+    Q_DECLARE_FLAGS(RenderResults, RenderResult)
 
     struct Result
     {
@@ -47,6 +48,8 @@ public:
 
     using TypeMask = QSSGRenderGraphObject::TypeT;
     static constexpr TypeMask NodeMask = QSSGRenderGraphObject::BaseType::Node;
+
+    void scheduleRenderResults(RenderResults results) const;
 
     Result getRenderResult(RenderResult id) const;
 

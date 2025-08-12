@@ -464,7 +464,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     rhiScreenTexture = data.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
     auto &layer = data.layer;
     const auto &layerPrepResult = data.layerPrepResult;
-    wantsMips = layerPrepResult.flags.requiresMipmapsForScreenTexture();
+    wantsMips = layerPrepResult.getFlags().requiresMipmapsForScreenTexture();
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
     ps = data.getPipelineState();
     ps.samples = 1; // screen texture is always non-MSAA
@@ -971,8 +971,8 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
         const int viewCount = data.layer.viewCount;
         if (layer.scissorRect.isValid()) {
-            QRect effScissor = layer.scissorRect & layerPrepResult.viewport.toRect();
-            QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult.viewport,
+            QRect effScissor = layer.scissorRect & layerPrepResult.getViewport().toRect();
+            QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult.getViewport(),
                                                             effScissor,
                                                             rhiCtx->rhi()->isYUpInNDC());
             for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
@@ -983,7 +983,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         } else {
             for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
                 renderer2d->setProjectionMatrix(mvps[viewIndex], viewIndex);
-            renderer2d->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.viewport, deviceRect));
+            renderer2d->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.getViewport(), deviceRect));
         }
         renderer2d->setDeviceRect(deviceRect);
         QSGRenderTarget sgRt(renderTarget, rpd, rhiCtx->commandBuffer());

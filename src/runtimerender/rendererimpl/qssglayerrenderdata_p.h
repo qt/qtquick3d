@@ -152,18 +152,36 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     }
 };
 
-struct QSSGLayerRenderPreparationResult
+class QSSGLayerRenderPreparationResult
 {
-    QSSGLayerRenderPreparationResultFlags flags;
-    QRectF viewport;
-    QSSGRenderLayer *layer = nullptr;
+public:
+    enum class State : quint8
+    {
+        Null = 0,
+        DataPrep,
+        Done,
+    };
 
     QSSGLayerRenderPreparationResult() = default;
     QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer);
 
-    bool isNull() const { return !layer; }
+    void setState(State state) { m_state = state; }
+    State getState() const { return m_state; }
+    bool isNull() const { return !layer && m_state == State::Null; }
     bool isLayerVisible() const;
     QSize textureDimensions() const;
+    QRectF getViewport() const { return viewport; }
+    const QSSGLayerRenderPreparationResultFlags &getFlags() const { return flags; }
+    QSSGRenderLayer *getLayer() const { return layer; }
+
+private:
+    friend class QSSGLayerRenderData;
+    friend class QSSGFrameData;
+
+    QSSGLayerRenderPreparationResultFlags flags;
+    QRectF viewport;
+    QSSGRenderLayer *layer = nullptr;
+    State m_state = State::Null;
 };
 
 struct QSSGDefaultMaterialPreparationResult

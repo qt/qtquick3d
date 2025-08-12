@@ -2272,6 +2272,7 @@ void QSSGLayerRenderData::prepareForRender()
     bool wasDataDirty = false;
     wasDirty = layer.isDirty();
 
+    // NOTE: Prep-state is implicitly set to "DataPrep"
     layerPrepResult = { theViewport, layer };
 
     // SSAO
@@ -2768,6 +2769,10 @@ void QSSGLayerRenderData::prepareForRender()
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, depthTestEnableDefault);
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, depthWriteEnableDefault);
 
+
+    // All data prep is done, from now on the layer content shouldn't change.
+    layerPrepResult.setState(QSSGLayerRenderPreparationResult::State::Done);
+
     // Prepare passes
     QSSG_ASSERT(activePasses.isEmpty(), activePasses.clear());
     // If needed, generate a depth texture with the opaque objects. This
@@ -2899,6 +2904,7 @@ void QSSGLayerRenderData::resetForFrame()
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer)
     : layer(&inLayer)
+    , m_state(State::DataPrep)
 {
     viewport = inViewport;
 }
