@@ -33,16 +33,9 @@ public:
     {
         AoTexture,
         DepthTexture,
-        DepthTextureMS,
         ScreenTexture,
-        AccumTexture,
-        RevealageTexture,
         NormalTexture,
-        ABufferImage = AccumTexture,
-        AuxiliaryImage = RevealageTexture,
-        CounterImage,
         MotionVectorTexture,
-        RenderResultCount
     };
     Q_DECLARE_FLAGS(RenderResults, RenderResult)
 
@@ -81,7 +74,6 @@ public:
 
 private:
     friend class QSSGLayerRenderData;
-    friend class QSSGRenderHelpers;
     friend class QSSGRenderOutputProviderExtension;
 
     void clear();

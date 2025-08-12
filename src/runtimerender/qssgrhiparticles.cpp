@@ -180,9 +180,9 @@ void QSSGParticleRenderer::updateUniformsForParticles(const QSSGLayerRenderData 
         shaders.setUniform(ubufData, "qt_texcoordScale", &texcoordScale, sizeof(float));
     }
 
-    const QSSGRhiRenderableTexture *abuf = inData.getRenderResult(QSSGFrameData::RenderResult::ABufferImage);
-    const QSSGRhiRenderableTexture *aux = inData.getRenderResult(QSSGFrameData::RenderResult::AuxiliaryImage);
-    const QSSGRhiRenderableTexture *counter = inData.getRenderResult(QSSGFrameData::RenderResult::CounterImage);
+    const QSSGRhiRenderableTexture *abuf = inData.getRenderResult(QSSGRenderResult::Key::ABufferImage);
+    const QSSGRhiRenderableTexture *aux = inData.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
+    const QSSGRhiRenderableTexture *counter = inData.getRenderResult(QSSGRenderResult::Key::CounterImage);
     shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
     if (abuf->texture) {
         int abufWidth = RenderHelpers::rhiCalculateABufferSize(inData.layer.oitNodeCount);

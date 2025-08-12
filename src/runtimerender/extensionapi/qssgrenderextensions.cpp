@@ -27,11 +27,11 @@ QT_BEGIN_NAMESPACE
 */
 QSSGFrameData::Result QSSGFrameData::getRenderResult(RenderResult id) const
 {
-    using RenderResultT = std::underlying_type_t<RenderResult>;
     const QSSGRhiRenderableTexture *res = nullptr;
     auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
-    if (QSSG_GUARD(data && (std::size(data->renderResults) > RenderResultT(id))))
-        res = data->getRenderResult(id);
+    const auto resultKey = QSSGRenderResult::toInternalRenderResultKey(id);
+    if (QSSG_GUARD(data && (std::size(data->renderResults) > size_t(resultKey))))
+        res = data->getRenderResult(resultKey);
 
     return res ? Result{ res->texture, res->depthStencil } : Result{};
 }

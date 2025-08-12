@@ -390,9 +390,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             const auto &renderer = m_sgContext->renderer();
             QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
             Q_ASSERT(theRenderData);
-            QRhiTexture *theDepthTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::DepthTexture)->texture;
-            QRhiTexture *theNormalTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::NormalTexture)->texture;
-            QRhiTexture *theMotionVectorTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::MotionVectorTexture)->texture;
+            QRhiTexture *theDepthTexture = theRenderData->getRenderResult(QSSGRenderResult::Key::DepthTexture)->texture;
+            QRhiTexture *theNormalTexture = theRenderData->getRenderResult(QSSGRenderResult::Key::NormalTexture)->texture;
+            QRhiTexture *theMotionVectorTexture = theRenderData->getRenderResult(QSSGRenderResult::Key::MotionVectorTexture)->texture;
 
             currentTexture = m_effectSystem->process(*m_layer,
                                                      currentTexture,
@@ -448,8 +448,8 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     if (m_layer->temporalAAMode == QSSGRenderLayer::TAAMode::MotionVector) {
                         QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
                         Q_ASSERT(theRenderData);
-                        QRhiTexture *theDepthTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::DepthTexture)->texture;
-                        QRhiTexture *theMotionVectorTexture = theRenderData->getRenderResult(QSSGFrameData::RenderResult::MotionVectorTexture)->texture;
+                        QRhiTexture *theDepthTexture = theRenderData->getRenderResult(QSSGRenderResult::Key::DepthTexture)->texture;
+                        QRhiTexture *theMotionVectorTexture = theRenderData->getRenderResult(QSSGRenderResult::Key::MotionVectorTexture)->texture;
                         bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, theDepthTexture, sampler);
                         bindings.addTexture(4, QRhiShaderResourceBinding::FragmentStage, theMotionVectorTexture, sampler);
                         QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, m_sgContext->shaderCache()->getBuiltInRhiShaders().getRhiTemporalAAShader().get());

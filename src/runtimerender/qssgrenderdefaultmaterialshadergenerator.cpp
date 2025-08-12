@@ -2301,11 +2301,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders.setShadowMapBlueNoiseTexture(nullptr);
     }
 
-    const QSSGRhiRenderableTexture *depthTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
-    const QSSGRhiRenderableTexture *normalTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::NormalTexture);
-    const QSSGRhiRenderableTexture *ssaoTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
-    const QSSGRhiRenderableTexture *screenTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
-    const QSSGRhiRenderableTexture *motionVectorTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::MotionVectorTexture);
+    const QSSGRhiRenderableTexture *depthTexture = inRenderProperties.getRenderResult(QSSGRenderResult::Key::DepthTexture);
+    const QSSGRhiRenderableTexture *normalTexture = inRenderProperties.getRenderResult(QSSGRenderResult::Key::NormalTexture);
+    const QSSGRhiRenderableTexture *ssaoTexture = inRenderProperties.getRenderResult(QSSGRenderResult::Key::AoTexture);
+    const QSSGRhiRenderableTexture *screenTexture = inRenderProperties.getRenderResult(QSSGRenderResult::Key::ScreenTexture);
+    const QSSGRhiRenderableTexture *motionVectorTexture = inRenderProperties.getRenderResult(QSSGRenderResult::Key::MotionVectorTexture);
 
     shaders.setDepthTexture(depthTexture->texture);
     shaders.setNormalTexture(normalTexture->texture);
@@ -2314,9 +2314,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders.setLightmapTexture(lightmapTexture);
     shaders.setMotionVectorTexture(motionVectorTexture->texture);
 
-    const QSSGRhiRenderableTexture *abuf = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::ABufferImage);
-    const QSSGRhiRenderableTexture *aux = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::AuxiliaryImage);
-    const QSSGRhiRenderableTexture *counter = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::CounterImage);
+    const QSSGRhiRenderableTexture *abuf = inRenderProperties.getRenderResult(QSSGRenderResult::Key::ABufferImage);
+    const QSSGRhiRenderableTexture *aux = inRenderProperties.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
+    const QSSGRhiRenderableTexture *counter = inRenderProperties.getRenderResult(QSSGRenderResult::Key::CounterImage);
     shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
     if (abuf->texture) {
         int abufWidth = RenderHelpers::rhiCalculateABufferSize(inRenderProperties.layer.oitNodeCount);

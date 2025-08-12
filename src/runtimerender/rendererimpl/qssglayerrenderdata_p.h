@@ -47,6 +47,50 @@ class QSSGRenderableObject;
 
 class QSGRenderer;
 
+namespace QSSGRenderResult
+{
+
+enum class Key : quint32
+{
+    // Public
+    AoTexture,
+    DepthTexture,
+    ScreenTexture,
+    NormalTexture,
+    MotionVectorTexture,
+    // Internal
+    AccumTexture,
+    RevealageTexture,
+    ABufferImage = AccumTexture,
+    AuxiliaryImage = RevealageTexture,
+    DepthTextureMS,
+    CounterImage,
+    RenderResultCount,
+};
+
+inline QSSGRenderResult::Key toInternalRenderResultKey(QSSGFrameData::RenderResult id)
+{
+    switch (id) {
+    case QSSGFrameData::RenderResult::AoTexture:
+        return QSSGRenderResult::Key::AoTexture;
+    case QSSGFrameData::RenderResult::DepthTexture:
+        return QSSGRenderResult::Key::DepthTexture;
+    case QSSGFrameData::RenderResult::ScreenTexture:
+        return QSSGRenderResult::Key::ScreenTexture;
+    case QSSGFrameData::RenderResult::NormalTexture:
+        return QSSGRenderResult::Key::NormalTexture;
+    case QSSGFrameData::RenderResult::MotionVectorTexture:
+        return QSSGRenderResult::Key::MotionVectorTexture;
+    }
+
+    if (size_t(QSSGRenderResult::Key::CounterImage) > size_t(id))
+        return static_cast<QSSGRenderResult::Key>(size_t(id));
+
+    return QSSGRenderResult::Key::RenderResultCount;
+}
+
+} // namespace QSSGRenderResult
+
 enum class QSSGLayerRenderPreparationResultFlag
 {
     // Was the data in this layer dirty (meaning re-render to texture, possibly)
@@ -463,8 +507,8 @@ public:
                                   float minThreshold,
                                   float maxThreshold);
 
-    [[nodiscard]] QSSGRhiRenderableTexture *getRenderResult(QSSGFrameData::RenderResult id) { return &renderResults[size_t(id)]; }
-    [[nodiscard]] const QSSGRhiRenderableTexture *getRenderResult(QSSGFrameData::RenderResult id) const { return &renderResults[size_t(id)]; }
+    [[nodiscard]] QSSGRhiRenderableTexture *getRenderResult(QSSGRenderResult::Key id) { return &renderResults[size_t(id)]; }
+    [[nodiscard]] const QSSGRhiRenderableTexture *getRenderResult(QSSGRenderResult::Key id) const { return &renderResults[size_t(id)]; }
     [[nodiscard]] static inline const std::unique_ptr<QSSGPerFrameAllocator> &perFrameAllocator(QSSGRenderContextInterface &ctx);
     [[nodiscard]] static inline QSSGLayerRenderData *getCurrent(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
     void saveRenderState(const QSSGRenderer &renderer);
@@ -719,7 +763,7 @@ private:
     QSSGRenderMotionVectorMapPtr motionVectorMapManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
     QHash<const QSSGModelContext *, QRhiTexture *> bonemapTextures;
-    QSSGRhiRenderableTexture renderResults[int(QSSGFrameData::RenderResult::RenderResultCount)] {};
+    QSSGRhiRenderableTexture renderResults[size_t(QSSGRenderResult::Key::RenderResultCount)] {};
     QSSGOITRenderContext oitRenderContext;
 };
 
