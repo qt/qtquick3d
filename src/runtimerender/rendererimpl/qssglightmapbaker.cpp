@@ -1,14 +1,16 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "qssglightmapbaker_p.h"
+
+#ifdef QT_QUICK3D_HAS_LIGHTMAPPER
 #include <QString>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
-#include <QtQuick3DRuntimeRender/private/qssglightmapbaker_p.h>
 #include <QThreadPool>
 #include "qssgrendercontextcore.h"
 #if QT_CONFIG(opengl)
 #include <QOffscreenSurface>
-#endif
+#endif // QT_CONFIG(opengl)
 
 QT_BEGIN_NAMESPACE
 
@@ -116,3 +118,24 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
 
 QT_END_NAMESPACE
 
+#else // QT_QUICK3D_HAS_LIGHTMAPPER
+
+QT_BEGIN_NAMESPACE
+
+QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
+{
+    qWarning("QSSGLightmapBaker: This build has no lightmap baking support.");
+#if defined(qApp)
+    if (ctx.settings.quitWhenFinished)
+        QMetaObject::invokeMethod(qApp, "quit");
+#endif
+}
+
+QSSGLightmapBaker::Status QSSGLightmapBaker::process()
+{
+    return QSSGLightmapBaker::Status::Finished;
+}
+
+QT_END_NAMESPACE
+
+#endif // QT_QUICK3D_HAS_LIGHTMAPPER

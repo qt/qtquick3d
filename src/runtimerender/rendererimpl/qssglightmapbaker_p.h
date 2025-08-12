@@ -60,7 +60,9 @@ public:
     Status process();
 
 private:
+#ifdef QT_QUICK3D_HAS_LIGHTMAPPER
     QSSGLightmapBakerPrivate *d;
+#endif
 };
 
 QT_END_NAMESPACE
