@@ -128,6 +128,8 @@ QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
 #if defined(qApp)
     if (ctx.settings.quitWhenFinished)
         QMetaObject::invokeMethod(qApp, "quit");
+#else
+    Q_UNUSED(ctx);
 #endif
 }
 
