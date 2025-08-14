@@ -22,6 +22,7 @@ struct QSSGLightmapBakerPrivate
     // Use a local threadpool to be able to set highest thread priority on the bake thread
     QThreadPool localThreadPool;
     QOffscreenSurface *fallbackSurface = nullptr;
+    bool waitingForInvoke = false;
 };
 
 QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
@@ -32,8 +33,16 @@ QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
     d->localThreadPool.setMaxThreadCount(1);
 }
 
+QSSGLightmapBaker::~QSSGLightmapBaker()
+{
+    delete d;
+}
+
 QSSGLightmapBaker::Status QSSGLightmapBaker::process()
 {
+    if (d->waitingForInvoke)
+        return d->currentStatus;
+
     auto &env = d->ctx.env;
     auto &settings = d->ctx.settings;
     auto &callbacks = d->ctx.callbacks;
@@ -47,9 +56,11 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
         callbacks.triggerNewFrame(true);
 
 #if QT_CONFIG(opengl)
+        d->waitingForInvoke = true;
         QMetaObject::invokeMethod(qApp, [this]() {
             d->fallbackSurface = QRhiGles2InitParams::newFallbackSurface();
             d->currentStatus = Status::Running;
+            d->waitingForInvoke = false;
         },
         Qt::QueuedConnection);
 #else
@@ -72,6 +83,7 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
             d->lightmapper->add(bakedLightingModels[i]);
 
         if (!d->lightmapper->setupLights(*env.renderer)) {
+            d->currentStatus = Status::Finished;
             callbacks.setCurrentlyBaking(false);
             callbacks.triggerNewFrame(true);
             if (settings.quitWhenFinished) {
@@ -93,10 +105,12 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
             callbacks.triggerNewFrame(true);
 
 #if QT_CONFIG(opengl)
+            d->waitingForInvoke = true;
             QMetaObject::invokeMethod(qApp, [this]() {
                 delete d->fallbackSurface;
                 d->fallbackSurface = nullptr;
                 d->currentStatus = Status::Finished;
+                d->waitingForInvoke = false;
             },
             Qt::QueuedConnection);
 #else
@@ -132,6 +146,8 @@ QSSGLightmapBaker::QSSGLightmapBaker(const QSSGLightmapBaker::Context &ctx)
     Q_UNUSED(ctx);
 #endif
 }
+
+QSSGLightmapBaker::~QSSGLightmapBaker() = default;
 
 QSSGLightmapBaker::Status QSSGLightmapBaker::process()
 {
