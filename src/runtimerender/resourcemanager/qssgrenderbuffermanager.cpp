@@ -249,7 +249,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         if (it != renderExtensionTexture.end()) {
             it->usageCounts[currentLayer]++;
             result = it->renderImageTexture;
-            increaseMemoryStat(result.m_texture);
         }
     }
     return result;
@@ -1583,18 +1582,14 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
     // Textures from render extensions
     auto renderExtensionTextureKeyIterator = renderExtensionTexture.cbegin();
     while (renderExtensionTextureKeyIterator != renderExtensionTexture.cend()) {
-        if (isUnused(renderExtensionTextureKeyIterator.value().usageCounts)) {
-            auto rhiTexture = renderExtensionTextureKeyIterator.value().renderImageTexture.m_texture;
-            if (rhiTexture) {
-                if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
-                   qDebug() << "- releaseTexture: " << (*renderExtensionTextureKeyIterator).renderImageTexture.m_texture << currentLayer;
-                decreaseMemoryStat(rhiTexture);
-                // NOTE: We don't own the texture, it's own by the user, so don't release.
-            }
+        // We do not own the textures, so we just keep track of usage, but
+        // if the texture is no longer valid it means that the extension
+        // has unregistered it, so we can remove it from the map.
+        auto rhiTexture = renderExtensionTextureKeyIterator.value().renderImageTexture.m_texture;
+        if (!rhiTexture)
             renderExtensionTextureKeyIterator = renderExtensionTexture.erase(renderExtensionTextureKeyIterator);
-        } else {
+        else
             ++renderExtensionTextureKeyIterator;
-        }
     }
 
     // Resource Tracking Debug Code
@@ -1902,8 +1897,7 @@ void QSSGBufferManager::registerExtensionResult(const QSSGRenderExtension &exten
         flags.setLinear(!isSRGB);
         const bool isRGBA8 = (texture->format() == QRhiTexture::Format::RGBA8);
         flags.setRgbe8(isRGBA8);
-        const quint32 usageCount = 1 /* At least '1' as long as a texture is registered */;
-        renderExtensionTexture.insert(&extensions, ImageData { QSSGRenderImageTexture{ texture, mipLevels, flags }, {}, usageCount });
+        renderExtensionTexture.insert(&extensions, ImageData { QSSGRenderImageTexture{ texture, mipLevels, flags }, {}, 0 /* version */ });
     } else {
         renderExtensionTexture.insert(&extensions, {});
     }
