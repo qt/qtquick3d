@@ -27,5 +27,9 @@ qt_add_qml_module(${PROJECT_NAME}_shared
         shaders/target_indicator.vert
         shaders/cursor.frag
         shaders/cursor.vert
+        meshes/arrow_mesh.mesh
+        meshes/rotate_mesh.mesh
+        meshes/resize_mesh.mesh
+
     STATIC
 )
