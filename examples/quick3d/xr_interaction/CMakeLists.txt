@@ -39,10 +39,6 @@ qt_add_qml_module(xr_interaction
         main.qml
         Scene.qml
         GadgetBox.qml
-    RESOURCES
-        meshes/arrow_mesh.mesh
-        meshes/rotate_mesh.mesh
-        meshes/resize_mesh.mesh
     NO_RESOURCE_TARGET_PATH
 )
 

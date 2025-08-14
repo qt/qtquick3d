@@ -7,7 +7,7 @@ import QtQuick3D
 pragma ComponentBehavior: Bound
 
 AxisGadget {
-    source: "meshes/rotate_mesh.mesh"
+    source: "qrc:/qt/qml/xr_shared/meshes/rotate_mesh.mesh"
 
     property quaternion originalRot
     property vector3d pressOffset

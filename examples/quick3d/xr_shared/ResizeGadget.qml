@@ -7,7 +7,7 @@ import QtQuick3D
 pragma ComponentBehavior: Bound
 
 AxisGadget {
-    source: "meshes/resize_mesh.mesh"
+    source: "qrc:/qt/qml/xr_shared/meshes/resize_mesh.mesh"
 
     property vector3d originalScale
     property real minExtent
