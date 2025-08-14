@@ -57,6 +57,8 @@ public:
     };
 
     QSSGLightmapBaker(const Context &ctx);
+    ~QSSGLightmapBaker();
+
     Status process();
 
 private:
