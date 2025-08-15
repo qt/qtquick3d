@@ -14,6 +14,7 @@
 #include "../math/range.h"
 #include "../../include/embree3/rtcore.h"
 
+#include <exception>
 #include <list>
 
 namespace embree
