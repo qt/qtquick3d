@@ -800,37 +800,8 @@ void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
     }
 
     m_importScene = inScene;
-    if (m_importScene) {
-        auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
-        if (!privateObject->sceneManager) {
-            // If object doesn't already have scene manager, check from its children
-            QQuick3DSceneManager *manager = findChildSceneManager(m_importScene);
-            // If still not found, use the one from the scene root (scenes defined outside of an view3d)
-            if (!manager)
-                manager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-            if (manager) {
-                manager->setWindow(window());
-                privateObject->refSceneManager(*manager);
-            }
-            // At this point some manager will exist
-            Q_ASSERT(privateObject->sceneManager);
-        }
-
-        connect(privateObject->sceneManager, &QQuick3DSceneManager::needsUpdate,
-                this, &QQuickItem::update);
-
-        QQuick3DNode *scene = inScene;
-        while (scene) {
-            QQuick3DSceneRootNode *rn = qobject_cast<QQuick3DSceneRootNode *>(scene);
-            scene = rn ? rn->view3D()->importScene() : nullptr;
-
-            if (scene) {
-                connect(QQuick3DObjectPrivate::get(scene)->sceneManager,
-                        &QQuick3DSceneManager::needsUpdate,
-                        this, &QQuickItem::update);
-            }
-        }
-    }
+    if (m_importScene)
+        updateSceneManagerForImportScene();
 
     emit importSceneChanged();
     update();
@@ -2144,6 +2115,48 @@ void QQuick3DViewport::updateCameraForLayer(const QQuick3DViewport &view3D, QSSG
     for (QSSGRenderCamera *camera : std::as_const(layerNode.explicitCameras)) {
         if (!camera->parent)
             layerNode.addChild(*camera);
+    }
+}
+
+void QQuick3DViewport::updateSceneManagerForImportScene()
+{
+    auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
+    if (!privateObject->sceneManager) {
+        // If object doesn't already have scene manager, check from its children
+        QQuick3DSceneManager *manager = findChildSceneManager(m_importScene);
+        // If still not found, use the one from the scene root (scenes defined outside of an view3d)
+        if (!manager)
+            manager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+        if (manager) {
+            manager->setWindow(window());
+            privateObject->refSceneManager(*manager);
+        }
+
+        // In the case m_sceneRoot doesn't have a valid sceneManager,
+        // it means the view3d is not valid now.
+        if (!privateObject->sceneManager)
+            return;
+
+    }
+    connect(privateObject->sceneManager, &QQuick3DSceneManager::needsUpdate,
+            this, &QQuickItem::update);
+    connect(privateObject->sceneManager, &QObject::destroyed,
+            this, [&](QObject *) {
+                auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
+                privateObject->sceneManager = nullptr;
+                updateSceneManagerForImportScene();
+            }, Qt::DirectConnection);
+
+    QQuick3DNode *scene = m_importScene;
+    while (scene) {
+        QQuick3DSceneRootNode *rn = qobject_cast<QQuick3DSceneRootNode *>(scene);
+        scene = rn ? rn->view3D()->importScene() : nullptr;
+
+        if (scene) {
+            connect(QQuick3DObjectPrivate::get(scene)->sceneManager,
+                    &QQuick3DSceneManager::needsUpdate,
+                    this, &QQuickItem::update);
+        }
     }
 }
 
