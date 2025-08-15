@@ -180,6 +180,8 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
 void QQuick3DItem2D::markAllDirty()
 {
+    m_pickingDirty = true;
+
     QQuick3DNode::markAllDirty();
 }
 
