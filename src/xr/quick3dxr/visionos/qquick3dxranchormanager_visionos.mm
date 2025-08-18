@@ -119,7 +119,7 @@ static const AnchorClassificationMap &getAnchorClassificationName(ar_plane_class
 
 static void updateAnchorProperties(QQuick3DXrSpatialAnchor &anchor, ar_plane_anchor_t planeAnchor)
 {
-    static const QQuaternion s_rot90X = QQuaternion::fromEulerAngles({-90.0f, 0.0f, 0.0f});
+    constexpr auto s_rot90X = QQuaternion{M_SQRT1_2, -M_SQRT1_2, 0, 0}; // fromEulerAngles(-90, 0, 0);
 
     simd_float4x4 originFromAnchorTransform = ar_anchor_get_origin_from_anchor_transform(planeAnchor);
     QMatrix4x4 transform{originFromAnchorTransform.columns[0].x, originFromAnchorTransform.columns[1].x, originFromAnchorTransform.columns[2].x, originFromAnchorTransform.columns[3].x,
