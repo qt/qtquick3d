@@ -63,6 +63,7 @@ qt_add_qml_module(particles3d
         main.qml
         LineParticles.qml
         AppSettings.qml
+        SceneShape.qml
     RESOURCES
         images/arrow_icon.png
         images/bear_black.png

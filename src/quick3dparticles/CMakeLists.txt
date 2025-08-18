@@ -47,6 +47,7 @@ qt_internal_add_qml_module(Quick3DParticles
         qquick3dparticlemodelblendparticle_p.h qquick3dparticlemodelblendparticle.cpp
         qquick3dparticledynamicburst.cpp qquick3dparticledynamicburst_p.h
         qquick3dparticlelineparticle.cpp qquick3dparticlelineparticle_p.h
+        qquick3dparticlesceneshape.cpp qquick3dparticlesceneshape_p.h
     DEFINES
         QT_BUILD_QUICK3DPARTICLES_LIB
     LIBRARIES

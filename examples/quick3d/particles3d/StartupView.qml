@@ -115,6 +115,10 @@ Item {
             name: "Model Shape"
             file: "ModelShape.qml"
         }
+        ListElement {
+            name: "Scene Shape"
+            file: "SceneShape.qml"
+        }
     }
 
     View3D {

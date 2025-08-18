@@ -4,7 +4,7 @@
 #include "qquick3dparticlemodelshape_p.h"
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticlesystem_p.h"
-#include <QtCore/qdir.h>
+#include "qquick3dparticleutils_p.h"
 #include <QtQml/qqmlfile.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
@@ -109,27 +109,6 @@ QVector3D QQuick3DParticleModelShape::getSurfaceNormal(int particleIndex)
     return m_cachedNormal;
 }
 
-static QSSGMesh::Mesh loadModelShapeMesh(const QString &source)
-{
-    QString src = source;
-    if (source.startsWith(QLatin1Char('#'))) {
-        src = QSSGBufferManager::primitivePath(source);
-        src.prepend(QLatin1String(":/"));
-    }
-    src = QDir::cleanPath(src);
-    if (src.startsWith(QLatin1String("qrc:/")))
-        src = src.mid(3);
-    QSSGMesh::Mesh mesh;
-    QFileInfo fileInfo = QFileInfo(src);
-    if (fileInfo.exists()) {
-        QFile file(fileInfo.absoluteFilePath());
-        if (!file.open(QFile::ReadOnly))
-            return {};
-        mesh = QSSGMesh::Mesh::loadMesh(&file);
-    }
-    return mesh;
-}
-
 void QQuick3DParticleModelShape::setDelegate(QQmlComponent *delegate)
 {
     if (delegate == m_delegate)
@@ -227,95 +206,8 @@ void QQuick3DParticleModelShape::clearModelVertexPositions()
 
 void QQuick3DParticleModelShape::calculateModelVertexPositions()
 {
-    if (m_vertexPositions.empty()) {
-        QVector<QVector3D> indicedPositions;
-        QVector<QVector3D> positions;
-
-        if (m_model->geometry()) {
-            QQuick3DGeometry *geometry = m_model->geometry();
-            bool hasIndexBuffer = false;
-            QQuick3DGeometry::Attribute::ComponentType indexBufferFormat;
-            int posOffset = 0;
-            QQuick3DGeometry::Attribute::ComponentType posType = QQuick3DGeometry::Attribute::U16Type;
-            for (int i = 0; i < geometry->attributeCount(); ++i) {
-                auto attribute = geometry->attribute(i);
-                if (attribute.semantic == QQuick3DGeometry::Attribute::PositionSemantic) {
-                    posOffset = attribute.offset;
-                    posType = attribute.componentType;
-                } else if (attribute.semantic == QQuick3DGeometry::Attribute::IndexSemantic) {
-                    hasIndexBuffer = true;
-                    indexBufferFormat = attribute.componentType;
-                }
-            }
-            if (posType == QQuick3DGeometry::Attribute::F32Type) {
-                const auto &data = geometry->vertexData();
-                int stride = geometry->stride();
-                for (int i = 0; i < data.size(); i += stride) {
-                    float v[3];
-                    memcpy(v, data + posOffset + i, sizeof(v));
-                    positions.append(QVector3D(v[0], v[1], v[2]));
-                }
-                if (hasIndexBuffer) {
-                    const auto &data = geometry->vertexData();
-                    int indexSize = 4;
-                    if (indexBufferFormat == QQuick3DGeometry::Attribute::U16Type)
-                        indexSize = 2;
-                    for (int i = 0; i < data.size(); i += indexSize) {
-                        qsizetype index = 0;
-                        memcpy(&index, data + i, indexSize);
-                        if (positions.size() > index)
-                            indicedPositions.append(positions[index]);
-                    }
-                }
-            }
-        } else {
-                const QQmlContext *context = qmlContext(this);
-                QString src = m_model->source().toString();
-                if (context && !src.startsWith(QLatin1Char('#')))
-                    src = QQmlFile::urlToLocalFileOrQrc(context->resolvedUrl(m_model->source()));
-                QSSGMesh::Mesh mesh = loadModelShapeMesh(src);
-                if (!mesh.isValid())
-                    return;
-                if (mesh.drawMode() != QSSGMesh::Mesh::DrawMode::Triangles)
-                    return;
-
-                auto entries = mesh.vertexBuffer().entries;
-                int posOffset = 0;
-                int posCount = 0;
-                // Just set 'posType' to something to avoid invalid 'maybe-uninitialized' warning
-                QSSGMesh::Mesh::ComponentType posType = QSSGMesh::Mesh::ComponentType::UnsignedInt8;
-                for (int i = 0; i < entries.size(); ++i) {
-                    const char *nameStr = entries[i].name.constData();
-                    if (!strcmp(nameStr, QSSGMesh::MeshInternal::getPositionAttrName())) {
-                        posOffset = entries[i].offset;
-                        posCount = entries[i].componentCount;
-                        posType = entries[i].componentType;
-                        break;
-                    }
-                }
-                if (posCount == 3 && posType == QSSGMesh::Mesh::ComponentType::Float32) {
-                    const auto &data = mesh.vertexBuffer().data;
-                    int stride = mesh.vertexBuffer().stride;
-                    for (int i = 0; i < data.size(); i += stride) {
-                        float v[3];
-                        memcpy(v, data + posOffset + i, sizeof(v));
-                        positions.append(QVector3D(v[0], v[1], v[2]));
-                    }
-                    const auto &indexData = mesh.indexBuffer().data;
-                    int indexSize = QSSGMesh::MeshInternal::byteSizeForComponentType(mesh.indexBuffer().componentType);
-                    for (int i = 0; i < indexData.size(); i += indexSize) {
-                        qsizetype index = 0;
-                        memcpy(&index, indexData + i, indexSize);
-                        if (positions.size() > index)
-                            indicedPositions.append(positions[index]);
-                    }
-                }
-        }
-        if (!indicedPositions.empty())
-            m_vertexPositions = indicedPositions;
-        else
-            m_vertexPositions = positions;
-    }
+    if (m_vertexPositions.empty())
+        m_vertexPositions = positionsFromModel(m_model, nullptr, qmlContext(this));
 }
 
 QT_END_NAMESPACE
