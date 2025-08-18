@@ -110,6 +110,8 @@ void BenchFrustumCulling::test_frustumCulling()
 
 }
 
+constexpr auto Identity = QQuaternion{1, 0, 0, 0};
+
 void BenchFrustumCulling::bench_outputlist()
 {
     // bounds 10x10x10 all in world coordinates
@@ -133,14 +135,14 @@ void BenchFrustumCulling::bench_outputlist()
     // Fill the list with object data that should be culled
     for (quint32 i = 0, end = objectCount; i != end; ++i) {
         if (i % 2)
-            objects.push_back(createRenderableData({0.0f, 0.0f, frustumNearBorder }, QQuaternion::fromEulerAngles({}), bounds));
+            objects.push_back(createRenderableData({0.0f, 0.0f, frustumNearBorder }, Identity, bounds));
         else
-            objects.push_back(createRenderableData({0.0f, 0.0f, frustumFarBorder }, QQuaternion::fromEulerAngles({}), bounds));
+            objects.push_back(createRenderableData({0.0f, 0.0f, frustumFarBorder }, Identity, bounds));
     }
 
     // Insert items at random positions in the list that should not be culled
     for (auto v : std::as_const(replaceIndexes))
-        objects.replace(v, createRenderableData({0.0f, 0.0f, 0.0f}, QQuaternion::fromEulerAngles({}), bounds));
+        objects.replace(v, createRenderableData({0.0f, 0.0f, 0.0f}, Identity, bounds));
 
     QCOMPARE(objects.size(), objectCount);
 
@@ -192,14 +194,14 @@ void BenchFrustumCulling::bench_inline()
     // Fill the list with object data that should be culled
     for (quint32 i = 0, end = objectCount; i != end; ++i) {
         if (i % 2)
-            objects.push_back(createRenderableData({0.0f, 0.0f, frustumNearBorder }, QQuaternion::fromEulerAngles({}), bounds));
+            objects.push_back(createRenderableData({0.0f, 0.0f, frustumNearBorder }, Identity, bounds));
         else
-            objects.push_back(createRenderableData({0.0f, 0.0f, frustumFarBorder }, QQuaternion::fromEulerAngles({}), bounds));
+            objects.push_back(createRenderableData({0.0f, 0.0f, frustumFarBorder }, Identity, bounds));
     }
 
     // Insert items at random positions in the list that should not be culled
     for (auto v : std::as_const(replaceIndexes))
-        objects.replace(v, createRenderableData({0.0f, 0.0f, 0.0f}, QQuaternion::fromEulerAngles({}), bounds));
+        objects.replace(v, createRenderableData({0.0f, 0.0f, 0.0f}, Identity, bounds));
 
     QCOMPARE(objects.size(), objectCount);
 
