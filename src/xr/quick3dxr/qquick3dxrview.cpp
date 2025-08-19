@@ -390,6 +390,19 @@ QList<QQuick3DPickResult> QQuick3DXrView::rayPickAll(const QVector3D &origin, co
 }
 
 /*!
+    \qmlmethod pickResult XrView::rayPick(vector3d origin, vector3d direction, Model model)
+
+    This method will "shoot" a ray into the scene starting at \a origin and in
+    \a direction and return information about the intersection between the ray and the specified \a model.
+
+    \since 6.11
+*/
+QQuick3DPickResult QQuick3DXrView::rayPick(const QVector3D &origin, const QVector3D &direction, QQuick3DModel *model) const
+{
+    return m_xrManager.m_vrViewport->rayPick(origin, direction, model);
+}
+
+/*!
     \qmlmethod XrView::setTouchpoint(Item target, point position, int pointId, bool pressed)
 
     Sends a synthetic touch event to \a target, moving the touch point with ID \a pointId to \a position,

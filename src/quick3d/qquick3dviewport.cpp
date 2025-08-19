@@ -1218,6 +1218,27 @@ QList<QQuick3DPickResult> QQuick3DViewport::rayPickAll(const QVector3D &origin, 
     return processedResultList;
 }
 
+/*!
+    \qmlmethod pickResult View3D::rayPick(vector3d origin, vector3d direction, Model model)
+
+    This method will "shoot" a ray into the scene starting at \a origin and in
+    \a direction and return information about the intersection between the ray and the specified \a model.
+
+    \since 6.11
+*/
+QQuick3DPickResult QQuick3DViewport::rayPick(const QVector3D &origin, const QVector3D &direction, QQuick3DModel *model) const
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
+        return QQuick3DPickResult();
+
+    const QSSGRenderRay ray(origin, direction);
+
+    const auto renderNode = static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(model)->spatialNode);
+    const auto resultList = renderer->syncPickOne(ray, renderNode);
+    return getNearestPickResult(resultList);
+}
+
 void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event) const
 {
     internalPick(event, origin, direction);

@@ -511,6 +511,13 @@ void tst_Picking::test_ray_picking()
     QCOMPARE(resultList[1].objectHit(), model1);
     QCOMPARE(resultList[2].hitType(), QQuick3DPickResultEnums::HitType::Model);
     QCOMPARE(resultList[2].objectHit(), model2);
+    QVector3D hitPoint = resultList[2].scenePosition();
+
+    // Test ray picking only model 2
+    result = view3d->rayPick(origin, direction, model2);
+    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
+    QCOMPARE(result.objectHit(), model2);
+    QCOMPARE(result.scenePosition(), hitPoint);
 
     // Up the z axis from 0, 0, -101 (towards 0,0,0)
     origin = QVector3D(0.0f, 0.0f, -101.0f);
