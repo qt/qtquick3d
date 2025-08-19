@@ -2139,7 +2139,7 @@ void QQuick3DViewport::updateSceneManagerForImportScene()
 
     }
     connect(privateObject->sceneManager, &QQuick3DSceneManager::needsUpdate,
-            this, &QQuickItem::update);
+            this, &QQuickItem::update, Qt::UniqueConnection);
     connect(privateObject->sceneManager, &QObject::destroyed,
             this, [&](QObject *) {
                 auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
@@ -2155,7 +2155,7 @@ void QQuick3DViewport::updateSceneManagerForImportScene()
         if (scene) {
             connect(QQuick3DObjectPrivate::get(scene)->sceneManager,
                     &QQuick3DSceneManager::needsUpdate,
-                    this, &QQuickItem::update);
+                    this, &QQuickItem::update, Qt::UniqueConnection);
         }
     }
 }
