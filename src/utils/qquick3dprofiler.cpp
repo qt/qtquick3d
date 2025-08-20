@@ -26,6 +26,8 @@ QHash<QByteArray, int> QQuick3DProfiler::s_eventData = {};
 QHash<int, QByteArray> QQuick3DProfiler::s_eventDataRev = {};
 QMutex QQuick3DProfiler::s_eventDataMutex;
 
+QThreadStorage<QQuick3DProfilerSceneGraphData::TimingData> QQuick3DProfilerSceneGraphData::eventTimings = QThreadStorage<QQuick3DProfilerSceneGraphData::TimingData>();
+
 QQuick3DProfilerData::QQuick3DProfilerData(qint64 time, int messageType, int detailType, qint64 d1, qint64 d2, const QList<int> &ids)
     : QQuick3DProfilerData(time, messageType, detailType, d1, d2)
 {

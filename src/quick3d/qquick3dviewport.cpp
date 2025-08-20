@@ -566,8 +566,10 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
             }
         }
 
-        if (rci)
+        if (rci) {
             renderer = new QQuick3DSceneRenderer(rci);
+            Q_QUICK3D_PROFILE_ASSIGN_ID(this, renderer);
+        }
     }
 
     return renderer;
