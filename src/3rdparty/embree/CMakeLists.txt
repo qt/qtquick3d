@@ -2,10 +2,25 @@ qt_internal_add_3rdparty_library(BundledEmbree
     STATIC
     INSTALL
     EXCEPTIONS
-)
-
-qt_internal_extend_target(BundledEmbree
     SOURCES
+        include/embree3/rtcore_builder.h
+        include/embree3/rtcore.h
+        include/embree3/rtcore.isph
+        include/embree3/rtcore_buffer.h
+        include/embree3/rtcore_quaternion.isph
+        include/embree3/rtcore_scene.isph
+        include/embree3/rtcore_common.h
+        include/embree3/rtcore_scene.h
+        include/embree3/rtcore_geometry.h
+        include/embree3/rtcore_ray.h
+        include/embree3/rtcore_buffer.isph
+        include/embree3/rtcore_device.h
+        include/embree3/rtcore_common.isph
+        include/embree3/rtcore_quaternion.h
+        include/embree3/rtcore_ray.isph
+        include/embree3/rtcore_config.h
+        include/embree3/rtcore_geometry.isph
+        include/embree3/rtcore_device.isph
         common/sys/sysinfo.cpp
         common/sys/alloc.cpp
         common/sys/filename.cpp
@@ -48,6 +63,8 @@ qt_internal_extend_target(BundledEmbree
         kernels/bvh/bvh_builder_sah_mb.cpp
         kernels/bvh/bvh_builder_twolevel.cpp
         kernels/bvh/bvh_intersector1_bvh4.cpp
+    PUBLIC_INCLUDE_DIRECTORIES
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 qt_disable_warnings(BundledEmbree)
