@@ -181,22 +181,10 @@ qt_internal_add_resource(Quick3DRuntimeRender "res"
 qt_internal_extend_target(Quick3DRuntimeRender
     INCLUDE_DIRECTORIES
         ../3rdparty/tinyexr
-        ../3rdparty/embree/include
     NO_UNITY_BUILD_SOURCES
         ../3rdparty/tinyexr/tinyexr.h
-        ../3rdparty/embree/include/embree3/rtcore.h
-        ../3rdparty/embree/include/embree3/rtcore_buffer.h
-        ../3rdparty/embree/include/embree3/rtcore_builder.h
-        ../3rdparty/embree/include/embree3/rtcore_common.h
-        ../3rdparty/embree/include/embree3/rtcore_config.h
-        ../3rdparty/embree/include/embree3/rtcore_device.h
-        ../3rdparty/embree/include/embree3/rtcore_geometry.h
-        ../3rdparty/embree/include/embree3/rtcore_quaternion.h
-        ../3rdparty/embree/include/embree3/rtcore_ray.h
-        ../3rdparty/embree/include/embree3/rtcore_scene.h
     ATTRIBUTION_FILE_DIR_PATHS
         ../3rdparty/tinyexr
-        ../3rdparty/embree
 )
 
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_FEATURE_system_zlib
