@@ -55,7 +55,6 @@ private:
     void markAllDirty() override;
 
     QVector<QQuickItem *> m_sourceItems;
-    QSGRootNode *m_rootNode = nullptr;
     QQuickWindow *m_window = nullptr;
     QQuickItem *m_contentItem = nullptr;
     bool m_pickingDirty = true;
