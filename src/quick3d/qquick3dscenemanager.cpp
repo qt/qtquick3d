@@ -630,6 +630,10 @@ void QQuick3DWindowAttachment::onInvalidated()
     for (auto &sceneManager : std::as_const(sceneManagers))
         sceneManager->cleanupNodes();
 
+    for (QSSGRenderLayer *layers : std::as_const(pendingLayerCleanupQueue))
+        delete layers;
+    pendingLayerCleanupQueue.clear();
+
     for (const auto &pr : std::as_const(pendingResourceCleanupQueue))
         resourceCleanupQueue.insert(pr);
     pendingResourceCleanupQueue.clear();
