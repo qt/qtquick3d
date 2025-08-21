@@ -8,11 +8,10 @@ import QtQuick.Dialogs
 import QtQuick3D
 import QtQuick3D.Helpers
 
-Window {
+ApplicationWindow {
     id: window
     width: 1280
     height: 800
-    color: "black"
     visible: true
 
     View3D {
@@ -122,13 +121,11 @@ Window {
         }
     }
 
-    Rectangle {
-        color: "lightGray"
+    Pane {
         width: 350
         height: parent.height - 40
         anchors.verticalCenter: parent.verticalCenter
         x: 8
-        radius: 8
         ColumnLayout {
             anchors.centerIn: parent
             GroupBox {
