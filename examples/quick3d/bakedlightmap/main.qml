@@ -7,7 +7,7 @@ import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.Helpers
 
-Window {
+ApplicationWindow {
     width: 1280
     height: 720
     title: "Qt Quick 3D Baked Lightmap Example"
@@ -53,8 +53,7 @@ Window {
         }
         //! [model]
 
-        Rectangle {
-            color: "lightGray"
+        Pane {
             width: 320
             height: 160
             ColumnLayout {
@@ -65,10 +64,10 @@ Window {
                     checked: true
                     focusPolicy: Qt.NoFocus
                 }
-                Text {
+                Label {
                     text: "How to bake lightmaps: \nOpen DebugView -> Tools -> Bake lightmap"
                 }
-                Text {
+                Label {
                     text: "Slider controls light brightness"
                 }
                 Slider {
