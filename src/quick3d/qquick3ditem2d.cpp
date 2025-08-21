@@ -93,9 +93,15 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
     auto itemNode = static_cast<QSSGRenderItem2D *>(node);
 
-    m_rootNode = sourceItemPrivate->rootNode();
-    if (!m_rootNode)
-        return nullptr;
+    itemNode->m_rootNode = sourceItemPrivate->rootNode();
+    if (!itemNode->m_rootNode) {
+        QQuickWindowPrivate::get(window)->updateDirtyNode(m_contentItem);
+        itemNode->m_rootNode = sourceItemPrivate->rootNode();
+        if (!itemNode->m_rootNode) {
+            qWarning() << "Item2D is not initialized. It will not be shown.";
+            return nullptr;
+        }
+    }
 
     if (m_pickingDirty) {
         m_pickingDirty = false;
@@ -109,8 +115,6 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
         }
         itemNode->setState(QSSGRenderNode::LocalState::Pickable, isPickable);
     }
-
-    itemNode->m_rootNode = m_rootNode;
 
     return node;
 }
