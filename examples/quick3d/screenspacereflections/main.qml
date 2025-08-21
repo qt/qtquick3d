@@ -167,11 +167,7 @@ Window {
         }
     }
 
-    Frame {
-        background: Rectangle {
-            color: "#c0c0c0"
-            border.color: "#202020"
-        }
+    Pane {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.margins: 10
@@ -192,7 +188,7 @@ Window {
                     to: 5
                     value: 0.79
                 }
-                Text {
+                Label {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Depth Bias: " + depthBiasSlider.value.toFixed(2);
                 }
@@ -207,7 +203,7 @@ Window {
                     value: 200
                     stepSize: 1
                 }
-                Text {
+                Label {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Ray Distance: " + distanceSlider.value
                 }
@@ -223,7 +219,7 @@ Window {
                     value: 300
                     stepSize: 1
                 }
-                Text {
+                Label {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "March Steps: " + marchSlider.value
                 }
@@ -238,7 +234,7 @@ Window {
                     value: 10
                     stepSize: 1
                 }
-                Text {
+                Label {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Refinement Steps: " + refinementStepsSlider.value
                 }
@@ -252,7 +248,7 @@ Window {
                     to: 1
                     value: 1.0
                 }
-                Text {
+                Label {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Specular: " + specularSlider.value.toFixed(2);
                 }
