@@ -204,7 +204,7 @@ non-zero value), the engine will work in baking mode and exit the application
 once baking has completed. The steps of the baking process can be followed by
 checking the messages printed on the debug output. The result is a binary file
 (\c{lightmaps.bin} by default) written to the current working directory
-containing all the baked lightmaps in the scene. There will also be a \c{.tmp}
+containing all the baked lightmaps in the scene. There will also be a \c{.raw}
 file created that contains the whole lightmap and some extra data that is needed
 for denoising. Each lightmap is uniquely identified in the file by the unique
 key from \l{BakedLightmap::key}.
@@ -326,7 +326,7 @@ look significantly better, with the noise mostly gone.
 \image lightmap_noise_denoised.jpg "Cornell box scene with the lightmaps denoised"
 
 Denoising is done automatically on every baked lightmap. It is possible to do
-just denoising, if an existing baked \c{.tmp} lightmap file exists in the working
+just denoising, if an existing baked \c{.raw} lightmap file exists in the working
 directory, by clicking the \c{Denoise} button in the DebugView. It is also possible to
 denoise by calling the application with the \c{--denoise-lightmaps} argument.
 To tweak the strength of the denoising, the \l{Lightmapper::}{denoiseSigma} property
