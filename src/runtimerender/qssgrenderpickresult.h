@@ -34,6 +34,8 @@ public:
     QVector3D m_localPosition;
     // The normal of the hit face
     QVector3D m_faceNormal;
+    // The normal of the hit face in world coordinates
+    QVector3D m_sceneNormal;
     // The subset index
     int m_subset = 0;
     int m_instanceIndex = -1;

@@ -65,18 +65,21 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
         QVector3D scenePosition;
         QVector3D localPosition;
         QVector3D faceNormal;
+        QVector3D sceneFaceNormal;
         IntersectionResult() = default;
         inline constexpr IntersectionResult(float rl,
                                             const QVector2D &relxy,
                                             const QVector3D &scenePosition,
                                             const QVector3D &localPosition,
-                                            const QVector3D &normal)
+                                            const QVector3D &normal,
+                                            const QVector3D &sceneNormal)
             : intersects(true)
             , rayLengthSquared(rl)
             , relXY(relxy)
             , scenePosition(scenePosition)
             , localPosition(localPosition)
             , faceNormal(normal)
+            , sceneFaceNormal(sceneNormal)
         {}
     };
 

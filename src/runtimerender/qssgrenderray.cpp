@@ -71,7 +71,7 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::createIntersectionResult(const 
     const QVector2D uvCoords{((localPosition[0] - boundsMin.x()) / xRange), ((localPosition[1] - boundsMin.y()) / yRange)};
 
     // Since we just intersected with a bounding box, there is no face normal
-    return IntersectionResult(rayLenSquared, uvCoords, globalPosition, localPosition, QVector3D());
+    return IntersectionResult(rayLenSquared, uvCoords, globalPosition, localPosition, QVector3D(), QVector3D());
 }
 
 QSSGRenderRay::HitResult QSSGRenderRay::intersectWithAABBv2(const QSSGRenderRay::RayData &data,
@@ -257,11 +257,17 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
             const QVector3D hitVector = data.ray.origin - sceneIntersectionPos;
             // Get the magnitude of the hit vector
             const float rayLengthSquared = QSSGUtils::vec3::magnitudeSquared(hitVector);
+
+            // Get the normal vector in scene coordinates
+            const QMatrix3x3 normalMatrix = data.globalTransform.normalMatrix();
+            const QVector3D sceneNormal = QSSGUtils::mat33::transform(normalMatrix, normal);
+
             results.append(IntersectionResult(rayLengthSquared,
                                               uvCoordinate,
                                               sceneIntersectionPos,
                                               localIntersectionPoint,
-                                              normal));
+                                              normal,
+                                              sceneNormal));
         }
     }
 

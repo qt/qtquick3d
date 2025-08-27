@@ -624,6 +624,7 @@ void QSSGRendererPrivate::intersectRayWithSubsetRenderable(const QSSGRenderLayer
                                                                        intersectionResult.scenePosition,
                                                                        intersectionResult.localPosition,
                                                                        intersectionResult.faceNormal,
+                                                                       intersectionResult.sceneFaceNormal,
                                                                        resultSubset,
                                                                        instanceIndex
                                                 });
@@ -657,7 +658,7 @@ void QSSGRendererPrivate::intersectRayWithItem2D(const QSSGRenderLayer &layer,
                                                                        qmlCoordinate,
                                                                        intersectionPoint,
                                                                        localIntersectionPoint,
-                                                                       -normal });
+                                                                       -normal, -normal });
         }
     }
 }
