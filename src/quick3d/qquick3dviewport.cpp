@@ -2029,6 +2029,7 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
                                   pickResult.m_scenePosition,
                                   pickResult.m_localPosition,
                                   pickResult.m_faceNormal,
+                                  pickResult.m_sceneNormal,
                                   pickResult.m_instanceIndex);
 
     QQuick3DItem2D *frontend2DItem = qobject_cast<QQuick3DItem2D *>(frontendObject);

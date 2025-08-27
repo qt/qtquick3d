@@ -30,6 +30,7 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
                                        const QVector3D &scenePosition,
                                        const QVector3D &position,
                                        const QVector3D &normal,
+                                       const QVector3D &sceneNormal,
                                        int instanceIndex)
     : m_objectHit(hitObject)
     , m_distance(distanceFromCamera)
@@ -37,15 +38,14 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
     , m_scenePosition(scenePosition)
     , m_position(position)
     , m_normal(normal)
+    , m_sceneNormal(sceneNormal)
     , m_instanceIndex(instanceIndex)
     , m_itemHit(nullptr)
     , m_hitType(QQuick3DPickResultEnums::HitType::Model)
 {
+
 }
 
-// NB: we are intentionally storing the sceneNormal in the "m_normal" member variable
-// as 2D Items always have the same face normal, but we can't calculate the scene normal
-// on demand either. This logic should be handled in the respective getters.
 QQuick3DPickResult::QQuick3DPickResult(QQuickItem *itemHit,
                                        float distanceFromCamera,
                                        const QVector2D &uvPosition,
@@ -57,7 +57,8 @@ QQuick3DPickResult::QQuick3DPickResult(QQuickItem *itemHit,
     , m_uvPosition(uvPosition)
     , m_scenePosition(scenePosition)
     , m_position(position)
-    , m_normal(sceneNormal)
+    , m_normal({ 0, 0, 1 })
+    , m_sceneNormal(sceneNormal)
     , m_instanceIndex(-1)
     , m_itemHit(itemHit)
     , m_hitType(QQuick3DPickResultEnums::HitType::Item)
@@ -142,9 +143,6 @@ QVector3D QQuick3DPickResult::position() const
 */
 QVector3D QQuick3DPickResult::normal() const
 {
-    if (m_itemHit)
-        return QVector3D(0, 0, 1);
-
     return m_normal;
 }
 
@@ -158,10 +156,7 @@ QVector3D QQuick3DPickResult::normal() const
 */
 QVector3D QQuick3DPickResult::sceneNormal() const
 {
-    if (m_objectHit)
-        return m_objectHit->mapDirectionToScene(m_normal);
-
-    return m_normal;
+    return m_sceneNormal;
 }
 
 
