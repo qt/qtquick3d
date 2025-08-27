@@ -23,7 +23,6 @@ Node {
         onScenePosChanged: {
             const touchOffset = view.processTouch(scenePos, root.touchId)
             handModel.position = touchOffset
-            root.touchPointGrabbed = view.touchpointState(handComponentRoot.touchId).grabbed
         }
     }
 
