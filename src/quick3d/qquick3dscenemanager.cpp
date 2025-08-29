@@ -707,6 +707,11 @@ void QQuick3DWindowAttachment::setRci(const std::shared_ptr<QSSGRenderContextInt
 {
     QSSG_CHECK_X(m_rci == nullptr || m_rci.use_count() == 1, "Old render context was not released!");
     m_rci = rciptr;
+
+    // For convenience we'll also set the SG rendere context here.
+    if (m_rci && m_window)
+        QSSGRendererPrivate::setSgRenderContext(*m_rci->renderer(), QQuickWindowPrivate::get(m_window)->context);
+
     emit renderContextInterfaceChanged();
 }
 
