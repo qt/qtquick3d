@@ -20,6 +20,8 @@
 #include <private/qssgrhicontext_p.h>
 #include <private/qssgrhiquadrenderer_p.h>
 
+#include <QtCore/qpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QSSGShaderCache;
@@ -34,6 +36,7 @@ struct QSSGRenderRay;
 class QSSGSubsetRenderable;
 struct QSSGShaderDefaultMaterialKeyProperties;
 struct QSSGShaderFeatures;
+class QSGRenderContext;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
@@ -112,6 +115,8 @@ private:
 
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
 
+    QPointer<QSGRenderContext> m_qsgRenderContext;
+
     mutable std::unique_ptr<QSSGRhiQuadRenderer> m_rhiQuadRenderer;
     mutable std::unique_ptr<QSSGRhiCubeRenderer> m_rhiCubeRenderer;
 
@@ -178,8 +183,11 @@ public:
     static void setGlobalPickingEnabled(QSSGRenderer &renderer, bool isEnabled);
 
     static void setRenderContextInterface(QSSGRenderer &renderer, QSSGRenderContextInterface *ctx);
+    static void setSgRenderContext(QSSGRenderer &renderer, QSGRenderContext *sgRenderCtx);
 
     static QSSGLayerRenderData *getCurrentRenderData(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
+
+    static QSGRenderContext *getSgRenderContext(const QSSGRenderer &renderer);
 
     static constexpr float minimumRenderOpacity = .01f;
 };
