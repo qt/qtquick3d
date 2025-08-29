@@ -2033,19 +2033,58 @@ bool QSSGLayerRenderData::prepareItem2DsForRender(const QSSGRenderContextInterfa
 {
     const bool hasItems = (renderableItem2Ds.size() != 0);
     if (hasItems) {
+        const auto &rhiCtx = ctxIfc.rhiContext();
         const auto &clipSpaceCorrMatrix = ctxIfc.rhiContext()->rhi()->clipSpaceCorrMatrix();
         const QSSGRenderCameraDataList &cameraDatas(getCachedCameraDatas());
+
+        item2DDataMap.clear();
+        item2DDataMap.reserve(size_t(renderableItem2Ds.size()));
+        renderer->populateItem2DDataMapForLayer(layer, item2DDataMap);
+        const auto getItem2DData = [&](const QSSGRenderItem2D *item) {
+            const auto foundIt = item2DDataMap.find(item);
+            return (foundIt != item2DDataMap.cend()) ? foundIt->second : QSSGRenderer::Item2DData{};
+        };
+
         for (const auto &theItem2D : renderableItem2Ds) {
-            theItem2D->mvps.clear();
-            for (const QSSGRenderCameraData &camData : cameraDatas) {
+            QSSGRenderer::Item2DData i2d = getItem2DData(theItem2D);
+            i2d.layer = &layer;
+            i2d.item = theItem2D;
+            auto &mvps = i2d.mvps;
+
+            // Check that we have a renderer and that it hasn't changed (would indicate a context change)
+            // and we need to update all the data.
+            QSGRenderContext *sgRc = QSSGRendererPrivate::getSgRenderContext(*renderer);
+            QSSG_ASSERT(sgRc != nullptr, continue);
+            const bool contextChanged = (item2DRenderContext && item2DRenderContext != sgRc);
+            item2DRenderContext = sgRc;
+            if (contextChanged) {
+                delete i2d.renderer;
+                i2d.renderer = nullptr;
+            }
+
+            if (!i2d.renderer)
+                i2d.renderer = sgRc->createRenderer(QSGRendererInterface::RenderMode3D);
+
+            if (i2d.renderer->rootNode() != theItem2D->m_rootNode) {
+                i2d.renderer->setRootNode(theItem2D->m_rootNode);
+                theItem2D->m_rootNode->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
+                i2d.renderer->nodeChanged(theItem2D->m_rootNode, QSGNode::DirtyForceUpdate); // Force render list update.
+            }
+
+            if (!i2d.rpd)
+                i2d.rpd = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
+
+            for (size_t i = 0, end = qMin(cameraDatas.size(), 2); i < end; ++i) {
+                const QSSGRenderCameraData &camData = cameraDatas[i];
                 QMatrix4x4 mvp = camData.viewProjection * theItem2D->globalTransform;
                 static const QMatrix4x4 flipMatrix(1.0f, 0.0f, 0.0f, 0.0f,
                                                 0.0f, -1.0f, 0.0f, 0.0f,
                                                 0.0f, 0.0f, 1.0f, 0.0f,
                                                 0.0f, 0.0f, 0.0f, 1.0f);
-                mvp = clipSpaceCorrMatrix * mvp * flipMatrix;
-                theItem2D->mvps.append(mvp);
+                mvps[i] = clipSpaceCorrMatrix * mvp * flipMatrix;
             }
+            if (i2d.isValid())
+                renderer->registerItem2DData(i2d);
         }
     }
 

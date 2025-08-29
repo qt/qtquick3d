@@ -31,6 +31,10 @@ QSSGRenderLayer::~QSSGRenderLayer()
 {
     delete importSceneNode;
     importSceneNode = nullptr;
+
+    if (renderData && renderData->renderer)
+        renderData->renderer->releaseItem2DData(*this);
+
     delete renderData;
 }
 
