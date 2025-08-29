@@ -937,16 +937,23 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, false);
 
     item2Ds = data.getRenderableItem2Ds();
+    item2DDataMap.reserve(size_t(item2Ds.size()));
+    prepdItem2DRenderers.reserve(size_t(item2Ds.size()));
+    renderer.populateItem2DDataMapForLayer(data.layer, item2DDataMap);
     // NOTE: This marks the start of the 2D sub-scene rendering as it might result in
     // a nested 3D scene to be rendered and if we don't save the state here, we can
     // end up with a mismatched state in the QtQuick3D renderer.
     // See the end of this function for the corresponding end call (endSubLayerRender()).
     renderer.beginSubLayerRender(data);
     for (const auto &item2D: std::as_const(item2Ds)) {
-        // Set the projection matrix
-        if (!item2D->m_renderer)
-            continue;
-        if (item2D->m_renderer && item2D->m_renderer->currentRhi() != renderer.contextInterface()->rhiContext()->rhi()) {
+        // Find data for item
+        auto item2DData = getItem2DData(item2D);
+        const auto &mvps = item2DData.mvps;
+        QSGRenderer *renderer2d = item2DData.renderer;
+        QRhiRenderPassDescriptor *rpd = item2DData.rpd;
+
+        // NOTE: We shouldn't get into this state...
+        if (renderer2d && renderer2d->currentRhi() != rhiCtx->rhi()) {
             static bool contextWarningShown = false;
             if (!contextWarningShown) {
                 qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
@@ -955,48 +962,35 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
             continue;
         }
 
+        // Set the projection matrix
+
         auto layerPrepResult = data.layerPrepResult;
 
         QRhiRenderTarget *renderTarget = rhiCtx->renderTarget();
-        item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
+        renderer2d->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
         const int viewCount = data.layer.viewCount;
-        QSSG_ASSERT(item2D->mvps.count() == viewCount, return);
         if (layer.scissorRect.isValid()) {
             QRect effScissor = layer.scissorRect & layerPrepResult.viewport.toRect();
             QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult.viewport,
                                                             effScissor,
                                                             rhiCtx->rhi()->isYUpInNDC());
             for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex) {
-                const QMatrix4x4 projectionMatrix = correctionMat * item2D->mvps[viewIndex];
-                item2D->m_renderer->setProjectionMatrix(projectionMatrix, viewIndex);
+                const QMatrix4x4 projectionMatrix = correctionMat * mvps[viewIndex];
+                renderer2d->setProjectionMatrix(projectionMatrix, viewIndex);
             }
-            item2D->m_renderer->setViewportRect(effScissor);
+            renderer2d->setViewportRect(effScissor);
         } else {
             for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
-                item2D->m_renderer->setProjectionMatrix(item2D->mvps[viewIndex], viewIndex);
-            item2D->m_renderer->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.viewport, deviceRect));
+                renderer2d->setProjectionMatrix(mvps[viewIndex], viewIndex);
+            renderer2d->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.viewport, deviceRect));
         }
-        item2D->m_renderer->setDeviceRect(deviceRect);
-        QRhiRenderPassDescriptor *oldRp = nullptr;
-        if (item2D->m_rp) {
-            // Changing render target, and so incompatible renderpass
-            // descriptors should be uncommon, but possible.
-            if (!item2D->m_rp->isCompatible(rhiCtx->mainRenderPassDescriptor()))
-                std::swap(item2D->m_rp, oldRp);
-        }
-        if (!item2D->m_rp) {
-            // Do not pass our object to the Qt Quick scenegraph. It may
-            // hold on to it, leading to lifetime and ownership issues.
-            // Rather, create a dedicated, compatible object.
-            item2D->m_rp = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
-            QSSG_CHECK(item2D->m_rp);
-        }
-        QSGRenderTarget sgRt(renderTarget, item2D->m_rp, rhiCtx->commandBuffer());
+        renderer2d->setDeviceRect(deviceRect);
+        QSGRenderTarget sgRt(renderTarget, rpd, rhiCtx->commandBuffer());
         sgRt.multiViewCount = data.layer.viewCount;
-        item2D->m_renderer->setRenderTarget(sgRt);
-        delete oldRp;
-        item2D->m_renderer->prepareSceneInline();
+        renderer2d->setRenderTarget(sgRt);
+        renderer2d->prepareSceneInline();
+        prepdItem2DRenderers.push_back(renderer2d);
     }
     renderer.endSubLayerRender(data);
 }
@@ -1014,11 +1008,8 @@ void Item2DPass::renderPass(QSSGRenderer &renderer)
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render 2D sub-scene"));
     QSSGLayerRenderData *data = QSSGLayerRenderData::getCurrent(renderer);
     renderer.beginSubLayerRender(*data);
-    for (const auto &item : std::as_const(item2Ds)) {
-        QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
-        if (item2D->m_renderer && item2D->m_renderer->currentRhi() == renderer.contextInterface()->rhiContext()->rhi())
-            item2D->m_renderer->renderSceneInline();
-    }
+    for (QSGRenderer *renderer2d : std::as_const(prepdItem2DRenderers))
+        renderer2d->renderSceneInline();
     renderer.endSubLayerRender(*data);
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("2D_sub_scene"));
@@ -1027,7 +1018,15 @@ void Item2DPass::renderPass(QSSGRenderer &renderer)
 void Item2DPass::resetForFrame()
 {
     item2Ds.clear();
+    item2DDataMap.clear();
+    prepdItem2DRenderers.clear();
     ps = {};
+}
+
+QSSGRenderer::Item2DData Item2DPass::getItem2DData(QSSGRenderItem2D *item2D)
+{
+    const auto foundIt = item2DDataMap.find(item2D);
+    return (foundIt != item2DDataMap.cend()) ? foundIt->second : QSSGRenderer::Item2DData{};
 }
 
 void InfiniteGridPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)

@@ -32,6 +32,7 @@
 #include <qtquick3d_tracepoints_p.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 
 #include <QtCore/QMutexLocker>
 #include <QtCore/QBitArray>
@@ -76,6 +77,56 @@ void QSSGRenderer::releaseCachedResources()
 {
     m_rhiQuadRenderer.reset();
     m_rhiCubeRenderer.reset();
+}
+
+void QSSGRenderer::registerItem2DData(const Item2DData &data)
+{
+    const auto foundIt = std::find_if(item2DDataList.begin(), item2DDataList.end(), [&data](const Item2DData &i2dd) {
+        return i2dd.layer == data.layer && i2dd.item == data.item;
+    });
+
+    if (foundIt != item2DDataList.end()) {
+        // Update existing entry
+        *foundIt = data;
+        return;
+    }
+
+    item2DDataList.push_back(data);
+}
+
+void QSSGRenderer::populateItem2DDataMapForLayer(const QSSGRenderLayer &layer, Item2DDataMap &item2DDataMap) const
+{
+    item2DDataMap.clear();
+    for (const auto &item2dData : std::as_const(item2DDataList)) {
+        if (item2dData.layer == &layer)
+            item2DDataMap[item2dData.item] = item2dData;
+    }
+}
+
+void QSSGRenderer::releaseItem2DData(const QSSGRenderItem2D &item2D)
+{
+    for (auto it = item2DDataList.begin(); it != item2DDataList.end(); /* no increment */) {
+        if (it->item == &item2D) {
+            delete it->rpd;
+            delete it->renderer;
+            it = item2DDataList.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void QSSGRenderer::releaseItem2DData(const QSSGRenderLayer &layer)
+{
+    for (auto it = item2DDataList.begin(); it != item2DDataList.end(); /* no increment */) {
+        if (it->layer == &layer) {
+            delete it->rpd;
+            delete it->renderer;
+            it = item2DDataList.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 QSSGRenderer::QSSGRenderer() = default;
@@ -187,6 +238,9 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
             auto *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
             auto *table = static_cast<QSSGRenderInstanceTable *>(resource);
             rhiCtxD->releaseInstanceBuffer(table);
+        } else if (resource->type == QSSGRenderGraphObject::Type::Item2D) {
+            auto *item2D = static_cast<QSSGRenderItem2D *>(resource);
+            rci.renderer()->releaseItem2DData(*item2D);
         }
 
         // ### There might be more types that need to be supported
