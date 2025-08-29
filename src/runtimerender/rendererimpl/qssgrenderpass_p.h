@@ -22,10 +22,10 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
+#include "qssgrenderer_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRenderer;
 class QSSGRenderShadowMap;
 class QSSGRenderReflectionMap;
 class QSSGLayerRenderData;
@@ -259,7 +259,12 @@ public:
     Type passType() const final { return Type::Main; }
     void resetForFrame() final;
 
+protected:
+    [[nodiscard]] QSSGRenderer::Item2DData getItem2DData(QSSGRenderItem2D *item2D);
+
+    QSSGRenderer::Item2DDataMap item2DDataMap;
     QList<QSSGRenderItem2D *> item2Ds;
+    std::vector<QSGRenderer *> prepdItem2DRenderers;
     QSSGRhiGraphicsPipelineState ps {};
 };
 

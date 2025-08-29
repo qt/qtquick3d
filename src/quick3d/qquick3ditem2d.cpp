@@ -35,24 +35,6 @@ QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item, QQuick3DNode *parent)
 QQuick3DItem2D::~QQuick3DItem2D()
 {
     delete m_contentItem;
-
-    // This is sketchy. Similarly to the problems QQuick3DTexture has with its
-    // QSGTexture, the same problems arise here with the QSGRenderer. The
-    // associated scenegraph resource must be destroyed on the render thread,
-    // if there is one. If the scenegraph gets invalidated, that's easy due to
-    // signals/slots, but there's no such signal if an object with Item2Ds in
-    // it gets dynamically destroyed.
-    // Here on the gui thread in this dtor there's no way to properly manage
-    // the QSG resource's releasing anymore. Rather, as QSGRenderer is a
-    // QObject, do a deleteLater(), which typically works, but is not a 100%
-    // guarantee that the object will get destroyed on the render thread
-    // eventually, since in theory it could happen that the render thread is
-    // not even running at this point anymore (if the window is closing / the
-    // app is shutting down) - although in practice that won't be an issue
-    // since that case is taken care of the sceneGraphInvalidated signal.
-    // So while unlikely, a leak may still occur under certain circumstances.
-    if (m_renderer)
-        m_renderer->deleteLater();
 }
 
 void QQuick3DItem2D::addChildItem(QQuickItem *item)
@@ -86,15 +68,6 @@ void QQuick3DItem2D::itemDestroyed(QQuickItem *item)
     removeChildItem(item);
 }
 
-void QQuick3DItem2D::invalidated()
-{
-    // clean up the renderer
-    if (m_renderer) {
-        delete m_renderer;
-        m_renderer = nullptr;
-    }
-}
-
 void QQuick3DItem2D::updatePicking()
 {
     m_pickingDirty = true;
@@ -119,46 +92,10 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     QQuick3DNode::updateSpatialNode(node);
 
     auto itemNode = static_cast<QSSGRenderItem2D *>(node);
-    QSGRenderContext *rc = static_cast<QQuickWindowPrivate *>(QObjectPrivate::get(window))->context;
 
     m_rootNode = sourceItemPrivate->rootNode();
-    if (!m_rootNode) {
+    if (!m_rootNode)
         return nullptr;
-    }
-
-    if (!m_renderer) {
-        m_renderer = rc->createRenderer(QSGRendererInterface::RenderMode3D);
-        connect(window, &QQuickWindow::sceneGraphInvalidated, this, &QQuick3DItem2D::invalidated, Qt::DirectConnection);
-        connect(m_renderer, &QSGAbstractRenderer::sceneGraphChanged, this, &QQuick3DObject::update);
-
-        // item2D rendernode has its own render pass descriptor and it should
-        // be removed before deleting rhi context.
-        // Otherwise, rhi will complain about the unreleased resource.
-        connect(
-                m_renderer,
-                &QObject::destroyed,
-                this,
-                [this]() {
-                    auto itemNode = static_cast<QSSGRenderItem2D *>(QQuick3DObjectPrivate::get(this)->spatialNode);
-                    if (itemNode) {
-                        if (itemNode->m_rp) {
-                            itemNode->m_rp->deleteLater();
-                            itemNode->m_rp = nullptr;
-                        }
-                    }
-                },
-                Qt::DirectConnection);
-    }
-
-    {
-        // Block the sceneGraphChanged() signal. Calling nodeChanged() will emit the sceneGraphChanged()
-        // signal, which is connected to the update() slot to mark the object dirty, which could cause
-        // and constant update even if the 2D content doesn't change.
-        QSignalBlocker blocker(m_renderer);
-        m_renderer->setRootNode(m_rootNode);
-        m_rootNode->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
-        m_renderer->nodeChanged(m_rootNode, QSGNode::DirtyForceUpdate); // Force render list update.
-    }
 
     if (m_pickingDirty) {
         m_pickingDirty = false;
@@ -173,7 +110,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
         itemNode->setState(QSSGRenderNode::LocalState::Pickable, isPickable);
     }
 
-    itemNode->m_renderer = m_renderer;
+    itemNode->m_rootNode = m_rootNode;
 
     return node;
 }

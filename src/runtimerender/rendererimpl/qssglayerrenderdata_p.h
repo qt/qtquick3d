@@ -44,6 +44,8 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderableObject;
 
+class QSGRenderer;
+
 enum class QSSGLayerRenderPreparationResultFlag
 {
     // Was the data in this layer dirty (meaning re-render to texture, possibly)
@@ -338,6 +340,9 @@ public:
     // it is simplest to duplicate the lists.
     QVector<QSSGBakedLightingModel> renderedBakedLightingModels;
     RenderableItem2DEntries renderedItem2Ds;
+    // Temporary look-up map for Item2D data (for use in prepareItem2DsForRender()).
+    QSSGRenderer::Item2DDataMap item2DDataMap;
+    QPointer<QSGRenderContext> item2DRenderContext;
 
     QSSGLayerRenderPreparationResult layerPrepResult;
     std::optional<QSSGRenderCameraDataList> renderedCameraData;
