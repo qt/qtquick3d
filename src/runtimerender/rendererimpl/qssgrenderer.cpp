@@ -31,6 +31,8 @@
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <qtquick3d_tracepoints_p.h>
 
+#include <QtQuick/private/qsgcontext_p.h>
+
 #include <QtCore/QMutexLocker>
 #include <QtCore/QBitArray>
 
@@ -388,6 +390,16 @@ void QSSGRendererPrivate::setGlobalPickingEnabled(QSSGRenderer &renderer, bool i
 void QSSGRendererPrivate::setRenderContextInterface(QSSGRenderer &renderer, QSSGRenderContextInterface *ctx)
 {
     renderer.m_contextInterface = ctx;
+}
+
+void QSSGRendererPrivate::setSgRenderContext(QSSGRenderer &renderer, QSGRenderContext *sgRenderCtx)
+{
+    renderer.m_qsgRenderContext = sgRenderCtx;
+}
+
+QSGRenderContext *QSSGRendererPrivate::getSgRenderContext(const QSSGRenderer &renderer)
+{
+    return renderer.m_qsgRenderContext.data();
 }
 
 const std::unique_ptr<QSSGRhiQuadRenderer> &QSSGRenderer::rhiQuadRenderer() const
