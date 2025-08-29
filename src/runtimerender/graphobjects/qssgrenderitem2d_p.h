@@ -24,20 +24,17 @@
 QT_BEGIN_NAMESPACE
 
 class QSGNode;
-class QSGRenderer;
+class QSGRootNode;
 class QRhiRenderPassDescriptor;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
 {
     Q_DISABLE_COPY(QSSGRenderItem2D)
 
-    QVarLengthArray<QMatrix4x4, 2> mvps;
-
-    QPointer<QSGRenderer> m_renderer;
-    QRhiRenderPassDescriptor *m_rp = nullptr;
+    QSGRootNode *m_rootNode = nullptr;
 
     QSSGRenderItem2D();
-    ~QSSGRenderItem2D();
+    ~QSSGRenderItem2D() override;
 };
 QT_END_NAMESPACE
 
