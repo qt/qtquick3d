@@ -31,8 +31,6 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QBitArray>
 #include <array>
 
 #include "qssgrenderpass_p.h"
