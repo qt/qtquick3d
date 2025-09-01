@@ -106,7 +106,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     if (m_pickingDirty) {
         m_pickingDirty = false;
         bool isPickable = false;
-        for (auto item : m_sourceItems) {
+        for (const auto &item : std::as_const(m_sourceItems)) {
             // Enable picking for Item2D if any of its child is visible and enabled.
             if (item->isVisible() && item->isEnabled()) {
                 isPickable = true;
