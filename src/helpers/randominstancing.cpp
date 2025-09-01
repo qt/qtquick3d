@@ -131,7 +131,7 @@ QT_BEGIN_NAMESPACE
     Set \l {InstanceRange::proportional}{InstanceRange.proportional} to \c true for uniform scaling.
     The default value is empty, causing no scaling to be applied.
 
-    \sa position, color, rotation, scale, customData
+    \sa position, color, rotation, customData
 */
 
 /*!
@@ -163,7 +163,7 @@ QT_BEGIN_NAMESPACE
     The type is \l vector4d.
     The default value is empty, causing causing the generated data to be \c{[0, 0, 0, 0]}.
 
-    \sa position, color, rotation, scale, customData
+    \sa position, color, rotation, scale
 */
 /*!
     \qmlproperty enumeration RandomInstancing::colorModel
