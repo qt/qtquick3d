@@ -7,10 +7,14 @@
 #include <QByteArray>
 #include <QString>
 
+#include <QtQuick3DRuntimeRender/private/qssglightmapio_p.h>
+
 struct LightmapViewerHelpers
 {
     static void maskToBBGRColor(QByteArray &array, bool useAlpha = true);
     static bool processLightmap(const QString &filename, bool print, bool extract);
+    static QString lightmapTagToString(QSSGLightmapIODataTag tag);
+    static QSSGLightmapIODataTag stringToLightmapTag(const QString &tag);
 };
 
 #endif // LIGHTMAPVIEWERHELPERS_H

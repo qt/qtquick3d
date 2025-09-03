@@ -26,41 +26,36 @@ QImage LightmapImageProvider::requestImage(const QString &id, QSize *size, const
 {
     if (size)
         *size = QSize(100, 100);
+    const QUrl url = QUrl("lightmap://?" + id, QUrl::StrictMode);
+    const QUrlQuery query(url);
+    const QString keyWithTag = query.queryItemValue("key");
 
-    const QUrlQuery query(QUrl("lightmap://?" + id));
-    const QString key = query.queryItemValue("key");
+    QString key = keyWithTag;
+    QSSGLightmapIODataTag tag = QSSGLightmapIODataTag::Unset;
+    if (int sep = keyWithTag.indexOf('$'); sep >= 0) {
+        key = keyWithTag.left(sep);
+        const QString tagString = keyWithTag.mid(sep + 1);
+        tag = LightmapViewerHelpers::stringToLightmapTag(tagString);
+    }
+
     const QUrl filePath = query.queryItemValue("file");
     const bool useAlpha = query.queryItemValue("alpha") == QStringLiteral("true");
 
-    const QString meshPrefix = QStringLiteral("_mesh");
-    const QString maskSuffix = QStringLiteral("_mask");
-    const QString finalSuffix = QStringLiteral("_final");
-    const QString directSuffix = QStringLiteral("_direct");
-    const QString indirectSuffix = QStringLiteral("_indirect");
-    const QString metadataSuffix = QStringLiteral("_metadata");
-
-    QString baseKey = key;
     LightmapDataType dataType = LightmapDataType::Unset;
-    if (key.endsWith(maskSuffix)) {
-        baseKey = key.chopped(maskSuffix.length());
+    switch (tag) {
+    case QSSGLightmapIODataTag::Mask:
         dataType = LightmapDataType::U32;
-    } else if (key.endsWith(directSuffix)) {
-        baseKey = key.chopped(directSuffix.length());
+        break;
+    case QSSGLightmapIODataTag::Texture_Final:
+    case QSSGLightmapIODataTag::Texture_Direct:
+    case QSSGLightmapIODataTag::Texture_Indirect:
         dataType = LightmapDataType::F32;
-    } else if (key.endsWith(indirectSuffix)) {
-        baseKey = key.chopped(indirectSuffix.length());
-        dataType = LightmapDataType::F32;
-    } else if (key.endsWith(finalSuffix)) {
-        baseKey = key.chopped(finalSuffix.length());
-        dataType = LightmapDataType::F32;
-    } else if (key.endsWith(metadataSuffix)) {
-        return m_errorImage;
-    } else if (key.startsWith(meshPrefix)) {
-        return m_errorImage;
-    } else {
-        // assume f32 image
-        baseKey = key;
-        dataType = LightmapDataType::F32;
+        break;
+    case QSSGLightmapIODataTag::Metadata:
+    case QSSGLightmapIODataTag::Mesh:
+    case QSSGLightmapIODataTag::Unset:
+    default:
+        break;
     }
 
     QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(filePath.toLocalFile());
@@ -68,7 +63,7 @@ QImage LightmapImageProvider::requestImage(const QString &id, QSize *size, const
     if (!loader)
         return m_errorImage;
 
-    QVariantMap metadata = loader->readMetadata(baseKey);
+    QVariantMap metadata = loader->readMetadata(key);
     if (metadata.isEmpty())
         return m_errorImage;
     bool ok = false;
@@ -82,13 +77,13 @@ QImage LightmapImageProvider::requestImage(const QString &id, QSize *size, const
     QImage::Format format = QImage::Format_Invalid;
     QByteArray array;
     if (dataType == LightmapDataType::U32) {
-        array = loader->readU32Image(key);
+        array = loader->readU32Image(key, tag);
         if (array.size() != qsizetype(sizeof(quint32) * width * height))
             return m_errorImage;
         format = QImage::Format_RGBA8888;
         LightmapViewerHelpers::maskToBBGRColor(array, useAlpha);
     } else if (dataType == LightmapDataType::F32) {
-        array = loader->readF32Image(key);
+        array = loader->readF32Image(key, tag);
         if (array.size() != qsizetype(4 * sizeof(float) * width * height))
             return m_errorImage;
         if (!useAlpha) {

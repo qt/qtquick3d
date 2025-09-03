@@ -17,47 +17,49 @@
 
 QT_BEGIN_NAMESPACE
 
-constexpr int cNameLength = 112;
+using IndexKey = std::tuple<QSSGLightmapIODataTag /* dataTag */, qint32 /* keySize */, QByteArray /* key */>;
 
 struct IndexEntry
 {
-    char name[cNameLength]; // UTF-8 null-padded, max 111 chars
-    qint64 offset; // 8 bytes
-    qint64 size; // 8 bytes
+    qint64 keyOffset; // 8 bytes
+    qint64 keySize; // 8 bytes
+    qint64 dataOffset; // 8 bytes
+    qint64 dataSize; // 8 bytes
+    QSSGLightmapIODataTag dataTag; // 4 bytes
+    quint32 padding;
 };
 
 struct QSSGLightmapIOPrivate
 {
-    QByteArray readKey(const QByteArray &key) const;
+    QByteArray readKey(const IndexKey &indexKey) const;
     bool writeHeader() const;
-    bool writeData(const QString &key, const QByteArray &data);
-    bool writeFooter() const;
+    bool writeData(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &data);
+    bool writeFooter();
     bool decodeHeaders();
-    QList<QString> getKeys() const;
+    QList<std::pair<QString, QSSGLightmapIODataTag>> getKeys() const;
 
     QSharedPointer<QIODevice> stream;
-    QMap<QByteArray, IndexEntry> entries; // Maps from name -> entry
+    QMap<IndexKey, IndexEntry> entries; // Maps from name -> entry
     qint64 entryCount = -1;
     qint64 indexOffset = -1;
     qint64 fileVersion = -1;
     qint64 fileSize = -1;
 };
 
-static_assert(offsetof(IndexEntry, name) == 0, "Unexpected alignment");
-static_assert(offsetof(IndexEntry, offset) == cNameLength, "Unexpected alignment");
-static_assert(offsetof(IndexEntry, size) == cNameLength + 8, "Unexpected alignment");
-static_assert(sizeof(IndexEntry) == cNameLength + 16, "Unexpected size");
+static_assert(offsetof(IndexEntry, keyOffset) == 0, "Unexpected alignment");
+static_assert(offsetof(IndexEntry, keySize) == 8, "Unexpected alignment");
+static_assert(offsetof(IndexEntry, dataOffset) == 16, "Unexpected alignment");
+static_assert(offsetof(IndexEntry, dataSize) == 24, "Unexpected alignment");
+static_assert(offsetof(IndexEntry, dataTag) == 32, "Unexpected alignment");
+static_assert(offsetof(IndexEntry, padding) == 36, "Unexpected alignment");
+static_assert(sizeof(IndexEntry) == 40, "Unexpected size");
 
 constexpr char fileSignature[] = "QTLTMP";
 
-static QByteArray keyToByteArray(const QString &key)
+static IndexKey keyToIndexKey(const QString &key, QSSGLightmapIODataTag tag)
 {
     QByteArray keyBuffer = key.toUtf8();
-    if (keyBuffer.size() > cNameLength) {
-        qWarning() << "QSSGLightmapIO: Key too big, truncating";
-        keyBuffer.slice(keyBuffer.size() - cNameLength, cNameLength);
-    }
-    return keyBuffer;
+    return std::make_tuple(tag, keyBuffer.size(), keyBuffer);
 }
 
 static QByteArray mapToByteArray(const QVariantMap &map)
@@ -220,16 +222,16 @@ bool QSSGLightmapIOPrivate::writeHeader() const
     return true;
 }
 
-bool QSSGLightmapIOPrivate::writeData(const QString &key, const QByteArray &data)
+bool QSSGLightmapIOPrivate::writeData(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &data)
 {
     Q_ASSERT(stream->isOpen() && stream->isWritable());
-    QByteArray keyBytes = keyToByteArray(key);
+    IndexKey keyBytes = keyToIndexKey(key, tag);
     Q_ASSERT(!entries.contains(keyBytes));
 
     IndexEntry &entry = entries[keyBytes];
-    std::memcpy(entry.name, keyBytes.constData(), keyBytes.size());
-    entry.offset = stream->pos();
-    entry.size = data.size();
+    entry.dataOffset = stream->pos();
+    entry.dataSize = data.size();
+    entry.dataTag = tag;
 
     if (stream->write(data) != data.size()) {
         qWarning() << "QSSGLightmapIO: Failed to write entry data";
@@ -239,30 +241,51 @@ bool QSSGLightmapIOPrivate::writeData(const QString &key, const QByteArray &data
     return true;
 }
 
-bool QSSGLightmapIOPrivate::writeFooter() const
+template<typename T>
+bool writeType(const QSharedPointer<QIODevice> &stream, T value)
+{
+    return stream->write(reinterpret_cast<const char *>(&value), sizeof(value)) == sizeof(value);
+}
+
+bool QSSGLightmapIOPrivate::writeFooter()
 {
     Q_ASSERT(stream);
     Q_ASSERT(stream->isOpen());
     Q_ASSERT(stream->isWritable());
 
+    // Store the key strings
+    for (auto it = entries.begin(); it != entries.end(); ++it) {
+        auto [dataTag, keySize, key] = it.key();
+        IndexEntry &entry = it.value();
+        entry.keyOffset = stream->pos();
+        entry.keySize = keySize;
+        if (stream->write(key) != key.size()) {
+            qWarning() << "QSSGLightmapIO: Failed to write key";
+            return false;
+        }
+    }
+
     // The file should be seeked to the end of the data segment so we can just
     // add indices and footer now
     const qint64 indexOffset = qToLittleEndian<qint64>(stream->pos());
     const qint64 indexCount = qToLittleEndian<qint64>(entries.size());
+
     for (const IndexEntry &entry : std::as_const(entries)) {
-        const qint64 offset = qToLittleEndian<qint64>(entry.offset);
-        const qint64 size = qToLittleEndian<qint64>(entry.size);
-        if (stream->write(entry.name, cNameLength) != cNameLength
-            || stream->write(reinterpret_cast<const char *>(&offset), sizeof(offset)) != sizeof(offset)
-            || stream->write(reinterpret_cast<const char *>(&size), sizeof(size)) != sizeof(size)) {
+        const qint64 keyOffset = qToLittleEndian<qint64>(entry.keyOffset);
+        const qint64 keySize = qToLittleEndian<qint64>(entry.keySize);
+        const qint64 dataOffset = qToLittleEndian<qint64>(entry.dataOffset);
+        const qint64 dataSize = qToLittleEndian<qint64>(entry.dataSize);
+        const quint32 dataTag = qToLittleEndian<quint32>(std::underlying_type_t<QSSGLightmapIODataTag>(entry.dataTag));
+        const quint32 padding = qToLittleEndian<quint32>(entry.padding);
+        if (!writeType(stream, keyOffset) || !writeType(stream, keySize) || !writeType(stream, dataOffset)
+            || !writeType(stream, dataSize) || !writeType(stream, dataTag) || !writeType(stream, padding)) {
             qWarning() << "QSSGLightmapIO: Failed to write entry";
             return false;
         }
     }
 
     // Write footer
-    if (stream->write(reinterpret_cast<const char *>(&indexOffset), sizeof(indexOffset)) != sizeof(indexOffset)
-        || stream->write(reinterpret_cast<const char *>(&indexCount), sizeof(indexCount)) != sizeof(indexCount)) {
+    if (!writeType(stream, indexOffset) || !writeType(stream, indexCount)) {
         qWarning() << "QSSGLightmapIO: Failed to write footer";
         return false;
     }
@@ -270,7 +293,7 @@ bool QSSGLightmapIOPrivate::writeFooter() const
     return true;
 }
 
-QByteArray QSSGLightmapIOPrivate::readKey(const QByteArray &key) const
+QByteArray QSSGLightmapIOPrivate::readKey(const IndexKey &indexKey) const
 {
     Q_ASSERT(stream);
     Q_ASSERT(entryCount >= 0);
@@ -279,11 +302,10 @@ QByteArray QSSGLightmapIOPrivate::readKey(const QByteArray &key) const
     Q_ASSERT(fileSize >= 0);
 
     // Perform binary search by reading one IndexEntry at a time
-    const char *keyData = key.constData();
     qint64 low = 0;
     qint64 high = entryCount;
     IndexEntry entry;
-
+    auto [dataTag, keySize, key] = indexKey;
     bool found = false;
     qint64 matchOffset = 0;
     qint64 matchSize = 0;
@@ -302,7 +324,28 @@ QByteArray QSSGLightmapIOPrivate::readKey(const QByteArray &key) const
             return {};
         }
 
-        int cmp = std::strncmp(entry.name, keyData, cNameLength);
+        // Sort by dataTag, keySize and name (matching the order of IndexKey)
+        int cmp = qint64(entry.dataTag) - qint64(dataTag);
+        if (cmp == 0) {
+            cmp = entry.keySize - keySize;
+        }
+        if (cmp == 0) {
+            if (!stream->seek(entry.keyOffset)) {
+                qWarning() << "Failed to seek to key entry";
+                return {};
+            }
+            const QByteArray entryKey = stream->read(entry.keySize);
+            if (entryKey.size() != entry.keySize) {
+                qWarning() << "Failed to read to key entry";
+                return {};
+            }
+            for (int i = 0, n = entry.keySize; i < n; ++i) {
+                cmp = int(entryKey[i]) - int(key[i]);
+                if (cmp != 0)
+                    break;
+            }
+        }
+
         if (cmp < 0) {
             low = mid + 1;
         } else if (cmp > 0) {
@@ -310,8 +353,8 @@ QByteArray QSSGLightmapIOPrivate::readKey(const QByteArray &key) const
         } else {
             // Found
             found = true;
-            matchOffset = qFromLittleEndian(entry.offset);
-            matchSize = qFromLittleEndian(entry.size);
+            matchOffset = qFromLittleEndian(entry.dataOffset);
+            matchSize = qFromLittleEndian(entry.dataSize);
             break;
         }
     }
@@ -341,7 +384,7 @@ QByteArray QSSGLightmapIOPrivate::readKey(const QByteArray &key) const
     return assetData;
 }
 
-QList<QString> QSSGLightmapIOPrivate::getKeys() const
+QList<std::pair<QString, QSSGLightmapIODataTag>> QSSGLightmapIOPrivate::getKeys() const
 {
     Q_ASSERT(stream);
     Q_ASSERT(entryCount >= 0);
@@ -349,7 +392,7 @@ QList<QString> QSSGLightmapIOPrivate::getKeys() const
     Q_ASSERT(fileVersion >= 0);
     Q_ASSERT(fileSize >= 0);
 
-    QList<QString> keys;
+    QList<std::pair<QString, QSSGLightmapIODataTag>> keys;
     keys.resize(entryCount);
 
     IndexEntry entry;
@@ -366,9 +409,20 @@ QList<QString> QSSGLightmapIOPrivate::getKeys() const
             qWarning() << "Failed to read index entry";
             return {};
         }
+        if (!stream->seek(entry.keyOffset)) {
+            qWarning() << "Failed to seek to key entry";
+            return {};
+        }
+        const QByteArray entryKey = stream->read(entry.keySize);
+        if (entryKey.size() != entry.keySize) {
+            qWarning() << "Failed to read to key entry";
+            return {};
+        }
 
-        keys[i] = QString::fromUtf8(entry.name);
+        keys[i] = std::make_pair(entryKey, static_cast<QSSGLightmapIODataTag>(entry.dataTag));
     }
+
+    std::sort(keys.begin(), keys.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
 
     return keys;
 }
@@ -411,33 +465,33 @@ QSharedPointer<QSSGLightmapLoader> QSSGLightmapLoader::open(const QString &path)
     return nullptr;
 }
 
-QByteArray QSSGLightmapLoader::readF32Image(const QString &key) const
+QByteArray QSSGLightmapLoader::readF32Image(const QString &key, QSSGLightmapIODataTag tag) const
 {
-    QByteArray buffer = d->readKey(keyToByteArray(key));
+    QByteArray buffer = d->readKey(keyToIndexKey(key, tag));
     convertEndian(buffer, sizeof(float));
     return buffer;
 }
 
-QByteArray QSSGLightmapLoader::readU32Image(const QString &key) const
+QByteArray QSSGLightmapLoader::readU32Image(const QString &key, QSSGLightmapIODataTag tag) const
 {
-    QByteArray buffer = d->readKey(keyToByteArray(key));
+    QByteArray buffer = d->readKey(keyToIndexKey(key, tag));
     convertEndian(buffer, sizeof(quint32));
     return buffer;
 }
 
-QByteArray QSSGLightmapLoader::readData(const QString &key) const
+QByteArray QSSGLightmapLoader::readData(const QString &key, QSSGLightmapIODataTag tag) const
 {
-    return d->readKey(keyToByteArray(key));
+    return d->readKey(keyToIndexKey(key, tag));
 }
 
 QVariantMap QSSGLightmapLoader::readMetadata(const QString &key) const
 {
-    QByteArray metadataBuffer = d->readKey(keyToByteArray(key + QStringLiteral("_metadata")));
+    QByteArray metadataBuffer = d->readKey(keyToIndexKey(key, QSSGLightmapIODataTag::Metadata));
     QVariantMap metadata = byteArrayToMap(metadataBuffer);
     return metadata;
 }
 
-QList<QString> QSSGLightmapLoader::getKeys() const
+QList<std::pair<QString, QSSGLightmapIODataTag>> QSSGLightmapLoader::getKeys() const
 {
     return d->getKeys();
 }
@@ -469,7 +523,7 @@ QSSGLoadedTexture *QSSGLightmapLoader::createTexture(QSharedPointer<QIODevice> s
     const int h = metadata[QStringLiteral("height")].toInt(&ok);
     Q_ASSERT(ok);
     QSize pixelSize = QSize(w, h);
-    QByteArray imageFP32 = loader->readF32Image(key + QStringLiteral("_final"));
+    QByteArray imageFP32 = loader->readF32Image(key, QSSGLightmapIODataTag::Texture_Final);
     if (imageFP32.isEmpty())
         return nullptr;
 
@@ -552,28 +606,28 @@ QSharedPointer<QSSGLightmapWriter> QSSGLightmapWriter::open(const QSharedPointer
     return writer;
 }
 
-bool QSSGLightmapWriter::writeF32Image(const QString &key, const QByteArray &imageFP32)
+bool QSSGLightmapWriter::writeF32Image(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &imageFP32)
 {
     QByteArray buffer = QByteArray(imageFP32.constData(), imageFP32.size());
     convertEndian(buffer, sizeof(float));
-    return d->writeData(key, buffer);
+    return d->writeData(key, tag, buffer);
 }
 
-bool QSSGLightmapWriter::writeU32Image(const QString &key, const QByteArray &imageU32)
+bool QSSGLightmapWriter::writeU32Image(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &imageU32)
 {
     QByteArray buffer = QByteArray(imageU32.constData(), imageU32.size());
     convertEndian(buffer, sizeof(quint32));
-    return d->writeData(key, buffer);
+    return d->writeData(key, tag, buffer);
 }
 
-bool QSSGLightmapWriter::writeData(const QString &key, const QByteArray &buffer)
+bool QSSGLightmapWriter::writeData(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &buffer)
 {
-    return d->writeData(key, buffer);
+    return d->writeData(key, tag, buffer);
 }
 
 bool QSSGLightmapWriter::writeMetadata(const QString &key, const QVariantMap &metadata)
 {
-    return d->writeData(key + QStringLiteral("_metadata"), mapToByteArray(metadata));
+    return d->writeData(key, QSSGLightmapIODataTag::Metadata, mapToByteArray(metadata));
 }
 
 bool QSSGLightmapWriter::close() const

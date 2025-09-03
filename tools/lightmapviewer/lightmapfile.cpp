@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QtQuick3DRuntimeRender/private/qssglightmapio_p.h>
+#include "lightmapviewerhelpers.h"
 
 LightmapFile::LightmapFile(QObject *parent) : QObject { parent } { }
 
@@ -17,7 +18,13 @@ QStringList LightmapFile::dataList() const
 void LightmapFile::loadData()
 {
     QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(m_source.toLocalFile());
-    m_dataList = loader ? loader->getKeys() : QStringList();
+    auto keys = loader ? loader->getKeys() : QList<std::pair<QString, QSSGLightmapIODataTag>>();
+    m_dataList.clear();
+    m_dataList.reserve(keys.size());
+    for (const auto &[key, tag] : std::as_const(keys)) {
+        QString tagString = LightmapViewerHelpers::lightmapTagToString(tag);
+        m_dataList.push_back(key + QStringLiteral("$") + tagString);
+    }
     emit dataListChanged();
 }
 
