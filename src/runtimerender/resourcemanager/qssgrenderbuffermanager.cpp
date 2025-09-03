@@ -146,7 +146,7 @@ static QPair<QSSGMesh::Mesh, QString> loadFromLightmapFile(const QString &lightm
         if (meshKey.isEmpty())
             return retVal;
 
-        QByteArray meshData = io->readData(meshKey);
+        QByteArray meshData = io->readData(meshKey, QSSGLightmapIODataTag::Mesh);
         if (meshData.isEmpty())
             return retVal;
 

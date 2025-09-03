@@ -26,6 +26,9 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
     QByteArray f32Image(16, 'F');
     QByteArray u32Image(16, 'U');
 
+    QByteArray finalImage("FINAL");
+    QByteArray directImage("DIRECT");
+
     const QString longName = QStringLiteral("THIS-IS-A-VERY-LONG-NAME-THIS-IS-A-VERY-LONG-NAME-THIS-IS-A-VERY-LONG-"
                                             "NAME-THIS-IS-A-VERY-LONG-NAME-THIS-IS-A-VERY-LONG-NAME_mask");
 
@@ -40,7 +43,7 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
         metadata["height"] = 50;
 
         io->writeMetadata("metadata", metadata);
-        io->writeF32Image("image", f32Image);
+        io->writeF32Image("image", QSSGLightmapIODataTag::Unset, f32Image);
 
         QVariantMap mapA;
         QVariantMap mapB;
@@ -54,7 +57,10 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
         io->writeMetadata("b", mapB);
         io->writeMetadata("c", mapC);
 
-        io->writeU32Image(longName, u32Image);
+        io->writeF32Image("a", QSSGLightmapIODataTag::Texture_Final, finalImage);
+        io->writeU32Image("a", QSSGLightmapIODataTag::Texture_Direct, directImage);
+
+        io->writeU32Image(longName, QSSGLightmapIODataTag::Unset, u32Image);
 
         io->close();
     }
@@ -72,8 +78,10 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
     QCOMPARE(mapA["value"].toString(), "a");
     QCOMPARE(mapB["value"].toString(), "b");
     QCOMPARE(mapC["value"].toString(), "c");
-    QCOMPARE(io->readF32Image("image"), f32Image);
-    QCOMPARE(io->readU32Image(longName), u32Image);
+    QCOMPARE(io->readF32Image("image", QSSGLightmapIODataTag::Unset), f32Image);
+    QCOMPARE(io->readU32Image(longName, QSSGLightmapIODataTag::Unset), u32Image);
+    QCOMPARE(io->readF32Image("a", QSSGLightmapIODataTag::Texture_Final), finalImage);
+    QCOMPARE(io->readU32Image("a", QSSGLightmapIODataTag::Texture_Direct), directImage);
 }
 
 // Test saving to an invalid path

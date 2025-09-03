@@ -52,29 +52,6 @@ static constexpr int MAX_TILE_SIZE = 1024;
 static constexpr quint32 PIXEL_VOID = 0; // Pixel not part of any mask
 static constexpr quint32 PIXEL_UNSET = -1; // Pixel part of mask, but not yet set
 
-enum class QSSGLightmapKeySuffix {
-    Final,
-    Direct,
-    Indirect,
-    Mask
-};
-
-QString getLightmapKeySuffix(QSSGLightmapKeySuffix suffix)
-{
-    switch (suffix) {
-    case QSSGLightmapKeySuffix::Final:
-        return QStringLiteral("_final");
-    case QSSGLightmapKeySuffix::Direct:
-        return QStringLiteral("_direct");
-    case QSSGLightmapKeySuffix::Indirect:
-        return QStringLiteral("_indirect");
-    case QSSGLightmapKeySuffix::Mask:
-        return QStringLiteral("_mask");
-    }
-
-    return QString();
-}
-
 static void floodFill(quint32 *maskUintPtr, const int rows, const int cols)
 {
     quint32 targetColor = 1;
@@ -2230,7 +2207,7 @@ bool QSSGLightmapperPrivate::storeMeshes(QSharedPointer<QSSGLightmapWriter> writ
     }
 
     for (int i = 0; i < meshes.size(); ++i) {
-        if (!writer->writeData(indexToMeshKey(i), meshes[i]))
+        if (!writer->writeData(indexToMeshKey(i), QSSGLightmapIODataTag::Mesh, meshes[i]))
             return false;
     }
 
@@ -2278,7 +2255,7 @@ bool QSSGLightmapperPrivate::storeDirectLightData(int lmIdx, const QVector<QVect
     if (dilated.isEmpty())
         return false;
 
-    writer->writeF32Image(lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct), dilated);
+    writer->writeF32Image(lm.model->lightmapKey, QSSGLightmapIODataTag::Texture_Direct, dilated);
 
     return true;
 }
@@ -2397,7 +2374,7 @@ bool QSSGLightmapperPrivate::storeIndirectLightData(int lmIdx, const QVector<QVe
         }
     }
 
-    writer->writeF32Image(lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect), dilated);
+    writer->writeF32Image(lm.model->lightmapKey, QSSGLightmapIODataTag::Texture_Indirect, dilated);
 
     return true;
 }
@@ -2425,7 +2402,7 @@ bool QSSGLightmapperPrivate::storeMaskImage(int lmIdx, QSharedPointer<QSSGLightm
     // pixels in the same chart.
     floodFill(reinterpret_cast<quint32 *>(mask.data()), rows, cols);
 
-    writer->writeF32Image(lm.model->lightmapKey + getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask), mask);
+    writer->writeF32Image(lm.model->lightmapKey, QSSGLightmapIODataTag::Mask, mask);
 
     return true;
 }
@@ -2452,14 +2429,13 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     }
 
     QSet<QString> lightmapKeys;
-    for (const QString &key : tmpFile->getKeys()) {
-        if (!key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct)) &&
-            !key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect)) &&
-            !key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask))) {
+    for (const auto &[key, tag] : tmpFile->getKeys()) {
+        if (tag != QSSGLightmapIODataTag::Texture_Direct && tag != QSSGLightmapIODataTag::Texture_Indirect
+            && tag != QSSGLightmapIODataTag::Mask) {
             // Clone meshes and metadata for final file
-            finalFile->writeData(key, tmpFile->readData(key));
-        } else if (key.endsWith(getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct))) {
-            lightmapKeys.insert(key.chopped(7)); // chop "_direct"
+            finalFile->writeData(key, tag, tmpFile->readData(key, tag));
+        } else if (tag == QSSGLightmapIODataTag::Texture_Direct) {
+            lightmapKeys.insert(key);
         }
     }
 
@@ -2494,15 +2470,10 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                        QStringLiteral("[%2/%3] denoising '%1'").arg(key).arg(lmIdx + 1).arg(bakedLightingModelCount));
 
-        const QString keyFinal = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Final);
-        const QString keyDirect = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Direct);
-        const QString keyIndirect = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Indirect);
-        const QString keyMask = key + getLightmapKeySuffix(QSSGLightmapKeySuffix::Mask);
-
         QVariantMap metadata = tmpFile->readMetadata(key);
-        QByteArray indirect = tmpFile->readF32Image(keyIndirect);
-        QByteArray direct = tmpFile->readF32Image(keyDirect);
-        QByteArray mask = tmpFile->readU32Image(keyMask);
+        QByteArray indirect = tmpFile->readF32Image(key, QSSGLightmapIODataTag::Texture_Indirect);
+        QByteArray direct = tmpFile->readF32Image(key, QSSGLightmapIODataTag::Texture_Direct);
+        QByteArray mask = tmpFile->readU32Image(key, QSSGLightmapIODataTag::Mask);
 
         if (!metadata.contains(QStringLiteral("width")) || !metadata.contains(QStringLiteral("height"))
             || indirect.isEmpty() || direct.isEmpty() || mask.isEmpty()) {
@@ -2657,7 +2628,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
             Q_ASSERT(imagePtr[i][3] == 1.f || imagePtr[i][3] == 0.f);
         }
 
-        finalFile->writeF32Image(keyFinal, final);
+        finalFile->writeF32Image(key, QSSGLightmapIODataTag::Texture_Final, final);
     }
 
     if (!finalFile->close()) {

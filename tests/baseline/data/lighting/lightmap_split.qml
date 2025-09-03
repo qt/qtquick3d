@@ -56,14 +56,14 @@ Rectangle {
             backgroundMode: SceneEnvironment.Color
             clearColor: "black"
             lightmapper: Lightmapper {
-                texelsPerUnit: 0.3
+                texelsPerUnit: 0.1
                 source: "lightmaps/box_low.bin"
             }
         }
 
         PointLight {
             bakeMode: Light.BakeModeAll
-            y: 190
+            y: 90
             brightness: 5
             castsShadow: true
             shadowFactor: 75

@@ -38,6 +38,59 @@ static QRgb numberToBBGRColor(quint32 i, quint32 N, bool useAlpha)
     return qRgba(r, g, b, 0xff);
 }
 
+QString LightmapViewerHelpers::lightmapTagToString(QSSGLightmapIODataTag tag)
+{
+    switch (tag) {
+    case QSSGLightmapIODataTag::Unset:
+        return QStringLiteral("Unset");
+        break;
+    case QSSGLightmapIODataTag::Mask:
+        return QStringLiteral("Mask");
+        break;
+    case QSSGLightmapIODataTag::Texture_Final:
+        return QStringLiteral("Texture_Final");
+        break;
+    case QSSGLightmapIODataTag::Texture_Direct:
+        return QStringLiteral("Texture_Direct");
+        break;
+    case QSSGLightmapIODataTag::Texture_Indirect:
+        return QStringLiteral("Texture_Indirect");
+        break;
+    case QSSGLightmapIODataTag::Metadata:
+        return QStringLiteral("Metadata");
+        break;
+    case QSSGLightmapIODataTag::Mesh:
+        return QStringLiteral("Mesh");
+        break;
+    default:
+        break;
+    }
+    return QStringLiteral("Invalid");
+}
+
+QSSGLightmapIODataTag LightmapViewerHelpers::stringToLightmapTag(const QString &tag)
+{
+    if (tag == QStringLiteral("Unset"))
+        return QSSGLightmapIODataTag::Unset;
+    if (tag == QStringLiteral("Mask"))
+        return QSSGLightmapIODataTag::Mask;
+    if (tag == QStringLiteral("Texture_Final"))
+        return QSSGLightmapIODataTag::Texture_Final;
+    if (tag == QStringLiteral("Texture_Direct"))
+        return QSSGLightmapIODataTag::Texture_Direct;
+    if (tag == QStringLiteral("Texture_Indirect"))
+        return QSSGLightmapIODataTag::Texture_Indirect;
+    if (tag == QStringLiteral("Metadata"))
+        return QSSGLightmapIODataTag::Metadata;
+    if (tag == QStringLiteral("Mesh"))
+        return QSSGLightmapIODataTag::Mesh;
+    if (tag == QStringLiteral("Unset"))
+        return QSSGLightmapIODataTag::Unset;
+
+    qWarning() << "Could not match tag for: " << tag;
+    return QSSGLightmapIODataTag::Unset;
+}
+
 void LightmapViewerHelpers::maskToBBGRColor(QByteArray &array, bool useAlpha)
 {
     QVector<quint32> uints;
@@ -63,31 +116,34 @@ bool LightmapViewerHelpers::processLightmap(const QString &filename, bool print,
         return false;
     }
 
-    if (QDir dir; !dir.exists("meshes") && (!dir.mkpath("meshes") || !dir.mkpath("images"))) {
-        qInfo() << "Failed to create folders";
-        return false;
+    if (extract) {
+        QDir dir;
+        for (const char *path : { "meshes", "images", "images/masks", "images/direct", "images/indirect", "images/final" }) {
+            if (!dir.mkpath(path)) {
+                qInfo() << "Failed to create folders";
+                return false;
+            }
+        }
     }
 
     int numImagesSaved = 0;
     int numMeshesSaved = 0;
 
-    QList<QString> keys = loader->getKeys();
+    QList<std::pair<QString, QSSGLightmapIODataTag>> keys = loader->getKeys();
 
     if (print)
         qInfo() << "-- Keys --";
 
-    QVector<QString> baseKeys;
     QVector<QString> meshKeys;
 
-    for (const QString &key : std::as_const(keys)) {
-        if (print)
-            qInfo() << key;
+    for (const auto &[key, tag] : std::as_const(keys)) {
+        QString tagString = LightmapViewerHelpers::lightmapTagToString(tag);
 
-        if (key.endsWith(QByteArrayLiteral("_metadata"))) {
-            baseKeys.push_back(key.chopped(9));
-        } else if (key.startsWith(QByteArrayLiteral("_mesh"))) {
+        if (print)
+            qInfo() << key << ":" << tagString;
+
+        if (tag == QSSGLightmapIODataTag::Mesh)
             meshKeys.push_back(key);
-        }
     }
 
     if (print)
@@ -96,7 +152,7 @@ bool LightmapViewerHelpers::processLightmap(const QString &filename, bool print,
     // Extract meshes
     if (extract) {
         for (const QString &key : meshKeys) {
-            const QByteArray meshData = loader->readData(key);
+            const QByteArray meshData = loader->readData(key, QSSGLightmapIODataTag::Mesh);
             QFile meshFile(QString("meshes/" + key + ".mesh"));
             if (meshFile.open(QFile::WriteOnly)) {
                 meshFile.write(meshData);
@@ -109,45 +165,42 @@ bool LightmapViewerHelpers::processLightmap(const QString &filename, bool print,
         }
     }
 
-    for (const QString &key : baseKeys) {
-        const QString key_metadata = key + QStringLiteral("_metadata");
-        const QString key_mask = key + QStringLiteral("_mask");
-        const QString key_direct = key + QStringLiteral("_direct");
-        const QString key_indirect = key + QStringLiteral("_indirect");
-        const QString key_final = key + QStringLiteral("_final");
+    for (const auto &[key, tag] : std::as_const(keys)) {
+        if (tag != QSSGLightmapIODataTag::Metadata)
+            continue;
 
         int width = 0;
         int height = 0;
 
-        if (keys.contains(key_metadata)) {
+        if (tag == QSSGLightmapIODataTag::Metadata) {
             QVariantMap map = loader->readMetadata(key);
             if (print) {
-                qInfo() << key_metadata << ":";
+                qInfo() << key << ":";
                 qInfo().noquote() << QJsonDocument(QJsonObject::fromVariantMap(map)).toJson(QJsonDocument::Indented).trimmed();
             }
             width = map[QStringLiteral("width")].toInt();
             height = map[QStringLiteral("height")].toInt();
-        } else {
-            success = false;
-            qInfo() << key << ": expected metadata key, skipping.";
-            continue;
         }
 
         if (extract) {
-            if (keys.contains(key_mask)) {
-                QByteArray data = loader->readU32Image(key_mask);
+            if (keys.contains(std::make_pair(key, QSSGLightmapIODataTag::Mask))) {
+                QByteArray data = loader->readU32Image(key, QSSGLightmapIODataTag::Mask);
                 maskToBBGRColor(data);
                 QImage img = QImage(reinterpret_cast<uchar *>(data.data()), width, height, QImage::Format_RGBA8888);
-                img.save(QString("images/" + key_mask + ".png"));
+                img.save(QString("images/masks/" + key + ".png"));
                 ++numImagesSaved;
             }
-            for (const QString &imageKey : { key_direct, key_indirect, key_final }) {
-                if (keys.contains(imageKey)) {
-                    QByteArray data = loader->readF32Image(imageKey);
-                    QImage img = QImage(reinterpret_cast<uchar *>(data.data()), width, height, QImage::Format_RGBA32FPx4);
-                    img.save(QString("images/" + imageKey + ".png"));
-                    ++numImagesSaved;
-                }
+            for (const auto &[texTag, dir] : std::array {
+                         std::pair { QSSGLightmapIODataTag::Texture_Direct, QStringLiteral("direct") },
+                         std::pair { QSSGLightmapIODataTag::Texture_Indirect, QStringLiteral("indirect") },
+                         std::pair { QSSGLightmapIODataTag::Texture_Final, QStringLiteral("final") },
+                 }) {
+                if (!keys.contains(std::make_pair(key, texTag)))
+                    continue;
+                QByteArray data = loader->readF32Image(key, texTag);
+                QImage img = QImage(reinterpret_cast<uchar *>(data.data()), width, height, QImage::Format_RGBA32FPx4);
+                img.save(QString("images/" + dir + "/" + key + ".png"));
+                ++numImagesSaved;
             }
         }
     }

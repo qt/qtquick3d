@@ -27,6 +27,19 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGLoadedTexture;
 struct QSSGRenderTextureFormat;
+
+enum class QSSGLightmapIODataTag : quint32 {
+    Unset = 0,
+    Mask,
+    Texture_Final,
+    Texture_Direct,
+    Texture_Indirect,
+    Metadata,
+    Mesh,
+    // ...
+    Count
+};
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLightmapLoader
 {
     ~QSSGLightmapLoader();
@@ -34,12 +47,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLightmapLoader
     static QSharedPointer<QSSGLightmapLoader> open(const QSharedPointer<QIODevice> &stream);
     static QSharedPointer<QSSGLightmapLoader> open(const QString &path);
 
-    QByteArray readF32Image(const QString &key) const;
-    QByteArray readU32Image(const QString &key) const;
-    QByteArray readData(const QString &key) const;
+    QByteArray readF32Image(const QString &key, QSSGLightmapIODataTag tag) const;
+    QByteArray readU32Image(const QString &key, QSSGLightmapIODataTag tag) const;
+    QByteArray readData(const QString &key, QSSGLightmapIODataTag tag) const;
     QVariantMap readMetadata(const QString &key) const;
 
-    QList<QString> getKeys() const;
+    QList<std::pair<QString, QSSGLightmapIODataTag>> getKeys() const;
     static QSSGLoadedTexture *createTexture(QSharedPointer<QIODevice> stream, const QSSGRenderTextureFormat &format, const QString &key);
 
 private:
@@ -56,9 +69,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLightmapWriter
     static QSharedPointer<QSSGLightmapWriter> open(const QSharedPointer<QIODevice> &stream);
     static QSharedPointer<QSSGLightmapWriter> open(const QString &path);
 
-    bool writeF32Image(const QString &key, const QByteArray &imageFP32);
-    bool writeU32Image(const QString &key, const QByteArray &imageU32);
-    bool writeData(const QString &key, const QByteArray &buffer);
+    bool writeF32Image(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &imageFP32);
+    bool writeU32Image(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &imageU32);
+    bool writeData(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &buffer);
     bool writeMetadata(const QString &key, const QVariantMap &metadata);
 
     bool close() const;
