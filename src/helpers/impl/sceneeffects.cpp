@@ -101,6 +101,38 @@ void DepthOfFieldEffect::setEnabled(bool newEnabled)
     emit enabledChanged();
 }
 
+SsgiEnvEffect::SsgiEnvEffect(QQuick3DObject *p)
+    : SceneEffectBase(p)
+{
+}
+
+void SsgiEnvEffect::registerWithEnv(SceneEffectEnvironment *newEnvironment)
+{
+    if (newEnvironment)
+        newEnvironment->setSsgiEffect(this);
+}
+
+void SsgiEnvEffect::unregisterWithEnv(SceneEffectEnvironment *oldEnvironment)
+{
+    if (oldEnvironment)
+        oldEnvironment->setSsgiEffect(nullptr);
+}
+
+bool SsgiEnvEffect::enabled() const
+{
+    return m_enabled;
+}
+
+void SsgiEnvEffect::setEnabled(bool newEnabled)
+{
+    if (m_enabled == newEnabled)
+        return;
+
+    m_enabled = newEnabled;
+    scheduleEnvUpdate();
+    emit enabledChanged();
+}
+
 SceneEffectEnvironment::SceneEffectEnvironment(QQuick3DObject *p)
     : QQuick3DSceneEnvironment(p)
 {
@@ -126,9 +158,21 @@ void SceneEffectEnvironment::setDeptOfFieldEffect(DepthOfFieldEffect *dof)
     m_dof = dof;
 }
 
+void SceneEffectEnvironment::setSsgiEffect(SsgiEnvEffect *ssgi)
+{
+    if (m_ssgi == ssgi)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &SceneEffectEnvironment::setSsgiEffect, ssgi, m_ssgi);
+
+    m_ssgi = ssgi;
+}
+
 QSSGRenderGraphObject *SceneEffectEnvironment::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     m_effects = QQuick3DSceneEnvironment::effectList();
+    if (m_ssgi && m_ssgi->enabled())
+        m_effects.push_back(m_ssgi);
     if (m_dof && m_dof->enabled())
         m_effects.push_back(m_dof);
     if (m_tonemapper)

@@ -71,9 +71,13 @@ QT_BEGIN_NAMESPACE
     another method is available via
     \l{ExtendedSceneEnvironment::fxaaEnabled}{fxaaEnabled}.
 
-    \li Screen space ambient occlusion. The relevant properties are
-    \l aoEnabled, \l aoStrength, \l aoBias, \l aoDistance, \l aoDither,
-    \l aoSampleRate, \l aoSoftness.
+    \li Screen space ambient occlusion. The relevant properties are \l
+    aoEnabled, \l aoStrength, \l aoBias, \l aoDistance, \l aoDither, \l
+    aoSampleRate, \l aoSoftness. Note that
+    \l{ExtendedSceneEnvironment::ssgiEnabled}{SSGI} also provides ambient
+    occlusion, and it will often give better quality results, albeit possibly at
+    a higher performance cost. Avoid enabling SceneEnvironment's ambient
+    occlusion and ExtendedSceneEnvironment's SSGI together.
 
     \li Clear color, skybox, image-based lighting. For more information on IBL,
     see \l{Using Image-Based Lighting}. The relevant properties are \l

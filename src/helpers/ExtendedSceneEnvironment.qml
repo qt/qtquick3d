@@ -7,6 +7,18 @@ import QtQuick3D.Helpers.impl
 SceneEffectEnvironment {
     id: sceneEnvironment
 
+    // SSGI Effect
+    property alias ssgiEnabled: ssgiEffect.enabled
+    property alias ssgiIndirectLightEnabled: ssgiEffect.indirectLightEnabled
+    property alias ssgiIndirectLightBoost: ssgiEffect.indirectLightBoost
+    property alias ssgiBufferSizeFactor: ssgiEffect.bufferSizeFactor
+    property alias ssgiSimulatedBounceEnabled: ssgiEffect.simulatedBounceEnabled
+    property alias ssgiSimulatedBounceFactor: ssgiEffect.simulatedBounceFactor
+    property alias ssgiSampleCount: ssgiEffect.sampleCount
+    property alias ssgiSampleRadius: ssgiEffect.sampleRadius
+    property alias ssgiSliceCount: ssgiEffect.sliceCount
+    property alias ssgiHitThickness: ssgiEffect.hitThickness
+
     // Depth of Field Effect
     property alias depthOfFieldEnabled: dofBlurEffect.enabled
     property alias depthOfFieldFocusDistance: dofBlurEffect.focusDistance
@@ -86,6 +98,11 @@ SceneEffectEnvironment {
     property alias lensFlareLensColorTexture: sceneEffect.lensColorTextureAlias
     property alias lensFlareLensDirtTexture: sceneEffect.lensDirtTextureAlias
     property alias lensFlareLensStarburstTexture: sceneEffect.starburstTextureAlias
+
+    SsgiEffect {
+        id: ssgiEffect
+        environment: sceneEnvironment
+    }
 
     DepthOfFieldBlur {
         id: dofBlurEffect

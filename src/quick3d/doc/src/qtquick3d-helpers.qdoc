@@ -530,12 +530,15 @@
     \image extendedsceneenvironment_lensflare.jpg
 
     \li \l{SceneEnvironment::aoStrength}{Screen space ambient occlusion} -
-    Provided by \l SceneEnvironment.
-
-    Controlled by \l{SceneEnvironment::aoEnabled},
-    \l{SceneEnvironment::aoStrength}, \l{SceneEnvironment::aoDistance},
-    \l{SceneEnvironment::aoSoftness}, \l{SceneEnvironment::aoDither},
-    \l{SceneEnvironment::aoSampleRate}, \l{SceneEnvironment::aoBias}.
+    Provided by \l SceneEnvironment. Note that \l{ssgiEnabled}{SSGI} also
+    provides ambient occlusion, and it will often give better quality results in
+    practice. Avoid enabling both SceneEnvironment's ambient occlusion and
+    ExtendedSceneEnvironment's screen-space global illumination, since it is
+    unnecessary and wasteful to perform both. Controlled by
+    \l{SceneEnvironment::aoEnabled}, \l{SceneEnvironment::aoStrength},
+    \l{SceneEnvironment::aoDistance}, \l{SceneEnvironment::aoSoftness},
+    \l{SceneEnvironment::aoDither}, \l{SceneEnvironment::aoSampleRate},
+    \l{SceneEnvironment::aoBias}.
 
     \image extendedsceneenvironment_ssao.jpg
 
@@ -561,6 +564,16 @@
     \l{SceneEnvironment::specularAAEnabled}.
 
     \image extendedsceneenvironment_aa.jpg
+
+    \li \l{ssgiEnabled}{Screen-space global illumination} Provides ambient
+    occlusion and indirect lighting. Note that enabling this effect may have a
+    big impact on GPU load and performance. Controlled by the properties \l
+    ssgiEnabled, \l ssgiIndirectLightEnabled, \l ssgiIndirectLightBoost, \l
+    ssgiBufferSizeFactor, \l ssgiSimulatedBounceEnabled, \l
+    ssgiSimulatedBounceFactor, \l ssgiSampleCount, \l ssgiSampleRadius, \l
+    ssgiSliceCount, \l ssgiHitThickness
+
+    \image extendedsceneenvironment_ssgi.jpg
 
     \endlist
 
@@ -1236,4 +1249,125 @@
     By default a built-in noise texture is used:
 
     \image extendedsceneenvironment_lensflare_default_noise.jpg
+*/
+
+// SSGI
+/*! \qmlproperty bool ExtendedSceneEnvironment::ssgiEnabled
+    Enables screen-space global illumination. This effect increases realism
+    by adding ambient occlusion and indirect light to the scene.
+
+    \default false
+    \since 6.11
+
+    \table
+    \header
+    \li SSGI disabled
+    \li SSGI enabled
+    \row
+    \li \image extendedsceneenvironment_ssgi_without.jpg
+    \li \image extendedsceneenvironment_ssgi_with.jpg
+    \endtable
+*/
+/*! \qmlproperty bool ExtendedSceneEnvironment::ssgiIndirectLightEnabled
+
+    Controls whether indirect light is included in the result, or only ambient
+    occlusion. By default both are enabled.
+
+    \default true
+    \since 6.11
+
+    Setting the value to false provides a direct alternative to
+    SceneEnvironment's \l{SceneEnvironment::aoEnabled}{ambient occlusion}. The
+    AO results provided by SSGI are expected to be higher quality and require
+    little or no tuning. This comes at the expense of potentially higher GPU
+    load.
+
+    \table
+    \header
+    \li SSGI disabled
+    \li AO-only SSGI
+    \row
+    \li \image extendedsceneenvironment_ssgi_ao_without.jpg
+    \li \image extendedsceneenvironment_ssgi_ao_with.jpg
+    \endtable
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::ssgiIndirectLightBoost
+
+    \default 4.0
+    \since 6.11
+
+    Multiplier for the indirect light results. Increasing the value makes the
+    indirect light contribution more prominent. The suggested range is 1 to
+    100. The appropriate value always depends on the scene and how it is lit.
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::ssgiBufferSizeFactor
+
+    Controls the size of the color buffers the SSGI effect works on. Performing
+    everything with render targets matching the input and output dimensions
+    (i.e., the View3D's pixel size) can be too costly which many GPUs and
+    devices cannot afford in practice. Therefore, the SSGI effect operates on a
+    reduced size for intermediate textures. By default this is 0.5, meaning half
+    the size of the input and output textures. Increasing the value towards 1
+    increases the quality of the results, at the expense of a heavily growing
+    GPU load.
+
+    \default 0.5
+    \since 6.11
+*/
+/*! \qmlproperty bool ExtendedSceneEnvironment::ssgiSimulatedBounceEnabled
+
+    Controls whether additional light bouncing is simulated by sampling the
+    previous frame's texture.
+
+    \default false
+    \since 6.11
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::ssgiSimulatedBounceFactor
+
+    Multiplier for the result from the simulated bounce calculation. Only has an
+    effect when \l ssgiSimulatedBounceEnabled is \c true. This value may need to
+    be tuned together with \l ssgiIndirectLightBoost. Depending on the scene and
+    how it is lit, higher values for these properties can lead to overly
+    exaggerated indirect light contribution, and even a feedback loop where the
+    indirect light grows excessively between frames.
+
+    \default 0.5
+    \since 6.11
+*/
+/*! \qmlproperty int ExtendedSceneEnvironment::ssgiSampleCount
+
+    Configures the global illumination algorithm. A higher sample count will give
+    better results at the expense of increased GPU load.
+
+    The suggested range is 1 to 16.
+
+    \default 4
+    \since 6.11
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::ssgiSampleRadius
+
+    Configures the global illumination algorithm.
+
+    The suggested range is 0.001 to 4.0.
+
+    \default 0.1
+    \since 6.11
+*/
+/*! \qmlproperty int ExtendedSceneEnvironment::ssgiSliceCount
+
+    Configures the global illumination algorithm.
+
+    The suggested range is 1 to 8.
+
+    \default 4
+    \since 6.11
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::ssgiHitThickness
+
+    Configures the global illumination algorithm.
+
+    The suggested range is 0.001 to 4.0.
+
+    \default 0.5
+    \since 6.11
 */

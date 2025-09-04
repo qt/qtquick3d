@@ -407,6 +407,167 @@ Page {
                 }
             }
 
+            // SSGI
+            SectionLayout {
+                id: ssgiSection
+                title: "SSGI"
+                isExpanded: false
+
+                readonly property bool ssgiEnabled: toolPage.sceneEnvironment.ssgiEnabled
+
+                CheckBox {
+                    Layout.columnSpan: 2
+                    text: "Enabled"
+                    checked: toolPage.sceneEnvironment.ssgiEnabled
+                    onCheckedChanged: {
+                        toolPage.sceneEnvironment.ssgiEnabled = checked
+                    }
+                }
+
+                Label {
+                    enabled: ssgiSection.ssgiEnabled
+                    text: "Buffer size factor (" + (toolPage.sceneEnvironment.ssgiBufferSizeFactor).toFixed(2) +")"
+                    Layout.fillWidth: true
+                }
+
+                Slider {
+                    enabled: ssgiSection.ssgiEnabled
+                    Layout.fillWidth: true
+                    from: 0.1
+                    to: 1.0
+                    value: toolPage.sceneEnvironment.ssgiBufferSizeFactor
+                    onValueChanged: toolPage.sceneEnvironment.ssgiBufferSizeFactor = value
+                }
+
+                CheckBox {
+                    enabled: ssgiSection.ssgiEnabled
+                    Layout.columnSpan: 2
+                    text: "Indirect light"
+                    checked: toolPage.sceneEnvironment.ssgiIndirectLightEnabled
+                    onCheckedChanged: {
+                        toolPage.sceneEnvironment.ssgiIndirectLightEnabled = checked
+                    }
+                }
+
+                Label {
+                    enabled: ssgiSection.ssgiEnabled && toolPage.sceneEnvironment.ssgiIndirectLightEnabled
+                    text: "Indirect light boost (" + (toolPage.sceneEnvironment.ssgiIndirectLightBoost).toFixed(2) + ")"
+                    Layout.fillWidth: true
+                }
+
+                Slider {
+                    enabled: ssgiSection.ssgiEnabled && toolPage.sceneEnvironment.ssgiIndirectLightEnabled
+                    Layout.fillWidth: true
+                    from: 1.0
+                    to: 100.0
+                    value: toolPage.sceneEnvironment.ssgiIndirectLightBoost
+                    onValueChanged: toolPage.sceneEnvironment.ssgiIndirectLightBoost = value
+                }
+
+                CheckBox {
+                    enabled: ssgiSection.ssgiEnabled && toolPage.sceneEnvironment.ssgiIndirectLightEnabled
+                    Layout.columnSpan: 2
+                    text: "Simulated bounce"
+                    checked: toolPage.sceneEnvironment.ssgiSimulatedBounceEnabled
+                    onCheckedChanged: {
+                        toolPage.sceneEnvironment.ssgiSimulatedBounceEnabled = checked
+                    }
+                }
+
+                Label {
+                    enabled: ssgiSection.ssgiEnabled && toolPage.sceneEnvironment.ssgiIndirectLightEnabled && toolPage.sceneEnvironment.ssgiSimulatedBounceEnabled
+                    text: "Simulated bounce factor (" + (toolPage.sceneEnvironment.ssgiSimulatedBounceFactor).toFixed(2) +")"
+                    Layout.fillWidth: true
+                }
+
+                Slider {
+                    enabled: ssgiSection.ssgiEnabled && toolPage.sceneEnvironment.ssgiIndirectLightEnabled && toolPage.sceneEnvironment.ssgiSimulatedBounceEnabled
+                    Layout.fillWidth: true
+                    from: 0.0
+                    to: 1.0
+                    value: toolPage.sceneEnvironment.ssgiSimulatedBounceFactor
+                    onValueChanged: toolPage.sceneEnvironment.ssgiSimulatedBounceFactor = value
+                }
+
+                Label {
+                    enabled: ssgiSection.ssgiEnabled
+                    text: "Sample count (" + toolPage.sceneEnvironment.ssgiSampleCount +")"
+                    Layout.fillWidth: true
+                }
+
+                Slider {
+                    enabled: ssgiSection.ssgiEnabled
+                    Layout.fillWidth: true
+                    from: 1
+                    to: 16
+                    stepSize: 1
+                    value: toolPage.sceneEnvironment.ssgiSampleCount
+                    onValueChanged: toolPage.sceneEnvironment.ssgiSampleCount = value
+                }
+
+                Label {
+                    enabled: ssgiSection.ssgiEnabled
+                    text: "Sample radius (" + (toolPage.sceneEnvironment.ssgiSampleRadius).toFixed(2) +")"
+                    Layout.fillWidth: true
+                }
+
+                Slider {
+                    enabled: ssgiSection.ssgiEnabled
+                    Layout.fillWidth: true
+                    from: 0.001
+                    to: 4.0
+                    value: toolPage.sceneEnvironment.ssgiSampleRadius
+                    onValueChanged: toolPage.sceneEnvironment.ssgiSampleRadius = value
+                }
+
+                Label {
+                    enabled: ssgiSection.ssgiEnabled
+                    text: "Slice count (" + toolPage.sceneEnvironment.ssgiSliceCount +")"
+                    Layout.fillWidth: true
+                }
+
+                Slider {
+                    enabled: ssgiSection.ssgiEnabled
+                    Layout.fillWidth: true
+                    from: 1
+                    to: 8
+                    stepSize: 1
+                    value: toolPage.sceneEnvironment.ssgiSliceCount
+                    onValueChanged: toolPage.sceneEnvironment.ssgiSliceCount = value
+                }
+
+                Label {
+                    enabled: ssgiSection.ssgiEnabled
+                    text: "Hit thickness (" + (toolPage.sceneEnvironment.ssgiHitThickness).toFixed(2) +")"
+                    Layout.fillWidth: true
+                }
+
+                Slider {
+                    enabled: ssgiSection.ssgiEnabled
+                    Layout.fillWidth: true
+                    from: 0.001
+                    to: 4.0
+                    value: toolPage.sceneEnvironment.ssgiHitThickness
+                    onValueChanged: toolPage.sceneEnvironment.ssgiHitThickness = value
+                }
+
+                HorizontalSpacer {
+                }
+                ResetButton {
+                    onReset: {
+                        toolPage.sceneEnvironment.ssgiIndirectLightEnabled = true;
+                        toolPage.sceneEnvironment.ssgiIndirectLightBoost = 4.0;
+                        toolPage.sceneEnvironment.ssgiBufferSizeFactor = 0.5;
+                        toolPage.sceneEnvironment.ssgiSimulatedBounceEnabled = false;
+                        toolPage.sceneEnvironment.ssgiSimulatedBounceFactor = 0.5;
+                        toolPage.sceneEnvironment.ssgiSampleCount = 4;
+                        toolPage.sceneEnvironment.ssgiSampleRadius = 0.1;
+                        toolPage.sceneEnvironment.ssgiSliceCount = 4;
+                        toolPage.sceneEnvironment.ssgiHitThickness = 0.5;
+                    }
+                }
+            }
+
             // DOF
             SectionLayout {
                 id: dofSection

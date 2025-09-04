@@ -24,7 +24,7 @@ Rectangle {
             id: sectionHeader
             Layout.fillWidth: true
             implicitHeight: 24
-            color: palette.alternateBase
+            //color: palette.base
 
             RowLayout {
                 anchors.verticalCenter: parent.verticalCenter
@@ -34,7 +34,7 @@ Rectangle {
                     source: root.isExpanded ? "qrc:/images/TreeExpanded.png" : "qrc:/images/TreeUnexpanded.png"
                 }
 
-                Text {
+                Label {
                     id: titleText
                     Layout.fillWidth: true
                     text: root.title
