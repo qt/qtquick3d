@@ -41,6 +41,7 @@ enum class HandleType
     Layer,
     Node,
     Model,
+    Item2D
 };
 
 template <HandleType>
@@ -76,6 +77,7 @@ private:
 using QSSGRenderLayerHandle = QSSGRenderStorageHandle<HandleType::Layer>;
 using QSSGRenderNodeHandle = QSSGRenderStorageHandle<HandleType::Node>;
 using QSSGRenderModelHandle = QSSGRenderStorageHandle<HandleType::Model>;
+using QSSGRenderItem2DHandle = QSSGRenderStorageHandle<HandleType::Item2D>;
 
 class QSSGRenderFlag
 {

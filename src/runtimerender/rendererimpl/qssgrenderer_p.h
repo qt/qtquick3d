@@ -22,6 +22,8 @@
 
 #include <QtCore/qpointer.h>
 
+#include <vector>
+
 QT_BEGIN_NAMESPACE
 
 class QSSGShaderCache;
@@ -36,8 +38,8 @@ struct QSSGRenderRay;
 class QSSGSubsetRenderable;
 struct QSSGShaderDefaultMaterialKeyProperties;
 struct QSSGShaderFeatures;
+class QSSGRenderItem2DData;
 class QSGRenderContext;
-class QSGRenderer;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
@@ -87,25 +89,7 @@ public:
     void beginSubLayerRender(QSSGLayerRenderData &inLayer);
     void endSubLayerRender(QSSGLayerRenderData &inLayer);
 
-    using ModelViewProjections = std::array<QMatrix4x4, 2>;
-
-    struct Item2DData
-    {
-        const QSSGRenderLayer *layer = nullptr;
-        const QSSGRenderItem2D *item = nullptr;
-        QPointer<QSGRenderer> renderer;
-        QRhiRenderPassDescriptor *rpd = nullptr;
-        ModelViewProjections mvps;
-        bool isValid() const { return layer && item && renderer && rpd; }
-    };
-
-    using Item2DDataList = std::vector<Item2DData>;
-    using Item2DDataMap = std::unordered_map<const QSSGRenderItem2D *, Item2DData>;
-
-    void registerItem2DData(const Item2DData &data);
-    void populateItem2DDataMapForLayer(const QSSGRenderLayer &layer, Item2DDataMap &item2DDataMap) const;
     void releaseItem2DData(const QSSGRenderItem2D &item2D);
-    void releaseItem2DData(const QSSGRenderLayer &layer);
 
 protected:
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
@@ -127,6 +111,9 @@ private:
     void resetResourceCounters(QSSGRenderLayer *inLayer);
     void releaseCachedResources();
 
+    void registerItem2DData(QSSGRenderItem2DData &data);
+    void unregisterItem2DData(QSSGRenderItem2DData &data);
+
     QSSGRenderContextInterface *m_contextInterface = nullptr; //  We're own by the context interface
 
     bool m_globalPickingEnabled = false;
@@ -138,8 +125,9 @@ private:
 
     QPointer<QSGRenderContext> m_qsgRenderContext;
 
-    // Item2D data (per layer)
-    Item2DDataList item2DDataList;
+    // Item2D data (per layer).
+    // Note that the data is own by the layer.
+    std::vector<QSSGRenderItem2DData *> m_item2DDatas;
 
     mutable std::unique_ptr<QSSGRhiQuadRenderer> m_rhiQuadRenderer;
     mutable std::unique_ptr<QSSGRhiCubeRenderer> m_rhiCubeRenderer;

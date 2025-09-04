@@ -288,8 +288,6 @@ public:
                                 QSSGRenderableObjectList &screenTextureObjects,
                                 float lodThreshold = 0.0f);
     bool prepareParticlesForRender(const RenderableNodeEntries &renderableParticles, const QSSGRenderCameraData &cameraData, QSSGLayerRenderPreparationResultFlags &ioFlags);
-    bool prepareItem2DsForRender(const QSSGRenderContextInterface &ctxIfc,
-                                 const QSSGItem2DsView &renderableItem2Ds);
 
     void prepareResourceLoaders();
 
@@ -370,9 +368,6 @@ public:
     // it is simplest to duplicate the lists.
     QVector<QSSGBakedLightingModel> renderedBakedLightingModels;
     RenderableItem2DEntries renderedItem2Ds;
-    // Temporary look-up map for Item2D data (for use in prepareItem2DsForRender()).
-    QSSGRenderer::Item2DDataMap item2DDataMap;
-    QPointer<QSGRenderContext> item2DRenderContext;
 
     QSSGLayerRenderPreparationResult layerPrepResult;
     std::optional<QSSGRenderCameraDataList> renderedCameraData;
@@ -499,6 +494,28 @@ public:
     [[nodiscard]] float getGlobalOpacity(const QSSGRenderNode &node) const;
 
     //
+    [[nodiscard]] QSSGRenderItem2DData::Item2DRenderer getItem2DRenderer(const QSSGRenderItem2D &item) const
+    {
+        return item2DData->getItem2DRenderer(item);
+    }
+
+    [[nodiscard]] const std::unique_ptr<QRhiRenderPassDescriptor> &getItem2DRenderPassDescriptor() const
+    {
+        return item2DData->getItem2DRenderPassDescriptor();
+    }
+
+    [[nodiscard]] ModelViewProjections getItem2DMvps(QSSGRenderItem2DHandle h) const
+    {
+        return item2DData->getModelViewProjection(h);
+    }
+
+    [[nodiscard]] ModelViewProjections getItem2DMvps(const QSSGRenderItem2D &item) const
+    {
+        return item2DData->getModelViewProjection(item);
+    }
+
+
+    //
     void prepareRenderables(QSSGRenderContextInterface &ctx,
                             QSSGPrepResultId prepId,
                             QRhiRenderPassDescriptor *renderPassDescriptor,
@@ -549,6 +566,7 @@ private:
 
     std::shared_ptr<QSSGGlobalRenderNodeData> nodeData;
     std::unique_ptr<QSSGRenderModelData> modelData;
+    std::unique_ptr<QSSGRenderItem2DData> item2DData;
 
     // Soreted cache (per camera and extension)
     using PerCameraCache = std::unordered_map<const QSSGRenderCamera *, QSSGRenderableObjectList>;
