@@ -7,8 +7,12 @@
 #include <QtCore/qthreadpool.h>
 #endif // QT_CONFIG(thread)
 
+#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
+
 #include "graphobjects/qssgrenderroot_p.h"
 #include "graphobjects/qssgrenderlayer_p.h"
+#include "graphobjects/qssgrenderitem2d_p.h"
 #include "qssgrendercontextcore.h"
 #include "qssgrenderer_p.h"
 #include "resourcemanager/qssgrenderbuffermanager_p.h"
@@ -618,6 +622,139 @@ bool QSSGRenderDataHelpers::updateGlobalNodeDataIndexed(QSSGRenderNode *node, co
 bool QSSGRenderDataHelpers::calcGlobalVariablesIndexed(QSSGRenderNode *node, const quint32 version, QSSGGlobalRenderNodeData::GlobalTransformStore &globalTransforms, QSSGGlobalRenderNodeData::GlobalOpacityStore &globalOpacities)
 {
     return calcGlobalNodeDataIndexedImpl<Strategy::Initial>(node, version, globalTransforms, globalOpacities);
+}
+
+QSSGRenderItem2DData::Item2DRenderer QSSGRenderItem2DData::getItem2DRenderer(const QSSGRenderItem2D &item) const
+{
+    const auto foundIt = item2DRenderers.find(&item);
+    return (foundIt != item2DRenderers.cend()) ? foundIt->second : Item2DRenderer{};
+}
+
+QSSGRenderItem2DData::ModelViewProjections QSSGRenderItem2DData::getModelViewProjection(QSSGRenderItem2DHandle h) const
+{
+    const bool hasId = h.hasId();
+    const bool validVersion = hasId && (h.version() == m_version);
+    const auto index = h.index();
+
+    if (!validVersion || !(modelViewProjections.size() > index))
+        return {};
+
+    return modelViewProjections[index];
+}
+
+QSSGRenderItem2DData::ModelViewProjections QSSGRenderItem2DData::getModelViewProjection(const QSSGRenderItem2D &item) const
+{
+    return getModelViewProjection(item.ih);
+}
+
+QSSGRenderItem2DData::QSSGRenderItem2DData(const QSSGGlobalRenderNodeDataPtr &globalNodeData)
+{
+    m_gnd = globalNodeData;
+    m_version = globalNodeData->version();
+}
+
+QSSGRenderItem2DData::~QSSGRenderItem2DData()
+{
+    releaseAll();
+}
+
+void QSSGRenderItem2DData::updateItem2DData(QSSGItem2DsView &items, QSSGRenderer *renderer, const QSSGRenderCameraDataList &renderCameraData)
+{
+    const auto itemCount = size_t(items.size());
+
+    if (itemCount == 0)
+        return;
+
+    const bool versionChanged = m_version != m_gnd->version();
+    const bool storageSizeChanged = (modelViewProjections.size() < itemCount);
+
+    // NOTE: We always do this due to layer masking with shared scenes (import scene)
+    // in the future we should find a way to track when it is actually needed.
+    const bool reIndexNeeded = versionChanged || storageSizeChanged || true;
+
+    const QMatrix4x4 defaultModelViewProjection;
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+
+    // resize the storage if needed
+    modelViewProjections.resize(itemCount, { defaultModelViewProjection, defaultModelViewProjection });
+
+    if (reIndexNeeded) {
+        // NOTE: Node data's version is incremented when the node graph changes and starts at 1.
+        m_version = m_gnd->version();
+
+        for (quint32 i = 0; i < itemCount; ++i) {
+            QSSGRenderItem2D *item = items[i];
+            item->ih = QSSGRenderItem2DHandle(item->h.context(), item->h.version(), i);
+        }
+    }
+
+
+    const auto &clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
+
+    // - MVPs
+    const auto doMVPs = [&]() {
+        for (const QSSGRenderItem2D *item : std::as_const(items)) {
+            int mvpCount = 0;
+            const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*item);
+            auto &mvps = modelViewProjections[item->ih.index()];
+            for (const QSSGRenderCameraData &cameraData : renderCameraData) {
+                const QMatrix4x4 &mvp = cameraData.viewProjection * globalTransform;
+                mvps[mvpCount++] = clipSpaceCorrMatrix * mvp * flipMatrix;
+            }
+        }
+    };
+
+    doMVPs();
+
+    // Check that we have a renderer and that it hasn't changed (would indicate a context change)
+    // and we need to update all the data.
+    QSGRenderContext *sgRc = QSSGRendererPrivate::getSgRenderContext(*renderer);
+    const bool contextChanged = (item2DRenderContext && item2DRenderContext != sgRc);
+    item2DRenderContext = sgRc;
+
+    if (contextChanged || !rpd)
+        rpd.reset(rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor());
+
+    for (const QSSGRenderItem2D *theItem2D : std::as_const(items)) {
+        auto item2DRenderer = getItem2DRenderer(*theItem2D);
+        if (contextChanged)
+            delete item2DRenderer;
+
+        if (!item2DRenderer)
+            item2DRenderer = sgRc->createRenderer(QSGRendererInterface::RenderMode3D);
+
+        if (item2DRenderer->rootNode() != theItem2D->m_rootNode) {
+            item2DRenderer->setRootNode(theItem2D->m_rootNode);
+            theItem2D->m_rootNode->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
+            item2DRenderer->nodeChanged(theItem2D->m_rootNode, QSGNode::DirtyForceUpdate); // Force render list update.
+        }
+
+        item2DRenderers[theItem2D] = item2DRenderer;
+    }
+}
+
+void QSSGRenderItem2DData::releaseRenderData(const QSSGRenderItem2D &item)
+{
+    const auto foundIt = item2DRenderers.find(&item);
+    if (foundIt != item2DRenderers.cend()) {
+        delete foundIt->second;
+        item2DRenderers.erase(foundIt);
+
+        // Removing an item should trigger a reindex of the remaining items
+        ++m_version;
+    }
+}
+
+void QSSGRenderItem2DData::releaseAll()
+{
+    for (auto &it : item2DRenderers)
+        delete it.second;
+    rpd.reset();
+    item2DRenderers.clear();
+    item2DRenderContext = nullptr;
+    modelViewProjections.clear();
+    m_version = 0;
 }
 
 QT_END_NAMESPACE

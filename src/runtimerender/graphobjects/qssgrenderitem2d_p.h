@@ -35,6 +35,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
 
     QSSGRenderItem2D();
     ~QSSGRenderItem2D() override;
+
+    QSSGRenderItem2DHandle ih;
 };
 QT_END_NAMESPACE
 

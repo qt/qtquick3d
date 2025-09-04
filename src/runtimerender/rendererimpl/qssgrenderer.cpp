@@ -79,54 +79,28 @@ void QSSGRenderer::releaseCachedResources()
     m_rhiCubeRenderer.reset();
 }
 
-void QSSGRenderer::registerItem2DData(const Item2DData &data)
+void QSSGRenderer::registerItem2DData(QSSGRenderItem2DData &data)
 {
-    const auto foundIt = std::find_if(item2DDataList.begin(), item2DDataList.end(), [&data](const Item2DData &i2dd) {
-        return i2dd.layer == data.layer && i2dd.item == data.item;
-    });
-
-    if (foundIt != item2DDataList.end()) {
-        // Update existing entry
-        *foundIt = data;
-        return;
+    // Check if data is already in the m_item2DDatas list, if not insert it.
+    for (const auto *item2DData : m_item2DDatas) {
+        if (item2DData == &data)
+            return;
     }
 
-    item2DDataList.push_back(data);
+    m_item2DDatas.push_back(&data);
 }
 
-void QSSGRenderer::populateItem2DDataMapForLayer(const QSSGRenderLayer &layer, Item2DDataMap &item2DDataMap) const
+void QSSGRenderer::unregisterItem2DData(QSSGRenderItem2DData &data)
 {
-    item2DDataMap.clear();
-    for (const auto &item2dData : std::as_const(item2DDataList)) {
-        if (item2dData.layer == &layer)
-            item2DDataMap[item2dData.item] = item2dData;
-    }
+    const auto foundIt = std::find(m_item2DDatas.begin(), m_item2DDatas.end(), &data);
+    if (foundIt != m_item2DDatas.end())
+        m_item2DDatas.erase(foundIt);
 }
 
 void QSSGRenderer::releaseItem2DData(const QSSGRenderItem2D &item2D)
 {
-    for (auto it = item2DDataList.begin(); it != item2DDataList.end(); /* no increment */) {
-        if (it->item == &item2D) {
-            delete it->rpd;
-            delete it->renderer;
-            it = item2DDataList.erase(it);
-        } else {
-            ++it;
-        }
-    }
-}
-
-void QSSGRenderer::releaseItem2DData(const QSSGRenderLayer &layer)
-{
-    for (auto it = item2DDataList.begin(); it != item2DDataList.end(); /* no increment */) {
-        if (it->layer == &layer) {
-            delete it->rpd;
-            delete it->renderer;
-            it = item2DDataList.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    for (auto *item2DData : m_item2DDatas)
+        item2DData->releaseRenderData(item2D);
 }
 
 QSSGRenderer::QSSGRenderer() = default;

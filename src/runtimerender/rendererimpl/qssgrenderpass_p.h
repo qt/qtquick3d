@@ -30,7 +30,7 @@ class QSSGRenderShadowMap;
 class QSSGRenderReflectionMap;
 class QSSGLayerRenderData;
 class QSSGRenderCamera;
-struct QSSGRenderItem2D;
+class QSGRenderer;
 
 class QSSGRenderPass
 {
@@ -260,12 +260,7 @@ public:
     void resetForFrame() final;
 
 protected:
-    [[nodiscard]] QSSGRenderer::Item2DData getItem2DData(QSSGRenderItem2D *item2D);
-
-    QSSGRenderer::Item2DDataMap item2DDataMap;
-    QList<QSSGRenderItem2D *> item2Ds;
     std::vector<QSGRenderer *> prepdItem2DRenderers;
-    QSSGRhiGraphicsPipelineState ps {};
 };
 
 class InfiniteGridPass : public QSSGRenderPass

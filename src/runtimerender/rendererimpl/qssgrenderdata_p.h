@@ -20,6 +20,7 @@
 #include "qssgrenderableobjects_p.h"
 
 #include <vector>
+#include <unordered_map>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -28,6 +29,9 @@ struct QSSGRenderNode;
 class QSSGRenderRoot;
 
 class QThreadPool;
+
+class QSGRenderContext;
+class QSGRenderer;
 
 // Per window node data
 class QSSGGlobalRenderNodeData
@@ -234,6 +238,53 @@ private:
     void prepareMaterials(const QSSGModelsView &models);
 
     QSSGGlobalRenderNodeDataPtr m_gnd;
+
+    quint32 m_version = 0;
+};
+
+class QSSGRenderItem2DData
+{
+    Q_DISABLE_COPY_MOVE(QSSGRenderItem2DData)
+public:
+    explicit QSSGRenderItem2DData(const QSSGGlobalRenderNodeDataPtr &globalNodeData);
+    ~QSSGRenderItem2DData();
+
+    using ModelViewProjections = std::array<QMatrix4x4, 2>;
+    using ModelViewProjectionStore = std::vector<ModelViewProjections>;
+
+    using Item2DRenderer = QPointer<QSGRenderer>;
+
+    [[nodiscard]] ModelViewProjections getModelViewProjection(QSSGRenderItem2DHandle h) const;
+    [[nodiscard]] ModelViewProjections getModelViewProjection(const QSSGRenderItem2D &item) const;
+
+    [[nodiscard]] Item2DRenderer getItem2DRenderer(const QSSGRenderItem2D &item) const;
+    [[nodiscard]] const std::unique_ptr<QRhiRenderPassDescriptor> &getItem2DRenderPassDescriptor() const { return rpd; }
+
+    [[nodiscard]] const QSSGGlobalRenderNodeDataPtr &globalNodeData() const { return m_gnd; }
+
+    void updateItem2DData(QSSGItem2DsView &items, QSSGRenderer *renderer, const QSSGRenderCameraDataList &renderCameraData);
+
+    void releaseRenderData(const QSSGRenderItem2D &item);
+    void releaseAll();
+
+private:
+    // The association between the 2D item and its renderer and render pass descriptor, is cached and has
+    // a strong connection to the item itself. We therefore use a map here. The other stores are
+    // indexed stores as those are pure data.
+    using Item2DRendererStore = std::unordered_map<const QSSGRenderItem2D *, Item2DRenderer>;
+
+    QSSGGlobalRenderNodeDataPtr m_gnd;
+
+    QPointer<QSGRenderContext> item2DRenderContext;
+    Item2DRendererStore item2DRenderers;
+    std::unique_ptr<QRhiRenderPassDescriptor> rpd;
+    ModelViewProjectionStore modelViewProjections;
+
+    const QMatrix4x4 flipMatrix { 1.0f, 0.0f, 0.0f, 0.0f,
+                                  0.0f, -1.0f, 0.0f, 0.0f,
+                                  0.0f, 0.0f, 1.0f, 0.0f,
+                                  0.0f, 0.0f, 0.0f, 1.0f };
+
 
     quint32 m_version = 0;
 };
