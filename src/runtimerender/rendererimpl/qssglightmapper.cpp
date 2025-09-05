@@ -308,6 +308,7 @@ struct QSSGLightmapperPrivate
 
     QVector<QVector<ModelTexel>> modelTexels; // commit geom
     QVector<bool> modelHasBaseColorTransparency;
+    quint32 emissiveModelCount = 0; // Models that has any ModelTexel with emission > 0.
     QVector<quint32> numValidTexels;
 
     QVector<int> geomLightmapMap; // [geomId] -> index in lightmaps (NB lightmap is per-model, geomId is per-submesh)
@@ -348,6 +349,7 @@ struct QSSGLightmapperPrivate
     void updateStage(const QString &newStage);
     bool commitGeometry();
     bool prepareLightmaps();
+    bool verifyLights() const;
     QVector<QVector3D> computeDirectLight(int lmIdx);
     QVector<QVector3D> computeIndirectLight(int lmIdx,
                                             int wgSizePerGroup,
@@ -450,6 +452,7 @@ void QSSGLightmapper::reset()
     d->lights.clear();
 
     d->modelHasBaseColorTransparency.clear();
+    d->emissiveModelCount = 0;
     d->meshes.clear();
 
     d->geomLightmapMap.clear();
@@ -1279,6 +1282,8 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         const int numTilesX = (w + maxTileSize - 1) / maxTileSize;
         const int numTilesY = (h + maxTileSize - 1) / maxTileSize;
 
+        bool isEmissive = false;
+
         // Render tiled to make sure enough GPU memory is available
         for (int tileY = 0; tileY < numTilesY; ++tileY) {
             for (int tileX = 0; tileX < numTilesX; ++tileX) {
@@ -1327,12 +1332,17 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                         if (lmPix.baseColor[3] < 1.0f)
                             modelHasBaseColorTransparency[lmIdx] = true;
                         lmPix.emission = emissions[srcPixelI].toVector3D();
+                        if (!isEmissive && !qFuzzyIsNull(lmPix.emission.length()))
+                            isEmissive = true;
 
                         lmPix.isValid() ? ++numValidTexels[lmIdx] : ++unusedEntries;
                     }
                 }
             }
         }
+
+        if (isEmissive)
+            ++emissiveModelCount;
 
         totalUnusedEntries += unusedEntries;
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
@@ -1352,6 +1362,11 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap preparing done"));
     return true;
+}
+
+bool QSSGLightmapperPrivate::verifyLights() const {
+
+    return !lights.empty() || emissiveModelCount > 0;
 }
 
 bool QSSGLightmapper::setupLights(const QSSGRenderer &renderer)
@@ -1412,12 +1427,6 @@ bool QSSGLightmapper::setupLights(const QSSGRenderer &renderer)
 
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                       QStringLiteral("Total lights registered: %1").arg(d->lights.size()));
-
-    if (d->lights.isEmpty()) {
-        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
-                          QStringLiteral("No lights with baking enabled"));
-        return false;
-    }
 
     return true;
 }
@@ -2798,6 +2807,17 @@ bool QSSGLightmapper::bake()
         d->updateStage(QStringLiteral("Cancelled"));
         return false;
     }
+
+    if (!d->verifyLights()) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
+                          QStringLiteral("Did not find any lights with baking enabled or any "
+                                         "emissive models in the scene."));
+        return false;
+    }
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                      QStringLiteral("Total emissive models registered: %1")
+                          .arg(d->emissiveModelCount));
 
     // indirect lighting is slow, so parallelize per groups of samples,
     // e.g. if sample count is 256 and workgroup size is 32, then do up to
