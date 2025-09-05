@@ -419,7 +419,7 @@ QList<std::pair<QString, QSSGLightmapIODataTag>> QSSGLightmapIOPrivate::getKeys(
             return {};
         }
 
-        keys[i] = std::make_pair(entryKey, static_cast<QSSGLightmapIODataTag>(entry.dataTag));
+        keys[i] = std::make_pair(QString::fromUtf8(entryKey), static_cast<QSSGLightmapIODataTag>(entry.dataTag));
     }
 
     std::sort(keys.begin(), keys.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
