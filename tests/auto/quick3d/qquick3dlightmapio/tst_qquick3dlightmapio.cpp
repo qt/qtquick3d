@@ -42,7 +42,7 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
         metadata["width"] = 100;
         metadata["height"] = 50;
 
-        io->writeMetadata("metadata", metadata);
+        io->writeMap("metadata", QSSGLightmapIODataTag::Metadata, metadata);
         io->writeF32Image("image", QSSGLightmapIODataTag::Unset, f32Image);
 
         QVariantMap mapA;
@@ -53,9 +53,9 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
         mapB["value"] = "b";
         mapC["value"] = "c";
 
-        io->writeMetadata("a", mapA);
-        io->writeMetadata("b", mapB);
-        io->writeMetadata("c", mapC);
+        io->writeMap("a", QSSGLightmapIODataTag::Metadata, mapA);
+        io->writeMap("b", QSSGLightmapIODataTag::Metadata, mapB);
+        io->writeMap("c", QSSGLightmapIODataTag::SceneMetadata, mapC);
 
         io->writeF32Image("a", QSSGLightmapIODataTag::Texture_Final, finalImage);
         io->writeU32Image("a", QSSGLightmapIODataTag::Texture_Direct, directImage);
@@ -67,10 +67,10 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
 
     QSharedPointer<QIODevice> buffer(new class QBuffer(&bufferData));
     QSharedPointer<QSSGLightmapLoader> io = QSSGLightmapLoader::open(buffer);
-    QVariantMap metadata = io->readMetadata("metadata");
-    QVariantMap mapA = io->readMetadata("a");
-    QVariantMap mapB = io->readMetadata("b");
-    QVariantMap mapC = io->readMetadata("c");
+    QVariantMap metadata = io->readMap("metadata", QSSGLightmapIODataTag::Metadata);
+    QVariantMap mapA = io->readMap("a", QSSGLightmapIODataTag::Metadata);
+    QVariantMap mapB = io->readMap("b", QSSGLightmapIODataTag::Metadata);
+    QVariantMap mapC = io->readMap("c", QSSGLightmapIODataTag::SceneMetadata);
     QCOMPARE(metadata["author"].toString(), QString("QtCreator"));
     QCOMPARE(metadata["version"].toDouble(), 1.0);
     QCOMPARE(metadata["width"].toUInt(), 100);

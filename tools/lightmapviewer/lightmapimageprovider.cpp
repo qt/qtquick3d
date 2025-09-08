@@ -63,7 +63,7 @@ QImage LightmapImageProvider::requestImage(const QString &id, QSize *size, const
     if (!loader)
         return m_errorImage;
 
-    QVariantMap metadata = loader->readMetadata(key);
+    QVariantMap metadata = loader->readMap(key, QSSGLightmapIODataTag::Metadata);
     if (metadata.isEmpty())
         return m_errorImage;
     bool ok = false;

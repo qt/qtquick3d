@@ -59,10 +59,13 @@ QString LightmapViewerHelpers::lightmapTagToString(QSSGLightmapIODataTag tag)
     case QSSGLightmapIODataTag::Metadata:
         return QStringLiteral("Metadata");
         break;
+    case QSSGLightmapIODataTag::SceneMetadata:
+        return QStringLiteral("SceneMetadata");
+        break;
     case QSSGLightmapIODataTag::Mesh:
         return QStringLiteral("Mesh");
         break;
-    default:
+    case QSSGLightmapIODataTag::Count:
         break;
     }
     return QStringLiteral("Invalid");
@@ -82,10 +85,10 @@ QSSGLightmapIODataTag LightmapViewerHelpers::stringToLightmapTag(const QString &
         return QSSGLightmapIODataTag::Texture_Indirect;
     if (tag == QStringLiteral("Metadata"))
         return QSSGLightmapIODataTag::Metadata;
+    if (tag == QStringLiteral("SceneMetadata"))
+        return QSSGLightmapIODataTag::SceneMetadata;
     if (tag == QStringLiteral("Mesh"))
         return QSSGLightmapIODataTag::Mesh;
-    if (tag == QStringLiteral("Unset"))
-        return QSSGLightmapIODataTag::Unset;
 
     qWarning() << "Could not match tag for: " << tag;
     return QSSGLightmapIODataTag::Unset;
@@ -165,22 +168,24 @@ bool LightmapViewerHelpers::processLightmap(const QString &filename, bool print,
         }
     }
 
+    const QVariantMap sceneMetadata = loader->readMap(QStringLiteral("_qt_scene_metadata"), QSSGLightmapIODataTag::SceneMetadata);
+    if (print && !sceneMetadata.isEmpty()) {
+        qInfo() << "_qt_scene_metadata:";
+        qInfo().noquote() << QJsonDocument(QJsonObject::fromVariantMap(sceneMetadata)).toJson(QJsonDocument::Indented).trimmed();
+    }
+
     for (const auto &[key, tag] : std::as_const(keys)) {
         if (tag != QSSGLightmapIODataTag::Metadata)
             continue;
 
-        int width = 0;
-        int height = 0;
-
-        if (tag == QSSGLightmapIODataTag::Metadata) {
-            QVariantMap map = loader->readMetadata(key);
-            if (print) {
-                qInfo() << key << ":";
-                qInfo().noquote() << QJsonDocument(QJsonObject::fromVariantMap(map)).toJson(QJsonDocument::Indented).trimmed();
-            }
-            width = map[QStringLiteral("width")].toInt();
-            height = map[QStringLiteral("height")].toInt();
+        QVariantMap map = loader->readMap(key, tag);
+        if (print) {
+            qInfo() << key << ":";
+            qInfo().noquote() << QJsonDocument(QJsonObject::fromVariantMap(map)).toJson(QJsonDocument::Indented).trimmed();
         }
+
+        int width = map[QStringLiteral("width")].toInt();
+        int height = map[QStringLiteral("height")].toInt();
 
         if (extract) {
             if (keys.contains(std::make_pair(key, QSSGLightmapIODataTag::Mask))) {

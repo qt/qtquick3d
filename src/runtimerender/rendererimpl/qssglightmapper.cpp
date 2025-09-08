@@ -51,6 +51,7 @@ static constexpr int DIRECT_MAP_UPSCALE_FACTOR = 4;
 static constexpr int MAX_TILE_SIZE = 1024;
 static constexpr quint32 PIXEL_VOID = 0; // Pixel not part of any mask
 static constexpr quint32 PIXEL_UNSET = -1; // Pixel part of mask, but not yet set
+static constexpr char KEY_SCENE_METADATA[] = "_qt_scene_metadata";
 
 static void floodFill(quint32 *maskUintPtr, const int rows, const int cols)
 {
@@ -361,6 +362,7 @@ struct QSSGLightmapperPrivate
                                 QVector2D minUVRegion = QVector2D(0, 0),
                                 QVector2D maxUVRegion = QVector2D(1, 1));
 
+    bool storeSceneMetadata(QSharedPointer<QSSGLightmapWriter> writer);
     bool storeMetadata(int lmIdx, QSharedPointer<QSSGLightmapWriter> tempFile);
     bool storeDirectLightData(int lmIdx, const QVector<QVector3D> &directLight, QSharedPointer<QSSGLightmapWriter> tempFile);
     bool storeIndirectLightData(int lmIdx, const QVector<QVector3D> &indirectLight, QSharedPointer<QSSGLightmapWriter> tempFile);
@@ -374,6 +376,7 @@ struct QSSGLightmapperPrivate
     QString stage = QStringLiteral("Initializing");
 
     ProgressTracker progressTracker;
+    qint64 bakeStartTime = 0;
 };
 
 // Used to output progress ETA during baking.
@@ -2223,6 +2226,30 @@ bool QSSGLightmapperPrivate::storeMeshes(QSharedPointer<QSSGLightmapWriter> writ
     return true;
 }
 
+bool QSSGLightmapperPrivate::storeSceneMetadata(QSharedPointer<QSSGLightmapWriter> writer)
+{
+    QVariantMap metadata;
+
+    metadata[QStringLiteral("qt_version")] = QString::fromUtf8(QT_VERSION_STR);
+    metadata[QStringLiteral("bake_start_time")] = bakeStartTime;
+    metadata[QStringLiteral("bake_end_time")] = QDateTime::currentMSecsSinceEpoch();
+
+    QVariantMap metadata2;
+    metadata2[QStringLiteral("opacityThreshold")] = options.opacityThreshold;
+    metadata2[QStringLiteral("bias")] = options.bias;
+    metadata2[QStringLiteral("useAdaptiveBias")] = options.useAdaptiveBias;
+    metadata2[QStringLiteral("indirectLightEnabled")] = options.indirectLightEnabled;
+    metadata2[QStringLiteral("indirectLightSamples")] = options.indirectLightSamples;
+    metadata2[QStringLiteral("indirectLightWorkgroupSize")] = options.indirectLightWorkgroupSize;
+    metadata2[QStringLiteral("indirectLightBounces")] = options.indirectLightBounces;
+    metadata2[QStringLiteral("indirectLightFactor")] = options.indirectLightFactor;
+    metadata2[QStringLiteral("denoiseSigma")] = options.sigma;
+    metadata2[QStringLiteral("texelsPerUnit")] = options.texelsPerUnit;
+
+    metadata[QStringLiteral("options")] = metadata2;
+    return writer->writeMap(QString::fromUtf8(KEY_SCENE_METADATA), QSSGLightmapIODataTag::SceneMetadata, metadata);
+}
+
 bool QSSGLightmapperPrivate::storeMetadata(int lmIdx, QSharedPointer<QSSGLightmapWriter> writer)
 {
     const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
@@ -2233,7 +2260,7 @@ bool QSSGLightmapperPrivate::storeMetadata(int lmIdx, QSharedPointer<QSSGLightma
     metadata[QStringLiteral("height")] = drawInfos[lmIdx].lightmapSize.height();
     metadata[QStringLiteral("mesh_key")] = indexToMeshKey(drawInfo.meshIndex);
 
-    return writer->writeMetadata(lm.model->lightmapKey, metadata);
+    return writer->writeMap(lm.model->lightmapKey, QSSGLightmapIODataTag::Metadata, metadata);
 }
 
 bool QSSGLightmapperPrivate::storeDirectLightData(int lmIdx, const QVector<QVector3D> &directLight, QSharedPointer<QSSGLightmapWriter> writer)
@@ -2439,6 +2466,8 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
 
     QSet<QString> lightmapKeys;
     for (const auto &[key, tag] : tmpFile->getKeys()) {
+        if (tag == QSSGLightmapIODataTag::SceneMetadata) continue; // Will write at end
+
         if (tag != QSSGLightmapIODataTag::Texture_Direct && tag != QSSGLightmapIODataTag::Texture_Indirect
             && tag != QSSGLightmapIODataTag::Mask) {
             // Clone meshes and metadata for final file
@@ -2468,6 +2497,9 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     }
     Q_ASSERT(shader.isValid());
 
+    QVariantMap sceneMetadata = tmpFile->readMap(QString::fromUtf8(KEY_SCENE_METADATA), QSSGLightmapIODataTag::SceneMetadata);
+    sceneMetadata[QStringLiteral("denoise_start_time")] = QDateTime::currentMSecsSinceEpoch();
+
     int lmIdx = -1;
     for (const QString &key : lightmapKeys) {
         ++lmIdx;
@@ -2479,7 +2511,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                        QStringLiteral("[%2/%3] denoising '%1'").arg(key).arg(lmIdx + 1).arg(bakedLightingModelCount));
 
-        QVariantMap metadata = tmpFile->readMetadata(key);
+        QVariantMap metadata = tmpFile->readMap(key, QSSGLightmapIODataTag::Metadata);
         QByteArray indirect = tmpFile->readF32Image(key, QSSGLightmapIODataTag::Texture_Indirect);
         QByteArray direct = tmpFile->readF32Image(key, QSSGLightmapIODataTag::Texture_Direct);
         QByteArray mask = tmpFile->readU32Image(key, QSSGLightmapIODataTag::Mask);
@@ -2640,6 +2672,13 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
         finalFile->writeF32Image(key, QSSGLightmapIODataTag::Texture_Final, final);
     }
 
+    sceneMetadata[QStringLiteral("denoise_end_time")] = QDateTime::currentMSecsSinceEpoch();
+    auto optionsMap = sceneMetadata[QStringLiteral("options")].toMap();
+    optionsMap[QStringLiteral("denoiseSigma")] = options.sigma;
+    sceneMetadata[QStringLiteral("options")] = optionsMap;
+
+    finalFile->writeMap(QString::fromUtf8(KEY_SCENE_METADATA), QSSGLightmapIODataTag::SceneMetadata, sceneMetadata);
+
     if (!finalFile->close()) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Error, QStringLiteral("Could not save file '%1'").arg(outPath));
         return false;
@@ -2728,6 +2767,7 @@ void QSSGLightmapperPrivate::updateStage(const QString &newStage)
 bool QSSGLightmapper::bake()
 {
     d->totalTimer.start();
+    d->bakeStartTime = QDateTime::currentMSecsSinceEpoch();
 
     d->updateStage(QStringLiteral("Preparing"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Bake starting..."));
@@ -2844,6 +2884,7 @@ bool QSSGLightmapper::bake()
     d->updateStage(QStringLiteral("Storing Metadata"));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Storing metadata..."));
     auto writer = QSSGLightmapWriter::open(workFile);
+
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
         if (d->userCancelled()) {
             d->updateStage(QStringLiteral("Cancelled"));
@@ -3004,6 +3045,16 @@ bool QSSGLightmapper::bake()
     if (d->userCancelled()) {
         d->updateStage(QStringLiteral("Cancelled"));
         return false;
+    }
+
+    // ------------- Scene Metadata ---------
+
+    d->updateStage(QStringLiteral("Storing Scene Metadata"));
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Storing scene metadata..."));
+    if (!d->storeSceneMetadata(writer)) {
+        d->updateStage(QStringLiteral("Failed"));
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
+                          QStringLiteral("Failed to store scene metadata"));
     }
 
     // ------------- Copy file from tmp -------------

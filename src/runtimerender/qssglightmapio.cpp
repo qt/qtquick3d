@@ -484,9 +484,9 @@ QByteArray QSSGLightmapLoader::readData(const QString &key, QSSGLightmapIODataTa
     return d->readKey(keyToIndexKey(key, tag));
 }
 
-QVariantMap QSSGLightmapLoader::readMetadata(const QString &key) const
+QVariantMap QSSGLightmapLoader::readMap(const QString &key, QSSGLightmapIODataTag tag) const
 {
-    QByteArray metadataBuffer = d->readKey(keyToIndexKey(key, QSSGLightmapIODataTag::Metadata));
+    QByteArray metadataBuffer = d->readKey(keyToIndexKey(key, tag));
     QVariantMap metadata = byteArrayToMap(metadataBuffer);
     return metadata;
 }
@@ -513,7 +513,7 @@ QSSGLoadedTexture *QSSGLightmapLoader::createTexture(QSharedPointer<QIODevice> s
     if (!loader)
         return nullptr;
 
-    QVariantMap metadata = loader->readMetadata(key);
+    QVariantMap metadata = loader->readMap(key, QSSGLightmapIODataTag::Metadata);
     if (metadata.isEmpty())
         return nullptr;
 
@@ -625,9 +625,9 @@ bool QSSGLightmapWriter::writeData(const QString &key, QSSGLightmapIODataTag tag
     return d->writeData(key, tag, buffer);
 }
 
-bool QSSGLightmapWriter::writeMetadata(const QString &key, const QVariantMap &metadata)
+bool QSSGLightmapWriter::writeMap(const QString &key, QSSGLightmapIODataTag tag, const QVariantMap &data)
 {
-    return d->writeData(key, QSSGLightmapIODataTag::Metadata, mapToByteArray(metadata));
+    return d->writeData(key, tag, mapToByteArray(data));
 }
 
 bool QSSGLightmapWriter::close() const

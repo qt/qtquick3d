@@ -138,7 +138,7 @@ static QPair<QSSGMesh::Mesh, QString> loadFromLightmapFile(const QString &lightm
         return retVal;
 
     if (const auto io = QSSGLightmapLoader::open(lightmapPath)) {
-        const QVariantMap metadata = io->readMetadata(lightmapKey);
+        const QVariantMap metadata = io->readMap(lightmapKey, QSSGLightmapIODataTag::Metadata);
         if (metadata.isEmpty())
             return retVal;
 

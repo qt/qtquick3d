@@ -36,6 +36,7 @@ enum class QSSGLightmapIODataTag : quint32 {
     Texture_Indirect,
     Metadata,
     Mesh,
+    SceneMetadata,
     // ...
     Count
 };
@@ -50,7 +51,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLightmapLoader
     QByteArray readF32Image(const QString &key, QSSGLightmapIODataTag tag) const;
     QByteArray readU32Image(const QString &key, QSSGLightmapIODataTag tag) const;
     QByteArray readData(const QString &key, QSSGLightmapIODataTag tag) const;
-    QVariantMap readMetadata(const QString &key) const;
+    QVariantMap readMap(const QString &key, QSSGLightmapIODataTag tag) const;
 
     QList<std::pair<QString, QSSGLightmapIODataTag>> getKeys() const;
     static QSSGLoadedTexture *createTexture(QSharedPointer<QIODevice> stream, const QSSGRenderTextureFormat &format, const QString &key);
@@ -72,7 +73,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLightmapWriter
     bool writeF32Image(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &imageFP32);
     bool writeU32Image(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &imageU32);
     bool writeData(const QString &key, QSSGLightmapIODataTag tag, const QByteArray &buffer);
-    bool writeMetadata(const QString &key, const QVariantMap &metadata);
+    bool writeMap(const QString &key, QSSGLightmapIODataTag tag, const QVariantMap &data);
 
     bool close() const;
 
