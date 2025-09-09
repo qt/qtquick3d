@@ -1,6 +1,7 @@
 qt_internal_add_3rdparty_library(BundledEmbree
     STATIC
     INSTALL
+    SKIP_AUTOMOC
     EXCEPTIONS
     SOURCES
         include/embree3/rtcore_builder.h
