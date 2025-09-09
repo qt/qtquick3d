@@ -1018,7 +1018,7 @@ QSSGLightmapperPrivate::RasterResult QSSGLightmapperPrivate::rasterizeLightmap(i
         const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
         qint32 hasBaseColorMap = subMeshInfo.baseColorMap ? 1 : 0;
         qint32 hasEmissiveMap = subMeshInfo.emissiveMap ? 1 : 0;
-        qint32 hasNormalMap = subMeshInfo.normalMap ? 1 : 0;
+        qint32 hasNormalMap = subMeshInfo.normalMap && hasTangentAndBinormal ? 1 : 0;
         const float minRegionU = minUVRegion.x();
         const float minRegionV = minUVRegion.y();
         const float maxRegionU = maxUVRegion.x();
