@@ -577,7 +577,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
         return false;
     }
 
-    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Geometry setup..."));
+    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Preparing geometry..."));
     QElapsedTimer geomPrepTimer;
     geomPrepTimer.start();
 
@@ -826,10 +826,6 @@ bool QSSGLightmapperPrivate::commitGeometry()
         }
     } // end loop over models used in the lightmap
 
-    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Found %1 models for the lightmapped scene").arg(bakedLightingModelCount));
-
-    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Found %1 lights enabled for baking").arg(lights.size()));
-
     rdev = rtcNewDevice(nullptr);
     if (!rdev) {
         sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create Embree device"));
@@ -916,7 +912,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
             subMeshOpacityMap[subMeshInfo.geomId] = subMeshInfo.opacity;
     }
 
-    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Geometry setup done. Time taken: %1").arg(formatDuration(geomPrepTimer.elapsed())));
+    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Geometry ready. Time taken: %1").arg(formatDuration(geomPrepTimer.elapsed())));
     return true;
 }
 
@@ -1259,6 +1255,8 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
     }
 
     sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Preparing lightmaps..."));
+    QElapsedTimer lightmapPrepTimer;
+    lightmapPrepTimer.start();
     const int bakedLightingModelCount = bakedLightingModels.size();
     Q_ASSERT(drawInfos.size() == bakedLightingModelCount);
     Q_ASSERT(subMeshInfos.size() == bakedLightingModelCount);
@@ -1363,7 +1361,9 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         }
     }
 
-    sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap preparing done"));
+    sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                   QStringLiteral("Lightmaps ready. Time taken: %1")
+                       .arg(formatDuration(lightmapPrepTimer.elapsed())));
     return true;
 }
 
@@ -2770,7 +2770,7 @@ bool QSSGLightmapper::bake()
     d->bakeStartTime = QDateTime::currentMSecsSinceEpoch();
 
     d->updateStage(QStringLiteral("Preparing"));
-    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Bake starting..."));
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Preparing for bake..."));
 
     if (!isValidSavePath(d->outputPath)) {
         d->updateStage(QStringLiteral("Failed"));
@@ -2778,10 +2778,6 @@ bool QSSGLightmapper::bake()
                           QStringLiteral("Source path %1 is not a writable location").arg(d->outputPath));
         return false;
     }
-
-    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Source path: %1").arg(d->options.source));
-    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Output path: %1").arg(d->outputPath));
-    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Total models registered: %1").arg(d->bakedLightingModels.size()));
 
     if (d->bakedLightingModels.isEmpty()) {
         d->updateStage(QStringLiteral("Failed"));
@@ -3165,6 +3161,7 @@ void QSSGLightmapper::run(QOffscreenSurface *fallbackSurface)
     }
 
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Source path: %1").arg(d->outputPath));
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Output path: %1").arg(d->outputPath));
 
     const QRhi::Flags flags = QRhi::EnableTimestamps | QRhi::EnableDebugMarkers;
 #if QT_CONFIG(vulkan)
