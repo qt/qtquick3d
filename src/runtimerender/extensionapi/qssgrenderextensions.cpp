@@ -155,6 +155,28 @@ QSSGFrameData::QSSGFrameData(QSSGRenderContextInterface *ctx)
     \sa QQuick3DRenderExtension
 */
 
+/*!
+    Constructor that allows users to specifying a user-type and flags for an extension.
+
+    \note For user-defined extensions the type must be a combination of \l QSSGRenderGraphObject::BaseType::User
+    and a value between 0 and 4095.
+
+    \note The \l QSSGRenderGraphObject::BaseType::Extension type is automatically added to the given \a inType.
+
+    \note The \a inFlags must include \l Flags::HasGraphicsResources if the extension
+          allocates graphics resources.
+
+ */
+QSSGRenderExtension::QSSGRenderExtension(Type inType, FlagT inFlags)
+    : QSSGRenderGraphObject(static_cast<Type>(TypeT(inType) | TypeT(QSSGRenderGraphObject::BaseType::Extension)), inFlags)
+{
+    Q_ASSERT_X((QSSGRenderGraphObjectUtils::getBaseType(type) == QSSGRenderGraphObject::BaseType::Extension) ||
+                  (QSSGRenderGraphObjectUtils::getBaseType(type) == (QSSGRenderGraphObject::BaseType::Extension | QSSGRenderGraphObject::BaseType::User)),
+                  "QSSGRenderExtension()",
+                  "The type must be a combination of QSSGRenderGraphObject::BaseType::Extension "
+                  "and optionally QSSGRenderGraphObject::BaseType::User.");
+}
+
 QSSGRenderExtension::QSSGRenderExtension()
     : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::RenderExtension, FlagT(Flags::HasGraphicsResources))
 {

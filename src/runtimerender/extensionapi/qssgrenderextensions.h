@@ -102,6 +102,9 @@ public:
 
     virtual RenderMode mode() const = 0;
     virtual RenderStage stage() const = 0;
+
+protected:
+    QSSGRenderExtension(Type inType, FlagT inFlags);
 };
 
 QT_END_NAMESPACE

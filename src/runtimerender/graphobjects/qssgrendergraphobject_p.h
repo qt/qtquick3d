@@ -73,6 +73,13 @@ T *getExtension(QSSGExtensionId extensionId)
 
 template <typename QSSGTypeId>
 constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }
+
+[[nodiscard]] static constexpr QSSGRenderGraphObject::BaseType getBaseType(QSSGRenderGraphObject::Type type) noexcept
+{
+    constexpr auto BaseTypeMask = QSSGRenderGraphObject::TypeT(~0xFFF);
+    return static_cast<QSSGRenderGraphObject::BaseType>(QSSGRenderGraphObject::TypeT(type) & BaseTypeMask);
+}
+
 }
 
 #endif // QSSGRENDERGRAPHOBJECT_P_H
