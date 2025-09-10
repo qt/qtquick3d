@@ -316,13 +316,11 @@ struct QSSGLightmapperPrivate
     QVector<float> subMeshOpacityMap; // [geomId] -> opacity
 
     bool denoiseOnly = false;
-    int totalUnusedEntries = 0;
+
     double totalProgress = 0; // [0-1]
     qint64 estimatedTimeRemaining = -1; // ms
-    qint64 texelsDone = 0;
-
-    qint64 totalIncrementsToBeMade = 0;
-    qint64 incrementsDone = 0;
+    qint64 indirectTexelsTotal = 0;
+    qint64 indirectTexelsDone = 0;
 
     inline const ModelTexel &texelForLightmapUV(unsigned int geomId, float u, float v) const
     {
@@ -471,7 +469,6 @@ void QSSGLightmapper::reset()
     }
 
     d->bakingControl.cancelled = false;
-    d->totalUnusedEntries = 0;
     d->totalProgress = 0.0;
     d->estimatedTimeRemaining = -1;
 }
@@ -1329,14 +1326,16 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
 
                         lmPix.worldPos = worldPositions[srcPixelI].toVector3D();
                         lmPix.normal = normals[srcPixelI].toVector3D();
+                        if (lmPix.isValid())
+                            ++numValidTexels[lmIdx];
+
                         lmPix.baseColor = baseColors[srcPixelI];
                         if (lmPix.baseColor[3] < 1.0f)
                             modelHasBaseColorTransparency[lmIdx] = true;
+
                         lmPix.emission = emissions[srcPixelI].toVector3D();
                         if (!isEmissive && !qFuzzyIsNull(lmPix.emission.length()))
                             isEmissive = true;
-
-                        lmPix.isValid() ? ++numValidTexels[lmIdx] : ++unusedEntries;
                     }
                 }
             }
@@ -1345,7 +1344,6 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         if (isEmissive)
             ++emissiveModelCount;
 
-        totalUnusedEntries += unusedEntries;
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                        QStringLiteral(
                                "Successfully rasterized %1/%2 lightmap texels for model %3, lightmap size %4 in %5")
@@ -2074,7 +2072,7 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeIndirectLight(int lmIdx, int w
         if (!lmPix.isValid())
             continue;
 
-        ++incrementsDone;
+        ++indirectTexelsDone;
         for (int wgIdx = 0; wgIdx < wgCount; ++wgIdx) {
             const int beginIdx = wgIdx * wgSizePerGroup;
             const int endIdx = qMin(beginIdx + wgSizePerGroup, options.indirectLightSamples);
@@ -2166,7 +2164,7 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeIndirectLight(int lmIdx, int w
         if (bakingControl.cancelled)
             return {};
 
-        progressTracker.indirectTexelDone(incrementsDone, totalIncrementsToBeMade);
+        progressTracker.indirectTexelDone(indirectTexelsDone, indirectTexelsTotal);
     }
 
     return result;
@@ -2980,7 +2978,7 @@ bool QSSGLightmapper::bake()
     // ------------- Indirect compute / store -------------
 
     if (d->options.indirectLightEnabled) {
-        d->totalIncrementsToBeMade = std::accumulate(d->numValidTexels.begin(), d->numValidTexels.end(), 0);
+        d->indirectTexelsTotal = std::accumulate(d->numValidTexels.begin(), d->numValidTexels.end(), 0);
         d->updateStage(QStringLiteral("Computing Indirect Light"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                           QStringLiteral("Computing indirect light..."));
