@@ -722,8 +722,12 @@ void QSSGRenderItem2DData::updateItem2DData(QSSGItem2DsView &items, QSSGRenderer
 
     for (const QSSGRenderItem2D *theItem2D : std::as_const(items)) {
         auto item2DRenderer = getItem2DRenderer(*theItem2D);
-        if (contextChanged)
+        if (contextChanged) {
             delete item2DRenderer;
+            // NOTE: Should already be "cleared" as the QObject is deleted
+            // but we do it here for clarity.
+            item2DRenderer.clear();
+        }
 
         if (!item2DRenderer)
             item2DRenderer = sgRc->createRenderer(QSGRendererInterface::RenderMode3D);
