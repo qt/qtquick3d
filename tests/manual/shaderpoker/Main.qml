@@ -35,7 +35,8 @@ ApplicationWindow {
             "ReduceMaxNumLights" : (1 << 22) + 14,
             "Lightmap" : (1 << 23) + 15,
             "DisableMultiView" : (1 << 24) + 16,
-            "ForceIblExposure" : (1 << 25) + 17
+            "ForceIblExposure" : (1 << 25) + 17,
+            "NormalPass" : (1 << 26) + 18,
         },
         "indexMask" : 0x000000FF,
 
@@ -106,40 +107,6 @@ ApplicationWindow {
                         }
                     }
 
-                    SectionLayout {
-                        id: materialSection
-                        title: "Material"
-
-                        Label {
-                            text: "Material Type"
-                            Layout.fillWidth: true
-                        }
-
-                        RowLayout {
-                            HorizontalSpacer {}
-                            ComboBox {
-                                id: materialTypeComboBox
-                                textRole: "text"
-                                valueRole: "value"
-                                implicitContentWidthPolicy: ComboBox.WidestText
-                                onActivated: shaderPoker.materialType = currentValue
-                                Component.onCompleted: materialTypeComboBox.currentIndex = materialTypeComboBox.indexOfValue(shaderPoker.materialType)
-                                Layout.fillWidth: true
-                                model: [
-                                    { value: ShaderPoker.MaterialType.Default, text: "Default"},
-                                    { value: ShaderPoker.MaterialType.Principled, text: "Principled"},
-                                    { value: ShaderPoker.MaterialType.SpecularGlossy, text: "SpecularGlossy"}
-                                ]
-
-                                Connections {
-                                    target: shaderPoker
-                                    function onMaterialTypeChanged() {
-                                        materialTypeComboBox.currentIndex = materialTypeComboBox.indexOfValue(shaderPoker.materialType)
-                                    }
-                                }
-                            }
-                        }
-                    }
                     SectionLayout {
                         id: featureSection
                         title: "Features"
@@ -320,6 +287,16 @@ ApplicationWindow {
                             checked: featureHelper.isSet("ForceIblExposure")
                             onCheckedChanged: {
                                 featureHelper.setFeature("ForceIblExposure", checked)
+                            }
+                        }
+                        HorizontalSpacer {}
+
+                        CheckBox {
+                            id: normalPassFeatureCheckbox
+                            text: "NormalPass"
+                            checked: featureHelper.isSet("NormalPass")
+                            onCheckedChanged: {
+                                featureHelper.setFeature("NormalPass", checked)
                             }
                         }
                         HorizontalSpacer {}

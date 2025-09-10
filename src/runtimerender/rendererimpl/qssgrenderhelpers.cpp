@@ -1106,9 +1106,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                                  QSSGRhiHelpers::toRhi(tiling.first), QSSGRhiHelpers::toRhi(tiling.second), QRhiSampler::Repeat });
                         bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage,
                                             shaderPipeline->lightProbeTexture(), sampler);
-                    } else {
-                        qWarning("Could not find sampler for lightprobe");
-                    }
+                    } // else ignore, not an error (since non-lighting passes wont need it)
                 }
 
                 // Screen Texture

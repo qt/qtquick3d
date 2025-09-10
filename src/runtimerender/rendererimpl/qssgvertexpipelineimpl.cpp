@@ -291,8 +291,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     skipCustomFragmentSnippet = false;
     const bool isDepthPass = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DepthPass);
     const bool isOpaqueDepthPrePass = inFeatureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
-    const bool isNormalPass = inFeatureSet.isSet(QSSGShaderFeatures::Feature::NormalPass);
-    skipCustomFragmentSnippet = (isDepthPass && !isOpaqueDepthPrePass) || isNormalPass;
+    skipCustomFragmentSnippet = (isDepthPass && !isOpaqueDepthPrePass);
 
     if (hasCustomVertexShader || hasCustomFragmentShader) {
         // This is both for unshaded and shaded. Regardless of any other

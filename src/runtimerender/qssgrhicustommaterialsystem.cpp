@@ -100,7 +100,6 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                                                                     defaultMaterialShaderKeyProperties,
                                                                                     featureSet,
                                                                                     renderable.material,
-                                                                                    renderable.firstImage,
                                                                                     *context->shaderLibraryManager(),
                                                                                     *context->shaderCache());
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, material.profilingId);

@@ -42,7 +42,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                                               const QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                               const QSSGShaderFeatures &inFeatureSet,
                                                               const QSSGRenderGraphObject &inMaterial,
-                                                              QSSGRenderableImage *inFirstImage,
                                                               QSSGShaderLibraryManager &shaderLibraryManager,
                                                               QSSGShaderCache &theCache);
 

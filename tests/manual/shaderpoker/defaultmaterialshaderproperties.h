@@ -13,7 +13,9 @@ class DefaultMaterialShaderProperties : public QObject
     Q_OBJECT
     Q_PROPERTY(bool hasLighting READ hasLighting WRITE setHasLighting NOTIFY hasLightingChanged)
     Q_PROPERTY(bool hasPunctualLights READ hasPunctualLights WRITE setHasPunctualLights NOTIFY hasPunctualLightsChanged)
+    Q_PROPERTY(bool hasShadows READ hasShadows WRITE setHasShadows NOTIFY hasShadowsChanged)
     Q_PROPERTY(bool hasIbl READ hasIbl WRITE setHasIbl NOTIFY hasIblChanged)
+    Q_PROPERTY(bool specularEnabled READ specularEnabled WRITE setSpecularEnabled NOTIFY specularEnabledChanged FINAL)
     Q_PROPERTY(bool fresnelScaleBiasEnabled READ fresnelScaleBiasEnabled WRITE setFresnelScaleBiasEnabled NOTIFY fresnelScaleBiasEnabledChanged)
     Q_PROPERTY(bool clearcoatFresnelScaleBiasEnabled READ clearcoatFresnelScaleBiasEnabled WRITE setClearcoatFresnelScaleBiasEnabled NOTIFY clearcoatFresnelScaleBiasEnabledChanged)
     Q_PROPERTY(bool fresnelEnabled READ fresnelEnabled WRITE setFresnelEnabled NOTIFY fresnelEnabledChanged)
@@ -27,6 +29,8 @@ class DefaultMaterialShaderProperties : public QObject
     Q_PROPERTY(quint16 vertexColorGreenMask READ vertexColorGreenMask WRITE setVertexColorGreenMask NOTIFY vertexColorGreenMaskChanged)
     Q_PROPERTY(quint16 vertexColorBlueMask READ vertexColorBlueMask WRITE setVertexColorBlueMask NOTIFY vertexColorBlueMaskChanged)
     Q_PROPERTY(quint16 vertexColorAlphaMask READ vertexColorAlphaMask WRITE setVertexColorAlphaMask NOTIFY vertexColorAlphaMaskChanged)
+    Q_PROPERTY(quint8 specularModel READ specularModel WRITE setSpecularModel NOTIFY specularModelChanged FINAL)
+    Q_PROPERTY(quint8 diffuseModel READ diffuseModel WRITE setDiffuseModel NOTIFY diffuseModelChanged FINAL)
     Q_PROPERTY(quint8 diffuseMap READ diffuseMap WRITE setDiffuseMap NOTIFY diffuseMapChanged FINAL)
     Q_PROPERTY(quint8 emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged FINAL)
     Q_PROPERTY(quint8 specularMap READ specularMap WRITE setSpecularMap NOTIFY specularMapChanged FINAL)
@@ -84,6 +88,8 @@ class DefaultMaterialShaderProperties : public QObject
     Q_PROPERTY(bool transmissionEnabled READ transmissionEnabled WRITE setTransmissionEnabled NOTIFY transmissionEnabledChanged)
     Q_PROPERTY(bool specularAAEnabled READ specularAAEnabled WRITE setSpecularAAEnabled NOTIFY specularAAEnabledChanged)
     Q_PROPERTY(bool lightmapEnabled READ lightmapEnabled WRITE setLightmapEnabled NOTIFY lightmapEnabledChanged)
+    Q_PROPERTY(bool specularGlossyEnabled READ specularGlossyEnabled WRITE setSpecularGlossyEnabled NOTIFY specularGlossyEnabledChanged FINAL)
+    Q_PROPERTY(bool metallicRoughnessEnabled READ metallicRoughnessEnabled WRITE setMetallicRoughnessEnabled NOTIFY metallicRoughnessEnabledChanged FINAL)
     Q_PROPERTY(quint8 debugMode READ debugMode WRITE setDebugMode NOTIFY debugModeChanged)
     Q_PROPERTY(bool fogEnabled READ fogEnabled WRITE setFogEnabled NOTIFY fogEnabledChanged)
     Q_PROPERTY(quint8 viewCount READ viewCount WRITE setViewCount NOTIFY viewCountChanged)
@@ -326,6 +332,24 @@ public:
     void setOpacityChannel(quint8 newOpacityChannel);
 
 
+    bool hasShadows() const;
+    void setHasShadows(bool newHasShadows);
+
+    bool specularEnabled() const;
+    void setSpecularEnabled(bool newSpecularEnabled);
+
+    quint8 specularModel() const;
+    void setSpecularModel(quint8 newSpecularModel);
+
+    quint8 diffuseModel() const;
+    void setDiffuseModel(quint8 newDiffuseModel);
+
+    bool specularGlossyEnabled() const;
+    void setSpecularGlossyEnabled(bool newSpecularGlossyEnabled);
+
+    bool metallicRoughnessEnabled() const;
+    void setMetallicRoughnessEnabled(bool newMetallicRoughnessEnabled);
+
 signals:
     void hasLightingChanged();
     void hasPunctualLightsChanged();
@@ -406,11 +430,18 @@ signals:
     void specularAmountChannelChanged();
     void emissiveChannelChanged();
     void opacityChannelChanged();
+    void hasShadowsChanged();
+    void specularEnabledChanged();
+    void specularModelChanged();
+    void diffuseModelChanged();
+    void specularGlossyEnabledChanged();
+    void metallicRoughnessEnabledChanged();
 
 private:
     void updated();
     QSSGShaderDefaultMaterialKeyProperties m_properties;
     QSSGShaderDefaultMaterialKey m_key;
+
 };
 
 #endif // DEFAULTMATERIALSHADERPROPERTIES_H

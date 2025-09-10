@@ -39,6 +39,8 @@ Rectangle {
             x: -200
             materials: CustomMaterial {
                 shadingMode: CustomMaterial.Unshaded
+
+                vertexShader: "worldnormal_texture_unshaded.vert"
                 fragmentShader: "worldnormal_texture_unshaded.frag"
             }
         }
@@ -50,6 +52,7 @@ Rectangle {
             x: 100
             materials: CustomMaterial {
                 shadingMode: CustomMaterial.Unshaded
+                vertexShader: "worldnormal_texture_unshaded.vert"
                 fragmentShader: "worldnormal_texture_unshaded.frag"
             }
         }

@@ -8,12 +8,12 @@ float qt_calcRGBAvg(in vec4 rgba)
 
 vec3 qt_defaultMaterialBumpNoLod(in sampler2D inSampler, in float factor,
                                  in vec2 texCoord, in vec3 tangent, in vec3 binormal,
-                                 in vec3 normal, in vec2 bumpSize)
+                                 in vec3 normal)
 {
     // invert factor
     float invFactor = -factor;
 
-    vec2 unitStep = 1.0 / bumpSize;
+    vec2 unitStep = 1.0 / vec2(textureSize(inSampler, 0));
 
     float du = qt_calcRGBAvg(texture2D(inSampler, vec2(texCoord.x + unitStep.x, texCoord.y)))
              - qt_calcRGBAvg(texture2D(inSampler, vec2(texCoord.x, texCoord.y)));

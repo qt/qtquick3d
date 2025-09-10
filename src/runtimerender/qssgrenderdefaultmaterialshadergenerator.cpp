@@ -24,7 +24,6 @@
 #include <QtCore/QByteArray>
 
 #include <cstdio>
-#include <limits>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,12 +67,11 @@ struct ImageStringSet
     const char *imageFragCoordsTemp;
     const char *imageOffsets;
     const char *imageRotations;
-    const char *imageSamplerSize;
 };
 
 #define DefineImageStringTableEntry(V) \
     { ImageStrings<Type::V>::sampler(), ImageStrings<Type::V>::fragCoords1(), ImageStrings<Type::V>::fragCoords2(), \
-      ImageStrings<Type::V>::offsets(), ImageStrings<Type::V>::rotations(), ImageStrings<Type::V>::samplerSize() }
+      ImageStrings<Type::V>::offsets(), ImageStrings<Type::V>::rotations() }
 
 constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(Unknown),
@@ -137,26 +135,16 @@ static QByteArray uvTransform(const QByteArray& imageRotations, const QByteArray
     return transform;
 }
 
-static void sanityCheckImageForSampler(const QSSGRenderableImage &image, const char *samplerName)
-{
-    if (image.m_imageNode.type == QSSGRenderGraphObject::Type::ImageCube) {
-        qWarning("Sampler %s expects a 2D texture but the associated texture is a cube map. "
-                 "This will lead to problems.",
-                 samplerName);
-    }
-}
-
 static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
                                        QSSGStageGeneratorBase &fragmentShader,
                                        const QSSGShaderDefaultMaterialKey &key,
-                                       QSSGRenderableImage &image,
+                                       const ImageStringSet &names,
                                        bool forceFragmentShader = false,
                                        quint32 uvSet = 0,
-                                       bool reuseImageCoords = false)
+                                       bool reuseImageCoords = false,
+                                       bool useEnvironmentMapping = false)
 {
-    const auto &names = imageStringTable[int(image.m_mapType)];
     char textureCoordName[TEXCOORD_VAR_LEN];
-    sanityCheckImageForSampler(image, names.imageSampler);
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
     if (!forceFragmentShader) {
         vertexShader.addUniform(names.imageOffsets, "vec3");
@@ -166,7 +154,7 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
         fragmentShader.addUniform(names.imageRotations, "vec4");
     }
     QByteArray uvTrans = uvTransform(names.imageRotations, names.imageOffsets);
-    if (image.m_imageNode.m_mappingMode == QSSGRenderImage::MappingModes::Normal) {
+    if (!useEnvironmentMapping) { // default to UV mapping
         if (!forceFragmentShader) {
             vertexShader << uvTrans;
             vertexShader.addOutgoing(names.imageFragCoords, "vec2");
@@ -205,12 +193,10 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
 static void generateImageUVSampler(QSSGMaterialVertexPipeline &vertexGenerator,
                                    QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGShaderDefaultMaterialKey &key,
-                                   const QSSGRenderableImage &image,
+                                   const ImageStringSet &names,
                                    char (&outString)[TEXCOORD_VAR_LEN],
                                    quint8 uvSet = 0)
 {
-    const auto &names = imageStringTable[int(image.m_mapType)];
-    sanityCheckImageForSampler(image, names.imageSampler);
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
     // NOTE: Actually update the uniform name here
     textureCoordVariableName(outString, uvSet);
@@ -409,6 +395,371 @@ static void generateFragmentDefines(QSSGStageGeneratorBase &fragmentShader,
 
 }
 
+struct SamplerState {
+    bool uvCoordinatesGenerated[QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ImageMapCount] = { false };
+    bool m_isActive = false;
+    bool m_uvCoordinateVariableDeclared = false;
+
+    // Use shared texcoord when transforms are identity
+    char imageFragCoords[TEXCOORD_VAR_LEN];
+    const QSSGShaderDefaultMaterialKey &m_inKey;
+    const QSSGShaderDefaultMaterialKeyProperties &m_keyProps;
+
+    std::optional<QSSGShaderDefaultMaterialKeyProperties::ImageMapNames> fromType(QSSGRenderableImage::Type type) const
+    {
+        switch (type) {
+        case QSSGRenderableImage::Type::Diffuse:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::DiffuseMap;
+        case QSSGRenderableImage::Type::Opacity:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::OpacityMap;
+        case QSSGRenderableImage::Type::Specular:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::SpecularMap;
+        case QSSGRenderableImage::Type::Emissive:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::EmissiveMap;
+        case QSSGRenderableImage::Type::Bump:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::BumpMap;
+        case QSSGRenderableImage::Type::SpecularAmountMap:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::SpecularAmountMap;
+        case QSSGRenderableImage::Type::Normal:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::NormalMap;
+        case QSSGRenderableImage::Type::Translucency:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::TranslucencyMap;
+        case QSSGRenderableImage::Type::Roughness:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::RoughnessMap;
+        case QSSGRenderableImage::Type::BaseColor:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::BaseColorMap;
+        case QSSGRenderableImage::Type::Metalness:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::MetalnessMap;
+        case QSSGRenderableImage::Type::Occlusion:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::OcclusionMap;
+        case QSSGRenderableImage::Type::Height:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::HeightMap;
+        case QSSGRenderableImage::Type::Clearcoat:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ClearcoatMap;
+        case QSSGRenderableImage::Type::ClearcoatRoughness:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ClearcoatRoughnessMap;
+        case QSSGRenderableImage::Type::ClearcoatNormal:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ClearcoatNormalMap;
+        case QSSGRenderableImage::Type::Transmission:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::TransmissionMap;
+        case QSSGRenderableImage::Type::Thickness:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ThicknessMap;
+        case QSSGRenderableImage::Type::Unknown:
+            break;
+        }
+        return {};
+    }
+
+    SamplerState(const QSSGShaderDefaultMaterialKey &inKey, const QSSGShaderDefaultMaterialKeyProperties &keyProps)
+        : m_inKey(inKey)
+        , m_keyProps(keyProps)
+    {
+        for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ImageMapCount; ++i) {
+            const QSSGShaderDefaultMaterialKeyProperties::ImageMapNames mapName = QSSGShaderDefaultMaterialKeyProperties::ImageMapNames(i);
+            const QSSGShaderKeyImageMap &mapValue = m_keyProps.m_imageMaps[mapName];
+            // just check if any are enabled
+            if (mapValue.isEnabled(m_inKey))
+                m_isActive = true;
+        }
+    }
+
+    bool isActive() const { return m_isActive; }
+
+    bool hasImage(QSSGRenderableImage::Type type) const
+    {
+        if (auto imageType = fromType(type))
+            return m_keyProps.m_imageMaps[*imageType].isEnabled(m_inKey);
+
+        return false;
+    }
+
+    bool uvGenerated(QSSGShaderDefaultMaterialKeyProperties::ImageMapNames imageType) const
+    {
+        if (imageType < 0 || imageType >= QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ImageMapCount)
+            return false;
+        return uvCoordinatesGenerated[size_t(imageType)];
+    }
+
+    void generateImageUVAndSampler(QSSGRenderableImage::Type imageType,
+                                   QSSGMaterialVertexPipeline &vertexShader,
+                                   QSSGStageGeneratorBase &fragmentShader,
+                                   const QSSGShaderDefaultMaterialKey &key,
+                                   bool forceFragmentShader = false)
+    {
+        if (auto mapType = fromType(imageType)) {
+            if (uvGenerated(*mapType))
+                return; // don't do it a second time
+
+            const QSSGShaderKeyImageMap &mapValue = m_keyProps.m_imageMaps[size_t(*mapType)];
+            const quint8 indexUV = mapValue.isUsingUV1(m_inKey) ? 1 : 0;
+            const auto &samplerNames = imageStringTable[int(imageType)]; // using the QSSGRenderableImage::Type
+            if (mapValue.isIdentityTransform(m_inKey)) {
+                generateImageUVSampler(vertexShader, fragmentShader, key, samplerNames, imageFragCoords, indexUV);
+            } else {
+                if (!m_uvCoordinateVariableDeclared) {
+                    // The frist time we need to declare the shared variable
+                    fragmentShader.append("    vec3 qt_uTransform;");
+                    fragmentShader.append("    vec3 qt_vTransform;");
+                    m_uvCoordinateVariableDeclared = true;
+                }
+                generateImageUVCoordinates(vertexShader, fragmentShader, key, samplerNames, forceFragmentShader, indexUV, false, mapValue.isEnvMap(m_inKey) || mapValue.isLightProbe(m_inKey));
+            }
+            uvCoordinatesGenerated[int(*mapType)] = true;
+        }
+    }
+
+    const char *samplerName(QSSGRenderableImage::Type imageType) const
+    {
+        if (imageType <= QSSGRenderableImage::Type::Unknown)
+            return "";
+        return imageStringTable[int(imageType)].imageSampler;
+    }
+
+    const char *fragCoordsName(QSSGRenderableImage::Type imageType) const
+    {
+        if (auto mapType = fromType(imageType)) {
+            if (!uvGenerated(*mapType))
+                qWarning("Requesting image frag coords for image type %d that has not been generated", int(imageType));
+
+            const QSSGShaderKeyImageMap &mapValue = m_keyProps.m_imageMaps[size_t(*mapType)];
+            if (mapValue.isIdentityTransform(m_inKey))
+                return imageFragCoords;
+
+            return imageStringTable[int(imageType)].imageFragCoords;
+        }
+
+        return "";
+    }
+
+};
+
+struct PassRequirmentsState {
+    enum PassType {
+        None = 0,
+        Color,
+        Depth,
+        OrthoShadow,
+        PerspectiveShadow,
+        Normal,
+        Debug,
+        User
+    };
+    PassType passType = None;
+
+    // Requirments for Pass
+    bool needsBaseColor = false;     // qt_diffuseColor
+    bool needsRoughness = false;      // qt_roughnessAmount
+    bool needsMetalness = false;     // qt_metalnessAmount
+    bool needsDiffuseLight = false;  // global_diffuse_light
+    bool needsSpecularLight = false; // global_specular_light
+    bool needsEmission = false;      // global_emission
+    bool needsWorldNormal = false;   // qt_world_normal
+    bool needsWorldTangent = false;  // qt_world_tangent
+    bool needsWorldBinormal = false; // qt_world_binormal
+    bool needsF0 = false;            // qt_f0
+    bool needsF90 = false;           // qt_f90
+    bool needsAmbientOcclusion = false; // qt_ao_factor
+
+
+    // Available Information
+    bool hasVertexColors = false;
+    bool hasLighting = false;
+    bool hasPunctualLights = false;
+    bool hasSpecularLight = false;
+    bool hasIblProbe = false;
+    bool hasReflectionProbe = false;
+    bool hasIblOrientation = false;
+    bool hasShadowMap = false;
+    bool hasSSAOMap = false;
+    bool hasLightMap = false;
+    bool hasBumpNormalMap = false;
+    bool hasParallaxMapping = false;
+    bool hasClearcoat = false;
+    bool hasTransmission = false;
+    bool hasFresnelScaleBias = false;
+    bool hasClearcoatFresnelScaleBias = false;
+    bool hasFog = false;
+
+
+    // Material Properties
+    bool isDoubleSided = false;
+    bool isSpecularAAEnabled = false;
+    bool isMetallicRoughnessWorkflow = false;
+    bool isSpecularGlossinessWorkflow = false;
+    bool isPbrMaterial = false;
+    bool isOpaqueDepthPrePass = false;
+    quint32 numMorphTargets = 0;
+    int viewCount = 1;
+    QSSGRenderLayer::OITMethod oitMethod = QSSGRenderLayer::OITMethod::None;
+    QSSGRenderLayer::MaterialDebugMode debugMode = QSSGRenderLayer::MaterialDebugMode::None;
+
+    PassRequirmentsState(const QSSGShaderDefaultMaterialKey &inKey,
+                         const QSSGShaderDefaultMaterialKeyProperties &keyProps,
+                         const QSSGShaderFeatures &featureSet,
+                         const SamplerState &samplerState)
+    {
+        const bool isDepthPass = featureSet.isSet(QSSGShaderFeatures::Feature::DepthPass);
+        const bool isOrthoShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::OrthoShadowPass);
+        const bool isPerspectiveShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::PerspectiveShadowPass);
+        isOpaqueDepthPrePass = featureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
+        const bool isNormalPass = featureSet.isSet(QSSGShaderFeatures::Feature::NormalPass);
+
+        hasVertexColors = keyProps.m_vertexColorsEnabled.getValue(inKey)
+                       || keyProps.m_usesVarColor.getValue(inKey)
+                       || keyProps.m_vertexColorsMaskEnabled.getValue(inKey)
+                       || keyProps.m_usesInstancing.getValue(inKey)
+                       || keyProps.m_blendParticles.getValue(inKey);
+        hasLighting = keyProps.m_hasLighting.getValue(inKey);
+        hasPunctualLights = keyProps.m_hasPunctualLights.getValue(inKey);
+        isDoubleSided = keyProps.m_isDoubleSided.getValue(inKey);
+        hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
+        hasReflectionProbe = featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe);
+        oitMethod = static_cast<QSSGRenderLayer::OITMethod>(keyProps.m_orderIndependentTransparency.getValue(inKey));
+        isSpecularAAEnabled = keyProps.m_specularAAEnabled.getValue(inKey);
+
+        // TODO: Not sure I agree with the following, but this is the current behavior
+        hasSpecularLight |= keyProps.m_specularEnabled.getValue(inKey);
+        hasSpecularLight |= hasIblProbe;
+        hasSpecularLight |= hasReflectionProbe;
+        hasSpecularLight |= samplerState.hasImage(QSSGRenderableImage::Type::SpecularAmountMap);
+
+        hasIblOrientation = featureSet.isSet(QSSGShaderFeatures::Feature::IblOrientation);
+        hasShadowMap = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
+        hasSSAOMap = featureSet.isSet(QSSGShaderFeatures::Feature::Ssao);
+        hasLightMap = featureSet.isSet(QSSGShaderFeatures::Feature::Lightmap);
+        hasBumpNormalMap = samplerState.hasImage(QSSGRenderableImage::Type::Normal) || samplerState.hasImage(QSSGRenderableImage::Type::Bump);
+        hasParallaxMapping = samplerState.hasImage(QSSGRenderableImage::Type::Height);
+        hasClearcoat = keyProps.m_clearcoatEnabled.getValue(inKey);
+        hasTransmission = keyProps.m_transmissionEnabled.getValue(inKey);
+        hasFresnelScaleBias = keyProps.m_fresnelScaleBiasEnabled.getValue(inKey);
+        hasClearcoatFresnelScaleBias = keyProps.m_clearcoatFresnelScaleBiasEnabled.getValue(inKey);
+        isMetallicRoughnessWorkflow = keyProps.m_metallicRoughnessEnabled.getValue(inKey);
+        isSpecularGlossinessWorkflow = keyProps.m_specularGlossyEnabled.getValue(inKey);
+        isPbrMaterial = isMetallicRoughnessWorkflow || isSpecularGlossinessWorkflow;
+        hasFog = keyProps.m_fogEnabled.getValue(inKey);
+        numMorphTargets = keyProps.m_targetCount.getValue(inKey);
+        viewCount = featureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView) ? 1 : keyProps.m_viewCount.getValue(inKey);
+
+        if (isDepthPass) {
+            passType = Depth;
+            if (isOpaqueDepthPrePass)
+                needsBaseColor = true;
+        } else if (isOrthoShadowPass) {
+            passType = OrthoShadow;
+            if (isOpaqueDepthPrePass)
+                needsBaseColor = true;
+        } else if (isPerspectiveShadowPass) {
+            passType = PerspectiveShadow;
+            if (isOpaqueDepthPrePass)
+                needsBaseColor = true;
+        } else if (isNormalPass) {
+            passType = Normal;
+            needsWorldNormal = true;
+            needsRoughness = true;
+        } else {
+            // Either a Color or Debug Pass
+            passType = Color;
+            debugMode = QSSGRenderLayer::MaterialDebugMode(keyProps.m_debugMode.getValue(inKey));
+            if (debugMode == QSSGRenderLayer::MaterialDebugMode::None) {
+                needsBaseColor = true;
+                needsRoughness = true;
+                needsMetalness = true;
+                needsDiffuseLight = true;
+                needsSpecularLight = true;
+                needsEmission = true;
+                needsWorldNormal = true;
+                needsWorldTangent = true;
+                needsWorldBinormal = true;
+                needsF0 = true;
+                needsF90 = true;
+                needsAmbientOcclusion = true;
+            } else {
+                passType = Debug;
+                switch (debugMode) {
+                case QSSGRenderLayer::MaterialDebugMode::None:
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::BaseColor:
+                    needsBaseColor = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Roughness:
+                    needsRoughness = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Metalness:
+                    needsMetalness = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Diffuse:
+                    needsBaseColor = true;
+                    needsRoughness = true;
+                    needsMetalness = true;
+                    needsDiffuseLight = true;
+                    needsEmission = true;
+                    needsWorldNormal = true;
+                    needsWorldTangent = true;
+                    needsWorldBinormal = true;
+                    needsF0 = true;
+                    needsF90 = true;
+                    needsAmbientOcclusion = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Specular:
+                    needsBaseColor = true;
+                    needsRoughness = true;
+                    needsMetalness = true;
+                    needsSpecularLight = true;
+                    needsEmission = true;
+                    needsWorldNormal = true;
+                    needsWorldTangent = true;
+                    needsWorldBinormal = true;
+                    needsF0 = true;
+                    needsF90 = true;
+                    needsAmbientOcclusion = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::ShadowOcclusion:
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Emission:
+                    needsEmission = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::AmbientOcclusion:
+                    needsAmbientOcclusion = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Normal:
+                    needsWorldNormal = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Tangent:
+                    needsWorldTangent = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::Binormal:
+                    needsWorldBinormal = true;
+                    break;
+                case QSSGRenderLayer::MaterialDebugMode::F0:
+                    needsBaseColor = true;
+                    needsRoughness = true;
+                    needsMetalness = true;
+                    needsSpecularLight = true;
+                    needsEmission = true;
+                    needsWorldNormal = true;
+                    needsWorldTangent = true;
+                    needsWorldBinormal = true;
+                    needsF0 = true;
+                    needsF90 = true;
+                    needsAmbientOcclusion = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    bool shouldIncludeCustomFragmentMain() const {
+        if (needsBaseColor || needsRoughness || needsMetalness || needsDiffuseLight || needsSpecularLight || needsEmission)
+            return true;
+        return false;
+    }
+
+    bool shouldDiscardNonOpaque() const {
+        return (passType == OrthoShadow || passType == PerspectiveShadow || passType == Depth) && isOpaqueDepthPrePass;
+    }
+
+};
+
 
 static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    QSSGMaterialVertexPipeline &vertexShader,
@@ -416,7 +767,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                    const QSSGShaderFeatures &featureSet,
                                    const QSSGRenderGraphObject &inMaterial,
-                                   QSSGRenderableImage *firstImage,
                                    QSSGShaderLibraryManager &shaderLibraryManager)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
@@ -425,56 +775,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                                  funcName,
                                                  shaderLibraryManager);
     };
-
-    generateFragmentDefines(fragmentShader, inKey, keyProps, materialAdapter, shaderLibraryManager);
-
-    // alwayas true for Custom,
-    // true if vertexColorsEnabled, usesInstancing and blendParticles for others
-    bool vertexColorsEnabled = keyProps.m_vertexColorsEnabled.getValue(inKey)
-                            || keyProps.m_usesVarColor.getValue(inKey)
-                            || keyProps.m_vertexColorsMaskEnabled.getValue(inKey)
-                            || keyProps.m_usesInstancing.getValue(inKey)
-                            || keyProps.m_blendParticles.getValue(inKey);
-
-    bool hasLighting = keyProps.m_hasLighting.getValue(inKey);
-    bool hasPunctualLights = keyProps.m_hasPunctualLights.getValue(inKey);
-    bool isDoubleSided = keyProps.m_isDoubleSided.getValue(inKey);
-    bool hasImage = firstImage != nullptr;
-
-    QSSGRenderLayer::OITMethod oitMethod = static_cast<QSSGRenderLayer::OITMethod>(keyProps.m_orderIndependentTransparency.getValue(inKey));
-    bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
-    bool specularLightingEnabled = keyProps.m_specularEnabled.getValue(inKey) || hasIblProbe; // always true for Custom, depends for others
-    bool specularAAEnabled = keyProps.m_specularAAEnabled.getValue(inKey);
-    quint32 numMorphTargets = keyProps.m_targetCount.getValue(inKey);
-    // Pull the bump out as
-    QSSGRenderableImage *bumpImage = nullptr;
-    quint32 imageIdx = 0;
-    QSSGRenderableImage *specularAmountImage = nullptr;
-    QSSGRenderableImage *roughnessImage = nullptr;
-    QSSGRenderableImage *metalnessImage = nullptr;
-    QSSGRenderableImage *occlusionImage = nullptr;
-    // normal mapping
-    QSSGRenderableImage *normalImage = nullptr;
-    // translucency map
-    QSSGRenderableImage *translucencyImage = nullptr;
-    // opacity map
-    QSSGRenderableImage *opacityImage = nullptr;
-    // height map
-    QSSGRenderableImage *heightImage = nullptr;
-    // clearcoat maps
-    QSSGRenderableImage *clearcoatImage = nullptr;
-    QSSGRenderableImage *clearcoatRoughnessImage = nullptr;
-    QSSGRenderableImage *clearcoatNormalImage = nullptr;
-    // transmission map
-    QSSGRenderableImage *transmissionImage = nullptr;
-    // thickness
-    QSSGRenderableImage *thicknessImage = nullptr;
-
-    QSSGRenderableImage *baseImage = nullptr;
-
-    // Use shared texcoord when transforms are identity
-    QVector<QSSGRenderableImage *> identityImages;
-    char imageFragCoords[TEXCOORD_VAR_LEN];
 
     auto channelStr = [](const QSSGShaderKeyTextureChannel &chProp, const QSSGShaderDefaultMaterialKey &inKey) -> QByteArray {
         QByteArray ret;
@@ -508,79 +808,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
     };
 
-    for (QSSGRenderableImage *img = firstImage; img != nullptr; img = img->m_nextImage, ++imageIdx) {
-        if (img->m_imageNode.isImageTransformIdentity())
-            identityImages.push_back(img);
-        if (img->m_mapType == QSSGRenderableImage::Type::BaseColor || img->m_mapType == QSSGRenderableImage::Type::Diffuse) {
-            baseImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Bump) {
-            bumpImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::SpecularAmountMap) {
-            specularAmountImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Roughness) {
-            roughnessImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Metalness) {
-            metalnessImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Occlusion) {
-            occlusionImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Normal) {
-            normalImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Translucency) {
-            translucencyImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Opacity) {
-            opacityImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Height) {
-            heightImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Clearcoat) {
-            clearcoatImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::ClearcoatRoughness) {
-            clearcoatRoughnessImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::ClearcoatNormal) {
-            clearcoatNormalImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Transmission) {
-            transmissionImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Thickness) {
-            thicknessImage = img;
-        }
-    }
+    generateFragmentDefines(fragmentShader, inKey, keyProps, materialAdapter, shaderLibraryManager);
 
-    const bool isDepthPass = featureSet.isSet(QSSGShaderFeatures::Feature::DepthPass);
-    const bool isOrthoShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::OrthoShadowPass);
-    const bool isPerspectiveShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::PerspectiveShadowPass);
-    const bool isOpaqueDepthPrePass = featureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
-    const bool isNormalPass = featureSet.isSet(QSSGShaderFeatures::Feature::NormalPass);
-    const bool hasIblOrientation = featureSet.isSet(QSSGShaderFeatures::Feature::IblOrientation);
-    bool enableShadowMaps = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
-    bool enableSSAO = featureSet.isSet(QSSGShaderFeatures::Feature::Ssao);
-    bool enableLightmap = featureSet.isSet(QSSGShaderFeatures::Feature::Lightmap);
-    bool hasReflectionProbe = featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe);
-    bool enableBumpNormal = normalImage || bumpImage;
-    bool genBumpNormalImageCoords = false;
-    bool genClearcoatNormalImageCoords = false;
-    bool enableParallaxMapping = heightImage != nullptr;
-    bool enableClearcoat = keyProps.m_clearcoatEnabled.getValue(inKey);
-    bool enableTransmission = keyProps.m_transmissionEnabled.getValue(inKey);
-    const bool enableFresnelScaleBias = keyProps.m_fresnelScaleBiasEnabled.getValue(inKey);
-    const bool enableClearcoatFresnelScaleBias = keyProps.m_clearcoatFresnelScaleBiasEnabled.getValue(inKey);
-
-    const bool isMetallicRoughnessWorkflow = keyProps.m_metallicRoughnessEnabled.getValue(inKey);
-    const bool isSpecularGlossinessWorkflow = keyProps.m_specularGlossyEnabled.getValue(inKey);
-    const bool isPbrMaterial = isMetallicRoughnessWorkflow || isSpecularGlossinessWorkflow;
-
-    specularLightingEnabled |= specularAmountImage != nullptr;
-    specularLightingEnabled |= hasReflectionProbe;
+    // Determine the available texture channels
+    SamplerState samplerState(inKey, keyProps);
+    // Determine the requirements of this rendering pass
+    const PassRequirmentsState passRequirmentState(inKey, keyProps, featureSet, samplerState);
 
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
-    auto debugMode = QSSGRenderLayer::MaterialDebugMode(keyProps.m_debugMode.getValue(inKey));
-    const bool enableFog = keyProps.m_fogEnabled.getValue(inKey);
 
     const int viewCount = featureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
         ? 1 : keyProps.m_viewCount.getValue(inKey);
 
     // Morphing
-    if (numMorphTargets > 0 || hasCustomVert) {
+    if (passRequirmentState.numMorphTargets > 0 || hasCustomVert) {
         vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_MAX_COUNT"),
-                    QByteArray::number(numMorphTargets));
+                    QByteArray::number(passRequirmentState.numMorphTargets));
         quint8 offset;
         if ((offset = keyProps.m_targetPositionOffset.getValue(inKey)) < UINT8_MAX) {
             vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_POSITION_OFFSET"),
@@ -612,44 +855,28 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
     }
 
-    bool includeCustomFragmentMain = true;
-    if (isDepthPass || isOrthoShadowPass || isPerspectiveShadowPass || isNormalPass) {
-        hasLighting = false;
-        enableSSAO = false;
-        enableShadowMaps = false;
-        enableLightmap = false;
-
-        specularLightingEnabled = false;
-        enableClearcoat = false;
-        enableTransmission = false;
-
-        oitMethod = QSSGRenderLayer::OITMethod::None;
-
-        if (!isOpaqueDepthPrePass) {
-            vertexColorsEnabled = false;
-            baseImage = nullptr;
-            includeCustomFragmentMain = false;
-        }
-    }
-
-    bool includeSSAOVars = enableSSAO || enableShadowMaps;
-
-    vertexShader.beginFragmentGeneration(shaderLibraryManager, oitMethod);
-
     // Unshaded custom materials need no code in main (apart from calling qt_customMain)
     const bool hasCustomFrag = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
     const bool usesSharedVar = materialAdapter->usesSharedVariables();
 
-    // This is necessary for unshaded custom materials
-    if (isOrthoShadowPass)
+    vertexShader.beginFragmentGeneration(shaderLibraryManager, passRequirmentState.oitMethod);
+
+    if (passRequirmentState.passType == PassRequirmentsState::OrthoShadow) {
+        vertexShader.generateDepth();
         fragmentShader.addUniform("qt_shadowDepthAdjust", "vec2");
+    }
+
+
+    if (passRequirmentState.passType == PassRequirmentsState::PerspectiveShadow)
+        vertexShader.generateShadowWorldPosition(inKey);
+
 
     if (hasCustomFrag && materialAdapter->isUnshaded()) {
         // Unlike the depth texture pass, the normal texture pass needs to
         // output valid fragment values. The custom main is skipped in
         // beginVertexGeneration if isNormalPass is true, but something must be
         // written to gl_FragColor (the normals), so pretend we are shaded...
-        if (!isNormalPass)
+        // if (passRequirmentState.passType != PassRequirmentsState::Normal)
             return;
     }
 
@@ -657,38 +884,34 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     // The fragment or vertex shaders may not use the material_properties or diffuse
     // uniforms in all cases but it is simpler to just add them and let the linker strip them.
+    // if (passRequirmentState.needsEmission)
     fragmentShader.addUniform("qt_material_emissive_color", "vec3");
+    // if (passRequirmentState.needsBaseColor)
     fragmentShader.addUniform("qt_material_base_color", "vec4");
     fragmentShader.addUniform("qt_material_properties", "vec4");
     fragmentShader.addUniform("qt_material_properties2", "vec4");
     fragmentShader.addUniform("qt_material_properties3", "vec4");
-    if (enableParallaxMapping || enableTransmission)
+    if (passRequirmentState.hasParallaxMapping || passRequirmentState.hasTransmission)
         fragmentShader.addUniform("qt_material_properties4", "vec4");
     if (!hasCustomFrag) {
-        if (enableTransmission) {
+        if (passRequirmentState.hasTransmission) {
             fragmentShader.addUniform("qt_material_attenuation", "vec4");
             fragmentShader.addUniform("qt_material_thickness", "float");
         }
-        if (enableFresnelScaleBias || enableClearcoatFresnelScaleBias)
+        if (passRequirmentState.hasFresnelScaleBias || passRequirmentState.hasClearcoatFresnelScaleBias)
             fragmentShader.addUniform("qt_material_properties5", "vec4");
         fragmentShader.addUniform("qt_material_clearcoat_normal_strength", "float");
         fragmentShader.addUniform("qt_material_clearcoat_fresnel_power", "float");
     }
 
-    if (vertexColorsEnabled) {
+    if (passRequirmentState.hasVertexColors) {
         vertexShader.generateVertexColor(inKey);
     }else {
         fragmentShader.append("    vec4 qt_vertColorMask = vec4(1.0);");
         fragmentShader.append("    vec4 qt_vertColor = vec4(1.0);");
     }
 
-    if (hasImage && ((!isDepthPass && !isOrthoShadowPass && !isPerspectiveShadowPass) || isOpaqueDepthPrePass)) {
-        fragmentShader.append("    vec3 qt_uTransform;");
-        fragmentShader.append("    vec3 qt_vTransform;");
-    }
-
-    if (hasLighting || hasCustomFrag || isNormalPass) {
-        // Do not move these three. These varyings are exposed to custom material shaders too.
+    if (passRequirmentState.needsWorldNormal || passRequirmentState.needsWorldTangent || passRequirmentState.needsWorldBinormal || hasCustomFrag) {
         vertexShader.generateViewVector(inKey);
         if (keyProps.m_usesProjectionMatrix.getValue(inKey)) {
             if (viewCount >= 2)
@@ -705,36 +928,27 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition(inKey);
 
-        // Note: tangetOrBinormalDebugMode doesn't force generation, it just makes sure that qt_tangent and qt_binormal variables exist
-        const bool tangentOrBinormalDebugMode = (debugMode == QSSGRenderLayer::MaterialDebugMode::Tangent) || (debugMode == QSSGRenderLayer::MaterialDebugMode::Binormal);
-        const bool needsTangentAndBinormal = hasCustomFrag || enableParallaxMapping || clearcoatNormalImage || enableBumpNormal || tangentOrBinormalDebugMode;
-
-
-        if (needsTangentAndBinormal) {
+        if (passRequirmentState.needsWorldTangent || passRequirmentState.needsWorldBinormal || hasCustomFrag) {
             bool genTangent = false;
             bool genBinormal = false;
             vertexShader.generateVarTangentAndBinormal(inKey, genTangent, genBinormal);
 
             if (!genTangent) {
-                int id = 0;
-                if (enableBumpNormal) {
+                QSSGRenderableImage::Type id = QSSGRenderableImage::Type::Unknown;
+                if (passRequirmentState.hasBumpNormalMap) {
                     // Generate imageCoords for bump/normal map first.
                     // Some operations needs to use the TBN transform and if the
                     // tangent vector is not provided, it is necessary.
-                    auto *bumpNormalImage = bumpImage != nullptr ? bumpImage : normalImage;
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpNormalImage, true, bumpNormalImage->m_imageNode.m_indexUV);
-                    genBumpNormalImageCoords = true;
-                    id = (bumpImage != nullptr) ? int(QSSGRenderableImage::Type::Bump) : int(QSSGRenderableImage::Type::Normal);
-                } else if (clearcoatNormalImage) {
+                    id = samplerState.hasImage(QSSGRenderableImage::Type::Bump) ? QSSGRenderableImage::Type::Bump : QSSGRenderableImage::Type::Normal;
+                } else if (samplerState.hasImage(QSSGRenderableImage::Type::ClearcoatNormal)) {
                     // For the corner case that there is only a clearcoat normal map
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatNormalImage, true, clearcoatNormalImage->m_imageNode.m_indexUV);
-                    genClearcoatNormalImageCoords = true;
-                    id = int(QSSGRenderableImage::Type::ClearcoatNormal);
+                    id = QSSGRenderableImage::Type::ClearcoatNormal;
                 }
-                if (id > 0) {
-                    const auto &names = imageStringTable[id];
-                    fragmentShader << "    vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
-                                   << "    vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
+
+                if (id > QSSGRenderableImage::Type::Unknown) {
+                    samplerState.generateImageUVAndSampler(id, vertexShader, fragmentShader, inKey, true);
+                    fragmentShader << "    vec2 dUVdx = dFdx(" << samplerState.fragCoordsName(id) << ");\n"
+                                   << "    vec2 dUVdy = dFdy(" << samplerState.fragCoordsName(id) << ");\n";
                     fragmentShader << "    qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
                                    << "    qt_tangent = qt_tangent - dot(qt_world_normal, qt_tangent) * qt_world_normal;\n"
                                    << "    qt_tangent = normalize(qt_tangent);\n";
@@ -744,14 +958,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_binormal = cross(qt_world_normal, qt_tangent);\n";
         }
 
-        if (isDoubleSided) {
+        if (passRequirmentState.isDoubleSided) {
             fragmentShader.append("#if QSHADER_HLSL && QSHADER_VIEW_COUNT >= 2");
             fragmentShader.append("    const float qt_facing = 1.0;");
             fragmentShader.append("#else");
             fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;");
             fragmentShader.append("#endif");
             fragmentShader.append("    qt_world_normal *= qt_facing;\n");
-            if (needsTangentAndBinormal) {
+            if (passRequirmentState.needsWorldTangent || passRequirmentState.needsWorldBinormal || hasCustomFrag) {
                 fragmentShader.append("    qt_tangent *= qt_facing;");
                 fragmentShader.append("    qt_binormal *= qt_facing;");
             }
@@ -772,22 +986,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    float qt_customFresnelPower = 5.0;\n"; // overrides qt_material_properties2.x
         fragmentShader << "    vec4 qt_customBaseColor = vec4(1.0);\n"; // overrides qt_material_base_color
         fragmentShader << "    vec3 qt_customEmissiveColor = vec3(0.0);\n"; // overrides qt_material_emissive_color
-        if (enableClearcoat) {
+        if (passRequirmentState.hasClearcoat) {
             fragmentShader << "    float qt_customClearcoatAmount = 0.0;\n";
             fragmentShader << "    float qt_customClearcoatFresnelPower = 5.0;\n";
             fragmentShader << "    float qt_customClearcoatRoughness = 0.0;\n";
             fragmentShader << "    vec3 qt_customClearcoatNormal = qt_world_normal;\n";
-            if (enableClearcoatFresnelScaleBias) {
+            if (passRequirmentState.hasClearcoatFresnelScaleBias) {
                 fragmentShader << "    float qt_customClearcoatFresnelScale = 1.0;\n";
                 fragmentShader << "    float qt_customClearcoatFresnelBias = 0.0;\n";
             }
         }
-        if (enableFresnelScaleBias) {
+        if (passRequirmentState.hasFresnelScaleBias) {
             fragmentShader << "    float qt_customFresnelScale = 1.0;\n";
             fragmentShader << "    float qt_customFresnelBias = 0.0;\n";
         }
 
-        if (enableTransmission) {
+        if (passRequirmentState.hasTransmission) {
             fragmentShader << "    float qt_customTransmissionFactor = 0.0;\n";
             fragmentShader << "    float qt_customThicknessFactor = 0.0;\n";
             fragmentShader << "    vec3 qt_customAttenuationColor = vec3(1.0);\n";
@@ -799,24 +1013,43 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // properties directly.
         vertexShader.generateUVCoords(0, inKey);
         vertexShader.generateUVCoords(1, inKey);
-        if (includeCustomFragmentMain && hasCustomFunction(QByteArrayLiteral("qt_customMain"))) {
-            fragmentShader << "    qt_customMain(qt_customBaseColor, qt_customEmissiveColor, qt_customMetalnessAmount, qt_customSpecularRoughness,"
-                              " qt_customSpecularAmount, qt_customFresnelPower, qt_world_normal, qt_tangent, qt_binormal,"
-                              " qt_texCoord0, qt_texCoord1, qt_view_vector, qt_customIOR, qt_customOcclusionAmount";
-            if (enableClearcoat) {
-                fragmentShader << ", qt_customClearcoatAmount, qt_customClearcoatFresnelPower, qt_customClearcoatRoughness, qt_customClearcoatNormal";
-                if (enableClearcoatFresnelScaleBias) {
-                    fragmentShader << ", qt_customClearcoatFresnelScale, qt_customClearcoatFresnelBias";
+        if (passRequirmentState.shouldIncludeCustomFragmentMain() && hasCustomFunction(QByteArrayLiteral("qt_customMain"))) {
+            fragmentShader << "    qt_customMain(qt_customBaseColor,\n"
+                           << "                  qt_customEmissiveColor,\n"
+                           << "                  qt_customMetalnessAmount,\n"
+                           << "                  qt_customSpecularRoughness,\n"
+                           << "                  qt_customSpecularAmount,\n"
+                           << "                  qt_customFresnelPower,\n"
+                           << "                  qt_world_normal,\n"
+                           << "                  qt_tangent,\n"
+                           << "                  qt_binormal,\n"
+                           << "                  qt_texCoord0,\n"
+                           << "                  qt_texCoord1,\n"
+                           << "                  qt_view_vector,\n"
+                           << "                  qt_customIOR,\n"
+                           << "                  qt_customOcclusionAmount";
+            if (passRequirmentState.hasClearcoat) {
+                fragmentShader << ",\n                  qt_customClearcoatAmount,\n"
+                               << "                  qt_customClearcoatFresnelPower,\n"
+                               << "                  qt_customClearcoatRoughness,\n"
+                               << "                  qt_customClearcoatNormal";
+                if (passRequirmentState.hasClearcoatFresnelScaleBias) {
+                    fragmentShader << ",\n                  qt_customClearcoatFresnelScale,\n"
+                                   << "                  qt_customClearcoatFresnelBias";
                 }
             }
-            if (enableFresnelScaleBias) {
-                fragmentShader << ", qt_customFresnelScale, qt_customFresnelBias";
+            if (passRequirmentState.hasFresnelScaleBias) {
+                fragmentShader << ",\n                  qt_customFresnelScale,\n"
+                               << "                  qt_customFresnelBias";
             }
-            if (enableTransmission) {
-                fragmentShader << ", qt_customTransmissionFactor, qt_customThicknessFactor, qt_customAttenuationColor, qt_customAttenuationDistance";
+            if (passRequirmentState.hasTransmission) {
+                fragmentShader << ",\n                  qt_customTransmissionFactor,\n"
+                               << "                  qt_customThicknessFactor,\n"
+                               << "                  qt_customAttenuationColor,\n"
+                               << "                  qt_customAttenuationDistance";
             }
             if (usesSharedVar)
-                fragmentShader << ", qt_customShared);\n";
+                fragmentShader << "\n,                  qt_customShared);\n";
             else
                 fragmentShader << ");\n";
         }
@@ -826,111 +1059,104 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     } else {
         fragmentShader << "    vec4 qt_diffuseColor = qt_material_base_color * qt_vertColor;\n";
         fragmentShader << "    vec3 qt_global_emission = qt_material_emissive_color;\n";
-        if (specularLightingEnabled || hasImage)
+        if (passRequirmentState.hasSpecularLight || samplerState.isActive())
             fragmentShader << "    float qt_iOR = qt_material_specular.w;\n";
     }
 
     const bool hasCustomIblProbe = hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_iblProbeProcessor"));
 
-    if (isDepthPass)
-        fragmentShader << "    vec4 fragOutput = vec4(0.0);\n";
 
-    if (isOrthoShadowPass)
-        vertexShader.generateDepth();
+    // Lightmaps
+    // hasLighting && needsDiffuseLight || needsSpecularLight
+    if (passRequirmentState.hasLighting && (passRequirmentState.needsDiffuseLight || passRequirmentState.needsSpecularLight)) {
+        if (passRequirmentState.hasLightMap) {
+            vertexShader.generateLightmapUVCoords(inKey);
+            fragmentShader.addFunction("lightmap");
+        }
+    }
 
-    if (isPerspectiveShadowPass)
-        vertexShader.generateShadowWorldPosition(inKey);
+    // Heightmap / Parallax Mapping
+    // Possible Optimization: Also conditionally, only when we plan on using another map/texture since it only gets used when sampling
+    if (passRequirmentState.hasParallaxMapping) {
+        // Adjust UV coordinates to account for parallaxMapping before
+        // reading any other texture.
+        fragmentShader.addInclude("parallaxMapping.glsllib");
+        samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Height, vertexShader, fragmentShader, inKey, true);
+        fragmentShader << "    float qt_heightAmount = qt_material_properties4.x;\n";
+        maskVariableByVertexColorChannel( "qt_heightAmount", QSSGRenderDefaultMaterial::HeightAmountMask );
+        fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << samplerState.fragCoordsName(QSSGRenderableImage::Type::Height) << ",\n"
+                       << "                                      " << samplerState.samplerName(QSSGRenderableImage::Type::Height) << ",\n"
+                       << "                                       qt_tangent,\n"
+                       << "                                       qt_binormal,\n"
+                       << "                                       qt_world_normal,\n"
+                       << "                                       qt_varWorldPos, \n"
+                       << "#if QSHADER_VIEW_COUNT >= 2\n"
+                       << "                                       qt_cameraPosition[qt_viewIndex],\n"
+                       << "#else\n"
+                       << "                                       qt_cameraPosition,\n"
+                       << "#endif\n"
+                       << "                                       qt_heightAmount,\n"
+                       << "                                       qt_material_properties4.y,\n"
+                       << "                                       qt_material_properties4.z);\n";
+    }
+
+    // Clearcoat (before normal/bump has a chance to overwrite qt_world_normal)
+    if (passRequirmentState.hasClearcoat && (passRequirmentState.needsDiffuseLight || passRequirmentState.needsSpecularLight)) {
+        addLocalVariable(fragmentShader, "qt_clearcoatNormal", "vec3");
+        // Clearcoat normal should be calculated not considering the normalImage for the base material
+        // If both are to be the same then just set the same normalImage for the base and clearcoat
+        // This does mean that this value should be calculated before qt_world_normal is overwritten by
+        // the normalMap.
+        if (hasCustomFrag) {
+            fragmentShader << "    qt_clearcoatNormal = qt_customClearcoatNormal;\n";
+        } else {
+            if (samplerState.hasImage(QSSGRenderableImage::Type::ClearcoatNormal)) {
+                samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::ClearcoatNormal, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                fragmentShader.addFunction("sampleNormalTexture");
+                fragmentShader << "    float qt_clearcoat_normal_strength = qt_material_clearcoat_normal_strength;\n";
+                maskVariableByVertexColorChannel( "qt_clearcoat_normal_strength", QSSGRenderDefaultMaterial::ClearcoatNormalStrengthMask  );
+                fragmentShader << "    qt_clearcoatNormal = qt_sampleNormalTexture(" << samplerState.samplerName(QSSGRenderableImage::Type::ClearcoatNormal)
+                               << ", qt_clearcoat_normal_strength, "
+                               << samplerState.fragCoordsName(QSSGRenderableImage::Type::ClearcoatNormal)
+                               << ", qt_tangent, qt_binormal, qt_world_normal);\n";
+
+            } else {
+                // same as qt_world_normal then
+                fragmentShader << "    qt_clearcoatNormal = qt_world_normal;\n";
+            }
+        }
+    }
+
+    // Normal / Bump Map
+    if (passRequirmentState.needsWorldNormal) {
+        if (samplerState.hasImage(QSSGRenderableImage::Type::Bump)) {
+            samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Bump, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+            fragmentShader.append("    float qt_bumpAmount = qt_material_properties2.y;\n");
+            maskVariableByVertexColorChannel( "qt_bumpAmount", QSSGRenderDefaultMaterial::NormalStrengthMask );
+            fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
+            fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod("
+                           << samplerState.samplerName(QSSGRenderableImage::Type::Bump)
+                           << ", qt_bumpAmount, " << samplerState.fragCoordsName(QSSGRenderableImage::Type::Bump)
+                           << ", qt_tangent, qt_binormal, qt_world_normal);\n";
+        } else if (samplerState.hasImage(QSSGRenderableImage::Type::Normal)) {
+            samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Normal, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+            fragmentShader.append("    float qt_normalStrength = qt_material_properties2.y;\n");
+            maskVariableByVertexColorChannel( "qt_normalStrength", QSSGRenderDefaultMaterial::NormalStrengthMask );
+            fragmentShader.addFunction("sampleNormalTexture");
+            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture(" << samplerState.samplerName(QSSGRenderableImage::Type::Normal)
+                           << ", qt_normalStrength, " << samplerState.fragCoordsName(QSSGRenderableImage::Type::Normal)
+                           << ", qt_tangent, qt_binormal, qt_world_normal);\n";
+        }
+    }
 
     // !hasLighting does not mean 'no light source'
     // it should be KHR_materials_unlit
     // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
-    if (hasLighting || isNormalPass) {
-        if (includeSSAOVars)
-            fragmentShader.addInclude("ssao.glsllib");
-
-        if (enableLightmap) {
-            vertexShader.generateLightmapUVCoords(inKey);
-            fragmentShader.addFunction("lightmap");
-        }
-
-        if (enableParallaxMapping) {
-            // Adjust UV coordinates to account for parallaxMapping before
-            // reading any other texture.
-            const bool hasIdentityMap = identityImages.contains(heightImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *heightImage, imageFragCoords, heightImage->m_imageNode.m_indexUV);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *heightImage, true, heightImage->m_imageNode.m_indexUV);
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Height)];
-            fragmentShader.addInclude("parallaxMapping.glsllib");
-            fragmentShader << "    float qt_heightAmount = qt_material_properties4.x;\n";
-            maskVariableByVertexColorChannel( "qt_heightAmount", QSSGRenderDefaultMaterial::HeightAmountMask );
-            if (viewCount < 2) {
-                fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ", " << names.imageSampler
-                            <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition, qt_heightAmount, qt_material_properties4.y, qt_material_properties4.z);\n";
-            } else {
-                fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ", " << names.imageSampler
-                            <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition[qt_viewIndex], qt_heightAmount, qt_material_properties4.y, qt_material_properties4.z);\n";
-            }
-        }
-
-        // Clearcoat Setup (before normalImage code has a change to overwrite qt_world_normal)
-        if (enableClearcoat) {
-            addLocalVariable(fragmentShader, "qt_clearcoatNormal", "vec3");
-            // Clearcoat normal should be calculated not considering the normalImage for the base material
-            // If both are to be the same then just set the same normalImage for the base and clearcoat
-            // This does mean that this value should be calculated before qt_world_normal is overwritten by
-            // the normalMap.
-            if (hasCustomFrag) {
-                fragmentShader << "    qt_clearcoatNormal = qt_customClearcoatNormal;\n";
-            } else {
-                if (clearcoatNormalImage) {
-                    if (enableParallaxMapping || !genClearcoatNormalImageCoords)
-                        generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatNormalImage, enableParallaxMapping, clearcoatNormalImage->m_imageNode.m_indexUV);
-                    const auto &names = imageStringTable[int(QSSGRenderableImage::Type::ClearcoatNormal)];
-                    fragmentShader.addFunction("sampleNormalTexture");
-                    fragmentShader << "    float qt_clearcoat_normal_strength = qt_material_clearcoat_normal_strength;\n";
-                    maskVariableByVertexColorChannel( "qt_clearcoat_normal_strength", QSSGRenderDefaultMaterial::ClearcoatNormalStrengthMask  );
-                    fragmentShader << "    qt_clearcoatNormal = qt_sampleNormalTexture(" << names.imageSampler << ", qt_clearcoat_normal_strength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
-
-                } else {
-                    // same as qt_world_normal then
-                    fragmentShader << "    qt_clearcoatNormal = qt_world_normal;\n";
-                }
-            }
-        }
-
-        if (bumpImage != nullptr) {
-            if (enableParallaxMapping || !genBumpNormalImageCoords) {
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey,
-                                           *bumpImage, enableParallaxMapping,
-                                           bumpImage->m_imageNode.m_indexUV,
-                                           genBumpNormalImageCoords);
-            }
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
-            fragmentShader.addUniform(names.imageSamplerSize, "vec2");
-            fragmentShader.append("    float qt_bumpAmount = qt_material_properties2.y;\n");
-            maskVariableByVertexColorChannel( "qt_bumpAmount", QSSGRenderDefaultMaterial::NormalStrengthMask );
-            fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
-            fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal, " << names.imageSamplerSize << ");\n";
-        } else if (normalImage != nullptr) {
-            if (enableParallaxMapping || !genBumpNormalImageCoords) {
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey,
-                                           *normalImage, enableParallaxMapping,
-                                           normalImage->m_imageNode.m_indexUV,
-                                           genBumpNormalImageCoords);
-            }
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
-            fragmentShader.append("    float qt_normalStrength = qt_material_properties2.y;\n");
-            maskVariableByVertexColorChannel( "qt_normalStrength", QSSGRenderDefaultMaterial::NormalStrengthMask );
-            fragmentShader.addFunction("sampleNormalTexture");
-            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture(" << names.imageSampler << ", qt_normalStrength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
-        }
-
+    if ((passRequirmentState.hasLighting || passRequirmentState.passType == PassRequirmentsState::Normal) && passRequirmentState.needsWorldNormal) {
         fragmentShader.append("    vec3 tmp_light_color;");
     }
 
-    if (specularLightingEnabled || hasImage) {
+    if (passRequirmentState.hasSpecularLight || samplerState.isActive()) {
         fragmentShader.append("    vec3 qt_specularBase;");
         fragmentShader.addUniform("qt_material_specular", "vec4");
         if (hasCustomFrag)
@@ -939,29 +1165,36 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    vec3 qt_specularTint = qt_material_specular.rgb;");
     }
 
-    if (baseImage) {
-        const bool hasIdentityMap = identityImages.contains(baseImage);
-        if (hasIdentityMap)
-            generateImageUVSampler(vertexShader, fragmentShader, inKey, *baseImage, imageFragCoords, baseImage->m_imageNode.m_indexUV);
-        else
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *baseImage, enableParallaxMapping, baseImage->m_imageNode.m_indexUV);
+    // Base Color / Diffuse / Albedo
+    if ((samplerState.hasImage(QSSGRenderableImage::Type::BaseColor) || samplerState.hasImage(QSSGRenderableImage::Type::Diffuse)) && passRequirmentState.needsBaseColor) {
 
-        // NOTE: The base image hande is used for both the diffuse map and the base color map, so we can't hard-code the type here...
-        const auto &names = imageStringTable[int(baseImage->m_mapType)];
-        // Diffuse and BaseColor maps need to converted to linear color space
-        fragmentShader.addInclude("tonemapping.glsllib");
+        // first off, which one
+        QSSGRenderableImage::Type baseImageType = QSSGRenderableImage::Type::Unknown;
+        if (samplerState.hasImage(QSSGRenderableImage::Type::BaseColor))
+            baseImageType = QSSGRenderableImage::Type::BaseColor;
+        else if (samplerState.hasImage(QSSGRenderableImage::Type::Diffuse))
+            baseImageType = QSSGRenderableImage::Type::Diffuse;
+
+        // Generate the UVs and sampler snippets
+        samplerState.generateImageUVAndSampler(baseImageType, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+
         if (keyProps.m_baseColorSingleChannelEnabled.getValue(inKey)) {
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::BaseColorChannel];
-            fragmentShader << "    vec4 qt_base_texture_color = vec4(vec3(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << "), 1.0f);\n";
+            fragmentShader << "    vec4 qt_base_texture_color = vec4(vec3(texture2D(" << samplerState.samplerName(baseImageType)
+                           << ", " << samplerState.fragCoordsName(baseImageType) << ")" << channelStr(channelProps, inKey) << "), 1.0f);\n";
         } else {
-            fragmentShader << "    vec4 qt_base_texture_color = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
+            fragmentShader << "    vec4 qt_base_texture_color = texture2D(" << samplerState.samplerName(baseImageType)
+                           << ", " << samplerState.fragCoordsName(baseImageType) << ");\n";
         }
-        if (!keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::BaseColorMap].isLinear(inKey))
+        if (!keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::BaseColorMap].isLinear(inKey)) {
+            // Diffuse/BaseColor maps need to converted to linear color space
+            fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader << "    qt_base_texture_color = qt_sRGBToLinear(qt_base_texture_color);\n";
+        }
         fragmentShader << "    qt_diffuseColor *= qt_base_texture_color;\n";
     }
 
-    // alpha cutoff
+    // Alpha cutoff
     if (keyProps.m_alphaMode.getAlphaMode(inKey) == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
         // The Implementation Notes from
         // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#alpha-coverage
@@ -976,56 +1209,86 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    qt_diffuseColor.a = 1.0;\n";
     }
 
-    if (opacityImage) {
-        const bool hasIdentityMap = identityImages.contains(opacityImage);
-        if (hasIdentityMap)
-            generateImageUVSampler(vertexShader, fragmentShader, inKey, *opacityImage, imageFragCoords, opacityImage->m_imageNode.m_indexUV);
-        else
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *opacityImage, enableParallaxMapping, opacityImage->m_imageNode.m_indexUV);
-
-        const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Opacity)];
+    // Opacity
+    if (samplerState.hasImage(QSSGRenderableImage::Type::Opacity)) {
+        samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Opacity, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
         const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
-        fragmentShader << "    float qt_opacity_map_value = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+        fragmentShader << "    float qt_opacity_map_value = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Opacity)
+                       << ", " << samplerState.fragCoordsName(QSSGRenderableImage::Type::Opacity) << ")" << channelStr(channelProps, inKey) << ";\n";
         if (keyProps.m_invertOpacityMapValue.getValue(inKey))
             fragmentShader << "    qt_opacity_map_value = 1.0 - qt_opacity_map_value;\n";
         fragmentShader << "    qt_objectOpacity *= qt_opacity_map_value;\n";
     }
 
-    if (isNormalPass) { // what we want is a normal-roughness texture, so replicate roughness calculations that would be skipped below
-        if (hasCustomFrag) {
-            addLocalVariable(fragmentShader, "qt_aoFactor", "float");
-            fragmentShader << "    float qt_roughnessAmount = qt_customSpecularRoughness;\n";
+    // Ambient Occlusion
+    if (passRequirmentState.needsAmbientOcclusion) {
+        addLocalVariable(fragmentShader, "qt_aoFactor", "float");
+
+        if (passRequirmentState.hasSSAOMap) {
+            fragmentShader.addInclude("ssao.glsllib");
+            fragmentShader.append("    qt_aoFactor = qt_screenSpaceAmbientOcclusionFactor();");
+        } else {
+            fragmentShader.append("    qt_aoFactor = 1.0;");
+        }
+
+        if (hasCustomFrag)
             fragmentShader << "    qt_aoFactor *= qt_customOcclusionAmount;\n";
-        }
-        else {
+    }
+
+    // Roughness
+    if (passRequirmentState.needsRoughness) {
+        if (hasCustomFrag)
+            fragmentShader << "    float qt_roughnessAmount = qt_customSpecularRoughness;\n";
+        else
             fragmentShader << "    float qt_roughnessAmount = qt_material_properties.y;\n";
-        }
 
         maskVariableByVertexColorChannel( "qt_roughnessAmount", QSSGRenderDefaultMaterial::RoughnessMask );
 
-        if (roughnessImage) {
+        if (samplerState.hasImage(QSSGRenderableImage::Type::Roughness)) {
+            samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Roughness, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::RoughnessChannel];
-            const bool hasIdentityMap = identityImages.contains(roughnessImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *roughnessImage, imageFragCoords, roughnessImage->m_imageNode.m_indexUV);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, enableParallaxMapping, roughnessImage->m_imageNode.m_indexUV);
-
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Roughness)];
-            fragmentShader << "    qt_roughnessAmount *= texture2D(" << names.imageSampler << ", "
-                           << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+            fragmentShader << "    qt_roughnessAmount *= texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Roughness) << ", "
+                           << samplerState.fragCoordsName(QSSGRenderableImage::Type::Roughness) << ")" << channelStr(channelProps, inKey) << ";\n";
         }
 
-        if (materialAdapter->isSpecularGlossy())
+        // Convert Glossy to Roughness
+        if (passRequirmentState.isSpecularGlossinessWorkflow)
             fragmentShader << "    qt_roughnessAmount = clamp(1.0 - qt_roughnessAmount, 0.0, 1.0);\n";
     }
 
-    if (hasLighting) {
-        if (specularLightingEnabled) {
+    // Metalness
+    if (passRequirmentState.needsMetalness) {
+        if (hasCustomFrag)
+            fragmentShader << "    float qt_metalnessAmount = qt_customMetalnessAmount;\n";
+        else if (!passRequirmentState.isSpecularGlossinessWorkflow)
+            fragmentShader << "    float qt_metalnessAmount = qt_material_properties.z;\n";
+        else
+            fragmentShader << "    float qt_metalnessAmount = 0.0;\n";
+
+        maskVariableByVertexColorChannel( "qt_metalnessAmount", QSSGRenderDefaultMaterial::MetalnessMask );
+
+        if (passRequirmentState.hasSpecularLight && samplerState.hasImage(QSSGRenderableImage::Type::Metalness)) {
+            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::MetalnessChannel];
+            samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Metalness, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+            fragmentShader << "    float qt_sampledMetalness = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Metalness) << ", "
+                           << samplerState.fragCoordsName(QSSGRenderableImage::Type::Metalness) << ")" << channelStr(channelProps, inKey) << ";\n";
+            fragmentShader << "    qt_metalnessAmount = clamp(qt_metalnessAmount * qt_sampledMetalness, 0.0, 1.0);\n";
+        }
+    }
+
+    // Special case for depth pre-pass
+    if (passRequirmentState.shouldDiscardNonOpaque()) {
+        fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";
+        fragmentShader << "        discard;\n";
+    }
+
+    // This is a Lighting Pass
+    if (passRequirmentState.hasLighting && (passRequirmentState.needsDiffuseLight || passRequirmentState.needsSpecularLight)) {
+        if (passRequirmentState.hasSpecularLight) {
             vertexShader.generateViewVector(inKey);
             fragmentShader.addUniform("qt_material_properties", "vec4");
 
-            if (isPbrMaterial)
+            if (passRequirmentState.isPbrMaterial)
                 fragmentShader << "    qt_specularBase = vec3(1.0);\n";
             else
                 fragmentShader << "    qt_specularBase = qt_diffuseColor.rgb;\n";
@@ -1037,35 +1300,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             maskVariableByVertexColorChannel( "qt_specularFactor", QSSGRenderDefaultMaterial::SpecularAmountMask  );
         }
 
-        // Metalness must be setup fairly earily since so many factors depend on the runtime value
-        if (hasCustomFrag)
-            fragmentShader << "    float qt_metalnessAmount = qt_customMetalnessAmount;\n";
-        else if (!isSpecularGlossinessWorkflow)
-            fragmentShader << "    float qt_metalnessAmount = qt_material_properties.z;\n";
-        else
-            fragmentShader << "    float qt_metalnessAmount = 0.0;\n";
-
-        maskVariableByVertexColorChannel( "qt_metalnessAmount", QSSGRenderDefaultMaterial::MetalnessMask );
-
-        if (specularLightingEnabled && metalnessImage) {
-            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::MetalnessChannel];
-            const bool hasIdentityMap = identityImages.contains(metalnessImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *metalnessImage, imageFragCoords, metalnessImage->m_imageNode.m_indexUV);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage, enableParallaxMapping, metalnessImage->m_imageNode.m_indexUV);
-
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Metalness)];
-            fragmentShader << "    float qt_sampledMetalness = texture2D(" << names.imageSampler << ", "
-                           << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
-            fragmentShader << "    qt_metalnessAmount = clamp(qt_metalnessAmount * qt_sampledMetalness, 0.0, 1.0);\n";
-        }
-
         fragmentShader.addUniform("qt_light_ambient_total", "vec3");
 
         fragmentShader.append("    vec4 global_diffuse_light = vec4(0.0);");
 
-        if (enableLightmap) {
+        if (passRequirmentState.hasLightMap) {
             fragmentShader << "    global_diffuse_light.rgb = qt_lightmap_color(qt_texCoordLightmap) * (1.0 - qt_metalnessAmount) * qt_diffuseColor.rgb;\n";
         } else {
             if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_ambientLightProcessor"))) {
@@ -1084,26 +1323,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         // Fragment lighting means we can perhaps attenuate the specular amount by a texture
         // lookup.
-        if (specularAmountImage) {
-            const bool hasIdentityMap = identityImages.contains(specularAmountImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *specularAmountImage, imageFragCoords, specularAmountImage->m_imageNode.m_indexUV);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, enableParallaxMapping, specularAmountImage->m_imageNode.m_indexUV);
+        if (samplerState.hasImage(QSSGRenderableImage::Type::SpecularAmountMap)) {
+            samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::SpecularAmountMap, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
 
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap )];
-
-        if (keyProps.m_specularSingleChannelEnabled.getValue(inKey)) {
-            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::SpecularAmountChannel];
-            fragmentShader << "    vec4 qt_specular_amount_map = vec4(vec3(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << "), 1.0f);\n";
-        } else {
-            fragmentShader << "    vec4 qt_specular_amount_map = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
-        }
+            if (keyProps.m_specularSingleChannelEnabled.getValue(inKey)) {
+                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::SpecularAmountChannel];
+                fragmentShader << "    vec4 qt_specular_amount_map = vec4(vec3(texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::SpecularAmountMap)
+                               << ", " << samplerState.fragCoordsName(QSSGRenderableImage::Type::SpecularAmountMap) << ")" << channelStr(channelProps, inKey) << "), 1.0f);\n";
+            } else {
+                fragmentShader << "    vec4 qt_specular_amount_map = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::SpecularAmountMap)
+                               << ", " << samplerState.fragCoordsName(QSSGRenderableImage::Type::SpecularAmountMap) << ");\n";
+            }
             fragmentShader << "    qt_specularBase *= qt_sRGBToLinear(qt_specular_amount_map).rgb;\n";
         }
 
-        if (specularLightingEnabled) {
-            if (isSpecularGlossinessWorkflow) {
+        if (passRequirmentState.hasSpecularLight) {
+            if (passRequirmentState.isSpecularGlossinessWorkflow) {
                 fragmentShader << "    qt_specularTint *= qt_specularBase;\n";
                 fragmentShader << "    vec3 qt_specularAmount = vec3(1.0);\n";
             } else {
@@ -1111,74 +1346,27 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             }
         }
 
-        if (translucencyImage != nullptr) {
-            const bool hasIdentityMap = identityImages.contains(translucencyImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *translucencyImage, imageFragCoords);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *translucencyImage, enableParallaxMapping);
-
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Translucency)];
+        if (samplerState.hasImage(QSSGRenderableImage::Type::Translucency)) {
+            samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Translucency, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::TranslucencyChannel];
-            fragmentShader << "    float qt_translucent_depth_range = texture2D(" << names.imageSampler
-                           << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+            fragmentShader << "    float qt_translucent_depth_range = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Translucency)
+                           << ", " << samplerState.fragCoordsName(QSSGRenderableImage::Type::Translucency) << ")" << channelStr(channelProps, inKey) << ";\n";
             fragmentShader << "    float qt_translucent_thickness = qt_translucent_depth_range * qt_translucent_depth_range;\n";
             fragmentShader << "    float qt_translucent_thickness_exp = exp(qt_translucent_thickness * qt_material_properties2.z);\n";
         }
 
-        addLocalVariable(fragmentShader, "qt_aoFactor", "float");
-
-        if (enableSSAO)
-            fragmentShader.append("    qt_aoFactor = qt_screenSpaceAmbientOcclusionFactor();");
-        else
-            fragmentShader.append("    qt_aoFactor = 1.0;");
-
-        if (hasCustomFrag) {
-            fragmentShader << "    float qt_roughnessAmount = qt_customSpecularRoughness;\n";
-            fragmentShader << "    qt_aoFactor *= qt_customOcclusionAmount;\n";
-        }
-        else {
-            fragmentShader << "    float qt_roughnessAmount = qt_material_properties.y;\n";
-        }
-
-        maskVariableByVertexColorChannel( "qt_roughnessAmount", QSSGRenderDefaultMaterial::RoughnessMask );
-
-
         // Occlusion Map
-        if (occlusionImage) {
+        if (samplerState.hasImage(QSSGRenderableImage::Type::Occlusion)) {
             addLocalVariable(fragmentShader, "qt_ao", "float");
+            samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Occlusion, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
-            const bool hasIdentityMap = identityImages.contains(occlusionImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
-            fragmentShader << "    qt_ao = texture2D(" << names.imageSampler << ", "
-                           << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
-            fragmentShader << "    qt_aoFactor *= qt_ao * qt_material_properties3.x;\n";
-            // qt_material_properties3.x is the OcclusionAmount
+            fragmentShader << "    qt_ao = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Occlusion) << ", "
+                           << samplerState.fragCoordsName(QSSGRenderableImage::Type::Occlusion) << ")" << channelStr(channelProps, inKey) << ";\n";
+            fragmentShader << "    qt_aoFactor *= qt_ao * qt_material_properties3.x;\n"; // qt_material_properties3.x is the OcclusionAmount
             maskVariableByVertexColorChannel( "qt_aoFactor", QSSGRenderDefaultMaterial::OcclusionAmountMask );
         }
 
-        if (specularLightingEnabled && roughnessImage) {
-            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::RoughnessChannel];
-            const bool hasIdentityMap = identityImages.contains(roughnessImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *roughnessImage, imageFragCoords, roughnessImage->m_imageNode.m_indexUV);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, enableParallaxMapping, roughnessImage->m_imageNode.m_indexUV);
-
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Roughness)];
-            fragmentShader << "    qt_roughnessAmount *= texture2D(" << names.imageSampler << ", "
-                           << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
-        }
-
-        // Convert Glossy to Roughness
-        if (isSpecularGlossinessWorkflow)
-            fragmentShader << "    qt_roughnessAmount = clamp(1.0 - qt_roughnessAmount, 0.0, 1.0);\n";
-
-        if (enableClearcoat) {
+        if (passRequirmentState.hasClearcoat) {
             addLocalVariable(fragmentShader, "qt_clearcoatAmount", "float");
             addLocalVariable(fragmentShader, "qt_clearcoatRoughness", "float");
             addLocalVariable(fragmentShader, "qt_clearcoatF0", "vec3");
@@ -1199,33 +1387,23 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    qt_clearcoatF90 = vec3(1.0);\n";
             fragmentShader << "    qt_global_clearcoat = vec3(0.0);\n";
 
-            if (clearcoatImage) {
+            if (samplerState.hasImage(QSSGRenderableImage::Type::Clearcoat)) {
+                samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Clearcoat, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
                 const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::ClearcoatChannel];
-                const bool hasIdentityMap = identityImages.contains(clearcoatImage);
-                if (hasIdentityMap)
-                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *clearcoatImage, imageFragCoords, clearcoatImage->m_imageNode.m_indexUV);
-                else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatImage, enableParallaxMapping, clearcoatImage->m_imageNode.m_indexUV);
-                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Clearcoat)];
-                fragmentShader << "    qt_clearcoatAmount *= texture2D(" << names.imageSampler << ", "
-                               << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+                fragmentShader << "    qt_clearcoatAmount *= texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Clearcoat) << ", "
+                               << samplerState.fragCoordsName(QSSGRenderableImage::Type::Clearcoat) << ")" << channelStr(channelProps, inKey) << ";\n";
             }
 
-            if (clearcoatRoughnessImage) {
+            if (samplerState.hasImage(QSSGRenderableImage::Type::ClearcoatRoughness)) {
+                samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::ClearcoatRoughness, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
                 const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::ClearcoatRoughnessChannel];
-                const bool hasIdentityMap = identityImages.contains(clearcoatRoughnessImage);
-                if (hasIdentityMap)
-                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *clearcoatRoughnessImage, imageFragCoords, clearcoatRoughnessImage->m_imageNode.m_indexUV);
-                else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *clearcoatRoughnessImage, enableParallaxMapping, clearcoatRoughnessImage->m_imageNode.m_indexUV);
-                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::ClearcoatRoughness)];
-                fragmentShader << "    qt_clearcoatRoughness *= texture2D(" << names.imageSampler << ", "
-                               << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+                fragmentShader << "    qt_clearcoatRoughness *= texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::ClearcoatRoughness) << ", "
+                               << samplerState.fragCoordsName(QSSGRenderableImage::Type::ClearcoatRoughness) << ")" << channelStr(channelProps, inKey) << ";\n";
                 fragmentShader << "    qt_clearcoatRoughness = clamp(qt_clearcoatRoughness, 0.0, 1.0);\n";
             }
         }
 
-        if (enableTransmission) {
+        if (passRequirmentState.hasTransmission) {
             fragmentShader.addInclude("transmission.glsllib");
             addLocalVariable(fragmentShader, "qt_transmissionFactor", "float");
             addLocalVariable(fragmentShader, "qt_global_transmission", "vec3");
@@ -1244,16 +1422,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_transmissionFactor = qt_material_properties4.w;\n";
                 maskVariableByVertexColorChannel( "qt_transmissionFactor", QSSGRenderDefaultMaterial::TransmissionFactorMask );
 
-                if (transmissionImage) {
+                if (samplerState.hasImage(QSSGRenderableImage::Type::Transmission)) {
+                    samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Transmission, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
                     const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::TransmissionChannel];
-                    const bool hasIdentityMap = identityImages.contains(transmissionImage);
-                    if (hasIdentityMap)
-                        generateImageUVSampler(vertexShader, fragmentShader, inKey, *transmissionImage, imageFragCoords, transmissionImage->m_imageNode.m_indexUV);
-                    else
-                        generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *transmissionImage, enableParallaxMapping, transmissionImage->m_imageNode.m_indexUV);
-                    const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Transmission)];
-                    fragmentShader << "    qt_transmissionFactor *= texture2D(" << names.imageSampler << ", "
-                                   << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+                    fragmentShader << "    qt_transmissionFactor *= texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Transmission) << ", "
+                                   << samplerState.fragCoordsName(QSSGRenderableImage::Type::Transmission) << ")" << channelStr(channelProps, inKey) << ";\n";
                 }
 
                 fragmentShader << "    qt_thicknessFactor = qt_material_thickness;\n";
@@ -1261,27 +1434,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_attenuationColor = qt_material_attenuation.xyz;\n";
                 fragmentShader << "    qt_attenuationDistance = qt_material_attenuation.w;\n";
 
-                if (thicknessImage) {
+                if (samplerState.hasImage(QSSGRenderableImage::Type::Thickness)) {
+                    samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Thickness, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
                     const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::ThicknessChannel];
-                    const bool hasIdentityMap = identityImages.contains(thicknessImage);
-                    if (hasIdentityMap)
-                        generateImageUVSampler(vertexShader, fragmentShader, inKey, *thicknessImage, imageFragCoords, thicknessImage->m_imageNode.m_indexUV);
-                    else
-                        generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *thicknessImage, enableParallaxMapping, thicknessImage->m_imageNode.m_indexUV);
-                    const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Thickness)];
-                    fragmentShader << "    qt_thicknessFactor *= texture2D(" << names.imageSampler << ", "
-                                   << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+                    fragmentShader << "    qt_thicknessFactor *= texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Thickness) << ", "
+                                   << samplerState.fragCoordsName(QSSGRenderableImage::Type::Thickness) << ")" << channelStr(channelProps, inKey) << ";\n";
                 }
             }
         }
-        if (hasPunctualLights || specularLightingEnabled) {
+        if (passRequirmentState.hasPunctualLights || passRequirmentState.hasSpecularLight) {
             fragmentShader << "    vec3 qt_f0 = vec3(1.0);\n";
             fragmentShader << "    vec3 qt_f90 = vec3(1.0);\n";
         }
 
-        if (specularLightingEnabled) {
+        if (passRequirmentState.hasSpecularLight) {
             fragmentShader.addInclude("principledMaterialFresnel.glsllib");
-            if (!isSpecularGlossinessWorkflow) {
+            if (!passRequirmentState.isSpecularGlossinessWorkflow) {
                 fragmentShader << "    qt_f0 = qt_F0_ior(qt_iOR, qt_metalnessAmount, qt_diffuseColor.rgb);\n";
             } else {
                 fragmentShader << "    const float qt_reflectance = max(max(qt_specularTint.r, qt_specularTint.g), qt_specularTint.b);\n";
@@ -1291,7 +1459,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_diffuseColor.rgb *= (1 - qt_reflectance);\n";
             }
 
-            if (specularAAEnabled) {
+            if (passRequirmentState.isSpecularAAEnabled) {
                 fragmentShader.append("    vec3 vNormalWsDdx = dFdx(qt_world_normal.xyz);\n");
                 fragmentShader.append("    vec3 vNormalWsDdy = dFdy(qt_world_normal.xyz);\n");
                 fragmentShader.append("    float flGeometricRoughnessFactor = pow(clamp(max(dot(vNormalWsDdx, vNormalWsDdx), dot(vNormalWsDdy, vNormalWsDdy)), 0.0, 1.0), 0.333);\n");
@@ -1303,9 +1471,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             else
                 fragmentShader << "    float qt_fresnelPower = qt_material_properties2.x;\n";
 
-            if (isPbrMaterial) {
+            if (passRequirmentState.isPbrMaterial) {
                 fragmentShader << "    vec3 qt_principledMaterialFresnelValue = qt_principledMaterialFresnel(qt_world_normal, qt_view_vector, qt_f0, qt_roughnessAmount, qt_fresnelPower);\n";
-                if (enableFresnelScaleBias) {
+                if (passRequirmentState.hasFresnelScaleBias) {
                     if (hasCustomFrag) {
                         fragmentShader << "    float qt_fresnelScale = qt_customFresnelScale;\n";
                         fragmentShader << "    float qt_fresnelBias = qt_customFresnelBias;\n";
@@ -1317,7 +1485,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    << "qt_fresnelScale * qt_principledMaterialFresnelValue, 0.0, 1.0);\n";
                 }
                 fragmentShader << "    qt_specularAmount *= qt_principledMaterialFresnelValue;\n";
-                if (isMetallicRoughnessWorkflow) {
+                if (passRequirmentState.isMetallicRoughnessWorkflow) {
                     // Make sure that we scale the specularTint with repsect to metalness (no tint if qt_metalnessAmount == 1)
                     // We actually need to do this here because we won't know the final metalness value until this point.
                     fragmentShader << "    qt_specularTint = mix(vec3(1.0), qt_specularTint, 1.0 - qt_metalnessAmount);\n";
@@ -1327,7 +1495,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             }
         }
 
-        if (hasLighting && hasPunctualLights) {
+        if (passRequirmentState.hasLighting && passRequirmentState.hasPunctualLights) {
             fragmentShader.addUniform("qt_lightAndShadowCounts", "vec4");
             fragmentShader.addFunction("processPunctualLighting");
             fragmentShader << "    qt_processPunctualLighting(global_diffuse_light.rgb,\n"
@@ -1374,37 +1542,29 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // multiplied by the alpha from the material color and/or the vertex colors.
         fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * qt_aoFactor, qt_objectOpacity * qt_diffuseColor.a);\n";
 
-        if (hasReflectionProbe) {
+        if (passRequirmentState.hasReflectionProbe) {
             vertexShader.generateWorldNormal(inKey);
             fragmentShader.addInclude("sampleReflectionProbe.glsllib");
 
-            fragmentShader << "    vec3 qt_reflectionDiffuse = vec3(0.0);\n";
-            if (isPbrMaterial) {
-                fragmentShader << "    qt_reflectionDiffuse = qt_diffuseColor.rgb * (1.0 - qt_specularAmount) * qt_sampleDiffuseReflection(qt_reflectionMap, qt_world_normal).rgb;\n";
-            } else {
-                fragmentShader << "    qt_reflectionDiffuse = qt_diffuseColor.rgb * qt_sampleDiffuseReflection(qt_reflectionMap, qt_world_normal).rgb;\n";
+            // Diffuse
+            if (passRequirmentState.isPbrMaterial)
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * (1.0 - qt_specularAmount) * qt_sampleDiffuseReflection(qt_reflectionMap, qt_world_normal).rgb;\n";
+            else
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_sampleDiffuseReflection(qt_reflectionMap, qt_world_normal).rgb;\n";
+
+            // Specular
+            if (passRequirmentState.hasSpecularLight) {
+                if (passRequirmentState.isPbrMaterial)
+                    fragmentShader << "    global_specular_light += qt_specularTint * qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                else
+                    fragmentShader << "    global_specular_light += qt_specularAmount * qt_specularTint * qt_sampleGlossyReflection(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
             }
 
-            if (specularLightingEnabled) {
-                fragmentShader << "    vec3 qt_reflectionSpecular = vec3(0.0);\n";
-                if (isPbrMaterial) {
-                    fragmentShader << "    qt_reflectionSpecular = "
-                                   << "qt_specularTint * qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
-                } else {
-                    fragmentShader << "    qt_reflectionSpecular = qt_specularAmount * "
-                                   << "qt_specularTint * qt_sampleGlossyReflection(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
-                }
-            }
-            if (enableClearcoat) {
-                fragmentShader << "   vec3 qt_iblClearcoat = qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
-            }
+            // Clearcoat (pbr Only)
+            if (passRequirmentState.hasClearcoat)
+                fragmentShader << "    qt_global_clearcoat += qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
 
-            fragmentShader << "    global_diffuse_light.rgb += qt_reflectionDiffuse;\n";
-            if (specularLightingEnabled)
-                fragmentShader << "    global_specular_light += qt_reflectionSpecular;\n";
-            if (enableClearcoat)
-                fragmentShader << "    qt_global_clearcoat += qt_iblClearcoat;\n";
-        } else if (hasIblProbe) {
+        } else if (passRequirmentState.hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
             fragmentShader.addInclude("sampleProbe.glsllib");
             if (hasCustomIblProbe) {
@@ -1412,7 +1572,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    vec3 qt_iblDiffuse = vec3(0.0);\n";
                 fragmentShader << "    vec3 qt_iblSpecular = vec3(0.0);\n";
                 fragmentShader << "    qt_iblProbeProcessor(qt_iblDiffuse, qt_iblSpecular, qt_customBaseColor, qt_aoFactor, qt_specularFactor, qt_roughnessAmount, qt_world_normal, qt_view_vector";
-                if (hasIblOrientation)
+                if (passRequirmentState.hasIblOrientation)
                     fragmentShader << ", qt_lightProbeOrientation";
                 else
                     fragmentShader << ", mat3(1.0)";
@@ -1421,29 +1581,29 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 else
                     fragmentShader << ");\n";
             } else {
-                if (isPbrMaterial) {
+                // Diffuse
+                if (passRequirmentState.isPbrMaterial)
                     fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_world_normal).rgb;\n";
-                } else {
+                else
                     fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_sampleDiffuse(qt_world_normal).rgb;\n";
+
+                // Specular
+                if (passRequirmentState.hasSpecularLight) {
+                    if (passRequirmentState.isPbrMaterial)
+                        fragmentShader << "    vec3 qt_iblSpecular = qt_specularTint * qt_sampleGlossyPrincipled(qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                    else
+                        fragmentShader << "    vec3 qt_iblSpecular = qt_specularAmount * qt_specularTint * qt_sampleGlossy(qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
                 }
-                if (specularLightingEnabled) {
-                    if (isPbrMaterial) {
-                        fragmentShader << "    vec3 qt_iblSpecular = "
-                                       << "qt_specularTint * qt_sampleGlossyPrincipled(qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
-                    } else {
-                        fragmentShader << "    vec3 qt_iblSpecular = qt_specularAmount * "
-                                       << "qt_specularTint * qt_sampleGlossy(qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
-                    }
-                }
-                if (enableClearcoat) {
+
+                // Clearcoat (pbr Only)
+                if (passRequirmentState.hasClearcoat)
                     fragmentShader << "   vec3 qt_iblClearcoat = qt_sampleGlossyPrincipled(qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
-                }
             }
 
             fragmentShader << "    global_diffuse_light.rgb += qt_iblDiffuse * qt_aoFactor;\n";
-            if (specularLightingEnabled)
+            if (passRequirmentState.hasSpecularLight)
                 fragmentShader << "    global_specular_light += qt_iblSpecular * qt_aoFactor;\n";
-            if (enableClearcoat)
+            if (passRequirmentState.hasClearcoat)
                 fragmentShader << "    qt_global_clearcoat += qt_iblClearcoat * qt_aoFactor;\n";
         } else if (hasCustomIblProbe) {
             // Prevent breaking the fragment code while seeking uniforms
@@ -1452,81 +1612,62 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         // This can run even without a IBL probe
-        if (enableTransmission) {
+        if (passRequirmentState.hasTransmission) {
             fragmentShader << "    qt_global_transmission += qt_transmissionFactor * qt_getIBLVolumeRefraction(qt_world_normal, qt_view_vector, qt_roughnessAmount, "
                               "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, qt_iOR, qt_thicknessFactor, qt_attenuationColor, qt_attenuationDistance);\n";
         }
 
-        if (hasImage) {
-            bool texColorDeclared = false;
-            for (QSSGRenderableImage *image = firstImage; image; image = image->m_nextImage) {
-                // map types other than these 2 are handled elsewhere
-                if (image->m_mapType != QSSGRenderableImage::Type::Specular
-                        && image->m_mapType != QSSGRenderableImage::Type::Emissive)
-                {
-                    continue;
-                }
 
-                if (!texColorDeclared) {
-                    fragmentShader.append("    vec4 qt_texture_color;");
-                    texColorDeclared = true;
-                }
+        // Handle specular and emissive maps which just add additional color
+        if (samplerState.hasImage(QSSGRenderableImage::Type::Specular) || samplerState.hasImage(QSSGRenderableImage::Type::Emissive)) {
+            addLocalVariable(fragmentShader, "qt_texture_color", "vec4");
 
-                const bool hasIdentityMap = identityImages.contains(image);
-                if (hasIdentityMap)
-                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *image, imageFragCoords, image->m_imageNode.m_indexUV);
-                else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image, enableParallaxMapping, image->m_imageNode.m_indexUV);
+            if (samplerState.hasImage(QSSGRenderableImage::Type::Specular)) {
+                samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Specular, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                fragmentShader << "    qt_texture_color = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Specular) << ", "
+                               << samplerState.fragCoordsName(QSSGRenderableImage::Type::Specular) << ");\n";
+                fragmentShader.addInclude("tonemapping.glsllib");
+                fragmentShader << "    global_specular_light += qt_sRGBToLinear(qt_texture_color.rgb) * qt_specularTint;\n";
+                fragmentShader << "    global_diffuse_light.a *= qt_texture_color.a;\n";
+            }
 
-                const auto &names = imageStringTable[int(image->m_mapType)];
-                fragmentShader << "    qt_texture_color = texture2D(" << names.imageSampler
-                               << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
-
-                switch (image->m_mapType) {
-                case QSSGRenderableImage::Type::Specular:
-                    fragmentShader.addInclude("tonemapping.glsllib");
-                    fragmentShader.append("    global_specular_light += qt_sRGBToLinear(qt_texture_color.rgb) * qt_specularTint;");
-                    fragmentShader.append("    global_diffuse_light.a *= qt_texture_color.a;");
-                    break;
-                case QSSGRenderableImage::Type::Emissive:
-                    fragmentShader.addInclude("tonemapping.glsllib");
-                    if (keyProps.m_emissiveSingleChannelEnabled.getValue(inKey)) {
-                        const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::EmissiveChannel];
-                        fragmentShader << "    qt_global_emission *= qt_sRGBToLinear(vec3(qt_texture_color" <<
-                                                        channelStr(channelProps, inKey) << "));\n";
-                    } else {
-                        fragmentShader.append("    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb);");
-                    }
-                    break;
-                default:
-                    Q_ASSERT(false);
-                    break;
+            if (samplerState.hasImage(QSSGRenderableImage::Type::Emissive)) {
+                samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Emissive, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                fragmentShader << "    qt_texture_color = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Emissive) << ", "
+                               << samplerState.fragCoordsName(QSSGRenderableImage::Type::Emissive) << ");\n";
+                fragmentShader.addInclude("tonemapping.glsllib");
+                if (keyProps.m_emissiveSingleChannelEnabled.getValue(inKey)) {
+                    const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::EmissiveChannel];
+                    fragmentShader << "    qt_global_emission *= qt_sRGBToLinear(vec3(qt_texture_color" <<
+                                            channelStr(channelProps, inKey) << "));\n";
+                } else {
+                    fragmentShader << "    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb);\n";
                 }
             }
         }
 
-        if (enableTransmission)
+        if (passRequirmentState.hasTransmission)
             fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, qt_global_transmission, qt_transmissionFactor);\n";
 
-        if (isMetallicRoughnessWorkflow) {
+        if (passRequirmentState.isMetallicRoughnessWorkflow) {
             fragmentShader << "    global_diffuse_light.rgb *= 1.0 - qt_metalnessAmount;\n";
         }
 
-        if (enableFog) {
+        if (passRequirmentState.hasFog) {
             fragmentShader.addInclude("fog.glsllib");
             fragmentShader << "    calculateFog(qt_global_emission, global_specular_light, global_diffuse_light.rgb);\n";
         }
 
         fragmentShader << "    vec4 qt_color_sum = vec4(global_diffuse_light.rgb + global_specular_light + qt_global_emission, global_diffuse_light.a);\n";
 
-        if (enableClearcoat) {
+        if (passRequirmentState.hasClearcoat) {
             fragmentShader.addInclude("bsdf.glsllib");
             if (hasCustomFrag)
                 fragmentShader << "    float qt_clearcoatFresnelPower = qt_customClearcoatFresnelPower;\n";
             else
                 fragmentShader << "    float qt_clearcoatFresnelPower = qt_material_clearcoat_fresnel_power;\n";
             fragmentShader << "    vec3 qt_clearcoatFresnel = qt_schlick3(qt_clearcoatF0, qt_clearcoatF90, clamp(dot(qt_clearcoatNormal, qt_view_vector), 0.0, 1.0), qt_clearcoatFresnelPower);\n";
-            if (enableClearcoatFresnelScaleBias) {
+            if (passRequirmentState.hasClearcoatFresnelScaleBias) {
                 if (hasCustomFrag) {
                     fragmentShader << "    float qt_clearcoatFresnelScale = qt_customClearcoatFresnelScale;\n";
                     fragmentShader << "    float qt_clearcoatFresnelBias = qt_customClearcoatFresnelBias;\n";
@@ -1548,10 +1689,19 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             else
                 fragmentShader << ");\n";
         }
+    } // end of lighting block
 
-        Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isPerspectiveShadowPass && !isNormalPass);
+    // Outputs
+    switch (passRequirmentState.passType) {
 
-        if (oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
+    case PassRequirmentsState::None:
+        break;
+    case PassRequirmentsState::Color:
+        // Unlit color pass
+        if (!passRequirmentState.hasLighting)
+            fragmentShader.append("    vec4 qt_color_sum = vec4(qt_diffuseColor.rgb, qt_diffuseColor.a * qt_objectOpacity);");
+
+        if (passRequirmentState.oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
             fragmentShader.addInclude("orderindependenttransparency.glsllib");
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader.addUniform("qt_cameraPosition", "vec3");
@@ -1564,93 +1714,87 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_color_sum));");
         }
-        // Debug Overrides for viewing various parts of the shading process
-        if (Q_UNLIKELY(debugMode != QSSGRenderLayer::MaterialDebugMode::None)) {
-            fragmentShader.append("    vec3 debugOutput = vec3(0.0);\n");
-            switch (debugMode) {
-            case QSSGRenderLayer::MaterialDebugMode::BaseColor:
-                fragmentShader.append("    debugOutput += qt_tonemap(qt_diffuseColor.rgb);\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Roughness:
-                fragmentShader.append("    debugOutput += vec3(qt_roughnessAmount);\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Metalness:
-                fragmentShader.append("    debugOutput += vec3(qt_metalnessAmount);\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Diffuse:
-                fragmentShader.append("    debugOutput += qt_tonemap(global_diffuse_light.rgb);\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Specular:
-                fragmentShader.append("    debugOutput += qt_tonemap(global_specular_light);\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::ShadowOcclusion:
-                // Technically speaking this was just outputing the occlusion value of the last light processed, which is likely not super useful
-                // So for now this just outputs 1.0 (no occlusion)
-                fragmentShader.addFunction("debugShadowOcclusion");
-                fragmentShader.append("    debugOutput += vec3(qt_debugShadowOcclusion());\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Emission:
-                fragmentShader.append("    debugOutput += qt_tonemap(qt_global_emission);\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::AmbientOcclusion:
-                fragmentShader.append("    debugOutput += vec3(qt_aoFactor);\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Normal:
-                fragmentShader.append("    debugOutput += qt_world_normal * 0.5 + 0.5;\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Tangent:
-                fragmentShader.append("    debugOutput += qt_tangent * 0.5 + 0.5;\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::Binormal:
-                fragmentShader.append("    debugOutput += qt_binormal * 0.5 + 0.5;\n");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::F0:
-                if (isPbrMaterial)
-                    fragmentShader.append("    debugOutput += qt_f0;");
-                break;
-            case QSSGRenderLayer::MaterialDebugMode::None:
-                Q_UNREACHABLE();
-                break;
-            }
-            fragmentShader.append("    fragOutput = vec4(debugOutput, 1.0);\n");
+        break;
+    case PassRequirmentsState::Depth:
+        fragmentShader << "    vec4 fragOutput = vec4(0.0);\n";
+        break;
+    case PassRequirmentsState::OrthoShadow:
+        Q_ASSERT(viewCount == 1);
+        fragmentShader << "    // directional shadow pass\n"
+                       << "    float qt_shadowDepth = (qt_varDepth + qt_shadowDepthAdjust.x) * qt_shadowDepthAdjust.y;\n"
+                       << "    fragOutput = vec4(qt_shadowDepth);\n";
+        break;
+    case PassRequirmentsState::PerspectiveShadow:
+        Q_ASSERT(viewCount == 1);
+        fragmentShader.addUniform("qt_cameraPosition", "vec3");
+        fragmentShader.addUniform("qt_cameraProperties", "vec2");
+        fragmentShader << "    // omnidirectional shadow pass\n"
+                       << "    vec3 qt_shadowCamPos = vec3(qt_cameraPosition.x, qt_cameraPosition.y, qt_cameraPosition.z);\n"
+                       << "    float qt_shadowDist = length(qt_varShadowWorldPos - qt_shadowCamPos);\n"
+                       << "    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);\n"
+                       << "    fragOutput = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);\n";
+        break;
+    case PassRequirmentsState::Normal:
+        // world space normal in rgb, roughness in alpha
+        fragmentShader.append("    fragOutput = vec4(qt_world_normal, qt_roughnessAmount);\n");
+        break;
+    case PassRequirmentsState::Debug:
+        fragmentShader.append("    vec3 debugOutput = vec3(0.0);\n");
+        switch (passRequirmentState.debugMode) {
+        case QSSGRenderLayer::MaterialDebugMode::BaseColor:
+            fragmentShader.addInclude("tonemapping.glsllib");
+            fragmentShader.append("    debugOutput += qt_tonemap(qt_diffuseColor.rgb);\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Roughness:
+            fragmentShader.append("    debugOutput += vec3(qt_roughnessAmount);\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Metalness:
+            fragmentShader.append("    debugOutput += vec3(qt_metalnessAmount);\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Diffuse:
+            fragmentShader.addInclude("tonemapping.glsllib");
+            fragmentShader.append("    debugOutput += qt_tonemap(global_diffuse_light.rgb);\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Specular:
+            fragmentShader.addInclude("tonemapping.glsllib");
+            fragmentShader.append("    debugOutput += qt_tonemap(global_specular_light);\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::ShadowOcclusion:
+            // Technically speaking this was just outputing the occlusion value of the last light processed, which is likely not super useful
+            // So for now this just outputs 1.0 (no occlusion)
+            fragmentShader.addFunction("debugShadowOcclusion");
+            vertexShader.generateWorldPosition(inKey);
+            fragmentShader.append("    debugOutput += vec3(qt_debugShadowOcclusion());\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Emission:
+            fragmentShader.addInclude("tonemapping.glsllib");
+            fragmentShader.append("    debugOutput += qt_tonemap(qt_global_emission);\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::AmbientOcclusion:
+            fragmentShader.append("    debugOutput += vec3(qt_aoFactor);\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Normal:
+            fragmentShader.append("    debugOutput += qt_world_normal * 0.5 + 0.5;\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Tangent:
+            fragmentShader.append("    debugOutput += qt_tangent * 0.5 + 0.5;\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::Binormal:
+            fragmentShader.append("    debugOutput += qt_binormal * 0.5 + 0.5;\n");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::F0:
+            if (passRequirmentState.isPbrMaterial)
+                fragmentShader.append("    debugOutput += qt_f0;");
+            break;
+        case QSSGRenderLayer::MaterialDebugMode::None:
+            Q_UNREACHABLE();
+            break;
         }
-    } else {
-        if ((isOrthoShadowPass || isPerspectiveShadowPass || isDepthPass) && isOpaqueDepthPrePass) {
-            fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < (1.0 - 1e-6))\n";
-            fragmentShader << "        discard;\n";
-        }
-
-        if (isOrthoShadowPass) {
-            Q_ASSERT(viewCount == 1);
-            fragmentShader << "    // directional shadow pass\n"
-                           << "    float qt_shadowDepth = (qt_varDepth + qt_shadowDepthAdjust.x) * qt_shadowDepthAdjust.y;\n"
-                           << "    fragOutput = vec4(qt_shadowDepth);\n";
-        } else if (isPerspectiveShadowPass) {
-            Q_ASSERT(viewCount == 1);
-            fragmentShader.addUniform("qt_cameraPosition", "vec3");
-            fragmentShader.addUniform("qt_cameraProperties", "vec2");
-            fragmentShader << "    // omnidirectional shadow pass\n"
-                           << "    vec3 qt_shadowCamPos = vec3(qt_cameraPosition.x, qt_cameraPosition.y, qt_cameraPosition.z);\n"
-                           << "    float qt_shadowDist = length(qt_varShadowWorldPos - qt_shadowCamPos);\n"
-                           << "    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);\n"
-                           << "    fragOutput = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);\n";
-        } else if (isNormalPass) {
-            // world space normal in rgb, roughness in alpha
-            fragmentShader.append("    fragOutput = vec4(qt_world_normal, qt_roughnessAmount);\n");
-        } else {
-            if (oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
-                fragmentShader.addInclude("orderindependenttransparency.glsllib");
-                fragmentShader.addUniform("qt_cameraPosition", "vec3");
-                fragmentShader.addUniform("qt_cameraProperties", "vec2");
-                fragmentShader.append("    float z = abs(gl_FragCoord.z);");
-                fragmentShader.append("    vec4 color = vec4(qt_diffuseColor.rgb, qt_diffuseColor.a * qt_objectOpacity);");
-                fragmentShader.append("    fragOutput = qt_transparencyWeight(z, color.a, qt_cameraProperties.y) * color;");
-                fragmentShader.append("    revealageOutput = vec4(color.a);");
-            } else {
-                fragmentShader.addInclude("tonemapping.glsllib");
-                fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_diffuseColor.rgb), qt_diffuseColor.a * qt_objectOpacity);");
-            }
-        }
+        fragmentShader.append("    fragOutput = vec4(debugOutput, 1.0);\n");
+        break;
+    case PassRequirmentsState::User:
+        // TODO handle the user pass case by pulling the pass specific code from somewhere
+        break;
     }
 }
 
@@ -1660,7 +1804,6 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                                 const QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                                                 const QSSGShaderFeatures &inFeatureSet,
                                                                                 const QSSGRenderGraphObject &inMaterial,
-                                                                                QSSGRenderableImage *inFirstImage,
                                                                                 QSSGShaderLibraryManager &shaderLibraryManager,
                                                                                 QSSGShaderCache &theCache)
 {
@@ -1690,7 +1833,7 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
 
     // the call order is: beginVertex, beginFragment, endVertex, endFragment
     vertexPipeline.beginVertexGeneration(key, inFeatureSet, shaderLibraryManager);
-    generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, inFirstImage, shaderLibraryManager);
+    generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, shaderLibraryManager);
     vertexPipeline.endVertexGeneration();
     vertexPipeline.endFragmentGeneration();
 

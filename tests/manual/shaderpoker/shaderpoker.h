@@ -34,7 +34,7 @@ public:
     enum class MaterialType {
         Default,
         Principled,
-        SpecularGlossy
+        SpecularGlossy,
     };
     Q_ENUM(MaterialType);
 

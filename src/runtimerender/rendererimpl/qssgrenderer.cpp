@@ -301,7 +301,6 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSG
                                                                   shaderKeyProperties,
                                                                   featureSet,
                                                                   renderable.material,
-                                                                  renderable.firstImage,
                                                                   shaderLibraryManager,
                                                                   shaderCache);
 }

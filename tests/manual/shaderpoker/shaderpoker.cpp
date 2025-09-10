@@ -196,13 +196,14 @@ void ShaderPoker::setMaterialType(const MaterialType &newMaterialType)
     m_materialType = newMaterialType;
 
     delete m_material;
+    // This doesn't really matter in practice
     if (m_materialType == MaterialType::Default)
         m_material = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::DefaultMaterial);
-    else if (m_materialType == MaterialType::Principled) {
+    else if (m_materialType == MaterialType::Principled)
         m_material = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::PrincipledMaterial);
-    } else if (m_materialType == MaterialType::SpecularGlossy) {
+    else if (m_materialType == MaterialType::SpecularGlossy)
         m_material = new QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type::SpecularGlossyMaterial);
-    }
+
 
     emit materialTypeChanged();
 

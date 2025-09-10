@@ -1086,3 +1086,88 @@ void DefaultMaterialShaderProperties::setHasPunctualLights(bool newHasPunctualLi
     updated();
 }
 
+bool DefaultMaterialShaderProperties::hasShadows() const
+{
+    return m_properties.m_hasShadows.getValue(m_key);
+}
+
+void DefaultMaterialShaderProperties::setHasShadows(bool newHasShadows)
+{
+    if (hasShadows() == newHasShadows)
+        return;
+
+    m_properties.m_hasShadows.setValue(m_key, newHasShadows);
+    emit hasShadowsChanged();
+    updated();
+}
+
+bool DefaultMaterialShaderProperties::specularEnabled() const
+{
+    return m_properties.m_specularEnabled.getValue(m_key);
+}
+
+void DefaultMaterialShaderProperties::setSpecularEnabled(bool newSpecularEnabled)
+{
+    if (specularEnabled() == newSpecularEnabled)
+        return;
+
+    m_properties.m_specularEnabled.setValue(m_key, newSpecularEnabled);
+    emit specularEnabledChanged();
+    updated();
+}
+
+quint8 DefaultMaterialShaderProperties::specularModel() const
+{
+    return m_properties.m_specularModel.getValue(m_key);
+}
+
+void DefaultMaterialShaderProperties::setSpecularModel(quint8 newSpecularModel)
+{
+    if (specularModel() == newSpecularModel)
+        return;
+    m_properties.m_specularModel.setValue(m_key, newSpecularModel);
+    emit specularModelChanged();
+    updated();
+}
+
+quint8 DefaultMaterialShaderProperties::diffuseModel() const
+{
+    return m_properties.m_diffuseModel.getValue(m_key);
+}
+
+void DefaultMaterialShaderProperties::setDiffuseModel(quint8 newDiffuseModel)
+{
+    if (diffuseModel() == newDiffuseModel)
+        return;
+    m_properties.m_diffuseModel.setValue(m_key, newDiffuseModel);
+    emit diffuseModelChanged();
+    updated();
+}
+
+bool DefaultMaterialShaderProperties::specularGlossyEnabled() const
+{
+    return m_properties.m_specularGlossyEnabled.getValue(m_key);
+}
+
+void DefaultMaterialShaderProperties::setSpecularGlossyEnabled(bool newSpecularGlossyEnabled)
+{
+    if (specularGlossyEnabled() == newSpecularGlossyEnabled)
+        return;
+    m_properties.m_specularGlossyEnabled.setValue(m_key, newSpecularGlossyEnabled);
+    emit specularGlossyEnabledChanged();
+    updated();
+}
+
+bool DefaultMaterialShaderProperties::metallicRoughnessEnabled() const
+{
+    return m_properties.m_metallicRoughnessEnabled.getValue(m_key);
+}
+
+void DefaultMaterialShaderProperties::setMetallicRoughnessEnabled(bool newMetallicRoughnessEnabled)
+{
+    if (metallicRoughnessEnabled() == newMetallicRoughnessEnabled)
+        return;
+    m_properties.m_metallicRoughnessEnabled.setValue(m_key, newMetallicRoughnessEnabled);
+    emit metallicRoughnessEnabledChanged();
+    updated();
+}
