@@ -65,8 +65,11 @@ void QSSGFrameData::scheduleRenderResults(RenderResults results) const
         prepResult.flags.setRequiresDepthTexture(true);
     if (results.testFlag(QSSGFrameData::RenderResult::ScreenTexture))
         prepResult.flags.setRequiresScreenTexture(true);
-    if (results.testFlag(RenderResult::AoTexture))
+    if (results.testFlag(RenderResult::AoTexture)) {
+        // NOTE: AO depends on the depth texture
         prepResult.flags.setRequiresSsaoPass(true);
+        prepResult.flags.setRequiresDepthTexture(true);
+    }
     if (results.testFlag(RenderResult::NormalTexture))
         prepResult.flags.setRequiresNormalTexture(true);
 }
