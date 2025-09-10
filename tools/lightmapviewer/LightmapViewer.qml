@@ -5,45 +5,49 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Dialogs
+import QtQuick3D
+import QtQuick3D.Helpers
 
+import QtQuick3D.lightmapviewer
 import LightmapFile 1.0
 
 ApplicationWindow {
-    width: 640
-    height: 480
+    width: 1024
+    height: 768
     visible: true
     title: qsTr("Lightmap Viewer")
 
     id: window
 
-    property string selectedKey: listView.model[0]
+    property var selectedEntry: listView.model.length ? listView.model[0] : null
     property real imageZoom: 1
     property real imageCenterX: 0
     property real imageCenterY: 0
 
-    function clampImagePosition() {
-        // If the image is smaller than the scroll view, center it
-        if (image.width <= scrollView.width) {
-            imageCenterX = 0
-        } else {
-            const maxOffsetX = (image.width - scrollView.width) / 2
-            imageCenterX = Math.max(-maxOffsetX, Math.min(imageCenterX,
-                                                          maxOffsetX))
-        }
+    function isImage(entry) {
+        return entry && entry.kind === "image"
+    }
+    function isMesh(entry) {
+        return entry && entry.kind === "mesh"
+    }
 
-        if (image.height <= scrollView.height) {
-            imageCenterY = 0
-        } else {
-            const maxOffsetY = (image.height - scrollView.height) / 2
-            imageCenterY = Math.max(-maxOffsetY, Math.min(imageCenterY,
-                                                          maxOffsetY))
-        }
+    Dialog {
+        id: sceneMetadataDialog
+        modal: true
+        standardButtons: Dialog.NoButton
+        x: Math.round((window.width - width) / 2)
+        y: Math.round((window.height - height) / 2)
+        visible: false
+        width: 220
+        height: 360
+
+        contentItem: SceneMetadataView {}
     }
 
     header: ToolBar {
         RowLayout {
             Button {
-                text: qsTr("Open Lightmap")
+                text: qsTr("Open Lightmap...")
                 onClicked: fileDialog.open()
             }
 
@@ -52,6 +56,11 @@ ApplicationWindow {
                 color: "darkgray"
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignVCenter
+            }
+
+            Button {
+                text: qsTr("Scene Metadata...")
+                onClicked: sceneMetadataDialog.open()
             }
 
             Label {
@@ -109,133 +118,192 @@ ApplicationWindow {
                             if (event.key === Qt.Key_Up) {
                                 listView.currentIndex = Math.max(
                                     0, listView.currentIndex - 1)
-                                selectedKey = listView.model[listView.currentIndex]
+                                selectedEntry = listView.model[listView.currentIndex]
                             } else if (event.key === Qt.Key_Down) {
                                 listView.currentIndex = Math.min(
                                     listView.model.length - 1,
                                     listView.currentIndex + 1)
-                                selectedKey = listView.model[listView.currentIndex]
+                                selectedEntry = listView.model[listView.currentIndex]
                             }
-                            clampImagePosition()
                         }
-        ListView {
-            id: listView
-            SplitView.preferredWidth: 100
-            SplitView.minimumWidth: 50
-            model: LightmapFile.dataList
-            delegate: Text {
-                text: modelData
-                MouseArea {
+
+        SplitView {
+            id: leftSplit
+            SplitView.preferredWidth: 220
+            SplitView.minimumWidth: 120
+            orientation: Qt.Vertical
+
+            Item {
+                id: metaArea
+                SplitView.preferredHeight: 120
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                ColumnLayout {
                     anchors.fill: parent
-                    onClicked: {
-                        listView.currentIndex = index
-                        selectedKey = modelData // Select this item
+                    spacing: 4
+
+                    Pane {
+                        id: metaPane
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+
+                        ScrollView {
+                            anchors.fill: parent
+
+                            ColumnLayout {
+                                id: metadataColumn
+                                Layout.fillWidth: true
+                                spacing: 4
+
+                                Repeater {
+                                    model: LightmapFile.metadataFor(selectedEntry)
+                                    delegate: RowLayout {
+                                        width: metadataColumn.width
+                                        spacing: 8
+
+                                        Label {
+                                            text: (modelData.key ?? "—") + ":"
+                                            font.bold: true
+                                        }
+                                        Label {
+                                            text: modelData.value
+                                                  !== undefined ? String(
+                                                                      modelData.value) : "—"
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-            highlight: Rectangle {
-                color: "lightsteelblue"
-                radius: 1
+
+            ListView {
+                id: listView
+                clip: true
+                spacing: 2
+                highlightMoveVelocity: -1
+                highlightMoveDuration: 1
+                model: LightmapFile.dataList
+                property var sectionExpanded: ({})
+
+                section.property: "owner"
+                section.criteria: ViewSection.FullString
+                section.delegate: Rectangle {
+                    width: listView.width
+                    height: 26
+                    color: Qt.rgba(0, 0, 0, 0.05)
+                    radius: 4
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: 8
+                        anchors.rightMargin: 8
+                        spacing: 6
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            text: (listView.sectionExpanded[section] === false) ? "▸" : "▾"
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            text: section
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            listView.sectionExpanded[section]
+                                    = !(listView.sectionExpanded[section] !== false)
+                            listView.sectionExpanded = Object.assign(
+                                        {}, listView.sectionExpanded)
+                        }
+                    }
+                }
+
+                delegate: Item {
+                    width: listView.width
+
+                    property bool isExpanded: listView.sectionExpanded[modelData.owner] !== false
+
+                    height: isExpanded ? Math.max(
+                                             24, rowText.implicitHeight + 6) : 0
+                    opacity: isExpanded ? 1 : 0
+
+                    Behavior on height {
+                        NumberAnimation {
+                            duration: 120
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 120
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            id: rowText
+                            text: modelData.display
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        enabled: isExpanded
+                        onClicked: {
+                            listView.currentIndex = index
+                            selectedEntry = modelData
+                        }
+                    }
+                }
+
+                highlight: Rectangle {
+                    color: Qt.rgba(76 / 255, 134 / 255, 191 / 255, 0.25)
+                    radius: 6
+                    anchors.margins: 2
+                }
+
+                ScrollBar.vertical: ScrollBar {}
             }
         }
 
-        Rectangle {
-            id: scrollView
-            clip: true
-            color: "black"
+        Item {
+            id: rightSplit
+            SplitView.fillWidth: true
+            SplitView.fillHeight: true
 
-            property real lastMouseX: 0
-            property real lastMouseY: 0
-
-            onWidthChanged: {
-                clampImagePosition()
-            }
-            onHeightChanged: {
-                clampImagePosition()
-            }
-
-            MouseArea {
-                id: mouseArea
-                property bool dragging: false
+            // These are toggled based on what is currently selected
+            Loader {
+                id: imageLoader
                 anchors.fill: parent
-                onPressed: mouse => {
-                               scrollView.lastMouseX = mouse.x
-                               scrollView.lastMouseY = mouse.y
-                               dragging = true
-                           }
-                onReleased: mouse => {
-                                dragging = false
-                            }
-
-                onPositionChanged: mouse => {
-                                       var dx = mouse.x - scrollView.lastMouseX
-                                       var dy = mouse.y - scrollView.lastMouseY
-
-                                       scrollView.lastMouseX = mouse.x
-                                       scrollView.lastMouseY = mouse.y
-
-                                       imageCenterX += dx
-                                       imageCenterY += dy
-
-                                       clampImagePosition()
-                                   }
-                cursorShape: mouseArea.dragging ? Qt.ClosedHandCursor : Qt.ArrowCursor
-
-                onWheel: event => {
-                             const oldZoom = imageZoom
-                             const zoomDelta = event.angleDelta.y / 256
-                             const newZoom = Math.max(
-                                 1, Math.min(32, oldZoom + zoomDelta))
-
-                             if (newZoom === oldZoom)
-                             return
-
-                             // Adjust center offset so the same point remains at the center
-                             const scaleFactor = newZoom / oldZoom
-                             imageCenterX *= scaleFactor
-                             imageCenterY *= scaleFactor
-
-                             imageZoom = newZoom
-                             clampImagePosition()
-
-                             event.accepted = true
-                         }
+                sourceComponent: ImageViewer {}
+                active: true
+                visible: isImage(selectedEntry)
+                enabled: visible
             }
 
-            Image {
-                id: baseGrid
-                anchors.fill: scrollView
-                source: "grid.png"
-                fillMode: Image.Tile
-                opacity: 0.75
-            }
-
-            Rectangle {
-                width: image.width + (border.width * 2)
-                height: image.height + (border.width * 2)
-                x: image.x - border.width
-                y: image.y - border.width
-                color: "white" // This is the border color
-
-                border.width: 0
-                border.color: "white"
-                opacity: 0.25
-            }
-
-            Image {
-                id: image
-                x: Math.round(parent.width / 2 - width / 2) + imageCenterX
-                y: Math.round(parent.height / 2 - height / 2) + imageCenterY
-                source: `image://lightmaps/key=${selectedKey}&file=${LightmapFile.source}&alpha=${alphaSwitch.checked}`
-                onWidthChanged: clampImagePosition()
-                onHeightChanged: clampImagePosition()
-                fillMode: Image.PreserveAspectFit
-                smooth: false
-                antialiasing: false
-
-                // Let the image scale visibly
-                width: sourceSize.width * imageZoom
-                height: sourceSize.height * imageZoom
+            Loader {
+                id: meshLoader
+                anchors.fill: parent
+                sourceComponent: MeshViewer {}
+                active: true
+                visible: isMesh(selectedEntry)
+                enabled: visible
             }
         }
     }
@@ -243,15 +311,15 @@ ApplicationWindow {
     DropArea {
         id: dropArea
         anchors.fill: parent
-        onEntered: (drag) => {
-            drag.accept(Qt.LinkAction)
-        }
-            // Just take first url if several
-        onDropped: (drop) => {
-            if (drop.hasUrls) {
-                LightmapFile.source = drop.urls[0]
-                LightmapFile.loadData()
-            }
-        }
+        onEntered: drag => {
+                       drag.accept(Qt.LinkAction)
+                   }
+        // Just take first url if several
+        onDropped: drop => {
+                       if (drop.hasUrls) {
+                           LightmapFile.source = drop.urls[0]
+                           LightmapFile.loadData()
+                       }
+                   }
     }
 }

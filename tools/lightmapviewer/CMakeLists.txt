@@ -16,6 +16,8 @@ qt_internal_add_tool(${target_name}
         lightmapviewer.cpp
         lightmapviewerhelpers.cpp
         lightmapviewerhelpers.h
+        lightmapmesh.h
+        lightmapmesh.cpp
     LIBRARIES
         Qt::Core
         Qt::Gui
@@ -34,6 +36,8 @@ qt_internal_add_resource(${target_name} "assets"
         ${lightmapviewer_asset_prefix}
     FILES
         grid.png
+        mesh.vert
+        mesh.frag
 )
 
 qt_internal_add_qml_module(${target_name}
@@ -41,6 +45,11 @@ qt_internal_add_qml_module(${target_name}
     URI ${lightmapviewer_uri}
     QML_FILES
         LightmapViewer.qml
+        SceneMetadataView.qml
+        MeshViewer.qml
+        ImageViewer.qml
+        ArcballController.qml
+        OriginGizmo.qml
     NO_PLUGIN
     IMPORTS
         QtQuick3D

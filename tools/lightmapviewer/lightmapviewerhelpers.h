@@ -15,6 +15,16 @@ struct LightmapViewerHelpers
     static bool processLightmap(const QString &filename, bool print, bool extract);
     static QString lightmapTagToString(QSSGLightmapIODataTag tag);
     static QSSGLightmapIODataTag stringToLightmapTag(const QString &tag);
+
+    struct SceneMetadata
+    {
+        QString qtVersion;
+        QString bakeStartTime;
+        QString bakeDuration;
+        QVariantList options;
+    };
+    static SceneMetadata processSceneMetadata(const QVariantMap &map);
+    static QVariantList processMetadata(const QString &key, const QVariantMap &map);
 };
 
 #endif // LIGHTMAPVIEWERHELPERS_H
