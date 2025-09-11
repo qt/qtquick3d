@@ -87,11 +87,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     void setFlag(QSSGRenderEffect::Flags flag, bool enabled = true);
     [[nodiscard]] bool testFlag(QSSGRenderEffect::Flags flag) const { return (flags & FlagT(flag)) != 0; }
 
-    struct Command {
-        QSSGCommand *command;
-        quint8 own : 1;
-    };
-    QVector<Command> commands;
+    QVector<QSSGCommand *> commands; // all owned, these are copies of the gui thread commands
 
     void resetCommands();
 

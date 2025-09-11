@@ -560,7 +560,39 @@ QQuick3DShaderUtilsBuffer::TextureFormat QQuick3DShaderUtilsBuffer::format() con
 
 void QQuick3DShaderUtilsBuffer::setFormat(TextureFormat format)
 {
-    command.m_format = mapTextureFormat(format);
+    QSSGRenderTextureFormat::Format mappedTextureFormat = mapTextureFormat(format);
+    if (command.m_format == mappedTextureFormat)
+        return;
+
+    command.m_format = mappedTextureFormat;
+    emit changed();
+}
+
+void QQuick3DShaderUtilsBuffer::setTextureFilterOperation(TextureFilterOperation op)
+{
+    if (command.m_filterOp == QSSGRenderTextureFilterOp(op))
+        return;
+
+    command.m_filterOp = QSSGRenderTextureFilterOp(op);
+    emit changed();
+}
+
+void QQuick3DShaderUtilsBuffer::setTextureCoordOperation(TextureCoordOperation texCoordOp)
+{
+    if (command.m_texCoordOp == QSSGRenderTextureCoordOp(texCoordOp))
+        return;
+
+    command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp);
+    emit changed();
+}
+
+void QQuick3DShaderUtilsBuffer::setBufferFlags(AllocateBufferFlagValues flag)
+{
+    if (quint32(command.m_bufferFlags) == quint32(flag))
+        return;
+
+    command.m_bufferFlags = quint32(flag);
+    emit changed();
 }
 
 void QQuick3DShaderUtilsRenderPass::qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list,
@@ -571,6 +603,7 @@ void QQuick3DShaderUtilsRenderPass::qmlAppendCommand(QQmlListProperty<QQuick3DSh
 
     QQuick3DShaderUtilsRenderPass *that = qobject_cast<QQuick3DShaderUtilsRenderPass *>(list->object);
     that->m_commands.push_back(command);
+    emit that->changed();
 }
 
 QQuick3DShaderUtilsRenderCommand *QQuick3DShaderUtilsRenderPass::qmlCommandAt(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list,
@@ -590,6 +623,7 @@ void QQuick3DShaderUtilsRenderPass::qmlCommandClear(QQmlListProperty<QQuick3DSha
 {
     QQuick3DShaderUtilsRenderPass *that = qobject_cast<QQuick3DShaderUtilsRenderPass *>(list->object);
     that->m_commands.clear();
+    emit that->changed();
 }
 
 QQmlListProperty<QQuick3DShaderUtilsRenderCommand> QQuick3DShaderUtilsRenderPass::commands()

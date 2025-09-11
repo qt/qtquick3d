@@ -78,12 +78,12 @@ Q_SIGNALS:
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBuffer : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(TextureFormat format READ format WRITE setFormat)
-    Q_PROPERTY(TextureFilterOperation textureFilterOperation READ textureFilterOperation WRITE setTextureFilterOperation)
-    Q_PROPERTY(TextureCoordOperation textureCoordOperation READ textureCoordOperation WRITE setTextureCoordOperation)
-    Q_PROPERTY(float sizeMultiplier MEMBER sizeMultiplier)
-    Q_PROPERTY(AllocateBufferFlagValues bufferFlags READ bufferFlags WRITE setBufferFlags)
-    Q_PROPERTY(QByteArray name MEMBER name)
+    Q_PROPERTY(TextureFormat format READ format WRITE setFormat NOTIFY changed)
+    Q_PROPERTY(TextureFilterOperation textureFilterOperation READ textureFilterOperation WRITE setTextureFilterOperation NOTIFY changed)
+    Q_PROPERTY(TextureCoordOperation textureCoordOperation READ textureCoordOperation WRITE setTextureCoordOperation NOTIFY changed)
+    Q_PROPERTY(float sizeMultiplier MEMBER sizeMultiplier NOTIFY changed)
+    Q_PROPERTY(AllocateBufferFlagValues bufferFlags READ bufferFlags WRITE setBufferFlags NOTIFY changed)
+    Q_PROPERTY(QByteArray name MEMBER name NOTIFY changed)
 
     QML_NAMED_ELEMENT(Buffer)
 
@@ -129,23 +129,26 @@ public:
 
     QSSGAllocateBuffer command {};
     TextureFilterOperation textureFilterOperation() const { return TextureFilterOperation(command.m_filterOp); }
-    void setTextureFilterOperation(TextureFilterOperation op) { command.m_filterOp = QSSGRenderTextureFilterOp(op); }
+    void setTextureFilterOperation(TextureFilterOperation op);
 
     TextureCoordOperation textureCoordOperation() const { return TextureCoordOperation(command.m_texCoordOp); }
-    void setTextureCoordOperation(TextureCoordOperation texCoordOp) { command.m_texCoordOp = QSSGRenderTextureCoordOp(texCoordOp); }
+    void setTextureCoordOperation(TextureCoordOperation texCoordOp);
     float &sizeMultiplier = command.m_sizeMultiplier;
-    QSSGCommand *getCommand() { return &command; }
+    QSSGCommand *cloneCommand() { return new QSSGAllocateBuffer(command); }
 
     TextureFormat format() const;
     void setFormat(TextureFormat format);
 
     AllocateBufferFlagValues bufferFlags() const { return AllocateBufferFlagValues(int(command.m_bufferFlags)); }
-    void setBufferFlags(AllocateBufferFlagValues flag) { command.m_bufferFlags = quint32(flag);}
+    void setBufferFlags(AllocateBufferFlagValues flag);
 
     QByteArray &name = command.m_name;
 
     static QSSGRenderTextureFormat::Format mapTextureFormat(QQuick3DShaderUtilsBuffer::TextureFormat fmt);
     static QQuick3DShaderUtilsBuffer::TextureFormat mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt);
+
+Q_SIGNALS:
+    void changed();
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderCommand : public QObject
@@ -157,7 +160,7 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderCommand : public QObject
 public:
     QQuick3DShaderUtilsRenderCommand() = default;
     ~QQuick3DShaderUtilsRenderCommand() override = default;
-    virtual QSSGCommand *getCommand() { Q_ASSERT(0); return nullptr; }
+    virtual QSSGCommand *cloneCommand() { Q_ASSERT(0); return nullptr; }
     virtual int bufferCount() const { return 0; }
     virtual QQuick3DShaderUtilsBuffer *bufferAt(int idx) const { Q_UNUSED(idx); return nullptr; }
 };
@@ -175,7 +178,7 @@ public:
     ~QQuick3DShaderUtilsBufferInput() override = default;
     QSSGApplyBufferValue command { QByteArray(), QByteArray() };
     QByteArray &sampler = command.m_samplerName;
-    QSSGCommand *getCommand() override { return &command; }
+    QSSGCommand *cloneCommand() override { return new QSSGApplyBufferValue(command); }
 
     int bufferCount() const override { return (m_buffer != nullptr) ? 1 : 0; }
     QQuick3DShaderUtilsBuffer *bufferAt(int idx) const override
@@ -211,7 +214,7 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsApplyValue : public QQuick3DShaderUtil
 public:
     QQuick3DShaderUtilsApplyValue() = default;
     ~QQuick3DShaderUtilsApplyValue() override = default;
-    QSSGCommand *getCommand() override { return &command; }
+    QSSGCommand *cloneCommand() override { return new QSSGApplyValue(command); }
     QSSGApplyValue command { };
     QVariant &value = command.m_value;
     QByteArray &target = command.m_propertyName;

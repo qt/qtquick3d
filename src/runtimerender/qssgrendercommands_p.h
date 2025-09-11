@@ -88,6 +88,16 @@ struct QSSGAllocateBuffer : public QSSGCommand
         , m_bufferFlags(inFlags)
     {
     }
+    QSSGAllocateBuffer(const QSSGAllocateBuffer &command)
+        : QSSGCommand(CommandType::AllocateBuffer),
+          m_name(command.m_name),
+          m_format(command.m_format),
+          m_filterOp(command.m_filterOp),
+          m_texCoordOp(command.m_texCoordOp),
+          m_sizeMultiplier(command.m_sizeMultiplier),
+          m_bufferFlags(command.m_bufferFlags)
+    {
+    }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_name << "format:" << m_format.toString() << "size multiplier:" << m_sizeMultiplier << "filter:" << QSSGBaseTypeHelpers::toString(m_filterOp) << "tiling:" << QSSGBaseTypeHelpers::toString(m_texCoordOp) << "sceneLifetime:" << m_bufferFlags.isSceneLifetime();
     }
@@ -101,6 +111,11 @@ struct QSSGBindTarget : public QSSGCommand
         : QSSGCommand(CommandType::BindTarget), m_outputFormat(inFormat)
     {
     }
+    QSSGBindTarget(const QSSGBindTarget &command)
+        : QSSGCommand(CommandType::BindTarget),
+          m_outputFormat(command.m_outputFormat)
+    {
+    }
     void addDebug(QDebug &stream) const {
         stream << "format" <<  m_outputFormat.toString();
     }
@@ -111,6 +126,11 @@ struct QSSGBindBuffer : public QSSGCommand
     QByteArray m_bufferName;
     QSSGBindBuffer(const QByteArray &inBufName)
         : QSSGCommand(CommandType::BindBuffer), m_bufferName(inBufName)
+    {
+    }
+    QSSGBindBuffer(const QSSGBindBuffer &command)
+        : QSSGCommand(CommandType::BindBuffer),
+          m_bufferName(command.m_bufferName)
     {
     }
     void addDebug(QDebug &stream) const {
@@ -127,6 +147,11 @@ struct QSSGBindShader : public QSSGCommand
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}
+    QSSGBindShader(const QSSGBindShader &command)
+        : QSSGCommand(CommandType::BindShader),
+          m_shaderPathKey(command.m_shaderPathKey)
+    {
+    }
     void addDebug(QDebug &stream) const {
         stream << "key:" <<  m_shaderPathKey << "effect:";
     }
@@ -153,6 +178,13 @@ struct QSSGApplyInstanceValue : public QSSGCommand
         : QSSGCommand(CommandType::ApplyInstanceValue), m_valueType(QSSGRenderShaderValue::Unknown), m_valueOffset(0)
     {
     }
+    QSSGApplyInstanceValue(const QSSGApplyInstanceValue &command)
+        : QSSGCommand(CommandType::ApplyInstanceValue),
+          m_propertyName(command.m_propertyName),
+          m_valueType(command.m_valueType),
+          m_valueOffset(command.m_valueOffset)
+    {
+    }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_propertyName << "type:" << int(m_valueType) << "offset:" << m_valueOffset ;
     }
@@ -164,6 +196,12 @@ struct QSSGApplyValue : public QSSGCommand
     QVariant m_value;
     explicit QSSGApplyValue(const QByteArray &inName)
         : QSSGCommand(CommandType::ApplyValue), m_propertyName(inName)
+    {
+    }
+    QSSGApplyValue(const QSSGApplyValue &command)
+        : QSSGCommand(CommandType::ApplyValue),
+          m_propertyName(command.m_propertyName),
+          m_value(command.m_value)
     {
     }
     // Default will attempt to apply all effect values to the currently bound shader
@@ -184,6 +222,12 @@ struct QSSGApplyBufferValue : public QSSGCommand
     }
     void addDebug(QDebug &stream) const {
         stream << "name:" <<  m_bufferName << "sampler:" << m_samplerName;
+    }
+    QSSGApplyBufferValue(const QSSGApplyBufferValue &command)
+        : QSSGCommand(CommandType::ApplyBufferValue),
+          m_bufferName(command.m_bufferName),
+          m_samplerName(command.m_samplerName)
+    {
     }
 };
 

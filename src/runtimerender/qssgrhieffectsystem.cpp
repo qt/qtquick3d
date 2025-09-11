@@ -237,10 +237,9 @@ void QSSGRhiEffectSystem::releaseResources()
 QSSGRenderTextureFormat::Format QSSGRhiEffectSystem::overriddenOutputFormat(const QSSGRenderEffect *inEffect)
 {
     QSSGRenderTextureFormat::Format format = QSSGRenderTextureFormat::Unknown;
-    for (const QSSGRenderEffect::Command &c : inEffect->commands) {
-        QSSGCommand *cmd = c.command;
+    for (const QSSGCommand *cmd : inEffect->commands) {
         if (cmd->m_type == CommandType::BindTarget) {
-            QSSGBindTarget *targetCmd = static_cast<QSSGBindTarget *>(cmd);
+            const QSSGBindTarget *targetCmd = static_cast<const QSSGBindTarget *>(cmd);
             format = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown
                     ? inEffect->outputFormat : targetCmd->m_outputFormat.format;
         }
@@ -257,17 +256,16 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
     QSSGRhiEffectTexture *finalOutputTexture = nullptr;
     QSSGRhiEffectTexture *currentOutput = nullptr;
     QSSGRhiEffectTexture *currentInput = inTexture;
-    for (const QSSGRenderEffect::Command &c : inEffect->commands) {
-        QSSGCommand *theCommand = c.command;
+    for (const QSSGCommand *theCommand : inEffect->commands) {
         qCDebug(lcEffectSystem).noquote() << "    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
 
         switch (theCommand->m_type) {
         case CommandType::AllocateBuffer:
-            allocateBufferCmd(static_cast<QSSGAllocateBuffer *>(theCommand), inTexture, inEffect, viewCount);
+            allocateBufferCmd(static_cast<const QSSGAllocateBuffer *>(theCommand), inTexture, inEffect, viewCount);
             break;
 
         case CommandType::ApplyBufferValue: {
-            auto *applyCommand = static_cast<QSSGApplyBufferValue *>(theCommand);
+            auto *applyCommand = static_cast<const QSSGApplyBufferValue *>(theCommand);
 
             /*
                 BufferInput { buffer: buf }
@@ -289,25 +287,25 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
         }
 
         case CommandType::ApplyInstanceValue:
-            applyInstanceValueCmd(static_cast<QSSGApplyInstanceValue *>(theCommand), inEffect);
+            applyInstanceValueCmd(static_cast<const QSSGApplyInstanceValue *>(theCommand), inEffect);
             break;
 
         case CommandType::ApplyValue:
-            applyValueCmd(static_cast<QSSGApplyValue *>(theCommand), inEffect);
+            applyValueCmd(static_cast<const QSSGApplyValue *>(theCommand), inEffect);
             break;
 
         case CommandType::BindBuffer: {
-            auto *bindCmd = static_cast<QSSGBindBuffer *>(theCommand);
+            auto *bindCmd = static_cast<const QSSGBindBuffer *>(theCommand);
             currentOutput = findTexture(bindCmd->m_bufferName);
             break;
         }
 
         case CommandType::BindShader:
-            bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect, viewCount);
+            bindShaderCmd(static_cast<const QSSGBindShader *>(theCommand), inEffect, viewCount);
             break;
 
         case CommandType::BindTarget: {
-            auto targetCmd = static_cast<QSSGBindTarget*>(theCommand);
+            auto targetCmd = static_cast<const QSSGBindTarget*>(theCommand);
             // matches overriddenOutputFormat()
             QSSGRenderTextureFormat::Format f = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown ?
                         inEffect->outputFormat : targetCmd->m_outputFormat.format;
