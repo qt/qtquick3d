@@ -189,7 +189,7 @@ struct ProgressTracker
         progress = fractionDirect + fractionIndirect + (fractionDenoise * double(i) / n);
     }
 
-    void indirectTexelDone(qint64 i, qint64 n)
+    void indirectTexelDone(quint64 i, quint64 n)
     {
         Q_ASSERT(stage == Stage::Indirect);
         progressIndirect = double(i) / n;
@@ -319,8 +319,8 @@ struct QSSGLightmapperPrivate
 
     double totalProgress = 0; // [0-1]
     qint64 estimatedTimeRemaining = -1; // ms
-    qint64 indirectTexelsTotal = 0;
-    qint64 indirectTexelsDone = 0;
+    quint64 indirectTexelsTotal = 0;
+    quint64 indirectTexelsDone = 0;
 
     inline const ModelTexel &texelForLightmapUV(unsigned int geomId, float u, float v) const
     {
@@ -2978,7 +2978,7 @@ bool QSSGLightmapper::bake()
     // ------------- Indirect compute / store -------------
 
     if (d->options.indirectLightEnabled) {
-        d->indirectTexelsTotal = std::accumulate(d->numValidTexels.begin(), d->numValidTexels.end(), 0);
+        d->indirectTexelsTotal = std::accumulate(d->numValidTexels.begin(), d->numValidTexels.end(), quint64(0));
         d->updateStage(QStringLiteral("Computing Indirect Light"));
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                           QStringLiteral("Computing indirect light..."));
