@@ -94,11 +94,8 @@ private:
     void disconnectModel(QQmlDelegateModelPointer *model);
 
     QPointer<QQmlInstanceModel> m_model;
-    QVariant m_dataSource;
-    QPointer<QObject> m_dataSourceAsObject;
     int m_itemCount;
     bool m_ownModel : 1;
-    bool m_dataSourceIsObject : 1;
     bool m_delegateValidated : 1;
     bool m_explicitDelegate: 1;
     bool m_explicitDelegateModelAccess : 1;
