@@ -816,8 +816,8 @@ static void generateMainLightCalculation(QSSGStageGeneratorBase &fragmentShader,
         bool castsShadow = enableShadowMaps && lightNode->m_castShadow && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
 
         fragmentShader.append("");
-        char lightIdxStr[11];
-        std::snprintf(lightIdxStr, 11, "%d", lightIdx);
+        char lightIdxStr[12];
+        std::snprintf(lightIdxStr, 12, "%d", lightIdx);
 
         QByteArray lightVarPrefix = "light";
         lightVarPrefix.append(lightIdxStr);
