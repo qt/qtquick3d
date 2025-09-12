@@ -62,7 +62,6 @@ QQuick3DRepeater::QQuick3DRepeater(QQuick3DNode *parent)
     , m_model(nullptr)
     , m_itemCount(0)
     , m_ownModel(false)
-    , m_dataSourceIsObject(false)
     , m_delegateValidated(false)
     , m_explicitDelegate(false)
     , m_explicitDelegateModelAccess(false)
@@ -139,13 +138,11 @@ void QQuick3DRepeater::disconnectModel(QQmlDelegateModelPointer *model)
 
 QVariant QQuick3DRepeater::model() const
 {
-    if (m_dataSourceIsObject) {
-        QObject *o = m_dataSourceAsObject;
-        return QVariant::fromValue(o);
-    }
-
-    return m_dataSource;
-
+    if (m_ownModel)
+        return static_cast<QQmlDelegateModel *>(m_model.data())->model();
+    if (m_model)
+        return QVariant::fromValue(m_model.data());
+    return QVariant();
 }
 
 void QQuick3DRepeater::applyDelegateChange()
@@ -175,20 +172,21 @@ void QQuick3DRepeater::setModel(const QVariant &m)
     if (model.userType() == qMetaTypeId<QJSValue>())
         model = model.value<QJSValue>().toVariant();
 
-    if (m_dataSource == model)
+    QQmlDelegateModelPointer oldModel(m_model);
+    if (m_ownModel) {
+        if (oldModel.delegateModel()->model() == model)
+            return;
+    } else if (QVariant::fromValue(m_model) == model) {
         return;
+    }
 
     clear();
 
-    QQmlDelegateModelPointer oldModel(m_model);
     disconnectModel(&oldModel);
 
     m_model = nullptr;
-    m_dataSource = model;
 
     QObject *object = qvariant_cast<QObject *>(model);
-    m_dataSourceAsObject = object;
-    m_dataSourceIsObject = object != nullptr;
 
     QQmlDelegateModelPointer newModel(qobject_cast<QQmlInstanceModel *>(object));
     if (newModel) {
@@ -209,10 +207,11 @@ void QQuick3DRepeater::setModel(const QVariant &m)
         }
         m_model = newModel.instanceModel();
     } else if (m_ownModel) {
+        // m_ownModel can only be set if the old model is a QQmlDelegateModel.
+        Q_ASSERT(oldModel.delegateModel());
         newModel = oldModel;
         m_model = newModel.instanceModel();
-        if (QQmlDelegateModel *delegateModel = newModel.delegateModel())
-            delegateModel->setModel(model);
+        newModel.delegateModel()->setModel(model);
     } else {
         newModel = createDelegateModel();
         if (m_explicitDelegate) {
