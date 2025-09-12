@@ -94,7 +94,13 @@ void QQuick3DRepeater::connectModel(QQmlDelegateModelPointer *model)
         QObject::connect(
                 dataModel, &QQmlDelegateModel::delegateChanged,
                 this, &QQuick3DRepeater::applyDelegateChange);
+        if (m_ownModel) {
+            QObject::connect(
+                    dataModel, &QQmlDelegateModel::modelChanged,
+                    this, &QQuick3DRepeater::modelChanged);
+        }
     }
+
     regenerate();
 }
 
@@ -114,6 +120,11 @@ void QQuick3DRepeater::disconnectModel(QQmlDelegateModelPointer *model)
         QObject::disconnect(
                 delegateModel, &QQmlDelegateModel::delegateChanged,
                 this, &QQuick3DRepeater::applyDelegateChange);
+        if (m_ownModel) {
+            QObject::disconnect(
+                    delegateModel, &QQmlDelegateModel::modelChanged,
+                    this, &QQuick3DRepeater::modelChanged);
+        }
     }
 }
 
