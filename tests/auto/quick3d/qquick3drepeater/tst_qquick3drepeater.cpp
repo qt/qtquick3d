@@ -4,6 +4,8 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 
+#include <QtTest/qsignalspy.h>
+
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQuick3D/private/qquick3drepeater_p.h>
 
@@ -126,6 +128,8 @@ void tst_qquick3drepeater::delegateModelAccess()
     QQuick3DRepeater *repeater = qvariant_cast<QQuick3DRepeater *>(object->property("repeater"));
     QVERIFY(repeater);
 
+    QSignalSpy modelChangedSpy(repeater, &QQuick3DRepeater::modelChanged);
+
     if (delegateKind == Delegate::Untyped && modelKind == Model::Array)
         QSKIP("Properties of objects in arrays are not exposed as context properties");
 
@@ -150,20 +154,34 @@ void tst_qquick3drepeater::delegateModelAccess()
             ? access != QQmlDelegateModel::ReadOnly
             : access == QQmlDelegateModel::ReadWrite;
 
+    // Only the array is actually updated itself. The other models are pointers
+    const bool writeShouldSignal = modelKind == Model::Kind::Array;
+
     double expected = 11;
+
+    // Initial setting of the model, signals one update
+    int expectedModelUpdates = 1;
+    QCOMPARE(modelChangedSpy.count(), expectedModelUpdates);
 
     QCOMPARE(delegate->property("immediateX").toDouble(), expected);
     QCOMPARE(delegate->property("modelX").toDouble(), expected);
 
-    if (modelWritable)
+    if (modelWritable) {
         expected = 3;
+        if (writeShouldSignal)
+            ++expectedModelUpdates;
+    }
 
     QMetaObject::invokeMethod(delegate, "writeThroughModel");
     QCOMPARE(delegate->property("immediateX").toDouble(), expected);
     QCOMPARE(delegate->property("modelX").toDouble(), expected);
+    QCOMPARE(modelChangedSpy.count(), expectedModelUpdates);
 
-    if (immediateWritable)
+    if (immediateWritable) {
         expected = 1;
+        if (writeShouldSignal)
+            ++expectedModelUpdates;
+    }
 
     QMetaObject::invokeMethod(delegate, "writeImmediate");
 
@@ -172,6 +190,7 @@ void tst_qquick3drepeater::delegateModelAccess()
              delegateKind == Delegate::Untyped ? expected : 1);
 
     QCOMPARE(delegate->property("modelX").toDouble(), expected);
+    QCOMPARE(modelChangedSpy.count(), expectedModelUpdates);
 }
 
 QTEST_MAIN(tst_qquick3drepeater)
