@@ -86,6 +86,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         extensionapi/qssgrenderextensions.h extensionapi/qssgrenderextensions.cpp
         extensionapi/qssgrenderhelpers.h extensionapi/qssgrenderhelpers.cpp
         qssgdebugdrawsystem_p.h qssgdebugdrawsystem.cpp
+        qssgrenderparticleshaderkeys_p.h
     NO_UNITY_BUILD_SOURCES
         rendererimpl/qssglightmapper.cpp              # avoiding possible clash with tinyexr' macros
         resourcemanager/qssgrenderbuffermanager.cpp # redefinition of 'cube' (from qssgrenderreflectionmap.cpp)
