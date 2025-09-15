@@ -960,21 +960,22 @@ struct QSSGShaderDefaultMaterialKeyProperties
     }
 };
 
-struct QSSGShaderDefaultMaterialKey
+template <typename Props, size_t size>
+struct QSSGShaderBaseMaterialKey
 {
     enum {
-        DataBufferSize = 24,
+        DataBufferSize = size,
     };
     quint32 m_dataBuffer[DataBufferSize]; // 24 * 4 * 8 = 768 bits
     size_t m_featureSetHash;
 
-    explicit QSSGShaderDefaultMaterialKey(size_t inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)
+    explicit QSSGShaderBaseMaterialKey(size_t inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)
     {
         for (size_t idx = 0; idx < DataBufferSize; ++idx)
             m_dataBuffer[idx] = 0;
     }
 
-    QSSGShaderDefaultMaterialKey() : m_featureSetHash(0)
+    QSSGShaderBaseMaterialKey() : m_featureSetHash(0)
     {
         for (size_t idx = 0; idx < DataBufferSize; ++idx)
             m_dataBuffer[idx] = 0;
@@ -988,7 +989,7 @@ struct QSSGShaderDefaultMaterialKey
         return retval ^ m_featureSetHash;
     }
 
-    bool operator==(const QSSGShaderDefaultMaterialKey &other) const
+    bool operator==(const QSSGShaderBaseMaterialKey<Props, size> &other) const
     {
         bool retval = true;
         for (size_t idx = 0; idx < DataBufferSize && retval; ++idx)
@@ -1032,13 +1033,13 @@ struct QSSGShaderDefaultMaterialKey
         }
     };
 
-    void toString(QByteArray &ioString, const QSSGShaderDefaultMaterialKeyProperties &inProperties) const
+    void toString(QByteArray &ioString, const Props &inProperties) const
     {
         ioString.reserve(inProperties.m_stringBufferSizeHint);
         StringVisitor theVisitor(ioString, *this);
-        const_cast<QSSGShaderDefaultMaterialKeyProperties &>(inProperties).visitProperties(theVisitor);
+        const_cast<Props &>(inProperties).visitProperties(theVisitor);
     }
-    void fromString(QByteArray &ioString, QSSGShaderDefaultMaterialKeyProperties &inProperties)
+    void fromString(QByteArray &ioString, Props &inProperties)
     {
         StringInVisitor theVisitor(ioString, *this);
         inProperties.visitProperties(theVisitor);
@@ -1058,6 +1059,8 @@ struct QSSGShaderDefaultMaterialKey
         return true;
     }
 };
+
+typedef QSSGShaderBaseMaterialKey<QSSGShaderDefaultMaterialKeyProperties, 24> QSSGShaderDefaultMaterialKey;
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGShaderDefaultMaterialKey>::value);
 

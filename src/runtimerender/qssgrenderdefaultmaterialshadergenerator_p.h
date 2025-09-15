@@ -25,8 +25,6 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGShaderDefaultMaterialKeyProperties;
-struct QSSGShaderDefaultMaterialKey;
 struct QSSGLayerGlobalRenderProperties;
 struct QSSGMaterialVertexPipeline;
 
