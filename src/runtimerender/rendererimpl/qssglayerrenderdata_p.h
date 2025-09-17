@@ -324,7 +324,7 @@ public:
     Item2DPass item2DPass;
     SkyboxPass skyboxPass;
     SkyboxCubeMapPass skyboxCubeMapPass;
-    static constexpr size_t USERPASSES = 2; // See QSSGRenderLayer::RenderExtensionMode::Count
+    static constexpr size_t USERPASSES = 3; // See QSSGRenderLayer::RenderExtensionMode::Count
     UserPass userPasses[USERPASSES];
     OpaquePass opaquePass;
     TransparentPass transparentPass;

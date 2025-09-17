@@ -2756,6 +2756,10 @@ void QSSGLayerRenderData::prepareForRender()
     // Reflection pass
     activePasses.push_back(&reflectionMapPass);
 
+    auto &textureExtensionPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionStage::TextureProviders)];
+    if (textureExtensionPass.hasData())
+        activePasses.push_back(&textureExtensionPass);
+
     auto &underlayPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionStage::Underlay)];
     if (underlayPass.hasData())
         activePasses.push_back(&underlayPass);

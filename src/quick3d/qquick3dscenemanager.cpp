@@ -15,6 +15,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
+#include <QtQuick3DRuntimeRender/ssg/qssgrenderextensions.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -376,10 +377,12 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::cleanupNodes()
         // So build another queue for graphics assets marked for removal
         if (node->hasGraphicsResources()) {
             wattached->queueForCleanup(node);
-            if (node->type == QSSGRenderGraphObject::Type::ResourceLoader)
+            if (node->type == QSSGRenderGraphObject::Type::ResourceLoader) {
                 resourceLoaders.remove(node);
-            else if (QSSGRenderGraphObjectUtils::isTextureProvider(node->type))
-                textureProviderExtensions.remove(node);
+            } else if (QSSGRenderGraphObjectUtils::isTextureProvider(node->type)) {
+                textureProviderExtensions.removeAll(node);
+                textureExtensionsDirty = true;
+            }
         } else {
             delete node;
         }
@@ -466,13 +469,16 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateExtensions(QQuick3D
         //       so we need to set it here.
         po->spatialNode = newNode;
 
-        if (po->spatialNode) {
+        if (po->spatialNode)
             m_nodeMap.insert(po->spatialNode, extension);
-            // We need to keep track of texture provider extensions, so we can
-            // update the textures when the extension changes.
-            if (QSSGRenderGraphObjectUtils::isTextureProvider(po->type) && backendNodeChanged) {
-                textureProviderExtensions.remove(oldNode);
-                textureProviderExtensions.insert(po->spatialNode);
+
+        // We need to keep track of texture provider extensions, so we can
+        // update the textures when the extension changes.
+        if (QSSGRenderGraphObjectUtils::isTextureProvider(po->type) && backendNodeChanged) {
+            const bool shouldInsert = newNode && (textureProviderExtensions.indexOf(newNode) == -1);
+            if (shouldInsert) {
+                textureProviderExtensions.push_back(static_cast<QSSGRenderExtension *>(newNode));
+                textureExtensionsDirty = true;
             }
         }
     };
@@ -665,8 +671,7 @@ void QQuick3DWindowAttachment::onInvalidated()
     }
 }
 
-QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders,
-                                                                           QSet<QSSGRenderGraphObject *> &textureProviderExtensions)
+QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders)
 {
     // Terminate old scene managers
     for (auto manager: sceneManagerCleanupQueue) {
@@ -702,10 +707,6 @@ QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<
     // Resource Loaders
     for (auto &sceneManager : std::as_const(sceneManagers))
         resourceLoaders.unite(sceneManager->resourceLoaders);
-
-    // Texture Provider Extensions
-    for (auto &sceneManager : std::as_const(sceneManagers))
-        textureProviderExtensions.unite(sceneManager->textureProviderExtensions);
 
     if ((syncResult & SyncResultFlag::SharedResourcesDirty)) {
         // We know there are shared resources in the scene, so notify the "world".
