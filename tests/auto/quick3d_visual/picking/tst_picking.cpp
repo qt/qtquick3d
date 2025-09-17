@@ -131,6 +131,7 @@ private Q_SLOTS:
     void test_picking_corner_case();
     void test_triangleIntersect();
     void test_sphere_geometry();
+    void test_closest_point_picking();
 
 private:
     QQuickItem *find2DChildIn3DNode(QQuickView *view, const QString &objectName, const QString &itemName);
@@ -1130,6 +1131,90 @@ void tst_Picking::test_triangleIntersect()
     QCOMPARE(normal, expectedNormal);
     QCOMPARE(u, 0.0f);
     QCOMPARE(v, 1.0f);
+}
+
+void tst_Picking::test_closest_point_picking()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("picking.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+    QQuick3DModel *model1 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model1"));
+    QVERIFY(model1);
+    QQuick3DModel *model2 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model2"));
+    QVERIFY(model2);
+    QQuick3DModel *instancedModel = view3d->findChild<QQuick3DModel *>(QStringLiteral("instancedModel"));
+    QVERIFY(instancedModel);
+    QQuickItem *item2d = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dNode", "item2d"));
+    QVERIFY(item2d);
+
+    item2d->setEnabled(true);
+    item2d->setVisible(true);
+    QTest::qWait(100);
+
+    // model1 is a unit cube at (0,0,0), so it has a surface point at (0, 0, 50)
+
+    QVector3D origin;
+
+    // Model outside radius
+    origin = QVector3D(0.0f, 0.0f, 70.0f);
+    auto result = view3d->closestPointPick(origin, 10);
+    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Null);
+
+    result = view3d->closestPointPick(origin, 30);
+    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
+    QCOMPARE(result.objectHit(), model1);
+    QCOMPARE(result.distance(), 20.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.5f, 0.5f));
+    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 50.0f));
+    QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
+
+    // Test hit on edge. It's not specified which face it should choose, so ignore
+    // normals and UVs. model1 has an edge that passes through (-50, -50, 0)
+
+    origin = QVector3D(-70.0f, -70.0f, 0.0f); // distance == sqrt(20^2 + 20^2) < 30
+    result = view3d->closestPointPick(origin, 30, model1);
+    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
+    QCOMPARE(result.objectHit(), model1);
+    QCOMPARE(result.scenePosition(), QVector3D(-50.0f, -50.0f, 0.0f));
+    QVERIFY(qFuzzyCompare(result.distance(), float(sqrt(800.0f))));
+
+    // model2 is a unit cube at (50, 50, -50), so it has a surface point at (10, 10, 0)
+    // Check to see that we return the specified model, even if model1 is closer
+    origin = QVector3D(10.0f, 10.0f, 70.0f);
+    result = view3d->closestPointPick(origin, 100, model2);
+    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
+    QCOMPARE(result.objectHit(), model2);
+    QCOMPARE(result.distance(), 70.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.1f, 0.1f));
+    QCOMPARE(result.scenePosition(), QVector3D(10.0f, 10.0f, 0.0f));
+    QCOMPARE(result.position(), QVector3D(-40.0f, -40.0f, 50.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+    QCOMPARE(result.instanceIndex(), 0);
+    QCOMPARE(result.itemHit(), nullptr);
+
+    // Test instanced picking
+    // Instance index 2 describes a unit cube at (200, 0, 0), so it has a surface
+    // point at (150, 0, 0) with a normal of (-1, 0, 0)
+    origin = QVector3D(140.0f, 0.0f, 0.0f);
+    result = view3d->closestPointPick(origin, 20);
+    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
+    QCOMPARE(result.objectHit(), instancedModel);
+    QCOMPARE(result.distance(), 10.0f);
+    QCOMPARE(result.uvPosition(), QVector2D(0.5f, 0.5f));
+    QCOMPARE(result.scenePosition(), QVector3D(150.0f, 0.0f, 0.0f));
+    QCOMPARE(result.position(), QVector3D(-50.0f, 0.0f, 0.0f));
+    QCOMPARE(result.sceneNormal(), QVector3D(-1.0f, 0.0f, 0.0f));
+    QCOMPARE(result.normal(), QVector3D(-1.0f, 0.0f, 0.0f));
+    QCOMPARE(result.instanceIndex(), 2);
+    QCOMPARE(result.itemHit(), nullptr);
 }
 
 QTEST_MAIN(tst_Picking)

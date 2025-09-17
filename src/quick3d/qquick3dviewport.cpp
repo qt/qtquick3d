@@ -1241,6 +1241,35 @@ QQuick3DPickResult QQuick3DViewport::rayPick(const QVector3D &origin, const QVec
     return getNearestPickResult(resultList);
 }
 
+/*!
+    \qmlmethod pickResult View3D::closestPointPick(vector3d origin, float radius, Model model)
+
+    This method will find the point on the surface of \a model that is nearest to \a origin, within a distance of
+    \a radius. If \a model is \c null, the closest object within \a radius will be found.
+
+    If no such object exists, \c null is returned.
+
+     \since 6.11
+*/
+QQuick3DPickResult QQuick3DViewport::closestPointPick(const QVector3D &origin, float radius, QQuick3DModel *model) const
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+
+    if (!renderer)
+        return QQuick3DPickResult();
+    QSSGRenderNode *renderNode = nullptr;
+    if (model) {
+        renderNode = static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(model)->spatialNode);
+        if (Q_UNLIKELY(!renderNode))
+            return QQuick3DPickResult{};
+    }
+
+    const auto pickResult = renderer->syncPickClosestPoint(origin, radius * radius, renderNode);
+    if (!pickResult.has_value())
+        return QQuick3DPickResult{};
+    return processPickResult(pickResult.value());
+}
+
 void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event) const
 {
     internalPick(event, origin, direction);
@@ -1937,7 +1966,7 @@ bool QQuick3DViewport::singlePointPick(QSinglePointEvent *event, const QVector3D
     return delivered;
 }
 
-QPair<QQuickItem *, QPointF> QQuick3DViewport::getItemAndPosition(const QSSGRenderPickResult &pickResult)
+QPair<QQuickItem *, QPointF> QQuick3DViewport::getItemAndPosition(const QSSGRenderPickResult &pickResult) const
 {
     QQuickItem *subsceneRootItem = nullptr;
     QPointF subscenePosition;
@@ -2033,7 +2062,8 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
     QQuick3DObject *frontendObject = findFrontendNode(pickResult.m_hitObject);
 
     QQuick3DModel *model = qobject_cast<QQuick3DModel *>(frontendObject);
-    if (model)
+    if (model) {
+        auto itemAndPosition = getItemAndPosition(pickResult);
         return QQuick3DPickResult(model,
                                   ::sqrtf(pickResult.m_distanceSq),
                                   pickResult.m_localUVCoords,
@@ -2041,7 +2071,9 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
                                   pickResult.m_localPosition,
                                   pickResult.m_faceNormal,
                                   pickResult.m_sceneNormal,
-                                  pickResult.m_instanceIndex);
+                                  pickResult.m_instanceIndex,
+                                  itemAndPosition.first);
+    }
 
     QQuick3DItem2D *frontend2DItem = qobject_cast<QQuick3DItem2D *>(frontendObject);
     if (frontend2DItem && frontend2DItem->contentItem()) {

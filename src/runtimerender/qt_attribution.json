@@ -14,5 +14,18 @@
         "LicenseFile": "LICENSE.GODOT.txt",
         "Copyright": ["Copyright (c) 2007-2022 Juan Linietsky, Ariel Manzur.",
         "Copyright (c) 2014-2022 Godot Engine contributors"]
+    },
+    {
+        "Id": "closest-point-on-triangle",
+        "Name": "closestPointOnTriangle",
+        "QDocModule": "qtquick3d",
+        "QtUsage": "Used in the Qt Quick 3D module.",
+        "Files": "rendererimpl/qssgrenderer.cpp",
+
+        "Description": "Closest point on triangle algorithm from Intel® Embree",
+        "DownloadLocation": "https://github.com/RenderKit/embree/blob/master/tutorials/common/math/closest_point.h",
+        "License": "Apache License Version 2.0",
+        "LicenseId": "Apache-2.0",
+        "Copyright": "Copyright 2009-2021 Intel Corporation"
     }
 ]

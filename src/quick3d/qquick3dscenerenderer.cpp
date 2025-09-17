@@ -1181,6 +1181,17 @@ std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const 
     return m_layer->renderedCameras[0]->unproject(globalTransform, theLocalMouse, viewportRect);
 }
 
+std::optional<QSSGRenderPickResult> QQuick3DSceneRenderer::syncPickClosestPoint(const QVector3D &center, float radiusSquared, QSSGRenderNode *node)
+{
+    if (!m_layer)
+        return std::nullopt;
+
+    return QSSGRendererPrivate::syncPickClosestPoint(*m_sgContext,
+                                                     *m_layer,
+                                                     center, radiusSquared,
+                                                     node);
+}
+
 QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)
 {
     if (!m_layer)

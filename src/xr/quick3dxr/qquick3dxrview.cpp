@@ -403,6 +403,21 @@ QQuick3DPickResult QQuick3DXrView::rayPick(const QVector3D &origin, const QVecto
 }
 
 /*!
+    \qmlmethod pickResult XrView::closestPointPick(vector3d origin, float radius, Model model)
+
+    This method will find the point on the surface of \a model that is nearest to \a origin, within a distance of
+    \a radius. If \a model is \c null, the closest object within \a radius will be found.
+
+    If no such object exists, \c null is returned.
+
+    \since 6.11
+*/
+QQuick3DPickResult QQuick3DXrView::closestPointPick(const QVector3D &origin, float radius, QQuick3DModel *model) const
+{
+    return m_xrManager.m_vrViewport->closestPointPick(origin, radius, model);
+}
+
+/*!
     \qmlmethod XrView::setTouchpoint(Item target, point position, int pointId, bool pressed)
 
     Sends a synthetic touch event to \a target, moving the touch point with ID \a pointId to \a position,

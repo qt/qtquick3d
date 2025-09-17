@@ -175,6 +175,12 @@ public:
                                        const QSSGRenderItem2D &item2D,
                                        PickResultList &outIntersectionResultList);
 
+    static std::optional<QSSGRenderPickResult> closestPointOnSubsetRenderable(const QSSGRenderLayer &layer,
+                                                                              QSSGBufferManager &bufferManager,
+                                                                              const QVector3D &center,
+                                                                              float radiusSquared,
+                                                                              const QSSGRenderNode &node);
+
     static PickResultList syncPickAll(const QSSGRenderContextInterface &ctx,
                                       const QSSGRenderLayer &layer,
                                       const QSSGRenderRay &ray);
@@ -188,6 +194,12 @@ public:
                                          QSSGBufferManager &bufferManager,
                                          const QSSGRenderRay &ray,
                                          QVarLengthArray<QSSGRenderNode *> subset);
+
+    static std::optional<QSSGRenderPickResult> syncPickClosestPoint(const QSSGRenderContextInterface &ctx,
+                                                                    const QSSGRenderLayer &layer,
+                                                                    const QVector3D &center,
+                                                                    const float radiusSquared,
+                                                                    QSSGRenderNode *target = nullptr);
 
     // Setting this true enables picking for all the models, regardless of
     // the models pickable property.

@@ -392,6 +392,46 @@ QSSGRendererPrivate::PickResultList QSSGRendererPrivate::syncPick(const QSSGRend
     return pickResults;
 }
 
+using RenderableList = QVarLengthArray<const QSSGRenderNode *>;
+static void getPickableRecursive(const QSSGRenderNode &node, RenderableList &renderables, bool pickEverything = false)
+{
+    if (QSSGRenderGraphObject::isRenderable(node.type) && (pickEverything || node.getLocalState(QSSGRenderNode::LocalState::Pickable))) {
+        renderables.push_back(&node);
+    }
+
+    for (const auto &child : node.children)
+        getPickableRecursive(child, renderables, pickEverything);
+}
+
+std::optional<QSSGRenderPickResult> QSSGRendererPrivate::syncPickClosestPoint(const QSSGRenderContextInterface &ctx,
+                                                                              const QSSGRenderLayer &layer,
+                                                                              const QVector3D &center, const float radiusSquared,
+                                                                              QSSGRenderNode *target)
+{
+    const auto &bufferManager = ctx.bufferManager();
+
+    Q_ASSERT(layer.getGlobalState(QSSGRenderNode::GlobalState::Active));
+    std::optional<QSSGRenderPickResult> result = std::nullopt;
+    if (target) {
+        result = closestPointOnSubsetRenderable(layer, *bufferManager, center, radiusSquared, *target);
+    } else {
+        const bool pickEverything = QSSGRendererPrivate::isGlobalPickingEnabled(*ctx.renderer());
+        RenderableList renderables;
+        for (const auto &childNode : layer.children)
+            getPickableRecursive(childNode, renderables, pickEverything);
+        float bestDistSquared = radiusSquared;
+        for (const auto &childNode : renderables) {
+            const auto res = closestPointOnSubsetRenderable(layer, *bufferManager, center, bestDistSquared, *childNode);
+            if (res.has_value()) {
+                bestDistSquared = res.value().m_distanceSq;
+                result = res;
+            }
+        }
+    }
+
+    return result;
+}
+
 QSSGRendererPrivate::PickResultList QSSGRendererPrivate::syncPickSubset(const QSSGRenderLayer &layer,
                                                                         QSSGBufferManager &bufferManager,
                                                                         const QSSGRenderRay &ray,
@@ -467,7 +507,6 @@ void QSSGRenderer::endLayerRender()
     m_currentLayer = nullptr;
 }
 
-using RenderableList = QVarLengthArray<const QSSGRenderNode *>;
 static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
 {
     if (QSSGRenderGraphObject::isRenderable(node.type))
@@ -492,6 +531,421 @@ void QSSGRendererPrivate::getLayerHitObjectList(const QSSGRenderLayer &layer,
         if (inPickEverything || pickableObject->getLocalState(QSSGRenderNode::LocalState::Pickable))
             intersectRayWithSubsetRenderable(layer, bufferManager, ray, *pickableObject, outIntersectionResult);
     }
+}
+
+namespace  {
+
+static inline QVector3D multiply(const QMatrix3x3& M, const QVector3D& v)
+{
+    return QVector3D(
+            M(0,0) * v.x() + M(0,1) * v.y() + M(0,2) * v.z(),
+            M(1,0) * v.x() + M(1,1) * v.y() + M(1,2) * v.z(),
+            M(2,0) * v.x() + M(2,1) * v.y() + M(2,2) * v.z()
+            );
+}
+
+// Return true if G ≈ s^2 I; outputs s2 (>=0). tolerance is relative-ish.
+static inline bool isUniformScaleMetric(const QMatrix3x3& G, float& s2, float tolerance = 1e-5f) {
+    const float gxx = G(0,0), gyy = G(1,1), gzz = G(2,2);
+    const float gxy = G(0,1), gxz = G(0,2), gyz = G(1,2);
+
+    // Average of diagonals as robust estimate of s^2
+    s2 = (gxx + gyy + gzz) / 3.0f;
+
+    // Scale for relative tolerance (avoid divide by zero)
+    const float scale = std::max({ std::fabs(gxx), std::fabs(gyy), std::fabs(gzz), 1.0f });
+
+    // Off-diagonals should be ~0; diagonals should be ~equal to s2
+    const bool offDiagOK = (std::fabs(gxy) <= tolerance * scale) &&
+            (std::fabs(gxz) <= tolerance * scale) &&
+            (std::fabs(gyz) <= tolerance * scale) &&
+            (std::fabs(G(1,0)) <= tolerance * scale) && // in case it's not exactly symmetric
+            (std::fabs(G(2,0)) <= tolerance * scale) &&
+            (std::fabs(G(2,1)) <= tolerance * scale);
+
+    const bool diagOK = (std::fabs(gxx - s2) <= tolerance * scale) &&
+            (std::fabs(gyy - s2) <= tolerance * scale) &&
+            (std::fabs(gzz - s2) <= tolerance * scale);
+
+    return offDiagOK && diagOK && (s2 >= 0.0f);
+}
+
+struct EuclideanDot
+{
+    inline float operator()(const QVector3D& u, const QVector3D& v) const {
+        return QVector3D::dotProduct(u, v);
+    }
+};
+
+struct MetricDot
+{
+    QMatrix3x3 G;
+    inline float operator()(const QVector3D& u, const QVector3D& v) const {
+        // u^T (G v)
+        return QVector3D::dotProduct(u, multiply(G, v));
+    }
+};
+
+// Closest point on triangle ABC to point p, using metric defined by template class
+// This code is based on: https://github.com/RenderKit/embree/blob/master/tutorials/common/math/closest_point.h
+// Copyright 2009-2021 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+template<class Dot>
+static QVector3D closestPointOnTriangle(const QVector3D &p,
+                                        const QVector3D &a,
+                                        const QVector3D &b,
+                                        const QVector3D &c,
+                                        const Dot &dot,
+                                        float &u, float &v, float &w)
+{
+    const QVector3D ab = b - a;
+    const QVector3D ac = c - a;
+    const QVector3D ap = p - a;
+
+    // Vertex region A
+    const float d1 = dot(ab, ap);
+    const float d2 = dot(ac, ap);
+    if (d1 <= 0.f && d2 <= 0.f) {
+        u = 1.0f; v = 0.0f; w = 0.0f;
+        return a;
+    }
+
+    // Vertex region B
+    const QVector3D bp = p - b;
+    const float d3 = dot(ab, bp);
+    const float d4 = dot(ac, bp);
+    if (d3 >= 0.f && d4 <= d3) {
+        u = 0.0f; v = 1.0f; w = 0.0f;
+        return b;
+    }
+
+    // Edge AB
+    const float vc = d1 * d4 - d3 * d2;
+    if (vc <= 0.f && d1 >= 0.f && d3 <= 0.f) {
+        const float v_edge = d1 / (d1 - d3);
+        u = 1.0f - v_edge; v = v_edge; w = 0.0f;
+        return a + v_edge * ab;
+    }
+
+    // Vertex region C
+    const QVector3D cp = p - c;
+    const float d5 = dot(ab, cp);
+    const float d6 = dot(ac, cp);
+    if (d6 >= 0.f && d5 <= d6) {
+        u = 0.0f; v = 0.0f; w = 1.0f;
+        return c;
+    }
+
+    // Edge AC
+    const float vb = d5 * d2 - d1 * d6;
+    if (vb <= 0.f && d2 >= 0.f && d6 <= 0.f) {
+        const float w_edge = d2 / (d2 - d6);
+        u = 1.0f - w_edge; v = 0.0f; w = w_edge;
+        return a + w_edge * ac;
+    }
+
+    // Edge BC
+    const float va = d3 * d6 - d5 * d4;
+    if (va <= 0.f && (d4 - d3) >= 0.f && (d5 - d6) >= 0.f) {
+        const QVector3D bc = c - b;
+        const float w_edge = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+        u = 0.0f; v = 1.0f - w_edge; w = w_edge;
+        return b + w_edge * bc;
+    }
+
+    // Inside face region
+    const float denom = va + vb + vc;
+
+    // Check for degenerate case
+    if (std::abs(denom) < 1e-20f) {
+        // Degenerate triangle in metric space: fall back to closest among vertices
+        const float da = dot(ap, ap);
+        const float db = dot(bp, bp);
+        const float dc = dot(cp, cp);
+        if (da <= db && da <= dc) {
+            u = 1.0f; v = 0.0f; w = 0.0f;
+            return a;
+        }
+        if (db <= dc) {
+            u = 0.0f; v = 1.0f; w = 0.0f;
+            return b;
+        }
+        u = 0.0f; v = 0.0f; w = 1.0f;
+        return c;
+    }
+
+    const float invDenom = 1.0f / denom;
+    u = va * invDenom;
+    v = vb * invDenom;
+    w = vc * invDenom;
+    return a + v * ab + w * ac;
+}
+
+struct SphereData
+{
+    QMatrix4x4 globalTransform;  // model -> world
+    QMatrix3x3 pullbackMetric;
+    QVector3D  centerLocal;      // sphere center in model local space
+};
+
+// Create local-space query data from world-space sphere and model transform.
+// The local radius uses max column length of the inverse linear part as a cheap,
+// conservative bound under non-uniform scaling/shear.
+static inline SphereData createSphereData(const QMatrix4x4 &globalTransform,
+                                          const QVector3D &centerWorld)
+{
+    QMatrix4x4 inv = globalTransform.inverted();
+
+    // center in local space
+    const QVector3D centerLocal = QSSGUtils::mat44::transform(inv, centerWorld);
+
+    const QMatrix3x3 A = QSSGUtils::mat44::getUpper3x3(globalTransform);
+    const QMatrix3x3 G = A.transposed() * A;
+
+    return SphereData{ globalTransform, G, centerLocal };
+}
+
+// Squared distance from point to axis-aligned bounding box.
+static inline float distanceSqPointTransformedAABB(const QVector3D &localPoint,
+                                                   const QSSGBounds3 &localAABB,
+                                                   const QMatrix3x3 &G)
+{
+    // Find the closest point on the AABB in local space
+    QVector3D closestLocal(
+            qBound(localAABB.minimum.x(), localPoint.x(), localAABB.maximum.x()),
+            qBound(localAABB.minimum.y(), localPoint.y(), localAABB.maximum.y()),
+            qBound(localAABB.minimum.z(), localPoint.z(), localAABB.maximum.z())
+            );
+
+    // Compute the difference vector in local space
+    QVector3D localDiff = localPoint - closestLocal;
+
+    // Use the pullback metric to get the squared world-space distance
+    // ||v||_world^2 = v^T * G * v where G = A^T * A
+    MetricDot dot{G};
+    return dot(localDiff, localDiff);
+}
+
+struct ClosestPointResult
+{
+    bool       found = false;
+    float      distSq = std::numeric_limits<float>::max();
+    QVector3D  localPoint;
+    QVector3D  scenePoint;
+    QVector3D  faceNormal;
+    QVector3D  sceneNormal;
+    QVector2D  uv;
+    int subset = -1;
+    int instanceIndex = -1;
+};
+
+static void closestPointBVHLeafNode(const SphereData &data,
+                                    const QSSGMeshBVHNode *node,
+                                    const QSSGRenderMesh *mesh,
+                                    int subset,
+                                    int instanceIndex,
+                                    ClosestPointResult &best)
+{
+    const int begin = node->offset;
+    const int end = begin + node->count;
+    const auto &triangles = mesh->bvh->triangles();
+
+    // Determine if we can use faster Euclidean distance computation
+    float uniformScaleFactor = 1.0f;
+    const bool isUniformScale = isUniformScaleMetric(data.pullbackMetric, uniformScaleFactor);
+    const MetricDot metricDot { data.pullbackMetric };
+
+    for (int i = begin; i < end; ++i) {
+        const auto &triangle = triangles[i];
+
+        // Micro-pruning: skip triangles whose bounds are already farther than current best
+        const float triangleDistSq = distanceSqPointTransformedAABB(data.centerLocal, triangle.bounds, data.pullbackMetric);
+        if (triangleDistSq >= best.distSq)
+            continue;
+
+        // Find closest point on triangle
+        float u, v, w;
+        QVector3D closestPoint;
+
+        if (isUniformScale) {
+            closestPoint = closestPointOnTriangle(data.centerLocal,
+                                                  triangle.vertex1, triangle.vertex2, triangle.vertex3,
+                                                  EuclideanDot{},
+                                                  u, v, w);
+        } else {
+            closestPoint = closestPointOnTriangle(data.centerLocal,
+                                                  triangle.vertex1, triangle.vertex2, triangle.vertex3,
+                                                  metricDot,
+                                                  u, v, w);
+        }
+
+        // Compute squared distance in metric space
+        const QVector3D delta = data.centerLocal - closestPoint;
+        const float distSq = metricDot(delta, delta);
+
+        // Update best result if this is closer
+        if (distSq < best.distSq) {
+            best.distSq = distSq;
+            best.localPoint = closestPoint;
+            best.scenePoint = QSSGUtils::mat44::transform(data.globalTransform, closestPoint);
+            best.subset = subset;
+            best.instanceIndex = instanceIndex;
+            best.found = true;
+
+            // Interpolate UV coordinates using barycentric coordinates.
+            // Note that we're using a different definition of u, v, w than intersectWithBVHTriangles
+            best.uv = u * triangle.uvCoord1 + v * triangle.uvCoord2 + w * triangle.uvCoord3;
+
+            // Compute face normal in local space
+            const QVector3D edge1 = triangle.vertex2 - triangle.vertex1;
+            const QVector3D edge2 = triangle.vertex3 - triangle.vertex1;
+            best.faceNormal = QVector3D::normal(edge1, edge2).normalized();
+            const QMatrix3x3 normalMatrix = data.globalTransform.normalMatrix();
+            best.sceneNormal = QSSGUtils::mat33::transform(normalMatrix, best.faceNormal);
+        }
+    }
+}
+
+static void closestPointBVH(const SphereData &data,
+                            const QSSGMeshBVHNode *node,
+                            const QSSGRenderMesh *mesh,
+                            int subset,
+                            int instanceIndex,
+                            ClosestPointResult &best)
+{
+    if (!node || !mesh || !mesh->bvh)
+        return;
+
+    // Prune by AABB distance vs. current best
+    const float aabbDistSq = distanceSqPointTransformedAABB(data.centerLocal, node->boundingData, data.pullbackMetric);
+    if (aabbDistSq >= best.distSq)
+        return;
+
+    // Leaf node: compute closest point on each triangle
+    if (node->count != 0) {
+        closestPointBVHLeafNode(data, node, mesh, subset, instanceIndex, best);
+        return;
+    }
+
+    // Internal node: visit children in order of increasing AABB distance
+    const auto *leftChild = static_cast<const QSSGMeshBVHNode *>(node->left);
+    const auto *rightChild = static_cast<const QSSGMeshBVHNode *>(node->right);
+
+    // Compute AABB distances for both children
+    const float leftDistSq = leftChild
+            ? distanceSqPointTransformedAABB(data.centerLocal, leftChild->boundingData, data.pullbackMetric)
+            : std::numeric_limits<float>::max();
+    const float rightDistSq = rightChild
+            ? distanceSqPointTransformedAABB(data.centerLocal, rightChild->boundingData, data.pullbackMetric)
+            : std::numeric_limits<float>::max();
+
+    // Visit children in order of increasing distance (closer child first for better pruning)
+    if (leftDistSq < rightDistSq) {
+        if (leftDistSq < best.distSq)
+            closestPointBVH(data, leftChild, mesh, subset, instanceIndex, best);
+        if (rightDistSq < best.distSq)
+            closestPointBVH(data, rightChild, mesh, subset, instanceIndex, best);
+    } else {
+        if (rightDistSq < best.distSq)
+            closestPointBVH(data, rightChild, mesh, subset, instanceIndex, best);
+        if (leftDistSq < best.distSq)
+            closestPointBVH(data, leftChild, mesh, subset, instanceIndex, best);
+    }
+}
+} // namespace (anonymous)
+
+std::optional<QSSGRenderPickResult>
+QSSGRendererPrivate::closestPointOnSubsetRenderable(const QSSGRenderLayer& layer,
+                                                    QSSGBufferManager& bufferManager,
+                                                    const QVector3D& center,
+                                                    const float radiusSquared,
+                                                    const QSSGRenderNode& node)
+{
+    if (!layer.renderData)
+        return std::nullopt;
+
+    const auto *renderData = layer.renderData;
+
+    // Note: If we want to extend this to also handling Item2D, this is where we would do it.
+    // if (node.type == QSSGRenderGraphObject::Type::Item2D) {
+    //     ...
+    // }
+
+    if (node.type != QSSGRenderGraphObject::Type::Model)
+        return std::nullopt;
+
+    const auto &model = static_cast<const QSSGRenderModel &>(node);
+
+    // We have to have a guard here, as the meshes are usually loaded on the render thread,
+    // and we assume all meshes are loaded before picking and none are removed, which
+    // is usually true, except for custom geometry which can be updated at any time. So this
+    // guard should really only be locked whenever a custom geometry buffer is being updated
+    // on the render thread.  Still naughty though because this can block the render thread.
+
+    QMutexLocker mutexLocker(bufferManager.meshUpdateMutex());
+
+    auto mesh = bufferManager.getMeshForPicking(model);
+    if (!mesh)
+        return std::nullopt;
+
+    // Early culling: check if sphere can reach model bounds
+    QSSGBounds3 modelBounds;
+    for (const auto &subset : mesh->subsets)
+        modelBounds.include(subset.bounds);
+
+    if (modelBounds.isEmpty())
+        return std::nullopt;
+
+    const bool instancing = model.instancing();
+    int instanceCount = instancing ? model.instanceTable->count() : 1;
+    const auto instanceTransforms = instancing ? renderData->getInstanceTransforms(model) : QSSGLayerRenderData::InstanceTransforms{};
+
+    ClosestPointResult best;
+    best.distSq = radiusSquared; // Start with sphere radius as max distance
+
+    for (int i = 0; i < instanceCount; ++i) {
+        int instanceIndex = 0;
+        QMatrix4x4 modelTransform;
+        if (instancing) {
+            instanceIndex = i;
+            modelTransform = instanceTransforms.global * model.instanceTable->getTransform(instanceIndex) * instanceTransforms.local;
+        } else {
+            modelTransform = renderData->getGlobalTransform(model);
+        }
+        const SphereData data = createSphereData(modelTransform, center);
+
+        if (distanceSqPointTransformedAABB(data.centerLocal, modelBounds, data.pullbackMetric) > best.distSq)
+            continue;
+
+        for (int subsetIndex = 0; subsetIndex < mesh->subsets.size(); ++subsetIndex) {
+            const auto &subset = mesh->subsets[subsetIndex];
+
+            // Cull subset if its bounds are beyond our current best distance
+            if (distanceSqPointTransformedAABB(data.centerLocal, subset.bounds, data.pullbackMetric) >= best.distSq)
+                continue;
+
+            if (!subset.bvhRoot.isNull()) {
+                const auto *bvhRoot = static_cast<const QSSGMeshBVHNode *>(subset.bvhRoot);
+                closestPointBVH(data, bvhRoot, mesh, subsetIndex, instanceIndex, best);
+            }
+        }
+    }
+    if (best.found) {
+        return QSSGRenderPickResult{
+            &model,
+            best.distSq,
+            best.uv,
+            best.scenePoint,
+            best.localPoint,
+            best.faceNormal,
+            best.sceneNormal,
+            best.subset,
+            best.instanceIndex
+        };
+    }
+
+    return std::nullopt;
 }
 
 void QSSGRendererPrivate::intersectRayWithSubsetRenderable(const QSSGRenderLayer &layer,
@@ -538,12 +992,13 @@ void QSSGRendererPrivate::intersectRayWithSubsetRenderable(const QSSGRenderLayer
     const bool instancing = model.instancing(); // && instancePickingEnabled
     int instanceCount = instancing ? model.instanceTable->count() : 1;
 
+    const auto instanceTransforms = instancing ? renderData->getInstanceTransforms(model) : QSSGLayerRenderData::InstanceTransforms{};
+
     for (int instanceIndex = 0; instanceIndex < instanceCount; ++instanceIndex) {
 
         QMatrix4x4 modelTransform;
         if (instancing) {
-            const auto &[localInstanceTransform, globalInstanceTransform] = renderData->getInstanceTransforms(model);
-            modelTransform = globalInstanceTransform * model.instanceTable->getTransform(instanceIndex) * localInstanceTransform;
+            modelTransform = instanceTransforms.global * model.instanceTable->getTransform(instanceIndex) * instanceTransforms.local;
         } else {
             modelTransform = renderData->getGlobalTransform(model);
         }

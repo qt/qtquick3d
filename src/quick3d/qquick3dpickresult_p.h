@@ -65,7 +65,8 @@ public:
                                 const QVector3D &position,
                                 const QVector3D &normal,
                                 const QVector3D &sceneNormal,
-                                int instanceIndex);
+                                int instanceIndex,
+                                QQuickItem *itemHit = 0);
 
     explicit QQuick3DPickResult(QQuickItem *itemHit,
                                 float distanceFromCamera,

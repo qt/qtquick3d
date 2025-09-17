@@ -71,6 +71,7 @@ protected:
     PickResultList syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node);
     PickResultList syncPickSubset(const QSSGRenderRay &ray, QVarLengthArray<QSSGRenderNode *> subset);
     PickResultList syncPickAll(const QSSGRenderRay &ray);
+    std::optional<QSSGRenderPickResult> syncPickClosestPoint(const QVector3D &center, float radiusSquared, QSSGRenderNode *node);
 
     void setGlobalPickingEnabled(bool isEnabled);
 

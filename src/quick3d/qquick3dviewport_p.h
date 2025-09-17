@@ -107,6 +107,7 @@ public:
     Q_REVISION(6, 2) Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;
 
     Q_REVISION(6, 11) Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction, QQuick3DModel *model) const;
+    Q_REVISION(6, 11) Q_INVOKABLE QQuick3DPickResult closestPointPick(const QVector3D &origin, float radius, QQuick3DModel *model = nullptr) const;
 
     void processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event) const;
     bool singlePointPick(QSinglePointEvent *event, const QVector3D &origin, const QVector3D &direction);
@@ -204,7 +205,7 @@ private:
     void setupDirectRenderer(RenderMode mode);
     bool checkIsVisible() const;
     bool internalPick(QPointerEvent *event, const QVector3D &origin = QVector3D(), const QVector3D &direction = QVector3D()) const;
-    QPair<QQuickItem *, QPointF> getItemAndPosition(const QSSGRenderPickResult &pickResult);
+    QPair<QQuickItem *, QPointF> getItemAndPosition(const QSSGRenderPickResult &pickResult) const;
     QVarLengthArray<QSSGRenderPickResult, 20> getPickResults(QQuick3DSceneRenderer *renderer, const QVector3D &origin, const QVector3D &direction) const;
     QVarLengthArray<QSSGRenderPickResult, 20> getPickResults(QQuick3DSceneRenderer *renderer, const QEventPoint &eventPoint) const;
     bool forwardEventToSubscenes(QPointerEvent *event,
