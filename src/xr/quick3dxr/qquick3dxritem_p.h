@@ -6,6 +6,7 @@
 
 #include <QQuickItem>
 #include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3DXr/private/qquick3dxrview_p.h>
 
 #include <QtQuick/private/qquicktranslate_p.h>
 
@@ -42,18 +43,6 @@ class QQuick3DXrItem : public QQuick3DNode
     QML_NAMED_ELEMENT(XrItem)
     QML_ADDED_IN_VERSION(6, 8)
 public:
-    struct TouchState
-    {
-        int pointId = -1;
-        QQuick3DXrItem *target = nullptr;
-        bool grabbed = false;
-        bool pressed = false;
-        qreal touchDistance = 1e6;
-        QPointF cursorPos;
-        QVector3D previous;
-        qint64 timestamp;
-    };
-
     explicit QQuick3DXrItem(QQuick3DNode *parent = nullptr);
     ~QQuick3DXrItem() override;
 
@@ -82,8 +71,6 @@ public:
     void setAutomaticWidth(bool newAutomaticHeight);
 
     void componentComplete() override;
-
-    bool handleVirtualTouch(QQuick3DXrView *view, const QVector3D &pos, TouchState *touchState, QVector3D *offset);
 
 signals:
     void contentItemChanged();
