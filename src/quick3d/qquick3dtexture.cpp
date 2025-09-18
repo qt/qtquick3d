@@ -657,7 +657,7 @@ bool QQuick3DTexture::autoOrientation() const
 
     \since 6.7
 
-    \sa RenderExtension, QSSGRenderExtensionHelpers
+    \sa TextureProviderExtension, RenderExtension, QSSGRenderExtensionHelpers
 */
 
 QQuick3DRenderExtension *QQuick3DTexture::textureProvider() const
