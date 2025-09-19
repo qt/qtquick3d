@@ -563,8 +563,6 @@ bool QQuick3DXrManagerPrivate::initialize()
     if (!m_compositorLayer->isInitialized()) {
         if (auto *visionOSApplicaton = qGuiApp->nativeInterface<QNativeInterface::QVisionOSApplication>()) {
             visionOSApplicaton->setImmersiveSpaceCompositorLayer(m_compositorLayer);
-            m_compositorLayer->init(this);
-
             // FIXME: We don't actually handle the case where the rendere changes or we get multiple calls should do something.
             QObject::connect(m_compositorLayer, &CompositorLayer::layerRendererReady, q, &QQuick3DXrManager::initialized, Qt::ConnectionType(Qt::SingleShotConnection | Qt::QueuedConnection));
             QObject::connect(m_compositorLayer, &CompositorLayer::renderStateChanged, q, [q](QQuick3DXrManagerPrivate::RenderState state) {
@@ -615,6 +613,8 @@ bool QQuick3DXrManagerPrivate::initialize()
                         break;
                 }
             }, Qt::DirectConnection);
+
+            m_compositorLayer->init(this);
         }
         return false;
     }
