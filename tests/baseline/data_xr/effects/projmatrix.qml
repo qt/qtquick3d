@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Effects
 
 Node {
     property SceneEnvironment qmlxr_environment: SceneEnvironment {
