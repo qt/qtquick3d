@@ -671,16 +671,20 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking(XrTime predictedDisplayTi
 
 void QQuick3DXrInputManagerPrivate::setupHandTracking()
 {
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+        m_instance,
         "xrCreateHandTrackerEXT",
         (PFN_xrVoidFunction*)(&xrCreateHandTrackerEXT_));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+        m_instance,
         "xrDestroyHandTrackerEXT",
         (PFN_xrVoidFunction*)(&xrDestroyHandTrackerEXT_));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+        m_instance,
         "xrLocateHandJointsEXT",
         (PFN_xrVoidFunction*)(&xrLocateHandJointsEXT_));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+        m_instance,
         "xrGetHandMeshFB",
         (PFN_xrVoidFunction*)(&xrGetHandMeshFB_));
 
@@ -831,17 +835,6 @@ void QQuick3DXrInputManagerPrivate::destroyActions()
 bool QQuick3DXrInputManagerPrivate::checkXrResult(const XrResult &result)
 {
     return OpenXRHelpers::checkXrResult(result, m_instance);
-}
-
-bool QQuick3DXrInputManagerPrivate::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
-{
-    XrResult result = xrGetInstanceProcAddr(m_instance, name, function);
-    if (!OpenXRHelpers::checkXrResult(result, m_instance)) {
-        qWarning("Failed to resolve OpenXR function %s", name);
-        *function = nullptr;
-        return false;
-    }
-    return true;
 }
 
 void QQuick3DXrInputManagerPrivate::setPath(XrPath &path, const QByteArray &pathString)

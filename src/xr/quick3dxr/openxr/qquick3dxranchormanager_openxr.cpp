@@ -73,43 +73,56 @@ void QQuick3DXrAnchorManager::initialize(XrInstance instance, XrSession session)
     m_session = session;
 
     // Get the function pointers
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrEnumerateSpaceSupportedComponentsFB",
                     (PFN_xrVoidFunction*)(&xrEnumerateSpaceSupportedComponentsFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceComponentStatusFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceComponentStatusFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrSetSpaceComponentStatusFB",
                     (PFN_xrVoidFunction*)(&xrSetSpaceComponentStatusFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceUuidFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceUuidFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrQuerySpacesFB",
                     (PFN_xrVoidFunction*)(&xrQuerySpacesFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrRetrieveSpaceQueryResultsFB",
                     (PFN_xrVoidFunction*)(&xrRetrieveSpaceQueryResultsFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceBoundingBox2DFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceBoundingBox2DFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceBoundingBox3DFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceBoundingBox3DFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceSemanticLabelsFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceSemanticLabelsFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceBoundary2DFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceBoundary2DFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceRoomLayoutFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceRoomLayoutFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrGetSpaceContainerFB",
                     (PFN_xrVoidFunction*)(&xrGetSpaceContainerFB));
-    resolveXrFunction(
+    OpenXRHelpers::resolveXrFunction(
+                    m_instance,
                     "xrRequestSceneCaptureFB",
                     (PFN_xrVoidFunction*)(&xrRequestSceneCaptureFB));
 }
@@ -638,17 +651,6 @@ XrResult QQuick3DXrAnchorManager::requestSceneCapture(const XrSceneCaptureReques
 bool QQuick3DXrAnchorManager::checkXrResult(const XrResult &result)
 {
     return OpenXRHelpers::checkXrResult(result, m_instance);
-}
-
-bool QQuick3DXrAnchorManager::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
-{
-    XrResult result = xrGetInstanceProcAddr(m_instance, name, function);
-    if (!OpenXRHelpers::checkXrResult(result, m_instance)) {
-        qWarning("Failed to resolve OpenXR function %s", name);
-        *function = nullptr;
-        return false;
-    }
-    return true;
 }
 
 QT_END_NAMESPACE
