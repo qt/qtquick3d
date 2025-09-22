@@ -91,7 +91,6 @@ private:
     void setupActions();
     void destroyActions();
     [[nodiscard]] bool checkXrResult(const XrResult &result);
-    bool resolveXrFunction(const char *name, PFN_xrVoidFunction *function);
     void setPath(XrPath &path, const QByteArray &pathString);
 
     void createAction(XrActionType type,

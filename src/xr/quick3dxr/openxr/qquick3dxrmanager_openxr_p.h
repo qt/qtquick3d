@@ -111,7 +111,6 @@ private:
 
     void checkViewConfiguration();
     [[nodiscard]] bool checkXrResult(const XrResult &result);
-    bool resolveXrFunction(const char *name, PFN_xrVoidFunction *function);
     void checkEnvironmentBlendMode(XrViewConfigurationType type);
 
     void pollEvents(bool *exitRenderLoop, bool *requestRestart);
