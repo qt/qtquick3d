@@ -1719,11 +1719,13 @@ void QQuick3DXrManagerPrivate::setupMetaQuestFoveation()
         foveationUpdateState.type = XR_TYPE_SWAPCHAIN_STATE_FOVEATION_FB;
         foveationUpdateState.profile = foveationProfile;
 
-        pfnUpdateSwapchainFB(
-                swapchain.handle,
-                (XrSwapchainStateBaseHeaderFB*)(&foveationUpdateState));
+        XrResult updateSwapchainFBResult = OpenXRHelpers::safeCall(pfnUpdateSwapchainFB, swapchain.handle, (const XrSwapchainStateBaseHeaderFB*)(&foveationUpdateState));
+        if (updateSwapchainFBResult == XR_ERROR_FUNCTION_UNSUPPORTED)
+            return;
 
-        pfnDestroyFoveationProfileFB(foveationProfile);
+        XrResult destroyFoveationProfileFBResult = OpenXRHelpers::safeCall(pfnDestroyFoveationProfileFB, foveationProfile);
+        if (destroyFoveationProfileFBResult == XR_ERROR_FUNCTION_UNSUPPORTED)
+            return;
 
         qCDebug(lcQuick3DXr, "Fixed foveated rendering requested with level %d", int(m_foveationLevel));
     }
@@ -1743,7 +1745,8 @@ void QQuick3DXrManagerPrivate::createMetaQuestPassthrough()
     passthroughCreateInfo.type = XR_TYPE_PASSTHROUGH_CREATE_INFO_FB;
     passthroughCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
 
-    if (!checkXrResult(pfnXrCreatePassthroughFBX(m_session, &passthroughCreateInfo, &m_passthroughFeature)))
+    XrResult xrCreatePassthroughFBXResult = OpenXRHelpers::safeCall(pfnXrCreatePassthroughFBX, m_session, static_cast<const XrPassthroughCreateInfoFB*>(&passthroughCreateInfo), &m_passthroughFeature);
+    if (!checkXrResult(xrCreatePassthroughFBXResult))
         qWarning("Failed to create passthrough object");
 }
 
@@ -1752,7 +1755,8 @@ void QQuick3DXrManagerPrivate::destroyMetaQuestPassthrough()
     PFN_xrDestroyPassthroughFB pfnXrDestroyPassthroughFBX = nullptr;
     OpenXRHelpers::resolveXrFunction(m_instance, "xrDestroyPassthroughFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughFBX));
 
-    if (!checkXrResult(pfnXrDestroyPassthroughFBX(m_passthroughFeature)))
+    XrResult xrDestroyPassthroughFBXResult = OpenXRHelpers::safeCall(pfnXrDestroyPassthroughFBX, m_passthroughFeature);
+    if (!checkXrResult(xrDestroyPassthroughFBXResult))
         qWarning("Failed to destroy passthrough object");
 
     m_passthroughFeature = XR_NULL_HANDLE;
@@ -1763,7 +1767,8 @@ void QQuick3DXrManagerPrivate::startMetaQuestPassthrough()
     PFN_xrPassthroughStartFB pfnXrPassthroughStartFBX = nullptr;
     OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughStartFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughStartFBX));
 
-    if (!checkXrResult(pfnXrPassthroughStartFBX(m_passthroughFeature)))
+    XrResult xrPassthroughStartFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughStartFBX, m_passthroughFeature);
+    if (!checkXrResult(xrPassthroughStartFBXResult))
         qWarning("Failed to start passthrough");
 }
 
@@ -1772,7 +1777,8 @@ void QQuick3DXrManagerPrivate::pauseMetaQuestPassthrough()
     PFN_xrPassthroughPauseFB pfnXrPassthroughPauseFBX = nullptr;
     OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughPauseFBX));
 
-    if (!checkXrResult(pfnXrPassthroughPauseFBX(m_passthroughFeature)))
+    XrResult xrPassthroughPauseFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughPauseFBX, m_passthroughFeature);
+    if (!checkXrResult(xrPassthroughPauseFBXResult))
         qWarning("Failed to pause passthrough");
 }
 
@@ -1788,7 +1794,8 @@ void QQuick3DXrManagerPrivate::createMetaQuestPassthroughLayer()
     if (m_enablePassthrough)
         layerCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
 
-    if (!checkXrResult(pfnXrCreatePassthroughLayerFBX(m_session, &layerCreateInfo, &m_passthroughLayer)))
+    XrResult xrCreatePassthroughLayerFBXResult = OpenXRHelpers::safeCall(pfnXrCreatePassthroughLayerFBX, m_session, static_cast<const XrPassthroughLayerCreateInfoFB*>(&layerCreateInfo), &m_passthroughLayer);
+    if (!checkXrResult(xrCreatePassthroughLayerFBXResult))
         qWarning("Failed to create passthrough layer");
 }
 
@@ -1797,7 +1804,8 @@ void QQuick3DXrManagerPrivate::destroyMetaQuestPassthroughLayer()
     PFN_xrDestroyPassthroughLayerFB pfnXrDestroyPassthroughLayerFBX = nullptr;
     OpenXRHelpers::resolveXrFunction(m_instance, "xrDestroyPassthroughLayerFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughLayerFBX));
 
-    if (!checkXrResult(pfnXrDestroyPassthroughLayerFBX(m_passthroughLayer)))
+    XrResult xrDestroyPassthroughLayerFBXResult = OpenXRHelpers::safeCall(pfnXrDestroyPassthroughLayerFBX, m_passthroughLayer);
+    if (!checkXrResult(xrDestroyPassthroughLayerFBXResult))
         qWarning("Failed to destroy passthrough layer");
 
     m_passthroughLayer = XR_NULL_HANDLE;
@@ -1808,8 +1816,9 @@ void QQuick3DXrManagerPrivate::pauseMetaQuestPassthroughLayer()
     PFN_xrPassthroughLayerPauseFB pfnXrPassthroughLayerPauseFBX = nullptr;
     OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughLayerPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerPauseFBX));
 
-    if (!checkXrResult(pfnXrPassthroughLayerPauseFBX(m_passthroughLayer)))
-    qWarning("Failed to pause passthrough layer");
+    XrResult xrPassthroughLayerPauseFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughLayerPauseFBX, m_passthroughLayer);
+    if (!checkXrResult(xrPassthroughLayerPauseFBXResult))
+        qWarning("Failed to pause passthrough layer");
 }
 
 void QQuick3DXrManagerPrivate::resumeMetaQuestPassthroughLayer()
@@ -1817,7 +1826,8 @@ void QQuick3DXrManagerPrivate::resumeMetaQuestPassthroughLayer()
     PFN_xrPassthroughLayerResumeFB pfnXrPassthroughLayerResumeFBX = nullptr;
     OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughLayerResumeFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerResumeFBX));
 
-    if (!checkXrResult(pfnXrPassthroughLayerResumeFBX(m_passthroughLayer)))
+    XrResult xrPassthroughLayerResumeFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughLayerResumeFBX, m_passthroughLayer);
+    if (!checkXrResult(xrPassthroughLayerResumeFBXResult))
         qWarning("Failed to resume passthrough layer");
 }
 
