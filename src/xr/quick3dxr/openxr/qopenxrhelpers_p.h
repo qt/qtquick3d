@@ -28,6 +28,7 @@ namespace OpenXRHelpers
 {
 QString getXrResultAsString(XrResult result, XrInstance instance);
 bool checkXrResult(XrResult result, XrInstance instance);
+bool resolveXrFunction(XrInstance instance, const char *name, PFN_xrVoidFunction *function);
 
 inline QQuaternion toQQuaternion(const XrQuaternionf &q)
 {

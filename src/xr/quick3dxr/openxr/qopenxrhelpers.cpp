@@ -23,4 +23,15 @@ bool OpenXRHelpers::checkXrResult(XrResult result, XrInstance instance)
     return true;
 }
 
+bool OpenXRHelpers::resolveXrFunction(XrInstance instance, const char *name, PFN_xrVoidFunction *function)
+{
+    XrResult result = xrGetInstanceProcAddr(instance, name, function);
+    if (!checkXrResult(result, instance)) {
+        qWarning("Failed to resolve OpenXR function %s", name);
+        *function = nullptr;
+        return false;
+    }
+    return true;
+}
+
 QT_END_NAMESPACE
