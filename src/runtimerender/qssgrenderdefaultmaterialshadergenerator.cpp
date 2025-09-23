@@ -2045,7 +2045,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
     } else {
         if ((isOrthoShadowPass || isPerspectiveShadowPass || isDepthPass) && isOpaqueDepthPrePass) {
-            fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";
+            fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < (1.0 - 1e-6))\n";
             fragmentShader << "        discard;\n";
         }
 
