@@ -191,7 +191,7 @@ ApplicationWindow {
             }
 
             function resetModel() {
-                importUrl = ""
+                rootWindow.importUrl = ""
                 helper.updateBounds(defaultModel.bounds)
                 resetView()
             }
@@ -341,7 +341,7 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         nameFilters: ["glTF files (*.gltf *.glb)", "All files (*)"]
-        onAccepted: importUrl = selectedFile
+        onAccepted: rootWindow.importUrl = selectedFile
         Settings {
             id: fileDialogSettings
             category: "QtQuick3D.Examples.RuntimeLoader"
