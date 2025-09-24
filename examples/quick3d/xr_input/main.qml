@@ -42,8 +42,8 @@ XrView {
         trigger: pickRay.hit
         hapticEffect: XrSimpleHapticEffect {
             amplitude: 0.5
-            duration: 30
-            frequency: 3000
+            duration: 10
+            frequency: 200
         }
     }
     //! [haptics]
