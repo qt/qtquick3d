@@ -42,8 +42,8 @@ XrView {
         controller: XrHapticFeedback.RightController
         hapticEffect: XrSimpleHapticEffect {
             amplitude: 0.5
-            duration: 30
-            frequency: 3000
+            duration: 10
+            frequency: 200
         }
         property Model prevObj: null
         function handleHover(obj: Model) {
