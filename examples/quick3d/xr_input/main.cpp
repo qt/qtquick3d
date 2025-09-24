@@ -3,6 +3,7 @@
 
 #include <QtGui/QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QStyleHints>
 
 int main(int argc, char *argv[])
 {
@@ -13,6 +14,8 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("Qt Simple Input Example");
     QCoreApplication::setOrganizationName("The Qt Company");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));

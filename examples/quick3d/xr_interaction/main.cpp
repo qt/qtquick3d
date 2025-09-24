@@ -3,12 +3,14 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QStyleHints>
 
 int main(int argc, char *argv[])
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "Basic");
 
     QGuiApplication app(argc, argv);
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
 
     QQmlApplicationEngine engine;
     QObject::connect(
