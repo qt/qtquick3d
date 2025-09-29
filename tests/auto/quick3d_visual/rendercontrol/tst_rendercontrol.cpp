@@ -368,7 +368,7 @@ void tst_RenderControl::dynamicLights()
         QVERIFY(readCompleted);
         QCOMPARE(result.size(), QSize(640, 480));
 
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(239, 255, 239), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(255, 255, 255), FUZZ));
         QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(248, 255, 248), FUZZ));
         // floor in shadow, now with some green added
         QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(0, 82, 0), FUZZ));
@@ -384,8 +384,8 @@ void tst_RenderControl::dynamicLights()
         QVERIFY(readCompleted);
         QCOMPARE(result.size(), QSize(640, 480));
 
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(115, 255, 115), FUZZ));
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(120, 142, 120), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(255, 255, 255), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(173, 188, 173), FUZZ));
     }
 
     // Case: destroy the DirectionalLight
@@ -412,7 +412,7 @@ void tst_RenderControl::dynamicLights()
         QVERIFY(readCompleted);
         QCOMPARE(result.size(), QSize(640, 480));
 
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(239, 255, 239), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(255, 255, 255), FUZZ));
         QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(248, 255, 248), FUZZ));
         // floor in shadow, now with some green added
         QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(0, 82, 0), FUZZ));
@@ -427,7 +427,7 @@ void tst_RenderControl::dynamicLights()
         QVERIFY(readCompleted);
         QCOMPARE(result.size(), QSize(640, 480));
 
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(239, 239, 239), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(255, 255, 255), FUZZ));
         // floor in shadow
         QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(0, 0, 0), FUZZ));
     }
@@ -525,7 +525,7 @@ void tst_RenderControl::dynamicLights()
         QVERIFY(readCompleted);
         QCOMPARE(result.size(), QSize(640, 480));
 
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 255, 83), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 255, 255), FUZZ));
         QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(10, 82, 0), FUZZ));
     }
 

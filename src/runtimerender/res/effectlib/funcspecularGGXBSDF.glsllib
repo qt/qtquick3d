@@ -6,15 +6,14 @@
 
 vec4 qt_specularGGXBSDF(in vec3 normal, in vec3 L, in vec3 V, in vec3 lightSpecular, in vec3 F0, in vec3 F90, in float roughness)
 {
-    roughness = clamp(roughness, 0.00001, 1.0);
     float NdotL = dot(normal, L);
     float cNdotL = max(0.0, NdotL);
     float NdotV = dot(normal, V);
     float cNdotV = max(0.0, NdotV);
     vec3 H = normalize(V + L);
     float cLdotH = max(0.0, dot(L, H));
-    float cNdotH = max(0.0, dot(normal, H));
-    float alpha_ggx = roughness * roughness;
+    float cNdotH = max(0.001, dot(normal, H)); // arguments for qt_D_GGX must not be 0
+    float alpha_ggx = clamp(roughness * roughness, 0.001, 1.0);
     float GGX_D = qt_D_GGX(cNdotH, alpha_ggx);
     float GGX_V = qt_V_GGX(cNdotL, cNdotV, alpha_ggx);
 
