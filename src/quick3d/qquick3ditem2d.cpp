@@ -86,7 +86,9 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
     if (!node) {
         markAllDirty();
-        node = new QSSGRenderItem2D();
+        auto *backEndNode = new QSSGRenderItem2D();
+        backEndNode->m_frontEndObject = this;
+        node = backEndNode;
     }
 
     QQuick3DNode::updateSpatialNode(node);
