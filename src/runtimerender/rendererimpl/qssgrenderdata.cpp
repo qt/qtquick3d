@@ -729,8 +729,10 @@ void QSSGRenderItem2DData::updateItem2DData(QSSGItem2DsView &items, QSSGRenderer
             item2DRenderer.clear();
         }
 
-        if (!item2DRenderer)
+        if (!item2DRenderer) {
             item2DRenderer = sgRc->createRenderer(QSGRendererInterface::RenderMode3D);
+            QObject::connect(item2DRenderer, SIGNAL(sceneGraphChanged()), theItem2D->m_frontEndObject, SLOT(update()));
+        }
 
         if (item2DRenderer->rootNode() != theItem2D->m_rootNode) {
             item2DRenderer->setRootNode(theItem2D->m_rootNode);
