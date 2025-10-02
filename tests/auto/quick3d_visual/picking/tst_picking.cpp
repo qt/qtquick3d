@@ -130,6 +130,7 @@ private Q_SLOTS:
     void test_picking_QTBUG_111997();
     void test_picking_corner_case();
     void test_triangleIntersect();
+    void test_sphere_geometry();
 
 private:
     QQuickItem *find2DChildIn3DNode(QQuickView *view, const QString &objectName, const QString &itemName);
@@ -919,6 +920,31 @@ void tst_Picking::test_picking_QTBUG_111997()
     QVERIFY(result.objectHit() != nullptr);
     QCOMPARE(result.objectHit(), model1);
 
+}
+
+void tst_Picking::test_sphere_geometry()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("pickable_sphere.qml"), QSize(100, 100)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+    QQuick3DModel *model1 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model1"));
+    QVERIFY(model1);
+
+    const auto viewSize = view->size();
+    const float halfWidth = viewSize.width() * 0.5f;
+    const float halfHeight = viewSize.height() * 0.5f;
+    QSignalSpy frameSwappedSpy(view.data(), &QQuickWindow::frameSwapped);
+
+    // Wait for the next frame (so that geometry is up-to-date
+    if (!frameSwappedSpy.wait())
+        QFAIL("frameSwapped() signal not emitted");
+
+    auto result = view3d->pick(halfWidth, halfHeight);
+    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.objectHit(), model1);
 }
 
 void tst_Picking::test_picking_corner_case()

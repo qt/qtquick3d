@@ -132,6 +132,7 @@ static inline quint32 getIndexBufferValue(quint32 index, const quint32 indexCoun
 static inline QVector3D getVertexBufferValuePosition(quint32 index, const quint32 vertexStride, const quint32 vertexPosOffset, const QByteArray &vertexBufferData)
 {
     const quint32 offset = index * vertexStride + vertexPosOffset;
+    Q_ASSERT(offset < vertexBufferData.size());
     const QVector3D *position = reinterpret_cast<const QVector3D *>(vertexBufferData.begin() + offset);
 
     return *position;
@@ -140,6 +141,7 @@ static inline QVector3D getVertexBufferValuePosition(quint32 index, const quint3
 static inline QVector2D getVertexBufferValueUV(quint32 index, const quint32 vertexStride, const quint32 vertexUVOffset, const QByteArray &vertexBufferData)
 {
     const quint32 offset = index * vertexStride + vertexUVOffset;
+    Q_ASSERT(offset < vertexBufferData.size());
     const QVector2D *uv = reinterpret_cast<const QVector2D *>(vertexBufferData.begin() + offset);
 
     return *uv;
