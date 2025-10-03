@@ -1287,18 +1287,24 @@ void QQuick3DViewport::setTouchpoint(QQuickItem *target, const QPointF &position
 
     QPointingDevicePrivate *devPriv = QPointingDevicePrivate::get(m_syntheticTouchDevice);
 
-    auto makePoint = [devPriv](int id, QEventPoint::State pointState, QPointF pos) -> QEventPoint {
+    auto makePoint = [devPriv](int id, QEventPoint::State pointState, QPointF pos, quint64 timestamp) -> QEventPoint {
         auto epd = devPriv->pointById(id);
         auto &ep = epd->eventPoint;
         if (pointState != QEventPoint::State::Stationary)
             ep.setAccepted(false);
 
-        auto res = QMutableEventPoint::withTimeStamp(0, id, pointState, pos, pos, pos);
+        auto res = QMutableEventPoint::withTimeStamp(timestamp, id, pointState, pos, pos, pos);
         QMutableEventPoint::update(res, ep);
+
+        if (pointState == QEventPoint::State::Pressed)
+            QMutableEventPoint::setGlobalPressPosition(res, pos);
+        else if (ep.state() != QEventPoint::State::Unknown)
+            QMutableEventPoint::setGlobalPressPosition(res, ep.globalPressPosition());
+
         return res;
     };
 
-    auto sendTouchEvent = [&](QQuickItem *t, const QPointF &position, int pointId, QEventPoint::State pointState) -> void {
+    auto sendTouchEvent = [&](QQuickItem *t, const QPointF &position, int pointId, QEventPoint::State pointState, quint64 timestamp) -> void {
         QList<QEventPoint> points;
         bool otherPoint = false; // Does the event have another point already?
         for (int i = 0; i < m_touchState.size(); ++i) {
@@ -1306,11 +1312,11 @@ void QQuick3DViewport::setTouchpoint(QQuickItem *target, const QPointF &position
             if (ts.target != t)
                 continue;
             if (i == pointId) {
-                auto newPoint = makePoint(i, pointState, position);
+                auto newPoint = makePoint(i, pointState, position, timestamp);
                 points << newPoint;
             } else if (ts.isPressed) {
                 otherPoint = true;
-                points << makePoint(i, QEventPoint::Stationary, ts.position);
+                points << makePoint(i, QEventPoint::Stationary, ts.position, timestamp);
             }
         }
 
@@ -1323,6 +1329,7 @@ void QQuick3DViewport::setTouchpoint(QQuickItem *target, const QPointF &position
             type = QEvent::Type::TouchUpdate;
 
         QTouchEvent ev(type, m_syntheticTouchDevice, {}, points);
+        ev.setTimestamp(timestamp);
 
         if (t) {
             // Actually send event:
@@ -1342,13 +1349,15 @@ void QQuick3DViewport::setTouchpoint(QQuickItem *target, const QPointF &position
         }
     };
 
+    auto timestamp = QDateTime::currentMSecsSinceEpoch();
+
     // Send a release event to the previous target
     if (prevState.target && !sameTarget)
-        sendTouchEvent(prevState.target, prevState.position, pointId, QEventPoint::Released);
+        sendTouchEvent(prevState.target, prevState.position, pointId, QEventPoint::Released, timestamp);
 
     // Now send an event for the new state
     QEventPoint::State newState = isPress ? QEventPoint::Pressed : isRelease ? QEventPoint::Released : QEventPoint::Updated;
-    sendTouchEvent(target, position, pointId, newState);
+    sendTouchEvent(target, position, pointId, newState, timestamp);
 }
 
 QQuick3DLightmapBaker *QQuick3DViewport::maybeLightmapBaker()
