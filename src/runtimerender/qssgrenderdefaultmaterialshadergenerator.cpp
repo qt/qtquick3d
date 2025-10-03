@@ -1686,22 +1686,25 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
 
 static quint32 softShadowQualityToInt(QSSGRenderLight::SoftShadowQuality quality)
 {
+    quint32 samplesCount = 0;
     switch (quality) {
         case QSSGRenderLight::SoftShadowQuality::Hard:
-            return 0;
+            samplesCount = 0;
+            break;
         case QSSGRenderLight::SoftShadowQuality::PCF4:
-            return 4;
+            samplesCount = 4;
+            break;
         case QSSGRenderLight::SoftShadowQuality::PCF8:
-            return 8;
+            samplesCount = 8;
+            break;
         case QSSGRenderLight::SoftShadowQuality::PCF16:
-            return 16;
         case QSSGRenderLight::SoftShadowQuality::PCF32:
-            return 32;
         case QSSGRenderLight::SoftShadowQuality::PCF64:
-            return 64;
+            samplesCount = 16;
+            break;
     }
 
-    Q_UNREACHABLE_RETURN(0 /* HARD */);
+    return samplesCount;
 }
 
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,

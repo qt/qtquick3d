@@ -175,6 +175,8 @@ QT_BEGIN_NAMESPACE
 
     Default value: \c Light.PCF4
 
+    \note Currently values larger than 16 samples will be treated as 16 samples.
+
     \sa Light::pcfFactor, Light::shadowFilter
 */
 
