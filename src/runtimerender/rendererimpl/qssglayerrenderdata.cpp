@@ -945,6 +945,9 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
         if (texture.m_flags.isLinear())
             theKeyProp.setLinear(inShaderKey, true);
 
+        if (texture.m_flags.isPreMultipliedAlpha())
+            theKeyProp.setPreMultipliedAlpha(inShaderKey, true);
+
         if (ioFirstImage == nullptr)
             ioFirstImage = theImage;
         else

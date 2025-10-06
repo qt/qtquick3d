@@ -26,7 +26,8 @@ enum class QSSGRenderImageTextureFlagValue
 {
     HasTransparency = 1 << 0,
     RGBE8 = 1 << 1,
-    Linear = 1 << 2
+    Linear = 1 << 2,
+    PreMultipliedAlpha = 1 << 3,
 };
 
 struct QSSGRenderImageTextureFlags : public QFlags<QSSGRenderImageTextureFlagValue>
@@ -39,6 +40,9 @@ struct QSSGRenderImageTextureFlags : public QFlags<QSSGRenderImageTextureFlagVal
 
     bool isLinear() const { return this->operator&(QSSGRenderImageTextureFlagValue::Linear); }
     void setLinear(bool inValue) { setFlag(QSSGRenderImageTextureFlagValue::Linear, inValue); }
+
+    bool isPreMultipliedAlpha() const { return this->operator&(QSSGRenderImageTextureFlagValue::PreMultipliedAlpha); }
+    void setPreMultipliedAlpha(bool inValue) { setFlag(QSSGRenderImageTextureFlagValue::PreMultipliedAlpha, inValue); }
 };
 
 struct QSSGRenderImageTexture

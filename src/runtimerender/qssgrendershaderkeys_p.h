@@ -245,7 +245,7 @@ struct QSSGShaderKeyTextureChannel : public QSSGShaderKeyUnsigned<2>
     }
 };
 
-struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
+struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<7>
 {
     enum ImageMapBits {
         Enabled = 1 << 0,
@@ -253,10 +253,11 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
         LightProbe = 1 << 2,
         Identity = 1 << 3,
         UsesUV1 = 1 << 4,
-        Linear = 1 << 5
+        Linear = 1 << 5,
+        PreMultipliedAlpha = 1 << 6,
     };
 
-    explicit QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<6>(inName) {}
+    explicit QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<7>(inName) {}
 
     bool getBitValue(ImageMapBits imageBit, QSSGDataView<quint32> inKeySet) const
     {
@@ -294,6 +295,9 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
     bool isLinear(QSSGDataView<quint32> inKeySet) const { return getBitValue(Linear, inKeySet); }
     void setLinear(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Linear, val, inKeySet); }
 
+    bool isPreMultipliedAlpha(QSSGDataView<quint32> inKeySet) const { return getBitValue(PreMultipliedAlpha, inKeySet); }
+    void setPreMultipliedAlpha(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(PreMultipliedAlpha, val, inKeySet); }
+
     void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
         ioStr.append(name);
@@ -309,6 +313,8 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
         internalToString(ioStr, QByteArrayView("usesUV1"), isUsingUV1(inKeySet));
         ioStr.append(';');
         internalToString(ioStr, QByteArrayView("linear"), isLinear(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("preMultipliedAlpha"), isPreMultipliedAlpha(inKeySet));
         ioStr.append('}');
     }
 };
@@ -953,7 +959,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         visitProperties(visitor);
 
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.offsetVisitor.m_offset < 768);
+        Q_ASSERT(visitor.offsetVisitor.m_offset < 800);
         // This is so we can do some guestimate of how big the string buffer needs
         // to be to avoid doing a lot of allocations when concatenating the strings.
         m_stringBufferSizeHint = visitor.stringSizeVisitor.size;
@@ -966,7 +972,7 @@ struct QSSGShaderBaseMaterialKey
     enum {
         DataBufferSize = size,
     };
-    quint32 m_dataBuffer[DataBufferSize]; // 24 * 4 * 8 = 768 bits
+    quint32 m_dataBuffer[DataBufferSize];
     size_t m_featureSetHash;
 
     explicit QSSGShaderBaseMaterialKey(size_t inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)
@@ -1060,7 +1066,7 @@ struct QSSGShaderBaseMaterialKey
     }
 };
 
-typedef QSSGShaderBaseMaterialKey<QSSGShaderDefaultMaterialKeyProperties, 24> QSSGShaderDefaultMaterialKey;
+typedef QSSGShaderBaseMaterialKey<QSSGShaderDefaultMaterialKeyProperties, 25> QSSGShaderDefaultMaterialKey;
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGShaderDefaultMaterialKey>::value);
 

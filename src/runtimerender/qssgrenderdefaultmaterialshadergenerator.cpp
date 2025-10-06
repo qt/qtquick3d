@@ -1190,11 +1190,16 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    vec4 qt_base_texture_color = texture2D(" << samplerState.samplerName(baseImageType)
                            << ", " << samplerState.fragCoordsName(baseImageType) << ");\n";
         }
+
+        if (keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::BaseColorMap].isPreMultipliedAlpha(inKey))
+            fragmentShader << "    qt_base_texture_color.rgb /= qt_base_texture_color.a;\n";
+
         if (!keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::BaseColorMap].isLinear(inKey)) {
             // Diffuse/BaseColor maps need to converted to linear color space
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader << "    qt_base_texture_color = qt_sRGBToLinear(qt_base_texture_color);\n";
         }
+
         fragmentShader << "    qt_diffuseColor *= qt_base_texture_color;\n";
     }
 

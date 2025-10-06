@@ -222,6 +222,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                 theImage = qsgImageMap.insert(qsgTexture, ImageData());
             theImage.value().renderImageTexture.m_texture = qsgTexture->rhiTexture();
             theImage.value().renderImageTexture.m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
+            // If a texture from Qt Quick has an alpha channel, it is always pre-multiplied
+            theImage.value().renderImageTexture.m_flags.setPreMultipliedAlpha(qsgTexture->hasAlphaChannel());
             theImage.value().usageCounts[currentLayer]++;
             result = theImage.value().renderImageTexture;
             // inMipMode is ignored completely when sourcing the texture from a
