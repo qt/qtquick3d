@@ -15,16 +15,14 @@
 #ifndef INSTANCEREPEATER_P_H
 #define INSTANCEREPEATER_P_H
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QtQuick3D/qquick3dinstancing.h>
 #include <QtQuick3D/private/qquick3drepeater_p.h>
 #include <QAbstractListModel>
 
-// Workaround for QTBUG-94099, ensures qml_register_types...() is exported
-#include "qtquick3dhelpersglobal_p.h"
-
 QT_BEGIN_NAMESPACE
 
-class InstanceModel : public QAbstractListModel
+class Q_QUICK3DHELPERS_EXPORT InstanceModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DInstancing *instancingTable READ instancing WRITE setInstancing NOTIFY instancingChanged)
@@ -72,7 +70,7 @@ private:
     QMetaObject::Connection m_tableConnection;
 };
 
-class InstanceRepeater : public QQuick3DRepeater
+class Q_QUICK3DHELPERS_EXPORT InstanceRepeater : public QQuick3DRepeater
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DInstancing *instancingTable READ instancing WRITE setInstancing NOTIFY instancingChanged)

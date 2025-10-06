@@ -15,6 +15,7 @@
 #ifndef PROCEDURALMESH_H
 #define PROCEDURALMESH_H
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QQuick3DGeometry>
 #include <QQmlEngine>
 #include <QList>
@@ -22,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class ProceduralMeshSubset : public QObject {
+class Q_QUICK3DHELPERS_EXPORT ProceduralMeshSubset : public QObject {
     Q_OBJECT
     Q_PROPERTY(unsigned int offset READ offset WRITE setOffset NOTIFY offsetChanged FINAL)
     Q_PROPERTY(unsigned int count READ count WRITE setCount NOTIFY countChanged FINAL)
@@ -51,7 +52,7 @@ private:
     QString m_name;
 };
 
-class ProceduralMesh : public QQuick3DGeometry
+class Q_QUICK3DHELPERS_EXPORT ProceduralMesh : public QQuick3DGeometry
 {
     Q_OBJECT
     Q_PROPERTY(QList<QVector3D> positions READ positions WRITE setPositions NOTIFY positionsChanged FINAL)

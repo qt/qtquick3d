@@ -16,6 +16,7 @@
 #ifndef PROCEDURALSKYTEXTURE_H
 #define PROCEDURALSKYTEXTURE_H
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QtQuick3D/QQuick3DTextureData>
 #include <QtQml/QQmlEngine>
 
@@ -24,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class ProceduralSkyTextureData : public QQuick3DTextureData
+class Q_QUICK3DHELPERS_EXPORT ProceduralSkyTextureData : public QQuick3DTextureData
 {
     Q_OBJECT
     Q_PROPERTY(QColor skyTopColor READ skyTopColor WRITE setSkyTopColor NOTIFY skyTopColorChanged)

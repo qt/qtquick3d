@@ -15,13 +15,14 @@
 // We mean it.
 //
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QQuick3DObject>
 
 QT_BEGIN_NAMESPACE
 
 class QQuick3DSceneEnvironment;
 
-class QQuick3DInfiniteGrid : public QObject, public QQmlParserStatus
+class Q_QUICK3DHELPERS_EXPORT QQuick3DInfiniteGrid : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

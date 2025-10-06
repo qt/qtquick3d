@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QQuick3DGeometry>
 #include <QQmlEngine>
 #include <QVector3D>
@@ -26,7 +27,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class TorusGeometry : public QQuick3DGeometry
+class Q_QUICK3DHELPERS_EXPORT TorusGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
     Q_PROPERTY(int rings READ rings WRITE setRings NOTIFY ringsChanged FINAL)

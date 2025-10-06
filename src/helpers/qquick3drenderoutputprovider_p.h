@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QQuick3DTextureProviderExtension>
 #include <QQmlEngine>
 
@@ -22,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DRenderPass;
 
-class QQuick3DRenderOutputProvider : public QQuick3DTextureProviderExtension
+class Q_QUICK3DHELPERS_EXPORT QQuick3DRenderOutputProvider : public QQuick3DTextureProviderExtension
 {
     Q_OBJECT
     Q_PROPERTY(TextureSource textureSource READ textureSource WRITE setTextureSource NOTIFY textureSourceChanged FINAL)

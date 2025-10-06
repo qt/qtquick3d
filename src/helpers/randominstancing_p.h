@@ -15,12 +15,12 @@
 #ifndef RANDOMINSTANCING_P_H
 #define RANDOMINSTANCING_P_H
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QtQuick3D/QQuick3DInstancing>
-#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DInstanceRange : public QQuick3DObject
+class Q_QUICK3DHELPERS_EXPORT QQuick3DInstanceRange : public QQuick3DObject
 {
     Q_OBJECT
 
@@ -70,7 +70,7 @@ private:
 };
 
 class QRandomGenerator;
-class QQuick3DRandomInstancing : public QQuick3DInstancing
+class Q_QUICK3DHELPERS_EXPORT QQuick3DRandomInstancing : public QQuick3DInstancing
 {
     Q_OBJECT
 

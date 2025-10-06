@@ -15,6 +15,7 @@
 #ifndef QQUICK3DTEXTUREDATAFRONTEND_H
 #define QQUICK3DTEXTUREDATAFRONTEND_H
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QtQuick3D/QQuick3DTextureData>
 #include <QtQml/QQmlEngine>
 
@@ -22,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DTextureDataFrontend : public QQuick3DTextureData
+class Q_QUICK3DHELPERS_EXPORT QQuick3DTextureDataFrontend : public QQuick3DTextureData
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DTextureData::Format format READ format WRITE setFormat NOTIFY formatChanged)

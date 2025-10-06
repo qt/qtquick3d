@@ -16,10 +16,11 @@
 #define LOOKATNODE_H
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class LookAtNode : public QQuick3DNode
+class Q_QUICK3DHELPERS_EXPORT LookAtNode : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DNode *target READ target WRITE setTarget NOTIFY targetChanged)

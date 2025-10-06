@@ -15,14 +15,12 @@
 #ifndef HEIGHTFIELDGEOMETRY_H
 #define HEIGHTFIELDGEOMETRY_H
 
+#include <QtQuick3DHelpers/qtquick3dhelpersexports.h>
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
-
-// Workaround for QTBUG-94099, ensures qml_register_types...() is exported
-#include "qtquick3dhelpersglobal_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class HeightFieldGeometry : public QQuick3DGeometry
+class Q_QUICK3DHELPERS_EXPORT HeightFieldGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged REVISION(6, 5))
