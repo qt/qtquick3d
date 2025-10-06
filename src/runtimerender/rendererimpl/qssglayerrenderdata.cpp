@@ -2962,7 +2962,8 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
     bool cameraDirectionChanged = !qFuzzyCompare(instanceData.sortedCameraDirection, cameraDirection);
     bool cameraPositionChanged = !qFuzzyCompare(instanceData.cameraPosition, cameraPosition);
     bool updateInstanceBuffer = table->serial() != instanceData.serial || sortingChanged || (cameraDirectionChanged && table->isDepthSortingEnabled());
-    bool updateForLod = cameraPositionChanged && usesLod;
+    bool instanceBufferSizeChanged = instanceData.buffer && instanceBufferSize != instanceData.buffer->size();
+    bool updateForLod = (cameraPositionChanged || instanceBufferSizeChanged) && usesLod;
     if (sortingChanged && !table->isDepthSortingEnabled()) {
         instanceData.sortedData.clear();
         instanceData.sortData.clear();
