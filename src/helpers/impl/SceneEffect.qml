@@ -14,7 +14,9 @@ MainSceneEffect {
     property bool ditheringEnabled: false
     property real sharpnessAmount: 0.0 // 0.0 - 1.0
     property bool colorAdjustmentsEnabled: false
-    property vector3d bcsAdjustments: Qt.vector3d(1.0, 1.0, 1.0)
+    property real adjustmentBrightness: 1.0
+    property real adjustmentContrast: 1.0
+    property real adjustmentSaturation: 1.0
 
     // Lens Flare
     property bool lensFlareEnabled: false

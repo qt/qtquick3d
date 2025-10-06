@@ -24,9 +24,9 @@ SceneEffectEnvironment {
 
     // Adjustments
     property alias colorAdjustmentsEnabled: sceneEffect.colorAdjustmentsEnabled
-    property alias adjustmentBrightness: sceneEffect.bcsAdjustments.x
-    property alias adjustmentContrast: sceneEffect.bcsAdjustments.y
-    property alias adjustmentSaturation: sceneEffect.bcsAdjustments.z
+    property alias adjustmentBrightness: sceneEffect.adjustmentBrightness
+    property alias adjustmentContrast: sceneEffect.adjustmentContrast
+    property alias adjustmentSaturation: sceneEffect.adjustmentSaturation
 
     // Color Grading Effect
     property alias lutEnabled: sceneEffect.enableLut
