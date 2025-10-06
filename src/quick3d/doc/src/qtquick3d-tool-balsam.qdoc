@@ -50,6 +50,10 @@ TestModel {
 }
 \endcode
 
+\note The generated mesh filename depends on the mesh name(s) defined in the
+source file (in this example, the FBX file) and may differ from
+\c{testModel.mesh}.
+
 \section1 Balsam UI
 
 There is also a GUI frontend for Balsam called \c balsamui that is shipped
