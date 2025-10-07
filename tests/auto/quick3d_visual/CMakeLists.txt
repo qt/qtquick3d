@@ -9,6 +9,7 @@ else()
     add_subdirectory(rendercontrol)
     if(NOT ANDROID) # QTBUG-102711
     add_subdirectory(multiwindow)
+    add_subdirectory(sourceitem)
     endif()
     add_subdirectory(buffermanager)
     if(QT_FEATURE_private_tests)

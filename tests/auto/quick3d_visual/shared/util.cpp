@@ -101,6 +101,43 @@ QQuickView *QQuick3DDataTest::createView(const QString &filename, const QSize &w
     return view;
 }
 
+QQuickWindow *QQuick3DDataTest::createWindow(const QString &filename, const QSize &windowSize)
+{
+    QQuickWindow *window = new QQuickWindow;
+    window->setWidth(windowSize.width());
+    window->setHeight(windowSize.height());
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl(filename));
+    if (component.isError()) {
+        for (const QQmlError &error : component.errors())
+            qWarning() << error.url() << error.line() << error;
+        delete window;
+        return nullptr;
+    }
+
+    QObject *rootObject = component.create();
+    if (component.isError()) {
+        for (const QQmlError &error : component.errors())
+            qWarning() << error.url() << error.line() << error;
+        delete window;
+        return nullptr;
+    }
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(rootObject);
+    if (!rootItem) {
+        qWarning("No root item");
+        delete window;
+        return nullptr;
+    }
+
+    window->contentItem()->setSize(rootItem->size());
+    rootItem->setParentItem(window->contentItem());
+
+    window->show();
+    return window;
+}
+
 static inline void saveImageIfEnabled(const QImage &image)
 {
     if (qEnvironmentVariableIntValue("QT_QUICK3D_TEST_DEBUG")) {
