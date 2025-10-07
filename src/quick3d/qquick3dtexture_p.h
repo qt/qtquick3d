@@ -29,6 +29,7 @@ QT_BEGIN_NAMESPACE
 class QSGLayer;
 struct QSSGRenderImage;
 class QQuick3DRenderExtension;
+class QQuickWWindow;
 
 class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickItemChangeListener
 {
@@ -181,6 +182,7 @@ protected:
 
 private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);
+    void sourceItemWindowChanged(QQuickWindow *window);
 
 private:
     enum class DirtyFlag {

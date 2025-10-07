@@ -34,6 +34,7 @@ public:
 
     static bool isRunningOnRhi();
     QQuickView *createView(const QString &filename, const QSize &windowSize);
+    QQuickWindow *createWindow(const QString &filename, const QSize &windowSize);
     QImage grab(QQuickWindow *window);
 
     bool comparePixel(const QImage &image, int logicalX, int logicalY, qreal dpr, const QColor &expected, int fuzz = 2);
