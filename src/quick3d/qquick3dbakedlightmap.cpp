@@ -53,13 +53,10 @@ QT_BEGIN_NAMESPACE
     \qmlproperty string BakedLightmap::key
 
     When non-empty and \l enabled is true, the lightmap generated for the model
-    is stored persistently during lightmap baking. The value should be a unique
-    string that is fit to be included in the name of a file in the filesystem.
+    is stored persistently during lightmap baking.
     No other Model in the scene must use the same key.
 
     The default value is empty.
-
-    \sa loadPrefix
  */
 
 /*!
