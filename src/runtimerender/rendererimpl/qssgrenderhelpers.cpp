@@ -1385,8 +1385,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 }
                 if (indexBuffer) {
                     cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable->subset.rhi.indexBuffer->indexFormat());
-                    cb->drawIndexed(renderable->subset.count, instances, renderable->subset.offset);
-                    QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.count, instances));
+                    cb->drawIndexed(renderable->subset.lodCount(renderable->subsetLevelOfDetail), instances, renderable->subset.lodOffset(renderable->subsetLevelOfDetail));
+                    QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.lodCount(renderable->subsetLevelOfDetail), instances));
                 } else {
                     cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
                     cb->draw(renderable->subset.count, instances, renderable->subset.offset);
