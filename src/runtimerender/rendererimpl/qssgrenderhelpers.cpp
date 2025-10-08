@@ -1433,8 +1433,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 }
                 if (indexBuffer) {
                     cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable->subset.rhi.indexBuffer->indexFormat());
-                    cb->drawIndexed(renderable->subset.count, instances, renderable->subset.offset);
-                    QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.count, instances));
+                    cb->drawIndexed(renderable->subset.lodCount(renderable->subsetLevelOfDetail), instances, renderable->subset.lodOffset(renderable->subsetLevelOfDetail));
+                    QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.lodCount(renderable->subsetLevelOfDetail), instances));
                 } else {
                     cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
                     cb->draw(renderable->subset.count, instances, renderable->subset.offset);
@@ -2757,8 +2757,8 @@ void RenderHelpers::rhiRenderNormalPass(QSSGRhiContext *rhiCtx,
 
             if (indexBuffer) {
                 cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable->subset.rhi.indexBuffer->indexFormat());
-                cb->drawIndexed(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
-                QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable->subset.count, instances));
+                cb->drawIndexed(subsetRenderable->subset.lodCount(subsetRenderable->subsetLevelOfDetail), instances, subsetRenderable->subset.lodOffset(subsetRenderable->subsetLevelOfDetail));
+                QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable->subset.lodCount(subsetRenderable->subsetLevelOfDetail), instances));
             } else {
                 cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
                 cb->draw(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
