@@ -93,6 +93,11 @@ struct DirectionalLightData {
 
 }; // 496 bytes (31 x vec4)
 
+struct ShadowResult {
+    float illumination; // 0.0 = fully occluded, 1.0 = fully visible
+    bool isLit; // is the fragment hit by any direct light (used for specular computation)
+};
+
 layout (std140, binding = 1) uniform cbLights
 {
     LightData lights[MAX_NUM_LIGHTS];

@@ -32,14 +32,14 @@ float qt_debugShadowOcclusion() {
 
     for (int i = 0; i < qt_lightAndShadowCounts.y; ++i) {
         if (ubDirectionalLights.directionalLights[i].enableShadows > 0.0) {
-            shadow *= qt_sampleDirectionalShadowMap(i, qt_zDepthViewSpace, qt_varWorldPos);
+            shadow *= qt_sampleDirectionalShadowMap(i, qt_zDepthViewSpace, qt_varWorldPos).illumination;
         }
     }
 
     // Point and Spot Lights (positional)
     for (int i = 0; i < qt_lightAndShadowCounts.x; ++i) {
         if (ubLights.lights[i].enableShadows > 0.0) {
-            shadow *= qt_sampleLightShadowMap(i, qt_varWorldPos);
+            shadow *= qt_sampleLightShadowMap(i, qt_varWorldPos).illumination;
         }
     }
 
