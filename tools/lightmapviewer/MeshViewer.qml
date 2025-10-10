@@ -15,84 +15,32 @@ ColumnLayout {
     id: root
     anchors.fill: parent
 
-    property string selectedModelCandidate: ""
-
-    onSelectedModelCandidateChanged: {
-        if (!selectedModelCandidate || selectedModelCandidate === "") {
-            view.lmTextureCandidates = []
-            lview.mSelectedTextureCandidate = -1
-            return
-        }
-        view.lmTextureCandidates = LightmapFile.texturesAvailableFor(
-                    selectedModelCandidate)
-        view.lmSelectedTextureCandidate
-                = view.lmTextureCandidates.length ? view.lmTextureCandidates[0].value : -1
-    }
-
     Pane {
-        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignLeft
+        Layout.preferredHeight: 30
         padding: 8
 
-        ColumnLayout {
-            width: parent.width
-            spacing: 6
+        RowLayout {
+            anchors.fill: parent
+            spacing: 8
 
-            ColumnLayout {
-                RowLayout {
-                    Label {
-                        text: "Key:"
-                    }
-                    ComboBox {
-                        id: comboLmModelCandidate
-                        Layout.preferredWidth: 220
-                        model: view.lmModelCandidates
-                        onActivated: root.selectedModelCandidate = currentText
-                        currentIndex: {
-                            const i = view.lmModelCandidates.indexOf(
-                                        root.selectedModelCandidate)
-                            return (i >= 0 ? i : -1)
-                        }
-                        enabled: !!selectedEntry
-                                 && selectedEntry.kind === "mesh"
-                    }
-                    Label {
-                        text: "Texture:"
-                    }
-                    ComboBox {
-                        id: comboLmTextureCandidate
-                        Layout.preferredWidth: 220
-                        model: view.lmTextureCandidates
-                        textRole: "name"
-                        valueRole: "value"
-
-                        function indexForValue(val) {
-                            for (var i = 0; i < view.lmTextureCandidates.length; ++i)
-                                if (view.lmTextureCandidates[i].value === val)
-                                    return i
-                            return -1
-                        }
-
-                        onActivated: view.lmSelectedTextureCandidate = Number(
-                                         currentValue)
-                        currentIndex: indexForValue(
-                                          view.lmSelectedTextureCandidate)
-                        enabled: !!selectedEntry
-                                 && selectedEntry.kind === "mesh"
-                    }
-                }
-
-                RowLayout {
-                    CheckBox {
-                        id: checkboxBfCull
-                        text: "Backface Culling"
-                        checked: true
-                    }
-                    CheckBox {
-                        id: checkboxDebugUV
-                        text: "Debug UV"
-                        checked: false
-                    }
-                }
+            CheckBox {
+                id: cbWasd
+                text: "WASD controller"
+            }
+            CheckBox {
+                id: cbBackfaceCulling
+                text: "Backface Culling"
+                checked: true
+            }
+            CheckBox {
+                id: cbDebugUv
+                text: "Debug UV"
+            }
+            CheckBox {
+                id: cbIgnoreScale
+                text: "Ignore scale"
+                onCheckedChanged: view.recomputeBounds()
             }
         }
     }
@@ -101,78 +49,99 @@ ColumnLayout {
         id: view
         Layout.fillWidth: true
         Layout.fillHeight: true
-        enabled: meshLoader.visible
-        visible: meshLoader.visible
 
-        property var lmModelCandidates: []
-        property var lmTextureCandidates: []
-        property int lmSelectedTextureCandidate: -1
+        camera: cbWasd.checked ? wasdCamera : arcballCamera
 
+        property var origBounds: null
         property real boundsDiameter: 0
         property vector3d boundsCenter
         property vector3d boundsSize
 
-        function updateBounds(bounds) {
-            boundsSize = Qt.vector3d(bounds.maximum.x - bounds.minimum.x,
-                                     bounds.maximum.y - bounds.minimum.y,
-                                     bounds.maximum.z - bounds.minimum.z)
+        function scaledBounds(orig, scaleVec) {
+            if (!orig)
+                return
+
+            function mul(v, s) {
+                return Qt.vector3d(v.x * s.x, v.y * s.y, v.z * s.z)
+            }
+            const a = mul(orig.minimum, scaleVec)
+            const b = mul(orig.maximum, scaleVec)
+            const min = Qt.vector3d(Math.min(a.x, b.x), Math.min(a.y, b.y),
+                                    Math.min(a.z, b.z))
+            const max = Qt.vector3d(Math.max(a.x, b.x), Math.max(a.y, b.y),
+                                    Math.max(a.z, b.z))
+            return {
+                "minimum": min,
+                "maximum": max
+            }
+        }
+
+        function currentScale() {
+            return cbIgnoreScale.checked ? Qt.vector3d(
+                                               1, 1,
+                                               1) : LightmapFile.getAppliedScaleFor(
+                                               selectedKey)
+        }
+
+        function recomputeBounds() {
+            if (!origBounds)
+                return
+
+            const s = currentScale()
+            const sb = scaledBounds(origBounds, s)
+
+            boundsSize = Qt.vector3d(sb.maximum.x - sb.minimum.x,
+                                     sb.maximum.y - sb.minimum.y,
+                                     sb.maximum.z - sb.minimum.z)
             boundsDiameter = Math.max(boundsSize.x, boundsSize.y, boundsSize.z)
-            boundsCenter = Qt.vector3d(
-                        (bounds.maximum.x + bounds.minimum.x) / 2,
-                        (bounds.maximum.y + bounds.minimum.y) / 2,
-                        (bounds.maximum.z + bounds.minimum.z) / 2)
+            boundsCenter = Qt.vector3d((sb.maximum.x + sb.minimum.x) / 2,
+                                       (sb.maximum.y + sb.minimum.y) / 2,
+                                       (sb.maximum.z + sb.minimum.z) / 2)
+
             model.position = Qt.vector3d(-boundsCenter.x, -boundsCenter.y,
                                          -boundsCenter.z)
-            cameraNode.clipNear = boundsDiameter / 100
-            cameraNode.clipFar = boundsDiameter * 10
+
+            arcballCamera.clipNear = Math.max(0.001, boundsDiameter / 100)
+            arcballCamera.clipFar = Math.max(arcballCamera.clipNear + 1.0,
+                                             boundsDiameter * 10)
+            wasdCamera.clipNear = Math.max(0.001, boundsDiameter / 100)
+            wasdCamera.clipFar = Math.max(wasdCamera.clipNear + 1.0,
+                                          boundsDiameter * 10)
+
+            wasdController.speed = boundsDiameter / 1000.0
+            wasdController.shiftSpeed = 3 * wasdController.speed
+
             resetCamera()
         }
 
+        function updateBounds(bounds) {
+            origBounds = bounds
+            recomputeBounds()
+        }
+
         function resetCamera() {
-            cameraNode.position = boundsCenter
-            cameraNode.position = Qt.vector3d(0, 0, 2 * boundsDiameter)
-            cameraNode.eulerRotation = Qt.vector3d(0, 0, 0)
-        }
-
-        function refreshLightmapSelection() {
-            if (!selectedEntry) {
-                lmModelCandidates = []
-                root.selectedModelCandidate = ""
-                lmTextureCandidates = []
-                lmSelectedTextureCandidate = -1
-                return
-            }
-
-            if (selectedEntry.kind === "image") {
-                lmModelCandidates = [selectedEntry.key]
-                root.selectedModelCandidate = selectedEntry.key
-            } else if (selectedEntry.kind === "mesh") {
-                lmModelCandidates = LightmapFile.keysReferencingMesh(
-                            selectedEntry.key)
-                root.selectedModelCandidate = lmModelCandidates.length ? lmModelCandidates[0] : ""
-            } else {
-                lmModelCandidates = []
-                root.selectedModelCandidate = ""
-                lmTextureCandidates = []
-                lmSelectedTextureCandidate = -1
-            }
-        }
-
-        Component.onCompleted: refreshLightmapSelection()
-        Connections {
-            target: window
-            function onSelectedEntryChanged() {
-                view.refreshLightmapSelection()
-            }
+            arcballCamera.position = Qt.vector3d(0, 0,
+                                                 2 * Math.max(0.001,
+                                                              boundsDiameter))
+            arcballCamera.eulerRotation = Qt.vector3d(0, 0, 0)
+            wasdCamera.position = Qt.vector3d(0, 0,
+                                              2 * Math.max(0.001,
+                                                           boundsDiameter))
+            wasdCamera.eulerRotation = Qt.vector3d(0, 0, 0)
         }
 
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Color
-            clearColor: "black"
+            clearColor: "darkslategray"
         }
 
         PerspectiveCamera {
-            id: cameraNode
+            id: arcballCamera
+            z: 300
+        }
+
+        PerspectiveCamera {
+            id: wasdCamera
             z: 300
         }
 
@@ -181,30 +150,29 @@ ColumnLayout {
 
             Model {
                 id: model
+
+                scale: view.currentScale()
+                onScaleChanged: view.recomputeBounds()
+
                 geometry: LightmapMesh {
                     source: LightmapFile.source
-                    key: selectedEntry.key
+                    key: meshKey
                     onBoundsChanged: view.updateBounds(bounds)
                 }
                 materials: CustomMaterial {
                     shadingMode: CustomMaterial.Unshaded
-                    cullMode: checkboxBfCull.checked ? Material.BackFaceCulling : Material.NoCulling
+                    cullMode: cbBackfaceCulling.checked ? Material.BackFaceCulling : Material.NoCulling
 
                     property TextureInput baseMap: TextureInput {
                         texture: Texture {
-                            id: lmTexture
-                            minFilter: Texture.Linear
-                            magFilter: Texture.Linear
-                            mipFilter: Texture.None
                             tilingModeHorizontal: Texture.ClampToEdge
                             tilingModeVertical: Texture.ClampToEdge
 
                             textureData: LightmapFile.textureDataFor(
-                                             root.selectedModelCandidate,
-                                             view.lmSelectedTextureCandidate)
+                                             selectedKey, selectedTextureTag)
                         }
                     }
-                    property bool debugUV: checkboxDebugUV.checked
+                    property bool debugUV: cbDebugUv.checked
 
                     vertexShader: "mesh.vert"
                     fragmentShader: "mesh.frag"
@@ -215,7 +183,8 @@ ColumnLayout {
         ArcballController {
             id: arcballController
             controlledObject: modelNode
-            camera: cameraNode
+            camera: arcballCamera
+            enabled: !cbWasd.checked
 
             function jumpToAxis(axis) {
                 cameraRotation.from = arcballController.controlledObject.rotation
@@ -242,6 +211,12 @@ ColumnLayout {
             }
         }
 
+        WasdController {
+            id: wasdController
+            controlledObject: wasdCamera
+            enabled: cbWasd.checked
+        }
+
         OriginGizmo {
             id: originGizmo
             anchors.top: parent.top
@@ -250,34 +225,31 @@ ColumnLayout {
             width: 120
             height: 120
             targetNode: modelNode
-
             onAxisClicked: axis => {
                                arcballController.jumpToAxis(axis)
                            }
         }
 
         Keys.onPressed: event => {
+                            if (!arcballController.enabled) return
+
                             if (event.key === Qt.Key_Space) {
                                 let rotation = originGizmo.quaternionAlign(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)
-                            } else if (event.key === Qt.Key_Left
-                                       || event.key === Qt.Key_A) {
+                            } else if (event.key === Qt.Key_A) {
                                 let rotation = originGizmo.rotateYawLeft(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)
-                            } else if (event.key === Qt.Key_Right
-                                       || event.key === Qt.Key_D) {
+                            } else if (event.key === Qt.Key_D) {
                                 let rotation = originGizmo.rotateYawRight(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)
-                            } else if (event.key === Qt.Key_Up
-                                       || event.key === Qt.Key_W) {
+                            } else if (event.key === Qt.Key_W) {
                                 let rotation = originGizmo.rotatePitchUp(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)
-                            } else if (event.key === Qt.Key_Down
-                                       || event.key === Qt.Key_S) {
+                            } else if (event.key === Qt.Key_S) {
                                 let rotation = originGizmo.rotatePitchDown(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)

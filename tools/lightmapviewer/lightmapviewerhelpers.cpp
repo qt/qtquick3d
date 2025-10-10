@@ -165,15 +165,15 @@ QVariantList LightmapViewerHelpers::processMetadata(const QString &key, const QV
 
     appendRow(metadata, "key", key);
 
+    if (map.contains("mesh_key")) {
+        appendRow(metadata, "meshKey", map["mesh_key"].toString());
+    }
+
     if (map.contains("height") && map.contains("width")) {
 
         appendRow(metadata, "Lightmap pixel size", QStringLiteral("%1x%2").
                                                          arg(map["width"].toString()).arg(
                                                              map["height"].toString()));
-    }
-
-    if (map.contains("mesh_key")) {
-        appendRow(metadata, "meshKey", map["mesh_key"].toString());
     }
 
     return metadata;

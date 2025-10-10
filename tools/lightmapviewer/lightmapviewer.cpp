@@ -65,7 +65,6 @@ int main(int argc, char *argv[])
     LightmapFile *file = new LightmapFile();
     if (!input.isEmpty())
         file->setSource(QUrl::fromLocalFile(input));
-    file->loadData();
     qmlRegisterSingletonInstance("LightmapFile", 1, 0, "LightmapFile", file);
     LightmapImageProvider *provider = new LightmapImageProvider;
     engine.addImageProvider(QLatin1String("lightmaps"), provider);

@@ -15,7 +15,7 @@
 class LightmapFile : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariantList dataList READ dataList NOTIFY dataListChanged)
+    Q_PROPERTY(QStringList keys READ keys NOTIFY keysChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
     Q_PROPERTY(QString qtVersion READ qtVersion NOTIFY metadataChanged FINAL)
     Q_PROPERTY(QString bakeStart READ bakeStart NOTIFY metadataChanged FINAL)
@@ -25,13 +25,14 @@ class LightmapFile : public QObject
 public:
     explicit LightmapFile(QObject *parent = nullptr);
 
-    QVariantList dataList() const;
+    QStringList keys() const;
 
-    Q_INVOKABLE void loadData();
-    Q_INVOKABLE QVariantList metadataFor(const QVariant &selectedEntry);
-    Q_INVOKABLE QStringList keysReferencingMesh(const QString &meshKey) const;
+    Q_INVOKABLE QVariantList metadataFor(const QString &key);
     Q_INVOKABLE QQuick3DTextureData *textureDataFor(const QString &key, quint32 tag);
     Q_INVOKABLE QVariantList texturesAvailableFor(const QString &key) const;
+    Q_INVOKABLE QString meshKeyFor(const QString &key) const;
+    Q_INVOKABLE QVector3D getAppliedScaleFor(const QString &key) const;
+    Q_INVOKABLE QUrl imageUrlFor(const QString &key, quint32 tag, bool alpha) const;
 
     QUrl source() const;
     void setSource(const QUrl &newSource);
@@ -42,12 +43,14 @@ public:
     QVariantList options() const { return m_options; }
 
 signals:
-    void dataListChanged();
+    void keysChanged();
     void sourceChanged();
     void metadataChanged();
 
 private:
-    QVariantList m_dataList;
+    void loadData();
+
+    QStringList m_keys;
     QUrl m_source;
     QString m_qtVersion;
     QString m_bakeStart;

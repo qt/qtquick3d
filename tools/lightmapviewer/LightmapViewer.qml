@@ -12,23 +12,45 @@ import QtQuick3D.lightmapviewer
 import LightmapFile 1.0
 
 ApplicationWindow {
-    width: 1024
-    height: 768
+    width: 1200
+    height: 800
     visible: true
     title: qsTr("Lightmap Viewer")
 
     id: window
 
-    property var selectedEntry: listView.model.length ? listView.model[0] : null
-    property real imageZoom: 1
-    property real imageCenterX: 0
-    property real imageCenterY: 0
+    property var selectedKey: listView.model.length ? listView.model[0] : null
+    property string meshKey: ""
+    property var textureTagsAvailable: []
+    property int selectedTextureTag: -1
 
-    function isImage(entry) {
-        return entry && entry.kind === "image"
+    onSelectedKeyChanged: {
+        refresh()
     }
-    function isMesh(entry) {
-        return entry && entry.kind === "mesh"
+
+    Connections {
+        target: LightmapFile
+        function onKeysChanged() {
+            refresh()
+        }
+    }
+
+    function refresh() {
+        meshKey = ""
+        if (selectedKey === "") {
+            textureTagsAvailable = []
+            return
+        }
+
+        var newTags = LightmapFile.texturesAvailableFor(selectedKey)
+        if (textureTagsAvailable !== newTags) {
+            textureTagsAvailable = newTags
+        }
+
+        if (selectedTextureTag === -1 && textureTagsAvailable.length > 0)
+            selectedTextureTag = textureTagsAvailable[0].value
+
+        meshKey = LightmapFile.meshKeyFor(selectedKey)
     }
 
     Dialog {
@@ -51,22 +73,11 @@ ApplicationWindow {
                 onClicked: fileDialog.open()
             }
 
-            Rectangle {
-                width: 1
-                color: "darkgray"
-                Layout.fillHeight: true
-                Layout.alignment: Qt.AlignVCenter
-            }
-
             Button {
                 text: qsTr("Scene Metadata...")
                 onClicked: sceneMetadataDialog.open()
             }
 
-            Label {
-                text: "Zoom: " + window.imageZoom.toFixed(1)
-            }
-
             Rectangle {
                 width: 1
                 color: "darkgray"
@@ -74,19 +85,6 @@ ApplicationWindow {
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            Switch {
-                id: alphaSwitch
-                padding: 0
-                checked: true
-                text: "Alpha"
-            }
-
-            Rectangle {
-                width: 1
-                color: "darkgray"
-                Layout.fillHeight: true
-                Layout.alignment: Qt.AlignVCenter
-            }
 
             Text {
                 text: "Path: " + LightmapFile.source
@@ -98,7 +96,6 @@ ApplicationWindow {
         id: fileDialog
         onAccepted: {
             LightmapFile.source = selectedFile
-            LightmapFile.loadData()
         }
     }
 
@@ -109,70 +106,127 @@ ApplicationWindow {
         }
     }
 
+    function selectTextureByIndex(i) {
+        const n = window.textureTagsAvailable?.length || 0
+        if (i >= 0 && i < n) {
+            const row = window.textureTagsAvailable[i]
+            const v = row[comboLmTextureCandidate.valueRole]
+            window.selectedTextureTag = Number(v)
+            comboLmTextureCandidate.currentIndex = i
+        }
+    }
+
+    Instantiator {
+        model: Math.min(window.textureTagsAvailable?.length || 0, 9)
+        delegate: Shortcut {
+            sequence: (index + 1).toString()
+            context: Qt.ApplicationShortcut
+            enabled: !filterField.activeFocus
+            onActivated: selectTextureByIndex(index)
+        }
+    }
+
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
 
         focus: true
         Keys.onPressed: event => {
-                            if (event.key === Qt.Key_Up) {
-                                listView.currentIndex = Math.max(
-                                    0, listView.currentIndex - 1)
-                                selectedEntry = listView.model[listView.currentIndex]
-                            } else if (event.key === Qt.Key_Down) {
-                                listView.currentIndex = Math.min(
-                                    listView.model.length - 1,
-                                    listView.currentIndex + 1)
-                                selectedEntry = listView.model[listView.currentIndex]
+                            if (event.key === Qt.Key_Up || event.key === Qt.Key_Down) {
+                                var i = listView.currentIndex
+                                const dir = (event.key === Qt.Key_Down) ? 1 : -1
+
+                                do { i += dir } while (i >= 0 && i < listView.count && !listView.itemAtIndex(i)?.matches)
+
+                                if (i >= 0 && i < listView.count) {
+                                    listView.currentIndex = i
+                                    selectedKey = listView.model[i]
+                                }
+
+                                event.accepted = true
                             }
                         }
 
         SplitView {
             id: leftSplit
-            SplitView.preferredWidth: 220
+            SplitView.preferredWidth: 250
             SplitView.minimumWidth: 120
             orientation: Qt.Vertical
 
-            Item {
-                id: metaArea
-                SplitView.preferredHeight: 120
-                anchors.left: parent.left
-                anchors.right: parent.right
+            ColumnLayout {
+                spacing: 8
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: 4
+                RowLayout {
 
-                    Pane {
-                        id: metaPane
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
+                    Label {
+                        text: "Texture:"
+                    }
+                    ComboBox {
+                        id: comboLmTextureCandidate
+                        model: window.textureTagsAvailable
+                        textRole: "name"
+                        valueRole: "value"
 
-                        ScrollView {
-                            anchors.fill: parent
+                        // Closed state text
+                        displayText: {
+                            const idx = currentIndex
+                            if (idx < 0) return ""
+                            const row = window.textureTagsAvailable[idx]
+                            const base = row?.[comboLmTextureCandidate.textRole] ?? ""
+                            const prefix = (idx < 9) ? `${idx + 1}. ` : ""
+                            return prefix + base
+                        }
 
-                            ColumnLayout {
-                                id: metadataColumn
-                                Layout.fillWidth: true
-                                spacing: 4
+                        // Popup items
+                        delegate: ItemDelegate {
+                            required property int index
+                            required property var modelData
+                            width: parent.width
+                            text: {
+                                const base = modelData[comboLmTextureCandidate.textRole] ?? ""
+                                const prefix = (index < 9) ? `${index + 1}. ` : ""
+                                return prefix + base
+                            }
+                            highlighted: comboLmTextureCandidate.highlightedIndex === index
+                        }
 
-                                Repeater {
-                                    model: LightmapFile.metadataFor(selectedEntry)
-                                    delegate: RowLayout {
-                                        width: metadataColumn.width
-                                        spacing: 8
+                        function indexForValue(val) {
+                            for (var i = 0; i < window.textureTagsAvailable.length; ++i)
+                                if (window.textureTagsAvailable[i].value === val)
+                                    return i
+                            return -1
+                        }
 
-                                        Label {
-                                            text: (modelData.key ?? "—") + ":"
-                                            font.bold: true
-                                        }
-                                        Label {
-                                            text: modelData.value
-                                                  !== undefined ? String(
-                                                                      modelData.value) : "—"
-                                            Layout.fillWidth: true
-                                        }
+                        onActivated: window.selectedTextureTag = Number(currentValue)
+                        currentIndex: indexForValue(window.selectedTextureTag)
+                    }
+                }
+
+                Pane {
+                    id: metaPane
+                    Layout.fillWidth: true
+                    clip: true
+
+                    ScrollView {
+                        ColumnLayout {
+                            id: metadataColumn
+                            spacing: 4
+
+                            Repeater {
+                                model: LightmapFile.metadataFor(selectedKey)
+                                delegate: RowLayout {
+                                    width: metadataColumn.width
+                                    spacing: 8
+
+                                    Label {
+                                        text: (modelData.key ?? "—") + ":"
+                                        font.bold: true
+                                    }
+                                    Label {
+                                        text: modelData.value
+                                              !== undefined ? String(
+                                                                  modelData.value) : "—"
+                                        Layout.fillWidth: true
                                     }
                                 }
                             }
@@ -181,60 +235,42 @@ ApplicationWindow {
                 }
             }
 
+            Timer {
+                id: debounce
+                interval: 120; repeat: false; running: false
+                onTriggered: listView.forceLayout()
+            }
+
+            TextField {
+                id: filterField
+                placeholderText: "Filter keys…"
+                Layout.fillWidth: true
+                onTextEdited: debounce.restart()
+            }
+
+
             ListView {
                 id: listView
+                Layout.fillWidth: true
                 clip: true
                 spacing: 2
                 highlightMoveVelocity: -1
                 highlightMoveDuration: 1
-                model: LightmapFile.dataList
-                property var sectionExpanded: ({})
-
-                section.property: "owner"
-                section.criteria: ViewSection.FullString
-                section.delegate: Rectangle {
-                    width: listView.width
-                    height: 26
-                    color: Qt.rgba(0, 0, 0, 0.05)
-                    radius: 4
-
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        spacing: 6
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Text {
-                            text: (listView.sectionExpanded[section] === false) ? "▸" : "▾"
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            text: section
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            listView.sectionExpanded[section]
-                                    = !(listView.sectionExpanded[section] !== false)
-                            listView.sectionExpanded = Object.assign(
-                                        {}, listView.sectionExpanded)
-                        }
-                    }
-                }
+                model: LightmapFile.keys
 
                 delegate: Item {
+                    readonly property bool matches: {
+                        const q = filterField.text.trim().toLowerCase()
+                        if (!q) return true
+                        const tokens = q.split(/\s+/)
+                        const hay = String(modelData).toLowerCase()
+                        return tokens.every(t => hay.includes(t))
+                    }
+
                     width: listView.width
-
-                    property bool isExpanded: listView.sectionExpanded[modelData.owner] !== false
-
-                    height: isExpanded ? Math.max(
-                                             24, rowText.implicitHeight + 6) : 0
-                    opacity: isExpanded ? 1 : 0
+                    height: matches ? Math.max(24, rowText.implicitHeight + 6) : 0
+                    visible: matches
+                    HoverHandler { id: hh }
 
                     Behavior on height {
                         NumberAnimation {
@@ -256,18 +292,26 @@ ApplicationWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         Text {
                             id: rowText
-                            text: modelData.display
+                            text: modelData
                             elide: Text.ElideRight
                         }
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 6
+                        visible: hh.hovered
+                        color: Qt.rgba(76/255, 134/255, 191/255, 0.10)
+                        z: -1
                     }
 
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        enabled: isExpanded
+                        enabled: true
                         onClicked: {
                             listView.currentIndex = index
-                            selectedEntry = modelData
+                            selectedKey = modelData
                         }
                     }
                 }
@@ -282,27 +326,22 @@ ApplicationWindow {
             }
         }
 
-        Item {
+        SplitView {
             id: rightSplit
-            SplitView.fillWidth: true
-            SplitView.fillHeight: true
-
-            // These are toggled based on what is currently selected
-            Loader {
-                id: imageLoader
-                anchors.fill: parent
-                sourceComponent: ImageViewer {}
-                active: true
-                visible: isImage(selectedEntry)
-                enabled: visible
-            }
+            orientation: Qt.Horizontal
 
             Loader {
                 id: meshLoader
-                anchors.fill: parent
                 sourceComponent: MeshViewer {}
                 active: true
-                visible: isMesh(selectedEntry)
+                enabled: visible
+                SplitView.preferredWidth: Math.round(rightSplit.width * 0.50)
+            }
+
+            Loader {
+                id: imageLoader
+                sourceComponent: ImageViewer {}
+                active: true
                 enabled: visible
             }
         }
@@ -318,7 +357,6 @@ ApplicationWindow {
         onDropped: drop => {
                        if (drop.hasUrls) {
                            LightmapFile.source = drop.urls[0]
-                           LightmapFile.loadData()
                        }
                    }
     }

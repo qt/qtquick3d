@@ -32,8 +32,8 @@ QImage LightmapImageProvider::requestImage(const QString &id, QSize *size, const
     const QString tagStr = query.queryItemValue("tag");
     QSSGLightmapIODataTag tag = LightmapViewerHelpers::stringToLightmapTag(tagStr);
 
-    const auto filePath = QUrl{query.queryItemValue("file")};
-    const bool useAlpha = query.queryItemValue("alpha") == QStringLiteral("true");
+    const QUrl filePath = query.queryItemValue("file");
+    const bool useAlpha = query.queryItemValue("alpha") == QStringLiteral("1");
 
     LightmapDataType dataType = LightmapDataType::Unset;
     switch (tag) {

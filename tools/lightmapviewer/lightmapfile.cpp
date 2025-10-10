@@ -16,86 +16,36 @@
 
 LightmapFile::LightmapFile(QObject *parent) : QObject { parent } { }
 
-QVariantList LightmapFile::dataList() const
+QStringList LightmapFile::keys() const
 {
-    return m_dataList;
+    return m_keys;
 }
 
 void LightmapFile::loadData()
 {
     QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(m_source.toLocalFile());
     auto keys = loader ? loader->getKeys() : QList<std::pair<QString, QSSGLightmapIODataTag>>();
-    m_dataList.clear();
-    m_dataList.reserve(keys.size());
+    m_keys.clear();
 
     QVariantMap sceneMetadata;
-    std::unordered_map<QString, QStringList> keysReferencingMeshes;
-
-    // First pass: find scene metadata and populate keysReferencingMesh
-
     for (const auto &[key, tag] : std::as_const(keys)) {
         if (tag == QSSGLightmapIODataTag::SceneMetadata) {
             sceneMetadata = loader->readMap(key, tag);
             continue;
-        } else if (tag != QSSGLightmapIODataTag::Mesh) {
-            continue;
-        }
-
-        keysReferencingMeshes[key] = keysReferencingMesh(key);
-    }
-
-    QSet<QString> meshRowAddedForGroup;
-
-    // Second pass: populate datalist
-    for (const auto &[key, tag] : std::as_const(keys)) {
-        switch (tag) {
-        case QSSGLightmapIODataTag::Mask:
-        case QSSGLightmapIODataTag::Texture_Direct:
-        case QSSGLightmapIODataTag::Texture_Indirect:
-        case QSSGLightmapIODataTag::Texture_Final: {
-            const QString tagString = LightmapViewerHelpers::lightmapTagToString(tag);
-
-            QString meshKeyForThisImage;
-            for (auto it = keysReferencingMeshes.cbegin(); it != keysReferencingMeshes.cend(); ++it) {
-                if (it->second.contains(key)) {
-                    meshKeyForThisImage = it->first;
-                    break;
-                }
-            }
-
-            // Meshes
-            if (!meshRowAddedForGroup.contains(key)) {
-                QVariantMap meshEntry;
-                meshEntry["kind"]    = "mesh";
-                meshEntry["key"]     = meshKeyForThisImage;
-                meshEntry["display"] = meshKeyForThisImage;
-                meshEntry["owner"] = key;
-                m_dataList.push_back(meshEntry);
-                meshRowAddedForGroup.insert(key);
-            }
-
-            // Images
-            QVariantMap imgEntry;
-            imgEntry["kind"]    = "image";
-            imgEntry["key"]     = key;
-            imgEntry["tag"]     = tagString;
-            imgEntry["owner"] = key;
-            imgEntry["display"] = tagString.split('_').last();
-
-            m_dataList.push_back(imgEntry);
-        } break;
-        default:
-            break;
+        } else if (tag == QSSGLightmapIODataTag::Metadata) {
+            m_keys.append(key);
         }
     }
 
-    emit dataListChanged();
+    emit keysChanged();
 
     const auto processed = LightmapViewerHelpers::processSceneMetadata(sceneMetadata);
     m_qtVersion = processed.qtVersion;
     m_bakeStart = processed.bakeStartTime;
     m_bakeDuration = processed.bakeDuration;
     m_options = processed.options;
+
+    emit metadataChanged();
 }
 
 QUrl LightmapFile::source() const
@@ -108,13 +58,12 @@ void LightmapFile::setSource(const QUrl &newSource)
     if (m_source == newSource)
         return;
     m_source = newSource;
+    loadData();
     emit sourceChanged();
 }
 
-QVariantList LightmapFile::metadataFor(const QVariant &selectedEntry)
+QVariantList LightmapFile::metadataFor(const QString &key)
 {
-    const QString key = selectedEntry.toMap()["owner"].toString();
-
     if (key.isEmpty())
         return {};
 
@@ -127,25 +76,6 @@ QVariantList LightmapFile::metadataFor(const QVariant &selectedEntry)
         return {};
 
     return LightmapViewerHelpers::processMetadata(key, metadata);
-}
-
-QStringList LightmapFile::keysReferencingMesh(const QString &meshKey) const
-{
-    QStringList out;
-    auto loader = QSSGLightmapLoader::open(m_source.toLocalFile());
-    if (!loader)
-        return out;
-
-    const auto keys = loader->getKeys();
-    for (const auto &kp : keys) {
-        if (kp.second != QSSGLightmapIODataTag::Metadata)
-            continue;
-        const QVariantMap md = loader->readMap(kp.first, QSSGLightmapIODataTag::Metadata);
-        if (md.value(QStringLiteral("mesh_key")).toString() == meshKey)
-            out << kp.first;
-    }
-    out.removeDuplicates();
-    return out;
 }
 
 QQuick3DTextureData *LightmapFile::textureDataFor(const QString &key, quint32 tag)
@@ -246,10 +176,56 @@ QVariantList LightmapFile::texturesAvailableFor(const QString &key) const
         const QSSGLightmapIODataTag tag = kp.second;
         if (tag== QSSGLightmapIODataTag::Mask || tag== QSSGLightmapIODataTag::Texture_Direct
             || tag == QSSGLightmapIODataTag::Texture_Indirect || tag == QSSGLightmapIODataTag::Texture_Final) {
-            out << QVariantMap { {"name", LightmapViewerHelpers::lightmapTagToString(tag).replace("Texture_", "")},
-                                 {"value", static_cast<quint32>(tag)}
+            out << QVariantMap { {QStringLiteral("name"), LightmapViewerHelpers::lightmapTagToString(tag).replace("Texture_", "")},
+                                 {QStringLiteral("value"), static_cast<quint32>(tag)}
             };
         }
     }
     return out;
+}
+
+QString LightmapFile::meshKeyFor(const QString &key) const
+{
+    auto loader = QSSGLightmapLoader::open(m_source.toLocalFile());
+    if (!loader)
+        return {};
+
+    const auto metadata = loader->readMap(key, QSSGLightmapIODataTag::Metadata);
+    if (metadata.isEmpty())
+        return {};
+
+    return metadata[QStringLiteral("mesh_key")].toString();
+}
+
+QVector3D LightmapFile::getAppliedScaleFor(const QString &key) const
+{
+    if (key.isEmpty())
+        return QVector3D(1, 1, 1);
+
+    if (key.isEmpty())
+        return QVector3D(1, 1, 1);
+
+    auto loader = QSSGLightmapLoader::open(m_source.toLocalFile());
+    if (!loader)
+        return QVector3D(1, 1, 1);
+
+    auto scaleBuffer = loader->readData(key, QSSGLightmapIODataTag::OriginalScale);
+    if (scaleBuffer.isEmpty()) {
+        qDebug() << "scale empty";
+        return QVector3D(1, 1, 1);
+    }
+
+    QDataStream stream(&scaleBuffer, QIODevice::ReadOnly);
+    QVector3D scale;
+    stream >> scale;
+    return scale;
+}
+
+QUrl LightmapFile::imageUrlFor(const QString &key, quint32 tag, bool alpha) const
+{
+    return QStringLiteral("image://lightmaps/key=%1&tag=%2&file=%3&alpha=%4")
+                                  .arg(key)
+                                  .arg(LightmapViewerHelpers::lightmapTagToString(static_cast<QSSGLightmapIODataTag>(tag)))
+                                  .arg(m_source.toString())
+                                  .arg(alpha);
 }
