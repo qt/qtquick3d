@@ -468,6 +468,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         bool srbChanged = false;
         if (!srb || bindings != dcd.bindings) {
             srb = rhiCtx->srb(bindings);
+            rhiCtx->releaseCachedSrb(dcd.bindings);
             dcd.bindings = bindings;
             srbChanged = true;
         }

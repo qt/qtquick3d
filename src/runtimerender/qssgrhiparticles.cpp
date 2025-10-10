@@ -490,6 +490,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
     bool srbChanged = false;
     if (!srb || bindings != dcd.bindings) {
         srb = rhiCtx->srb(bindings);
+        rhiCtx->releaseCachedSrb(dcd.bindings);
         dcd.bindings = bindings;
         srbChanged = true;
     }

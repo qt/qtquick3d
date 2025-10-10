@@ -951,6 +951,7 @@ public:
 
     QRhiShaderResourceBindings *srb(const QSSGRhiShaderResourceBindingList &bindings);
     void releaseDrawCallData(QSSGRhiDrawCallData &dcd);
+    void releaseCachedSrb(QSSGRhiShaderResourceBindingList &bindings);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key,
                                    QRhiRenderPassDescriptor *rpDesc,
                                    QRhiShaderResourceBindings *srb);
@@ -999,6 +1000,8 @@ public:
     {
         return m_instanceBuffersLod[model];
     }
+
+    void releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable);
 
     QSSGRhiParticleData &particleData(const QSSGRenderGraphObject *particlesOrModel)
     {

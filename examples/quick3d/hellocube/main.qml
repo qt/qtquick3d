@@ -133,7 +133,11 @@ Window {
         }
 
         onClicked: {
-            if (clickme.state == "flipped") {
+            // do nothing while animating
+            if (flip1.running || flip2.running)
+                return;
+
+            if (clickme.state === "flipped") {
                 clickme.state = "";
                 flip2.start();
             } else {

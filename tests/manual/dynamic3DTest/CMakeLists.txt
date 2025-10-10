@@ -14,6 +14,7 @@ qt_internal_add_manual_test(manual_test_dynamic3DTest
 
 set(qml_resource_files
     "main.qml"
+    "RiggedFigure.qml"
     "random1.mesh"
     "random2.mesh"
     "random3.mesh"
@@ -23,6 +24,7 @@ set(qml_resource_files
     "noise3.jpg"
     "noise4.jpg"
     "noise5.jpg"
+    "riggedfigure.mesh"
 )
 
 qt_internal_add_resource(manual_test_dynamic3DTest "qml"

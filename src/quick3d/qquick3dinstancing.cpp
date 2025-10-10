@@ -689,7 +689,7 @@ void QQuick3DInstanceListEntry::setRotation(QQuaternion rotation)
 }
 
 /*!
-    \qmlproperty vector3d QtQuick3D::InstanceListEntry::color
+    \qmlproperty color QtQuick3D::InstanceListEntry::color
 
     This property specifies the color for the instance.
 */

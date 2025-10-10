@@ -126,6 +126,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
                 || (isTexture(type))
                 || (type == Type::Geometry)
                 || (type == Type::TextureData)
+                || (type == Type::ModelInstance)
                 || (type == Type::ResourceLoader));
     }
 

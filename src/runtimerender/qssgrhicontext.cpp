@@ -962,6 +962,12 @@ QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindi
     return srb;
 }
 
+void QSSGRhiContext::releaseCachedSrb(QSSGRhiShaderResourceBindingList &bindings)
+{
+    auto srb = m_srbCache.take(bindings);
+    delete srb;
+}
+
 void QSSGRhiContext::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
 {
     delete dcd.ubuf;
@@ -1278,6 +1284,15 @@ void QSSGRhiContextStats::printRenderPass(const QSSGRhiContextStats::RenderPassI
                "%llu instanced non-indexed draw calls with %llu indices and %llu instances in total",
                rp.instancedIndexedDraws.callCount, rp.instancedIndexedDraws.vertexOrIndexCount, rp.instancedIndexedDraws.instanceCount,
                rp.instancedDraws.callCount, rp.instancedDraws.vertexOrIndexCount, rp.instancedDraws.instanceCount);
+    }
+}
+
+void QSSGRhiContext::releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable)
+{
+    auto it = m_instanceBuffers.constFind(instanceTable);
+    if (it != m_instanceBuffers.constEnd()) {
+        it->buffer->destroy();
+        m_instanceBuffers.erase(it);
     }
 }
 
