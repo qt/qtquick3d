@@ -32,6 +32,8 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
     const QString longName = QStringLiteral("THIS-IS-A-VERY-LONG-NAME-THIS-IS-A-VERY-LONG-NAME-THIS-IS-A-VERY-LONG-"
                                             "NAME-THIS-IS-A-VERY-LONG-NAME-THIS-IS-A-VERY-LONG-NAME_mask");
 
+    QVector3D scale(1.0f, 2.0f, 3.0f);
+
     { // Save data to buffer
         QSharedPointer<QIODevice> buffer(new class QBuffer(&bufferData));
         QSharedPointer<QSSGLightmapWriter> io = QSSGLightmapWriter::open(buffer);
@@ -62,6 +64,14 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
 
         io->writeU32Image(longName, QSSGLightmapIODataTag::Unset, u32Image);
 
+        {
+            QByteArray buffer;
+            QDataStream stream(&buffer, QIODevice::WriteOnly);
+            stream << scale;
+            io->writeData("a", QSSGLightmapIODataTag::OriginalScale, buffer);
+        }
+
+
         io->close();
     }
 
@@ -71,6 +81,15 @@ void tst_QQuick3DLightmapIO::testWriteAndRead()
     QVariantMap mapA = io->readMap("a", QSSGLightmapIODataTag::Metadata);
     QVariantMap mapB = io->readMap("b", QSSGLightmapIODataTag::Metadata);
     QVariantMap mapC = io->readMap("c", QSSGLightmapIODataTag::SceneMetadata);
+
+    {
+        auto valueBuffer = io->readData("a", QSSGLightmapIODataTag::OriginalScale);
+        QDataStream stream(&valueBuffer, QIODevice::ReadOnly);
+        QVector3D readScale;
+        stream >> readScale;
+        QCOMPARE(readScale, scale);
+    }
+
     QCOMPARE(metadata["author"].toString(), QString("QtCreator"));
     QCOMPARE(metadata["version"].toDouble(), 1.0);
     QCOMPARE(metadata["width"].toUInt(), 100);

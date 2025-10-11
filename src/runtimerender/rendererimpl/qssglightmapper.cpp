@@ -264,6 +264,7 @@ struct QSSGLightmapperPrivate
         quint32 binormalOffset = UINT_MAX;
         QRhiVertexInputAttribute::Format binormalFormat = QRhiVertexInputAttribute::Float;
         int meshIndex = -1; // Maps to an index in meshInfos;
+        QVector3D scale; // Stored in metadata
     };
     QVector<DrawInfo> drawInfos; // per model
     QVector<QByteArray> meshes;
@@ -362,6 +363,7 @@ struct QSSGLightmapperPrivate
 
     bool storeSceneMetadata(QSharedPointer<QSSGLightmapWriter> writer);
     bool storeMetadata(int lmIdx, QSharedPointer<QSSGLightmapWriter> tempFile);
+    bool storeScale(int lmIdx, QSharedPointer<QSSGLightmapWriter> tempFile);
     bool storeDirectLightData(int lmIdx, const QVector<QVector3D> &directLight, QSharedPointer<QSSGLightmapWriter> tempFile);
     bool storeIndirectLightData(int lmIdx, const QVector<QVector3D> &indirectLight, QSharedPointer<QSSGLightmapWriter> tempFile);
     bool storeMaskImage(int lmIdx, QSharedPointer<QSSGLightmapWriter> tempFile);
@@ -545,8 +547,8 @@ static QByteArray meshToByteArray(const QSSGMesh::Mesh &mesh)
     return meshData;
 }
 
-// Function to extract a scale-only matrix from a transform matrix
-static QMatrix4x4 extractScaleMatrix(const QMatrix4x4 &transform)
+// Function to extract a scale from a transform matrix
+static QVector3D extractScale(const QMatrix4x4 &transform)
 {
     Q_ASSERT(transform.isAffine());
 
@@ -555,15 +557,21 @@ static QMatrix4x4 extractScaleMatrix(const QMatrix4x4 &transform)
     const QVector4D col1 = transform.column(1);
     const QVector4D col2 = transform.column(2);
 
-    const float scaleX = QVector3D(col0[0], col0[1], col0[2]).length(); // X column
-    const float scaleY = QVector3D(col1[0], col1[1], col1[2]).length(); // Y column
-    const float scaleZ = QVector3D(col2[0], col2[1], col2[2]).length(); // Z column
+    const float scaleX = QVector3D(col0[0], col0[1], col0[2]).length();
+    const float scaleY = QVector3D(col1[0], col1[1], col1[2]).length();
+    const float scaleZ = QVector3D(col2[0], col2[1], col2[2]).length();
 
+    return QVector3D(scaleX, scaleY, scaleZ);
+}
+
+
+static QMatrix4x4 constructScaleMatrix(const QVector3D &scale)
+{
     // Construct a scale-only matrix
     QMatrix4x4 scaleMatrix;
-    scaleMatrix.data()[0 * 4 + 0] = scaleX;
-    scaleMatrix.data()[1 * 4 + 1] = scaleY;
-    scaleMatrix.data()[2 * 4 + 2] = scaleZ;
+    scaleMatrix.data()[0 * 4 + 0] = scale.x();
+    scaleMatrix.data()[1 * 4 + 1] = scale.y();
+    scaleMatrix.data()[2 * 4 + 2] = scale.z();
     return scaleMatrix;
 }
 
@@ -640,9 +648,11 @@ bool QSSGLightmapperPrivate::commitGeometry()
         QSSGSubsetRenderable *renderableObj = static_cast<QSSGSubsetRenderable *>(lm.renderables.first().obj);
         worldTransform = renderableObj->modelContext.globalTransform;
         normalMatrix = renderableObj->modelContext.normalMatrix;
-        const QMatrix4x4 scaleTransform = extractScaleMatrix(worldTransform);
+        const QVector3D scale = extractScale(worldTransform);
+        const QMatrix4x4 scaleTransform = constructScaleMatrix(scale);
 
         DrawInfo &drawInfo(drawInfos[lmIdx]);
+        drawInfo.scale = scale;
         QSSGMesh::Mesh mesh;
 
         if (lm.model->geometry)
@@ -2261,6 +2271,17 @@ bool QSSGLightmapperPrivate::storeMetadata(int lmIdx, QSharedPointer<QSSGLightma
     return writer->writeMap(lm.model->lightmapKey, QSSGLightmapIODataTag::Metadata, metadata);
 }
 
+bool QSSGLightmapperPrivate::storeScale(int lmIdx, QSharedPointer<QSSGLightmapWriter> writer)
+{
+    const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
+    const DrawInfo &drawInfo(drawInfos[lmIdx]);
+
+    QByteArray buffer;
+    QDataStream stream(&buffer, QIODevice::WriteOnly);
+    stream << drawInfo.scale;
+    return writer->writeData(lm.model->lightmapKey, QSSGLightmapIODataTag::OriginalScale, buffer);
+}
+
 bool QSSGLightmapperPrivate::storeDirectLightData(int lmIdx, const QVector<QVector3D> &directLight, QSharedPointer<QSSGLightmapWriter> writer)
 {
     const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
@@ -2896,6 +2917,27 @@ bool QSSGLightmapper::bake()
                                   .arg(bakedLightingModelCount)
                                   .arg(lm.model->lightmapKey));
             return false;
+        }
+
+    }
+
+    d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Storing scale..."));
+    for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
+        if (d->userCancelled()) {
+            d->updateStage(QStringLiteral("Cancelled"));
+            return false;
+        }
+        QSSGBakedLightingModel &lm = d->bakedLightingModels[lmIdx];
+        if (!lm.model->hasLightmap())
+            continue;
+
+        if (!d->storeScale(lmIdx, writer)) {
+            d->updateStage(QStringLiteral("failed"));
+            d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
+                              QStringLiteral("[%1/%2] Failed to store scale for '%3'")
+                                      .arg(lmIdx + 1)
+                                      .arg(bakedLightingModelCount)
+                                      .arg(lm.model->lightmapKey));
         }
     }
 

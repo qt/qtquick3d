@@ -37,6 +37,7 @@ enum class QSSGLightmapIODataTag : quint32 {
     Metadata,
     Mesh,
     SceneMetadata,
+    OriginalScale,
     // ...
     Count
 };

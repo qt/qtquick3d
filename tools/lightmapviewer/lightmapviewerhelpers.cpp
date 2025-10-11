@@ -43,28 +43,22 @@ QString LightmapViewerHelpers::lightmapTagToString(QSSGLightmapIODataTag tag)
     switch (tag) {
     case QSSGLightmapIODataTag::Unset:
         return QStringLiteral("Unset");
-        break;
     case QSSGLightmapIODataTag::Mask:
         return QStringLiteral("Mask");
-        break;
     case QSSGLightmapIODataTag::Texture_Final:
         return QStringLiteral("Texture_Final");
-        break;
     case QSSGLightmapIODataTag::Texture_Direct:
         return QStringLiteral("Texture_Direct");
-        break;
     case QSSGLightmapIODataTag::Texture_Indirect:
         return QStringLiteral("Texture_Indirect");
-        break;
     case QSSGLightmapIODataTag::Metadata:
         return QStringLiteral("Metadata");
-        break;
     case QSSGLightmapIODataTag::SceneMetadata:
         return QStringLiteral("SceneMetadata");
-        break;
     case QSSGLightmapIODataTag::Mesh:
         return QStringLiteral("Mesh");
-        break;
+    case QSSGLightmapIODataTag::OriginalScale:
+        return QStringLiteral("OriginalScale");
     case QSSGLightmapIODataTag::Count:
         break;
     }
@@ -89,6 +83,8 @@ QSSGLightmapIODataTag LightmapViewerHelpers::stringToLightmapTag(const QString &
         return QSSGLightmapIODataTag::SceneMetadata;
     if (tag == QStringLiteral("Mesh"))
         return QSSGLightmapIODataTag::Mesh;
+    if (tag == QStringLiteral("OriginalScale"))
+        return QSSGLightmapIODataTag::OriginalScale;
 
     qWarning() << "Could not match tag for: " << tag;
     return QSSGLightmapIODataTag::Unset;
