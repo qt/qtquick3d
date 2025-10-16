@@ -1636,6 +1636,15 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                                                      [](const QSSGShaderLight &light) { return light.shadows; })
                 != lights.end();
         const bool hasAnyLights = !lights.isEmpty();
+        QSSGRenderLight::SoftShadowQuality maxSoftShadowQuality = QSSGRenderLight::SoftShadowQuality::Hard;
+        if (anyLightHasShadows) {
+            // Iterate the light list to find the maximum shadow quality of lights that cast shadows
+            for (const QSSGShaderLight &light : lights) {
+                if (light.shadows && light.light->m_softShadowQuality > maxSoftShadowQuality)
+                    maxSoftShadowQuality = light.light->m_softShadowQuality;
+            }
+        }
+
 
         // Subset(s)
         auto &renderableSubsets = theModelContext.subsets;
@@ -1765,6 +1774,9 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                     defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.setValue(theGeneratedKey, checkF32TypeIndex(attr->format()));
                 }
 
+                // SoftShadow quality
+                defaultMaterialShaderKeyProperties.m_shadowSoftness.setShadowSoftness(theGeneratedKey, maxSoftShadowQuality);
+
                 // Instancing
                 defaultMaterialShaderKeyProperties.m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
                 // Morphing
@@ -1820,6 +1832,9 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                     defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, true);
                 else
                     defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, false);
+
+                // SoftShadow quality
+                defaultMaterialShaderKeyProperties.m_shadowSoftness.setShadowSoftness(theGeneratedKey, maxSoftShadowQuality);
 
                 // Skin
                 const auto boneCount = model.skin ? model.skin->boneCount :

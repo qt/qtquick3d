@@ -164,7 +164,9 @@ QT_BEGIN_NAMESPACE
     \qmlproperty enumeration Light::softShadowQuality
     \since 6.8
 
-    The property controls the soft shadow quality.
+    The property suggests the soft shadow quality that should be used when
+    shadows are enabled. The actual number of samples used when rendering shadows
+    is determined by highest quality set by any light used by a material.
 
     \value Light.Hard No soft shadows.
     \value Light.PCF4 Percentage-closer filtering soft shadows with 4 samples.

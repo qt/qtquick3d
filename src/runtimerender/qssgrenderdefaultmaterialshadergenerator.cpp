@@ -388,6 +388,25 @@ static void generateFragmentDefines(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addDefinition("QSSG_ENABLE_SPECULAR_MODEL_SCHLICK_GGX", "1");
         break;
     }
+    // Shadow softness
+    switch (keyProps.m_shadowSoftness.getShadowSoftness(inKey)) {
+    case QSSGRenderLight::SoftShadowQuality::Hard:
+        fragmentShader.addDefinition("QSSG_SHADOW_SOFTNESS", "0");
+        break;
+    case QSSGRenderLight::SoftShadowQuality::PCF4:
+        fragmentShader.addDefinition("QSSG_SHADOW_SOFTNESS", "4");
+        break;
+    case QSSGRenderLight::SoftShadowQuality::PCF8:
+        fragmentShader.addDefinition("QSSG_SHADOW_SOFTNESS", "8");
+        break;
+    case QSSGRenderLight::SoftShadowQuality::PCF16:
+    case QSSGRenderLight::SoftShadowQuality::PCF32:
+    case QSSGRenderLight::SoftShadowQuality::PCF64:
+        fragmentShader.addDefinition("QSSG_SHADOW_SOFTNESS", "16");
+        break;
+    ;}
+
+
 }
 
 

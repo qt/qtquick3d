@@ -295,13 +295,6 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
         qt_shadow_map_result.illumination = 1.0f;
         qt_shadow_map_result.isLit = true;
 
-#if QSSG_ENABLE_SHADOWMAPPING
-        // Shadows
-        if (ubLights.lights[i].enableShadows > 0.0) {
-            qt_shadow_map_result = qt_sampleLightShadowMap(i, qt_varWorldPos);
-        }
-#endif // QSSG_ENABLE_SHADOWMAPPING
-
         // Directions
         vec3 relativeDirection = qt_varWorldPos - ubLights.lights[i].position;
         float relativeDistance = length(relativeDirection);
@@ -321,9 +314,17 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
         vec3 tmp_light_color = ubLights.lights[i].diffuseColor * (1.0 - qt_metalnessAmount);
 #endif
 
+        bool isPointLight = ubLights.lights[i].coneAngle > 1.0;
+
         // coneAngle is normally in cos(radians) if it's a spotlight (-1.0, 1.0) or > 1.0 if it's a point light
-        if (ubLights.lights[i].coneAngle > 1.0) {
+        if (isPointLight) {
             // Point Light
+#if QSSG_ENABLE_SHADOWMAPPING
+            if (ubLights.lights[i].enableShadows > 0.0) {
+                qt_shadow_map_result = qt_samplePointLight(i, qt_varWorldPos);
+            }
+#endif // QSSG_ENABLE_SHADOWMAPPING
+
 #if QSSG_CUSTOM_MATERIAL_POINT_LIGHT_PROCESSOR
             qt_pointLightProcessor(global_diffuse_light.rgb,
                                    tmp_light_color,
@@ -349,6 +350,12 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
 #endif // QSSG_CUSTOM_MATERIAL_POINT_LIGHT_PROCESSOR
         } else {
             // Spot Light
+#if QSSG_ENABLE_SHADOWMAPPING
+            if (ubLights.lights[i].enableShadows > 0.0) {
+                qt_shadow_map_result = qt_sampleSpotLight(i, qt_varWorldPos);
+            }
+#endif // QSSG_ENABLE_SHADOWMAPPING
+
             float spotAngle = dot(normalizedDirection, normalize(ubLights.lights[i].direction));
             if (spotAngle > ubLights.lights[i].coneAngle) {
                 float spotFactor = smoothstep(ubLights.lights[i].coneAngle, ubLights.lights[i].innerConeAngle, spotAngle);

@@ -19,6 +19,7 @@
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -413,6 +414,102 @@ struct QSSGShaderKeyDiffuseModel : QSSGShaderKeyUnsigned<2>
     }
 };
 
+struct QSSGShaderKeyShadowSoftness : QSSGShaderKeyUnsigned<2>
+{
+    // possible values:
+    //  SoftShadowQuality::Hard  : 00
+    //  SoftShadowQuality::PCF4  : 01
+    //  SoftShadowQuality::PCF8  : 10
+    //  SoftShadowQuality::PCF16 : 11
+    //  All others map to PCF16
+
+    explicit QSSGShaderKeyShadowSoftness(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
+
+    void setShadowSoftness(QSSGDataRef<quint32> inKeySet, QSSGRenderLight::SoftShadowQuality inQuality)
+    {
+        quint32 val = 0;
+        switch (inQuality) {
+        case QSSGRenderLight::SoftShadowQuality::Hard:
+            val = 0;
+            break;
+        case QSSGRenderLight::SoftShadowQuality::PCF4:
+            val = 1;
+            break;
+        case QSSGRenderLight::SoftShadowQuality::PCF8:
+            val = 2;
+            break;
+        case QSSGRenderLight::SoftShadowQuality::PCF16:
+        default:
+            val = 3;
+            break;
+        }
+        setValue(inKeySet, val);
+    }
+
+    QSSGRenderLight::SoftShadowQuality getShadowSoftness(QSSGDataView<quint32> inKeySet) const
+    {
+        quint32 val = getValue(inKeySet);
+        switch (val) {
+        case 0:
+            return QSSGRenderLight::SoftShadowQuality::Hard;
+        case 1:
+            return QSSGRenderLight::SoftShadowQuality::PCF4;
+        case 2:
+            return QSSGRenderLight::SoftShadowQuality::PCF8;
+        case 3:
+        default:
+            return QSSGRenderLight::SoftShadowQuality::PCF16;
+        }
+    }
+
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
+    {
+        ioStr.append(name);
+        ioStr.append('=');
+        switch (getShadowSoftness(inKeySet)) {
+        case QSSGRenderLight::SoftShadowQuality::Hard:
+            ioStr.append(QByteArrayView("Hard"));
+            break;
+        case QSSGRenderLight::SoftShadowQuality::PCF4:
+            ioStr.append(QByteArrayView("PCF4"));
+            break;
+        case QSSGRenderLight::SoftShadowQuality::PCF8:
+            ioStr.append(QByteArrayView("PCF8"));
+            break;
+        case QSSGRenderLight::SoftShadowQuality::PCF16:
+        case QSSGRenderLight::SoftShadowQuality::PCF32:
+        case QSSGRenderLight::SoftShadowQuality::PCF64:
+            ioStr.append(QByteArrayView("PCF16"));
+            break;
+        }
+    }
+
+    void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
+    {
+        const qsizetype nameLen = name.size();
+        const int strOffset = ioStr.indexOf(name);
+        if (strOffset >= 0) {
+            /* The key is stored as name=shadowSoftness; */
+            if (ioStr[strOffset + nameLen] != '=')
+                return;
+            const int codeOffsetBegin = strOffset + nameLen + 1;
+            int codeOffset = 0;
+            while (ioStr[codeOffsetBegin + codeOffset] != ';')
+                codeOffset++;
+            const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
+            if (val == QByteArrayView("Hard"))
+                setShadowSoftness(inKeySet, QSSGRenderLight::SoftShadowQuality::Hard);
+            if (val == QByteArrayView("PCF4"))
+                setShadowSoftness(inKeySet, QSSGRenderLight::SoftShadowQuality::PCF4);
+            if (val == QByteArrayView("PCF8"))
+                setShadowSoftness(inKeySet, QSSGRenderLight::SoftShadowQuality::PCF8);
+            if (val == QByteArrayView("PCF16"))
+                setShadowSoftness(inKeySet, QSSGRenderLight::SoftShadowQuality::PCF16);
+        }
+    }
+
+};
+
 struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
 {
     explicit QSSGShaderKeyAlphaMode(const char *inName = "") : QSSGShaderKeyUnsigned<2>(inName) {}
@@ -650,6 +747,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyUnsigned<3> m_viewCount;
     QSSGShaderKeyBoolean m_usesViewIndex;
     QSSGShaderKeyUnsigned<3> m_orderIndependentTransparency;
+    QSSGShaderKeyShadowSoftness m_shadowSoftness;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -703,6 +801,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_viewCount("viewCount")
         , m_usesViewIndex("usesViewIndex")
         , m_orderIndependentTransparency("orderIndependentTransparency")
+        , m_shadowSoftness("shadowSoftness")
     {
         m_imageMaps[0].name = "diffuseMap";
         m_imageMaps[1].name = "emissiveMap";
@@ -801,6 +900,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_viewCount);
         inVisitor.visit(m_usesViewIndex);
         inVisitor.visit(m_orderIndependentTransparency);
+        inVisitor.visit(m_shadowSoftness);
     }
 
     struct OffsetVisitor
