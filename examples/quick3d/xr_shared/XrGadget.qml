@@ -29,6 +29,7 @@ Model {
 
     signal pressed(pos: vector3d, dir: vector3d)
     signal moved(delta: vector3d, dir: vector3d)
+    signal touched(uvPosition: vector2d, touchID: int, pressed: bool)
 
     function handleControllerPress(pos: vector3d, direction: vector3d) {
         pressPos = pos
@@ -39,5 +40,9 @@ Model {
     function handleControllerMove(pos: vector3d, direction: vector3d) {
         delta = pos.minus(pressPos)
         moved(pos, direction)
+    }
+
+    function handleTouch(uvPosition: vector2d, touchID: int, pressed: bool) {
+        touched(uvPosition, touchID, pressed)
     }
 }
