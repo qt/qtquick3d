@@ -120,10 +120,7 @@ bool QOpenXRGraphicsOpenGL::finializeGraphics(QRhi *rhi)
 int64_t QOpenXRGraphicsOpenGL::colorSwapchainFormat(const QVector<int64_t> &swapchainFormats) const
 {
     // List of supported color swapchain formats.
-    constexpr int64_t supportedColorSwapchainFormats[] = {
-        GL_RGBA8,
-        GL_RGBA8_SNORM
-    };
+    constexpr int64_t supportedColorSwapchainFormats[] = { GL_SRGB8_ALPHA8_EXT, GL_RGBA8, GL_RGBA8_SNORM };
 
     auto swapchainFormatIt = std::find_first_of(std::begin(supportedColorSwapchainFormats),
                                                 std::end(supportedColorSwapchainFormats),
