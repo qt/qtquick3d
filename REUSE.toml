@@ -183,8 +183,7 @@ SPDX-License-Identifier = "CC-BY-4.0"
 [[annotations]]
 path = ["tests/baseline/data/shared/maps/cubemap_bc1.ktx",
         "tests/manual/reflectionprobe/cubemap_bc1.ktx",
-        "tests/baseline/data/shared/maps/miptester_etc2.ktx",
-        "/examples/quick3d/virtualassistant/content/colosseum_4k.hdr"]
+        "tests/baseline/data/shared/maps/miptester_etc2.ktx"]
 precedence = "override"
 SPDX-FileCopyrightText = "Unknown"
 SPDX-License-Identifier = "CC0-1.0"
