@@ -289,8 +289,8 @@ enum class QSSGRhiSamplerBindingHints
 // these are our current shader limits
 #define QSSG_MAX_NUM_LIGHTS 16
 #define QSSG_MAX_NUM_DIRECTIONAL_LIGHTS 4
-#define QSSG_REDUCED_MAX_NUM_LIGHTS 8
-#define QSSG_REDUCED_MAX_NUM_DIRECTIONAL_LIGHTS 2
+#define QSSG_REDUCED_MAX_NUM_LIGHTS 4
+#define QSSG_REDUCED_MAX_NUM_DIRECTIONAL_LIGHTS 1
 
 struct QSSGShaderLightData {
     float position[3];
