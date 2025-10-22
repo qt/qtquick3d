@@ -108,6 +108,7 @@ public:
 
     Q_REVISION(6, 11) Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction, QQuick3DModel *model) const;
     Q_REVISION(6, 11) Q_INVOKABLE QQuick3DPickResult closestPointPick(const QVector3D &origin, float radius, QQuick3DModel *model = nullptr) const;
+    Q_REVISION(6, 11) Q_INVOKABLE QList<QQuick3DObject *> pickInRect(const QPointF &start, const QPointF &end) const;
 
     void processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event) const;
     bool singlePointPick(QSinglePointEvent *event, const QVector3D &origin, const QVector3D &direction);

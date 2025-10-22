@@ -12,6 +12,7 @@ qt_internal_add_module(Quick3DUtils
         qqsbcollection.cpp qqsbcollection_p.h
         qssgbounds3.cpp qssgbounds3_p.h
         qssgdataref.cpp qssgdataref_p.h
+        qssgfrustum_p.h
         qssginvasivelinkedlist_p.h
         qssgmeshbvh.cpp qssgmeshbvh_p.h
         qssgplane.cpp qssgplane_p.h

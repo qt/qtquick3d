@@ -29,6 +29,7 @@
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
+#include <QtQuick3DUtils/private/qssgfrustum_p.h>
 #include <qtquick3d_tracepoints_p.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
@@ -1146,6 +1147,34 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::getShaderPipelineForDefaultMateria
     QSSGRhiContextStats::get(*rhiContext).registerMaterialShaderGenerationTime(timer.elapsed());
 
     return shaderPipeline;
+}
+
+QList<const QSSGRenderNode *> QSSGRendererPrivate::syncPickInFrustum(const QSSGRenderContextInterface &ctx,
+                                                                     const QSSGRenderLayer &layer,
+                                                                     const QSSGFrustum &frustum)
+{
+    if (!layer.renderData)
+        return {};
+
+    auto &bufferManager = ctx.bufferManager();
+    const bool pickEverything = QSSGRendererPrivate::isGlobalPickingEnabled(*ctx.renderer());
+
+    RenderableList nodes;
+    for (const auto &child : layer.children)
+        getPickableRecursive(child, nodes, pickEverything);
+
+    QList<const QSSGRenderNode *> ret;
+    for (const auto node : nodes) {
+        auto aabb = node->getBounds(*bufferManager);
+        if (!aabb.isEmpty()) {
+            const auto &transform = layer.renderData->getGlobalTransform(*node);
+            aabb.transform(transform);
+            if (frustum.contains(aabb))
+                ret.append(node);
+        }
+    }
+
+    return ret;
 }
 
 QT_END_NAMESPACE

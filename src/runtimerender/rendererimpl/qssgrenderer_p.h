@@ -40,6 +40,7 @@ struct QSSGShaderDefaultMaterialKeyProperties;
 struct QSSGShaderFeatures;
 class QSSGRenderItem2DData;
 class QSGRenderContext;
+class QSSGFrustum;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
@@ -202,6 +203,10 @@ public:
                                                                     const QVector3D &center,
                                                                     const float radiusSquared,
                                                                     QSSGRenderNode *target = nullptr);
+
+    static QList<const QSSGRenderNode *> syncPickInFrustum(const QSSGRenderContextInterface &ctx,
+                                                           const QSSGRenderLayer &layer,
+                                                           const QSSGFrustum &frustum);
 
     // Setting this true enables picking for all the models, regardless of
     // the models pickable property.

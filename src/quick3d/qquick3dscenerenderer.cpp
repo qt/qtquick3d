@@ -32,6 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgcputonemapper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
+
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -1240,6 +1241,14 @@ QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const Q
     return QSSGRendererPrivate::syncPickAll(*m_sgContext,
                                             *m_layer,
                                             ray);
+}
+
+QList<const QSSGRenderNode *> QQuick3DSceneRenderer::syncPickInFrustum(const QSSGFrustum &frustum)
+{
+    if (!m_layer)
+        return {};
+
+    return QSSGRendererPrivate::syncPickInFrustum(*m_sgContext, *m_layer, frustum);
 }
 
 void QQuick3DSceneRenderer::setGlobalPickingEnabled(bool isEnabled)

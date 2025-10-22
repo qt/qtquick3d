@@ -20,6 +20,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
+#include <QtQuick3DUtils/private/qssgfrustum_p.h>
 
 #include <qsgtextureprovider.h>
 #include <QSGSimpleTextureNode>
@@ -1281,6 +1282,87 @@ QQuick3DPickResult QQuick3DViewport::closestPointPick(const QVector3D &origin, f
     if (!pickResult.has_value())
         return QQuick3DPickResult{};
     return processPickResult(pickResult.value());
+}
+
+QList<QQuick3DObject *> QQuick3DViewport::pickInRect(const QPointF &start, const QPointF &end) const
+{
+    const qreal minX = qMin(start.x(), end.x());
+    const qreal maxX = qMax(start.x(), end.x());
+    const qreal minY = qMin(start.y(), end.y());
+    const qreal maxY = qMax(start.y(), end.y());
+
+    const qreal ndc[4] = {
+        2.0f * minX / width() - 1.0f, // left
+        2.0f * maxX / width() - 1.0f, // right
+        // flip Y-coordinates
+        1.0f - 2.0f * maxY / height(), // bottom
+        1.0f - 2.0f * minY / height(), // top
+    };
+
+    const float near = 0.0f;
+    const float far = 1.0f;
+    enum { L, R, B, T }; // left, right, bottom, top
+    const QVector4D ndcCorners[8] = {
+        // Near plane
+        QVector4D(ndc[L], ndc[B], near, 1.0f), // 0: bottom-left  | n0
+        QVector4D(ndc[R], ndc[B], near, 1.0f), // 1: bottom-right | n1
+        QVector4D(ndc[L], ndc[T], near, 1.0f), // 3: top-left     | n2
+        QVector4D(ndc[R], ndc[T], near, 1.0f), // 2: top-right    | n3
+        // Far plane
+        QVector4D(ndc[L], ndc[B], far, 1.0f), // 4: bottom-left   | f0
+        QVector4D(ndc[R], ndc[B], far, 1.0f), // 5: bottom-right  | f1
+        QVector4D(ndc[L], ndc[T], far, 1.0f), // 7: top-left      | f2
+        QVector4D(ndc[R], ndc[T], far, 1.0f), // 6: top-right     | f3
+    };
+
+    QMatrix4x4 viewProjection;
+    if (this->camera()) {
+        if (auto camera = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(this->camera())->spatialNode))
+            camera->calculateViewProjectionMatrix(camera->localTransform, camera->projection, viewProjection);
+    }
+    QMatrix4x4 viewProjectionInverted = viewProjection.inverted();
+
+    QVector3D worldCorners[8];
+    for (int i = 0; i < 8; ++i) {
+        QVector4D worldPoint = viewProjectionInverted * ndcCorners[i];
+        worldCorners[i] = worldPoint.toVector3D() / worldPoint.w(); // perspective divide
+    }
+
+    // Frustum
+    //
+    //    f2 ------------f3
+    //     |             |
+    //     |             |
+    //     |             |
+    //     |             |
+    //    f0 ------------f1
+    //
+    // n2 -------- n3
+    // |           |
+    // |   camera  |
+    // |           |
+    // n0 -------- n1
+    //
+    // CCW winding if inside the frustum and looking toward the face
+    const QSSGFrustum frustum {
+        QSSGPlane(worldCorners[0], worldCorners[4], worldCorners[6]), // L [n0, f0, f2]
+        QSSGPlane(worldCorners[1], worldCorners[3], worldCorners[7]), // R [n1, n3, f3]
+        QSSGPlane(worldCorners[0], worldCorners[1], worldCorners[5]), // B [n0, n1, f1]
+        QSSGPlane(worldCorners[2], worldCorners[6], worldCorners[7]), // T [n2, f2, f3]
+        QSSGPlane(worldCorners[0], worldCorners[2], worldCorners[3]), // N [n0, n2, n3]
+        QSSGPlane(worldCorners[5], worldCorners[7], worldCorners[6]), // F [f1, f3, f2]
+    };
+
+    QList<QQuick3DObject *> ret;
+    if (QQuick3DSceneRenderer *renderer = getRenderer()) {
+        auto nodes = renderer->syncPickInFrustum(frustum);
+        for (auto node : nodes) {
+            if (QQuick3DObject *m = findFrontendNode(node))
+                ret.append(m);
+        }
+    }
+
+    return ret;
 }
 
 void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event) const
