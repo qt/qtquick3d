@@ -23,7 +23,6 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderImage;
-struct QSSGShaderMaterialAdapter;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleSimple
 {
@@ -112,8 +111,9 @@ private:
     QSSGBounds3 m_bounds;
 };
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
 {
+public:
     enum class BlendMode : quint8
     {
         SourceOver = 0,
