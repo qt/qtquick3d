@@ -76,14 +76,20 @@ bool QSSGRenderLayer::hasEffect(QSSGRenderEffect *inEffect) const
     return false;
 }
 
-void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
+void QSSGRenderLayer::setImportScene(QSSGRenderNode &importedNode)
 {
+    if (importedNode.parent != nullptr) {
+        qWarning("The root of the imported scene node is already part of another scene graph.\n"
+                 "Importing a sub-scene is unsupported and may not work as expected!");
+    }
+
     // We create a dummy node to represent the imported scene tree, as we
     // do absolutely not want to change the node links in that tree!
     if (importSceneNode == nullptr) {
         importSceneNode = new QSSGRenderNode(QSSGRenderGraphObject::Type::ImportScene);
         // Now we can add the dummy node to the layers child list
-        children.push_back(*importSceneNode);
+        // NOTE: We push front because this way we'll always index the imported scene first...
+        children.push_front(*importSceneNode);
     } else {
         importSceneNode->children.clear(); // Clear the list (or the list will modify the rootNode)
     }
@@ -92,7 +98,21 @@ void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
     auto &importChildren = importSceneNode->children;
     Q_ASSERT(importChildren.isEmpty());
     // We don't want the list to modify our node, so we set the tail and head manually.
-    importChildren.m_head = importChildren.m_tail = &rootNode;
+    importChildren.m_head = importChildren.m_tail = &importedNode;
+
+    // Mark all nodes as imported, this allows us to detect imported nodes later on.
+    importedNode.setState(QSSGRenderNode::LocalState::Imported);
+
+    // Now try to detect if the imported scene is used in a different window. This is not
+    // supported and might not function correctly, so we warn the user and try to be nice.
+    const bool warnAboutCrossWindowSharing = importedNode.rootNodeRef && QSSGRenderRoot::get(importedNode.rootNodeRef) != rootNode;
+    if (warnAboutCrossWindowSharing) {
+        qWarning("Sharing nodes across different windows is not supported and may lead to unexpected behavior!");
+        // NOTE: If there are multiple windows sharing the same imported scene, then we don't, and don't want
+        //       to, keep track of that, so we mark the whole imported scene as dirty to force every window to
+        //       update their data for the imported scene.
+        importSceneNode->markDirty(QSSGRenderNode::DirtyFlag::StickyDirty);
+    }
 }
 
 void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)

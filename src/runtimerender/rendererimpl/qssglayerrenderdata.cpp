@@ -2335,7 +2335,7 @@ void QSSGLayerRenderData::prepareForRender()
         lightsView.clear();
         reflectionProbesView.clear();
 
-        enum NodeType : size_t { Model = 0, Particles, Item2D, Camera, Light, ReflectionProbe, Other, Inactive };
+        enum NodeType : size_t { Model = 0, Particles, Item2D, Camera, ImportedCamera, Light, ReflectionProbe, Other, Inactive };
         static const auto nodeType = [](QSSGRenderNode *node) -> NodeType {
             if (!node->getGlobalState(QSSGRenderNode::GlobalState::Active))
                 return NodeType::Inactive;
@@ -2347,8 +2347,13 @@ void QSSGLayerRenderData::prepareForRender()
             default: break;
             }
 
-            if (QSSGRenderGraphObject::isCamera(node->type))
-                return NodeType::Camera;
+            if (QSSGRenderGraphObject::isCamera(node->type)) {
+                // NOTE: To keep compatibility with old code, we collect shared and non-shared cameras differently,
+                // so that shared cameras (import scene) are picked after non-shared ones.
+                const bool isImported = node->getGlobalState(QSSGRenderNode::GlobalState::Imported);
+                constexpr NodeType cameraTypes[2] { NodeType::Camera, NodeType::ImportedCamera };
+                return cameraTypes[size_t(isImported)];
+            }
             if (QSSGRenderGraphObject::isLight(node->type))
                 return NodeType::Light;
 

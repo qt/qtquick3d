@@ -2129,7 +2129,8 @@ void QQuick3DViewport::updateCameraForLayer(const QQuick3DViewport &view3D, QSSG
         for (QQuick3DCamera *camera : std::as_const(view3D.m_multiViewCameras))
             layerNode.explicitCameras.append(static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(camera)->spatialNode));
     } else if (view3D.camera()) {
-        layerNode.explicitCameras.append(static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode));
+        if (QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode))
+            layerNode.explicitCameras.append(camera);
     }
 
     // Ensure these have a parent. All nodes need to be in the node tree somewhere, even if they're technically "parentless"
