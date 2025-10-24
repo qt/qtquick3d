@@ -111,10 +111,16 @@ static bool calcGlobalNodeDataIndexedImpl(QSSGRenderNode *node,
     if (Q_UNLIKELY(!node || (node->h.version() != version)))
         return false;
 
-    constexpr bool forcedRebuilf = (Strategy == QSSGRenderDataHelpers::Strategy::Initial);
-    bool retval = forcedRebuilf || node->isDirty(TransformAndOpacityDirty);
+    constexpr bool forcedRebuild = (Strategy == QSSGRenderDataHelpers::Strategy::Initial);
+    bool retval = forcedRebuild || node->isDirty(TransformAndOpacityDirty);
 
-    if (retval) {
+    // NOTE 1: Nodes shared across windows will be marked with a stick dirty flag.
+    //         Officially this isn't supported, but in practice it can happen so
+    //         we try to be nice and try to keep things moving (literally).
+    // NOTE 2: We don't change the return value, as that would interfere with the progressive AA.
+    const bool alwaysDirty = node->isDirty(DirtyFlag::StickyDirty);
+
+    if (retval || alwaysDirty) {
         const auto idx = node->h.index();
 
         auto &globalTransform = globalTransforms[idx];
@@ -148,15 +154,16 @@ QSSGRenderDataHelpers::GlobalStateResult QSSGRenderDataHelpers::updateGlobalNode
     using DirtyFlag = QSSGRenderNode::DirtyFlag;
     using FlagT = QSSGRenderNode::FlagT;
 
-    constexpr DirtyFlag ActiveOrPickableDirty = DirtyFlag(FlagT(DirtyFlag::ActiveDirty) | FlagT(DirtyFlag::PickableDirty));
+    constexpr DirtyFlag ClearDirtyMask = DirtyFlag(FlagT(DirtyFlag::ActiveDirty) | FlagT(DirtyFlag::PickableDirty) | FlagT(DirtyFlag::ImportDirty));
 
     if (Q_UNLIKELY(!node || (node->h.version() != version)))
         return GlobalStateResult::None;
 
     const bool activeDirty = node->isDirty(DirtyFlag::ActiveDirty);
     const bool pickableDirty = node->isDirty(DirtyFlag::PickableDirty);
+    const bool importedDirty = node->isDirty(DirtyFlag::ImportDirty);
 
-    const bool updateState = activeDirty || pickableDirty;
+    const bool updateState = activeDirty || pickableDirty || importedDirty;
 
     if (updateState) {
         const QSSGRenderNode *parent = node->parent;
@@ -165,9 +172,11 @@ QSSGRenderDataHelpers::GlobalStateResult QSSGRenderDataHelpers::updateGlobalNode
         node->flags = globallyActive ? (node->flags | FlagT(GlobalState::Active)) : (node->flags & ~FlagT(GlobalState::Active));
         const bool globallyPickable = node->getLocalState(LocalState::Pickable) || (hasParent && parent->getGlobalState(GlobalState::Pickable));
         node->flags = globallyPickable ? (node->flags | FlagT(GlobalState::Pickable)) : (node->flags & ~FlagT(GlobalState::Pickable));
+        const bool globallyImported = node->getLocalState(LocalState::Imported) || (hasParent && parent->getGlobalState(GlobalState::Imported));
+        node->flags = globallyImported ? (node->flags | FlagT(GlobalState::Imported)) : (node->flags & ~FlagT(GlobalState::Imported));
 
-        // Clear dirty flags (Transform, Opacity, Active, Pickable)
-        node->clearDirty(ActiveOrPickableDirty);
+        // Clear dirty flags (Active, Pickable, Imported)
+        node->clearDirty(ClearDirtyMask);
     }
 
     return GlobalStateResult((activeDirty << 1) | (pickableDirty << 2));
@@ -231,9 +240,10 @@ bool QSSGRenderDataHelpers::calcInstanceTransforms(QSSGRenderNode *node,
     return retval;
 }
 
-QSSGGlobalRenderNodeData::QSSGGlobalRenderNodeData()
+QSSGGlobalRenderNodeData::QSSGGlobalRenderNodeData(QSSGRenderRoot *root)
 #if QT_CONFIG(thread)
     : m_threadPool(new QThreadPool)
+    , m_rootNode(root)
 #endif // QT_CONFIG(thread)
 {
 
@@ -244,9 +254,9 @@ QSSGGlobalRenderNodeData::~QSSGGlobalRenderNodeData()
 
 }
 
-void QSSGGlobalRenderNodeData::reindex(QSSGRenderRoot *rootNode)
+void QSSGGlobalRenderNodeData::reindex()
 {
-    if (rootNode) {
+    if (m_rootNode) {
         quint32 dfsIdx = 0;
         m_nodeCount = 0;
 
@@ -254,12 +264,12 @@ void QSSGGlobalRenderNodeData::reindex(QSSGRenderRoot *rootNode)
         // this check ensures we accidentally don't reindex with the
         // same version, as that can cause problems.
         // The start version should be set to the last layer's last version.
-        if (m_version == rootNode->startVersion())
-            m_version = rootNode->startVersion() + 1;
+        if (m_version == m_rootNode->startVersion())
+            m_version = m_rootNode->startVersion() + 1;
         else
             ++m_version;
 
-        ::reindex(rootNode, m_version, dfsIdx, m_nodeCount);
+        ::reindex(m_rootNode, m_version, dfsIdx, m_nodeCount);
 
         // Actual storage size (Some nodes, like the layers, will all use index 0).
         // NOTE: This can differ from the node count, as nodes are collected for each
@@ -271,11 +281,16 @@ void QSSGGlobalRenderNodeData::reindex(QSSGRenderRoot *rootNode)
         globalOpacities.resize(m_size, 1.0f);
         instanceTransforms.resize(m_size, { QMatrix4x4{ Qt::Uninitialized }, QMatrix4x4{ Qt::Uninitialized } });
 
-        collectNodes(rootNode);
+        collectNodes(m_rootNode);
         // NOTE: If the tree was dirty we force a full rebuild of the global transforms etc. since
         //       the stored data is invalid for the new index order.
         updateGlobalState();
     }
+}
+
+void QSSGGlobalRenderNodeData::invalidate()
+{
+    m_rootNode = nullptr;
 }
 
 QMatrix4x4 QSSGGlobalRenderNodeData::getGlobalTransform(QSSGRenderNodeHandle h, QMatrix4x4 defaultValue) const

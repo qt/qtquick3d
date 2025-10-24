@@ -42,25 +42,30 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     enum class LocalState : quint8
     {
         Active = 1 << 0,
-        Pickable = 1 << 1
+        Pickable = 1 << 1,
+        Imported = 1 << 2,
     };
 
     enum class GlobalState : quint8
     {
-        Active = 1 << 2,
-        Pickable = 1 << 3
+        Active = 1 << 3,
+        Pickable = 1 << 4,
+        Imported = 1 << 5,
     };
 
     enum class DirtyFlag : quint32
     {
-        TransformDirty = 1 << 4,
-        OpacityDirty = 1 << 5,
-        ActiveDirty = 1 << 6,
-        PickableDirty = 1 << 7,
-        TagDirty = 1 << 8,
-        SubNodeDirty = 1 << 9, // Sub-nodes should set/unest this if they "extend" the dirty flags provided by the node
+        TransformDirty = 1 << 6,
+        OpacityDirty = 1 << 7,
+        ActiveDirty = 1 << 8,
+        PickableDirty = 1 << 9,
+        TagDirty = 1 << 10,
+        ImportDirty = 1 << 11,
+        SubNodeDirty = 1 << 12, // Sub-nodes should set/unest this if they "extend" the dirty flags provided by the node
+        StickyDirty = 1 << 13, // Sticky flag (Only used by import scenes.)
 
-        GlobalValuesDirty = TransformDirty | OpacityDirty | ActiveDirty | PickableDirty,
+        GlobalValuesDirty = TransformDirty | OpacityDirty | ActiveDirty | PickableDirty | ImportDirty,
+        SubtreeUpdateMask = GlobalValuesDirty | StickyDirty,
         DirtyMask = GlobalValuesDirty | SubNodeDirty
     };
     using FlagT = std::underlying_type_t<DirtyFlag>;

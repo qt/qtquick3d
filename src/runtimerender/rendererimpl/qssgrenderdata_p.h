@@ -58,10 +58,15 @@ public:
     using NodeStore = std::vector<QSSGRenderNode *>;
     using LayerNodeViewStore = std::vector<LayerNodeSection>;
 
-    QSSGGlobalRenderNodeData();
+    explicit QSSGGlobalRenderNodeData(QSSGRenderRoot *root);
     ~QSSGGlobalRenderNodeData();
 
-    void reindex(QSSGRenderRoot *rootNode);
+    void reindex();
+
+    // Once this is called we expect teardown as bugn and no further
+    // updates will be made. We do however keep the data around in case
+    // anyone holding a reference to us decides to query something.
+    void invalidate();
 
     [[nodiscard]] quint32 version() const { return m_version; }
 
@@ -104,6 +109,7 @@ private:
     std::unique_ptr<QThreadPool> m_threadPool;
 #endif // QT_CONFIG(thread)
 
+    QSSGRenderRoot *m_rootNode = nullptr;
     size_t m_size = 0;
     size_t m_nodeCount = 0;
     quint32 m_version = 0;
