@@ -426,6 +426,12 @@ QQuick3DNode *QQuick3DViewport::scene() const
     referenced node becomes a sibling with child nodes of View3D, if there are
     any.
 
+    \note Scenes can only be shared between View3D items that are in the same
+    \l{QQuickWindow}{window}.
+
+    \note When sharing scenes between multiple View3D items the imported scene should
+    be imported in whole, that is, importing a subtree of a scene is not supported.
+
     \note This property can only be set once, and subsequent changes will have
     no effect.
 
