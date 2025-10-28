@@ -71,6 +71,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     TStrTableStrMap m_flatIncoming;
     TStrTableStrMap *m_flatOutgoing = nullptr;
     QSet<QByteArray> m_includes;
+    QList<QByteArray> m_prefixes;
     TStrTableStrMap m_uniforms;
     TStrTableSizedStrMap m_uniformArrays;
     TStrTableStrMap m_constantBuffers;
@@ -131,6 +132,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     virtual void addDefinition(const QByteArray &name, const QByteArray &value) final;
 
     virtual void addTypeDeclaration(const QByteArray &typeName, const QByteArray &snippet) final;
+
+    void addPrefix(const QByteArray &data);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGStageGeneratorBase::ShaderItemMapFlags)

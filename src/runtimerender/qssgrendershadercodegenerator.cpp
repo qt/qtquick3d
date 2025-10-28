@@ -66,6 +66,7 @@ void QSSGStageGeneratorBase::begin(QSSGShaderGeneratorStageFlags inEnabledStages
     m_addedFunctions.clear();
     m_addedDefinitions.clear();
     m_addedTypeDeclarations.clear();
+    m_prefixes.clear();
     // the shared buffers will be cleared elsewhere.
 }
 
@@ -239,6 +240,14 @@ void QSSGStageGeneratorBase::addInclude(const QByteArray &name) { m_includes.ins
 void QSSGStageGeneratorBase::buildShaderSourcePass1(QSSGShaderResourceMergeContext *mergeContext)
 {
     m_mergeContext = mergeContext;
+
+    if (m_prefixes.size())
+        m_finalBuilder.append("\n");
+    for (const auto &prefix : std::as_const(m_prefixes)) {
+        m_finalBuilder.append(prefix);
+        m_finalBuilder.append("\n");
+    }
+
     addShaderIncomingMap();
     addShaderUniformMap();
     addShaderConstantBufferItemMap("uniform", m_constantBuffers, m_constantBufferParams);
@@ -374,6 +383,11 @@ void QSSGStageGeneratorBase::addFunction(const QByteArray &functionName)
         includeName = "func" + functionName + ".glsllib";
         addInclude(includeName);
     }
+}
+
+void QSSGStageGeneratorBase::addPrefix(const QByteArray &data)
+{
+    m_prefixes.append(data);
 }
 
 void QSSGStageGeneratorBase::addDefinition(const QByteArray &name, const QByteArray &value)
