@@ -18,16 +18,18 @@
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderparticleshaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGShaderMapKey
+template <typename T>
+struct TShaderMapKey
 {
     QByteArray m_name;
     const QSSGShaderFeatures m_featuresOrig;
-    const QSSGShaderDefaultMaterialKey *m_materialKeyOrig;
-    QSSGShaderDefaultMaterialKey m_materialKeyCopy;
+    const T *m_materialKeyOrig;
+    T m_materialKeyCopy;
     size_t m_hashCode;
 
     void detach()
@@ -38,29 +40,37 @@ struct QSSGShaderMapKey
         }
     }
 
-    QSSGShaderMapKey(const QByteArray &inName,
+    TShaderMapKey(const QByteArray &inName,
                      const QSSGShaderFeatures &inFeatures,
-                     const QSSGShaderDefaultMaterialKey &inMaterialKey)
+                     const T &inMaterialKey)
         : m_name(inName), m_featuresOrig(inFeatures), m_materialKeyOrig(&inMaterialKey)
     {
         m_hashCode = qHash(m_name) ^ qHash(m_featuresOrig) ^ qHash(m_materialKeyOrig->hash());
     }
 };
-
-inline bool operator==(const QSSGShaderMapKey &a, const QSSGShaderMapKey &b) Q_DECL_NOTHROW
+template <typename T>
+inline bool operator==(const TShaderMapKey<T> &a, const TShaderMapKey<T> &b) Q_DECL_NOTHROW
 {
     if (a.m_name != b.m_name)
         return false;
 
-    const QSSGShaderDefaultMaterialKey *keyA = a.m_materialKeyOrig ? a.m_materialKeyOrig : &a.m_materialKeyCopy;
-    const QSSGShaderDefaultMaterialKey *keyB = b.m_materialKeyOrig ? b.m_materialKeyOrig : &b.m_materialKeyCopy;
+    const T *keyA = a.m_materialKeyOrig ? a.m_materialKeyOrig : &a.m_materialKeyCopy;
+    const T *keyB = b.m_materialKeyOrig ? b.m_materialKeyOrig : &b.m_materialKeyCopy;
     if (!(*keyA == *keyB))
         return false;
 
     return (a.m_featuresOrig == b.m_featuresOrig);
 }
 
+typedef TShaderMapKey<QSSGShaderDefaultMaterialKey> QSSGShaderMapKey;
+typedef TShaderMapKey<QSSGShaderParticleMaterialKey> QSSGParticleShaderMapKey;
+
 inline size_t qHash(const QSSGShaderMapKey &key, size_t seed)
+{
+    return key.m_hashCode ^ seed;
+}
+
+inline size_t qHash(const QSSGParticleShaderMapKey &key, size_t seed)
 {
     return key.m_hashCode ^ seed;
 }
