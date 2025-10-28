@@ -1880,8 +1880,11 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
     auto &transparentObjects = transparentObjectStore[0];
     auto &screenTextureObjects = screenTextureObjectStore[0];
 
-    for (const auto &renderable : renderableParticles) {
-        const QSSGRenderParticles &particles = *static_cast<QSSGRenderParticles *>(renderable.node);
+    for (auto &renderable : renderableParticles) {
+        QSSGShaderParticleMaterialKeyProperties &properties = particleMaterialShaderKeyProperties;
+
+        QSSGRenderParticles &particles = *static_cast<QSSGRenderParticles *>(renderable.node);
+        QSSGShaderParticleMaterialKey &theGeneratedKey(particles.materialKey);
         const auto &lights = renderable.lights;
 
         QSSGRenderableObjectFlags renderableFlags;
@@ -1895,6 +1898,30 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
         renderableFlags.setCastsReflections(particles.m_castsReflections);
         if (particles.m_hasTransparency && particles.m_blendMode != QSSGRenderParticles::BlendMode::SourceOver)
             ioFlags.setHasCustomBlendMode(true);
+
+        properties.m_isLineParticle.setValue(theGeneratedKey, particles.m_featureLevel >= QSSGRenderParticles::FeatureLevel::Line);
+        const bool animated = particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::LineAnimated
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::Animated
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::AnimatedVLight
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::LineAnimatedVLight;
+        const bool mapped = particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::LineMapped
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::Mapped
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::MappedVLight
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::LineMappedVLight;
+        const bool lit = particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::LineVLight
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::AnimatedVLight
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::MappedVLight
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::LineMappedVLight
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::LineAnimatedVLight
+                || particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::SimpleVLight;
+        properties.m_isAnimated.setValue(theGeneratedKey, animated);
+        properties.m_isMapped.setValue(theGeneratedKey, mapped);
+        properties.m_hasLighting.setValue(theGeneratedKey, lit);
+        properties.m_viewCount.setValue(theGeneratedKey, layer.viewCount);
+        if (renderableFlags.hasTransparency() && orderIndependentTransparencyEnabled)
+            properties.m_orderIndependentTransparency.setValue(theGeneratedKey, int(layer.oitMethod));
+        else
+            properties.m_orderIndependentTransparency.setValue(theGeneratedKey, int(0));
 
         float opacity = getGlobalOpacity(particles);
         QVector3D center(particles.m_particleBuffer.bounds().center());
@@ -1910,6 +1937,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
             const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(particles.m_sprite);
             QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *particles.m_sprite, texture);
             firstImage = theImage;
+            properties.m_isSpriteLinear.setValue(theGeneratedKey, texture.m_flags.isLinear());
         }
 
         QSSGRenderableImage *colorTable = nullptr;
@@ -1923,6 +1951,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
 
             QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *particles.m_colorTable, texture);
             colorTable = theImage;
+            properties.m_isColorTableLinear.setValue(theGeneratedKey, texture.m_flags.isLinear());
         }
 
         if (opacity > 0.0f && particles.m_particleBuffer.particleCount()) {
@@ -1936,7 +1965,8 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
                                                                                   firstImage,
                                                                                   colorTable,
                                                                                   lights,
-                                                                                  opacity);
+                                                                                  opacity,
+                                                                                  theGeneratedKey);
             if (theRenderableObject) {
                 if (theRenderableObject->renderableFlags.requiresScreenTexture())
                     screenTextureObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});

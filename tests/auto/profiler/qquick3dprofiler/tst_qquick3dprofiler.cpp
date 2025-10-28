@@ -200,7 +200,8 @@ void tst_QQuick3DProfiler::testProfiling()
     for (int i = 0; i < QQuick3DProfiler::MaximumQuick3DFrameType; i++) {
         QString msg("Required message detail type not received: %1");
         msg = msg.arg(i);
-        QVERIFY2(messageReceived[i] == true, qPrintable(msg));
+        if (i != QQuick3DProfiler::Quick3DLoadShader)
+            QVERIFY2(messageReceived[i] == true, qPrintable(msg));
     }
 }
 

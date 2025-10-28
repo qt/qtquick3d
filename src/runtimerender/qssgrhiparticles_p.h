@@ -43,6 +43,14 @@ public:
                                                char *ubufData,
                                                const QSSGRenderModel *model, quint32 offset);
 
+    static QSSGRhiShaderPipelinePtr getShaderPipelineParticles(QSSGRenderer &renderer,
+                                                               QSSGParticlesRenderable &inRenderable,
+                                                               const QSSGShaderFeatures &inFeatureSet);
+
+    static QSSGRhiShaderPipelinePtr generateRhiShaderPipeline(QSSGRenderer &renderer,
+                                                              QSSGParticlesRenderable &inRenderable,
+                                                              const QSSGShaderFeatures &inFeatureSet);
+
     static void rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPipeline, QSSGPassKey passKey,
                                      QSSGRhiContext *rhiCtx,
                                      QSSGRhiGraphicsPipelineState *ps,

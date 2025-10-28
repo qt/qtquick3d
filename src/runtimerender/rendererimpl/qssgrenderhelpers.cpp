@@ -42,12 +42,10 @@ static QSSGRhiShaderPipelinePtr shadersForDefaultMaterial(QSSGRhiGraphicsPipelin
 
 static QSSGRhiShaderPipelinePtr shadersForParticleMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                            QSSGParticlesRenderable &particleRenderable,
-                                                           QSSGRenderLayer::OITMethod method)
+                                                           const QSSGShaderFeatures &featureSet)
 {
-    const auto &renderer(particleRenderable.renderer);
-    const auto &shaderCache = renderer->contextInterface()->shaderCache();
-    auto featureLevel = particleRenderable.particles.m_featureLevel;
-    const auto &shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiParticleShader(featureLevel, ps->viewCount, method);
+    auto &renderer(particleRenderable.renderer);
+    const auto &shaderPipeline = QSSGParticleRenderer::getShaderPipelineParticles(*renderer, particleRenderable, featureSet);
     if (shaderPipeline)
         QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
     return shaderPipeline;
@@ -1231,7 +1229,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     case QSSGRenderableObject::Type::Particles:
     {
         QSSGParticlesRenderable &particleRenderable(static_cast<QSSGParticlesRenderable &>(inObject));
-        const auto &shaderPipeline = shadersForParticleMaterial(ps, particleRenderable, oit ? inData.layer.oitMethod : QSSGRenderLayer::OITMethod::None);
+        const auto &shaderPipeline = shadersForParticleMaterial(ps, particleRenderable, featureSet);
         if (shaderPipeline) {
             QSSGParticleRenderer::rhiPrepareRenderable(*shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples, viewCount,
                                                        alteredCamera, cubeFace, entry);

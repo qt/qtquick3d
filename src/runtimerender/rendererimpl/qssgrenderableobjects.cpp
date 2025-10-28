@@ -98,7 +98,8 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                                                  QSSGRenderableImage *inFirstImage,
                                                  QSSGRenderableImage *inColorTable,
                                                  const QSSGShaderLightListView &inLights,
-                                                 float inOpacity)
+                                                 float inOpacity,
+                                                 QSSGShaderParticleMaterialKey inShaderKey)
     : QSSGRenderableObject(Type::Particles,
                            inFlags,
                            inWorldCenterPt,
@@ -111,6 +112,7 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
     , lights(inLights)
     , globalTransform(inGlobalTransform)
     , opacity(inOpacity)
+    , shaderDescription(inShaderKey)
 {
     // Bounds are in global space for _model blend_ particles
     globalBounds = inParticles.m_particleBuffer.bounds();

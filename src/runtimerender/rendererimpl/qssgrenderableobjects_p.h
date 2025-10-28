@@ -402,6 +402,7 @@ public:
     const QSSGShaderLightListView &lights;
     QMatrix4x4 globalTransform;
     float opacity;
+    QSSGShaderParticleMaterialKey shaderDescription;
 
     struct {
         // Transient (due to the subsetRenderable being allocated using a
@@ -433,7 +434,8 @@ public:
                             QSSGRenderableImage *inFirstImage,
                             QSSGRenderableImage *inColorTable,
                             const QSSGShaderLightListView &inLights,
-                            float inOpacity);
+                            float inOpacity,
+                            QSSGShaderParticleMaterialKey inShaderKey);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGParticlesRenderable>::value);

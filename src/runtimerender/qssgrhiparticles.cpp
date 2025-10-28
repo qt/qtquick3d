@@ -11,6 +11,10 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+#include <ssg/qssgrendercontextcore.h>
+#include "qssgrendershadercodegenerator_p.h"
+
+#include "qtquick3d_tracepoints_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -141,7 +145,7 @@ void QSSGParticleRenderer::updateUniformsForParticles(const QSSGLayerRenderData 
             theLightAmbientTotal += theLight->m_ambientColor;
         }
         // Copy light data
-        int lightOffset = shaders.offsetOfUniform("qt_pointLightPosition");
+        int lightOffset = shaders.offsetOfUniform("lightData");
         if (lightOffset >= 0)
             memcpy(ubufData + lightOffset, &lightData, sizeof(ParticleLightData));
     }
@@ -615,6 +619,368 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRhiShaderPipeline &shade
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::VertexStage, texture, sampler);
         }
     }
+}
+
+static QByteArray logPrefix() { return QByteArrayLiteral("particle material pipeline-- "); }
+
+struct ShaderGeneratorCommon
+{
+    QSSGStageGeneratorBase *vs;
+    QSSGStageGeneratorBase *fs;
+    ShaderGeneratorCommon(QSSGProgramGenerator &gen)
+        : vs(gen.getStage(QSSGShaderGeneratorStage::Vertex)), fs(gen.getStage(QSSGShaderGeneratorStage::Fragment))
+    {
+
+    }
+    void addUniform(const QByteArray &name, const QByteArray &type)
+    {
+        vs->addUniform(name, type);
+        fs->addUniform(name, type);
+    }
+    void addUniformArray(const QByteArray &name, const QByteArray &type, quint32 size)
+    {
+        vs->addUniformArray(name, type, size);
+        fs->addUniformArray(name, type, size);
+    }
+    void addDefinition(const QByteArray &name, const QByteArray &value)
+    {
+        vs->addDefinition(name, value);
+        fs->addDefinition(name, value);
+    }
+    void addInterpolant(const QByteArray &name, const QByteArray &type)
+    {
+        vs->addOutgoing(name, type);
+        fs->addIncoming(name, type);
+    }
+    void addFlatInterpolant(const QByteArray &name, const QByteArray &type)
+    {
+        vs->addFlatOutgoing(name, type);
+        fs->addFlatIncoming(name, type);
+    }
+    void addPrefix(const QByteArray &prefix)
+    {
+        vs->addPrefix(prefix);
+        fs->addPrefix(prefix);
+    }
+};
+
+struct AutoFormatGenerator
+{
+    QSSGStageGeneratorBase &gen;
+    int indent = 0;
+    AutoFormatGenerator(QSSGStageGeneratorBase &g)
+        : gen(g)
+    {
+
+    }
+    AutoFormatGenerator &operator<<(const QByteArray &data)
+    {
+        for (int i = 0; i < indent; i++)
+            gen << "    ";
+        gen << data << "\n";
+        return *this;
+    }
+    void incIndent()
+    {
+        indent++;
+    }
+    void decIndent()
+    {
+        indent--;
+        Q_ASSERT(indent >= 0);
+    }
+};
+
+static const char *s_lightPrefix = {
+    "struct ParticleLightData\n" \
+    "{\n"
+    "    vec4 qt_pointLightPosition[4];\n" \
+    "    vec4 qt_pointLightConstantAtt;\n" \
+    "    vec4 qt_pointLightLinearAtt;\n" \
+    "    vec4 qt_pointLightQuadAtt;\n" \
+    "    vec4 qt_pointLightColor[4];\n" \
+    "    vec4 qt_spotLightPosition[4];\n" \
+    "    vec4 qt_spotLightConstantAtt;\n" \
+    "    vec4 qt_spotLightLinearAtt;\n" \
+    "    vec4 qt_spotLightQuadAtt;\n" \
+    "    vec4 qt_spotLightColor[4];\n" \
+    "    vec4 qt_spotLightDirection[4];\n" \
+    "    vec4 qt_spotLightConeAngle;\n" \
+    "    vec4 qt_spotLightInnerConeAngle;\n" \
+    "};\n"
+};
+
+QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRenderer &renderer,
+                                                                         QSSGParticlesRenderable &inRenderable,
+                                                                         const QSSGShaderFeatures &inFeatureSet)
+{
+    auto *currentLayer = renderer.m_currentLayer;
+    auto &shaderString = currentLayer->generatedShaderString;
+    auto &shaderKeyProperties = currentLayer->particleMaterialShaderKeyProperties;
+    const auto &m_contextInterface = renderer.m_contextInterface;
+    const auto &shaderCache = m_contextInterface->shaderCache();
+    const auto &shaderProgramGenerator = m_contextInterface->shaderProgramGenerator();
+    const auto &shaderLibraryManager = m_contextInterface->shaderLibraryManager();
+
+    shaderString = logPrefix();
+    QSSGShaderParticleMaterialKey theKey(inRenderable.shaderDescription);
+
+    theKey.toString(shaderString, shaderKeyProperties);
+
+    if (const auto &maybePipeline = shaderCache->tryGetRhiShaderPipeline(shaderString, inFeatureSet))
+        return maybePipeline;
+
+    // Check if there's a pre-built (offline generated) shader for available.
+    const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(inFeatureSet));
+    const QQsbCollection::EntryMap &pregenEntries = shaderLibraryManager->m_preGeneratedShaderEntries;
+    if (!pregenEntries.isEmpty()) {
+        const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
+        if (foundIt != pregenEntries.cend())
+            return shaderCache->newPipelineFromPregenerated(shaderString, inFeatureSet, *foundIt, inRenderable.particles);
+    }
+
+    // Try the persistent (disk-based) cache then.
+    if (const auto &maybePipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey, shaderString, inFeatureSet))
+        return maybePipeline;
+
+    // generate shader code
+    shaderProgramGenerator->beginProgram();
+    auto &vertex = *shaderProgramGenerator->getStage(QSSGShaderGeneratorStage::Vertex);
+    auto &fragment = *shaderProgramGenerator->getStage(QSSGShaderGeneratorStage::Fragment);
+    ShaderGeneratorCommon common(*shaderProgramGenerator);
+    const bool isSpriteLinear = shaderKeyProperties.m_isSpriteLinear.getValue(theKey);
+    const bool isColorTableLinear = shaderKeyProperties.m_isColorTableLinear.getValue(theKey);
+    const bool lighting = shaderKeyProperties.m_hasLighting.getValue(theKey);
+    const bool isMapped = shaderKeyProperties.m_isMapped.getValue(theKey);
+    const bool isLineParticle = shaderKeyProperties.m_isLineParticle.getValue(theKey);
+    const bool isAnimated = shaderKeyProperties.m_isAnimated.getValue(theKey);
+    const int viewCount = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
+            ? 1 : shaderKeyProperties.m_viewCount.getValue(theKey);
+    const int oit = shaderKeyProperties.m_orderIndependentTransparency.getValue(theKey);
+
+    if (isAnimated)
+        common.addDefinition("QSSG_PARTICLES_ENABLE_ANIMATED", "1");
+    if (isLineParticle)
+        common.addDefinition("QSSG_PARTICLES_ENABLE_LINE_PARTICLE", "1");
+    if (oit)
+        common.addDefinition("QSSG_OIT_METHOD", QStringLiteral("%1").arg(oit).toUtf8());
+
+    common.addUniform("qt_modelMatrix", "mat4");
+    if (viewCount >= 2) {
+        common.addUniformArray("qt_viewMatrix", "mat4", viewCount);
+        common.addUniformArray("qt_projectionMatrix", "mat4", viewCount);
+    } else {
+        common.addUniform("qt_viewMatrix", "mat4");
+        common.addUniform("qt_projectionMatrix", "mat4");
+    }
+    if (lighting) {
+        common.addPrefix(s_lightPrefix);
+        common.addUniform("lightData", "ParticleLightData");
+    }
+    common.addUniform("qt_spriteConfig", "vec4");
+    common.addUniform("qt_light_ambient_total", "vec3");
+    common.addUniform("qt_oneOverParticleImageSize", "vec2");
+    common.addUniform("qt_countPerSlice", "uint");
+    if (isLineParticle)
+        common.addUniform("qt_lineSegmentCount", "uint");
+    common.addUniform("qt_billboard", "float");
+    common.addUniform("qt_opacity", "float");
+    if (isLineParticle) {
+        common.addUniform("qt_alphaFade", "float");
+        common.addUniform("qt_sizeModifier", "float");
+        common.addUniform("qt_texcoordScale", "float");
+    }
+    if (lighting) {
+        common.addUniform("qt_pointLights", "bool");
+        common.addUniform("qt_spotLights", "bool");
+    }
+    if (oit == (int)QSSGRenderLayer::OITMethod::WeightedBlended)
+        common.addUniform("qt_cameraProperties", "vec2");
+
+    if (lighting)
+        vertex.addInclude("particleLighting.glsllib");
+
+    vertex.addUniform("qt_particleTexture", "sampler2D");
+
+    vertex.addInclude("particleLoading.glsllib");
+
+    common.addInterpolant("color", "vec4");
+    common.addInterpolant("spriteData", "vec2");
+    common.addInterpolant("texcoord", "vec2");
+    common.addFlatInterpolant("instanceIndex", "uint");
+
+    AutoFormatGenerator vg(vertex);
+    if (!isLineParticle)
+        vg << "const vec2 corners[4] = {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};";
+
+    // vertex shader main
+    vg << "out gl_PerVertex {"
+       << "    vec4 gl_Position;"
+       << "};";
+
+    vg << "void main() {";
+    vg.incIndent();
+    if (isLineParticle) {
+        vg << "uint segmentIndex = gl_VertexIndex / 2;"
+               << "uint particleIndex = segmentIndex + gl_InstanceIndex * qt_lineSegmentCount;";
+    } else {
+        vg << "uint particleIndex = gl_InstanceIndex;"
+               << "uint cornerIndex = gl_VertexIndex;"
+               << "vec2 corner = corners[cornerIndex];";
+    }
+    vg << "instanceIndex = particleIndex;"
+           << "Particle p = qt_loadParticle(particleIndex);";
+
+    if (isLineParticle) {
+        vg << "float side = float(mod(gl_VertexIndex, 2)) - 0.5;"
+           << "float size = p.size * qt_calcSizeFactor(segmentIndex);"
+           << "vec3 o = p.binormal * side * size;"
+           << "vec4 worldPos = qt_modelMatrix * vec4(p.position + (1.0 - qt_billboard) * o, 1.0);";
+        if (viewCount >= 2) {
+            vg << "vec4 viewPos = qt_viewMatrix[gl_ViewIndex] * worldPos;"
+               << "vec3 viewBN = (transpose(inverse(qt_viewMatrix[gl_ViewIndex] * qt_modelMatrix)) * vec4(p.binormal, 0.0)).xyz;";
+        } else {
+            vg << "vec4 viewPos = qt_viewMatrix * worldPos;"
+               << "vec3 viewBN = (transpose(inverse(qt_viewMatrix * qt_modelMatrix)) * vec4(p.binormal, 0.0)).xyz;";
+        }
+        vg << "viewBN.z = 0;"
+           << "viewBN = normalize(viewBN) * side * size;"
+           << "viewPos = viewPos + vec4(viewBN, 0.0) * qt_billboard;"
+           << "texcoord.x = p.segmentLength * qt_texcoordScale;"
+           << "texcoord.y = float(mod(gl_VertexIndex, 2));"
+           << "color = p.color;"
+           << "color.a *= qt_opacity * qt_calcAlphaFade(segmentIndex);";
+    } else {
+        vg << "mat3 rotMat = qt_fromEulerRotation(p.rotation);"
+           << "vec4 worldPos = qt_modelMatrix * vec4(p.position, 1.0);"
+           << "vec4 viewPos = worldPos;"
+           << "vec3 offset = (p.size * vec3(corner - vec2(0.5), 0.0));"
+           << "viewPos.xyz += offset * rotMat * (1.0 - qt_billboard);";
+        if (viewCount >= 2)
+            vg << "viewPos = qt_viewMatrix[gl_ViewIndex] * viewPos;";
+        else
+            vg << "viewPos = qt_viewMatrix * viewPos;";
+        vg << "viewPos.xyz += rotMat * offset * qt_billboard;"
+           << "texcoord = corner;"
+           << "color = p.color;"
+           << "color.a *= qt_opacity;";
+    }
+    if (lighting)
+        vg << "color.rgb *= qt_calcLightColor(worldPos.xyz);";
+    if (viewCount >= 2)
+        vg << "gl_Position = qt_projectionMatrix[gl_ViewIndex] * viewPos;";
+    else
+        vg << "gl_Position = qt_projectionMatrix * viewPos;";
+    if (isMapped)
+        vg << "spriteData.x = qt_ageToSpriteFactor(p.age);";
+    if (isAnimated)
+        vg << "spriteData.y = p.animationFrame;";
+    vg.decIndent();
+    vg << "}";
+
+    // fragment shader main
+    fragment.addInclude("tonemapping.glsllib");
+    fragment.addInclude("particleSprite.glsllib");
+    fragment.addUniform("qt_sprite", "sampler2D");
+
+    AutoFormatGenerator fg(fragment);
+
+    if (oit) {
+        fragment.addInclude("orderindependenttransparency.glsllib");
+        fg << "layout(location = 1) out vec4 revealageOutput;";
+    }
+    if (isSpriteLinear)
+        fg << "#define spriteFunc";
+    else
+        fg << "#define spriteFunc qt_sRGBToLinear";
+    if (isMapped) {
+        fragment.addUniform("qt_colorTable", "sampler2D");
+        if (isColorTableLinear)
+            fg << "#define colorTableFunc";
+        else
+            fg << "#define colorTableFunc qt_sRGBToLinear";
+    }
+
+    fg << "vec4 qt_readSprite() {";
+    fg.incIndent();
+    if (isAnimated) {
+        fg << "vec2 coords[2];"
+           << "float factor = qt_spriteCoords(coords);"
+           << "return mix(spriteFunc(texture(qt_sprite, coords[0])), spriteFunc(texture(qt_sprite, coords[1])), factor);";
+    } else {
+        fg << "return spriteFunc(texture(qt_sprite, texcoord));";
+    }
+    fg.decIndent();
+    fg << "}";
+    fg << "vec4 qt_readColor() {";
+    fg.incIndent();
+    if (isMapped)
+        fg << "return color * colorTableFunc(texture(qt_colorTable, vec2(spriteData.x, qt_rand(vec2(instanceIndex, 0)))));";
+    else
+        fg << "return color;";
+    fg.decIndent();
+    fg << "}";
+    fg << "void main() {";
+    fg.incIndent();
+    fg << "vec4 ret = qt_readColor() * qt_readSprite();";
+    if (oit) {
+        fg << "float z = abs(gl_FragCoord.z);"
+           << "float distWeight = qt_transparencyWeight(z, ret.a, qt_cameraProperties.y);"
+           << "fragOutput = distWeight * qt_tonemap(ret);"
+           << "revealageOutput = vec4(ret.a);";
+    } else {
+        fg << "fragOutput = qt_tonemap(ret);";
+    }
+    fg.decIndent();
+    fg << "}";
+
+
+    return shaderProgramGenerator->compileGeneratedRhiShader(shaderString, inFeatureSet, *shaderLibraryManager, *shaderCache,
+                                                             QSSGRhiShaderPipeline::UsedWithoutIa, shaderKeyProperties.m_viewCount.getValue(inRenderable.shaderDescription), false);
+}
+
+QSSGRhiShaderPipelinePtr QSSGParticleRenderer::getShaderPipelineParticles(QSSGRenderer &renderer,
+                                                           QSSGParticlesRenderable &inRenderable,
+                                                           const QSSGShaderFeatures &inFeatureSet)
+{
+    auto *m_currentLayer = renderer.m_currentLayer;
+    QSSG_ASSERT(m_currentLayer != nullptr, return {});
+
+    auto &shaderMap = m_currentLayer->particleShaderMap;
+
+    QElapsedTimer timer;
+    timer.start();
+
+    QSSGRhiShaderPipelinePtr shaderPipeline;
+
+    // This just references inFeatureSet and inRenderable.shaderDescription -
+    // cheap to construct and is good enough for the find()
+    QSSGParticleShaderMapKey skey = QSSGParticleShaderMapKey(QByteArray(),
+                                             inFeatureSet,
+                                             inRenderable.shaderDescription);
+    auto it = shaderMap.find(skey);
+    if (it == shaderMap.end()) {
+        Q_TRACE_SCOPE(QSSG_generateShader);
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
+        shaderPipeline = QSSGParticleRenderer::generateRhiShaderPipeline(renderer, inRenderable, inFeatureSet);
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inRenderable.particles.profilingId);
+        // make skey useable as a key for the QHash (makes a copy of the materialKey, instead of just referencing)
+        skey.detach();
+        // insert it no matter what, no point in trying over and over again
+        shaderMap.insert(skey, shaderPipeline);
+    } else {
+        shaderPipeline = it.value();
+    }
+
+    if (shaderPipeline != nullptr) {
+        if (m_currentLayer && !m_currentLayer->renderedCameras.isEmpty())
+            m_currentLayer->ensureCachedCameraDatas();
+    }
+
+    const auto &rhiContext = renderer.m_contextInterface->rhiContext();
+    QSSGRhiContextStats::get(*rhiContext).registerMaterialShaderGenerationTime(timer.elapsed());
+
+    return shaderPipeline;
 }
 
 void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,

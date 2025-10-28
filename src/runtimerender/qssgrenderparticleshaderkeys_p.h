@@ -22,21 +22,23 @@ QT_BEGIN_NAMESPACE
 struct QSSGShaderParticleMaterialKeyProperties
 {
     qsizetype m_stringBufferSizeHint = 0;
-    QSSGShaderKeyBoolean m_hasVertexLighting;
+    QSSGShaderKeyBoolean m_isSpriteLinear;
+    QSSGShaderKeyBoolean m_isColorTableLinear;
+    QSSGShaderKeyBoolean m_hasLighting;
     QSSGShaderKeyBoolean m_isLineParticle;
     QSSGShaderKeyBoolean m_isMapped;
     QSSGShaderKeyBoolean m_isAnimated;
     QSSGShaderKeyUnsigned<3> m_viewCount;
-    QSSGShaderKeyBoolean m_usesViewIndex;
     QSSGShaderKeyUnsigned<3> m_orderIndependentTransparency;
 
     QSSGShaderParticleMaterialKeyProperties()
-        : m_hasVertexLighting("hasVertexLighting")
+        : m_isSpriteLinear("isSpriteLinear")
+        , m_isColorTableLinear("isColorTableLinear")
+        , m_hasLighting("hasLighting")
         , m_isLineParticle("isLineParticle")
         , m_isMapped("isMapped")
         , m_isAnimated("isAnimated")
         , m_viewCount("viewCount")
-        , m_usesViewIndex("usesViewIndex")
         , m_orderIndependentTransparency("orderIndependentTransparency")
     {
         init();
@@ -45,12 +47,13 @@ struct QSSGShaderParticleMaterialKeyProperties
     template<typename TVisitor>
     void visitProperties(TVisitor &inVisitor)
     {
-        inVisitor.visit(m_hasVertexLighting);
+        inVisitor.visit(m_isSpriteLinear);
+        inVisitor.visit(m_isColorTableLinear);
+        inVisitor.visit(m_hasLighting);
         inVisitor.visit(m_isLineParticle);
         inVisitor.visit(m_isMapped);
         inVisitor.visit(m_isAnimated);
         inVisitor.visit(m_viewCount);
-        inVisitor.visit(m_usesViewIndex);
         inVisitor.visit(m_orderIndependentTransparency);
     }
 
@@ -103,15 +106,15 @@ struct QSSGShaderParticleMaterialKeyProperties
         InitVisitor visitor;
         visitProperties(visitor);
 
-        // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.offsetVisitor.m_offset < 768);
+        // If this assert fires, then the material key needs more bits.
+        Q_ASSERT(visitor.offsetVisitor.m_offset < 32);
         // This is so we can do some guestimate of how big the string buffer needs
         // to be to avoid doing a lot of allocations when concatenating the strings.
         m_stringBufferSizeHint = visitor.stringSizeVisitor.size;
     }
 };
 
-typedef QSSGShaderBaseMaterialKey<QSSGShaderParticleMaterialKeyProperties, 8> QSSGShaderParticleMaterialKey;
+typedef QSSGShaderBaseMaterialKey<QSSGShaderParticleMaterialKeyProperties, 1> QSSGShaderParticleMaterialKey;
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGShaderParticleMaterialKey>::value);
 

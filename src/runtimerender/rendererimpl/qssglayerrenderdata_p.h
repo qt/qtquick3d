@@ -566,6 +566,7 @@ private:
     friend class QSSGFrameData;
     friend class QSSGModelHelpers;
     friend class QSSGRenderHelpers;
+    friend class QSSGParticleRenderer;
 
     class ExtensionContext
     {
@@ -626,6 +627,7 @@ private:
 
     // Persistent data
     QHash<QSSGShaderMapKey, QSSGRhiShaderPipelinePtr> shaderMap;
+    QHash<QSSGParticleShaderMapKey, QSSGRhiShaderPipelinePtr> particleShaderMap;
 
     // Cached buffer.
     QByteArray generatedShaderString;
@@ -643,6 +645,7 @@ private:
     // Note: Re-used to avoid expensive initialization.
     // - Should be revisit, as we can do better.
     QSSGShaderDefaultMaterialKeyProperties defaultMaterialShaderKeyProperties;
+    QSSGShaderParticleMaterialKeyProperties particleMaterialShaderKeyProperties;
     QSSGFrameData frameData;
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set

@@ -18,6 +18,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderparticleshaderkeys_p.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -156,6 +157,7 @@ public:
     QSSGRenderImage *m_colorTable = nullptr;
     QSSGRenderParticles::FeatureLevel m_featureLevel = FeatureLevel::Simple;
     bool m_castsReflections = true;
+    QSSGShaderParticleMaterialKey materialKey;
 
     QSSGRenderParticles();
     ~QSSGRenderParticles() = default;

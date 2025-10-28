@@ -102,6 +102,7 @@ private:
     friend class QQuick3DSceneRenderer;
     friend class QQuick3DWindowAttachment;
     friend class QSSGCleanupObject;
+    friend class QSSGParticleRenderer;
 
     QSSGLayerRenderData *getOrCreateLayerRenderData(QSSGRenderLayer &layer);
     void beginLayerRender(QSSGLayerRenderData &inLayer);
