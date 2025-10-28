@@ -358,6 +358,7 @@ QQmlListProperty<QObject> QQuick3DViewport::data()
     \note It is strongly recommended to explicitly set this property and not rely
     on automatic camera selection. If there are multiple cameras in the scene, automatic
     camera selection does not provide any guarantees regarding which camera will be selected.
+    If \l{Node::layer}{layers} are used, explicitly setting the camera is required.
 
     \note If this property contains a camera that's not \l {Node::visible}{visible} then
     no further attempts to find a camera will be done.
