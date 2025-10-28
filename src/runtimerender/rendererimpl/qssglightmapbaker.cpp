@@ -6,6 +6,7 @@
 #include "qssglightmapbaker_p.h"
 
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER
+#include <QGuiApplication>
 #include <QString>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QThreadPool>
