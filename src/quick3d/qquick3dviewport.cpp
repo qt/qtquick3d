@@ -431,6 +431,8 @@ QQuick3DNode *QQuick3DViewport::scene() const
 
     \note When sharing scenes between multiple View3D items the imported scene should
     be imported in whole, that is, importing a subtree of a scene is not supported.
+    If multiple View3Ds need to show different parts of the same shared scene,
+    consider using \l {Node::layer}{layers} instead.
 
     \note This property can only be set once, and subsequent changes will have
     no effect.
