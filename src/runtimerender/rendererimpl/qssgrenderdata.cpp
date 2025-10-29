@@ -348,9 +348,9 @@ QSSGGlobalRenderNodeData::LayerNodeView QSSGGlobalRenderNodeData::getLayerNodeVi
     if (!validVersion || !(layerNodes.size() > index))
         return { };
 
-    auto &seciont = layerNodes[index];
+    auto &section = layerNodes[index];
 
-    return { nodes.data() + seciont.offset, qsizetype(seciont.size) };
+    return { nodes.data() + section.offset, qsizetype(section.size) };
 }
 
 QSSGGlobalRenderNodeData::LayerNodeView QSSGGlobalRenderNodeData::getLayerNodeView(const QSSGRenderLayer &layer) const
