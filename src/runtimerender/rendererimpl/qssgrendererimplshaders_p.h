@@ -43,7 +43,7 @@ public:
 
     QSSGRhiShaderPipelinePtr getRhiGridShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSsaoShader(int viewCount);
-    QSSGRhiShaderPipelinePtr getRhiSkyBoxCubeShader(int viewCount);
+    QSSGRhiShaderPipelinePtr getRhiSkyBoxCubeShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isLinear, int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE, int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSupersampleResolveShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();

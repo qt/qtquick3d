@@ -110,12 +110,12 @@ void rhiPrepareGrid(QSSGRhiContext *rhiCtx,
                     QSSGRenderCameraList &cameras,
                     QSSGRenderer &renderer);
 
-
 void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
                       QSSGPassKey passKey,
                       QSSGRenderLayer &layer,
                       QSSGRenderCameraList &cameras,
-                      QSSGRenderer &renderer);
+                      QSSGRenderer &renderer,
+                      uint tonemapMode = 0);
 
 void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
                                       QSSGPassKey passKey,

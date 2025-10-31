@@ -149,6 +149,50 @@ vec4 qt_tonemap(vec4 color)
     return vec4(qt_tonemap(color.rgb), color.a);
 }
 
+#ifdef QSSG_RUNTIME_TONEMAPPING
+
+// This overload chooses the correct tonemapper at runtime
+vec3 qt_tonemap(vec3 color, bool sRgbsource, uint tonemap_mode)
+{
+    const int LINEAR = 1;
+    const int ACES = 2;
+    const int HEJLDAWSON = 3;
+    const int FILMIC = 4;
+
+    if (sRgbsource && tonemap_mode == LINEAR)
+        return color;
+
+    vec3 linear_color = sRgbsource ? qt_sRGBToLinear(color) : color;
+
+    switch (tonemap_mode) {
+#if QSSG_ENABLE_LINEAR_TONEMAPPING
+        case LINEAR:
+            return qt_linearTosRGB(linear_color);
+#endif
+#if QSSG_ENABLE_ACES_TONEMAPPING
+        case ACES:
+            return qt_toneMapACES(linear_color);
+#endif
+#if QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
+        case HEJLDAWSON:
+            return qt_tonemapHejlDawson(linear_color);
+#endif
+#if QSSG_ENABLE_FILMIC_TONEMAPPING
+        case FILMIC:
+            return qt_toneMapFilmic(linear_color);
+#endif
+        default:
+            return linear_color;
+    }
+}
+
+vec4 qt_tonemap(vec4 color, bool sRgbsource, uint tonemap_mode)
+{
+    return vec4(qt_tonemap(color.rgb, sRgbsource, tonemap_mode), color.a);
+}
+
+#endif
+
 vec3 qt_exposure(vec3 color, float exposure)
 {
 #if QSSG_ENABLE_ACES_TONEMAPPING || QSSG_ENABLE_HEJLDAWSON_TONEMAPPING || QSSG_ENABLE_FILMIC_TONEMAPPING || QSSG_ENABLE_LINEAR_TONEMAPPING || QSSG_FORCE_IBL_EXPOSURE

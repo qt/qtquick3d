@@ -49,9 +49,11 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSsaoShader(int viewCou
     return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_cache.ssaoRhiShader, viewCount);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxCubeShader(int viewCount)
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyBoxCubeShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isLinear, int viewCount)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("skyboxcube"), m_cache.skyBoxCubeRhiShader, viewCount);
+    const bool rawPixels = (!isLinear && tonemapMode == QSSGRenderLayer::TonemapMode::Linear) || (isLinear && tonemapMode == QSSGRenderLayer::TonemapMode::None);
+    auto shaderName = rawPixels ? QByteArrayLiteral("skyboxcube") : QByteArrayLiteral("skyboxcube_runtime_tonemapping");
+    return getBuiltinRhiShader(shaderName, m_cache.skyBoxCubeRhiShader, viewCount);
 }
 
 static inline constexpr size_t getSkyboxIndex(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
