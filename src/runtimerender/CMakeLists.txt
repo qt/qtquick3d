@@ -522,6 +522,23 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_filmic"
         QSSG_ENABLE_FILMIC_TONEMAPPING=1
         QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skyboxcube_runtime_tonemapping"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/skyboxcube.vert
+        res/rhishaders/skyboxcube.frag
+    OUTPUTS
+        res/rhishaders/skyboxcube_runtime_tonemapping.vert.qsb
+        res/rhishaders/skyboxcube_runtime_tonemapping.frag.qsb
+    DEFINES
+        QSSG_RUNTIME_TONEMAPPING=1
+)
 
 function(_add_particle_shader target)
     cmake_parse_arguments(

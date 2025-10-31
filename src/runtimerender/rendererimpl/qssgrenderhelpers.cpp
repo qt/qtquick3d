@@ -1697,7 +1697,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                 const auto &shaderCache = renderer.contextInterface()->shaderCache();
                 const bool isSkyBox = inData.layer.background == QSSGRenderLayer::Background::SkyBox;
                 const auto &shaderPipeline = isSkyBox ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8, 1)
-                                                      : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(1);
+                                                      : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(QSSGRenderLayer::TonemapMode::None, !inData.layer.skyBoxIsSrgb, 1);
                 Q_ASSERT(shaderPipeline);
                 QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
@@ -2005,7 +2005,8 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                                     QSSGRenderCameraList &cameras,
                                     QSSGRenderer &renderer,
                                     QSSGReflectionMapEntry *entry = nullptr,
-                                    QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone)
+                                    QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
+                                    uint tonemapMode = 0)
 {
     QSSG_ASSERT(layer.renderData, return);
 
@@ -2020,6 +2021,8 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
     if (hasValidTexture) {
         if (cubeFace == QSSGRenderTextureCubeFaceNone)
             layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
+        if (cubeMapMode)
+            layer.skyBoxIsSrgb = !lightProbeTexture.m_flags.isLinear();
 
         QSSGRhiShaderResourceBindingList bindings;
 
@@ -2049,14 +2052,16 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
         const float exposure = layer.lightProbeSettings.probeExposure;
         // orientation
         const QMatrix3x3 &rotationMatrix(layer.lightProbeSettings.probeOrientation);
-        const float blurAmount = layer.skyboxBlurAmount;
-        const float maxMipLevel = float(lightProbeTexture.m_mipmapCount - 2);
+
+        // The cubemap shader doesn't use blur or mipmapping, so it uses those for tonemapping and texture color space
+        const float blurAmountOrSrgb = cubeMapMode ? layer.skyBoxIsSrgb : layer.skyboxBlurAmount;
+        const float maxMipLevelOrTonemapMode = cubeMapMode ? float(tonemapMode) : float(lightProbeTexture.m_mipmapCount - 2);
 
         const QVector4D skyboxProperties = {
             adjustY,
             exposure,
-            blurAmount,
-            maxMipLevel
+            blurAmountOrSrgb,
+            maxMipLevelOrTonemapMode
         };
 
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
@@ -2107,12 +2112,13 @@ void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
                                      QSSGPassKey passKey,
                                      QSSGRenderLayer &layer,
                                      QSSGRenderCameraList &cameras,
-                                     QSSGRenderer &renderer)
+                                     QSSGRenderer &renderer,
+                                     uint tonemapMode)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
-    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, cameras, renderer);
+    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, cameras, renderer, nullptr, QSSGRenderTextureCubeFaceNone, tonemapMode);
 
     cb->debugMarkEnd();
 }

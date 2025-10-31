@@ -896,10 +896,12 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     ps.viewCount = data.layer.viewCount;
     ps.polygonMode = QRhiGraphicsPipeline::Fill;
 
-    const auto &shaderCache = renderer.contextInterface()->shaderCache();
-    skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(data.layer.viewCount);
+    QSSGRenderLayer::TonemapMode tonemapMode = skipTonemapping && (layer->tonemapMode != QSSGRenderLayer::TonemapMode::Custom) ?  QSSGRenderLayer::TonemapMode::None : layer->tonemapMode;
 
-    RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
+    const auto &shaderCache = renderer.contextInterface()->shaderCache();
+    skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(tonemapMode, !data.layer.skyBoxIsSrgb, data.layer.viewCount);
+
+    RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, data.renderedCameras, renderer, uint(tonemapMode));
 }
 
 void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)
@@ -912,7 +914,7 @@ void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)
     QSSG_ASSERT(srb, return);
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-    Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render skybox"));
+    Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render cubemap skybox"));
 
     QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, skyBoxCubeShader.get());
     renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
