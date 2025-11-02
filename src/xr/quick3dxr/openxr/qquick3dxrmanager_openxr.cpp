@@ -139,10 +139,66 @@ static XRAPI_ATTR XrBool32 XRAPI_CALL defaultDebugCallbackFunc(XrDebugUtilsMessa
 }
 #endif // XR_EXT_debug_utils
 
+static std::pair<XrResult, XrFrameState> waitForNextFrame(XrSession session)
+{
+    XrFrameWaitInfo frameWaitInfo {};
+    frameWaitInfo.type = XR_TYPE_FRAME_WAIT_INFO;
+    XrFrameState frameState {};
+    frameState.type = XR_TYPE_FRAME_STATE;
+    auto result = xrWaitFrame(session, &frameWaitInfo, &frameState);
+    return { result, frameState };
+}
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
+
+static const char s_workerThreadName[] = "QQuick3DXrWorkerThread";
+
+class QQuick3DOpenXRThreadWorker : public QObject
+{
+    Q_OBJECT
+public:
+    explicit QQuick3DOpenXRThreadWorker(XrSession session, QObject *parent = nullptr)
+        : QObject(parent), m_session(session)
+    {
+    }
+
+    using EventT = std::underlying_type_t<QEvent::Type>;
+    enum Event : EventT {
+        WaitForFrame = QEvent::User + 1,
+    };
+
+    static constexpr QEvent::Type asQEvent(QQuick3DOpenXRThreadWorker::Event event)
+    {
+        return static_cast<QEvent::Type>(event);
+    }
+
+    void startWaitingForFrame()
+    {
+        QCoreApplication::postEvent(this, new QEvent(QQuick3DOpenXRThreadWorker::asQEvent(QQuick3DOpenXRThreadWorker::Event::WaitForFrame)));
+    }
+
+protected:
+    bool event(QEvent *event) override
+    {
+        switch (static_cast<Event>(event->type())) {
+        case Event::WaitForFrame: {
+            auto result = waitForNextFrame(m_session);
+            emit frameWaited(result.first, result.second);
+            return true;
+        }
+        default:
+            return QObject::event(event);
+        }
+    }
+
+signals:
+    void frameWaited(XrResult result, const XrFrameState &frameState);
+
+private:
+    XrSession m_session = XR_NULL_HANDLE;
+};
 
 void QQuick3DXrManagerPrivate::setErrorString(XrResult result, const char *callName)
 {
@@ -280,6 +336,11 @@ bool QQuick3DXrManagerPrivate::setupGraphics(QQuickWindow *window)
 void QQuick3DXrManagerPrivate::update()
 {
     Q_Q(QQuick3DXrManager);
+    if (m_waitingForFrame) {
+        m_wantUpdate = true;
+        return;
+    }
+
     QCoreApplication::postEvent(q, new QEvent(QEvent::UpdateRequest));
 }
 
@@ -320,14 +381,40 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
 {
     Q_ASSERT(m_session != XR_NULL_HANDLE);
 
-    XrFrameWaitInfo frameWaitInfo{};
-    frameWaitInfo.type = XR_TYPE_FRAME_WAIT_INFO;
-    XrFrameState frameState{};
-    frameState.type = XR_TYPE_FRAME_STATE;
-    if (!checkXrResult(xrWaitFrame(m_session, &frameWaitInfo, &frameState))) {
-        qWarning("xrWaitFrame failed");
+    if (m_waitingForFrame)
         return;
+    m_waitingForFrame = true;
+
+    if (m_worker) {
+        m_worker->startWaitingForFrame();
+        // onFrameWaitCompleted() will be called asynchronoiusly
+    } else {
+        auto result = waitForNextFrame(m_session);
+        onFrameWaitCompleted(result.first, result.second);
     }
+}
+
+void QQuick3DXrManagerPrivate::onFrameWaitCompleted(XrResult result, const XrFrameState &frameState)
+{
+    if (!m_waitingForFrame)
+        return;
+    m_waitingForFrame = false;
+
+    if (!checkXrResult(result)) {
+        qWarning("xrWaitFrame failed");
+    } else {
+        doRenderFrameAferWait(frameState);
+    }
+
+    if (m_wantUpdate) {
+        m_wantUpdate = false;
+        update();
+    }
+}
+
+void QQuick3DXrManagerPrivate::doRenderFrameAferWait(const XrFrameState &frameState)
+{
+    Q_ASSERT(m_session != XR_NULL_HANDLE);
 
     XrFrameBeginInfo frameBeginInfo{};
     frameBeginInfo.type = XR_TYPE_FRAME_BEGIN_INFO;
@@ -525,6 +612,10 @@ bool QQuick3DXrManagerPrivate::initialize()
         return false;
     }
 
+    const bool disableAsyncWait = qEnvironmentVariableIntValue("QT_QUICK3D_XR_DISABLE_ASYNC_WAIT") != 0;
+    if (Q_LIKELY(!disableAsyncWait))
+        initWorkerThread();
+
     // Meta Quest Specific Setup
     if (m_colorspaceExtensionSupported)
         setupMetaQuestColorSpaces();
@@ -553,6 +644,10 @@ bool QQuick3DXrManagerPrivate::initialize()
 
 void QQuick3DXrManagerPrivate::teardown()
 {
+    m_waitingForFrame = false;
+    m_wantUpdate = false;
+    destroyWorkerThread();
+
     if (m_inputManager) {
         QQuick3DXrInputManagerPrivate::get(m_inputManager)->teardown();
         m_inputManager = nullptr;
@@ -592,6 +687,41 @@ void QQuick3DXrManagerPrivate::teardown()
     // Note: Used to be part of the XRmanager dtor.
     if (m_graphics)
         m_graphics->releaseResources();
+}
+
+void QQuick3DXrManagerPrivate::initWorkerThread()
+{
+    Q_Q(QQuick3DXrManager);
+
+    qCDebug(lcQuick3DXr, "Initializing OpenXR worker thread");
+    m_workerThread = new QThread();
+    m_workerThread->setObjectName(QLatin1StringView(s_workerThreadName));
+
+    m_worker = new QQuick3DOpenXRThreadWorker(m_session);
+    m_worker->moveToThread(m_workerThread);
+
+    QObject::connect(
+            m_worker,
+            &QQuick3DOpenXRThreadWorker::frameWaited,
+            q,
+            [this](XrResult result, const XrFrameState &frameState) { onFrameWaitCompleted(result, frameState); },
+            Qt::QueuedConnection);
+
+    QObject::connect(m_workerThread, &QThread::finished, m_worker, &QObject::deleteLater);
+
+    m_workerThread->start();
+}
+
+void QQuick3DXrManagerPrivate::destroyWorkerThread()
+{
+    if (m_workerThread) {
+        m_workerThread->quit();
+        m_workerThread->wait();
+        delete m_workerThread;
+        m_workerThread = nullptr;
+        m_worker = nullptr;
+        qCDebug(lcQuick3DXr, "OpenXR worker thread destroyed");
+    }
 }
 
 void QQuick3DXrManagerPrivate::checkReferenceSpaces()
@@ -2299,3 +2429,5 @@ void QQuick3DXrManagerPrivate::checkEnvironmentBlendMode(XrViewConfigurationType
 }
 
 QT_END_NAMESPACE
+
+#include "qquick3dxrmanager_openxr.moc"
