@@ -40,6 +40,8 @@ class QQuick3DViewport;
 class QQuick3DXrAnchorManager;
 class QQuick3DXrManager;
 class QQuick3DXrInputManager;
+class QQuick3DOpenXRThreadWorker;
+class QThread;
 
 class QQuick3DXrManagerPrivate
 {
@@ -96,6 +98,11 @@ private:
 
     bool initialize();
     void teardown();
+
+    void initWorkerThread();
+    void destroyWorkerThread();
+    void onFrameWaitCompleted(XrResult result, const XrFrameState &frameState);
+    void doRenderFrameAferWait(const XrFrameState &frameState);
 
     void destroySwapchain();
     void setErrorString(XrResult result, const char *callName);
@@ -242,6 +249,10 @@ private:
 
     QAbstractOpenXRGraphics *m_graphics = nullptr;
 
+    bool m_waitingForFrame = false;
+    bool m_wantUpdate = false;
+    QQuick3DOpenXRThreadWorker *m_worker = nullptr;
+    QThread *m_workerThread = nullptr;
 };
 
 QT_END_NAMESPACE
