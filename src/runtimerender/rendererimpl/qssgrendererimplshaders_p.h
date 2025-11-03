@@ -47,7 +47,6 @@ public:
     QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE, int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSupersampleResolveShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();
-    QSSGRhiShaderPipelinePtr getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel, int viewCount, QSSGRenderLayer::OITMethod method);
     QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
     QSSGRhiShaderPipelinePtr getRhiLightmapDilateShader();
@@ -93,19 +92,6 @@ private:
         BuiltinShader reflectionprobePreFilterShader;
         BuiltinShader environmentmapPreFilterShader[2];
         BuiltinShader environmentmapShader;
-
-        BuiltinShader particlesNoLightingSimpleRhiShader[particleShaderCount];
-        BuiltinShader particlesNoLightingMappedRhiShader[particleShaderCount];
-        BuiltinShader particlesNoLightingAnimatedRhiShader[particleShaderCount];
-        BuiltinShader particlesVLightingSimpleRhiShader[particleShaderCount];
-        BuiltinShader particlesVLightingMappedRhiShader[particleShaderCount];
-        BuiltinShader particlesVLightingAnimatedRhiShader[particleShaderCount];
-        BuiltinShader lineParticlesRhiShader[particleShaderCount];
-        BuiltinShader lineParticlesMappedRhiShader[particleShaderCount];
-        BuiltinShader lineParticlesAnimatedRhiShader[particleShaderCount];
-        BuiltinShader lineParticlesVLightRhiShader[particleShaderCount];
-        BuiltinShader lineParticlesMappedVLightRhiShader[particleShaderCount];
-        BuiltinShader lineParticlesAnimatedVLightRhiShader[particleShaderCount];
 
         BuiltinShader clearMRTShader;
         BuiltinShader oitCompositeShader[compositeShaderCount];
