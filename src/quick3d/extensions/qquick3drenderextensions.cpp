@@ -35,7 +35,7 @@ QT_BEGIN_NAMESPACE
     \since 6.7
     \brief An uncreatable abstract base type for render extensions.
 
-    \sa QQuick3DRenderExtension, QSSGRenderExtension, QQuick3DViewport::extensions()
+    \sa QQuick3DRenderExtension, QSSGRenderExtension, View3D::extensions()
 */
 
 QQuick3DRenderExtension::QQuick3DRenderExtension(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)

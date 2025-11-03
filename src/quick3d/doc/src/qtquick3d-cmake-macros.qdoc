@@ -10,7 +10,8 @@
 
 \section1 Description
 
-\c {.hdr -> .ktx} baker. Somewhat similar to \l {qt6_add_shaders()}.
+\c {.hdr -> .ktx} baker. Somewhat similar to
+\l l{Qt Shader Tools Build System Integration}{qt6_add_shaders()}.
 
 For example, the following autogenerates the lightprobe map at build time and
 includes it in the executable under \c {:/maps/OpenfootageNET_garage-1024.ktx}:
