@@ -6,6 +6,12 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \class QQuick3DLightmapBaker
+    \inmodule QtQuick3D
+    \internal
+*/
+
 QQuick3DLightmapBaker::QQuick3DLightmapBaker(QQuick3DViewport *view) :
     QObject(view), m_bakingControl(new BakingControl()), m_view(view)
 {

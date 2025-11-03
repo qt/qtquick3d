@@ -1179,10 +1179,10 @@ void QQuick3DModel::setLevelOfDetailBias(float newLevelOfDetailBias)
     \default 0.0
 
     A value greater than zero means this value will override the
-    SceneEnvironment::texelsPerUnit value for this specific model during
+    \l {Lightmapper::texelsPerUnit} value for this specific model during
     lightmap baking.
 
-    \sa SceneEnvironment::texelsPerUnit
+    \sa Lightmapper::texelsPerUnit
 */
 
 float QQuick3DModel::texelsPerUnit() const
