@@ -88,6 +88,8 @@ public:
 
     ~QSSGShaderLibraryManager();
 
+    QQsbCollection::EntryMap getParticleShaderEntries() const;
+
     void setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type,
                          const QByteArray &inSource, const QSSGCustomShaderMetaData &meta);
 

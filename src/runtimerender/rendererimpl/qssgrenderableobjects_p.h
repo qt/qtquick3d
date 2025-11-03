@@ -391,7 +391,7 @@ Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
 /**
  * A renderable that corresponds to a particles.
  */
-class Q_AUTOTEST_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
 {
     Q_DISABLE_COPY_MOVE(QSSGParticlesRenderable)
 public:

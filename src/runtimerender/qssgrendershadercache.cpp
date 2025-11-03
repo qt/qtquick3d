@@ -383,6 +383,11 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
     return QByteArrayLiteral("qtappshaders.qsbc");
 }
 
+QByteArray QSSGShaderCache::particleShaderCollectionFile()
+{
+    return QByteArrayLiteral("qtparticleshaders.qsbc");
+}
+
 QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
                                                         const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags,
                                                         int viewCount,
@@ -567,8 +572,14 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::newPipelineFromPregenerated(const QByt
     QQsbCollection::EntryDesc entryDesc;
     if (qsbc.map(QQsbIODeviceCollection::Read))
         qsbc.extractEntry(entry, entryDesc);
-    else
-        qWarning("Failed to open entry %s", entry.key.constData());
+    else {
+        const QString collectionFile2 = QString::fromLatin1(resourceFolder() + particleShaderCollectionFile());
+        QQsbIODeviceCollection qsbc(collectionFile2);
+        if (qsbc.map(QQsbIODeviceCollection::Read))
+            qsbc.extractEntry(entry, entryDesc);
+        else
+            qWarning("Failed to open entry %s", entry.key.constData());
+    }
 
     if (entryDesc.vertShader.isValid() && entryDesc.fragShader.isValid()) {
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);

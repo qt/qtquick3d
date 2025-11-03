@@ -371,6 +371,7 @@ public:
 
     TModelContextPtrList modelContexts;
 
+    QQsbCollection::EntryMap m_particleShaderEntries;
 
     bool tooManyLightsWarningShown = false;
     bool tooManyDirectionalLightsWarningShown = false;
@@ -407,6 +408,10 @@ public:
     [[nodiscard]] const QSSGShaderDefaultMaterialKeyProperties &getDefaultMaterialPropertyTable() const
     {
         return defaultMaterialShaderKeyProperties;
+    }
+    [[nodiscard]] const QSSGShaderParticleMaterialKeyProperties &getParticleMaterialPropertyTable() const
+    {
+        return particleMaterialShaderKeyProperties;
     }
 
     struct GlobalRenderProperties

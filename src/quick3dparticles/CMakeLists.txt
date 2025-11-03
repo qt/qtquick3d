@@ -5,6 +5,8 @@
 ## Quick3DParticles Module:
 #####################################################################
 
+include(../runtimerender/ParticleShaderGenMacros.cmake)
+
 qt_internal_add_qml_module(Quick3DParticles
     URI "QtQuick3D.Particles3D"
     VERSION "${PROJECT_VERSION}"
@@ -77,6 +79,8 @@ qt_internal_generate_tracepoints(Quick3DParticles quick3d
     SOURCES
         qquick3dparticlesystem.cpp
 )
+
+_qt_internal_gen_particle_shaders(Quick3DParticles "res_particle_shaders")
 
 if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
     add_subdirectory(designer)

@@ -229,6 +229,7 @@ public:
 
     static QByteArray resourceFolder();
     static QByteArray shaderCollectionFile();
+    static QByteArray particleShaderCollectionFile();
 };
 
 namespace QtQuick3DEditorHelpers {

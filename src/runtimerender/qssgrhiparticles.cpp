@@ -710,13 +710,25 @@ static const char *s_lightPrefix = {
     "};\n"
 };
 
+QSSGShaderFeatures QSSGParticleRenderer::particleShaderFeatures(const QSSGShaderFeatures& features)
+{
+#define COPY_FEATURE(f) ret.set(f, features.isSet(f));
+    QSSGShaderFeatures ret;
+    COPY_FEATURE(QSSGShaderFeatures::Feature::LinearTonemapping);
+    COPY_FEATURE(QSSGShaderFeatures::Feature::AcesTonemapping);
+    COPY_FEATURE(QSSGShaderFeatures::Feature::HejlDawsonTonemapping);
+    COPY_FEATURE(QSSGShaderFeatures::Feature::FilmicTonemapping);
+    COPY_FEATURE(QSSGShaderFeatures::Feature::DisableMultiView);
+#undef COPY_FEATURE
+    return ret;
+}
+
 QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRenderer &renderer,
                                                                          QSSGParticlesRenderable &inRenderable,
-                                                                         const QSSGShaderFeatures &inFeatureSet)
+                                                                         const QSSGShaderFeatures &inFeatureSet,
+                                                                         QByteArray &shaderString,
+                                                                         const QSSGShaderParticleMaterialKeyProperties &shaderKeyProperties)
 {
-    auto *currentLayer = renderer.m_currentLayer;
-    auto &shaderString = currentLayer->generatedShaderString;
-    auto &shaderKeyProperties = currentLayer->particleMaterialShaderKeyProperties;
     const auto &m_contextInterface = renderer.m_contextInterface;
     const auto &shaderCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = m_contextInterface->shaderProgramGenerator();
@@ -730,13 +742,19 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     if (const auto &maybePipeline = shaderCache->tryGetRhiShaderPipeline(shaderString, inFeatureSet))
         return maybePipeline;
 
-    // Check if there's a pre-built (offline generated) shader for available.
     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(inFeatureSet));
-    const QQsbCollection::EntryMap &pregenEntries = shaderLibraryManager->m_preGeneratedShaderEntries;
-    if (!pregenEntries.isEmpty()) {
-        const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
-        if (foundIt != pregenEntries.cend())
-            return shaderCache->newPipelineFromPregenerated(shaderString, inFeatureSet, *foundIt, inRenderable.particles);
+    // Check if there's a pre-built (offline generated) shader for available.
+    if (renderer.m_currentLayer) {
+        QQsbCollection::EntryMap &pregenEntries = renderer.m_currentLayer->m_particleShaderEntries;
+        if (pregenEntries.isEmpty()) {
+            renderer.m_currentLayer->m_particleShaderEntries = shaderLibraryManager->getParticleShaderEntries();
+            pregenEntries = renderer.m_currentLayer->m_particleShaderEntries;
+        }
+        if (!pregenEntries.isEmpty()) {
+            const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
+            if (foundIt != pregenEntries.cend())
+                return shaderCache->newPipelineFromPregenerated(shaderString, inFeatureSet, *foundIt, inRenderable.particles);
+        }
     }
 
     // Try the persistent (disk-based) cache then.
@@ -943,6 +961,7 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::getShaderPipelineParticles(QSSGRe
                                                            QSSGParticlesRenderable &inRenderable,
                                                            const QSSGShaderFeatures &inFeatureSet)
 {
+    const auto features = particleShaderFeatures(inFeatureSet);
     auto *m_currentLayer = renderer.m_currentLayer;
     QSSG_ASSERT(m_currentLayer != nullptr, return {});
 
@@ -956,13 +975,14 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::getShaderPipelineParticles(QSSGRe
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find()
     QSSGParticleShaderMapKey skey = QSSGParticleShaderMapKey(QByteArray(),
-                                             inFeatureSet,
+                                             features,
                                              inRenderable.shaderDescription);
     auto it = shaderMap.find(skey);
     if (it == shaderMap.end()) {
         Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-        shaderPipeline = QSSGParticleRenderer::generateRhiShaderPipeline(renderer, inRenderable, inFeatureSet);
+        auto &shaderString = renderer.m_currentLayer->generatedShaderString;
+        shaderPipeline = QSSGParticleRenderer::generateRhiShaderPipeline(renderer, inRenderable, features, shaderString, m_currentLayer->particleMaterialShaderKeyProperties);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inRenderable.particles.profilingId);
         // make skey useable as a key for the QHash (makes a copy of the materialKey, instead of just referencing)
         skey.detach();

@@ -31,7 +31,7 @@ class QSSGRenderCamera;
 struct QSSGReflectionMapEntry;
 class QRhiTexture;
 
-class QSSGParticleRenderer
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleRenderer
 {
 public:
     static void updateUniformsForParticles(const QSSGLayerRenderData &inData, QSSGRhiShaderPipeline &shaderPipeline,
@@ -49,7 +49,9 @@ public:
 
     static QSSGRhiShaderPipelinePtr generateRhiShaderPipeline(QSSGRenderer &renderer,
                                                               QSSGParticlesRenderable &inRenderable,
-                                                              const QSSGShaderFeatures &inFeatureSet);
+                                                              const QSSGShaderFeatures &inFeatureSet,
+                                                              QByteArray &shaderString,
+                                                              const QSSGShaderParticleMaterialKeyProperties &shaderKeyProperties);
 
     static void rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPipeline, QSSGPassKey passKey,
                                      QSSGRhiContext *rhiCtx,
@@ -71,6 +73,7 @@ public:
                                          QSSGRhiContext *rhiCtx,
                                          QSSGRhiShaderResourceBindingList &bindings,
                                          const QSSGRenderModel *model);
+    static QSSGShaderFeatures particleShaderFeatures(const QSSGShaderFeatures& features);
 };
 
 QT_END_NAMESPACE

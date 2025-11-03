@@ -178,6 +178,20 @@ void QSSGShaderLibraryManager::loadPregeneratedShaderInfo()
     }
 }
 
+QQsbCollection::EntryMap QSSGShaderLibraryManager::getParticleShaderEntries() const
+{
+    QQsbCollection::EntryMap map;
+    const auto collectionFilePath = QString::fromLatin1(QSSGShaderCache::resourceFolder() + QSSGShaderCache::particleShaderCollectionFile());
+    QFile file(collectionFilePath);
+    if (file.exists()) {
+        QQsbIODeviceCollection qsbc(file);
+        if (qsbc.map(QQsbIODeviceCollection::Read))
+            map = qsbc.availableEntries();
+        qsbc.unmap();
+    }
+    return map;
+}
+
 bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1, const QSSGShaderDefaultMaterialKey &key2)
 {
     QSSGShaderDefaultMaterialKeyProperties props;
