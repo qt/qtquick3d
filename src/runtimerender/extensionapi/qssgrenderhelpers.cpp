@@ -399,13 +399,13 @@ QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGCameraId cameraI
 
 /*!
     Register a render result, in form of a texture, for this \a extension. Once a texture is registered,
-    the extension can be uses as a {QtQuick3D::Texture::textureProvider}{texture provider} in QML.
+    the extension can be used as a {QtQuick3D::Texture::textureProvider}{texture provider} in QML.
 
     \note To ensure that the \a texture is available for renderables, for example to be used by a {QtQuick3D::Texture} item,
     textures should be registered during the \l QSSGRenderExtension::prepareData call of the extension.
 
-    \note Calling this function with a new texture will any previously registered texture.
-    \note A texture can be unregistered by registering a nullptr for this extension.
+    \note Calling this function with a new texture will unregister any previously registered texture.
+    To unregister a texture, call this function with a \c nullptr texture.
 
     \a frameData
 
