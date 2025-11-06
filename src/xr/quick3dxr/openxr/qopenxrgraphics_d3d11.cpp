@@ -18,20 +18,14 @@ QOpenXRGraphicsD3D11::QOpenXRGraphicsD3D11()
     m_graphicsRequirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR;
 }
 
-bool QOpenXRGraphicsD3D11::isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const
+bool QOpenXRGraphicsD3D11::initialize(const QVector<XrExtensionProperties> &extensions)
 {
-    for (const auto &extension : extensions) {
-        if (!strcmp(XR_KHR_D3D11_ENABLE_EXTENSION_NAME,
-                    extension.extensionName))
-            return true;
-    }
-    return false;
+    return hasExtension(extensions, XR_KHR_D3D11_ENABLE_EXTENSION_NAME);
 }
 
-
-const char *QOpenXRGraphicsD3D11::extensionName() const
+QVector<const char *> QOpenXRGraphicsD3D11::getRequiredExtensions() const
 {
-    return XR_KHR_D3D11_ENABLE_EXTENSION_NAME;
+    return { XR_KHR_D3D11_ENABLE_EXTENSION_NAME };
 }
 
 

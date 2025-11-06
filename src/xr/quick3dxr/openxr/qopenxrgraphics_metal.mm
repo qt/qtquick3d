@@ -18,19 +18,14 @@ QOpenXRGraphicsMetal::QOpenXRGraphicsMetal()
 
 }
 
-bool QOpenXRGraphicsMetal::isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const
+bool QOpenXRGraphicsMetal::initialize(const QVector<XrExtensionProperties> &extensions)
 {
-    for (const auto &extension : extensions) {
-        if (!strcmp(XR_KHR_METAL_ENABLE_EXTENSION_NAME,
-                    extension.extensionName))
-            return true;
-    }
-    return false;
+    return hasExtension(extensions, XR_KHR_METAL_ENABLE_EXTENSION_NAME);
 }
 
-const char *QOpenXRGraphicsMetal::extensionName() const
+QVector<const char *> QOpenXRGraphicsMetal::getRequiredExtensions() const
 {
-    return XR_KHR_METAL_ENABLE_EXTENSION_NAME;
+    return { XR_KHR_METAL_ENABLE_EXTENSION_NAME };
 }
 
 const XrBaseInStructure *QOpenXRGraphicsMetal::handle() const

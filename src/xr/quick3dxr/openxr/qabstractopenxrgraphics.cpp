@@ -15,4 +15,14 @@ void QAbstractOpenXRGraphics::setupWindow(QQuickWindow *)
 
 }
 
+bool QAbstractOpenXRGraphics::hasExtension(const QVector<XrExtensionProperties> &extensions, const char *extensionName)
+{
+    for (const auto &extension : extensions) {
+        if (!strcmp(extensionName, extension.extensionName)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 QT_END_NAMESPACE
