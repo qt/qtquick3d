@@ -51,21 +51,14 @@ QOpenXRGraphicsOpenGL::QOpenXRGraphicsOpenGL()
     m_graphicsRequirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR;
 }
 
-
-bool QOpenXRGraphicsOpenGL::isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const
+bool QOpenXRGraphicsOpenGL::initialize(const QVector<XrExtensionProperties> &extensions)
 {
-    for (const auto &extension : extensions) {
-        if (!strcmp(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME,
-                    extension.extensionName))
-            return true;
-    }
-    return false;
+    return hasExtension(extensions, XR_KHR_OPENGL_ENABLE_EXTENSION_NAME);
 }
 
-
-const char *QOpenXRGraphicsOpenGL::extensionName() const
+QVector<const char *> QOpenXRGraphicsOpenGL::getRequiredExtensions() const
 {
-    return XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
+    return { XR_KHR_OPENGL_ENABLE_EXTENSION_NAME };
 }
 
 

@@ -2094,8 +2094,11 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensionProperties.data());
 
     QVector<const char*> enabledExtensions;
-    if (m_graphics->isExtensionSupported(extensionProperties))
-        enabledExtensions.append(m_graphics->extensionName());
+    if (!m_graphics->initialize(extensionProperties)) {
+        qWarning("Failed to initialize OpenXR graphics module");
+        return XR_ERROR_GRAPHICS_DEVICE_INVALID;
+    }
+    enabledExtensions.append(m_graphics->getRequiredExtensions());
 
     if (isExtensionSupported("XR_EXT_debug_utils", extensionProperties))
         enabledExtensions.append("XR_EXT_debug_utils");

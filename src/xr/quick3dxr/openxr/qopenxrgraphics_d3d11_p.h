@@ -27,8 +27,8 @@ class QOpenXRGraphicsD3D11 : public QAbstractOpenXRGraphics
 public:
     QOpenXRGraphicsD3D11();
 
-    bool isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const override;
-    const char *extensionName() const override;
+    bool initialize(const QVector<XrExtensionProperties> &extensions) override;
+    QVector<const char *> getRequiredExtensions() const override;
     const XrBaseInStructure *handle() const override;
     bool setupGraphics(const XrInstance &instance, XrSystemId &systemId, const QQuickGraphicsConfiguration &quickConfig) override;
     bool finializeGraphics(QRhi *rhi) override;

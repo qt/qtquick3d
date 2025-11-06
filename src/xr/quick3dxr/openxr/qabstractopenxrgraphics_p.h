@@ -34,8 +34,8 @@ public:
     QAbstractOpenXRGraphics();
     virtual ~QAbstractOpenXRGraphics() { }
 
-    virtual bool isExtensionSupported(const QVector<XrExtensionProperties> &extensions) const = 0;
-    virtual const char *extensionName() const = 0;
+    virtual bool initialize(const QVector<XrExtensionProperties> &extensions) = 0;
+    virtual QVector<const char *> getRequiredExtensions() const = 0;
     virtual const XrBaseInStructure* handle() const = 0;
     virtual bool setupGraphics(const XrInstance &instance,
                                XrSystemId &systemId,
@@ -57,6 +57,7 @@ public:
 
     virtual QRhi *rhi() const = 0;
     virtual void releaseResources() { }
+    static bool hasExtension(const QVector<XrExtensionProperties> &extensions, const char *extensionName);
 };
 
 QT_END_NAMESPACE
