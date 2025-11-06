@@ -28,6 +28,8 @@ class QOpenXRGraphicsOpenGL : public QAbstractOpenXRGraphics
 public:
     QOpenXRGraphicsOpenGL();
 
+    enum PlatformType { PLATFORM_UNSUPPORTED, PLATFORM_EGL, PLATFORM_WAYLAND, PLATFORM_XLIB, PLATFORM_WIN32 };
+
     bool initialize(const QVector<XrExtensionProperties> &extensions) override;
     QVector<const char *> getRequiredExtensions() const override;
     const XrBaseInStructure *handle() const override;
@@ -44,17 +46,10 @@ public:
     void releaseResources() override;
 
 private:
-#ifdef XR_USE_PLATFORM_WIN32
-    XrGraphicsBindingOpenGLWin32KHR m_graphicsBinding{};
-#elif defined(XR_USE_PLATFORM_XLIB)
-    XrGraphicsBindingOpenGLXlibKHR m_graphicsBinding{};
-#elif defined(XR_USE_PLATFORM_XCB)
-    XrGraphicsBindingOpenGLXcbKHR m_graphicsBinding{};
-#elif defined(XR_USE_PLATFORM_WAYLAND)
-    XrGraphicsBindingOpenGLWaylandKHR m_graphicsBinding{};
-#else
-    XrBaseInStructure m_graphicsBinding{}; // just so that the code compiles
-#endif
+    enum PlatformType m_selectedPlatform = PLATFORM_UNSUPPORTED;
+    QVector<const char *> m_requiredExtensions;
+    std::unique_ptr<XrBaseInStructure, decltype(&std::free)> m_graphicsBinding = { nullptr, std::free };
+
     QMap<XrSwapchain, QVector<XrSwapchainImageOpenGLKHR>> m_swapchainImageBuffer;
 
     XrGraphicsRequirementsOpenGLKHR m_graphicsRequirements{};

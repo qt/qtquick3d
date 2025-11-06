@@ -1,5 +1,6 @@
 qt_find_package(WrapOpenXR PROVIDED_TARGETS WrapOpenXR::WrapOpenXR)
 target_link_libraries(Quick3DXr PUBLIC WrapOpenXR::WrapOpenXR)
+qt_find_package(EGL PROVIDED_TARGETS EGL::EGL)
 
 qt_internal_extend_target(Quick3DXr
     SOURCES
@@ -26,10 +27,25 @@ qt_internal_extend_target(Quick3DXr CONDITION WIN32
         user32
 )
 
-# Linux / xcb
+# Linux / glx
 qt_internal_extend_target(Quick3DXr CONDITION QT_FEATURE_xcb AND QT_FEATURE_xcb_glx_plugin
     DEFINES
+        XR_USE_PLATFORM_XLIB
         XR_USE_PLATFORM_XCB
+)
+
+# Linux / wayland
+qt_internal_extend_target(Quick3DXr CONDITION LINUX AND QT_FEATURE_wayland
+    DEFINES
+        XR_USE_PLATFORM_WAYLAND
+)
+
+# Linux / egl
+qt_internal_extend_target(Quick3DXr CONDITION LINUX AND QT_FEATURE_egl
+    DEFINES
+        XR_USE_PLATFORM_EGL
+    LIBRARIES
+        EGL::EGL
 )
 
 # OpenGL
