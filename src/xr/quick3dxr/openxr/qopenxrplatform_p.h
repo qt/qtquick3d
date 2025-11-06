@@ -48,6 +48,11 @@
 # include <xcb/glx.h>
 #endif
 
+#ifdef XR_USE_PLATFORM_XLIB
+typedef struct __GLXFBConfigRec *GLXFBConfig;
+typedef unsigned long GLXDrawable;
+#endif
+
 #include <openxr/openxr_platform.h>
 
 #endif // QOPENXRPLATFORM_H

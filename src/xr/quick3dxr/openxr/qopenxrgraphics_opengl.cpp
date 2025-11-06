@@ -10,6 +10,16 @@
 
 #include <rhi/qrhi.h>
 
+#ifdef XR_USE_PLATFORM_EGL
+#include <EGL/egl.h>
+#endif
+
+#if defined(XR_USE_PLATFORM_XLIB) || defined(XR_USE_PLATFORM_XCB)
+#include <GL/glx.h>
+#endif
+
+#include <qpa/qplatformnativeinterface.h>
+
 QT_BEGIN_NAMESPACE
 
 #ifndef GL_RGBA8
@@ -36,35 +46,80 @@ QT_BEGIN_NAMESPACE
 #define GL_DEPTH24_STENCIL8               0x88F0
 #endif
 
+template<typename T>
+T *typed_calloc()
+{
+    return static_cast<T *>(calloc(1, sizeof(T)));
+}
+
 QOpenXRGraphicsOpenGL::QOpenXRGraphicsOpenGL()
 {
-#ifdef XR_USE_PLATFORM_WIN32
-    m_graphicsBinding.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR;
-#elif defined(XR_USE_PLATFORM_XLIB)
-    m_graphicsBinding.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR;
-#elif defined(XR_USE_PLATFORM_XCB)
-    m_graphicsBinding.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XCB_KHR;
-#elif defined(XR_USE_PLATFORM_WAYLAND)
-    m_graphicsBinding.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WAYLAND_KHR;
-#endif
-
     m_graphicsRequirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR;
 }
 
 bool QOpenXRGraphicsOpenGL::initialize(const QVector<XrExtensionProperties> &extensions)
 {
-    return hasExtension(extensions, XR_KHR_OPENGL_ENABLE_EXTENSION_NAME);
+
+#ifdef XR_USE_PLATFORM_EGL
+    if (hasExtension(extensions, XR_MNDX_EGL_ENABLE_EXTENSION_NAME)) {
+
+        // To choose XR_MNDX_egl_enable we need to be absolutely sure that
+        // we will get access to EGLContext later and at this point we have no window/rhi yet.
+        QOpenGLContext ctx;
+        if (ctx.create() && ctx.nativeInterface<QNativeInterface::QEGLContext>()) {
+            m_selectedPlatform = PLATFORM_EGL;
+            m_requiredExtensions = { XR_MNDX_EGL_ENABLE_EXTENSION_NAME };
+
+            // XR_MNDX_egl_enable does not require XR_KHR_opengl_enable
+            // However, some OpenXR runtimes still want it (old Monado/SteamVR)
+            if (hasExtension(extensions, XR_KHR_OPENGL_ENABLE_EXTENSION_NAME)) {
+                m_requiredExtensions.append(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME);
+            }
+            return true;
+        }
+    }
+#endif
+
+    // Standard OpenGL platforms
+    if (hasExtension(extensions, XR_KHR_OPENGL_ENABLE_EXTENSION_NAME)) {
+
+#ifdef XR_USE_PLATFORM_WAYLAND
+        auto wlApp = qApp->nativeInterface<QNativeInterface::QWaylandApplication>();
+        if (wlApp && wlApp->display()) {
+            m_selectedPlatform = PLATFORM_WAYLAND;
+            m_requiredExtensions = { XR_KHR_OPENGL_ENABLE_EXTENSION_NAME };
+            return true;
+        }
+#endif
+
+#ifdef XR_USE_PLATFORM_XLIB
+        auto x11App = qApp->nativeInterface<QNativeInterface::QX11Application>();
+        if (x11App && x11App->display()) {
+            m_selectedPlatform = PLATFORM_XLIB;
+            m_requiredExtensions = { XR_KHR_OPENGL_ENABLE_EXTENSION_NAME };
+            return true;
+        }
+#endif
+#ifdef XR_USE_PLATFORM_WIN32
+        m_selectedPlatform = PLATFORM_WIN32;
+        m_requiredExtensions = { XR_KHR_OPENGL_ENABLE_EXTENSION_NAME };
+        return true;
+#endif
+    }
+
+    qWarning("Qt Quick 3D XR (OpenGL): no supported platforms");
+    return false;
 }
 
 QVector<const char *> QOpenXRGraphicsOpenGL::getRequiredExtensions() const
 {
-    return { XR_KHR_OPENGL_ENABLE_EXTENSION_NAME };
+    return m_requiredExtensions;
 }
 
 
 const XrBaseInStructure *QOpenXRGraphicsOpenGL::handle() const
 {
-    return reinterpret_cast<const XrBaseInStructure*>(&m_graphicsBinding);
+    return m_graphicsBinding.get();
 }
 
 
@@ -88,21 +143,105 @@ bool QOpenXRGraphicsOpenGL::finializeGraphics(QRhi *rhi)
 {
     const QRhiGles2NativeHandles *openglRhi = static_cast<const QRhiGles2NativeHandles *>(rhi->nativeHandles());
 
-    auto context = openglRhi->context;
+    QOpenGLContext *openGLContext = openglRhi->context;
 
-    const XrVersion desiredApiVersion = XR_MAKE_VERSION(context->format().majorVersion(), context->format().minorVersion(), 0);
+    const XrVersion desiredApiVersion = XR_MAKE_VERSION(openGLContext->format().majorVersion(),
+                                                        openGLContext->format().minorVersion(),
+                                                        0);
     if (m_graphicsRequirements.minApiVersionSupported > desiredApiVersion) {
         qWarning("Qt Quick 3D XR (OpenGL): Runtime does not support desired graphics API and/or version");
         return false;
     }
 
-# ifdef XR_USE_PLATFORM_WIN32
-    auto nativeContext = context->nativeInterface<QNativeInterface::QWGLContext>();
-    if (nativeContext) {
-        m_graphicsBinding.hGLRC = nativeContext->nativeContext();
-        m_graphicsBinding.hDC = GetDC(reinterpret_cast<HWND>(m_window->winId()));
+    switch (m_selectedPlatform) {
+
+#ifdef XR_USE_PLATFORM_EGL
+    case PLATFORM_EGL: {
+        auto eglContext = openGLContext->nativeInterface<QNativeInterface::QEGLContext>();
+        if (!eglContext) {
+            qWarning("Qt Quick 3D XR (OpenGL): Failed to get QNativeInterface::QEGLContext");
+            return false;
+        }
+        auto binding = typed_calloc<XrGraphicsBindingEGLMNDX>();
+        binding->type = XR_TYPE_GRAPHICS_BINDING_EGL_MNDX;
+        binding->getProcAddress = &eglGetProcAddress;
+        binding->display = eglContext->display();
+        binding->config = eglContext->config();
+        binding->context = eglContext->nativeContext();
+        m_graphicsBinding.reset(reinterpret_cast<XrBaseInStructure *>(binding));
+        break;
     }
-# endif
+#endif
+
+#ifdef XR_USE_PLATFORM_WAYLAND
+    case PLATFORM_WAYLAND: {
+        auto wlApp = qApp->nativeInterface<QNativeInterface::QWaylandApplication>();
+        auto wlDisplay = wlApp->display();
+        auto binding = typed_calloc<XrGraphicsBindingOpenGLWaylandKHR>();
+        binding->type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WAYLAND_KHR;
+        binding->display = wlDisplay;
+        m_graphicsBinding.reset(reinterpret_cast<XrBaseInStructure *>(binding));
+        break;
+    }
+#endif
+
+#ifdef XR_USE_PLATFORM_XLIB
+    case PLATFORM_XLIB: {
+        auto glxContext = openGLContext->nativeInterface<QNativeInterface::QGLXContext>();
+        if (!glxContext) {
+            qWarning("Qt Quick 3D XR (OpenGL): Failed to get QNativeInterface::QGLXContext");
+            return false;
+        }
+
+        auto x11App = qApp->nativeInterface<QNativeInterface::QX11Application>();
+        auto xDisplay = x11App->display();
+        auto glxDrawable = m_window->winId();
+
+        QPlatformNativeInterface *native = QGuiApplication::platformNativeInterface();
+        auto glxFBConfig = static_cast<GLXFBConfig>(native->nativeResourceForContext("glxconfig", openGLContext));
+        if (!glxFBConfig) {
+            qWarning("Qt Quick 3D XR (OpenGL): Failed to get GLXFBConfig");
+            return false;
+        }
+
+        int visualId = 0;
+        if (glXGetFBConfigAttrib(xDisplay, glxFBConfig, GLX_VISUAL_ID, &visualId) != Success) {
+            qWarning("Qt Quick 3D XR (OpenGL): Failed to get visualId");
+            return false;
+        }
+
+        auto binding = typed_calloc<XrGraphicsBindingOpenGLXlibKHR>();
+        binding->type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR;
+        binding->xDisplay = xDisplay;
+        binding->visualid = visualId;
+        binding->glxFBConfig = glxFBConfig;
+        binding->glxDrawable = glxDrawable;
+        binding->glxContext = glxContext->nativeContext();
+        m_graphicsBinding.reset(reinterpret_cast<XrBaseInStructure *>(binding));
+        break;
+    }
+#endif
+
+#ifdef XR_USE_PLATFORM_WIN32
+    case PLATFORM_WIN32: {
+        auto wglContext = openGLContext->nativeInterface<QNativeInterface::QWGLContext>();
+        if (!wglContext) {
+            qWarning("Qt Quick 3D XR (OpenGL): Failed to get QNativeInterface::QWGLContext");
+            return false;
+        }
+        auto binding = typed_calloc<XrGraphicsBindingOpenGLWin32KHR>();
+        binding->type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR;
+        binding->hDC = GetDC(reinterpret_cast<HWND>(m_window->winId()));
+        binding->hGLRC = wglContext->nativeContext();
+        m_graphicsBinding.reset(reinterpret_cast<XrBaseInStructure *>(binding));
+        break;
+    }
+#endif
+
+    default:
+        return false;
+        break;
+    }
 
     m_rhi = rhi;
 
