@@ -128,8 +128,10 @@ bool GenShaders::process(QVector<QString> &qsbcFiles,
     /* Only generate srgb */
     const bool isSpriteLinear = false;
     const bool isColorTableLinear = false;
-    /* number of shaders to generate */
-    uint32_t permutations = 2 * 2 * 2 * 2 * 2 * 2;
+    /* Number of shaders to generate.
+       We'll add the bits here, but skip generating for undefined values in the loop.
+     */
+    uint32_t permutations = 2 * 2 * 2 * 2 * 2 * 4;
 
     for (uint32_t i = 0; i < permutations; i++) {
         QByteArray shaderString;
@@ -153,12 +155,10 @@ bool GenShaders::process(QVector<QString> &qsbcFiles,
         perm >>= 1;
         propertyTable.m_viewCount.setValue(key, (perm&1) ? 2 : 1);
         perm >>= 1;
-        propertyTable.m_orderIndependentTransparency.setValue(key, (perm&1) ? 1 : 0);
-
-        if (propertyTable.m_viewCount.getValue(key) > 1)
-            s_forMultiview = true;
-        else
-            s_forMultiview = false;
+        int oit = (perm&3);
+        if (oit > int(QSSGRenderLayer::OITMethod::LinkedList))
+            continue;
+        propertyTable.m_orderIndependentTransparency.setValue(key, oit);
 
         QSSGParticlesRenderable particlesRenderable(flags, {}, renderer.get(), {}, particles, nullptr, nullptr, {}, 1.0, key);
         auto shaderPipeline = QSSGParticleRenderer::generateRhiShaderPipeline(*renderer.get(), particlesRenderable, features, shaderString, propertyTable);
