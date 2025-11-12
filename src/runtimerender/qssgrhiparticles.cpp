@@ -640,7 +640,7 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRhiShaderPipeline &shade
     }
 }
 
-static QByteArray logPrefix() { return QByteArrayLiteral("particle material pipeline-- "); }
+static QByteArray particlesLogPrefix() { return QByteArrayLiteral("particle material pipeline-- "); }
 
 struct ShaderGeneratorCommon
 {
@@ -753,7 +753,7 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     const auto &shaderProgramGenerator = m_contextInterface->shaderProgramGenerator();
     const auto &shaderLibraryManager = m_contextInterface->shaderLibraryManager();
 
-    shaderString = logPrefix();
+    shaderString = particlesLogPrefix();
     QSSGShaderParticleMaterialKey theKey(inRenderable.shaderDescription);
 
     theKey.toString(shaderString, shaderKeyProperties);

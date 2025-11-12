@@ -255,7 +255,7 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
     m_materialClearDirty.insert(material);
 }
 
-static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
+static QByteArray rendererLogPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
 
 QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable,
@@ -266,7 +266,7 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSG
                                                                             const QSSGShaderFeatures &featureSet,
                                                                             QByteArray &shaderString)
 {
-    shaderString = logPrefix();
+    shaderString = rendererLogPrefix();
     QSSGShaderDefaultMaterialKey theKey(renderable.shaderDescription);
 
     // This is not a cheap operation. This function assumes that it will not be
@@ -302,7 +302,7 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSG
                                               shaderKeyProperties,
                                               material.adapter);
 
-    return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
+    return QSSGMaterialShaderGenerator::generateMaterialRhiShader(rendererLogPrefix(),
                                                                   vertexPipeline,
                                                                   renderable.shaderDescription,
                                                                   shaderKeyProperties,
