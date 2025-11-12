@@ -174,6 +174,7 @@ set(res_resource_files
     "res/primitives/Cylinder.mesh"
     "res/primitives/Rectangle.mesh"
     "res/primitives/Sphere.mesh"
+    "res/textures/blue_noise.png"
 )
 
 qt_internal_add_resource(Quick3DRuntimeRender "res"

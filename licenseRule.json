@@ -147,6 +147,11 @@
                 "spdx": ["LicenseRef-Qt-Commercial OR GPL-3.0-only AND MIT",
                           "LicenseRef-Qt-Commercial OR GPL-3.0-only"]
             },
+            "src/runtimerender/res/textures/blue_noise.png": {
+                "comment": "Blue noise texture used for shadow mapping",
+                "file type": "3rd party",
+                "spdx": ["CC0-1.0"]
+            },
             "tests/baseline/scenegrabber_xr/testscenes/maps/skybox/skybox-image.txt": {
                 "comment": "",
                 "file type": "3rd party",

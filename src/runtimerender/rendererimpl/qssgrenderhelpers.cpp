@@ -1105,6 +1105,36 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     }
                 }
 
+                // Shadow map blue noise
+                if (int binding = shaderPipeline->bindingForTexture("qt_shadowmap_blue_noise_texture"); binding >= 0) {
+                    if (auto shadowMapBlueNoise = shaderPipeline->shadowMapBlueNoiseTexture()) {
+                        int binding = shaderPipeline->bindingForTexture("qt_shadowmap_blue_noise_texture");
+                        if (binding >= 0) {
+                            QRhiTexture *texture = shadowMapBlueNoise;
+                            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                                     QRhiSampler::Linear,
+                                                                     QRhiSampler::None,
+                                                                     QRhiSampler::Repeat,
+                                                                     QRhiSampler::Repeat,
+                                                                     QRhiSampler::Repeat });
+                            Q_ASSERT(texture && sampler);
+                            bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+                        }
+                    } else {
+                        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                        QRhiTexture *texture = rhiCtx->dummyTexture({}, resourceUpdates);
+                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                                 QRhiSampler::Linear,
+                                                                 QRhiSampler::None,
+                                                                 QRhiSampler::Repeat,
+                                                                 QRhiSampler::Repeat,
+                                                                 QRhiSampler::Repeat });
+                        Q_ASSERT(texture && sampler);
+                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+                        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                    }
+                }
+
                  // Prioritize reflection texture over Light Probe texture because
                  // reflection texture also contains the irradiance and pre filtered
                  // values for the light probe.

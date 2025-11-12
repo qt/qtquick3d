@@ -8,7 +8,8 @@
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
-        { "type": "sampler2DArray", "name": "qt_shadowmap_texture" }
+        { "type": "sampler2DArray", "name": "qt_shadowmap_texture" },
+        { "type": "sampler2D", "name": "qt_shadowmap_blue_noise_texture" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -135,6 +136,41 @@ int findSplitIndex(in float depth, in vec4 splits, in vec4 splitActive, in uint 
     return int(result);
 }
 #if QSSG_SHADOW_SOFTNESS > 0
+
+#define BLUE_NOISE_TEXTURE_SIZE 64.0
+
+mat2 randomRotation2D(in vec2 pixelPos)
+{
+    vec2 blueNoiseUV = pixelPos / BLUE_NOISE_TEXTURE_SIZE;
+
+    // Sample precomputed cos/sin theta & phi from RGBA
+    vec4 noiseSample = texture(qt_shadowmap_blue_noise_texture, blueNoiseUV);
+
+    // Convert from [0,1] to [-1,1]
+    float cosTheta = noiseSample.r * 2.0 - 1.0;
+    float sinTheta = noiseSample.g * 2.0 - 1.0;
+
+    return mat2(cosTheta, -sinTheta, sinTheta, cosTheta);
+}
+
+mat3 randomRotation3D(in vec2 pixelPos) {
+    vec2 blueNoiseUV = pixelPos / BLUE_NOISE_TEXTURE_SIZE;
+
+    // Sample precomputed cos/sin theta & phi from RGBA
+    vec4 noiseSample = texture(qt_shadowmap_blue_noise_texture, blueNoiseUV);
+
+    // Convert from [0,1] to [-1,1]
+    float cosTheta = noiseSample.r * 2.0 - 1.0;
+    float sinTheta = noiseSample.g * 2.0 - 1.0;
+    float cosPhi   = noiseSample.b * 2.0 - 1.0;
+    float sinPhi   = noiseSample.a * 2.0 - 1.0;
+
+    // Build rotation matrix for Poisson disk sampling
+    return mat3(vec3(cosTheta * cosPhi, -sinTheta, cosTheta * sinPhi),
+                vec3(sinTheta * cosPhi, cosTheta , sinTheta * sinPhi),
+                vec3(-sinPhi          , 0.0      , cosPhi));
+}
+
 // Core directional light sampling function
 ShadowResult qt_sampleDirectionalLight_splitIndex(
         in int splitIndex,
@@ -165,11 +201,12 @@ ShadowResult qt_sampleDirectionalLight_splitIndex(
     float illumination = 0.0;
     vec2 radiusUV = pcfFactor * dimensionsInverted.xy;
     float bias = shadowBias * dimensionsInverted.z;
+    mat2 randomRotation = randomRotation2D(gl_FragCoord.xy);
 
     // Unified loop for both PCF and hard shadows
     // For hard shadows, numSamples should be 1 and radiusUV should be 0
     for (uint i = 0u; i < QSSG_SHADOW_SOFTNESS; ++i) {
-        vec2 sampleOffset = POISSON_SAMPLES[i] * radiusUV;
+        vec2 sampleOffset = randomRotation * (POISSON_SAMPLES[i] * radiusUV);
         vec3 atlasCoord = vec3((smpCoord.xy + sampleOffset) * uvAtlasScale + uvAtlasOffset, layerIndex);
 
         float pcfDepth = textureLod(qt_shadowmap_texture, atlasCoord, 0.0).r + bias;
@@ -360,9 +397,10 @@ ShadowResult qt_samplePointLight(in int lightIndex, in vec3 worldPos) {
     float currentDepth = clamp((dist - nearZ) / (farZ - nearZ), 0.0, 1.0) - bias;
     const float pcfRadius = ubLights.lights[lightIndex].pcfFactor;
     float shadowAccumulator = 0.0;
+    mat3 randomRotation = randomRotation3D(gl_FragCoord.xy);
 
     for (uint i = 0u; i < QSSG_SHADOW_SOFTNESS; ++i) {
-        vec3 offsetDir = CUBEMAP_SAMPLE_DIRECTIONS[i] * pcfRadius;
+        vec3 offsetDir = randomRotation * CUBEMAP_SAMPLE_DIRECTIONS[i] * pcfRadius;
         vec3 worldPosPCF = worldPos + offsetDir;
 
         vec3 Lpcf = worldPosPCF - lightPosition;
@@ -442,9 +480,10 @@ ShadowResult qt_sampleSpotLight(in int lightIndex, in vec3 worldPos)
     float currentDepth = clamp((dist - nearZ) / (farZ - nearZ), 0.0, 1.0) - bias;
     float pcfRadius = ubLights.lights[lightIndex].pcfFactor;
     float accum = 0.0;
+    mat3 randomRotation = randomRotation3D(gl_FragCoord.xy);
 
     for (uint i = 0u; i < QSSG_SHADOW_SOFTNESS; ++i) {
-        vec3 offsetDir = CUBEMAP_SAMPLE_DIRECTIONS[i] * pcfRadius;
+        vec3 offsetDir = randomRotation * CUBEMAP_SAMPLE_DIRECTIONS[i] * pcfRadius;
         vec3 worldPosPCF = worldPos + offsetDir;
 
         vec4 projPCF = ubLights.lights[lightIndex].shadowMatrix * vec4(worldPosPCF, 1.0);

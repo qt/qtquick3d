@@ -27,5 +27,20 @@
         "License": "Apache License Version 2.0",
         "LicenseId": "Apache-2.0",
         "Copyright": "Copyright 2009-2021 Intel Corporation"
+    },
+    {
+        "Id": "blue-noise-texture",
+        "Name": "Blue Noise Texture",
+        "QDocModule": "qtquick3d",
+        "QtUsage": "Blue noise texture used for shadow mapping",
+        "Files": "res/textures/blue_noise.png",
+
+        "Description": "A blue noise texture used for shadow mapping",
+        "Homepage": "https://momentsingraphics.de/BlueNoise.html",
+        "Comment": "Generated blue noise texture distributed under CC0-1.0.",
+        "License": "Creative Commons Zero v1.0 Universal",
+        "LicenseId": "CC0-1.0",
+        "Copyright": "Public Domain (CC0-1.0)"
     }
+
 ]

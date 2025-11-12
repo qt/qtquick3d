@@ -198,6 +198,9 @@ void QSSGRenderShadowMap::releaseCachedResources()
     if (m_shadowMapAtlasTexture)
         m_shadowMapAtlasTexture.reset();
 
+    if (m_shadowMapBlueNoiseTexture)
+        m_shadowMapBlueNoiseTexture.reset();
+
     qDeleteAll(m_layerDepthStencilBuffers);
     m_layerDepthStencilBuffers.clear();
     qDeleteAll(m_layerRenderTargets);
@@ -214,6 +217,36 @@ void QSSGRenderShadowMap::addShadowMaps(const QSSGShaderLightList &renderableLig
     // Bail out if there is no QRhi, since we can't add entries without it
     if (!rhi)
         return;
+
+    // Handle blue noise texture
+    if (!m_shadowMapBlueNoiseTexture) {
+        // The blue noise image is based on two random blue noise images with values v0 and v1.
+        // Then the cos and sin of these are stored to avoid trigonmoetric functions
+        // in the shadow mapping shader.
+        // R = cos(v0)
+        // G = sin(v0)
+        // B = cos(v1)
+        // A = sin(v1)
+        QImage blueNoiseImage(QStringLiteral(":/res/textures/blue_noise.png"));
+        if (blueNoiseImage.isNull()) {
+            qWarning("Failed to load blue noise texture!");
+        } else {
+            Q_ASSERT(blueNoiseImage.size() == QSize(64, 64));
+            Q_ASSERT(blueNoiseImage.format() == QImage::Format_ARGB32);
+            blueNoiseImage = blueNoiseImage.convertToFormat(QImage::Format_RGBA8888);
+            m_shadowMapBlueNoiseTexture.reset(allocateRhiShadowTexture(rhi, QRhiTexture::RGBA8, QSize(64, 64), 0, {}));
+            if (!m_shadowMapBlueNoiseTexture->create()) {
+                qWarning("Failed to create blue noise texture");
+            } else {
+                QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+                QRhiTextureSubresourceUploadDescription subresDesc(blueNoiseImage);
+                rub->uploadTexture(m_shadowMapBlueNoiseTexture.get(),
+                                   QRhiTextureUploadDescription({ QRhiTextureUploadEntry(0, 0, subresDesc) }));
+                QRhiCommandBuffer *cb = m_context.rhiContext()->commandBuffer();
+                cb->resourceUpdate(rub);
+            }
+        }
+    }
 
     const quint32 numLights = renderableLights.size();
     qsizetype numShadows = 0;
@@ -502,6 +535,11 @@ QRhiRenderPassDescriptor *QSSGRenderShadowMap::layerRenderPassDescriptor(int lay
 QRhiTexture *QSSGRenderShadowMap::shadowMapAtlasTexture() const
 {
     return m_shadowMapAtlasTexture.get();
+}
+
+QRhiTexture *QSSGRenderShadowMap::shadowMapBlueNoiseTexture() const
+{
+    return m_shadowMapBlueNoiseTexture.get();
 }
 
 QSSGShadowMapEntry::QSSGShadowMapEntry()

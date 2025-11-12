@@ -484,6 +484,19 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             }
         }
 
+        // Shadow map blue noise
+        if (auto shadowMapBlueNoise = shaderPipeline->shadowMapBlueNoiseTexture()) {
+            int binding = shaderPipeline->bindingForTexture("qt_shadowmap_blue_noise_texture");
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                QRhiTexture *texture = shadowMapBlueNoise;
+                QRhiSampler *sampler = rhiCtx->sampler(
+                        { QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::Repeat, QRhiSampler::Repeat, QRhiSampler::Repeat });
+                Q_ASSERT(texture && sampler);
+                bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+            }
+        }
+
         QSSGRenderableImage *renderableImage = renderable.firstImage;
         while (renderableImage) {
             const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);

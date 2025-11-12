@@ -89,6 +89,7 @@ public:
     QRhiTextureRenderTarget *layerRenderTarget(int layerIndex);
     QRhiRenderPassDescriptor *layerRenderPassDescriptor(int layerIndex);
     QRhiTexture *shadowMapAtlasTexture() const;
+    QRhiTexture *shadowMapBlueNoiseTexture() const;
 
     qsizetype shadowMapEntryCount() { return m_shadowMapList.size(); }
 
@@ -105,6 +106,7 @@ private:
 
     QVector<QSSGShadowMapEntry> m_shadowMapList;
     std::unique_ptr<QRhiTexture> m_shadowMapAtlasTexture;
+    std::unique_ptr<QRhiTexture> m_shadowMapBlueNoiseTexture;
     std::unique_ptr<QRhiSampler> m_sharedCubeToAtlasSampler;
     std::unique_ptr<QRhiBuffer> m_sharedFrontCubeToAtlasUniformBuffer;
     std::unique_ptr<QRhiBuffer> m_sharedBackCubeToAtlasUniformBuffer;

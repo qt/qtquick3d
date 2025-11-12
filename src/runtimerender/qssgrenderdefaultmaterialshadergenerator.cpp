@@ -2237,10 +2237,13 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     }
 
     // Shadow Map Atlas Texture (if needed)
-    if (shadowCount > 0 || directionalShadowCount > 0)
+    if (shadowCount > 0 || directionalShadowCount > 0) {
         shaders.setShadowMapAtlasTexture(inRenderProperties.getShadowMapManager()->shadowMapAtlasTexture());
-    else
+        shaders.setShadowMapBlueNoiseTexture(inRenderProperties.getShadowMapManager()->shadowMapBlueNoiseTexture());
+    } else {
         shaders.setShadowMapAtlasTexture(nullptr);
+        shaders.setShadowMapBlueNoiseTexture(nullptr);
+    }
 
     const QSSGRhiRenderableTexture *depthTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::DepthTexture);
     const QSSGRhiRenderableTexture *normalTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::NormalTexture);

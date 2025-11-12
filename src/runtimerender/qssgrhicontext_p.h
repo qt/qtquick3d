@@ -511,6 +511,9 @@ public:
     void setShadowMapAtlasTexture(QRhiTexture *texture) { m_shadowMapAtlasTexture = texture; }
     QRhiTexture *shadowMapAtlasTexture() const { return m_shadowMapAtlasTexture; }
 
+    void setShadowMapBlueNoiseTexture(QRhiTexture *texture) { m_shadowMapBlueNoiseTexture = texture; }
+    QRhiTexture *shadowMapBlueNoiseTexture() const { return m_shadowMapBlueNoiseTexture; }
+
     void setOITImages(QRhiTexture *accumulator, QRhiTexture *auxiliary, QRhiTexture *counter)
     {
         m_oitImages[0] = accumulator;
@@ -551,6 +554,7 @@ private:
     QSSGShaderLightsUniformData m_lightsUniformData;
     QSSGShaderDirectionalLightsUniformData m_directionalLightsUniformData;
     QRhiTexture *m_shadowMapAtlasTexture = nullptr;
+    QRhiTexture *m_shadowMapBlueNoiseTexture = nullptr;
     QRhiTexture *m_lightProbeTexture = nullptr;
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
