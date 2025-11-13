@@ -40,6 +40,12 @@ struct ParticleLightData
     float spotLightInnerConeAngle[4] = {0.0f};
 };
 
+static bool s_shaderCacheEnabled = true;
+void QSSGParticleRenderer::setShaderCacheEnabled(bool enabled)
+{
+    s_shaderCacheEnabled = enabled;
+}
+
 void QSSGParticleRenderer::updateUniformsForParticles(const QSSGLayerRenderData &inData,
                                                       QSSGRhiShaderPipeline &shaders,
                                                       QSSGRhiContext *rhiCtx,
@@ -758,27 +764,29 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
 
     theKey.toString(shaderString, shaderKeyProperties);
 
-    if (const auto &maybePipeline = shaderCache->tryGetRhiShaderPipeline(shaderString, inFeatureSet))
-        return maybePipeline;
+    if (s_shaderCacheEnabled) {
+        if (const auto &maybePipeline = shaderCache->tryGetRhiShaderPipeline(shaderString, inFeatureSet))
+            return maybePipeline;
 
-    const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(inFeatureSet));
-    // Check if there's a pre-built (offline generated) shader for available.
-    if (renderer.m_currentLayer) {
-        QQsbCollection::EntryMap &pregenEntries = renderer.m_currentLayer->m_particleShaderEntries;
-        if (pregenEntries.isEmpty()) {
-            renderer.m_currentLayer->m_particleShaderEntries = shaderLibraryManager->getParticleShaderEntries();
-            pregenEntries = renderer.m_currentLayer->m_particleShaderEntries;
+        const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(inFeatureSet));
+        // Check if there's a pre-built (offline generated) shader for available.
+        if (renderer.m_currentLayer) {
+            QQsbCollection::EntryMap &pregenEntries = renderer.m_currentLayer->m_particleShaderEntries;
+            if (pregenEntries.isEmpty()) {
+                renderer.m_currentLayer->m_particleShaderEntries = shaderLibraryManager->getParticleShaderEntries();
+                pregenEntries = renderer.m_currentLayer->m_particleShaderEntries;
+            }
+            if (!pregenEntries.isEmpty()) {
+                const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
+                if (foundIt != pregenEntries.cend())
+                    return shaderCache->newPipelineFromPregenerated(shaderString, inFeatureSet, *foundIt, inRenderable.particles);
+            }
         }
-        if (!pregenEntries.isEmpty()) {
-            const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
-            if (foundIt != pregenEntries.cend())
-                return shaderCache->newPipelineFromPregenerated(shaderString, inFeatureSet, *foundIt, inRenderable.particles);
-        }
+
+        // Try the persistent (disk-based) cache then.
+        if (const auto &maybePipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey, shaderString, inFeatureSet))
+            return maybePipeline;
     }
-
-    // Try the persistent (disk-based) cache then.
-    if (const auto &maybePipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey, shaderString, inFeatureSet))
-        return maybePipeline;
 
     // generate shader code
     shaderProgramGenerator->beginProgram();
@@ -933,10 +941,10 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     AutoFormatGenerator fg(fragment);
 
     if (oit == int(QSSGRenderLayer::OITMethod::WeightedBlended)) {
-        fragment.addInclude("orderindependenttransparency.glsllib");
+        fragment.addInclude("oitweightedblended.glsllib");
         fg << "layout(location = 1) out vec4 revealageOutput;";
     } else if (oit == int(QSSGRenderLayer::OITMethod::LinkedList)) {
-        fragment.addInclude("orderindependenttransparency.glsllib");
+        fragment.addInclude("oitlinkedlist.glsllib");
     }
     if (isSpriteLinear)
         fg << "#define spriteFunc";

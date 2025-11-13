@@ -75,6 +75,7 @@ public:
                                          QSSGRhiShaderResourceBindingList &bindings,
                                          const QSSGRenderModel *model);
     static QSSGShaderFeatures particleShaderFeatures(const QSSGShaderFeatures& features);
+    static void setShaderCacheEnabled(bool enabled);
 };
 
 QT_END_NAMESPACE

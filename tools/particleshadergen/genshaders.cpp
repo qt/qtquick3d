@@ -109,6 +109,9 @@ bool GenShaders::process(QVector<QString> &qsbcFiles,
 
     layerRenderData.prepareForRender();
 
+    // Disable shader caching so that we always generate the shaders
+    QSSGParticleRenderer::setShaderCacheEnabled(false);
+
     const auto &features = QSSGParticleRenderer::particleShaderFeatures(layerRenderData.getShaderFeatures());
     const auto &propertyTable = layerRenderData.getParticleMaterialPropertyTable();
 
