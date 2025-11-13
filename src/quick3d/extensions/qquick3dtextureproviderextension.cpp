@@ -41,6 +41,21 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \property QQuick3DTextureProviderExtension::samplerHint
+    \since 6.11
+
+    This property contains a hint about the type of texture that will be
+    provided by the extension. This is necessary because the texture data will
+    not be provided until it is necessary, but materials that use the Texture
+    component need to know what type of sampler to provide.
+
+    The default value is \c QQuick3DTextureProviderExtension::Sampler2D.
+
+    \note This property is only used when using CustomMaterials.
+
+    \sa SamplerHint
+*/
+/*!
     \qmlproperty enumeration TextureProviderExtension::samplerHint
 
     This property contains a hint about the type of texture that will be provided by the extension.
