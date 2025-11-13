@@ -9,6 +9,8 @@ Item {
     id: root
     width: settingsDrawer.width
     height: parent.height
+    property alias drawerVisible: settingsDrawer.visible
+    property bool drawerOpen: settingsDrawer.position === 1.0
 
     property real shadowFactor: sliderDirectionaLightShadowFactor.value
     property vector3d eulerRotation: Qt.vector3d(sliderDirectionalLightRotX.value,
