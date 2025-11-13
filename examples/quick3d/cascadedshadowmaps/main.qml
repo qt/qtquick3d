@@ -81,13 +81,25 @@ ApplicationWindow {
                 }
             }
         }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            propagateComposedEvents: true
+            onClicked: {
+                settings.drawerVisible = false
+                wasd.forceActiveFocus() // focus WASD controller for keyboard input
+            }
+        }
     }
     //! [scene]
 
     WasdController {
+        id: wasd
         controlledObject: view.camera
         speed: 5
         shiftSpeed: 10
+        enabled: !settings.drawerOpen
     }
 
     SettingsPane {
