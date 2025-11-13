@@ -195,10 +195,10 @@ static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QM
     if (drawCascades)
         ShadowmapHelpers::addDebugFrustum(frustumPointsSliced, QColorConstants::Black, debugDrawSystem);
 
-    QList<QVector3D> receivingSliced = ShadowmapHelpers::intersectBoxByFrustum(frustumPointsSliced,
-                                                                               receivingBox.toQSSGBoxPoints(),
-                                                                               drawSceneCascadeIntersection ? debugDrawSystem : nullptr,
-                                                                               QColorConstants::DarkGray);
+    const QList<QVector3D> receivingSliced = ShadowmapHelpers::intersectBoxByFrustum(frustumPointsSliced,
+                                                                                     receivingBox.toQSSGBoxPoints(),
+                                                                                     drawSceneCascadeIntersection ? debugDrawSystem : nullptr,
+                                                                                     QColorConstants::DarkGray);
     if (receivingSliced.isEmpty())
         return nullptr;
 
@@ -207,8 +207,8 @@ static std::unique_ptr<QSSGRenderCamera> computeShadowCameraFromFrustum(const QM
         receivingFrustumSlicedLightSpace.include(lightMatrix.map(point));
 
     // Slice casting box by frustumBounds' left, right, up, down planes
-    QList<QVector3D> castingPointsLightSpace = ShadowmapHelpers::intersectBoxByBox(receivingFrustumSlicedLightSpace,
-                                                                                   transformPoints(castingBox.toQSSGBoxPointsNoEmptyCheck()));
+    const QList<QVector3D> castingPointsLightSpace = ShadowmapHelpers::intersectBoxByBox(receivingFrustumSlicedLightSpace,
+                                                                                         transformPoints(castingBox.toQSSGBoxPointsNoEmptyCheck()));
     if (castingPointsLightSpace.isEmpty())
         return nullptr;
 
@@ -470,7 +470,7 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
         }
 
         int maxSamplerBinding = -1;
-        for (const QShaderDescription::InOutVariable &var : samplerVars)
+        for (const QShaderDescription::InOutVariable &var : std::as_const(samplerVars))
             maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
 
         // Will need to set unused image-samplers to something dummy
@@ -507,7 +507,7 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
         QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
         rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
 
-        for (const QShaderDescription::InOutVariable &var : samplerVars) {
+        for (const QShaderDescription::InOutVariable &var : std::as_const(samplerVars)) {
             if (!samplerBindingsSpecified.testBit(var.binding)) {
                 QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
                 bindings.addTexture(var.binding, RENDERER_VISIBILITY_ALL, t, dummySampler);

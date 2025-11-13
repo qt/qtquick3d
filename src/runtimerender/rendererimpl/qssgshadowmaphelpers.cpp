@@ -298,7 +298,7 @@ static QList<QVector3D> sliceBoxByPlanes(const QList<std::array<QVector3D, 2>> &
         }
 
         // Sanity check and revert if any point is borked
-        for (const Vertex &point : vertices) {
+        for (const Vertex &point : std::as_const(vertices)) {
             if (point.active && (point.borked || !point.allNeighbors())) {
                 vertices = verticesPrev;
                 break;
@@ -308,7 +308,7 @@ static QList<QVector3D> sliceBoxByPlanes(const QList<std::array<QVector3D, 2>> &
 
     QList<QVector3D> result;
     result.reserve(vertices.length());
-    for (const Vertex &vertex : vertices) {
+    for (const Vertex &vertex : std::as_const(vertices)) {
         if (vertex.active)
             result.push_back(vertex.position);
     }
