@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtGui/qguiapplication_platform.h>
 
 #ifdef XR_USE_GRAPHICS_API_VULKAN
 # include <QtGui/QVulkanInstance>
