@@ -300,7 +300,7 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
             case ShaderItemType::VertexInput:
                 if (m_stage == QSSGShaderGeneratorStage::Vertex) {
                     QByteArray block;
-                    for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_inOutVars) {
+                    for (const QSSGShaderResourceMergeContext::InOutVar &var : std::as_const(mergeContext->m_inOutVars)) {
                         if (var.stagesInputIn.testFlag(m_stage))
                             block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
                     }
@@ -310,7 +310,7 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
             case ShaderItemType::Input:
             {
                 QByteArray block;
-                for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_inOutVars) {
+                for (const QSSGShaderResourceMergeContext::InOutVar &var : std::as_const(mergeContext->m_inOutVars)) {
                     if (var.stagesInputIn.testFlag(m_stage))
                         block += QString::asprintf("layout(location = %d) in %s%s %s;\n", var.location, var.flat ? "flat " : "", var.type.constData(), var.name.constData()).toUtf8();
                 }
@@ -320,7 +320,7 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
             case ShaderItemType::Output:
             {
                 QByteArray block;
-                for (const QSSGShaderResourceMergeContext::InOutVar &var : mergeContext->m_inOutVars) {
+                for (const QSSGShaderResourceMergeContext::InOutVar &var : std::as_const(mergeContext->m_inOutVars)) {
                     if (var.stageOutputFrom.testFlag(m_stage))
                         block += QString::asprintf("layout(location = %d) out %s%s %s;\n", var.location, var.flat ? "flat " : "", var.type.constData(), var.name.constData()).toUtf8();
                 }
