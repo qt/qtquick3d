@@ -23,12 +23,6 @@ ivec2 qt_indexToImageCoord(in uint index, const uint width)
 
 #if QSSG_OIT_METHOD == QSSG_OIT_LINKED_LIST
 
-#ifdef QSSG_DECLARE_OIT_IMAGES_FOR_RENDER
-layout(binding = 4, rgba32ui) uniform restrict coherent writeonly uimage2D qt_imgAbuffer;
-layout(binding = 5, r32ui) uniform restrict coherent uimage2D qt_imgAux;
-layout(binding = 6, r32ui) uniform restrict coherent uimage2D qt_imgCounter;
-#endif
-
 vec4 qt_oitLinkedList(const vec4 color, const uint listNodeCount, const uint abufImageWidth, const ivec2 viewSize, const uint viewIndex)
 {
     // +1 as 0 is used as a list terminator. Adds 1 to imgCounter[0,0] and
