@@ -1704,7 +1704,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    vec4 qt_color_sum = vec4(qt_diffuseColor.rgb, qt_diffuseColor.a * qt_objectOpacity);");
 
         if (passRequirmentState.oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
-            fragmentShader.addInclude("orderindependenttransparency.glsllib");
+            fragmentShader.addInclude("oitweightedblended.glsllib");
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader.addUniform("qt_cameraPosition", "vec3");
             fragmentShader.addUniform("qt_cameraProperties", "vec2");
@@ -1714,7 +1714,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    revealageOutput = vec4(qt_color_sum.a);");
         } else if (passRequirmentState.oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
             fragmentShader.addInclude("tonemapping.glsllib");
-            fragmentShader.addInclude("orderindependenttransparency.glsllib");
+            fragmentShader.addInclude("oitlinkedlist.glsllib");
             fragmentShader.addUniform("qt_listNodeCount", "uint");
             fragmentShader.addUniform("qt_ABufImageWidth", "uint");
             fragmentShader.addUniform("qt_viewSize", "ivec2");
