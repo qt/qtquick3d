@@ -165,7 +165,7 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
 
-static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
+void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
     outputs.reserve(8);
@@ -211,7 +211,7 @@ static void initBakerForNonPersistentUse(QShaderBaker *, QRhi *)
 {
 }
 
-static void initBakerForPersistentUse(QShaderBaker *, QRhi *)
+static void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *, QRhi *)
 {
 }
 #endif // QT_QUICK3D_HAS_RUNTIME_SHADERS
@@ -297,7 +297,7 @@ QSSGShaderCache::QSSGShaderCache(QSSGRhiContext &ctx,
         // the cache directory was not available (no file system, no
         // permissions, etc.).
         m_initBaker = m_persistentShaderStorageFileName.isEmpty() ? initBakerForNonPersistentUse
-                                                                  : initBakerForPersistentUse;
+                                                                  : QSSGShaderCache::initBakerForPersistentUse;
     }
 }
 

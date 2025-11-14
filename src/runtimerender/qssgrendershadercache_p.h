@@ -232,6 +232,7 @@ public:
     static QByteArray resourceFolder();
     static QByteArray shaderCollectionFile();
     static QByteArray particleShaderCollectionFile();
+    static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *rhi);
 };
 
 namespace QtQuick3DEditorHelpers {

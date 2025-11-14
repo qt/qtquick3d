@@ -33,26 +33,6 @@ static inline void qDryRunPrintQsbcAdd(const QByteArray &id)
     printf("Shader pipeline generated for (dry run):\n %s\n\n", qPrintable(id));
 }
 
-static bool s_forMultiview = false;
-static void initBaker(QShaderBaker *baker, QRhi *rhi)
-{
-    Q_UNUSED(rhi); // that's a Null-backed rhi here anyways
-    QVector<QShaderBaker::GeneratedShader> outputs;
-    outputs.append({ QShader::SpirvShader, QShaderVersion(100) }); // Vulkan 1.0
-    outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
-    outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
-    if (s_forMultiview) {
-        outputs.append({ QShader::HlslShader, QShaderVersion(61) }); // Shader Model 6.1
-        outputs.append({ QShader::GlslShader, QShaderVersion(160) }); // OpenGL 3.3+
-    } else {
-        outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
-        outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
-    }
-
-    baker->setGeneratedShaders(outputs);
-    baker->setGeneratedShaderVariants({ QShader::StandardShader });
-}
-
 GenShaders::GenShaders()
 {
     sceneManager.reset(new QQuick3DSceneManager);
@@ -68,7 +48,7 @@ GenShaders::GenShaders()
     renderContext = std::make_shared<QSSGRenderContextInterface>(std::make_unique<QSSGBufferManager>(),
                                                                  std::make_unique<QSSGRenderer>(),
                                                                  std::make_shared<QSSGShaderLibraryManager>(),
-                                                                 std::make_unique<QSSGShaderCache>(*rhiContext, &initBaker),
+                                                                 std::make_unique<QSSGShaderCache>(*rhiContext, &QSSGShaderCache::initBakerForPersistentUse),
                                                                  std::make_unique<QSSGCustomMaterialSystem>(),
                                                                  std::make_unique<QSSGProgramGenerator>(),
                                                                  std::move(rhiContext));
