@@ -5,6 +5,7 @@
 #include "qquick3dxrview_p.h"
 #include <QtQuick3D/private/qquick3dnode_p_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QColor>
 
 QT_BEGIN_NAMESPACE
@@ -59,7 +60,7 @@ public:
             QObject::connect(q, &QQuick3DNode::visibleChanged, m_containerItem, [this, q](){
                 m_containerItem->setVisible(q->visible());
             });
-
+            QQuickItemPrivate::get(m_containerItem)->requestCustomOverlay();
             auto dataProp = data();
             dataProp.append(&dataProp, m_containerItem);
         }
