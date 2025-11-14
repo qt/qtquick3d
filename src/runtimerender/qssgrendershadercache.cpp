@@ -569,20 +569,28 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::newPipelineFromPregenerated(const QByt
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
     QSSGRhiShaderPipelinePtr shaders(new QSSGRhiShaderPipeline(m_rhiContext));
 
-    const QString collectionFile = QString::fromLatin1(resourceFolder() + shaderCollectionFile());
+    const QStringList collectionFiles
+            = {QString::fromLatin1(resourceFolder() + shaderCollectionFile()),
+               QString::fromLatin1(resourceFolder() + particleShaderCollectionFile())};
 
-    QQsbIODeviceCollection qsbc(collectionFile);
     QQsbCollection::EntryDesc entryDesc;
-    if (qsbc.map(QQsbIODeviceCollection::Read))
-        qsbc.extractEntry(entry, entryDesc);
-    else {
-        const QString collectionFile2 = QString::fromLatin1(resourceFolder() + particleShaderCollectionFile());
-        QQsbIODeviceCollection qsbc(collectionFile2);
-        if (qsbc.map(QQsbIODeviceCollection::Read))
-            qsbc.extractEntry(entry, entryDesc);
-        else
-            qWarning("Failed to open entry %s", entry.key.constData());
+    QScopedPointer<QQsbIODeviceCollection> qsbc;
+    for (const auto &collectionFile : collectionFiles) {
+        QFileInfo info(collectionFile);
+        if (!info.exists())
+            continue;
+
+        qsbc.reset(new QQsbIODeviceCollection(collectionFile));
+        if (qsbc->map(QQsbIODeviceCollection::Read)) {
+            if (qsbc->extractEntry(entry, entryDesc))
+                break;
+            else
+                qsbc.reset();
+        }
     }
+
+    if (qsbc.isNull())
+        qWarning("Failed to open entry %s", entry.key.constData());
 
     if (entryDesc.vertShader.isValid() && entryDesc.fragShader.isValid()) {
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);
@@ -602,7 +610,8 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::newPipelineFromPregenerated(const QByt
     cacheKey.updateHashCode();
 
     const auto inserted = m_rhiShaders.insert(cacheKey, shaders);
-    qsbc.unmap();
+    if (qsbc)
+        qsbc->unmap();
     return inserted.value();
 }
 
