@@ -2074,6 +2074,113 @@ void QSSGBufferManager::processResourceLoader(const QSSGRenderResourceLoader *lo
     commitBufferResourceUpdates();
 }
 
+static inline quint32 textureFormatSize(QRhiTexture::Format format)
+{
+    switch (format) {
+    case QRhiTexture::UnknownFormat:
+        return 0;
+    case QRhiTexture::RGBA8:
+        return 4;
+    case QRhiTexture::BGRA8:
+        return 4;
+    case QRhiTexture::R8:
+        return 1;
+    case QRhiTexture::RG8:
+        return 2;
+    case QRhiTexture::R16:
+        return 2;
+    case QRhiTexture::RG16:
+        return 4;
+    case QRhiTexture::RED_OR_ALPHA8:
+        return 1;
+
+    case QRhiTexture::RGBA16F:
+        return 8;
+    case QRhiTexture::RGBA32F:
+        return 16;
+    case QRhiTexture::R16F:
+        return 2;
+    case QRhiTexture::R32F:
+        return 4;
+
+    case QRhiTexture::RGB10A2:
+        return 4;
+
+    case QRhiTexture::R8SI:
+        return 1;
+    case QRhiTexture::R32SI:
+        return 4;
+    case QRhiTexture::RG32SI:
+        return 8;
+    case QRhiTexture::RGBA32SI:
+        return 16;
+
+    case QRhiTexture::R8UI:
+        return 1;
+    case QRhiTexture::R32UI:
+        return 4;
+    case QRhiTexture::RG32UI:
+        return 8;
+    case QRhiTexture::RGBA32UI:
+        return 16;
+
+    case QRhiTexture::D16:
+        return 2;
+    case QRhiTexture::D24:
+        return 4;
+    case QRhiTexture::D24S8:
+        return 4;
+    case QRhiTexture::D32F:
+        return 4;
+    case QRhiTexture::D32FS8:
+        return 8;
+
+    case QRhiTexture::BC1:
+        return 8;
+    case QRhiTexture::BC2:
+        return 16;
+    case QRhiTexture::BC3:
+        return 16;
+    case QRhiTexture::BC4:
+        return 8;
+    case QRhiTexture::BC5:
+        return 16;
+    case QRhiTexture::BC6H:
+        return 16;
+    case QRhiTexture::BC7:
+        return 16;
+
+    case QRhiTexture::ETC2_RGB8:
+        return 8;
+    case QRhiTexture::ETC2_RGB8A1:
+        return 8;
+    case QRhiTexture::ETC2_RGBA8:
+        return 16;
+
+    case QRhiTexture::ASTC_4x4:
+    case QRhiTexture::ASTC_5x4:
+    case QRhiTexture::ASTC_5x5:
+    case QRhiTexture::ASTC_6x5:
+    case QRhiTexture::ASTC_6x6:
+    case QRhiTexture::ASTC_8x5:
+    case QRhiTexture::ASTC_8x6:
+    case QRhiTexture::ASTC_8x8:
+    case QRhiTexture::ASTC_10x5:
+    case QRhiTexture::ASTC_10x6:
+    case QRhiTexture::ASTC_10x8:
+    case QRhiTexture::ASTC_10x10:
+    case QRhiTexture::ASTC_12x10:
+    case QRhiTexture::ASTC_12x12:
+        return 16;
+    }
+    Q_UNREACHABLE_RETURN(0);
+}
+
+static inline bool isCompressedTextureFormat(QRhiTexture::Format format)
+{
+    return (format >= QRhiTexture::BC1);
+}
+
 static inline quint64 textureMemorySize(QRhiTexture *texture)
 {
     quint64 s = 0;
@@ -2085,54 +2192,15 @@ static inline quint64 textureMemorySize(QRhiTexture *texture)
         return 0;
 
     s = texture->pixelSize().width() * texture->pixelSize().height();
-    /*
-        UnknownFormat,
-        RGBA8,
-        BGRA8,
-        R8,
-        RG8,
-        R16,
-        RG16,
-        RED_OR_ALPHA8,
-        RGBA16F,
-        RGBA32F,
-        R16F,
-        R32F,
-        RGB10A2,
-        R8SI,
-        R32SI,
-        RG32SI,
-        RGBA32SI,
-        R8UI,
-        R32UI,
-        RG32UI,
-        RGBA32UI,
-        D16,
-        D24,
-        D24S8,
-        D32F,
-        D32FS8*/
-    static const quint64 pixelSizes[] = {0, 4, 4, 1, 2, 2, 4, 1, 2, 4, 2, 4, 4, 1, 4, 8, 16, 1, 4, 8, 16, 2, 4, 4, 4, 8};
-    /*
-        BC1,
-        BC2,
-        BC3,
-        BC4,
-        BC5,
-        BC6H,
-        BC7,
-        ETC2_RGB8,
-        ETC2_RGB8A1,
-        ETC2_RGBA8,*/
-    static const quint64 blockSizes[] = {8, 16, 16, 8, 16, 16, 16, 8, 8, 16};
-    Q_STATIC_ASSERT_X(QRhiTexture::BC1 == 26 && QRhiTexture::ETC2_RGBA8 == 35,
-                      "QRhiTexture format constant value missmatch.");
-    if (format < QRhiTexture::BC1)
-        s *= pixelSizes[format];
-    else if (format >= QRhiTexture::BC1 && format <= QRhiTexture::ETC2_RGBA8)
-        s /= blockSizes[format - QRhiTexture::BC1];
-    else
-        s /= 16;
+
+    const quint32 bytesPerPixel = textureFormatSize(format);
+    QSSG_ASSERT_X(bytesPerPixel > 0, "Invalid texture format size", return 0);
+
+    if (!isCompressedTextureFormat(format)) {
+        s *= bytesPerPixel;
+    } else {
+        s /= bytesPerPixel;
+    }
 
     if (texture->flags() & QRhiTexture::MipMapped)
         s += s / 4;
