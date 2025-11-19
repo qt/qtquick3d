@@ -75,7 +75,20 @@ public:
     QHash<int, int> m_nextFreeOutLocation;
 
     int viewCount = 1;
-    bool separateImageBindingPoints = false;
+
+    void rearrangeResources()
+    {
+        // Put the images before samplers since images have
+        // separate binding points in OpenGL and minimum
+        // amount is only 8 so with many textures we might run
+        // out of binding points. Minimum amount of texture
+        // binding points is 16.
+        int binding = FIRST_CUSTOM_RESOURCE_BINDING_POINT;
+        for (auto &image : m_images)
+            image.binding = binding++;
+        for (auto &sampler : m_samplers)
+            sampler.binding = binding++;
+    }
 
     void registerInput(QSSGShaderGeneratorStage stage, const QByteArray &type, const QByteArray &name, bool flat = false)
     {
@@ -119,7 +132,7 @@ public:
     {
         if (m_samplers.contains(name) || m_images.contains(name))
             return;
-        Image var { {type, name, conditionType, conditionName, separateImageBindingPoints ? (m_nextFreeImageBinding++) : (m_nextFreeResourceBinding++) }, imgtype, qualifiers};
+        Image var { {type, name, conditionType, conditionName, m_nextFreeResourceBinding++}, imgtype, qualifiers};
         m_images.insert(name, var);
     }
 

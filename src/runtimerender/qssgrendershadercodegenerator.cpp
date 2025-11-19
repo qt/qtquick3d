@@ -291,6 +291,9 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
     const int prefixLen = 4;
     const int typeLen = 1;
     int from = 0;
+    if (!mergeContext->m_images.empty())
+        mergeContext->rearrangeResources();
+
     for (; ;) {
         int pos = m_finalBuilder.indexOf(prefix, from);
         if (pos >= 0) {
@@ -524,11 +527,8 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
         return nullptr;
     }
 
-    auto backend = theCache.rhiContext().rhi()->backend();
     QSSGShaderResourceMergeContext mergeContext;
     mergeContext.viewCount = viewCount;
-    if (backend == QRhi::OpenGLES2)
-        mergeContext.separateImageBindingPoints = true;
 
     for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
