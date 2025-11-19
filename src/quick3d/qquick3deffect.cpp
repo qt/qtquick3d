@@ -33,6 +33,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick3D/private/qquick3dobject_p.h>
+#include <QtQuick3D/private/qquick3dscenemanager_p.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qurl.h>
 
@@ -235,12 +236,20 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             break;
     }
 
+    if (!window && QQuick3DObjectPrivate::get(this)->sceneManager)
+        window = QQuick3DObjectPrivate::get(this)->sceneManager->window();
+
     static const auto addUniform = [](QVariant::Type propType, const char *propName, QByteArray &uniforms) {
         uniforms += QByteArray("uniform ") + uniformTypeName(propType) + " " + propName + ";\n";
     };
 
     const auto &renderContext
             = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window));
+
+    if (!renderContext) {
+        qWarning("QQuick3DEffect: No render context interface?");
+        return nullptr;
+    }
 
     QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(node);
     if (!effectNode) {
