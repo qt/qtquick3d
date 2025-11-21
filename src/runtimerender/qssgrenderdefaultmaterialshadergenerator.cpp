@@ -657,6 +657,8 @@ struct PassRequirmentsState {
         } else if (isNormalPass) {
             passType = Normal;
             needsWorldNormal = true;
+            needsWorldTangent = true;
+            needsWorldBinormal = true;
             needsRoughness = true;
         } else {
             // Either a Color or Debug Pass
