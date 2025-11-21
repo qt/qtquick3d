@@ -29,7 +29,7 @@ QT_BEGIN_NAMESPACE
 class QSGLayer;
 struct QSSGRenderImage;
 class QQuick3DRenderExtension;
-class QQuickWWindow;
+class QQuickWindow;
 
 class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickItemChangeListener
 {
