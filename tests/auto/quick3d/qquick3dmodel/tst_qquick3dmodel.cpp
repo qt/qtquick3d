@@ -83,7 +83,7 @@ void tst_QQuick3DModel::testProperties()
     QCOMPARE(spy.size(), 1);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
     QCOMPARE(cubeUrl, model.source());
-    QCOMPARE(cubeUrl, node->meshPath.path());
+    QCOMPARE(cubeUrl, QUrl{node->meshPath.path()});
     QCOMPARE(originalNode, node);
 
     QQuick3DGeometry geometry;
