@@ -1051,7 +1051,7 @@ static QSSGRenderPath resolveImagePath(const QUrl &url, const QQmlContext *conte
             const QStringList paths = path.split(separator);
             bool first = true;
             for (auto &s : paths) {
-                auto mapped =  QQmlFile::urlToLocalFileOrQrc(context->resolvedUrl(s));
+                auto mapped =  QQmlFile::urlToLocalFileOrQrc(context->resolvedUrl(QUrl{s}));
                 if (!first)
                     resolvedPath.append(separator);
                 resolvedPath.append(mapped);
