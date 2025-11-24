@@ -51,8 +51,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     enum class TAAMode : quint8
     {
-        Off,
-        On
+        Off = 0,
+        Default,
+        MotionVector
     };
 
     enum class AAQuality : quint8
@@ -175,6 +176,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     QSSGRenderLayer::AAMode antialiasingMode;
     QSSGRenderLayer::AAQuality antialiasingQuality;
+    QVector4D currentAndLastJitter;
 
     QSSGRenderLayer::Background background;
     QVector3D clearColor;
@@ -303,9 +305,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     [[nodiscard]] bool isMsaaEnabled() const { return antialiasingMode == AAMode::MSAA; }
     [[nodiscard]] bool isSsaaEnabled() const { return antialiasingMode == AAMode::SSAA; }
-    [[nodiscard]] bool isProgressiveAAEnabled() const { return antialiasingMode == AAMode::ProgressiveAA; }
+    // NOTE: Progressive AA is not enabled when temporalAA mode is MotionVector.
+    [[nodiscard]] bool isProgressiveAAEnabled() const { return antialiasingMode == AAMode::ProgressiveAA && temporalAAMode != TAAMode::MotionVector; }
     // NOTE: Temporal AA is not enabled when MSAA is enabled.
-    [[nodiscard]] bool isTemporalAAEnabled() const { return (temporalAAMode == TAAMode::On) && !isMsaaEnabled(); }
+    [[nodiscard]] bool isTemporalAAEnabled() const { return (temporalAAMode != TAAMode::Off) && !isMsaaEnabled(); }
 
     static constexpr float ssaaMultiplierForQuality(QSSGRenderLayer::AAQuality quality)
     {

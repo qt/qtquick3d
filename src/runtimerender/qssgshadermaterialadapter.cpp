@@ -728,6 +728,7 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "IBL_TEXTURE", "qt_lightProbe", false },
     { "LIGHTMAP", "qt_lightmap", false },
     { "NORMAL_ROUGHNESS_TEXTURE", "qt_normalTexture", false },
+    { "MOTION_VECTOR_TEXTURE", "qt_motionVectorTexture", false },
 
     // For shaded only: vertex outputs, for convenience and perf. (only those
     // that are always present when lighting is enabled) The custom vertex main
@@ -985,6 +986,8 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
                 else if (trimmedId == QByteArrayLiteral("FRESNEL_SCALE") ||
                             trimmedId == QByteArrayLiteral("FRESNEL_BIAS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesFresnelScaleBias;
+                else if (trimmedId == QByteArrayLiteral("MOTION_VECTOR_TEXTURE"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesMotionVectorTexture;
                 else if (trimmedId == QByteArrayLiteral("TRANSMISSION_FACTOR")) {
                     md.flags |= QSSGCustomShaderMetaData::UsesTransmission;
                     md.flags |= QSSGCustomShaderMetaData::UsesScreenTexture;
@@ -1164,6 +1167,9 @@ void QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
 
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesLightmap))
         allUniforms.append({ "sampler2D", "qt_lightmap" });
+
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesMotionVectorTexture))
+        allUniforms.append({ "sampler2D", "qt_motionVectorTexture" });
 
     static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
     static const char *metaEnd = "  ]\n}*/\n#endif\n";

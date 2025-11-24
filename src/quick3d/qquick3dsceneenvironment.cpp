@@ -802,8 +802,11 @@ QVector3D QQuick3DSceneEnvironment::probeOrientation() const
     new frame is blended with the previous frame.
 
     \note Temporal antialiasing doesn't have an effect when antialiasingMode is MSAA.
-    \note When combined with ProgressiveAA antialiasingMode, temporalAA is used
-    when scene animates while ProgressiveAA is used once animations stop.
+    \note When using ProgressiveAA, temporal AA is applied during scene animation.
+    Once the scene becomes static, ProgressiveAA takes over — but only when
+    temporalAAMode is SceneEnvironment.TAADefault.
+    In other words: ProgressiveAA has no effect when temporalAAMode is set to
+    SceneEnvironment.TAAMotionVector.
 
     \b Pros: Due to the jiggling camera it finds real details that were otherwise
     lost; low impact on performance.
@@ -825,7 +828,8 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
     \since 5.15
 
     This property modifies the amount of temporal movement (antialiasing).
-    This has an effect only when temporalAAEnabled property is true.
+    This has an effect only when temporalAAEnabled property is true and
+    temporalAAMode property is SceneEnvironment.TAADefault.
 
     \default 0.3
 
@@ -834,6 +838,33 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 float QQuick3DSceneEnvironment::temporalAAStrength() const
 {
     return m_temporalAAStrength;
+}
+
+/*!
+    \qmlproperty enumeration QtQuick3D::SceneEnvironment::temporalAAMode
+    \since 6.11
+
+    Controls the temporal anti-aliasing mode. Temporal AA reduces flickering and
+    aliasing by blending information across multiple frames.
+
+    \value SceneEnvironment.TAADefault
+    Blends current and previous frames for basic temporal filtering.
+
+    \value SceneEnvironment.TAAMotionVector
+    Uses motion vectors to track pixel movement between frames, providing
+    superior quality for animated scenes.
+
+    The default is \c SceneEnvironment.TAADefault.
+
+    \note Temporal AA may cause ghosting artifacts with fast-moving objects or
+       rapid camera movements.
+
+    \note Works best with constant frame rates. Frame rate variations reduce
+    effectiveness.
+*/
+QQuick3DSceneEnvironment::QQuick3DEnvironmentTemporalAAMode QQuick3DSceneEnvironment::temporalAAMode() const
+{
+    return m_temporalAAMode;
 }
 
 /*!
@@ -1267,6 +1298,15 @@ void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)
         QQuick3DObjectPrivate::derefSceneManager(m_lightProbe);
         QQuick3DObjectPrivate::derefSceneManager(m_skyBoxCubeMap);
     }
+}
+
+void QQuick3DSceneEnvironment::setTemporalAAMode(const QQuick3DEnvironmentTemporalAAMode &newTemporalAAMode)
+{
+    if (m_temporalAAMode == newTemporalAAMode)
+        return;
+    m_temporalAAMode = newTemporalAAMode;
+    emit temporalAAModeChanged();
+    update();
 }
 
 void QQuick3DSceneEnvironment::setTemporalAAEnabled(bool temporalAAEnabled)

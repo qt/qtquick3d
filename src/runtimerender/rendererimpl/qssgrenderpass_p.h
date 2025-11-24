@@ -22,6 +22,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendermotionvectormap_p.h>
 #include "qssgrenderer_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -58,6 +59,24 @@ public:
     // Flags: Debug markers(?)
 
     // Dependency
+};
+
+class MotionVectorMapPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Standalone; }
+    void resetForFrame() final;
+
+    QSSGRhiRenderableTexture *rhiMotionVectorTexture = nullptr;
+
+    static constexpr int MaxBuckets = 8; // (int(skin) << 2) | (int(instance) << 1) | int(morph);
+    QSSGRenderableObjectList motionVectorPassObjects[MaxBuckets];
+    QSSGRenderCamera *camera = nullptr;
+    QSSGRhiGraphicsPipelineState ps;
+    bool enabled = false;
+    QSSGRenderMotionVectorMapPtr motionVectorMapManager;
 };
 
 class ShadowMapPass : public QSSGRenderPass

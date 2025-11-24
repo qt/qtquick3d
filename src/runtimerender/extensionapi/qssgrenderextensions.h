@@ -40,7 +40,9 @@ public:
         NormalTexture,
         ABufferImage = AccumTexture,
         AuxiliaryImage = RevealageTexture,
-        CounterImage
+        CounterImage,
+        MotionVectorTexture,
+        RenderResultCount
     };
     Q_DECLARE_FLAGS(RenderResults, RenderResult)
 

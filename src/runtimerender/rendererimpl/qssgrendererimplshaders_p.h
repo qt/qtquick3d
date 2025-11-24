@@ -47,6 +47,8 @@ public:
     QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE, int viewCount);
     QSSGRhiShaderPipelinePtr getRhiSupersampleResolveShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();
+    QSSGRhiShaderPipelinePtr getRhiMotionVectorShader(bool skin, bool instance, bool morph);
+    QSSGRhiShaderPipelinePtr getRhiTemporalAAShader();
     QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
     QSSGRhiShaderPipelinePtr getRhiLightmapDilateShader();
@@ -71,8 +73,10 @@ private:
     };
 
     QSSGRhiShaderPipelinePtr getBuiltinRhiShader(const QByteArray &name,
-                                                BuiltinShader &storage,
-                                                int viewCount = 1);
+                                                 BuiltinShader &storage,
+                                                 int viewCount = 1,
+                                                 QSSGRhiShaderPipeline::StageFlags vertexStageFlags = QSSGRhiShaderPipeline::UsedWithoutIa);
+    static constexpr int motionvectorShaderCount = 8; // (int(skin) << 2) | (int(instance) << 1) | int(morph);
     static constexpr int particleShaderCount = 2;
     static constexpr int compositeShaderCount = 4;
     struct {
@@ -99,6 +103,9 @@ private:
         BuiltinShader cubeMapToAtlasShader;
         BuiltinShader clearShadowMapShader;
         BuiltinShader clearImageShader;
+        BuiltinShader motionVectorRhiShader[motionvectorShaderCount];
+        BuiltinShader temporalAARhiShader;
+
     } m_cache;
 };
 

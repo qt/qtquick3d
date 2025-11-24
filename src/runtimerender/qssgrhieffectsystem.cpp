@@ -167,7 +167,8 @@ void QSSGRhiEffectSystem::releaseTextures()
 QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderLayer &layer,
                                           QRhiTexture *inTexture,
                                           QRhiTexture *inDepthTexture,
-                                          QRhiTexture *inNormalTexture)
+                                          QRhiTexture *inNormalTexture,
+                                          QRhiTexture *inMotionVectorTexture)
 {
     QSSG_ASSERT(m_sgContext != nullptr, return inTexture);
     QSSG_ASSERT(layer.firstEffect != nullptr, return inTexture);
@@ -179,6 +180,7 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderLayer &layer,
 
     m_depthTexture = inDepthTexture;
     m_normalTexture = inNormalTexture;
+    m_motionVectorTexture = inMotionVectorTexture;
     m_cameraClipRange = layer.renderedCameras[0]->clipPlanes;
 
     bool usesProjectionMatrix = false;
@@ -722,6 +724,14 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSSGRenderEffect *inEffe
             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat
         };
         addTextureToShaderPipeline("qt_normalTexture", m_normalTexture, normalSamplerDesc);
+    }
+    if (m_motionVectorTexture) {
+        static const QSSGRhiSamplerDescription motionVectorSamplerDesc {
+            QRhiSampler::Linear, QRhiSampler::Linear,
+            QRhiSampler::None,
+            QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat
+        };
+        addTextureToShaderPipeline("qt_motionVectorTexture", m_motionVectorTexture, motionVectorSamplerDesc);
     }
 }
 

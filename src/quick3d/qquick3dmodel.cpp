@@ -912,6 +912,8 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         const QString path = translateMeshSource(m_source, this);
         modelNode->meshPath = QSSGRenderPath(path, modelNode->lightmapKey);
         modelNode->levelOfDetailBias = m_levelOfDetailBias;
+        modelNode->motionVectorEnabled = m_motionVectorEnabled;
+        modelNode->motionVectorScale = m_motionVectorScale;
     }
 
     if (m_dirtyAttributes & ReflectionDirty) {
@@ -1197,6 +1199,69 @@ void QQuick3DModel::setTexelsPerUnit(float newTexelsPerUnit)
     m_texelsPerUnit = newTexelsPerUnit;
     emit texelsPerUnitChanged();
     markDirty(PropertyDirty);
+}
+
+/*!
+    \qmlproperty bool Model::motionVectorEnabled
+    \since 6.11
+    \default true
+
+    Specifies whether the model participates in the motion vector pass.
+
+    When this property is set to \c true, the model contributes its
+    motion information to the motion vector buffer. This is used by
+    temporal anti-aliasing (TAA) and other effects that rely on
+    per-pixel motion data.
+
+    When set to \c false, the model is excluded from motion vector
+    generation.
+
+    \sa Model::motionVectorScale
+*/
+
+bool QQuick3DModel::motionVectorEnabled() const
+{
+    return m_motionVectorEnabled;
+}
+
+void QQuick3DModel::setMotionVectorEnabled(bool newMotionVectorEnabled)
+{
+    if (m_motionVectorEnabled == newMotionVectorEnabled)
+        return;
+    m_motionVectorEnabled = newMotionVectorEnabled;
+    emit motionVectorEnabledChanged();
+    markDirty(QQuick3DModel::PropertyDirty);
+}
+
+/*!
+    \qmlproperty real Model::motionVectorScale
+    \since 6.11
+    \default 1.0
+
+    Specifies a scaling factor applied to the model's generated motion
+    vectors.
+
+    A value of \c 1.0 preserves the model's actual motion, while values
+    greater than \c 1.0 exaggerate the motion vectors and values lower
+    than \c 1.0 reduce them. This can be useful for stylized effects or
+    fine-tuning visual behavior in effects that rely on the motion
+    vector buffer.
+
+    \sa Model::motionVectorEnabled
+*/
+
+float QQuick3DModel::motionVectorScale() const
+{
+    return m_motionVectorScale;
+}
+
+void QQuick3DModel::setMotionVectorScale(float newMotionVectorScale)
+{
+    if (qFuzzyCompare(m_motionVectorScale, newMotionVectorScale))
+        return;
+    m_motionVectorScale = newMotionVectorScale;
+    emit motionVectorScaleChanged();
+    markDirty(QQuick3DModel::PropertyDirty);
 }
 
 QT_END_NAMESPACE

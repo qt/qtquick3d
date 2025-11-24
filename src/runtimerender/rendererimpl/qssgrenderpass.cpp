@@ -37,6 +37,110 @@ QSSGRenderPass::~QSSGRenderPass()
 
 }
 
+
+// MOTION VECTOR PASS
+
+void MotionVectorMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    Q_UNUSED(renderer)
+    using namespace RenderHelpers;
+
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    camera = data.renderedCameras[0];
+    const auto &layerPrepResult = data.layerPrepResult;
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+
+    const auto &renderedOpaques = data.getSortedOpaqueRenderableObjects(*camera);
+    const auto &renderedTransparent = data.getSortedTransparentRenderableObjects(*camera);
+
+    rhiMotionVectorTexture = data.getRenderResult(QSSGFrameData::RenderResult::MotionVectorTexture);
+    bool textureReady = rhiMotionVectorTexture &&
+            rhiPrepareMotionVectorTexture(rhiCtx.get(), layerPrepResult.textureDimensions(), rhiMotionVectorTexture);
+
+    if (!textureReady) {
+        rhiMotionVectorTexture = nullptr;
+        enabled = false;
+        return;
+    }
+
+    motionVectorMapManager = data.requestMotionVectorMapManager();
+    ps = data.getPipelineState();
+    ps.flags |= { QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled,
+                  QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled };
+    ps.samples = 1;
+    ps.viewCount = data.layer.viewCount;
+
+    for (int i = 0; i < MaxBuckets; ++i)
+        motionVectorPassObjects[i].clear();
+    enabled = false;
+
+    for (const auto &handles : { &renderedOpaques, &renderedTransparent }) {
+        for (const auto &handle : *handles) {
+            if (handle.obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset ||
+                handle.obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
+                QSSGSubsetRenderable *renderable(static_cast<QSSGSubsetRenderable *>(handle.obj));
+                if (handle.obj->renderableFlags.isMotionVectorParticipant()) {
+                    bool skin = renderable->modelContext.model.usesBoneTexture();
+                    bool instance = renderable->modelContext.model.instanceCount() > 0;
+                    bool morph = renderable->modelContext.model.morphTargets.size() > 0;
+                    int bucketIndex = (int(skin) << 2) | (int(instance) << 1) | int(morph);
+                    motionVectorPassObjects[bucketIndex].push_back(handle);
+
+                    QSSGRhiGraphicsPipelineState tempPs = ps;
+
+                    rhiPrepareMotionVectorRenderable(rhiCtx.get(),
+                                                     this,
+                                                     data,
+                                                     *handle.obj,
+                                                     rhiMotionVectorTexture->rpDesc,
+                                                     &tempPs,
+                                                     *motionVectorMapManager);
+                    enabled = true;
+                }
+            }
+        }
+    }
+}
+
+void MotionVectorMapPass::renderPass(QSSGRenderer &renderer)
+{
+    using namespace RenderHelpers;
+    if (enabled) {
+        const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+        QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+        QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D motion vector map"));
+        Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D motion vector map"));
+
+        if (Q_LIKELY(rhiMotionVectorTexture && rhiMotionVectorTexture->isValid())) {
+            cb->beginPass(rhiMotionVectorTexture->rt, QColor(0, 0, 0, 0), { 1.0f, 0 }, nullptr, rhiCtx->commonPassFlags());
+            QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiMotionVectorTexture->rt));
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+
+            rhiRenderMotionVector(rhiCtx.get(),
+                                  ps,
+                                  motionVectorPassObjects,
+                                  MaxBuckets);
+
+            cb->endPass();
+            QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("motion_vector_map"));
+        }
+        cb->debugMarkEnd();
+    }
+}
+
+void MotionVectorMapPass::resetForFrame()
+{
+    QSSG_CHECK(motionVectorMapManager);
+    motionVectorMapManager->endFrame();
+    camera = nullptr;
+    ps = {};
+    rhiMotionVectorTexture = nullptr;
+    for (int i = 0; i < MaxBuckets; ++i)
+        motionVectorPassObjects[i].clear();
+}
+
 // SHADOW PASS
 
 void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)

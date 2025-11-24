@@ -26,6 +26,7 @@ class QSSGRhiContext;
 class QSSGRenderShadowMap;
 class QRhiRenderPassDescriptor;
 class QSSGRenderReflectionMap;
+class QSSGRenderMotionVectorMap;
 class QSSGLayerRenderData;
 struct QSSGReflectionMapEntry;
 class QSSGRhiShaderPipeline;
@@ -186,6 +187,23 @@ bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx,
                             QSSGRhiRenderableTexture *renderableTex,
                             quint8 viewCount,
                             int samples = 1);
+
+bool rhiPrepareMotionVectorTexture(QSSGRhiContext *rhiCtx,
+                                   const QSize &size,
+                                   QSSGRhiRenderableTexture *renderableTex);
+
+void rhiPrepareMotionVectorRenderable(QSSGRhiContext *rhiCtx,
+                                      QSSGPassKey passKey,
+                                      const QSSGLayerRenderData &inData,
+                                      QSSGRenderableObject &inObject,
+                                      QRhiRenderPassDescriptor *renderPassDescriptor,
+                                      QSSGRhiGraphicsPipelineState *ps,
+                                      QSSGRenderMotionVectorMap &motionVectorMapManager);
+
+void rhiRenderMotionVector(QSSGRhiContext *rhiCtx,
+                           const QSSGRhiGraphicsPipelineState &state,
+                           const QSSGRenderableObjectList *motionVectorPassObjects,
+                           int bucketsCount);
 
 inline QRect correctViewportCoordinates(const QRectF &layerViewport, const QRect &deviceRect)
 {

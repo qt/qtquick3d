@@ -1246,6 +1246,11 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
+    \li \c MOTION_VECTOR_TEXTURE — Enables a dedicated rendering pass that computes per-object
+    motion vectors for the scene.
+    The output is a four-channel texture: the R and G components contain the scaled motion vectors
+    of the models, while the B and A components store the unscaled motion vectors.
+
     \li \c VIEW_INDEX - When used in the custom shader code, this is a
     (non-interpolated) uint variable. When \l{Multiview Rendering}{multiview
     rendering} is not used, the value is always 0. With multiview rendering, the
@@ -1708,6 +1713,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesFresnelScaleBias))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::FresnelScaleBias, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesMotionVectorTexture))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::MotionVectorTexture, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesTransmission)) {
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Transmission, true);
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture, true);

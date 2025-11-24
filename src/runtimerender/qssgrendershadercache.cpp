@@ -79,7 +79,8 @@ static constexpr DefineEntry DefineTable[] {
     { "QSSG_DISABLE_MULTIVIEW", QSSGShaderFeatures::Feature::DisableMultiView },
     { "QSSG_FORCE_IBL_EXPOSURE", QSSGShaderFeatures::Feature::ForceIblExposure },
     { "QSSG_ENABLE_NORMAL_PASS", QSSGShaderFeatures::Feature::NormalPass },
-    { "QSSG_ENABLE_USER_RENDER_PASS", QSSGShaderFeatures::Feature::UserRenderPass}
+    { "QSSG_ENABLE_USER_RENDER_PASS", QSSGShaderFeatures::Feature::UserRenderPass},
+    { "QSSG_ENABLE_MOTION_VECTOR", QSSGShaderFeatures::Feature::MotionVector }
 };
 
 static_assert(std::size(DefineTable) == QSSGShaderFeatures::Count, "Missing feature define?");
@@ -666,7 +667,8 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryNewPipelineFromPersistentCache(cons
     return {};
 }
 
-QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinUncached(const QByteArray &inKey, int viewCount)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinUncached(const QByteArray &inKey, int viewCount,
+                                                              QSSGRhiShaderPipeline::StageFlags vertexStageFlags)
 {
     const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
     if (shaderDebug)
@@ -714,7 +716,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinUncached(const QByteArray &
     }
 
     if (vertexShader.isValid() && fragmentShader.isValid()) {
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), QSSGRhiShaderPipeline::UsedWithoutIa);
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), vertexStageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
         if (shaderDebug)
             qDebug("Loading of vertex and fragment stages succeeded");

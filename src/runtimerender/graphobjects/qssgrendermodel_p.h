@@ -64,6 +64,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     bool usedInBakedLighting = false;
     QString lightmapKey;
     float texelsPerUnit = 0.0f;
+    bool motionVectorEnabled = true;
+    float motionVectorScale = 1.0f;
     bool hasLightmap() const { return !lightmapKey.isEmpty(); }
     bool usesBoneTexture() const { return ((skin != nullptr) || (skeleton != nullptr)); }
 

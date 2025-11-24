@@ -472,6 +472,19 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             } // else ignore, not an error
         }
 
+        if (shaderPipeline->MotionVectorTexture()) {
+            int binding = shaderPipeline->bindingForTexture("qt_motionVectorTexture", int(QSSGRhiSamplerBindingHints::MotionVectorTexture));
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->MotionVectorTexture(), sampler);
+
+            }
+        }
+
         // Shadow map atlas
         auto shadowMapAtlas = shaderPipeline->shadowMapAtlasTexture();
         if (shadowMapAtlas) {

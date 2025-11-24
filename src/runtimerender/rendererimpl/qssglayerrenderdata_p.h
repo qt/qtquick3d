@@ -77,7 +77,9 @@ enum class QSSGLayerRenderPreparationResultFlag
     // Set when multisampled depth texture is required
     RequiresDepthTextureMS = 1 << 8,
 
-    RequiresNormalTexture = 1 << 9
+    RequiresNormalTexture = 1 << 9,
+
+    RequiresMotionVectorPass = 1 << 10
 };
 
 struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPreparationResultFlag>
@@ -161,6 +163,15 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     void setRequiresNormalTexture(bool inValue)
     {
         setFlag(QSSGLayerRenderPreparationResultFlag::RequiresNormalTexture, inValue);
+    }
+
+    bool requiresMotionVectorPass() const
+    {
+        return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresMotionVectorPass);
+    }
+    void setRequiresMotionVectorPass(bool inValue)
+    {
+        setFlag(QSSGLayerRenderPreparationResultFlag::RequiresMotionVectorPass, inValue);
     }
 };
 
@@ -337,6 +348,7 @@ public:
     InfiniteGridPass infiniteGridPass;
     DebugDrawPass debugDrawPass;
     NormalPass normalPass;
+    MotionVectorMapPass motionVectorMapPass;
 
     // Built-in passes
     QVarLengthArray<QSSGRenderPass *, 16> activePasses;
@@ -436,11 +448,11 @@ public:
     const QSSGRenderShadowMapPtr &requestShadowMapManager();
     const QSSGRenderReflectionMapPtr &requestReflectionMapManager();
     const QSSGUserRenderPassManagerPtr &requestUserRenderPassManager();
+    const QSSGRenderMotionVectorMapPtr &requestMotionVectorMapManager();
     const QSSGRenderShadowMapPtr &getShadowMapManager() const { return shadowMapManager; }
     const QSSGRenderReflectionMapPtr &getReflectionMapManager() const { return reflectionMapManager; }
     const QSSGUserRenderPassManagerPtr &getUserRenderPassManager() const { return userRenderPassManager; }
-
-
+    const QSSGRenderMotionVectorMapPtr &getMotionvectorMapManager() const { return motionVectorMapManager; }
 
     QSSGOITRenderContext &getOitRenderContext() { return oitRenderContext; }
 
@@ -704,9 +716,10 @@ private:
     QSSGRenderShadowMapPtr shadowMapManager;
     QSSGRenderReflectionMapPtr reflectionMapManager;
     QSSGUserRenderPassManagerPtr userRenderPassManager;
+    QSSGRenderMotionVectorMapPtr motionVectorMapManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
     QHash<const QSSGModelContext *, QRhiTexture *> bonemapTextures;
-    QSSGRhiRenderableTexture renderResults[7] {};
+    QSSGRhiRenderableTexture renderResults[int(QSSGFrameData::RenderResult::RenderResultCount)] {};
     QSSGOITRenderContext oitRenderContext;
 };
 

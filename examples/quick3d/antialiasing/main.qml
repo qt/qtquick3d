@@ -66,6 +66,7 @@ ApplicationWindow {
                                                           ? SceneEnvironment.High : SceneEnvironment.VeryHigh
             temporalAAEnabled: temporalModeButton.checked
             temporalAAStrength: temporalStrengthSlider.value
+            temporalAAMode: temporalModeDefault.checked ? SceneEnvironment.TAADefault : SceneEnvironment.TAAMotionVector
         }
    //! [scene environment]
 
@@ -169,8 +170,28 @@ ApplicationWindow {
                     text: qsTr("Enable Temporal AA")
                 }
 
-                ColumnLayout {
+                GroupBox {
+                    title: qsTr("Temporal AA Mode")
                     enabled: temporalModeButton.checked
+                    ButtonGroup {
+                        buttons: temporalModeColumn.children
+                    }
+                    ColumnLayout {
+                        id: temporalModeColumn
+                        RadioButton {
+                            id: temporalModeDefault
+                            checked: true
+                            text: qsTr("Default")
+                        }
+                        RadioButton {
+                            id: temporalModeMotionVector
+                            text: qsTr("Motion Vector")
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    enabled: temporalModeButton.checked && temporalModeDefault.checked
                     Label {
                         text: qsTr("Temporal AA Strength")
                     }

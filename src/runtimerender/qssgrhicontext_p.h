@@ -279,6 +279,7 @@ enum class QSSGRhiSamplerBindingHints
     ScreenTextureArray,
     AoTextureArray,
     NormalTexture,
+    MotionVectorTexture,
 
     BindingMapSize
 };
@@ -517,6 +518,8 @@ public:
     void setLightmapTexture(QRhiTexture *texture) { m_lightmapTexture = texture; }
     QRhiTexture *lightmapTexture() const { return m_lightmapTexture; }
 
+    void setMotionVectorTexture(QRhiTexture *texture) { m_motionVectorTexture = texture; }
+    QRhiTexture *MotionVectorTexture() const { return m_motionVectorTexture; }
     void setShadowMapAtlasTexture(QRhiTexture *texture) { m_shadowMapAtlasTexture = texture; }
     QRhiTexture *shadowMapAtlasTexture() const { return m_shadowMapAtlasTexture; }
 
@@ -573,6 +576,7 @@ private:
     QRhiTexture *m_ssaoTexture = nullptr;
     QRhiTexture *m_lightmapTexture = nullptr;
     QRhiTexture *m_oitImages[3] = {nullptr};
+    QRhiTexture *m_motionVectorTexture = nullptr;
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures;
 };
 

@@ -136,6 +136,7 @@ enum class Feature : FlagType
     ForceIblExposure = (1 << 25) + 17,
     NormalPass = (1 << 26) + 18,
     UserRenderPass = (1 << 27) + 19,
+    MotionVector = (1 << 28) + 20,
     LastFeature
 };
 
@@ -237,7 +238,8 @@ private:
     QString m_persistentShaderStorageFileName;
     QSSGBuiltInRhiShaderCache m_builtInShaders;
 
-    QSSGRhiShaderPipelinePtr loadBuiltinUncached(const QByteArray &inKey, int viewCount);
+    QSSGRhiShaderPipelinePtr loadBuiltinUncached(const QByteArray &inKey, int viewCount,
+                                                 QSSGRhiShaderPipeline::StageFlags vertexStageFlags);
 
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,

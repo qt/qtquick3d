@@ -19,7 +19,8 @@ QT_BEGIN_NAMESPACE
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getBuiltinRhiShader(const QByteArray &name,
                                                                         BuiltinShader &storage,
-                                                                        int viewCount)
+                                                                        int viewCount,
+                                                                        QSSGRhiShaderPipeline::StageFlags vertexStageFlags)
 {
     if (storage.shaderPipeline && storage.viewCount != viewCount)
         storage = {};
@@ -27,7 +28,7 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getBuiltinRhiShader(const QB
     if (!storage.shaderPipeline) {
         // loadBuiltin must always return a valid QSSGRhiShaderPipeline.
         // There will just be no stages if loading fails.
-        storage.shaderPipeline = m_shaderCache.loadBuiltinUncached(name, viewCount);
+        storage.shaderPipeline = m_shaderCache.loadBuiltinUncached(name, viewCount, vertexStageFlags);
         storage.viewCount = viewCount;
     }
 
@@ -111,6 +112,25 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSupersampleResolveShad
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiProgressiveAAShader()
 {
     return getBuiltinRhiShader(QByteArrayLiteral("progressiveaa"), m_cache.progressiveAARhiShader);
+}
+
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiMotionVectorShader(bool skin, bool instance, bool morph)
+{
+    QByteArray shaderName = "motionvector";
+    if (skin)
+        shaderName += "_skin";
+    if (instance)
+        shaderName += "_instance";
+    if (morph)
+        shaderName += "_morph";
+
+    int index = (int(skin) << 2) | (int(instance) << 1) | int(morph);
+    return getBuiltinRhiShader(shaderName, m_cache.motionVectorRhiShader[index], 1, {});
+}
+
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiTemporalAAShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("temporalaa"), m_cache.temporalAARhiShader);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSimpleQuadShader(int viewCount)

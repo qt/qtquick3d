@@ -37,6 +37,11 @@
     The \l [QML] {SceneEnvironment::antialiasingQuality}{antialiasing quality} can be set to \c Medium, \c High, or \c VeryHigh.
 
     In addition, \l [QML] {SceneEnvironment::temporalAAEnabled}{temporal antialiasing} can be enabled independently.
+    The \l [QML] {SceneEnvironment::temporalAAMode}{temporal antialiasing mode} can be set to one of the following:
+    \list
+    \li \c TAADefault for basic temporal antialiasing
+    \li \c TAAMotionVector for higher-quality temporal antialiasing which uses motion vectors
+    \endlist
 
     \snippet antialiasing/main.qml scene environment
 

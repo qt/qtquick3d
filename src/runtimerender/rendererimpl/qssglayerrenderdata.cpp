@@ -1414,6 +1414,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
 
     retval.firstImage = nullptr;
 
+    if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::MotionVectorTexture))
+        ioFlags.setRequiresMotionVectorPass(true);
+
     if (retval.dirty || alreadyDirty)
         renderer->addMaterialDirtyClear(&inMaterial);
     return retval;
@@ -1551,6 +1554,8 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
 
         if (meshSubsetCount > 0) {
             const QSSGRenderSubset &theSubset = meshSubsets.at(0);
+
+            renderableFlagsForModel.setMotionVectorParticipant(model.motionVectorEnabled);
 
             renderableFlagsForModel.setCastsShadows(model.castsShadows);
             renderableFlagsForModel.setReceivesShadows(model.receivesShadows);
@@ -2220,6 +2225,7 @@ void QSSGLayerRenderData::prepareForRender()
     // Effects
     bool requiresDepthTexture = SSAOEnabled;
     bool requiresNormalTexture = false;
+    bool requiresMotionVectorTexture = false;
     for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
         if (theEffect->isDirty()) {
             wasDirty = true;
@@ -2229,6 +2235,8 @@ void QSSGLayerRenderData::prepareForRender()
             requiresDepthTexture = true;
         if (theEffect->testFlag(QSSGRenderEffect::Flags::UsesNormalTexture))
             requiresNormalTexture = true;
+        if (theEffect->testFlag(QSSGRenderEffect::Flags::UsesMotionVectorTexture))
+            requiresMotionVectorTexture = true;
     }
 
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
@@ -2251,6 +2259,8 @@ void QSSGLayerRenderData::prepareForRender()
     layerPrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
 
     layerPrepResult.flags.setRequiresNormalTexture(requiresNormalTexture);
+
+    layerPrepResult.flags.setRequiresMotionVectorPass(requiresMotionVectorTexture);
 
     // Tonemapping. Except when there are effects, then it is up to the
     // last pass of the last effect to perform tonemapping.
@@ -2719,9 +2729,19 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     if (temporalAA) {
-        const int t = 1 - 2 * (layer.tempAAPassIndex % 2);
-        const float f = t * layer.temporalAAStrength;
-        vertexOffsetsAA = { f / float(theViewport.width()/2.0), f / float(theViewport.height()/2.0) };
+        if (layer.temporalAAMode == QSSGRenderLayer::TAAMode::MotionVector && layer.tempAAPassIndex > 0) {
+            if (layer.tempAAPassIndex >= quint32(MAX_AA_LEVELS) + 1)
+                layer.tempAAPassIndex = 1;
+            int idx = layer.tempAAPassIndex - 1;
+            vertexOffsetsAA = s_ProgressiveAAVertexOffsets[idx] / QVector2D{ float(theViewport.width()/2.0), float(theViewport.height()/2.0) };
+            layer.currentAndLastJitter = QVector4D(vertexOffsetsAA, layer.currentAndLastJitter.x(), layer.currentAndLastJitter.y());
+            layerPrepResult.flags.setRequiresMotionVectorPass(true);
+            layerPrepResult.flags.setRequiresDepthTexture(true);
+        }else {
+            const int t = 1 - 2 * (layer.tempAAPassIndex % 2);
+            const float f = t * layer.temporalAAStrength;
+            vertexOffsetsAA = { f / float(theViewport.width()/2.0), f / float(theViewport.height()/2.0) };
+        }
     }
 
     if (!renderedCameras.isEmpty()) {
@@ -2804,6 +2824,10 @@ void QSSGLayerRenderData::prepareForRender()
 
     if (hasOpaqueObjects && !disableMainPasses)
         activePasses.push_back(&opaquePass);
+
+    // MotionVector Pass
+    if (layerPrepResult.flags.requiresMotionVectorPass())
+        activePasses.push_back(&motionVectorMapPass);
 
     // NOTE: When the a screen texture is used, the skybox pass will be called twice. First from
     // the screen texture pass and later as part of the normal run through the list.
@@ -3159,11 +3183,19 @@ const QSSGRenderReflectionMapPtr &QSSGLayerRenderData::requestReflectionMapManag
     return reflectionMapManager;
 }
 
+
 const QSSGUserRenderPassManagerPtr &QSSGLayerRenderData::requestUserRenderPassManager()
 {
     if (!userRenderPassManager && QSSG_GUARD(renderer && renderer->contextInterface()))
         userRenderPassManager.reset(new QSSGUserRenderPassManager(*renderer->contextInterface()));
     return userRenderPassManager;
+}
+
+const QSSGRenderMotionVectorMapPtr &QSSGLayerRenderData::requestMotionVectorMapManager()
+{
+    if (!motionVectorMapManager && QSSG_GUARD(renderer && renderer->contextInterface()))
+        motionVectorMapManager.reset(new QSSGRenderMotionVectorMap(*renderer->contextInterface()));
+    return motionVectorMapManager;
 }
 
 QT_END_NAMESPACE

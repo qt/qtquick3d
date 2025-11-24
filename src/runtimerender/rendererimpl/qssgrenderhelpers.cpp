@@ -3664,4 +3664,312 @@ void RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
     }
 }
 
+bool RenderHelpers::rhiPrepareMotionVectorTexture(QSSGRhiContext *rhiCtx,
+                                   const QSize &size,
+                                   QSSGRhiRenderableTexture *renderableTex){
+    QRhi *rhi = rhiCtx->rhi();
+    bool needsBuild = false;
+    QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
+    if (!renderableTex->texture) {
+        renderableTex->texture = rhi->newTexture(QRhiTexture::RGBA16F, size, 1, flags);
+        needsBuild = true;
+    } else if (renderableTex->texture->pixelSize() != size) {
+        renderableTex->texture->setPixelSize(size);
+        needsBuild = true;
+    }
+
+    if (!renderableTex->depthStencil && !renderableTex->depthTexture) {
+        renderableTex->depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size);
+        needsBuild = true;
+    } else {
+        if (renderableTex->depthStencil && renderableTex->depthStencil->pixelSize() != size) {
+            renderableTex->depthStencil->setPixelSize(size);
+            needsBuild = true;
+        }
+    }
+
+    if (needsBuild) {
+        if (!renderableTex->texture->create()) {
+            qWarning("Failed to build motionvector texture (size %dx%d)", size.width(), size.height());
+            renderableTex->reset();
+            return false;
+        }
+        if (renderableTex->depthStencil && !renderableTex->depthStencil->create()) {
+            qWarning("Failed to build depth-stencil buffer for motionvector texture (size %dx%d)",
+                     size.width(), size.height());
+            renderableTex->reset();
+            return false;
+        }
+        renderableTex->resetRenderTarget();
+        QRhiTextureRenderTargetDescription desc;
+        QRhiColorAttachment colorAttachment(renderableTex->texture);
+        desc.setColorAttachments({ colorAttachment });
+        if (renderableTex->depthStencil)
+            desc.setDepthStencilBuffer(renderableTex->depthStencil);
+        renderableTex->rt = rhi->newTextureRenderTarget(desc);
+        renderableTex->rt->setName(QByteArrayLiteral("Motionvector texture"));
+        renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
+        renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
+        if (!renderableTex->rt->create()) {
+            qWarning("Failed to build render target for motionvector texture");
+            renderableTex->reset();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void RenderHelpers::rhiPrepareMotionVectorRenderable(QSSGRhiContext *rhiCtx,
+                                                     QSSGPassKey passKey,
+                                                     const QSSGLayerRenderData &inData,
+                                                     QSSGRenderableObject &inObject,
+                                                     QRhiRenderPassDescriptor *renderPassDescriptor,
+                                                     QSSGRhiGraphicsPipelineState *ps,
+                                                     QSSGRenderMotionVectorMap &motionVectorMapManager)
+{
+    if (inObject.type != QSSGRenderableObject::Type::DefaultMaterialMeshSubset &&
+        inObject.type != QSSGRenderableObject::Type::CustomMaterialMeshSubset)
+        return;
+
+    QSSGSubsetRenderable &subsetRenderable = static_cast<QSSGSubsetRenderable &>(inObject);
+    auto &modelNode = subsetRenderable.modelContext.model;
+
+    bool skin = modelNode.usesBoneTexture();
+    bool instance = modelNode.instanceCount() > 0;
+    bool morph = modelNode.morphTargets.size() > 0;
+
+    QSSGRhiShaderPipelinePtr shaderPipeline = inData.contextInterface()->shaderCache()->
+                                              getBuiltInRhiShaders().getRhiMotionVectorShader(skin, instance, morph);
+
+    if (!shaderPipeline)
+        return;
+
+    QSSGRhiShaderResourceBindingList bindings;
+
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
+    QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, &modelNode, nullptr, 0 });
+
+
+    QSSGRenderTextureData *boneTextureData = nullptr;
+    if (modelNode.skin)
+        boneTextureData = modelNode.skin;
+    else if (modelNode.skeleton)
+        boneTextureData = &modelNode.skeleton->boneTexData;
+
+    QMatrix4x4 modelViewProjection = subsetRenderable.modelContext.modelViewProjections[0];
+    auto motionData = motionVectorMapManager.trackMotionData(&modelNode, modelViewProjection, boneTextureData,
+                                                           modelNode.instanceTable,
+                                                           modelNode.morphWeights);
+    float velocityAmount = subsetRenderable.modelContext.model.motionVectorScale;
+    int morphTargetCount = modelNode.morphWeights.count();
+
+    // mat4 mvp;                    // 64
+    // mat4 prevMVP;                // 64
+    // vec4 currentAndLastJitter;   // 16
+    // float velocityAmount;        // 4
+    // int morphTargetCount;        // 4
+    // vec2 padding;                // 8
+    const int ubufSize = 160;
+
+    if (!dcd.ubuf) {
+        dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic,
+                                            QRhiBuffer::UniformBuffer,
+                                            ubufSize);
+        dcd.ubuf->create();
+    }
+
+    char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+    int ubufOffset = 0;
+    memcpy(ubufData, modelViewProjection.constData(), 64);
+    ubufOffset += 64;
+    memcpy(ubufData + ubufOffset, motionData.prevModelViewProjection.constData(), 64);
+    ubufOffset += 64;
+    memcpy(ubufData + ubufOffset, &inData.layer.currentAndLastJitter, 16);
+    ubufOffset += 16;
+    memcpy(ubufData + ubufOffset, &velocityAmount, 4);
+    ubufOffset += 4;
+    memcpy(ubufData + ubufOffset, &morphTargetCount, 4);
+    dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+    bindings.addUniformBuffer(0, QRhiShaderResourceBinding::VertexStage |
+                                      QRhiShaderResourceBinding::FragmentStage, dcd.ubuf);
+
+    QRhiSampler *nearestSampler = nullptr;
+
+    if (skin || instance) {
+        nearestSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                QRhiSampler::Nearest,
+                QRhiSampler::None,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::Repeat
+        });
+    }
+
+    if (skin) {
+        int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
+        if (binding >= 0) {
+
+            bindings.addTexture(binding,
+                                QRhiShaderResourceBinding::VertexStage,
+                                inData.getBonemapTexture(subsetRenderable.modelContext),
+                                nearestSampler);
+            binding = shaderPipeline->bindingForTexture("lastBoneTexture");
+            if (binding >= 0) {
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::VertexStage,
+                                    motionData.prevBoneTexture.m_texture,
+                                    nearestSampler);
+            }
+        }
+    }
+
+    if (instance) {
+        int binding = shaderPipeline->bindingForTexture("lastInstanceTexture");
+        if (binding >= 0) {
+            bindings.addTexture(binding,
+                                QRhiShaderResourceBinding::VertexStage,
+                                motionData.prevInstanceTexture.m_texture,
+                                nearestSampler);
+        }
+    }
+
+    auto *targetsTexture = subsetRenderable.subset.rhi.targetsTexture;
+    if (targetsTexture) {
+        int binding = shaderPipeline->bindingForTexture("qt_morphTargetTexture");
+        if (binding >= 0) {
+            QRhiSampler *targetsSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                    QRhiSampler::Nearest,
+                    QRhiSampler::None,
+                    QRhiSampler::ClampToEdge,
+                    QRhiSampler::ClampToEdge,
+                    QRhiSampler::ClampToEdge
+            });
+            bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, subsetRenderable.subset.rhi.targetsTexture, targetsSampler);
+
+            if ((binding = shaderPipeline->bindingForTexture("morphWeightTexture")) >= 0)
+                bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, motionData.currentMorphWeightTexture.m_texture, targetsSampler);
+
+            if ((binding = shaderPipeline->bindingForTexture("lastMorphWeightTexture")) >= 0)
+                bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, motionData.prevMorphWeightTexture.m_texture, targetsSampler);
+        }
+    }
+
+    auto &ia = QSSGRhiInputAssemblerStatePrivate::get(*ps);
+    ia = subsetRenderable.subset.rhi.ia;
+    const QSSGRenderCameraDataList &cameraDatas(*inData.renderedCameraData);
+    QVector3D cameraDirection = cameraDatas[0].direction;
+    QVector3D cameraPosition = cameraDatas[0].position;
+    int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDirection, cameraPosition);
+    QSSGRhiHelpers::bakeVertexInputLocations(&ia, *shaderPipeline, instanceBufferBinding);
+    QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
+
+    QRhiShaderResourceBindings *&srb = dcd.srb;
+    bool srbChanged = false;
+    if (!srb || bindings != dcd.bindings) {
+        srb = rhiCtxD->srb(bindings);
+        rhiCtxD->releaseCachedSrb(dcd.bindings);
+        dcd.bindings = bindings;
+        srbChanged = true;
+    }
+
+    subsetRenderable.rhiRenderData.motionVectorPass.srb = srb;
+
+    const auto pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
+    if (dcd.pipeline
+        && !srbChanged
+        && dcd.renderTargetDescriptionHash == pipelineKey.extra.renderTargetDescriptionHash
+        && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
+        && dcd.ps == *ps)
+    {
+        subsetRenderable.rhiRenderData.motionVectorPass.pipeline = dcd.pipeline;
+    } else {
+
+        subsetRenderable.rhiRenderData.motionVectorPass.pipeline = rhiCtxD->pipeline(pipelineKey,
+                                                                                     renderPassDescriptor,
+                                                                                     srb);
+        dcd.pipeline = subsetRenderable.rhiRenderData.motionVectorPass.pipeline;
+        dcd.renderTargetDescriptionHash = pipelineKey.extra.renderTargetDescriptionHash;
+        dcd.renderTargetDescription = pipelineKey.renderTargetDescription;
+        dcd.ps = *ps;
+    }
+}
+
+void RenderHelpers::rhiRenderMotionVector(QSSGRhiContext *rhiCtx,
+                                          const QSSGRhiGraphicsPipelineState &state,
+                                          const QSSGRenderableObjectList *motionVectorPassObjects,
+                                          int bucketsCount)
+{
+    bool needsSetViewport = true;
+
+    auto renderObjectList = [&](const QSSGRenderableObjectList &objects) {
+        for (const auto &handle : objects) {
+            QSSGRenderableObject &object = *handle.obj;
+
+            // Only handle mesh subsets
+            if (object.type != QSSGRenderableObject::Type::DefaultMaterialMeshSubset &&
+                object.type != QSSGRenderableObject::Type::CustomMaterialMeshSubset)
+                continue;
+
+            QSSGSubsetRenderable &subsetRenderable = static_cast<QSSGSubsetRenderable &>(object);
+
+            QRhiGraphicsPipeline *ps = subsetRenderable.rhiRenderData.motionVectorPass.pipeline;
+            QRhiShaderResourceBindings *srb = subsetRenderable.rhiRenderData.motionVectorPass.srb;
+
+            if (!ps || !srb)
+                return;
+
+            QRhiBuffer *vertexBuffer = subsetRenderable.subset.rhi.vertexBuffer->buffer();
+            QRhiBuffer *indexBuffer = subsetRenderable.subset.rhi.indexBuffer ? subsetRenderable.subset.rhi.indexBuffer->buffer() : nullptr;
+
+            QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+            // QRhi optimizes out unnecessary binding of the same pipline
+            cb->setGraphicsPipeline(ps);
+            cb->setShaderResources(srb);
+
+            if (needsSetViewport) {
+                cb->setViewport(state.viewport);
+                if (state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::UsesScissor))
+                    cb->setScissor(state.scissor);
+                needsSetViewport = false;
+            }
+
+            QRhiCommandBuffer::VertexInput vertexBuffers[2];
+            int vertexBufferCount = 1;
+            vertexBuffers[0] = QRhiCommandBuffer::VertexInput(vertexBuffer, 0);
+            quint32 instances = 1;
+            if ( subsetRenderable.modelContext.model.instancing()) {
+                instances = subsetRenderable.modelContext.model.instanceCount();
+                // If the instance count is 0, bail out before trying to do any
+                // draw calls. Making an instanced draw call with a count of 0 is invalid
+                // for Metal and likely other API's as well.
+                // It is possible that the particle systems may produce 0 instances here
+                if (instances == 0)
+                    return;
+                vertexBuffers[1] = QRhiCommandBuffer::VertexInput(subsetRenderable.instanceBuffer, 0);
+                vertexBufferCount = 2;
+            }
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
+            if (state.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef))
+                cb->setStencilRef(state.stencilRef);
+            if (indexBuffer) {
+                cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.indexBuffer->indexFormat());
+                cb->drawIndexed(subsetRenderable.subset.lodCount(subsetRenderable.subsetLevelOfDetail), instances, subsetRenderable.subset.lodOffset(subsetRenderable.subsetLevelOfDetail));
+                QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable.subset.lodCount(subsetRenderable.subsetLevelOfDetail), instances));
+            } else {
+                cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
+                cb->draw(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);
+                QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable.subset.count, instances));
+            }
+            Q_QUICK3D_PROFILE_END_WITH_IDS(QQuick3DProfiler::Quick3DRenderCall, (subsetRenderable.subset.count | quint64(instances) << 32),
+                                           QVector<int>({subsetRenderable.modelContext.model.profilingId,
+                                                          subsetRenderable.material.profilingId}));
+        }
+    };
+
+    for (int i = 0; i < bucketsCount; ++i)
+        renderObjectList(motionVectorPassObjects[i]);
+}
+
 QT_END_NAMESPACE

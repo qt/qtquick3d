@@ -62,7 +62,8 @@ enum class QSSGRenderableObjectFlag : quint32
     RendersWithLightmap = 1 << 18,
     HasAttributeTexCoordLightmap = 1 << 19,
     CastsReflections = 1 << 20,
-    RequiresNormalTexture = 1 << 21
+    RequiresNormalTexture = 1 << 21,
+    IsMotionVectorParticipant = 1 << 22
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -156,6 +157,8 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     bool requiresNormalTexture() const {
         return this->operator&(QSSGRenderableObjectFlag::RequiresNormalTexture);
     }
+    void setMotionVectorParticipant(bool v) { setFlag(QSSGRenderableObjectFlag::IsMotionVectorParticipant, v); }
+    bool isMotionVectorParticipant() const { return this->operator&(QSSGRenderableObjectFlag::IsMotionVectorParticipant); }
 };
 
 struct QSSGShaderLight
@@ -374,9 +377,11 @@ public:
             QRhiGraphicsPipeline *pipeline = nullptr;
             QRhiShaderResourceBindings *srb = nullptr;
         } normalPass;
-
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb = nullptr;
+        } motionVectorPass;
         RhiPassData userPassData[16] {};
-
     } rhiRenderData;
 
     QSSGSubsetRenderable(Type type,

@@ -55,6 +55,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrendershadermetadata.cpp qssgrendershadermetadata_p.h
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
         qssgrenderreflectionmap.cpp qssgrenderreflectionmap_p.h
+        qssgrendermotionvectormap.cpp qssgrendermotionvectormap_p.h
         qssgrenderpickresult_p.h qssgrenderpickresult.h
         qssgrhiparticles.cpp qssgrhiparticles_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h qssgrhicontext.h
@@ -242,6 +243,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_pertarget"
         res/rhishaders/ssaaresolve.frag
         res/rhishaders/progressiveaa.vert
         res/rhishaders/progressiveaa.frag
+        res/rhishaders/temporalaa.vert
+        res/rhishaders/temporalaa.frag
         res/rhishaders/simplequad.vert
         res/rhishaders/simplequad.frag
 )
@@ -535,6 +538,153 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_filmic"
     DEFINES
         QSSG_ENABLE_FILMIC_TONEMAPPING=1
         QSSG_ENABLE_RGBE_LIGHT_PROBE=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector.vert.qsb
+        res/rhishaders/motionvector.frag.qsb
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector_morph"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector_morph.vert.qsb
+        res/rhishaders/motionvector_morph.frag.qsb
+    DEFINES
+        QSSG_MORPH=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector_instance"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector_instance.vert.qsb
+        res/rhishaders/motionvector_instance.frag.qsb
+    DEFINES
+        QSSG_INSTANCE=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector_instance_morph"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector_instance_morph.vert.qsb
+        res/rhishaders/motionvector_instance_morph.frag.qsb
+    DEFINES
+        QSSG_INSTANCE=1
+        QSSG_MORPH=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector_skin"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector_skin.vert.qsb
+        res/rhishaders/motionvector_skin.frag.qsb
+    DEFINES
+        QSSG_SKIN=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector_skin_morph"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector_skin_morph.vert.qsb
+        res/rhishaders/motionvector_skin_morph.frag.qsb
+    DEFINES
+        QSSG_SKIN=1
+        QSSG_MORPH=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector_skin_instance"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector_skin_instance.vert.qsb
+        res/rhishaders/motionvector_skin_instance.frag.qsb
+    DEFINES
+        QSSG_SKIN=1
+        QSSG_INSTANCE=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_motionvector_skin_instance_morph"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/motionvector.vert
+        res/rhishaders/motionvector.frag
+    OUTPUTS
+        res/rhishaders/motionvector_skin_instance_morph.vert.qsb
+        res/rhishaders/motionvector_skin_instance_morph.frag.qsb
+    DEFINES
+        QSSG_SKIN=1
+        QSSG_INSTANCE=1
+        QSSG_MORPH=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skyboxcube_runtime_tonemapping"
     SILENT

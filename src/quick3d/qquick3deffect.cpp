@@ -685,6 +685,7 @@ static inline void resetShaderDependentEffectFlags(QSSGRenderEffect *effectNode)
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesInverseProjectionMatrix, false);
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesViewMatrix, false);
     effectNode->setFlag(QSSGRenderEffect::Flags::UsesNormalTexture, false);
+    effectNode->setFlag(QSSGRenderEffect::Flags::UsesMotionVectorTexture, false);
 }
 
 static inline void accumulateEffectFlagsFromShader(QSSGRenderEffect *effectNode, const QSSGCustomShaderMetaData &meta)
@@ -699,6 +700,8 @@ static inline void accumulateEffectFlagsFromShader(QSSGRenderEffect *effectNode,
         effectNode->setFlag(QSSGRenderEffect::Flags::UsesViewMatrix);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesNormalTexture))
         effectNode->setFlag(QSSGRenderEffect::Flags::UsesNormalTexture);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesMotionVectorTexture))
+        effectNode->setFlag(QSSGRenderEffect::Flags::UsesMotionVectorTexture);
 }
 
 QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *node)

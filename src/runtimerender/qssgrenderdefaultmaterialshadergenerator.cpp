@@ -2305,12 +2305,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QSSGRhiRenderableTexture *normalTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::NormalTexture);
     const QSSGRhiRenderableTexture *ssaoTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::AoTexture);
     const QSSGRhiRenderableTexture *screenTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::ScreenTexture);
+    const QSSGRhiRenderableTexture *motionVectorTexture = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::MotionVectorTexture);
 
     shaders.setDepthTexture(depthTexture->texture);
     shaders.setNormalTexture(normalTexture->texture);
     shaders.setSsaoTexture(ssaoTexture->texture);
     shaders.setScreenTexture(screenTexture->texture);
     shaders.setLightmapTexture(lightmapTexture);
+    shaders.setMotionVectorTexture(motionVectorTexture->texture);
 
     const QSSGRhiRenderableTexture *abuf = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::ABufferImage);
     const QSSGRhiRenderableTexture *aux = inRenderProperties.getRenderResult(QSSGFrameData::RenderResult::AuxiliaryImage);
