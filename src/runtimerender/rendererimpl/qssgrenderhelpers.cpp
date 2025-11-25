@@ -703,6 +703,12 @@ void RenderHelpers::addAccumulatorImageBindings(QSSGRhiShaderPipeline *shaderPip
     const auto images = shaderPipeline->oitImages();
     if (!images[0])
         return;
+
+#ifdef QSSG_OIT_USE_BUFFERS
+    bindings.addStorageBuffer(3, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[0]);
+    bindings.addStorageBuffer(4, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[1]);
+    bindings.addStorageBuffer(5, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[2]);
+#else
     int abuf = shaderPipeline->bindingForImage("qt_imgAbuffer");
     int aux = shaderPipeline->bindingForImage("qt_imgAux");
     int counter = shaderPipeline->bindingForImage("qt_imgCounter");
@@ -714,6 +720,7 @@ void RenderHelpers::addAccumulatorImageBindings(QSSGRhiShaderPipeline *shaderPip
     // atomic operations require loadstore
     bindings.addImageLoadStore(aux, QRhiShaderResourceBinding::FragmentStage, images[1], 0);
     bindings.addImageLoadStore(counter, QRhiShaderResourceBinding::FragmentStage, images[2], 0);
+#endif
 }
 
 static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,

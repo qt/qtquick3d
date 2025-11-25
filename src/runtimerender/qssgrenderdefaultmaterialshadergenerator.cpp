@@ -22,6 +22,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
 
 #include <QtCore/QByteArray>
 
@@ -1769,16 +1770,27 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.append("    revealageOutput = vec4(qt_color_sum.a);");
         } else if (passRequirmentState.oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
             fragmentShader.addInclude("tonemapping.glsllib");
-            fragmentShader.addInclude("oitlinkedlist.glsllib");
             fragmentShader.addUniform("qt_listNodeCount", "uint");
             fragmentShader.addUniform("qt_ABufImageWidth", "uint");
             fragmentShader.addUniform("qt_viewSize", "ivec2");
             if (passRequirmentState.oitMSAA)
                 fragmentShader.addDefinition("QSSG_MULTISAMPLE", "1");
+#ifdef QSSG_OIT_USE_BUFFERS
+            QSSGShaderResourceMergeContext::setAdditionalBufferAmount(3);
+            fragmentShader.addUniform("qt_samples", "uint");
+            fragmentShader.addInclude("oitlinkedlist_buf.glsllib");
+            if (viewCount >= 2)
+                fragmentShader.append("    fragOutput = qt_oitLinkedList(qt_tonemap(qt_color_sum), qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, qt_viewIndex, qt_samples);");
+            else
+                fragmentShader.append("    fragOutput = qt_oitLinkedList(qt_tonemap(qt_color_sum), qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, 0, qt_samples);");
+#else
+            fragmentShader.addInclude("oitlinkedlist.glsllib");
             if (viewCount >= 2)
                 fragmentShader.append("    fragOutput = qt_oitLinkedList(qt_tonemap(qt_color_sum), qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, qt_viewIndex);");
             else
                 fragmentShader.append("    fragOutput = qt_oitLinkedList(qt_tonemap(qt_color_sum), qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, 0);");
+#endif
+
         } else {
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_color_sum));");
@@ -2318,17 +2330,26 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders.setLightmapTexture(lightmapTexture);
     shaders.setMotionVectorTexture(motionVectorTexture->texture);
 
+#ifdef QSSG_OIT_USE_BUFFERS
+    shaders.setOITImages((QRhiTexture*)inRenderProperties.getOitRenderContextConst().aBuffer,
+                         (QRhiTexture*)inRenderProperties.getOitRenderContextConst().auxBuffer,
+                         (QRhiTexture*)inRenderProperties.getOitRenderContextConst().counterBuffer);
+    if (inRenderProperties.getOitRenderContextConst().aBuffer) {
+#else
     const QSSGRhiRenderableTexture *abuf = inRenderProperties.getRenderResult(QSSGRenderResult::Key::ABufferImage);
     const QSSGRhiRenderableTexture *aux = inRenderProperties.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
     const QSSGRhiRenderableTexture *counter = inRenderProperties.getRenderResult(QSSGRenderResult::Key::CounterImage);
     shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
     if (abuf->texture) {
+#endif
         int abufWidth = RenderHelpers::rhiCalculateABufferSize(inRenderProperties.layer.oitNodeCount);
         int listNodeCount = abufWidth * abufWidth;
         shaders.setUniform(ubufData, "qt_ABufImageWidth", &abufWidth, sizeof(int), &cui.abufImageWidth);
         shaders.setUniform(ubufData, "qt_listNodeCount", &listNodeCount, sizeof(int), &cui.listNodeCount);
         int viewSize[2] = {inRenderProperties.layerPrepResult.textureDimensions().width(), inRenderProperties.layerPrepResult.textureDimensions().height()};
         shaders.setUniform(ubufData, "qt_viewSize", viewSize, sizeof(int) * 2, &cui.viewSize);
+        int samples = inPipelineState->samples;
+        shaders.setUniform(ubufData, "qt_samples", &samples, sizeof(int), &cui.samples);
     }
 
     const QSSGRenderLayer &layer = QSSGLayerRenderData::getCurrent(*renderContext.renderer())->layer;

@@ -57,10 +57,11 @@ public:
     QSSGRhiShaderPipelinePtr getRhienvironmentmapPreFilterShader(bool isRGBE);
     QSSGRhiShaderPipelinePtr getRhiEnvironmentmapShader();
     QSSGRhiShaderPipelinePtr getRhiClearMRTShader();
-    QSSGRhiShaderPipelinePtr getRhiOitCompositeShader(QSSGRenderLayer::OITMethod method, bool multisample);
+    QSSGRhiShaderPipelinePtr getRhiOitCompositeShader(QSSGRenderLayer::OITMethod method, bool multisample, bool use_buffers = false);
     QSSGRhiShaderPipelinePtr getRhiCubeMapToAtlasShader();
     QSSGRhiShaderPipelinePtr getRhiClearShadowMapShader();
     QSSGRhiShaderPipelinePtr getRhiClearImageShader();
+    QSSGRhiShaderPipelinePtr getRhiClearBufferShader();
 
 private:
     QSSGShaderCache &m_shaderCache; // We're owned by the shadercache
@@ -78,7 +79,7 @@ private:
                                                  QSSGRhiShaderPipeline::StageFlags vertexStageFlags = QSSGRhiShaderPipeline::UsedWithoutIa);
     static constexpr int motionvectorShaderCount = 8; // (int(skin) << 2) | (int(instance) << 1) | int(morph);
     static constexpr int particleShaderCount = 2;
-    static constexpr int compositeShaderCount = 4;
+    static constexpr int compositeShaderCount = 6;
     struct {
         BuiltinShader gridShader;
         BuiltinShader ssaoRhiShader;
@@ -103,9 +104,9 @@ private:
         BuiltinShader cubeMapToAtlasShader;
         BuiltinShader clearShadowMapShader;
         BuiltinShader clearImageShader;
+        BuiltinShader clearBufferShader;
         BuiltinShader motionVectorRhiShader[motionvectorShaderCount];
         BuiltinShader temporalAARhiShader;
-
     } m_cache;
 };
 

@@ -111,6 +111,10 @@ qt_internal_add_module(Quick3DRuntimeRender
         "(^|/)qssg.*[^_][^p]\\.h$"
 )
 
+if (MACOS)
+    target_compile_definitions(Quick3DRuntimeRender PRIVATE QSSG_OIT_USE_BUFFERS)
+endif()
+
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools
     PUBLIC_LIBRARIES
         Qt::ShaderTools
@@ -165,6 +169,7 @@ set(res_resource_files
     "res/effectlib/oitcommon.glsllib"
     "res/effectlib/oitweightedblended.glsllib"
     "res/effectlib/oitlinkedlist.glsllib"
+    "res/effectlib/oitlinkedlist_buf.glsllib"
     "res/effectlib/lightsData.glsllib"
     "res/effectlib/funcprocessPunctualLighting.glsllib"
     "res/effectlib/custommaterialforwarddeclarations.glsllib"
@@ -849,6 +854,23 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_clearimage"
         res/rhishaders/clearimage.frag.qsb
 )
 
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_clearbuffer"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "320es,430"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/clearimage.vert
+        res/rhishaders/clearimage.frag
+    OUTPUTS
+        res/rhishaders/clearbuffer.vert.qsb
+        res/rhishaders/clearbuffer.frag.qsb
+    DEFINES
+        QSSG_CLEAR_BUFFER=1
+)
+
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_weightedblended"
     SILENT
     PRECOMPILE
@@ -923,6 +945,45 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_linkedlist_m
     DEFINES
         QSSG_OIT_METHOD=2
         QSSG_MULTISAMPLE
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_linkedlist_buf"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "320es,430"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/oitcomposite.vert
+        res/rhishaders/oitcomposite.frag
+    OUTPUTS
+        res/rhishaders/oitcomposite_linkedlist_buf.vert.qsb
+        res/rhishaders/oitcomposite_linkedlist_buf.frag.qsb
+    DEFINES
+        QSSG_OIT_METHOD=2
+        QSSG_USE_BUFFER=1
+)
+
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_composite_linkedlist_ms_buf"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL "320es,430"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/oitcomposite.vert
+        res/rhishaders/oitcomposite.frag
+    OUTPUTS
+        res/rhishaders/oitcomposite_linkedlist_ms_buf.vert.qsb
+        res/rhishaders/oitcomposite_linkedlist_ms_buf.frag.qsb
+    DEFINES
+        QSSG_OIT_METHOD=2
+        QSSG_MULTISAMPLE
+        QSSG_USE_BUFFER=1
 )
 
 # special case end

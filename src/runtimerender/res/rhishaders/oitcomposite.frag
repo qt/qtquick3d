@@ -104,6 +104,8 @@ void main()
 layout(std140, binding = 0) uniform buf {
     uint qt_ABufImageWidth;
     uint qt_listNodeCount;
+    uint qt_samples;
+    uint pad;
     ivec2 qt_viewSize;
 } ubuf;
 
@@ -114,8 +116,19 @@ bool compareNodes(const uvec2 a, const uvec2 b)
 
 #include "../effectlib/sorting.glsllib"
 
+#if QSSG_USE_BUFFER == 1
+layout(std430, binding = 1) buffer restrict readonly qt_imgAbuffer
+{
+    uvec4 abufData[];
+};
+layout(std430, binding = 2) buffer restrict readonly qt_imgAux
+{
+    uint auxData[];
+};
+#else
 layout(binding = 1, rgba32ui) uniform restrict readonly uimage2D qt_imgAbuffer;
 layout(binding = 2, r32ui) uniform restrict readonly uimage2D qt_imgAux;
+#endif
 
 void main()
 {
@@ -133,12 +146,20 @@ void main()
     coord.x += gl_SampleID * ubuf.qt_viewSize.x;
 #endif
 
+#if QSSG_USE_BUFFER == 1
+    uint startOffset = auxData[coord.x + coord.y * ubuf.qt_viewSize.x * ubuf.qt_samples];
+#else
     uint startOffset = imageLoad(qt_imgAux, coord).r;
+#endif
 
     // Traverse the linked list:
     while (startOffset != uint(0) && fragments < QSSG_OIT_LAYERS && startOffset <= ubuf.qt_listNodeCount)
     {
+#if QSSG_USE_BUFFER == 1
+        const uvec4 stored = abufData[startOffset - 1];
+#else
         const uvec4 stored = imageLoad(qt_imgAbuffer, qt_indexToImageCoord(startOffset - 1, ubuf.qt_ABufImageWidth));
+#endif
         array[fragments]   = stored.rg;
         fragments++;
 
@@ -152,7 +173,11 @@ void main()
     float minKicked = 999999;
     int count = 0;
     while(startOffset != uint(0) && count < 8 && startOffset <= ubuf.qt_listNodeCount) {
+#if QSSG_USE_BUFFER == 1
+        const uvec4 stored = abufData[startOffset - 1];
+#else
         uvec4 stored = imageLoad(qt_imgAbuffer, qt_indexToImageCoord(startOffset - 1, ubuf.qt_ABufImageWidth));
+#endif
 
         uvec2 kicked = qt_insertionSort(array, stored.rg);
         float kd = uintBitsToFloat(kicked.g);

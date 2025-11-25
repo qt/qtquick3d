@@ -30,6 +30,8 @@ static inline void addEndCond(QByteArray &block, const T &var)
         block += QByteArrayLiteral("#endif\n");
 }
 
+int QSSGShaderResourceMergeContext::s_additionalBuffers = 0;
+
 struct QSSGShaderGeneratedProgramOutput
 {
     // never null; so safe to call strlen on.
@@ -291,8 +293,8 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
     const int prefixLen = 4;
     const int typeLen = 1;
     int from = 0;
-    if (!mergeContext->m_images.empty())
-        mergeContext->rearrangeResources();
+
+    mergeContext->rearrangeResources();
 
     for (; ;) {
         int pos = m_finalBuilder.indexOf(prefix, from);
@@ -555,6 +557,8 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
             theStage.buildShaderSourcePass2(&mergeContext);
         }
     }
+
+    QSSGShaderResourceMergeContext::setAdditionalBufferAmount(0);
 
     // qDebug("VERTEX:\n%s\n\n", m_vs.m_finalBuilder.constData());
     // qDebug("FRAGMENT:\n%s\n\n", m_fs.m_finalBuilder.constData());

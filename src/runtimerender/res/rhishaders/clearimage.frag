@@ -12,17 +12,38 @@ layout(std140, binding = 0) uniform buf {
     uint viewCount;
 } ubuf;
 
+#if QSSG_CLEAR_BUFFER == 1
+layout(std430, binding = 1) buffer qt_imgAux
+{
+    uint auxData[];
+};
+layout(std430, binding = 2) buffer qt_imgCounter
+{
+    uint counter;
+};
+#else
 layout(binding = 1, rgba32ui) uniform restrict writeonly uimage2D qt_imgAux;
 layout(binding = 2, r32ui) uniform restrict writeonly uimage2D qt_imgCounter;
+#endif
 
 void main()
 {
     fragOutput = vec4(0.0);
     const ivec2 coord = ivec2(gl_FragCoord.x * ubuf.samples, gl_FragCoord.y * ubuf.viewCount);
     for (uint s = 0; s < ubuf.samples; s++) {
+#if QSSG_CLEAR_BUFFER == 1
+        auxData[ubuf.viewSize.x * ubuf.samples * coord.y + coord.x + s] = ubuf.clearColor.x;
+        if (ubuf.viewCount > 1)
+            auxData[ubuf.viewSize.x * ubuf.samples * (coord.y + 1) + coord.x + s] = ubuf.clearColor.x;
+#else
         imageStore(qt_imgAux, ivec2(coord.x + s, coord.y), ubuf.clearColor);
         if (ubuf.viewCount > 1)
             imageStore(qt_imgAux, ivec2(coord.x + s, coord.y + 1), ubuf.clearColor);
+#endif
     }
+#if QSSG_CLEAR_BUFFER == 1
+    counter = 0;
+#else
     imageStore(qt_imgCounter, ivec2(0), uvec4(0));
+#endif
 }

@@ -12,6 +12,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
 
 #include <ssg/qssgrendercontextcore.h>
 #include "qssgrendershadercodegenerator_p.h"
@@ -180,18 +181,28 @@ void QSSGParticleRenderer::updateUniformsForParticles(const QSSGLayerRenderData 
         shaders.setUniform(ubufData, "qt_texcoordScale", &texcoordScale, sizeof(float));
     }
 
+#ifdef QSSG_OIT_USE_BUFFERS
+    shaders.setOITImages((QRhiTexture*)inData.oitRenderContext.aBuffer,
+                         (QRhiTexture*)inData.oitRenderContext.auxBuffer,
+                         (QRhiTexture*)inData.oitRenderContext.counterBuffer);
+    if (inData.oitRenderContext.aBuffer) {
+#else
     const QSSGRhiRenderableTexture *abuf = inData.getRenderResult(QSSGRenderResult::Key::ABufferImage);
     const QSSGRhiRenderableTexture *aux = inData.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
     const QSSGRhiRenderableTexture *counter = inData.getRenderResult(QSSGRenderResult::Key::CounterImage);
     shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
     if (abuf->texture) {
+#endif
         int abufWidth = RenderHelpers::rhiCalculateABufferSize(inData.layer.oitNodeCount);
         int listNodeCount = abufWidth * abufWidth;
         shaders.setUniform(ubufData, "qt_ABufImageWidth", &abufWidth, sizeof(int), &cui.abufImageWidth);
         shaders.setUniform(ubufData, "qt_listNodeCount", &listNodeCount, sizeof(int), &cui.listNodeCount);
         int viewSize[2] = {inData.layerPrepResult.textureDimensions().width(), inData.layerPrepResult.textureDimensions().height()};
         shaders.setUniform(ubufData, "qt_viewSize", viewSize, sizeof(int) * 2, &cui.viewSize);
+        int samples = rhiCtx->mainPassSampleCount();
+        shaders.setUniform(ubufData, "qt_samples", &samples, sizeof(int), &cui.samples);
     }
+
 }
 
 void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRhiShaderPipeline &shaderPipeline,
@@ -848,6 +859,9 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
         common.addUniform("qt_viewSize", "ivec2");
         common.addUniform("qt_ABufImageWidth", "uint");
         common.addUniform("qt_listNodeCount", "uint");
+#ifdef QSSG_OIT_USE_BUFFERS
+        common.addUniform("qt_samples", "uint");
+#endif
     }
 
     if (lighting)
@@ -947,7 +961,12 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
         fragment.addInclude("oitweightedblended.glsllib");
         fg << "layout(location = 1) out vec4 revealageOutput;";
     } else if (oit == int(QSSGRenderLayer::OITMethod::LinkedList)) {
+#ifdef QSSG_OIT_USE_BUFFERS
+        fragment.addInclude("oitlinkedlist_buf.glsllib");
+        QSSGShaderResourceMergeContext::setAdditionalBufferAmount(3);
+#else
         fragment.addInclude("oitlinkedlist.glsllib");
+#endif
     }
     if (isSpriteLinear)
         fg << "#define spriteFunc";
@@ -990,10 +1009,17 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
                << "fragOutput = distWeight * qt_tonemap(ret);"
                << "revealageOutput = vec4(ret.a);";
         } else if (oit == int(QSSGRenderLayer::OITMethod::LinkedList)) {
+#ifdef QSSG_OIT_USE_BUFFERS
+            if (viewCount >= 2)
+                fg << "fragOutput = qt_oitLinkedList(ret, qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, v_viewIndex, qt_samples);";
+            else
+                fg << "fragOutput = qt_oitLinkedList(ret, qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, 0, qt_samples);";
+#else
             if (viewCount >= 2)
                 fg << "fragOutput = qt_oitLinkedList(ret, qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, v_viewIndex);";
             else
                 fg << "fragOutput = qt_oitLinkedList(ret, qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, 0);";
+#endif
         }
     } else {
         fg << "fragOutput = qt_tonemap(ret);";

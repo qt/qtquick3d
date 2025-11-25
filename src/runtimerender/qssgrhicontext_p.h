@@ -451,6 +451,7 @@ public:
         int abufImageWidth = -1;
         int listNodeCount = -1;
         int viewSize = -1;
+        int samples = -1;
 
         struct ImageIndices
         {
@@ -622,6 +623,7 @@ public:
     void addImageLoad(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
     void addImageStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
     void addImageLoadStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
+    void addStorageBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset = 0 , int size = 0);
 };
 
 inline bool operator==(const QSSGRhiShaderResourceBindingList &a, const QSSGRhiShaderResourceBindingList &b) Q_DECL_NOTHROW
