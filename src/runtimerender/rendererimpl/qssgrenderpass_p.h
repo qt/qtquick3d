@@ -413,12 +413,15 @@ public:
     union {
         QSSGRhiRenderableTexture *rhiAccumTexture = nullptr;
         QSSGRhiRenderableTexture *rhiABufferImage;
+        QRhiBuffer *rhiABuffer;
     };
     union {
         QSSGRhiRenderableTexture *rhiRevealageTexture = nullptr;
         QSSGRhiRenderableTexture *rhiAuxiliaryImage;
+        QRhiBuffer *rhiAuxBuffer;
     };
     QSSGRhiRenderableTexture *rhiCounterImage = nullptr;
+    QRhiBuffer *rhiCounterBuffer = nullptr;
     QRhiTexture *readbackImage = nullptr;
     QSSGRhiRenderableTexture *rhiDepthTexture = nullptr;
     QRhiTextureRenderTarget *renderTarget = nullptr;
@@ -444,10 +447,12 @@ public:
     union {
         QSSGRhiRenderableTexture *rhiAccumTexture = nullptr;
         QSSGRhiRenderableTexture *rhiABufferImage;
+        QRhiBuffer *rhiABuffer;
     };
     union {
         QSSGRhiRenderableTexture *rhiRevealageTexture = nullptr;
         QSSGRhiRenderableTexture *rhiAuxiliaryImage;
+        QRhiBuffer *rhiAuxBuffer;
     };
 };
 

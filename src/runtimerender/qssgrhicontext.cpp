@@ -1639,6 +1639,25 @@ void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhiShaderR
     d->u.ubuf.hasDynamicOffset = false;
 }
 
+void QSSGRhiShaderResourceBindingList::addStorageBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size)
+{
+#ifdef QT_DEBUG
+    if (p == MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
+    h ^= qintptr(buf);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::BufferLoadStore;
+    d->u.ubuf.buf = buf;
+    d->u.ubuf.offset = offset;
+    d->u.ubuf.maybeSize = size; // 0 = all
+    d->u.ubuf.hasDynamicOffset = false;
+}
+
 void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, QRhiSampler *sampler)
 {
 #ifdef QT_DEBUG

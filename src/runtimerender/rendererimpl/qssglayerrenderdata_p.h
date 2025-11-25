@@ -278,14 +278,23 @@ struct QSSGOITRenderContext
     QRhiTextureRenderTarget *oitRenderTarget = nullptr;
     QRhiRenderPassDescriptor *renderPassDescriptor = nullptr;
     QRhiTexture *copyTexture = nullptr;
+    QRhiBuffer *aBuffer = nullptr;
+    QRhiBuffer *auxBuffer = nullptr;
+    QRhiBuffer *counterBuffer = nullptr;
     void reset()
     {
         delete oitRenderTarget;
         delete renderPassDescriptor;
         delete copyTexture;
+        delete aBuffer;
+        delete auxBuffer;
+        delete counterBuffer;
         oitRenderTarget = nullptr;
         renderPassDescriptor = nullptr;
         copyTexture = nullptr;
+        aBuffer = nullptr;
+        auxBuffer = nullptr;
+        counterBuffer = nullptr;
     }
 };
 
@@ -499,6 +508,7 @@ public:
     const QSSGRenderMotionVectorMapPtr &getMotionvectorMapManager() const { return motionVectorMapManager; }
 
     QSSGOITRenderContext &getOitRenderContext() { return oitRenderContext; }
+    const QSSGOITRenderContext &getOitRenderContextConst() const { return oitRenderContext; }
 
     static bool prepareInstancing(QSSGRhiContext *rhiCtx,
                                   QSSGSubsetRenderable *renderable,

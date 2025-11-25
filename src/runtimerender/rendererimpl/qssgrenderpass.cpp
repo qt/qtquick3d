@@ -1529,32 +1529,70 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         shaderFeatures = data.getShaderFeatures();
         sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
 
+#ifdef QSSG_OIT_USE_BUFFERS
+        auto &oitCtx = data.getOitRenderContext();
+        rhiABuffer = oitCtx.aBuffer;
+        rhiAuxBuffer = oitCtx.auxBuffer;
+        rhiCounterBuffer = oitCtx.counterBuffer;
+#else
         rhiABufferImage = data.getRenderResult(QSSGRenderResult::Key::ABufferImage);
         rhiAuxiliaryImage = data.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
         rhiCounterImage = data.getRenderResult(QSSGRenderResult::Key::CounterImage);
+#endif
         QSize dim = data.layerPrepResult.textureDimensions();
         dim.setWidth(dim.width() * ps.samples);
         dim.setHeight(dim.height() * ps.viewCount);
+#ifdef QSSG_OIT_USE_BUFFERS
+        if (!rhiAuxBuffer || rhiAuxBuffer->size() != (dim.width() * dim.height() * 4u) || currentNodeCount == 0 || currentNodeCount != reportedNodeCount)
+#else
         if (!rhiAuxiliaryImage->texture || rhiAuxiliaryImage->texture->pixelSize() != dim || currentNodeCount == 0 || currentNodeCount != reportedNodeCount)
+#endif
         {
+#ifdef QSSG_OIT_USE_BUFFERS
+            if (rhiAuxBuffer && rhiAuxBuffer->size() != (dim.width() * dim.height() * 4u)) {
+                rhiAuxBuffer->destroy();
+                rhiAuxBuffer = nullptr;
+            }
+#else
             if (rhiABufferImage->texture) {
                 rhiABufferImage->texture->destroy();
                 rhiAuxiliaryImage->texture->destroy();
             }
-            const QRhiTexture::Flags textureFlags = QRhiTexture::UsedWithLoadStore;
-            quint32 sizeWithLayers = 0;
+#endif
+
             if (reportedNodeCount) {
-                sizeWithLayers = RenderHelpers::rhiCalculateABufferSize(reportedNodeCount);
-                currentNodeCount = reportedNodeCount;
+                currentNodeCount = nextMultipleOf(reportedNodeCount, 64u * 1024u);
             } else {
-                sizeWithLayers = RenderHelpers::rhiCalculateABufferSize(data.layerPrepResult.textureDimensions(), 4 * ps.samples * ps.viewCount);
-                currentNodeCount = nextMultipleOf(sizeWithLayers * sizeWithLayers, 32u * 1024u);
-                sizeWithLayers = RenderHelpers::rhiCalculateABufferSize(currentNodeCount);
+                quint32 size = RenderHelpers::rhiCalculateABufferSize(data.layerPrepResult.textureDimensions(), 4 * ps.samples * ps.viewCount);
+                currentNodeCount = nextMultipleOf(size * size, 64u * 1024u);
             }
             data.layer.oitNodeCount = currentNodeCount;
+
+#ifdef QSSG_OIT_USE_BUFFERS
+            if (rhiABuffer && currentNodeCount * 16 != rhiABuffer->size()) {
+                rhiABuffer->destroy();
+                rhiABuffer = nullptr;
+            }
+            if (!rhiABuffer) {
+                rhiABuffer = rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, currentNodeCount * 16);
+                rhiABuffer->create();
+            }
+            if (!rhiAuxBuffer) {
+                rhiAuxBuffer = rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, dim.width() * dim.height() * 4);
+                rhiAuxBuffer->create();
+            }
+            if (!rhiCounterBuffer) {
+                rhiCounterBuffer = rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, 4);
+                rhiCounterBuffer->create();
+                oitCtx.counterBuffer = rhiCounterBuffer;
+            }
+            oitCtx.aBuffer = rhiABuffer;
+            oitCtx.auxBuffer = rhiAuxBuffer;
+#else
+            quint32 sizeWithLayers = RenderHelpers::rhiCalculateABufferSize(currentNodeCount);
+            const QRhiTexture::Flags textureFlags = QRhiTexture::UsedWithLoadStore;
             rhiABufferImage->texture = rhi->newTexture(QRhiTexture::RGBA32UI, QSize(sizeWithLayers, sizeWithLayers), 1, textureFlags);
             rhiABufferImage->texture->create();
-
             rhiAuxiliaryImage->texture = rhi->newTexture(QRhiTexture::R32UI, dim, 1, textureFlags);
             rhiAuxiliaryImage->texture->create();
             if (!rhiCounterImage->texture) {
@@ -1566,12 +1604,17 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
                 readbackImage->create();
                 oitrt.copyTexture = readbackImage;
             }
+#endif
         }
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
 
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
         const auto &shaderCache = renderer.contextInterface()->shaderCache();
+#ifdef QSSG_OIT_USE_BUFFERS
+        clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearBufferShader();
+#else
         clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearImageShader();
+#endif
         QSSGRhiShaderResourceBindingList bindings;
         quint32 clearImageData[8] = {0};
 
@@ -1591,8 +1634,13 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         rub->updateDynamicBuffer(ubuf, 0, ubufSize, clearImageData);
 
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
+#ifdef QSSG_OIT_USE_BUFFERS
+        bindings.addStorageBuffer(1, QRhiShaderResourceBinding::FragmentStage, rhiAuxBuffer);
+        bindings.addStorageBuffer(2, QRhiShaderResourceBinding::FragmentStage, rhiCounterBuffer);
+#else
         bindings.addImageStore(1, QRhiShaderResourceBinding::FragmentStage, rhiAuxiliaryImage->texture, 0);
         bindings.addImageStore(2, QRhiShaderResourceBinding::FragmentStage, rhiCounterImage->texture, 0);
+#endif
 
         clearSrb = rhiCtxD->srb(bindings);
 
@@ -1644,6 +1692,30 @@ void OITRenderPass::renderPass(QSSGRenderer &renderer)
         renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rhiCtx->mainRenderPassDescriptor(), {});
 
         TransparentPass::render(*ctx, ps, sortedTransparentObjects);
+#ifdef QSSG_OIT_USE_BUFFERS
+        QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+        QRhiReadbackResult *result = nullptr;
+        if (results.size() > 1) {
+            result = results.takeLast();
+            result->pixelSize = {};
+            result->data = {};
+            result->format = QRhiTexture::UnknownFormat;
+        }  else  {
+            result = new QRhiReadbackResult();
+        }
+        const auto completedFunc = [this, result](){
+            if (result) {
+                const quint32 *d = reinterpret_cast<const quint32 *>(result->data.constData());
+                quint32 nodeCount = *d;
+                if (nodeCount)
+                    this->reportedNodeCount = nextMultipleOf(nodeCount, 64u * 1024u);
+                this->results.append(result);
+            }
+        };
+        result->completed = completedFunc;
+        rub->readBackBuffer(rhiCounterBuffer, 0, 4, result);
+        this->rub = rub;
+#else
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         rub->copyTexture(readbackImage, rhiCounterImage->texture);
         QRhiReadbackDescription rbdesc;
@@ -1669,7 +1741,7 @@ void OITRenderPass::renderPass(QSSGRenderer &renderer)
         result->completed = completedFunc;
         rub->readBackTexture(rbdesc, result);
         this->rub = rub;
-
+#endif
         cb->debugMarkEnd();
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("transparent_order_independent_pass"));
         Q_TRACE(QSSG_renderPass_exit);
@@ -1714,23 +1786,42 @@ void OITCompositePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
         rhiRevealageTexture = data.getRenderResult(QSSGRenderResult::Key::RevealageTexture);
         compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false);
     } else if (method == QSSGRenderLayer::OITMethod::LinkedList) {
+#ifdef QSSG_OIT_USE_BUFFERS
+        rhiABuffer = data.getOitRenderContext().aBuffer;
+        rhiAuxBuffer = data.getOitRenderContext().auxBuffer;
+        compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false, true);
+#else
         rhiABufferImage = data.getRenderResult(QSSGRenderResult::Key::ABufferImage);
         rhiAuxiliaryImage = data.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
         compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false);
+#endif
 
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
         QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 }));
         QRhiBuffer *&ubuf = dcd.ubuf;
-        const int ubufSize = 4 * sizeof(quint32);
+        const int ubufSize = 6 * sizeof(quint32);
         if (!ubuf) {
             ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
             ubuf->create();
         }
-        const quint32 sizeWithLayers = rhiABufferImage->texture->pixelSize().width();
-        const quint32 values[4] = { sizeWithLayers,
-                                    sizeWithLayers * sizeWithLayers,
+#ifdef QSSG_OIT_USE_BUFFERS
+        const quint32 values[6] = { 0,
+                                    quint32(data.layer.oitNodeCount),
+                                    quint32(ps.samples),
+                                    0,
                                     quint32(data.layerPrepResult.textureDimensions().width()),
-                                    quint32(data.layerPrepResult.textureDimensions().height())};
+                                    quint32(data.layerPrepResult.textureDimensions().height())
+        };
+#else
+        const quint32 sizeWithLayers = rhiABufferImage->texture->pixelSize().width();
+        const quint32 values[6] = { sizeWithLayers,
+                                    sizeWithLayers * sizeWithLayers,
+                                    quint32(ps.samples),
+                                    0,
+                                    quint32(data.layerPrepResult.textureDimensions().width()),
+                                    quint32(data.layerPrepResult.textureDimensions().height())
+                                    };
+#endif
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         rub->updateDynamicBuffer(ubuf, 0, ubufSize, values);
         renderer.rhiQuadRenderer()->prepareQuad(rhiCtx.get(), rub);
@@ -1782,8 +1873,13 @@ void OITCompositePass::renderPass(QSSGRenderer &renderer)
         QRhiBuffer *&ubuf = dcd.ubuf;
 
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
+#ifdef QSSG_OIT_USE_BUFFERS
+        bindings.addStorageBuffer(1, QRhiShaderResourceBinding::FragmentStage, rhiABuffer);
+        bindings.addStorageBuffer(2, QRhiShaderResourceBinding::FragmentStage, rhiAuxBuffer);
+#else
         bindings.addImageLoad(1, QRhiShaderResourceBinding::FragmentStage, rhiABufferImage->texture, 0);
         bindings.addImageLoad(2, QRhiShaderResourceBinding::FragmentStage, rhiAuxiliaryImage->texture, 0);
+#endif
 
         compositeSrb = rhiCtxD->srb(bindings);
 

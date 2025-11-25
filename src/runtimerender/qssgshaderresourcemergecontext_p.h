@@ -23,6 +23,11 @@ QT_BEGIN_NAMESPACE
 class QSSGShaderResourceMergeContext
 {
 public:
+
+    QSSGShaderResourceMergeContext()
+        : m_nextFreeResourceBinding(FIRST_CUSTOM_RESOURCE_BINDING_POINT + s_additionalBuffers)
+    {
+    }
     // Resource bindings 0..2 are reserved for uniform buffers.
     // (0 is cbMain, 1 is cbLights)
     static const int FIRST_CUSTOM_RESOURCE_BINDING_POINT = 3;
@@ -83,7 +88,7 @@ public:
         // amount is only 8 so with many textures we might run
         // out of binding points. Minimum amount of texture
         // binding points is 16.
-        int binding = FIRST_CUSTOM_RESOURCE_BINDING_POINT;
+        int binding = FIRST_CUSTOM_RESOURCE_BINDING_POINT + s_additionalBuffers;
         for (auto &image : m_images)
             image.binding = binding++;
         for (auto &sampler : m_samplers)
@@ -151,6 +156,11 @@ public:
         }
         BlockMember var { type, name, conditionType, conditionName };
         m_uniformMembers.insert(name, var);
+    }
+    static int s_additionalBuffers;
+    static void setAdditionalBufferAmount(int amount)
+    {
+        s_additionalBuffers = amount;
     }
 };
 
