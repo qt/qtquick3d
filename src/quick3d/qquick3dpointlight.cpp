@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
     \endqml
 
     \image pointlight-1.png
+           {Green circle with white background}
 
     Adding a directional light, emitting down the Z axis by default, leads to the following:
 
@@ -98,6 +99,7 @@ QT_BEGIN_NAMESPACE
     \endqml
 
     \image pointlight-2.png
+           {Green circle with black edge}
 
     What if we now replace DirectionalLight with:
 
@@ -114,6 +116,8 @@ QT_BEGIN_NAMESPACE
     especially on the rectangle mesh in the background.
 
     \image pointlight-3.png
+           {Green gradient circle with black edge and dark gray gradient
+           background showing point light attenuation}
 
     For more usage examples, see \l{Qt Quick 3D - Lights Example}.
 

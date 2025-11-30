@@ -8,6 +8,8 @@
     \examplecategory {3D}
     \brief Demonstrates how to do instanced rendering in Qt Quick 3D.
     \image instancing.jpg
+           {Space scene with asteroid field and two spaceships demonstrating
+           instanced rendering}
 
     This example shows how do instanced rendering using the basic QML API.
 

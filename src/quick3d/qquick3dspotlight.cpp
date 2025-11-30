@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \image spotlight-1.png
+    \image spotlight-1.png {Green sphere with spotlight cone angle visualization}
 
     Rotations happens similarly to \l DirectionalLight. Here we want to light to
     emit more to the right, so we rotate around the Y axis by -20 degrees. The
@@ -84,7 +84,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \image spotlight-2.png
+    \image spotlight-2.png {Green sphere with spotlight inner and outer cone angles}
 
     For further usage examples, see \l{Qt Quick 3D - Lights Example}.
 

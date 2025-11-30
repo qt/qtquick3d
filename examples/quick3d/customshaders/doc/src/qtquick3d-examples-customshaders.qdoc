@@ -12,6 +12,7 @@
     and fragment shader code.
 
     \image customshaders-example.jpg
+           {Rainbow-colored sphere with wave deformation and shader settings}
 
     This example is the counterpart to the \l{Qt Quick 3D - Custom Materials
     Example}{custommaterials} example, which demonstrates the other group of

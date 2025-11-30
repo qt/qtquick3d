@@ -218,7 +218,10 @@ QT_BEGIN_NAMESPACE
     \table 70%
     \row
     \li \image effect_intro_1.png
+               {Three different 3D objects}
     \li \image effect_intro_2.png
+               {Three different 3D objects with transparent Qt logo overlaid as
+               fullscreen effect}
     \endtable
 
     \note The \c shader property value in Shader is a URL, as is the custom in
@@ -322,7 +325,10 @@ QT_BEGIN_NAMESPACE
     \table 70%
     \row
     \li \image effect_intro_1.png
+               {Three different 3D objects}
     \li \image effect_intro_3.png
+               {Warped view of three different 3D objects showing vertex shader
+               effect}
     \endtable
 
     \section1 Special keywords in effect shaders

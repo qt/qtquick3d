@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to use the Qt Quick 3D Particles3D module.
     \image particles3d-testbed.jpg
+           {Four windows showing different particle system examples}
 
     This example demonstrates different ways to use the
     \l{Qt Quick 3D Particles3D QML Types}{QtQuick3D.Particles3D}
@@ -25,12 +26,14 @@
     \l ParticleSystem3D has its own row showing its \l ParticleSystem3DLogging data.
 
     \image particles3d-loggingview.jpg
+           {Particle system statistics and performance metrics}
 
     Top-right corner of the most examples contain a settings view which can be shown
     or hidden by clicking its icon. These settings help to demonstrate individual API
     features as well as the dynamic behavior of the particle systems.
 
     \image particles3d-settings.jpg
+           {Control panel for fire, smoke, and sparkles particle effects}
 
     \section1 Snowing Example
 
@@ -38,6 +41,8 @@
     {Particles3D} by looking at the Snowing example.
 
     \image particles3d-snowing.jpg
+           {Two colored cubes with falling snow particles and particle settings
+           panel}
 
     First, import the \l{Qt Quick 3D Particles3D QML Types}
     {QtQuick3D.Particles3D} module with the following statement:

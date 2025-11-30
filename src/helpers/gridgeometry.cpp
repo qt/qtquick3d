@@ -17,6 +17,7 @@
     transformations, the grid is facing the camera by default.
 
     \image gridgeometry.jpg
+           {19 by 19 cell grid facing camera with directional lighting}
 
     \badcode
         View3D {

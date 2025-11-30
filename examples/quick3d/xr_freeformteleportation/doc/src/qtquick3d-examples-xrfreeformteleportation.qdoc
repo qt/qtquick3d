@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to implement simple locomotion in Qt Quick 3D XR.
     \image xrfreeformteleportation-example.jpg
+           {Grid room with green teleportation arc and target marker}
 
     \section1 Overview
 

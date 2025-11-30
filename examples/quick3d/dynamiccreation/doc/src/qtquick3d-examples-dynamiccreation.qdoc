@@ -12,6 +12,8 @@
     dynamically at the start of the application, and more can be added or removed using the
     \e {+} and \e {-} buttons.
     \image dynamiccreation-example.png
+           {42 colorful Qt logo models scattered in dark space demonstrating
+           dynamic object creation}
 
     \section1 Setting Up
 

@@ -14,6 +14,7 @@
     the application window.
 
     \image picking-example.png
+           {Three objects with pick information showing selected cube position}
 
     \section1 Making Model Pickable
 

@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates controller input in Qt Quick 3D XR.
     \image xrinput-example.jpg
+           {Teapot with XR controller ray pointing at UI panel with color buttons}
 
     This example shows how to use the low-level input APIs in Qt Quick 3D XR to
     interact with 2D and 3D objects in the scene. It follows the basic structure of

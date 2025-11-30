@@ -60,7 +60,9 @@ QT_BEGIN_NAMESPACE
     \li Orthographic camera
     \row
     \li \image perspectivecamera.png
+               {Perspective camera view of plate}
     \li \image orthographiccamera.png
+               {Orthographic camera view of plate}
     \endtable
 
     \sa {Qt Quick 3D - View3D Example}

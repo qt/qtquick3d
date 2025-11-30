@@ -60,6 +60,7 @@ library and tool, \l{Balsam Asset Import Tool}{Balsam}.
 \section1 How does Qt Quick 3D fit into the Qt Graphics Stack
 
 \image quick3d-graphics-stack.drawio.svg
+       {Qt Quick 3D graphics stack architecture diagram}
 
 The above diagram illustrates how Qt Quick 3D fits into the larger Qt
 graphics stack. Qt Quick 3D works as an extension to the 2D Qt Quick API, and
@@ -330,7 +331,7 @@ node that is being passed to the renderer to render a scene.
 
 \section1 Scene Rendering
 
-\image qtquick3d-rendergraph.drawio.svg
+\image qtquick3d-rendergraph.drawio.svg {Qt Quick 3D render graph flow diagram}
 
 \section2 Set up Render Target
 
@@ -508,6 +509,7 @@ render is what is used by the final render target. Note however that
 \l{ExtendedSceneEnvironment::tonemapMode}{tonemapping} is enabled by default.
 
 \image qtquick3d-postprocess-graph.drawio.svg
+       {Post-processing render pass graph}
 
 \section3 Built-in Post-Processing
 

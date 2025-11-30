@@ -92,7 +92,9 @@
     \li PrincipledMaterial in Qt 6
     \row
     \li \image quick3d-principled-qt5.png
+              {Teapot rendered with Qt 5 principled material}
     \li \image quick3d-principled-qt6.png
+              {Teapot rendered with Qt 6 principled material}
     \endtable
 
     Some properties change their defaults:

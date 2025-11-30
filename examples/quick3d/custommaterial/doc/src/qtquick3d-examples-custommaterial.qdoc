@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates writing shaded custom materials.
     \image custommaterial-example.jpg
+           {Six objects with different shapes and custom materials}
 
     This example shows how to write \e shaded \l{CustomMaterial}{custom materials}.
     With shaded materials, we don't have to write complete shader

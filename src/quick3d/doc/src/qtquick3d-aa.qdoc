@@ -40,7 +40,8 @@ By default, all geometry is rendered one on-screen pixel at a time. As you can
 see on the left in the image below, this leaves harsh edges that may be easily
 noticeable in high-contrast cases, most noticeably here with black-and-white.
 
-\image AA-GeometryAliasing.png
+\image AA-GeometryAliasing.png {Comparison of five antialiasing
+       techniques on rotated squares, circles, and text}
 \caption Effective techniques for reducing aliasing for geometry
 
 The most correct fix for this is to use \l{multisample-aa}{Multisample
@@ -61,7 +62,8 @@ different times. In the image below, notice how the line between E3 and F3 is
 missing, strongly present between G3 and H3, then gone for the next 5 columns,
 and so on.
 
-\image AA-TextureAliasing.png
+\image AA-TextureAliasing.png {Comparison of four antialiasing
+       techniques on receding grid texture}
 \caption Effective techniques for reducing aliasing for textures
 
 The simplest (and arguably the best) fix for this problem is to use
@@ -79,6 +81,7 @@ In some cases, as seen on the left in the image below, it becomes obvious when f
 skipped.
 
 \image AA-ReflectionAliasing.png
+       {Comparison of four techniques for reducing reflection aliasing}
 \caption Effective techniques for reducing aliasing for reflections
 
 The most correct solution in this case is using \l{temporal-aa}{Temporal AA} or
@@ -98,7 +101,7 @@ scaling} with a high resolution screen connected. This means that the content
 of any window shown on screen is rendered at a higher resolution and is then
 scaled down by the system compositor or some other component of the platform.
 That is in effect a form of \l{supersample-aa}{Supersample Anti-aliasing}.
-Enabling anti-aliasing techniques in Qt Quick 3D may then show smaller, or
+Enabling antialiasing techniques in Qt Quick 3D may then show smaller, or
 sometimes hard-to-see improvements, because aliasing is already eliminated to a
 degree by the windowing system's automatic scaling. However, when deploying the
 same application on another system, it could well be that that particular
@@ -110,7 +113,7 @@ with this in mind.
 
 Below is an example rendering of the
 \l{https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Sponza}{Sponza}
-scene with some anti-aliasing methods enabled. The screenshots were taken
+scene with some antialiasing methods enabled. The screenshots were taken
 without any system scaling applied to the window (no high DPI scaling), so the
 effects of the various methods are more pronounced.
 
@@ -120,19 +123,24 @@ effects of the various methods are more pronounced.
 \li Result
 \row
 \li No AA
-\li \image aa_disabled.jpg
+\li \image aa_disabled.jpg {Architectural scene with no antialiasing
+           showing jagged edges}
 \row
 \li Supersample AA, high (1.5x)
-\li \image aa_ssaa_high.jpg
+\li \image aa_ssaa_high.jpg {Architectural scene with supersample
+           antialiasing at 1.5x}
 \row
 \li Multisample AA, high (4x)
-\li \image aa_msaa_high.jpg
+\li \image aa_msaa_high.jpg {Architectural scene with multisample
+           antialiasing at 4x}
 \row
 \li FXAA
 \li \image aa_fxaa.jpg
+           {Architectural scene with fast approximate antialiasing}
 \row
 \li Temporal AA, default strength (0.3)
 \li \image aa_temporal_default.jpg
+           {Architectural scene with temporal antialiasing}
 \endtable
 
 \target multisample-aa
@@ -316,7 +324,11 @@ perhaps with a flickering appearance.
 \li Specular AA enabled
 \row
 \li \image specular_aa_off.jpg
+           {Architectural scene showing specular highlights without
+           antialiasing}
 \li \image specular_aa_on.jpg
+           {Architectural scene showing smoothed specular highlights with
+           antialiasing}
 \endtable
 
 \qml

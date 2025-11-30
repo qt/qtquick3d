@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates the use of Qt Quick Items in Quick 3D scene.
     \image quickitems-example.png
+           {3D sphere with layered 2D items including Qt logo and text}
 
     This example demonstrates using \l{Qt Quick 3D Scenes with 2D Content}{Qt Quick 2D items in the Quick 3D scene}.
 

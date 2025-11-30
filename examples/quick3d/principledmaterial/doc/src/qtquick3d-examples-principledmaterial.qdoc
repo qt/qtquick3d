@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates the use of Principled Material.
     \image principledmaterial-example.png
+           {Material preview with control panel and property sliders}
 
     This example serves as interactive documentation for the usage of \l PrincipledMaterial.
     Each property of \l PrincipledMaterial comes with some explanation of how it is used as

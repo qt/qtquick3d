@@ -48,7 +48,7 @@ nothing else in it.
     }
 \endqml
 
-\image assetintro_empty.jpg
+\image assetintro_empty.jpg {Empty 3D view with green background}
 
 \section1 Importing an Asset
 
@@ -59,7 +59,7 @@ These models typically come with a number of texture maps and the mesh
 (geometry) data stored in a separate binary file, in addition to the .gltf
 file:
 
-\image assetintro_sponza_dir.jpg
+\image assetintro_sponza_dir.jpg {File listing showing Sponza asset files}
 
 How do we get all this into our Qt Quick 3D scene?
 
@@ -110,7 +110,7 @@ allow generating missing data (e.g. \c{--generateNormals}) and performing variou
 optimizations.
 
 In \c balsamui the command-line options are mapped to interactive elements:
-\image assetintro_balsamui_options.jpg
+\image assetintro_balsamui_options.jpg {Balsam UI settings panel}
 
 \section2 Importing via balsam
 
@@ -223,12 +223,13 @@ and Z axis. In addition, the camera's starting Y position is bumped to 100.
 Running this gives us:
 
 \image assetintro_sponza_first.jpg
+       {Sponza palace interior with directional lighting}
 
 With the mouse and the WASDRF keys we can move around:
 
-\image assetintro_sponza_second.jpg
+\image assetintro_sponza_second.jpg {Sponza palace viewed from different angle}
 
-\image assetintro_sponza_out.jpg
+\image assetintro_sponza_out.jpg {Sponza palace viewed from outside}
 
 \note We mentioned \c{subscene} a number of times above as an alternative to
 "model". Why is this? While not obvious with the Sponza asset, which in its
@@ -250,19 +251,20 @@ For our second model, let's use the graphical user interface of \c balsam instea
 
 Running \c balsamui opens the tool:
 
-\image assetintro_balsamui_startup.jpg
+\image assetintro_balsamui_startup.jpg {Balsam UI startup window}
 
 Let's import the
 \l{https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Suzanne}{Suzanne}
 model. This is a simpler model with two texture maps.
 
-\image assetintro_balsamui_open.jpg
+\image assetintro_balsamui_open.jpg {File browser showing Suzanne asset files}
 
 As there is no need for any additional configuration options, we can just
 Convert. The result is the same as running \c balsam: a Suzanne.qml and some
 additional files generated in the specific output directory.
 
 \image assetintro_balsamui_convert.jpg
+       {Balsam UI showing conversion in progress}
 
 From this point on, working with the generated assets is the same as in the
 previous section.
@@ -313,7 +315,7 @@ Again, a scale is applied to the instantiated Suzanne node, and the Y position
 is altered a bit so that the model does not end up in the floor of the Sponza
 building.
 
-\image assetintro_suzanne_first.jpg
+\image assetintro_suzanne_first.jpg {Suzanne monkey head model in dark scene}
 
 All properties can be changed, bound to, and animated, just like with Qt Quick.
 For example, let's apply a continuous rotation to our Suzanne model:
@@ -396,7 +398,7 @@ PointLight, and one that casts a shadow.
 Launching this scene and moving the camera around a bit reveals that this
 is indeed starting to look better than before:
 
-\image assetintro_suzanne_morelight.jpg
+\image assetintro_suzanne_morelight.jpg {Suzanne with additional lighting}
 
 \section2 Light debugging
 
@@ -441,7 +443,7 @@ visualizing purposes.
 The result, note the small, white cube appearing, visualizing the position of
 the \l PointLight:
 
-\image assetintro_suzanne_cube.jpg
+\image assetintro_suzanne_cube.jpg {Suzanne monkey head on Sponza palace floor}
 
 \section2 Skybox and image-based lighting
 
@@ -476,9 +478,10 @@ and \l{SceneEnvironment::lightProbe}{light probe} being set to a valid \l
 Texture; the latter due to \l{SceneEnvironment::lightProbe}{light probe} being
 set to a valid \l Texture)
 
-\image assetintro_sponza_ibl.jpg
+\image assetintro_sponza_ibl.jpg {Sponza palace with image-based lighting}
 
 \image assetintro_sponza_ibl_2.jpg
+       {Sponza palace with different IBL orientation}
 
 \section1 Basic Performance Investigations
 
@@ -568,6 +571,7 @@ toggles the \l DebugView, both anchored in the top-right corner.
 \endqml
 
 \image assetintro_suzanne_debugview.jpg
+       {Sponza scene with debug view panel showing performance statistics}
 
 This panel shows live timings, allows examining the live list of texture maps
 and meshes, and gives an insight into the render passes that need to be
@@ -577,16 +581,19 @@ Due to making the \l PointLight a shadow casting light, there are multiple
 render passes involved:
 
 \image assetintro_suzanne_debugview_2.jpg
+       {Suzanne with debug panel showing render passes}
 
 In the \c Textures section we see the texture maps from the Suzanne and Sponza
 assets (the latter has a lot of them), as well as the procedurally generated
 sky texture.
 
 \image assetintro_suzanne_debugview_3.jpg
+       {Scene with debug panel showing texture statistics}
 
 The \c Models page presents no surprises:
 
 \image assetintro_suzanne_debugview_4.jpg
+       {Scene with debug panel showing mesh statistics}
 
 On the \c Tools page there are some interactive controls to toggle
 \l{DebugSettings::wireframeEnabled}{wireframe mode} and various
@@ -596,6 +603,7 @@ Here with wireframe mode enabled and forcing rendering to only use the
 \l{PrincipledMaterial::baseColor}{base color} component of the materials:
 
 \image assetintro_suzanne_override.jpg
+       {Sponza scene in wireframe mode with debug panel}
 
 This concludes our tour of the basics of building a \l{Qt Quick 3D} scene with imported assets.
 

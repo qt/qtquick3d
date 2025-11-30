@@ -15,7 +15,7 @@ graph, it's possible to mix Qt Quick 2D content with 3D content.
 
 Qt Quick 3D also provides for XR and VR applications with \l{\qxr}.
 
-\image dragon.jpg
+\image dragon.jpg {Green metallic dragon model}
 
 \section1 Using the Module
 

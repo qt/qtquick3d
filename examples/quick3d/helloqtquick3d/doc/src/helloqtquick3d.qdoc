@@ -8,6 +8,8 @@
     \examplecategory {3D}
     \brief Demonstrates simple instanced drawing.
     \image helloqtquick3d.jpg
+           {Qt logo formed by instanced small cube models demonstrating
+           instanced rendering}
 
     This example demonstrates instanced rendering using a custom \l QQuick3DInstancing subclass.
 */

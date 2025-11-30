@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to create a simple game using Quick3D.
     \image quickball-example.jpg
+           {Game scene with ball and Qt logo target boxes}
 
     This example demonstrates how to combine Qt Quick and Qt Quick 3D to create
     a simple 3D game. The goal of the game is to hit target boxes by throwing
@@ -49,6 +50,8 @@
     ball appearance.
 
     \image quickball-ball.png
+           {Base color map and normal map combining to create tennis ball
+           texture}
 
     \snippet quickball/main.qml ball model
 
@@ -108,6 +111,8 @@
     When we combine the above ground and sky models we get a 3D world like this:
 
     \image quickball-world.png
+           {Sky, ground, and particles combining to form game
+           environment}
 
     Finally we add some sparkles for the targets, this time using the
     \l {Qt Quick 3D Particles3D QML Types}{QtQuick3D.Particles3D}

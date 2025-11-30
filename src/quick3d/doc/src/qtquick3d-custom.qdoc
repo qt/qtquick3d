@@ -16,8 +16,9 @@ CustomMaterial type is provided.
 \li A model with PrincipledMaterial
 \li With a CustomMaterial transforming the vertices
 \row
-\li \image quick3d-custom-mat1.jpg
+\li \image quick3d-custom-mat1.jpg {Teapot rendered with standard material}
 \li \image quick3d-custom-mat2.jpg
+           {Teapot with vertices transformed by custom material}
 \endtable
 
 Post-processing effects, where one or more passes of processing on the color buffer are
@@ -47,7 +48,9 @@ ShaderEffect or \l MultiEffect instead.
 \li The same scene with a custom post-processing effect applied
 \row
 \li \image quick3d-custom-effect1.jpg
+           {Scene with sphere, cone, and cube without post-processing effect}
 \li \image quick3d-custom-effect2.jpg
+           {Scene with warped geometry from custom post-processing effect}
 \endtable
 
 In addition to programmable materials and post-processing, there are two types of data that is
@@ -72,8 +75,9 @@ data for a \l Model or \l Texture.
 \li A grid, rendered by specifying vertex data dynamically from C++
 \li A cube textured with image data generated from C++
 \row
-\li \image quick3d-custom-geom.jpg
+\li \image quick3d-custom-geom.jpg {Grid generated from custom geometry data}
 \li \image quick3d-custom-tex.jpg
+           {Cube with procedurally generated gradient texture}
 \endtable
 
 These four approaches to customizing and making materials, effects, geometry, and textures
@@ -165,7 +169,7 @@ Let's have a scene with a cube, and start with a default \l PrincipledMaterial a
 These both lead to the exact same result, because a \l CustomMaterial is effectively a \l
 PrincipledMaterial, when no vertex or fragment shader code is added to it.
 
-\image quick3d-custom-cube1.jpg
+\image quick3d-custom-cube1.jpg {White cube with default material}
 
 \note Properties, such as, \l{PrincipledMaterial::baseColor}{baseColor},
 \l{PrincipledMaterial::metalness}{metalness},
@@ -214,7 +218,7 @@ directly by these snippets. Rather, the Qt Quick 3D engine will amend them as ap
   {
   }
   \endcode
-  \li \image quick3d-custom-cube1-small.jpg
+  \li \image quick3d-custom-cube1-small.jpg {White cube with default material}
 \endtable
 
 A custom vertex or fragment shader snippet is expected to provide one or more functions
@@ -327,6 +331,7 @@ Quick 3D conveniently makes such details transparent to the custom material auth
   }
   \endcode
   \li \image quick3d-custom-cube2-anim.gif
+             {Cube with ground plane showing vertex displacement animation}
 \endtable
 
 \section2 Uniforms from QML properties
@@ -449,6 +454,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-cube3-anim.gif
+           {Cube with ground plane showing vertex displacement animation}
 \endtable
 
 \section2 Adding a fragment shader
@@ -472,7 +478,7 @@ void MAIN()
 {
 }
 \endcode
-\li \image quick3d-custom-cube4.jpg
+\li \image quick3d-custom-cube4.jpg {White cube with empty fragment shader}
 \endtable
 
 Our first fragment shader contains an empty MAIN() function. This is no different than not
@@ -556,7 +562,7 @@ void MAIN()
     BASE_COLOR = vec4(1.0, 0.0, 0.0, 1.0);
 }
 \endcode
-\li \image quick3d-custom-cube5.jpg
+\li \image quick3d-custom-cube5.jpg {Red cube with custom base color}
 \endtable
 
 Now strengthen the level of self-illumination a bit:
@@ -577,7 +583,7 @@ void MAIN()
     EMISSIVE_COLOR = vec3(0.4);
 }
 \endcode
-\li \image quick3d-custom-cube6.jpg
+\li \image quick3d-custom-cube6.jpg {Bright red cube with emissive color}
 \endtable
 
 Instead of having values hardcoded in the shader, we could also use QML properties exposed
@@ -604,6 +610,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-cube7-anim.gif
+           {Cube with animated color transition from black to purple}
 \endtable
 
 Let's do something less trivial, something that is not implementable with a
@@ -627,6 +634,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-cube8.jpg
+           {Cube showing UV coordinates as red and green color gradient}
 \endtable
 
 While we are at it, why not visualize normals as well, this time on a sphere. Like with
@@ -654,6 +662,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-cube9.jpg
+           {Sphere visualizing surface normals as RGB colors}
 \endtable
 
 \section2 Colors
@@ -696,7 +705,7 @@ void MAIN()
 \endcode
 \endtable
 
-\image quick3d-custom-color1.jpg
+\image quick3d-custom-color1.jpg {Green teapot with direct RGB color values}
 
 This does not look entirely right. Compare with the second approach:
 
@@ -720,6 +729,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-color2.jpg
+           {Green teapot with QML color property and sRGB conversion}
 \endtable
 
 Switching to a PrincipledMaterial, we can confirm that setting the
@@ -739,6 +749,7 @@ materials: PrincipledMaterial {
 }
 \endqml
 \li \image quick3d-custom-color3.jpg
+           {Green teapot with standard material showing correct color}
 \endtable
 
 If the type of the \c uColor property was changed to \c vector4d, or any type other than
@@ -836,6 +847,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-blend.jpg
+           {Three cubes showing blend mode opacity variations}
 \endtable
 
 The first cube is writing 0.5 to the alpha value of the color but it does not bring
@@ -907,7 +919,9 @@ void MAIN()
 \li qt_logo_rect.png
 \li Result
 \row \li \image quick3d-custom-varying-map.png
+                {Qt logo texture used as source data}
 \li \image quick3d-custom-varying1.jpg
+           {Cube with Qt logo texture applied to faces}
 \endtable
 
 Note that \c VARYING declarations. The name and type must match, \c uv in the fragment
@@ -942,6 +956,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-varying1.jpg
+           {Cube with Qt logo texture applied to faces}
 \endtable
 
 To disable interpolation for a variable, use the \c flat keyword in both the
@@ -1033,7 +1048,7 @@ void MAIN()
 \endcode
 \endtable
 
-\image quick3d-custmat-tex1-anim.gif
+\image quick3d-custmat-tex1-anim.gif {Red sphere with animated texture map}
 
 Here the 2D subtree (Rectangle with two children: another Rectangle and the Text) is
 rendered in to an 512x512 2D texture every time this mini-scene changes. The texture is
@@ -1065,6 +1080,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custmat-tex2-anim.gif
+           {Sphere with animated procedural texture}
 \endtable
 
 With the features covered so far a wide range of possibilities are open for creating
@@ -1108,6 +1124,7 @@ Item {
 }
 \endqml
 \li \image quick3d-custom-tex3.jpg
+           {Plane with winter landscape from custom texture data}
 \endtable
 
 Now let's make some shaders that apply a height and normal map to the mesh:
@@ -1117,8 +1134,9 @@ Now let's make some shaders that apply a height and normal map to the mesh:
 \li Height map
 \li Normap map
 \row
-\li \image quick3d-custom-heightmap.png
+\li \image quick3d-custom-heightmap.png {Grayscale height map texture}
 \li \image quick3d-custom-normalmap.jpg
+           {Plane with height map applied as displacement}
 \endtable
 
 \table
@@ -1169,6 +1187,7 @@ materials: CustomMaterial {
 }
 \endqml
 \li \image quick3d-custom-tex4.jpg
+           {Plane with normal map showing surface detail}
 \endtable
 
 \note The \l WasdController object can be immensely helpful during development and
@@ -1287,6 +1306,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-depth-anim.gif
+           {Animation showing depth buffer values as grayscale}
 \endtable
 
 Note how the cylinder is not present in \c DEPTH_TEXTURE due to its reliance on
@@ -1311,6 +1331,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-screen.jpg
+           {Scene showing screen texture with distortion effect}
 \endtable
 
 Here the rectangle is textured with \c SCREEN_TEXTURE, while replacing transparent pixels
@@ -1396,6 +1417,7 @@ void MAIN()
 }
 \endcode
 \li \image quick3d-custom-unshaded1.jpg
+           {Cube and cylinder with unshaded custom material}
 \endtable
 
 Notice how the right cylinder ignores the DirectionalLight in the scene. Its shading knows
@@ -1460,6 +1482,7 @@ void MAIN()
 \endtable
 
 \image quick3d-custom-unshaded-anim.gif
+       {Animation showing lighting toggle between shaded and unshaded}
 
 Unshaded materials are useful when interacting with scene lighting is not necessary or
 desired, and the material needs full control on the final fragment color. Notice how the
@@ -1603,6 +1626,7 @@ Item {
 }
 \endqml
 \li \image quick3d-custom-effect-section-scene.jpg
+           {Reference scene with sphere, cone, and cube}
 \endtable
 
 Now let's apply an affect to the entire scene. More precisely, to the View3D. When there
@@ -1650,6 +1674,7 @@ INPUT at the UV coordinates \c INPUT_UV. It then performs its desired calculatio
 assigns the final fragment color to \c FRAGCOLOR.
 
 \image quick3d-custom-first-effect-anim.gif
+       {Animation showing color inversion post-processing effect}
 
 Many properties set in the example are in plural (effects, passes, shaders). While the
 list \c{[ ]} syntax can be omitted when having a single element only, all these properties
@@ -1740,6 +1765,7 @@ void MAIN()
 \endtable
 
 \image quick3d-custom-chained-effect-anim.gif
+       {Animation showing combined blur and color inversion effects}
 
 Now the perhaps surprising question: why is this a bad example?
 
@@ -1829,6 +1855,7 @@ the end result is similar to this (here viewed from an altered camera angle, wit
 of \l WasdController):
 
 \image quick3d-custom-points.jpg
+       {Point cloud geometry rendered as individual points}
 
 \note Be aware that point sizes and line widths other than 1 may not be supported at run
 time, depending on the underlying graphics API. This is not something Qt has control

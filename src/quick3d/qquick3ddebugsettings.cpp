@@ -71,30 +71,37 @@ QT_BEGIN_NAMESPACE
     \l{SceneEnvironment::lightProbe} and also has a directional light.
 
     \image debugsettings_default.jpg
+           {Scene with default debug settings}
 
     Setting \c{DebugSettings.BaseColor}:
 
     \image debugsettings_basecolor.jpg
+           {Scene showing base colors without lighting}
 
     Setting \c{DebugSettings.Roughness}:
 
     \image debugsettings_roughness.jpg
+           {Scene showing roughness values}
 
     Setting \c{DebugSettings.Metalness}:
 
     \image debugsettings_metalness.jpg
+           {Scene highlighting metalness values}
 
     Setting \c{DebugSettings.Diffuse}:
 
     \image debugsettings_diffuse.jpg
+           {Scene showing diffuse lighting only}
 
     Setting \c{DebugSettings.Specular}:
 
     \image debugsettings_specular.jpg
+           {Scene showing specular lighting only}
 
     Setting \c{DebugSettings.Normals}:
 
     \image debugsettings_normals.jpg
+           {Scene showing normal vectors as colors}
 */
 
 
@@ -134,6 +141,7 @@ void QQuick3DDebugSettings::update()
     The default value is \c false.
 
     \image debugsettings_wireframe.jpg
+           {Scene showing wireframe rendering}
 */
 
 

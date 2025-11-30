@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates how assets can be loaded at runtime.
     \image runtimeloader-example.jpg
+           {Multiple car models with instancing and toolbar controls}
 
     This example shows how to implement a simple asset viewer using the \l RuntimeLoader.
 
@@ -68,5 +69,7 @@
     can be adjusted if necessary.
 
     \image runtimeloader-normals.jpg
+           {3D model rendered with normal map material override showing
+           surface details}
 */
 

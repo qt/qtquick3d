@@ -8,6 +8,8 @@
     \examplecategory {3D}
     \brief Demonstrates the use of baked lightmaps in a 3D scene.
     \image bakedlightmap-example.jpg
+           {Cornell box with two boxes and ceiling light showing baked
+           lightmap lighting}
 
     This example demonstrates using fully baked lighting in a scene. As a
     result, the rendered scene looks a lot more realistic, mainly because of

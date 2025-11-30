@@ -45,6 +45,7 @@
     and color grading, use \l ExtendedSceneEnvironment instead.
 
     \image effect_additive_color_gradient.png
+           {Scene comparison showing additive color gradient effect}
 
     This effect adds a vertical gradient to the whole scene, then additively blends it with all
     other elements on the layer. Additive blending adds the pixel values of the gradient and the
@@ -74,7 +75,7 @@
     \l[QML]{MultiEffect} on the \l View3D item (or a parent of
     it).
 
-    \image effect_blur.png
+    \image effect_blur.png {Scene comparison showing blur effect}
 
     This effect provides a simple one-pass blur. It is less expensive than GaussianBlur, but
     does not give the same quality result.
@@ -100,6 +101,7 @@
     post-processing effect via the \l Effect type.
 
     \image effect_brush_strokes.png
+           {Scene comparison showing brush strokes effect}
 
     The BrushStrokes effect simulates an artistic painting of the image.
 */
@@ -138,6 +140,7 @@
     post-processing effect via the \l Effect type.
 
     \image effect_chromatic_aberration.png
+           {Scene comparison showing chromatic aberration effect}
 
     The ChromaticAberration effect simulates an imperfection of optical lenses. In real life,
     chromatic aberration is an optical phenomenon causing color fringes in high contrast
@@ -172,6 +175,7 @@
     use \l ExtendedSceneEnvironment instead.
 
     \image effect_color_master.png
+           {Scene comparison showing color master effect}
 
     The ColorMaster effect adjusts the color balance and saturation of the scene.
 */
@@ -205,6 +209,7 @@
     effect to the scene, use \l ExtendedSceneEnvironment instead.
 
     \image effect_depth_of_field_hq_blur.png
+           {Scene comparison showing depth of field blur effect}
 
     The DepthOfFieldHQBlur effect performs a gradient blur on regions of the image based on their
     deviation from a specified distance from the camera.
@@ -250,7 +255,7 @@
     considered deprecated starting with Qt 6.5. To perform color adjustments
     and color grading, use \l ExtendedSceneEnvironment instead.
 
-    \image effect_desaturate.png
+    \image effect_desaturate.png {Scene comparison showing desaturate effect}
 
     The Desaturate effect allows decreasing the intensity of all colors in the scene.
 */
@@ -276,6 +281,7 @@
     post-processing effect via the \l Effect type.
 
     \image effect_distortion_ripple.png
+           {Scene comparison showing distortion ripple effect}
 
     The DistortionRipple effect adds a wavelike distortion of circular ripples around a center point.
 */
@@ -318,6 +324,7 @@
     post-processing effect via the \l Effect type.
 
     \image effect_distortion_sphere.png
+           {Scene comparison showing distortion sphere effect}
 
     The DistortionSphere effect creates a 3D effect of wrapping the scene around a spherical shape.
 */
@@ -351,6 +358,7 @@
     post-processing effect via the \l Effect type.
 
     \image effect_distortion_spiral.png
+           {Scene comparison showing distortion spiral effect}
 
     The DistortionSpiral effect creates a twirl-shaped distortion.
 */
@@ -382,7 +390,7 @@
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
-    \image effect_edge_detect.png
+    \image effect_edge_detect.png {Scene comparison showing edge detect effect}
 
     The EdgeDetect effect turns smooth, unchanging areas of the scene darker, while areas of the
     scene with sharp color changes are brightened to highlight the edges.
@@ -407,7 +415,7 @@
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
-    \image effect_emboss.png
+    \image effect_emboss.png {Scene comparison showing emboss effect}
 
     The Emboss effect replaces each pixel either by a highlight or a shadow, depending on light/dark
     boundaries on the scene. Low contrast areas are replaced by a gray background. The embossed
@@ -433,7 +441,7 @@
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
-    \image effect_flip.png
+    \image effect_flip.png {Scene comparison showing flip effect}
 
     The Flip effect flips the whole scene either horizontally, vertically, or in both directions.
 */
@@ -458,6 +466,7 @@
     \l ExtendedSceneEnvironment instead.
 
     \image effect_fxaa.png
+           {Scene comparison showing fast approximate anti-aliasing effect}
 
     The FXAA effect applies fast approximate anti-aliasing to the scene. FXAA is a high-speed
     anti-aliasing technique that removes some of the artifacts from the image without impacting
@@ -503,6 +512,7 @@
     it).
 
     \image effect_gaussian_blur.png
+           {Scene comparison showing gaussian blur effect}
 
     The GaussianBlur effect blurs all objects in the scene evenly. To keep the effect performant,
     a large blur \l amount will not produce a perfectly smooth blur, but rather a mosaic result.
@@ -524,6 +534,7 @@
     scene, use \l ExtendedSceneEnvironment instead.
 
     \image effect_hdr_bloom_tonemap.png
+           {Scene comparison showing HDR bloom tonemap effect}
 
     The HDRBloomTonemap effect provides two features:
 
@@ -584,7 +595,7 @@
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
-    \image effect_motion_blur.png
+    \image effect_motion_blur.png {Scene comparison showing motion blur effect}
 
     The MotionBlur effect creates a trailing streak for rapidly moving objects in the scene.
 
@@ -617,7 +628,7 @@
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
-    \image effect_scatter.png
+    \image effect_scatter.png {Scene comparison showing scatter effect}
 
     Scatters the pixels in a scene, creating a blurry or smeared appearance. Without changing the
     color of each individual pixel, the Scatter effect redistributes the pixels randomly, but in
@@ -653,11 +664,12 @@
     \l ExtendedSceneEnvironment instead.
 
     \image effect_scurve_tonemap.png
+           {Scene comparison showing S-curve tonemap effect}
 
     The SCurveTonemap effect maps the luminance of each pixel in the Scene
     according to an s-shaped curve:
 
-    \image effect_scurve_graph.png
+    \image effect_scurve_graph.png {Graph showing S-curve tonemap function}
 
     The curve has three parts. The \e {toe area} determines the shadows, and
     is governed by \l toeSlope and \l toeEmphasis. The middle part determines
@@ -745,7 +757,7 @@
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
-    \image effect_tilt_shift.png
+    \image effect_tilt_shift.png {Scene comparison showing tilt shift effect}
 
     The TiltShift effect simulates depth of field in a simple and performant manner.
     Instead of blurring based on the depth buffer, it blurs everything outside a horizontal
@@ -789,7 +801,7 @@
     considered deprecated starting with Qt 6.5. To apply a vignette effect to
     the 3D scene, use \l ExtendedSceneEnvironment instead.
 
-    \image effect_vignette.png
+    \image effect_vignette.png {Scene comparison showing vignette effect}
 */
 /*!
     \qmlproperty real Vignette::vignetteStrength

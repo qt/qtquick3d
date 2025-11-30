@@ -11,12 +11,14 @@
 Select the object to be exported. Next, open the \uicontrol Export dialog box.
 
 \image export-colladaMax01.png
+       {3ds Max file export dialog with OpenCOLLADA format selected}
 
 Be sure to select \b OpenCOLLADA and \b {\e not} Autodesk Collada.
 
 Next, you will be prompted with another set of options for the OpenCOLLADA exporter.
 
 \image export-colladaMax02.png
+       {3ds Max OpenCOLLADA Export dialog with Triangulate option checked}
 
 Make sure that the \uicontrol triangulate option is checked.
 */

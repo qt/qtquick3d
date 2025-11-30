@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates the use of View3D to show a scene from multiple cameras.
     \image view3d-example.png
+           {Four camera views of teapot with camera selection buttons}
 
     This example demonstrates using four separate \l {View3D}s with different cameras in an
     application.

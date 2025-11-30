@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to manipulate 3D objects with Qt Quick 3D XR.
     \image xrinteraction-example.jpg
+           {3D scene with colorful letters and shapes floating in space}
 
     This example shows how to create components that move and resize 3D objects in a scene.
     It uses the same ray-picking strategy as the \l{Qt Quick 3D - XR Simple Input Example}{xr_input} example.

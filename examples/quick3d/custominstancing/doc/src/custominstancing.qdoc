@@ -9,6 +9,8 @@
     \examplecategory {3D}
     \brief Demonstrates instancing with custom materials and a C++ instance table.
     \image custominstancing.jpg
+           {Blocky terrain with water, grass, and hills demonstrating
+           instanced rendering}
 
     This example shows how to create instance data programmatically in C++, and how to use custom
     materials with instanced rendering.

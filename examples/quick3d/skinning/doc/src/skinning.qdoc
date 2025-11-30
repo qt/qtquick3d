@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to render a simple skinning animation in Qt Quick 3D.
     \image skinning.png
+           {Two animated shapes showing skeletal deformation}
 
     Generally most \l{Vertex Skinning}{skin animations} will be designed by modeling tools, and Quick3D
     also supports glTF formats through the \l {Balsam Asset Import Tool}{Balsam importer}

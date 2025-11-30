@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates the order independent transparency in Qt Quick 3D.
     \image oit-example.jpg
+           {Transparent cubes with example selection menu}
 
     The \e {OIT} example demonstrates how to enable order-independent transparency
     in Qt Quick 3D. It has multiple examples using the feature in different ways.

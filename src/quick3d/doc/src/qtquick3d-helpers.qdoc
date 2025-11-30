@@ -16,7 +16,7 @@
     \inherits Node
     \brief Visual helper for showing the 3 axes and a grid in a 3D scene.
 
-    \image axishelper.jpg
+    \image axishelper.jpg {Sphere with RGB axis lines showing coordinate system}
 
     The X axis is red, the Y axis is green, and the Z axis is blue.
 
@@ -479,6 +479,7 @@
     ditheringEnabled.
 
     \image extendedsceneenvironment_tonemap.jpg
+           {Scene demonstrating tonemapping}
 
     \li \l{colorAdjustmentsEnabled}{Color adjustments} - Brightness, contrast,
     saturation adjustment.
@@ -487,12 +488,14 @@
     adjustmentBrightness, \l adjustmentContrast, \l adjustmentSaturation.
 
     \image extendedsceneenvironment_coloradj.jpg
+           {Scene demonstrating color adjustments}
 
     \li \l{lutEnabled}{Color grading} via lookup table (LUT) textures.
 
     Controlled by the properties \l lutEnabled, \l lutSize, \l lutFilterAlpha.
 
     \image extendedsceneenvironment_colorgrade.jpg
+           {Scene demonstrating color grading with lookup table}
 
     \li \l{depthOfFieldEnabled}{Depth of field}
 
@@ -501,6 +504,7 @@
     depthOfFieldBlurAmount.
 
     \image extendedsceneenvironment_dof.jpg
+           {Scene demonstrating depth of field effect}
 
     \li \l{glowEnabled}{Glow and bloom}
 
@@ -509,7 +513,7 @@
     glowBlendMode, \l glowHDRMaximumValue, \l glowHDRMinimumValue, \l
     glowHDRScale.
 
-    \image extendedsceneenvironment_glow.jpg
+    \image extendedsceneenvironment_glow.jpg {Scene demonstrating glow effect}
 
     \li \l{vignetteEnabled}{Vignette}
 
@@ -517,6 +521,7 @@
     vignetteColor, \l vignetteRadius.
 
     \image extendedsceneenvironment_vignette.jpg
+           {Scene demonstrating vignette effect}
 
     \li \l{lensFlareEnabled}{Lens flare}
 
@@ -528,6 +533,7 @@
     lensFlareLensDirtTexture, \l lensFlareLensStarburstTexture.
 
     \image extendedsceneenvironment_lensflare.jpg
+           {Scene demonstrating lens flare effect}
 
     \li \l{SceneEnvironment::aoStrength}{Screen space ambient occlusion} -
     Provided by \l SceneEnvironment. Note that \l{ssgiEnabled}{SSGI} also
@@ -541,6 +547,7 @@
     \l{SceneEnvironment::aoBias}.
 
     \image extendedsceneenvironment_ssao.jpg
+           {Scene demonstrating screen space ambient occlusion}
 
     \li \l{SceneEnvironment::fog}{Fog} - Provided by \l SceneEnvironment. This
     is not a post-processing type of effect, but is rather applied to the
@@ -549,7 +556,7 @@
     Controlled by the \l{QtQuick3D::Fog}{Fog} object associated with the
     \l{SceneEnvironment::fog} property.
 
-    \image extendedsceneenvironment_fog.jpg
+    \image extendedsceneenvironment_fog.jpg {Scene demonstrating fog effect}
 
     \li \l{SceneEnvironment::antialiasingMode}{Antialiasing} - Multisampling,
     supersampling, progressive antialiasing, specular antialiasing, temporal
@@ -563,7 +570,7 @@
     \l{SceneEnvironment::temporalAAStrength}, and
     \l{SceneEnvironment::specularAAEnabled}.
 
-    \image extendedsceneenvironment_aa.jpg
+    \image extendedsceneenvironment_aa.jpg {Scene demonstrating antialiasing}
 
     \li \l{ssgiEnabled}{Screen-space global illumination} Provides ambient
     occlusion and indirect lighting. Note that enabling this effect may have a
@@ -574,6 +581,7 @@
     ssgiSliceCount, \l ssgiHitThickness
 
     \image extendedsceneenvironment_ssgi.jpg
+           {City with buildings, red awnings, and outdoor cafe seating}
 
     \endlist
 
@@ -598,6 +606,7 @@
     below is taken with a focus distance of 753 and a focus range of 482.
 
     \image extendedsceneenvironment_dof.jpg
+           {Scene demonstrating depth of field effect}
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldFocusRange
     The distance around the \l
@@ -620,7 +629,9 @@
     \li Blur amount of 15
     \row
     \li \image extendedsceneenvironment_dof_no_blur.jpg
+               {Scene without depth of field blur}
     \li \image extendedsceneenvironment_dof_15_blur.jpg
+               {Scene with depth of field blur at 15}
     \endtable
 */
 // Tonemapper
@@ -662,18 +673,23 @@
     \row
     \li None
     \li \image extendedsceneenvironment_tonemap_none.jpg
+               {Scene with no tonemapping}
     \row
     \li Linear
     \li \image extendedsceneenvironment_tonemap_linear.jpg
+               {Scene with linear tonemapping}
     \row
     \li Aces
     \li \image extendedsceneenvironment_tonemap_aces.jpg
+               {Scene with ACES tonemapping}
     \row
     \li HejlDawson
     \li \image extendedsceneenvironment_tonemap_hejldawson.jpg
+               {Scene with Hejl-Dawson tonemapping}
     \row
     \li Filmic
     \li \image extendedsceneenvironment_tonemap_filmic.jpg
+               {Scene with filmic tonemapping}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::exposure
@@ -687,7 +703,9 @@
     \li Filmic tonmapping with exposure set to 0.5
     \row
     \li \image extendedsceneenvironment_tonemap_exposure_8.jpg
+               {Scene with exposure value 8}
     \li \image extendedsceneenvironment_tonemap_exposure_05.jpg
+               {Scene with exposure value 0.5}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::whitePoint
@@ -705,7 +723,9 @@
     \li Filmic tonmapping with white point set to 1
     \row
     \li \image extendedsceneenvironment_tonemap_whitepoint_01.jpg
+               {Stone hallway with brighter film tonemapping, white point 0.1}
     \li \image extendedsceneenvironment_tonemap_whitepoint_1.jpg
+               {Stone hallway with darker film tonemapping, white point 1}
     \endtable
 */
 /*! \qmlproperty bool ExtendedSceneEnvironment::ditheringEnabled
@@ -724,20 +744,24 @@
     \li Filmic tonmapping with sharpness set to 1
     \row
     \li \image extendedsceneenvironment_tonemap_sharpness_0.jpg
+               {Stone hallway with sharpness set to 0}
     \li \image extendedsceneenvironment_tonemap_sharpness_1.jpg
+               {Stone hallway with sharpness set to 1}
     \endtable
 */
 // FXAA
 /*! \qmlproperty bool ExtendedSceneEnvironment::fxaaEnabled
-    Enables fast approximate anti-aliasing (FXAA).
+    Enables fast approximate antialiasing (FXAA).
 
     \table
     \header
     \li FXAA disabled
     \li FXAA enabled
     \row
-    \li \image extendedsceneenvironment_without_fxaa.jpg
-    \li \image extendedsceneenvironment_with_fxaa.jpg
+    \li \image extendedsceneenvironment_without_fxaa.jpg {Stone hallway
+               without antialiasing}
+    \li \image extendedsceneenvironment_with_fxaa.jpg {Stone hallway with
+               fast approximate antialiasing}
     \endtable
 
     \default false
@@ -759,7 +783,9 @@
     \li Brightness of 4
     \row
     \li \image extendedsceneenvironment_brightness_contrast_saturation_at_1.jpg
+               {Stone hallway with default brightness level}
     \li \image extendedsceneenvironment_brightness_at_4.jpg
+               {Stone hallway with brightness increased to 4}
     \endtable
 
     \default 1
@@ -773,7 +799,9 @@
     \li Contrast of 4
     \row
     \li \image extendedsceneenvironment_brightness_contrast_saturation_at_1.jpg
+               {Stone hallway with default brightness level}
     \li \image extendedsceneenvironment_contrast_at_4.jpg
+               {Stone hallway with contrast increased to 4}
     \endtable
 
     \default 1
@@ -787,7 +815,9 @@
     \li Saturation of 4
     \row
     \li \image extendedsceneenvironment_brightness_contrast_saturation_at_1.jpg
+               {Stone hallway with default brightness level}
     \li \image extendedsceneenvironment_saturation_at_4.jpg
+               {Stone hallway with saturation increased to 4}
     \endtable
 
     \default 1
@@ -822,10 +852,12 @@
     default \l lutSize of 16.
 
     \image extendedsceneenvironment_lut_texture_used_for_invert.jpg
+           {Horizontal gradient strip showing LUT color mapping for inversion}
 
     The result of this effect:
 
     \image extendedsceneenvironment_lut_invert.jpg
+           {Stone hallway with inverted colors using LUT}
 */
 // Glow Effect
 /*! \qmlproperty bool ExtendedSceneEnvironment::glowEnabled
@@ -872,7 +904,9 @@
     \li glowStrength of 1.5
     \row
     \li \image extendedsceneenvironment_glow_strength_05.jpg
+               {Scene with glow strength 0.5}
     \li \image extendedsceneenvironment_glow_strength_15.jpg
+               {Scene with glow strength 1.5}
     \endtable
 
 */
@@ -895,7 +929,9 @@
     \li glowIntensity of 1.25
     \row
     \li \image extendedsceneenvironment_glow_intensity_025.jpg
+               {Stone courtyard with glow intensity 0.25}
     \li \image extendedsceneenvironment_glow_intensity_125.jpg
+               {Stone courtyard with glow intensity 1.25}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::glowBloom
@@ -920,7 +956,9 @@
     \li glowBloom set to 0.5
     \row
     \li \image extendedsceneenvironment_glow_level4_strength15_intensity1_bloom0.jpg
+               {Stone hallway with glow bloom set to 0}
     \li \image extendedsceneenvironment_glow_level4_strength15_intensity1_bloom05.jpg
+               {Stone hallway with glow bloom set to 0.5}
     \endtable
 */
 /*! \qmlproperty int ExtendedSceneEnvironment::glowBlendMode
@@ -952,18 +990,23 @@
     \row
     \li Glow disabled
     \li \image extendedsceneenvironment_glow_disabled.jpg
+               {Stone hallway without glow effect}
     \row
     \li Additive
     \li \image extendedsceneenvironment_glow_additive.jpg
+               {Scene with glow additive blend mode}
     \row
     \li Screen
     \li \image extendedsceneenvironment_glow_screen.jpg
+               {Scene with glow screen blend mode}
     \row
     \li SoftLight
     \li \image extendedsceneenvironment_glow_softlight.jpg
+               {Stone hallway with glow using soft light blend mode}
     \row
     \li Replace
     \li \image extendedsceneenvironment_glow_replace.jpg
+               {Scene with glow replace blend mode}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::glowHDRMaximumValue
@@ -1016,15 +1059,19 @@
     \row
     \li One
     \li \image extendedsceneenvironment_glow_levels_1.jpg
+               {Stone courtyard with glow at level 1}
     \row
     \li One | Two
     \li \image extendedsceneenvironment_glow_levels_1_2.jpg
+               {Stone courtyard with glow at levels 1 and 2}
     \row
     \li One | Two | Three
     \li \image extendedsceneenvironment_glow_levels_1_2_3.jpg
+               {Stone courtyard with glow at levels 1, 2, and 3}
     \row
     \li One | Two | Three | Four
     \li \image extendedsceneenvironment_glow_levels_1_2_3_4.jpg
+               {Scene showing glow at 1, 2, 3, and 4 levels}
     \endtable
 */
 
@@ -1046,7 +1093,9 @@
     \li Strength of 10
     \row
     \li \image extendedsceneenvironment_vignette_strength_15.jpg
+               {Stone hallway with vignette strength set to 15}
     \li \image extendedsceneenvironment_vignette_strength_10.jpg
+               {Stone hallway with vignette strength set to 10}
     \endtable
 */
 /*! \qmlproperty color ExtendedSceneEnvironment::vignetteColor
@@ -1058,6 +1107,7 @@
     strength 15:
 
     \image extendedsceneenvironment_vignette_red.jpg
+           {Stone hallway with red vignette effect}
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::vignetteRadius
     Sets the radius of the vignette effect. Ranges from \b 0 to \b 5.
@@ -1070,7 +1120,9 @@
     \li Radius of 5.0
     \row
     \li \image extendedsceneenvironment_vignette_radius_default.jpg
+               {Stone hallway with vignette radius set to 0.35}
     \li \image extendedsceneenvironment_vignette_radius_5.jpg
+               {Stone hallway with vignette radius set to 5.0}
     \endtable
 */
 // Lens Flare
@@ -1097,7 +1149,9 @@
     \li Scale 20, bias 0.81
     \row
     \li \image extendedsceneenvironment_lensflare_scale_2_bias_081.jpg
+               {Stone hallway with lens flare scale 2}
     \li \image extendedsceneenvironment_lensflare_scale_20_bias_081.jpg
+               {Stone hallway with lens flare scale 20}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::lensFlareBloomBias
@@ -1117,7 +1171,9 @@
     \li Bias of 0.31
     \row
     \li \image extendedsceneenvironment_lensflare_bias_081.jpg
+               {Stone courtyard with subtle lens flare, bias 0.81}
     \li \image extendedsceneenvironment_lensflare_bias_031.jpg
+               {Stone courtyard with prominent lens flare, bias 0.31}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::lensFlareGhostDispersal
@@ -1132,7 +1188,9 @@
     \li Ghost dispersal of 0.90
     \row
     \li \image extendedsceneenvironment_lensflare_ghostdispersal_025.jpg
+               {Stone courtyard with closely spaced lens flare ghosts}
     \li \image extendedsceneenvironment_lensflare_ghostdispersal_090.jpg
+               {Stone courtyard with widely spaced lens flare ghosts}
     \endtable
 */
 /*! \qmlproperty int ExtendedSceneEnvironment::lensFlareGhostCount
@@ -1146,7 +1204,9 @@
     \li Ghost count of 16
     \row
     \li \image extendedsceneenvironment_lensflare_ghostcount_2.jpg
+               {Stone courtyard with 2 lens flare ghosts}
     \li \image extendedsceneenvironment_lensflare_ghostcount_16.jpg
+               {Stone courtyard with 16 lens flare ghosts}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::lensFlareHaloWidth
@@ -1171,7 +1231,9 @@
     \li Distortion set to 15
     \row
     \li \image extendedsceneenvironment_lensflare_distortion_0.jpg
+               {Stone courtyard with lens flare, no chromatic aberration}
     \li \image extendedsceneenvironment_lensflare_distortion_15.jpg
+               {Stone courtyard with lens flare showing chromatic aberration}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::lensFlareBlurAmount
@@ -1185,7 +1247,9 @@
     \li Blur amount set to 30
     \row
     \li \image extendedsceneenvironment_lensflare_0_blur.jpg
+               {Stone courtyard with sharp lens flare}
     \li \image extendedsceneenvironment_lensflare_30_blur.jpg
+               {Stone courtyard with blurred lens flare}
     \endtable
 
 */
@@ -1200,7 +1264,9 @@
     \li Default dirty texture enabled
     \row
     \li \image extendedsceneenvironment_lensflare_dirt_off.jpg
+               {Stone courtyard with clean lens flare}
     \li \image extendedsceneenvironment_lensflare_dirt_on.jpg
+               {Stone courtyard with lens flare showing dirt texture}
     \endtable
 
     \sa {ExtendedSceneEnvironment::lensFlareLensDirtTexture}{lensFlareLensDirtTexture}
@@ -1216,7 +1282,9 @@
     \li Default starburst texture enabled
     \row
     \li \image extendedsceneenvironment_lensflare_starburst_off.jpg
+               {Stone courtyard with lens flare, no starburst}
     \li \image extendedsceneenvironment_lensflare_starburst_on.jpg
+               {Stone courtyard with lens flare showing starburst pattern}
     \endtable
 
     \sa {ExtendedSceneEnvironment::lensFlareLensStarburstTexture}{lensFlareLensStarburstTexture}
@@ -1232,6 +1300,7 @@
     By default a built-in 256x256 texture is used:
 
     \image extendedsceneenvironment_lensflare_default_texture.jpg
+           {Horizontal gradient from yellow through pink to magenta}
  */
 /*! \qmlproperty Texture ExtendedSceneEnvironment::lensFlareLensDirtTexture
     An image that is used to simulate inperfections on the lens.
@@ -1241,6 +1310,7 @@
     By default a built-in dirty texture is used:
 
     \image extendedsceneenvironment_lensflare_default_dirt.jpg
+           {Grayscale texture with scattered bright spots on dark background}
  */
 /*! \qmlproperty Texture ExtendedSceneEnvironment::lensFlareLensStarburstTexture
     A noise image to augment the starburst effect of the lens flare.
@@ -1249,6 +1319,7 @@
     By default a built-in noise texture is used:
 
     \image extendedsceneenvironment_lensflare_default_noise.jpg
+           {Grayscale noise texture with irregular light and dark patterns}
 */
 
 // SSGI
@@ -1265,7 +1336,9 @@
     \li SSGI enabled
     \row
     \li \image extendedsceneenvironment_ssgi_without.jpg
+               {Medieval hall without screen-space global illumination}
     \li \image extendedsceneenvironment_ssgi_with.jpg
+               {Medieval hall with screen-space global illumination enabled}
     \endtable
 */
 /*! \qmlproperty bool ExtendedSceneEnvironment::ssgiIndirectLightEnabled
@@ -1288,7 +1361,9 @@
     \li AO-only SSGI
     \row
     \li \image extendedsceneenvironment_ssgi_ao_without.jpg
+               {Lion sculpture without ambient occlusion}
     \li \image extendedsceneenvironment_ssgi_ao_with.jpg
+               {Lion sculpture with ambient occlusion from SSGI}
     \endtable
 */
 /*! \qmlproperty real ExtendedSceneEnvironment::ssgiIndirectLightBoost

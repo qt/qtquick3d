@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates the use of the experimental build-time material processing support.
     \image offlineshaders-example.jpg
+           {Red circle on gray background}
 
     This example uses the \l{Shadergen Tool}{build-time infrastructure} to
     perform shader preparation for materials.

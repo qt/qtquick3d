@@ -8,6 +8,8 @@
     \examplecategory {3D}
     \brief Demonstrates how the QtQuick3D Render Extension can be used to implement stencil outlining.
     \image stencil_outline.jpg
+           {Three monkey head models in pink, red, and green with blue
+           stencil outline on pink model}
 
     This example shows how the QtQuick3D Render Extensions can be used to add support for stencil outlining.
 

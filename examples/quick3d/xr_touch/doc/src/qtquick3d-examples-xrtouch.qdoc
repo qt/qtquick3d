@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates hand-tracking input in \qxr.
     \image xrtouch-example.jpg
+           {Virtual screen labeled XR Touch Example with three buttons}
 
     This example shows how to use the hand-tracking API in \qxr to
     interact with 2D and 3D objects in the scene. It follows the basic structure of

@@ -8,6 +8,8 @@
     \examplecategory {3D}
     \brief Demonstrates the use of layers in QtQuick3D.
     \image layers-example.jpg
+           {Three stacked Qt logo layers in red, green, and blue with layer
+           toggle checkboxes}
 
     In this example the different colored logo models are placed in different layers.
     From the settings panel users can control the visibility of each layer by toggling the

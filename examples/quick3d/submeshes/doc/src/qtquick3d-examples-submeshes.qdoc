@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates how assign materials to sub-meshes.
     \image submeshes-example.png
+           {Two cubes with sub-mesh materials}
 
     This example demonstrates how material and sub-meshes are mapped.
 
@@ -35,6 +36,7 @@
     the last material in the list, it will also be the material used for all the remaining sides of the distored cube.
 
     \image submeshes-example1.png
+           {Distorted cube with red back and green front and sides}
 
     \snippet submeshes/qml/main.qml DistortedCube Left
 
@@ -43,6 +45,7 @@
     color.
 
     \image submeshes-example2.png
+           {Distorted cube with six different colored sides}
 
     \snippet submeshes/qml/DistortedCube.qml DistortedCube Right
 */

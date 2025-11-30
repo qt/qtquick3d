@@ -31,15 +31,23 @@ directional light:
 \row
   \li \b{Single directional light}
   \li \image IBL-sphere-smooth-directional-light.png
+             {Smooth sphere with single directional light}
   \li \image IBL-sphere-rough-directional-light.png
+             {Rough sphere with single directional light}
   \li \image IBL-sphere-metallic-smooth-directional-light.png
+             {Metallic smooth sphere with single directional light}
   \li \image IBL-sphere-metallic-rough-directional-light.png
+             {Metallic rough sphere with single directional light}
 \row
   \li \b{Image-based light}
   \li \image IBL-sphere-smooth-environment-light.png
+             {Smooth sphere with image-based environment lighting}
   \li \image IBL-sphere-rough-environment-light.png
+             {Rough sphere with image-based environment lighting}
   \li \image IBL-sphere-metallic-smooth-environment-light.png
+             {Metallic smooth sphere with image-based environment lighting}
   \li \image IBL-sphere-metallic-rough-environment-light.png
+             {Metallic rough sphere with image-based environment lighting}
 \endtable
 
 \section1 Scene Lighting
@@ -84,19 +92,27 @@ following property values depending on the image and desired result:
 \row
   \li \e{\b{Default settings}}
   \li \image IBL-sphere-metallic-smooth-environment-light.png
+             {Metallic smooth sphere with image-based environment lighting}
   \li \image IBL-sphere-smooth-environment-light.png
+             {Smooth sphere with image-based environment lighting}
 \row
   \li \e{\b{Exposure}}
   \li \image IBL-sphere-metallic-smooth-environment-light-exposure.png
+             {Metallic smooth sphere showing light probe exposure adjustment}
   \li \image IBL-sphere-smooth-environment-light-exposure.png
+             {Smooth sphere showing light probe exposure adjustment}
 \row
   \li \e{\b{Horizon Cut-off}}
   \li \image IBL-sphere-metallic-smooth-environment-light-horizon.png
+             {Metallic smooth sphere showing light probe horizon adjustment}
   \li \image IBL-sphere-smooth-environment-light-horizon.png
+             {Smooth sphere showing light probe horizon adjustment}
 \row
   \li \e{\b{Orientation}}
   \li \image IBL-sphere-metallic-smooth-environment-light-orientation.png
+             {Metallic smooth sphere showing light probe orientation}
   \li \image IBL-sphere-smooth-environment-light-orientation.png
+             {Smooth sphere showing light probe orientation}
 \endtable
 
 \section1 Material Lighting

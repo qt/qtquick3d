@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates writing C++ custom geometry with a morph target.
     \image custommorphing.png
+           {Orange wavy object demonstrating custom morphing animation}
 
     This example shows how to define a complex custom geometry in C++ that contains a base shape and a
     morph target, with normal vectors for both.
@@ -33,6 +34,7 @@
     derivatives of the function describing the plane:
 
     \image partialderivatives.png
+           {Formula to calculate normal vector}
 
     In this example, we make it simple by using a cosine wave for the base
     shape, knowing that its derivative is a sine function.

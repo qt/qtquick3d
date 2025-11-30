@@ -211,6 +211,7 @@
     geometry from a Model:
 
     \image customgeometry.jpg
+           {Black triangle with gray background showing custom geometry}
 
     \note Vertex data is expected to follow OpenGL conventions. This means the
     data must be provided with the assumption that the Y axis is pointing up in

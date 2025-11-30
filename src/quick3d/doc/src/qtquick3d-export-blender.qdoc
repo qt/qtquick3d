@@ -26,6 +26,7 @@ To create material slots, follow the steps below.
   \li Press the \uicontrol + to add a new material slot.
   \li Press the \uicontrol{New} button.
   \image export-blender1.png
+         {Blender material properties panel with New button highlighted}
   \li Repeat steps 2 to 4 for each material slot to create.
 \endlist
 
@@ -41,6 +42,7 @@ same object, follow the steps below.
   \li In the material slots list, select the desired material slot.
   \li Press the \uicontrol{Assign} button to assign the selected material slot to selected faces.
   \image export-blender3.png
+         {Blender viewport showing green cube with material properties panel}
 \endlist
 
 \section2 UV Unwrap Models
@@ -55,6 +57,7 @@ Blender is described below.
   \li In edit mode, press \e A to select the whole mesh.
   \li Press the \e U key and select \uicontrol{Unwrap} from the context menu.
   \image export-blender2.png
+         {Blender UV Mapping menu with Unwrap option selected}
 \endlist
 
 \section2 Triangulate
@@ -64,6 +67,7 @@ Blender is described below.
   \li In the properties panel, select the modifiers tab.
   \li In the drop down list, select \uicontrol{Triangulate}.
   \image export-blender4.png
+         {Blender Add Modifier menu with Triangulate option highlighted}
   \li Press \uicontrol{Apply}.
 \endlist
 
@@ -96,7 +100,7 @@ visually change.
   \li Press the \e{Ctrl + A} keys.
   \li Select \uicontrol {Location}.
   \li From the check box in the panel, check also \uicontrol Rotation and \uicontrol {Scale}.
-  \image export-blender5.png
+  \image export-blender5.png {Blender Apply menu showing Location option}
 \endlist
 
 \note Applying Location will also reset the object's origin (pivot point).
@@ -187,6 +191,7 @@ enabled by following the steps:
 \endlist
 
 \image export-blender-enable-fbx-addon.png
+       {Blender User Preferences showing FBX format addon enabled}
 
 Next, to export as FBX, follow these steps:
 
@@ -195,9 +200,11 @@ Next, to export as FBX, follow these steps:
   \li Under the \uicontrol Main tab, set \uicontrol Forward to \c{Y Forward} and \uicontrol Up
   to \c{Z Up}.
   \image export-blender-fbx-axis.png
+         {Blender FBX export axis settings showing Y Forward and Z Up}
   \li For animations, ensure that the \uicontrol{Baked Animation} option is checked in the
   \uicontrol Animation tab.
   \image export-blender6.png
+         {Blender FBX export settings with Baked Animation option checked}
   \li Select the \uicontrol {Export FBX} button.
 \endlist
 

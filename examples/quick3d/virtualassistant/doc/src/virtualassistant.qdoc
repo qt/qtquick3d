@@ -10,6 +10,7 @@
     \meta {tag} {quick,quick3D}
 
     \image VirtualAssistantHome.png
+           {Virtual assistant character with animation controls}
 
     The \e{Virtual Assistant} example demonstrates how to bring a 3D model of a virtual assistant
     to life through timeline animations, increasing user engagement and interaction.

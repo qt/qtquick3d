@@ -85,8 +85,8 @@ QT_BEGIN_NAMESPACE
     \li Original image
     \li Mapped onto a sphere
     \row
-    \li \image madewithqt.png
-    \li \image spheremap.png
+    \li \image madewithqt.png {Built with Qt logo}
+    \li \image spheremap.png {Sphere with Qt logo as texture map}
     \endtable
 
     \sa {Qt Quick 3D - Procedural Texture Example}

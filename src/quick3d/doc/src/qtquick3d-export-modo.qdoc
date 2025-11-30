@@ -10,13 +10,14 @@
 
 \list 1
     \li With the mesh object selected, triangulate the mesh by pressing \e Shift+T.
-    \image export-colladaModo01.png
+    \image export-colladaModo01.png {Modo viewport showing wireframe cube}
     \li Next, select \uicontrol{System > Preferences} from the menu bar to configure the COLLADA
     exporter.
     \li In the preferences dialog box, locate the \uicontrol{Collada I/O} section under
     \uicontrol{File I/O}. Ensure that the  \uicontrol{Save Triangles as Triangles} option is
     checked.
     \image export-colladaModo02.png
+           {Modo COLLADA Export preferences with Save Triangles as Triangles}
     \li Close the preferences dialog box.
     \li From the menu bar, select \uicontrol{File > Export As}.
     \li Select \b Collada in the \uicontrol{Save as Type} drop-down list.
@@ -27,7 +28,7 @@
 
 \list 1
     \li With the mesh object selected, triangulate the mesh by pressing \e Shift+T.
-    \image export-colladaModo01.png
+    \image export-colladaModo01.png {Modo viewport showing wireframe cube}
     \li From the menu bar, select \uicontrol{File > Export As}.
     \li Select \b FBX in the \uicontrol{Save as Type} drop-down list.
     \li Select \uicontrol{Save}.

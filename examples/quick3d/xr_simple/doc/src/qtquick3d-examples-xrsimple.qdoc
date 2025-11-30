@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates setting up a simple VR scene with Qt Quick 3D XR.
     \image xrsimple-example.jpg
+           {VR scene with text Qt 6 in VR and three colored cubes}
 
     This example gives an introductory overview of the basic \qxr features.
 

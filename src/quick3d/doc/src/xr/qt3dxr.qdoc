@@ -3,7 +3,7 @@
 /*!
     \page qt-quick-3d-xr.html
     \title \qxr
-    \image xr_development.webp
+    \image xr_development.webp {VR headset render}
     \brief The \qxr module provides APIs for developing XR applications.
 
     \section1 Introduction

@@ -133,6 +133,7 @@ QT_BEGIN_NAMESPACE
     The result is a cylinder that animates its vertices:
 
     \image custommaterial_cylinder.png
+           {Bent cylinder with custom vertex shader}
 
     \section1 Two flavors of custom materials
 

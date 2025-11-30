@@ -8,6 +8,8 @@
     \examplecategory {3D}
     \brief Demonstrates cascaded shadow maps.
     \image cascadedshadowmaps.webp
+           {Row of black cones and cylinders casting long shadows with
+           cascaded shadow map settings panel}
 
     This example demonstrates how to use a DirectionalLight with cascaded shadow maps.
 

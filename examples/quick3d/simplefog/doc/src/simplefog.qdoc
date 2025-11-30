@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to enable fog in the 3D scene.
     \image simplefog.jpg
+           {3D scene with colorful spheres and fog controls}
 
     This example demonstrates the usage of the \l {SceneEnvironment}'s
     \l{SceneEnvironment::fog}{fog} property. The scene contains a number of

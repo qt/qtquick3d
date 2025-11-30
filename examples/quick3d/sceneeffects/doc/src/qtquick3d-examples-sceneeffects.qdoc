@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates the use of ExtendedSceneEnvironment.
     \image sceneeffects-example.jpg
+           {Green sphere with environment controls and toolbar}
 
     This example demonstrates using various features of \l SceneEnvironment and
     \l ExtendedSceneEnvironment.

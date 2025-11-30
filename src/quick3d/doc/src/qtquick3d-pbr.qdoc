@@ -113,7 +113,7 @@ This example shows two spheres, one with a non-metallic material and one with a
 metallic material and shows the different meanings that base color has depending
 on the metalness amount.
 
-\image pbr_example.jpg
+\image pbr_example.jpg {Two red spheres demonstrating PBR material properties}
 
 In the previous example all of the relevant properties of the Metallic Roughness
 workflow are defined via a constant value, but they can also be defined using

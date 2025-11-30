@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \image sceneenvironment_lightprobe_proceduralsky.jpg
+    \image sceneenvironment_lightprobe_proceduralsky.jpg {Architectural scene lit by procedural sky visible in background}
 
     \sa SceneEnvironment
 */

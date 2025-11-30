@@ -8,6 +8,8 @@
     \examplecategory {3D}
     \brief Demonstrates how to control morphing animations in Qt Quick 3D.
     \image morphing.png
+           {3D head model with morphing sliders for mouth, ears, and
+           cubify}
 
     This example shows how to control morphing animation on a model that has been imported from an external tool.
 
@@ -17,6 +19,7 @@
     shape, the mesh contains three morph targets (called \e {shape keys} in Blender).
 
     \image blender.jpg
+           {Blender interface with monkey head model and shape key controls}
 
     It was exported from Blender as a glTF file, and imported using \l{Balsam Asset Import Tool}{balsam}.
 

@@ -35,6 +35,7 @@ good ratio of geometry per pixel. This data is written to the .mesh file and wil
 be used automatically when used by a Model.
 
 \image lod_balsamui.png
+       {Balsam UI settings with LOD generation option highlighted}
 
 A tradeoff to the automatic system, and the reason why it is not enabled by default
 is that it is possible that when the geometry is reduced, visual artifacts can also
@@ -90,6 +91,7 @@ This is an \l {Qt Quick 3D - Level of Detail Helper Example}{example} of how to 
 the explicit level of detail system:
 
 \image lodhelper-example.jpg
+       {Bust sculpture with instanced objects at varying detail levels}
 
 In the referenced example the \l LodManager is used to explicitly specify different mesh
 files for each level of detail of the marble bust.
@@ -100,7 +102,7 @@ For this code this is a diagram of what is being defined which points out how th
 list is used to define where the boundaries between the different levels of detail as well
 as the fadeDistance property which is used to define the cross fade transition.
 
-\image lodmanager_diagram.png
+\image lodmanager_diagram.png {LOD system architecture diagram}
 
 */
 

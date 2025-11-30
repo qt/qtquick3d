@@ -9,6 +9,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to use spatial anchors in Qt Quick 3D XR.
     \image xranchors-example.jpg
+           {Colored boxes with label showing anchor information}
 
     This example shows how to use XrSpatialAnchorListModel to display and interact with real
     physical objects in the environment. It supports both passthrough mode and fully

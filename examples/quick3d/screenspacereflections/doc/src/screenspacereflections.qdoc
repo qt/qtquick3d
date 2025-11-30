@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates reflections in Qt Quick 3D.
     \image screenspacereflections-example.jpg
+           {Reflective surface with colored spheres and floating objects}
 
     This example demonstrates how to create reflections using
     \e {Screen Space Reflections} (SSR) on a model. SSR is a post-processing effect

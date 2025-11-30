@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates providing custom vertex data from C++ and QML.
     \image customgeometry-example.jpg
+           {Triangle with Qt logo texture demonstrating custom geometry}
 
     This example makes use of QQuick3DGeometry and \l{Model::geometry}{the
     geometry property} of Model to render a mesh with vertex, normal, and

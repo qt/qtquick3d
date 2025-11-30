@@ -8,6 +8,7 @@
     \examplecategory {3D}
     \brief Demonstrates how to render a scene in Qt Quick 3D.
     \image intro.png
+           {Blue sphere hovering over red disc}
 
     This example gives an introductory overview of the basic Quick 3D features by going
     through the code of a simple example.
