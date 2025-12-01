@@ -38,6 +38,7 @@ qt_internal_add_example(extensions/stenciloutline3d)
 qt_internal_add_example(cascadedshadowmaps)
 qt_internal_add_example(orderindependenttransparency)
 qt_internal_add_example(layers)
+qt_internal_add_example(userpasses)
 
 if(QT_FEATURE_quick3dxr_openxr)
     qt_internal_add_example(xr_simple)
