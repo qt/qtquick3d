@@ -1,0 +1,103 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example userpasses
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - User Passes Example
+    \examplecategory {3D}
+    \brief Demonstrates creating custom render passes in Qt Quick 3D.
+    \image userpasses.webp
+           {A 3D scene rendered using custom user passes}}
+
+    The \e {User Passes} example demonstrates how to create custom render passes
+    in Qt Quick 3D. It shows a simple 3D scene rendered using multiple user-defined
+    render passes to achieve a simplined deferred lighting technique.
+
+    \section1 Disabling internal render passes
+
+    By default, Qt Quick 3D uses a set of internal render passes to render the
+    3D scene. Sometimes you may want to disable these internal passes and
+    implement your own rendering pipeline using user-defined render passes.
+
+    To disable the internal render passes, set the \l {QtQuick3D::View3D::renderOverrides}{renderOverrides}
+    property of the \l {QtQuick3D::View3D}{View3D} to \c View3D.DisableInternalPasses.
+
+    \snippet userpasses/Main.qml disable internal passes
+
+    If you disable the internal render passes, you will need to provide the result
+    of the main color pass for the View3D to be able to display anything on the screen.
+
+    \section1 Geometry Buffer Pass
+
+    In this example, the first custom render pass is a geometry buffer (G-buffer) pass
+    that renders the scene geometry into multiple render targets, storing different
+    material properties in each target.  The provided example is a subset of the full
+    material properties provided by Qt Quick 3D materials, focusing on the properties
+    needed for a basic deferred lighting implementation.
+
+    Our RenderPass is defined in \c GBufferPass.qml:
+
+    \snippet userpasses/GBufferPass.qml gbuffer pass
+
+    It defines 3 color attachments and 1 depth attachment. The pass requires 3 textures
+    which are defined as \l {QtQuick3D::RenderPassTexture}{RenderPassTexture} objects inside the RenderPass.
+    These 3 RenderPassTextures are used as the targets for the color attachments of the pass, and the depth
+    attachment uses a depth texture provided from outside the pass.
+
+    The RenderPass itself is set to \c AugmentMaterial mode, which means that it will augment the materials
+    of the rendered objects with additional shader code. The augment shader is provided
+    in the \c gbuffer_augment.glsl file, which outputs the required material properties
+    to the multiple render targets.
+
+    \snippet userpasses/gbuffer_augment.glsl gbuffer augment shader
+
+    Here you see how the base color, metalness, worldNormal, roughness and world position are
+    stored into the 3 color attachments of the G-buffer.
+
+    To actually use the G-buffer pass in the rendering pipeline, we need to create an instance
+    of it in \c Main.qml, and provide the required depth texture:
+
+    \snippet userpasses/Main.qml depth texture
+
+    \snippet userpasses/Main.qml GBufferPass usage
+
+    Three instances of RenderPassTexture are created to provide references to the rendered
+    G-buffer textures, which will be used in the subsequent lighting pass.
+
+    The \c layerMask property of the G-buffer pass is set to only render objects
+    that are on ContentLayer.Layer0 and ContentLayer.Layer1. This allows us to control
+    which objects are rendered in the G-buffer pass by setting their \l {QtQuick3D::Model::layers}{layers}
+    property accordingly.
+
+    \section1 Deferred Lighting Pass
+
+    The second custom render pass is a deferred lighting pass that uses the data
+    stored in the G-buffer to compute lighting for the scene. This pass renders a full-screen
+    quad that samples the G-buffer textures and applies lighting calculations in the fragment shader.
+
+    The deferred lighting pass is defined in \c Main.qml as follows:
+    \snippet userpasses/Main.qml deferred lighting quad
+
+    The \c deferredLightingQuad Model uses a CustomMaterial with vertex and fragment
+    shaders defined in \c lighting.vert and \c lighting.frag files.
+    The CustomMaterial has three TextureInput properties that are used to pass the
+    G-buffer textures to the shaders.
+
+    The \c deferredLightingPass RenderPass renders the full-screen quad to the main color
+    texture of the View3D. It uses a RenderablesFilter to only render objects on
+    ContentLayer.Layer13, which is where the \c deferredLightingQuad Model is placed.
+
+    \section1 Rendering to the screen
+
+    Finally, to display the result of our custom render passes on the screen,
+    we need to ensure that the View3D's main color texture is updated with the
+    result of the deferred lighting pass.
+
+    \snippet userpasses/Main.qml main texture
+
+    Here the SimpleQuadRenderer is used to render the main color texture of the View3D
+    using the texture provided by the \c deferredLightingPass.
+
+    This is a highly simplified example of using custom user passes in Qt Quick 3D.
+*/
