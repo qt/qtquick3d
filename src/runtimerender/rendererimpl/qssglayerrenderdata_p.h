@@ -30,6 +30,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglightmapbaker_p.h>
+#include <QtQuick3DRuntimeRender/private/qssguserrenderpassmanager_p.h>
 #include <ssg/qssgrenderextensions.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
@@ -298,11 +299,13 @@ public:
     static qsizetype frustumCulling(const QSSGClippingFrustum &clipFrustum, const QSSGRenderableObjectList &renderables, QSSGRenderableObjectList &visibleRenderables);
     [[nodiscard]] static qsizetype frustumCullingInline(const QSSGClippingFrustum &clipFrustum, QSSGRenderableObjectList &renderables);
 
+    [[nodiscard]] static qsizetype filterLayerMaskInline(quint32 layerMask, QSSGRenderableObjectList &renderables);
+
 
     // Per-frame cache of renderable objects post-sort (for the MAIN rendering camera, i.e., don't use these lists for rendering from a different camera).
-    const QSSGRenderableObjectList &getSortedOpaqueRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0);
+    const QSSGRenderableObjectList &getSortedOpaqueRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0, quint32 layerMask = 0xFFFFFFFF);
     // If layer depth test is false, this may also contain opaque objects.
-    const QSSGRenderableObjectList &getSortedTransparentRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0);
+    const QSSGRenderableObjectList &getSortedTransparentRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0, quint32 layerMask = 0xFFFFFFFF);
     const QSSGRenderableObjectList &getSortedScreenTextureRenderableObjects(const QSSGRenderCamera &camera, size_t index = 0);
     const QVector<QSSGBakedLightingModel> &getSortedBakedLightingModels();
     const RenderableItem2DEntries &getRenderableItem2Ds();
@@ -324,8 +327,9 @@ public:
     Item2DPass item2DPass;
     SkyboxPass skyboxPass;
     SkyboxCubeMapPass skyboxCubeMapPass;
+    UserRenderPass userRenderPasses;
     static constexpr size_t USERPASSES = 3; // See QSSGRenderLayer::RenderExtensionMode::Count
-    UserPass userPasses[USERPASSES];
+    UserExtensionPass userPasses[USERPASSES];
     OpaquePass opaquePass;
     TransparentPass transparentPass;
     OITRenderPass oitRenderPass;
@@ -381,6 +385,7 @@ public:
     bool oitWarningUnsupportedShown = false;
     bool oitWarningInvalidBlendModeShown = false;
     bool orderIndependentTransparencyEnabled = false;
+    bool disableMainPasses = false;
 
     std::unique_ptr<QSSGLightmapBaker> lightmapBaker = nullptr;
 
@@ -430,8 +435,12 @@ public:
     // but we follow the existing pattern for now.
     const QSSGRenderShadowMapPtr &requestShadowMapManager();
     const QSSGRenderReflectionMapPtr &requestReflectionMapManager();
+    const QSSGUserRenderPassManagerPtr &requestUserRenderPassManager();
     const QSSGRenderShadowMapPtr &getShadowMapManager() const { return shadowMapManager; }
     const QSSGRenderReflectionMapPtr &getReflectionMapManager() const { return reflectionMapManager; }
+    const QSSGUserRenderPassManagerPtr &getUserRenderPassManager() const { return userRenderPassManager; }
+
+
 
     QSSGOITRenderContext &getOitRenderContext() { return oitRenderContext; }
 
@@ -568,6 +577,8 @@ public:
                                  quint32 layerMask,
                                  quint32 typeMask);
 
+    [[nodiscard]] static QSSGLayerRenderData *getCurrent(const QSSGFrameData &data) { return data.getCurrent(); }
+
 private:
     friend class QSSGRenderer;
     friend class QSSGRendererPrivate;
@@ -604,7 +615,23 @@ private:
     std::unique_ptr<QSSGRenderItem2DData> item2DData;
 
     // Soreted cache (per camera and extension)
-    using PerCameraCache = std::unordered_map<const QSSGRenderCamera *, QSSGRenderableObjectList>;
+    using CameraKey = std::pair<const QSSGRenderCamera*, uint32_t>;
+
+    struct CameraKeyHash {
+        std::size_t operator()(const CameraKey& k) const noexcept {
+            // Hash combine: pointer hash ^ (uint hash shifted)
+            return std::hash<const QSSGRenderCamera*>()(k.first) ^
+                    (std::hash<uint32_t>()(k.second) << 1);
+        }
+    };
+
+    struct CameraKeyEq {
+        bool operator()(const CameraKey& a, const CameraKey& b) const noexcept {
+            return a.first == b.first && a.second == b.second;
+        }
+    };
+
+    using PerCameraCache = std::unordered_map<CameraKey, QSSGRenderableObjectList, CameraKeyHash, CameraKeyEq>;
     std::vector<PerCameraCache> sortedOpaqueObjectCache { PerCameraCache{ /* 0 - Always available */ } };
     std::vector<PerCameraCache> sortedTransparentObjectCache { PerCameraCache{ /* 0 - Always available */ } };
     std::vector<PerCameraCache> sortedScreenTextureObjectCache { PerCameraCache{ /* 0 - Always available */ } };
@@ -676,6 +703,7 @@ private:
     DepthPrepassObjectStateT depthPrepassObjectsState { DepthPrepassObjectStateT(DepthPrepassObject::None) };
     QSSGRenderShadowMapPtr shadowMapManager;
     QSSGRenderReflectionMapPtr reflectionMapManager;
+    QSSGUserRenderPassManagerPtr userRenderPassManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;
     QHash<const QSSGModelContext *, QRhiTexture *> bonemapTextures;
     QSSGRhiRenderableTexture renderResults[7] {};

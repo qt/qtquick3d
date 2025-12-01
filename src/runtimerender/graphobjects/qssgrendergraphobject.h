@@ -87,6 +87,7 @@ public:
         ModelInstance, // Resource
         ModelBlendParticle, // Resource
         ResourceLoader, // Resource [meta]
+        RenderPass, // Resource
         // Materials
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource

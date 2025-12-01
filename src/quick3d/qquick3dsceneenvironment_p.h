@@ -28,6 +28,7 @@
 #include <QtQuick3D/private/qquick3dlightmapper_p.h>
 #include <QtQuick3D/private/qquick3ddebugsettings_p.h>
 #include <QtQuick3D/private/qquick3dfog_p.h>
+#include <QtQuick3D/private/qquick3drenderpass_p.h>
 
 QT_BEGIN_NAMESPACE
 

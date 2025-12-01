@@ -18,6 +18,8 @@
 
 #include <QtQuick3DUtils/qtquick3dutilsexports.h>
 
+#include <QtCore/qvariant.h>
+
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
 #include <QtGui/QVector4D>
@@ -59,6 +61,17 @@ enum class QSSGRenderWinding // stored in mesh files, the values must not change
 {
     Clockwise = 1,
     CounterClockwise
+};
+
+enum class QSSGRenderSamplerType
+{
+    Unknown,
+    Sampler2D,
+    Sampler2DArray,
+    Sampler3D,
+    SamplerCube,
+    SamplerCubeArray,
+    SamplerBuffer,
 };
 
 struct Q_QUICK3DUTILS_EXPORT QSSGRenderTextureFormat
@@ -378,6 +391,20 @@ public:
     { return (face == QSSGRenderTextureCubeFaces[0]) ? QSSGRenderTextureCubeFaces[5] : QSSGRenderTextureCubeFace(quint8(face) - 1); }
 
     static constexpr QSSGRenderTextureCubeFaceT indexOfCubeFace(QSSGRenderTextureCubeFace face) noexcept { return QSSGRenderTextureCubeFaceT(face) & 0xf; }
+};
+
+class QSSGBaseTypeProperty
+{
+public:
+    QSSGBaseTypeProperty() = default;
+    QSSGBaseTypeProperty(const QByteArray &name, const QByteArray &typeName, const QVariant &value, QSSGRenderShaderValue::Type shaderDataType, int pid = -1)
+        : name(name), typeName(typeName), value(value), shaderDataType(shaderDataType), pid(pid)
+    { }
+    QByteArray name;
+    QByteArray typeName;
+    mutable QVariant value;
+    QSSGRenderShaderValue::Type shaderDataType;
+    int pid;
 };
 
 QT_END_NAMESPACE

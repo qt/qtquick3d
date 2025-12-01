@@ -159,7 +159,7 @@ void BenchFrustumCulling::bench_outputlist()
     renderables.reserve(objects.size());
 
     for (auto *ro : renderableObjects)
-        renderables.push_back({ ro, 0.0f });
+        renderables.push_back({ ro, 0.0f, {}});
 
     QVERIFY(!cameraNode->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
 
@@ -215,7 +215,7 @@ void BenchFrustumCulling::bench_inline()
     renderables.reserve(objects.size());
 
     for (auto *ro : renderableObjects)
-        renderables.push_back({ ro, 0.0f });
+        renderables.push_back({ ro, 0.0f, {} });
 
     QVERIFY(!cameraNode->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
 

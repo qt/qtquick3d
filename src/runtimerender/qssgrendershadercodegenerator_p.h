@@ -182,6 +182,7 @@ public:
                                                        QSSGShaderLibraryManager &shaderLibraryManager,
                                                        QSSGShaderCache &theCache,
                                                        QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                                       const QSSGUserShaderAugmentation &shaderAugmentation,
                                                        int viewCount,
                                                        bool perTargetCompilation);
 };

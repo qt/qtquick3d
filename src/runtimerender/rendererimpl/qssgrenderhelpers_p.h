@@ -128,6 +128,37 @@ void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
                                       QSSGReflectionMapEntry *entry,
                                       QSSGRenderTextureCubeFace cubeFace);
 
+void rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
+                                        QSSGPassKey passKey,
+                                        const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                        QRhiRenderPassDescriptor *rpDesc,
+                                        QSSGRenderGraphObject *overrideMaterial,
+                                        const QSSGLayerRenderData &inData,
+                                        QSSGRenderableObjectList &inObjects,
+                                        QSSGShaderFeatures featureSet,
+                                        size_t index);
+
+void rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
+                                        QSSGPassKey passKey,
+                                        const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                        QRhiRenderPassDescriptor *rpDesc,
+                                        const QSSGLayerRenderData &inData,
+                                        QSSGRenderableObjectList &inObjects,
+                                        QSSGShaderFeatures featureSet,
+                                        size_t index);
+
+void rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
+                                 QSSGPassKey passKey,
+                                 const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                 QRhiRenderPassDescriptor *rpDesc,
+                                 const QSSGUserShaderAugmentation &shaderAugmentation,
+                                 const QSSGLayerRenderData &inData,
+                                 QSSGRenderableObjectList &inObjects,
+                                 QSSGShaderFeatures featureSet, size_t index);
+
+void rhiRenderUserAugmentedPass(QSSGRhiContext *rhiCtx,
+                               QSSGRenderableObjectList &inObjects);
+
 Q_QUICK3DRUNTIMERENDER_EXPORT void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                         QSSGPassKey passKey,
                                                         const QSSGLayerRenderData &inData,
@@ -147,7 +178,8 @@ Q_QUICK3DRUNTIMERENDER_EXPORT void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                        const QSSGRhiGraphicsPipelineState &state,
                                                        QSSGRenderableObject &object,
                                                        bool *needsSetViewport,
-                                                       QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone);
+                                                       QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
+                                                       qsizetype userPassIndex = -1);
 
 bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx,
                             const QSize &size,

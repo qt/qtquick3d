@@ -11,11 +11,14 @@
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
+#include <QtQuick3DRuntimeRender/private/qssguserrenderpassmanager_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <qtquick3d_tracepoints_p.h>
 
 #include <QtGui/qquaternion.h>
+
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -1043,6 +1046,36 @@ int QSSGRhiShaderPipeline::bindingForImage(const char *name)
     return binding;
 }
 
+void QSSGRhiShaderPipeline::setShaderResources(char *ubufData,
+                                               QSSGBufferManager &theBufferManager,
+                                               const QByteArray &inPropertyName,
+                                               const QVariant &propertyValue,
+                                               QSSGRenderShaderValue::Type inPropertyType)
+{
+    if (inPropertyType == QSSGRenderShaderValue::Texture) {
+        QSSGRenderImage *image = propertyValue.value<QSSGRenderImage *>();
+        if (image) {
+            const QSSGRenderImageTexture texture = theBufferManager.loadRenderImage(image);
+            if (texture.m_texture) {
+                const QSSGRhiTexture t = {
+                    inPropertyName,
+                    texture.m_texture,
+                    { QSSGRhiHelpers::toRhi(image->m_minFilterType),
+                            QSSGRhiHelpers::toRhi(image->m_magFilterType),
+                            image->m_mipFilterType != QSSGRenderTextureFilterOp::None ? QSSGRhiHelpers::toRhi(image->m_mipFilterType) : QRhiSampler::None,
+                            QSSGRhiHelpers::toRhi(image->m_horizontalTilingMode),
+                            QSSGRhiHelpers::toRhi(image->m_verticalTilingMode),
+                            QSSGRhiHelpers::toRhi(image->m_depthTilingMode)
+                    }
+                };
+                addExtraTexture(t);
+            }
+        }
+    } else {
+        setUniformValue(ubufData, inPropertyName, propertyValue, inPropertyType);
+    }
+}
+
 
 /*!
     \internal
@@ -1784,4 +1817,82 @@ QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const
     // We do not use GPU compute at all at the moment, this means we can
     // get a small performance gain with OpenGL by declaring this.
     return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
+}
+
+/*!
+    \internal
+
+    \fn void QSSGRhiRenderableTextureV2::setDescription(QRhi *rhi, QRhiTextureRenderTargetDescription rtDesc)
+
+    Takes ownership of the textures in \a rtDesc and creates a render target.
+    Once set the textures should be assume owned by this object references to
+    individual textures can be gotten via the textures() method.
+ */
+void QSSGRhiRenderableTextureV2::setDescription(QRhi *rhi, QRhiTextureRenderTargetDescription rtDesc)
+{
+    Q_ASSERT(rhi);
+
+    textures = {};
+    const size_t colorAttachmentCount = rtDesc.colorAttachmentCount();
+    for (size_t i = 0; i < colorAttachmentCount; ++i)
+        textures.push_back(std::make_shared<QSSGSharedRhiTextureWrapper>(m_manager, rtDesc.colorAttachmentAt(i)->texture(), QSSGSharedRhiTextureWrapper::Private::Initialize));
+
+    if (rtDesc.depthTexture()) {
+        depthTexture = std::make_shared<QSSGSharedRhiTextureWrapper>(m_manager, rtDesc.depthTexture(), QSSGSharedRhiTextureWrapper::Private::Initialize);
+        depthStencil.reset();
+    } else if (rtDesc.depthStencilBuffer()) {
+        depthStencil.reset(rtDesc.depthStencilBuffer());
+        depthTexture.reset();
+    } else {
+        depthTexture.reset();
+        depthStencil = nullptr;
+    }
+
+    dirty = ColorTextureDirty | DepthTextureDirty | DepthStencilDirty;
+
+    rt.reset(rhi->newTextureRenderTarget(rtDesc));
+    rt->setName(rtName);
+    rpDesc.reset(rt->newCompatibleRenderPassDescriptor());
+    if (!rt->create()) {
+        qWarning("Failed to create renderable texture render target");
+        rt.reset();
+        return;
+    }
+}
+
+void QSSGRhiRenderableTextureV2::resetRenderTarget()
+{
+    rt.reset();
+    rpDesc.reset();
+}
+
+void QSSGRhiRenderableTextureV2::reset()
+{
+    if (rt)
+        rt->setDescription({/* empty */});
+
+    resetRenderTarget();
+
+    textures = {};
+
+    depthStencil = nullptr;
+    depthTexture.reset();
+}
+
+QSSGSharedRhiTextureWrapper::QSSGSharedRhiTextureWrapper(QSSGUserRenderPassManager *manager, QRhiTexture *texture, Private)
+    : m_manager(manager)
+    , m_texture(texture)
+{
+    Q_ASSERT(m_manager != nullptr);
+    m_manager->refTexture(texture);
+}
+
+QSSGSharedRhiTextureWrapper::~QSSGSharedRhiTextureWrapper()
+{
+    if (m_owner)
+        m_owner->derefTexture(m_texture.get());
+
+    // It's up to the owner to actually delete the texture,
+    // we're only using the unique_ptr for API convenience.
+    m_texture.release();
 }

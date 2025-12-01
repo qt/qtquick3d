@@ -225,12 +225,14 @@ struct QSSGRenderableNodeEntry
 struct QSSGRenderableObjectHandle
 {
     QSSGRenderableObjectHandle() = default;
-    QSSGRenderableObjectHandle(QSSGRenderableObject *o, float camDistSq)
+    QSSGRenderableObjectHandle(QSSGRenderableObject *o, float camDistSq, QSSGRenderNodeTag tag)
         : obj(o)
         , cameraDistanceSq(camDistSq)
+        , tag(tag)
     {}
     QSSGRenderableObject *obj = nullptr;
     float cameraDistanceSq = 0.0f;
+    QSSGRenderNodeTag tag;
 };
 Q_DECLARE_TYPEINFO(QSSGRenderableObjectHandle, Q_PRIMITIVE_TYPE);
 
@@ -343,6 +345,11 @@ public:
     QSSGShaderDefaultMaterialKey shaderDescription;
     const QSSGShaderLightListView &lights;
 
+    struct RhiPassData {
+        QRhiGraphicsPipeline *pipeline = nullptr;
+        QRhiShaderResourceBindings *srb = nullptr;
+    };
+
     struct {
         // Transient (due to the subsetRenderable being allocated using a
         // per-frame allocator on every frame), not owned refs from the
@@ -367,6 +374,9 @@ public:
             QRhiGraphicsPipeline *pipeline = nullptr;
             QRhiShaderResourceBindings *srb = nullptr;
         } normalPass;
+
+        RhiPassData userPassData[16] {};
+
     } rhiRenderData;
 
     QSSGSubsetRenderable(Type type,

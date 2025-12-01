@@ -16,6 +16,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 #include <QtQuick3DRuntimeRender/ssg/qssgrenderextensions.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -234,6 +235,8 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
             resourceLoaders.insert(itemPriv->spatialNode);
         } else if (itemPriv->spatialNode->type == QQuick3DObjectPrivate::Type::Image2D && backendNodeChanged) {
             ++inputHandlingEnabled;
+        } else if (QSSGRenderGraphObjectUtils::isUserRenderPass(itemPriv->type) && itemPriv->spatialNode) {
+            userRenderPasses.push_back(static_cast<QSSGRenderUserPass *>(itemPriv->spatialNode));
         }
     }
 

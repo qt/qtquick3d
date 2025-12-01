@@ -73,7 +73,8 @@ public:
                                                       const QSSGRenderCustomMaterial &material,
                                                       QSSGSubsetRenderable &renderable,
                                                       const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties,
-                                                      const QSSGShaderFeatures &featureSet);
+                                                      const QSSGShaderFeatures &featureSet,
+                                                      const QSSGUserShaderAugmentation &shaderAugmentation = {});
 
     void updateUniformsForCustomMaterial(QSSGRhiShaderPipeline &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
@@ -107,7 +108,8 @@ public:
                              QSSGSubsetRenderable &renderable,
                              bool *needsSetViewport,
                              QSSGRenderTextureCubeFace cubeFace,
-                             const QSSGRhiGraphicsPipelineState &state);
+                             const QSSGRhiGraphicsPipelineState &state,
+                             qsizetype userPassIndex = -1);
 };
 
 QT_END_NAMESPACE

@@ -170,6 +170,23 @@ qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &c
     return back + 1;
 }
 
+qsizetype QSSGLayerRenderData::filterLayerMaskInline(quint32 layerMask, QSSGRenderableObjectList &renderables)
+{
+    const qint32 end = renderables.size();
+    qint32 front = 0;
+    qint32 back = end - 1;
+
+    while (front <= back) {
+        const auto &b = renderables.at(front).tag;
+        if (layerMask & b.value())
+            ++front;
+        else
+            renderables.swapItemsAt(front, back--);
+    }
+
+    return back + 1;
+}
+
 [[nodiscard]] constexpr static inline bool nearestToFurthestCompare(const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) noexcept
 {
     return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
@@ -293,15 +310,20 @@ void QSSGLayerRenderData::ensureCachedCameraDatas()
 }
 
 // Per-frame cache of renderable objects post-sort.
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueRenderableObjects(const QSSGRenderCamera &camera, size_t index)
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueRenderableObjects(const QSSGRenderCamera &camera, size_t index, quint32 layerMask)
 {
     index = index * size_t(index < opaqueObjectStore.size());
-    auto &sortedOpaqueObjects = sortedOpaqueObjectCache[index][&camera];
+    auto &sortedOpaqueObjects = sortedOpaqueObjectCache[index][{&camera, layerMask}];
     if (!sortedOpaqueObjects.empty())
         return sortedOpaqueObjects;
 
     if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest))
         sortedOpaqueObjects = std::as_const(opaqueObjectStore)[index];
+
+    if (camera.layerMask != layerMask) {
+        const auto filteredObjects = filterLayerMaskInline(layerMask, sortedOpaqueObjects);
+        sortedOpaqueObjects.resize(filteredObjects);
+    }
 
     const auto &clippingFrustum = getCameraRenderData(&camera).clippingFrustum;
     if (clippingFrustum.has_value()) { // Frustum culling
@@ -316,10 +338,10 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueR
 }
 
 // If layer depth test is false, this may also contain opaque objects.
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTransparentRenderableObjects(const QSSGRenderCamera &camera, size_t index)
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTransparentRenderableObjects(const QSSGRenderCamera &camera, size_t index, quint32 layerMask)
 {
     index = index * size_t(index < transparentObjectStore.size());
-    auto &sortedTransparentObjects = sortedTransparentObjectCache[index][&camera];
+    auto &sortedTransparentObjects = sortedTransparentObjectCache[index][{&camera, layerMask}];
 
     if (!sortedTransparentObjects.empty())
         return sortedTransparentObjects;
@@ -329,6 +351,11 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTranspa
     if (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
         const auto &opaqueObjects = std::as_const(opaqueObjectStore)[index];
         sortedTransparentObjects.append(opaqueObjects);
+    }
+
+    if (camera.layerMask != layerMask) {
+        const auto filteredObjects = filterLayerMaskInline(layerMask, sortedTransparentObjects);
+        sortedTransparentObjects.resize(filteredObjects);
     }
 
     const auto &clippingFrustum = getCameraRenderData(&camera).clippingFrustum;
@@ -347,7 +374,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedScreenT
 {
     index = index * size_t(index < screenTextureObjectStore.size());
     const auto &screenTextureObjects = std::as_const(screenTextureObjectStore)[index];
-    auto &renderedScreenTextureObjects = sortedScreenTextureObjectCache[index][&camera];
+    auto &renderedScreenTextureObjects = sortedScreenTextureObjectCache[index][{&camera, camera.layerMask}];
 
     if (!renderedScreenTextureObjects.empty())
         return renderedScreenTextureObjects;
@@ -414,8 +441,8 @@ const QSSGLayerRenderData::RenderableItem2DEntries &QSSGLayerRenderData::getRend
 // Depth Write List
 void QSSGLayerRenderData::updateSortedDepthObjectsListImp(const QSSGRenderCamera &camera, size_t index)
 {
-    auto &depthWriteObjects = sortedDepthWriteCache[index][&camera];
-    auto &depthPrepassObjects = sortedOpaqueDepthPrepassCache[index][&camera];
+    auto &depthWriteObjects = sortedDepthWriteCache[index][{&camera, camera.layerMask}];
+    auto &depthPrepassObjects = sortedOpaqueDepthPrepassCache[index][{&camera, camera.layerMask}];
 
     if (!depthWriteObjects.isEmpty() || !depthPrepassObjects.isEmpty())
         return;
@@ -838,13 +865,13 @@ void QSSGLayerRenderData::renderRenderables(QSSGRenderContextInterface &ctx, QSS
 const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedRenderedDepthWriteObjects(const QSSGRenderCamera &camera, size_t index)
 {
     updateSortedDepthObjectsListImp(camera, index);
-    return sortedDepthWriteCache[index][&camera];
+    return sortedDepthWriteCache[index][{&camera, camera.layerMask}];
 }
 
 const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedrenderedOpaqueDepthPrepassObjects(const QSSGRenderCamera &camera, size_t index)
 {
     updateSortedDepthObjectsListImp(camera, index);
-    return sortedOpaqueDepthPrepassCache[index][&camera];;
+    return sortedOpaqueDepthPrepassCache[index][{&camera, camera.layerMask}];
 }
 
 /**
@@ -1850,17 +1877,17 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
 
             if (ro.renderableFlags.requiresScreenTexture()) {
                 depthPrepassObjectsState |= DepthPrepassObjectStateT(ppState[ObjectType::ScreenTexture][size_t(depthMode == QSSGDepthDrawMode::OpaquePrePass)]);
-                screenTextureObjects.push_back({&ro, ro.camdistSq});
+                screenTextureObjects.push_back({&ro, ro.camdistSq, model.tag});
             } else if (ro.renderableFlags.hasTransparency()) {
                 depthPrepassObjectsState |= DepthPrepassObjectStateT(ppState[ObjectType::Transparent][size_t(depthMode == QSSGDepthDrawMode::OpaquePrePass)]);
-                transparentObjects.push_back({&ro, ro.camdistSq});
+                transparentObjects.push_back({&ro, ro.camdistSq, model.tag});
             } else {
                 depthPrepassObjectsState |= DepthPrepassObjectStateT(ppState[ObjectType::Opaque][size_t(depthMode == QSSGDepthDrawMode::OpaquePrePass)]);
-                opaqueObjects.push_back({&ro, ro.camdistSq});
+                opaqueObjects.push_back({&ro, ro.camdistSq, model.tag});
             }
 
             if (ro.renderableFlags.usedInBakedLighting())
-                bakedLightingObjects.push_back({&ro, ro.camdistSq});
+                bakedLightingObjects.push_back({&ro, ro.camdistSq, model.tag});
         }
 
         if (!bakedLightingObjects.isEmpty())
@@ -1972,11 +1999,11 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
                                                                                   theGeneratedKey);
             if (theRenderableObject) {
                 if (theRenderableObject->renderableFlags.requiresScreenTexture())
-                    screenTextureObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
+                    screenTextureObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData), particles.tag});
                 else if (theRenderableObject->renderableFlags.hasTransparency())
-                    transparentObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
+                    transparentObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData), particles.tag});
                 else
-                    opaqueObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
+                    opaqueObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData), particles.tag});
             }
         }
     }
@@ -2594,6 +2621,19 @@ void QSSGLayerRenderData::prepareForRender()
         prepareLights(renderableParticles);
     }
 
+    // Insert the texture provider extensions first
+    // Texture extensions are added to the render extensions list
+    {
+        auto &preColorPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionStage::Underlay)];
+        for (auto *o : std::as_const(layer.textureProviders)) {
+            auto *textureProviderExt = static_cast<QSSGRenderTextureProviderExtension *>(o);
+            if (textureProviderExt->prepareData(frameData)) {
+                wasDirty |= true;
+                preColorPass.extensions.push_back(textureProviderExt);
+            }
+        }
+    }
+
     {
         // Give user provided passes a chance to modify the renderable data before starting
         // Note: All non-active extensions should be filtered out by now
@@ -2608,6 +2648,13 @@ void QSSGLayerRenderData::prepareForRender()
                 }
             }
         }
+    }
+
+    // User render passes
+    {
+        const auto &userRenderPassManager = requestUserRenderPassManager();
+        userRenderPassManager->updateUserPassOrder(layerTreeWasDirty); // NOTE: If the tree was dirty we need to force an update.
+        userRenderPasses.userPasses = userRenderPassManager->scheduledUserPasses();
     }
 
     auto &opaqueObjects = opaqueObjectStore[0];
@@ -2727,7 +2774,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (layerPrepResult.flags.requiresShadowMapPass())
         activePasses.push_back(&shadowMapPass);
 
-    if (zPrePassActive)
+    if (zPrePassActive && !disableMainPasses)
         activePasses.push_back(&zPrePassPass);
 
     // Screen texture with opaque objects.
@@ -2745,28 +2792,32 @@ void QSSGLayerRenderData::prepareForRender()
     if (underlayPass.hasData())
         activePasses.push_back(&underlayPass);
 
+    // Generated User render passes (QML)
+    if (userRenderPasses.hasData())
+        activePasses.push_back(&userRenderPasses);
+
     const bool hasOpaqueObjects = (opaqueObjects.size() > 0);
 
-    if (hasOpaqueObjects)
+    if (hasOpaqueObjects && !disableMainPasses)
         activePasses.push_back(&opaquePass);
 
     // NOTE: When the a screen texture is used, the skybox pass will be called twice. First from
     // the screen texture pass and later as part of the normal run through the list.
     if (renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::TexelFetch)) {
-        if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap)
+        if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap && !disableMainPasses)
             activePasses.push_back(&skyboxCubeMapPass);
-        else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
+        else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe && !disableMainPasses)
             activePasses.push_back(&skyboxPass);
     }
 
-    if (hasItem2Ds)
+    if (hasItem2Ds && !disableMainPasses)
         activePasses.push_back(&item2DPass);
 
     if (layerPrepResult.flags.requiresScreenTexture())
         activePasses.push_back(&reflectionPass);
 
     // Note: Transparent pass includeds opaque objects when layerEnableDepthTest is false.
-    if (transparentObjects.size() > 0 || (!layerEnableDepthTest && hasOpaqueObjects)) {
+    if ((transparentObjects.size() > 0 || (!layerEnableDepthTest && hasOpaqueObjects)) && !disableMainPasses) {
         if (orderIndependentTransparencyEnabled) {
             activePasses.push_back(&oitRenderPass);
             activePasses.push_back(&oitCompositePass);
@@ -2784,7 +2835,7 @@ void QSSGLayerRenderData::prepareForRender()
     if (layer.gridEnabled)
         activePasses.push_back(&infiniteGridPass);
 
-    if (const auto &dbgDrawSystem = renderer->contextInterface()->debugDrawSystem(); dbgDrawSystem && dbgDrawSystem->isEnabled())
+    if (const auto &dbgDrawSystem = renderer->contextInterface()->debugDrawSystem(); dbgDrawSystem && dbgDrawSystem->isEnabled() && !disableMainPasses)
         activePasses.push_back(&debugDrawPass);
 }
 
@@ -3102,6 +3153,13 @@ const QSSGRenderReflectionMapPtr &QSSGLayerRenderData::requestReflectionMapManag
     if (!reflectionMapManager && QSSG_GUARD(renderer && renderer->contextInterface()))
         reflectionMapManager.reset(new QSSGRenderReflectionMap(*renderer->contextInterface()));
     return reflectionMapManager;
+}
+
+const QSSGUserRenderPassManagerPtr &QSSGLayerRenderData::requestUserRenderPassManager()
+{
+    if (!userRenderPassManager && QSSG_GUARD(renderer && renderer->contextInterface()))
+        userRenderPassManager.reset(new QSSGUserRenderPassManager(*renderer->contextInterface()));
+    return userRenderPassManager;
 }
 
 QT_END_NAMESPACE

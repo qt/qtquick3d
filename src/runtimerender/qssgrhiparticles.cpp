@@ -999,8 +999,14 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     fg << "}";
 
 
-    return shaderProgramGenerator->compileGeneratedRhiShader(shaderString, inFeatureSet, *shaderLibraryManager, *shaderCache,
-                                                             QSSGRhiShaderPipeline::UsedWithoutIa, shaderKeyProperties.m_viewCount.getValue(inRenderable.shaderDescription), false);
+    return shaderProgramGenerator->compileGeneratedRhiShader(shaderString,
+                                                             inFeatureSet,
+                                                             *shaderLibraryManager,
+                                                             *shaderCache,
+                                                             QSSGRhiShaderPipeline::UsedWithoutIa,
+                                                             {},
+                                                             shaderKeyProperties.m_viewCount.getValue(inRenderable.shaderDescription),
+                                                             false);
 }
 
 QSSGRhiShaderPipelinePtr QSSGParticleRenderer::getShaderPipelineParticles(QSSGRenderer &renderer,

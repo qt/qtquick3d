@@ -6,6 +6,16 @@
 const char *QSSGCommand::typeAsString() const
 {
     switch (m_type) {
+    case CommandType::AddShaderDefine:
+        return "AddShaderDefine";
+    case CommandType::DepthTextureAttachment:
+        return "DepthTextureAttachment";
+    case CommandType::ColorAttachment:
+        return "ColorAttachment";
+    case CommandType::AllocateTexture:
+        return "AllocateTexture";
+    case CommandType::RenderablesFilter:
+        return "RenderablesFilter";
     case CommandType::Unknown:
         return "Unknown";
     case CommandType::AllocateBuffer:
@@ -24,10 +34,13 @@ const char *QSSGCommand::typeAsString() const
         return "Render";
     case CommandType::ApplyValue:
         return "ApplyValue";
-    default:
-        break;
+    case CommandType::PipelineStateOverride:
+        return "PipelineStateOverride";
+    case CommandType::DepthStencilAttachment:
+        return "DepthStencilAttachment";
     }
-    return "";
+
+    Q_UNREACHABLE_RETURN("");
 }
 
 QString QSSGCommand::debugString() const
@@ -36,6 +49,9 @@ QString QSSGCommand::debugString() const
     QDebug stream(&result);
 
     switch (m_type) {
+    case CommandType::AllocateTexture:
+        static_cast<const QSSGAllocateTexture *>(this)->addDebug(stream);
+        break;
     case CommandType::AllocateBuffer:
         static_cast<const QSSGAllocateBuffer*>(this)->addDebug(stream);
         break;

@@ -44,6 +44,14 @@ public:
     };
     Q_DECLARE_FLAGS(RenderResults, RenderResult)
 
+    enum class AttachmentSelector : quint32
+    {
+        Attachment0 = 0,
+        Attachment1 = 1,
+        Attachment2 = 2,
+        Attachment3 = 3,
+    };
+
     struct Result
     {
         QRhiTexture *texture = nullptr;
@@ -56,6 +64,9 @@ public:
     void scheduleRenderResults(RenderResults results) const;
 
     Result getRenderResult(RenderResult id) const;
+    Result getRenderResult(QSSGResourceId userPassId, AttachmentSelector attachment) const;
+
+    qsizetype getAttachmentCount(QSSGResourceId userPassId) const;
 
     [[nodiscard]] QSSGRhiGraphicsPipelineState getPipelineState() const;
 
@@ -69,10 +80,13 @@ public:
 private:
     friend class QSSGLayerRenderData;
     friend class QSSGRenderHelpers;
+    friend class QSSGRenderOutputProviderExtension;
 
     void clear();
 
     [[nodiscard]] QSSGLayerRenderData *getCurrent() const;
+
+    void scheduleRenderResults(QSSGResourceId userPassId) const;
 
     QSSGFrameData() = default;
     explicit QSSGFrameData(QSSGRenderContextInterface *ctx);

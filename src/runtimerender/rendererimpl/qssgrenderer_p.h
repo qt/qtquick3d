@@ -41,6 +41,7 @@ struct QSSGShaderFeatures;
 class QSSGRenderItem2DData;
 class QSGRenderContext;
 class QSSGFrustum;
+class QSSGUserShaderAugmentation;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
@@ -156,14 +157,17 @@ public:
                                                                   QSSGProgramGenerator &shaderProgramGenerator,
                                                                   const QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
                                                                   const QSSGShaderFeatures &featureSet,
+                                                                  const QSSGUserShaderAugmentation &shaderAugmentation,
                                                                   QByteArray &shaderString);
     static QSSGRhiShaderPipelinePtr generateRhiShaderPipeline(QSSGRenderer &renderer,
                                                               QSSGSubsetRenderable &inRenderable,
-                                                              const QSSGShaderFeatures &inFeatureSet);
+                                                              const QSSGShaderFeatures &inFeatureSet,
+                                                              const QSSGUserShaderAugmentation &shaderAugmentation);
 
     static QSSGRhiShaderPipelinePtr getShaderPipelineForDefaultMaterial(QSSGRenderer &renderer,
                                                                         QSSGSubsetRenderable &inRenderable,
-                                                                        const QSSGShaderFeatures &inFeatureSet);
+                                                                        const QSSGShaderFeatures &inFeatureSet,
+                                                                        const QSSGUserShaderAugmentation &shaderAugmentation);
 
     static void getLayerHitObjectList(const QSSGRenderLayer &layer,
                                       QSSGBufferManager &bufferManager,

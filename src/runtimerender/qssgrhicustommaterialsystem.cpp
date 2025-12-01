@@ -55,7 +55,8 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                                                             const QSSGRenderCustomMaterial &material,
                                                                             QSSGSubsetRenderable &renderable,
                                                                             const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties,
-                                                                            const QSSGShaderFeatures &featureSet)
+                                                                            const QSSGShaderFeatures &featureSet,
+                                                                            const QSSGUserShaderAugmentation &shaderAugmentation)
 {
     QElapsedTimer timer;
     timer.start();
@@ -66,7 +67,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
         ? false
         : defaultMaterialShaderKeyProperties.m_viewCount.getValue(renderable.shaderDescription) >= 2;
     const QByteArray shaderPathKey = material.m_shaderPathKey[multiView ? QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex
-                                                                        : QSSGRenderCustomMaterial::RegularShaderPathKeyIndex];
+                                                                        : QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] + shaderAugmentation.preamble + shaderAugmentation.body;
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find(). This is the first
@@ -102,7 +103,8 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                                                                     featureSet,
                                                                                     renderable.material,
                                                                                     *context->shaderLibraryManager(),
-                                                                                    *context->shaderCache());
+                                                                                    *context->shaderCache(),
+                                                                                    shaderAugmentation);
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, material.profilingId);
         }
 
@@ -664,10 +666,11 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                    QSSGSubsetRenderable &renderable,
                                                    bool *needsSetViewport,
                                                    QSSGRenderTextureCubeFace cubeFace,
-                                                   const QSSGRhiGraphicsPipelineState &state)
+                                                   const QSSGRhiGraphicsPipelineState &state,
+                                                   qsizetype userPassIndex)
 {
-    QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
-    QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
+    QRhiGraphicsPipeline *ps = (userPassIndex >= 0) ? renderable.rhiRenderData.userPassData[userPassIndex].pipeline : renderable.rhiRenderData.mainPass.pipeline;
+    QRhiShaderResourceBindings *srb = (userPassIndex >= 0) ? renderable.rhiRenderData.userPassData[userPassIndex].srb : renderable.rhiRenderData.mainPass.srb;
 
     if (cubeFace != QSSGRenderTextureCubeFaceNone) {
         const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);

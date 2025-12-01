@@ -473,6 +473,14 @@ QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat
     case QSSGRenderTextureFormat::SRGB8_Alpha8_ASTC_12x12:
         return QRhiTexture::ASTC_12x12;
 
+    case QSSGRenderTextureFormat::Depth16:
+        return QRhiTexture::D16;
+    case QSSGRenderTextureFormat::Depth24:
+        return QRhiTexture::D24;
+    case QSSGRenderTextureFormat::Depth32:
+        return QRhiTexture::D32F;
+    case QSSGRenderTextureFormat::Depth24Stencil8:
+        return QRhiTexture::D24S8;
 
     case QSSGRenderTextureFormat::SRGB8A8:
         return QRhiTexture::RGBA8; // Note: user must keep track of color space manually

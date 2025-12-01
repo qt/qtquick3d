@@ -19,14 +19,16 @@
 #include <QQuick3DTextureProviderExtension>
 #include <QQmlEngine>
 
-QT_BEGIN_NAMESPACE
+#include <QtQuick3D/private/qquick3drenderpass_p.h>
 
-class QQuick3DRenderPass;
+QT_BEGIN_NAMESPACE
 
 class Q_QUICK3DHELPERS_EXPORT QQuick3DRenderOutputProvider : public QQuick3DTextureProviderExtension
 {
     Q_OBJECT
     Q_PROPERTY(TextureSource textureSource READ textureSource WRITE setTextureSource NOTIFY textureSourceChanged FINAL)
+    Q_PROPERTY(QQuick3DRenderPass *renderPass READ renderPass WRITE setRenderPass NOTIFY renderPassChanged FINAL)
+    Q_PROPERTY(AttachmentSelector attachmentSelector READ attachmentSelector WRITE setAttachmentSelector NOTIFY attachmentSelectorChanged FINAL)
     QML_NAMED_ELEMENT(RenderOutputProvider)
     QML_ADDED_IN_VERSION(6, 11)
 public:
@@ -36,15 +38,36 @@ public:
         AoTexture = 1,
         DepthTexture,
         ScreenTexture,
+        UserPassTexture,
+        // Override the main color output of the render pass
+        MainColorTexture,
     };
     Q_ENUM(TextureSource)
+
+    enum class AttachmentSelector : quint32
+    {
+        Attachment0 = 0,
+        Attachment1 = 1,
+        Attachment2 = 2,
+        Attachment3 = 3,
+    };
+    Q_ENUM(AttachmentSelector)
 
     explicit QQuick3DRenderOutputProvider(QQuick3DObject *parent = nullptr);
     TextureSource textureSource() const;
     void setTextureSource(TextureSource newTextureSource);
 
+    QQuick3DRenderPass *renderPass() const;
+    void setRenderPass(QQuick3DRenderPass *newRenderPass);
+
+    AttachmentSelector attachmentSelector() const;
+    void setAttachmentSelector(AttachmentSelector newAttachmentSelector);
+
 signals:
     void textureSourceChanged();
+    void renderPassChanged();
+
+    void attachmentSelectorChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -53,14 +76,19 @@ protected:
 private:
     enum DirtyType : quint32 {
         TextureSourceDirty = 0x1,
+        UserPassTextureDirty = 0x2,
     };
 
     using DirtyTypeT = std::underlying_type_t<DirtyType>;
     static constexpr DirtyTypeT AllDirty = 0xffffffff;
 
+    QQuick3DRenderPass *m_renderPass = nullptr;
+
     TextureSource m_textureSource = TextureSource::None;
     DirtyTypeT m_dirtyAttributes = AllDirty;
     void markDirty(DirtyType type);
+    QString m_userPassKey;
+    AttachmentSelector m_attachmentSelector { AttachmentSelector::Attachment0 };
 };
 
 QT_END_NAMESPACE

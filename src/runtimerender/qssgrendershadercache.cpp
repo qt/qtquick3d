@@ -78,7 +78,8 @@ static constexpr DefineEntry DefineTable[] {
     { "QSSG_ENABLE_LIGHTMAP", QSSGShaderFeatures::Feature::Lightmap },
     { "QSSG_DISABLE_MULTIVIEW", QSSGShaderFeatures::Feature::DisableMultiView },
     { "QSSG_FORCE_IBL_EXPOSURE", QSSGShaderFeatures::Feature::ForceIblExposure },
-    { "QSSG_ENABLE_NORMAL_PASS", QSSGShaderFeatures::Feature::NormalPass }
+    { "QSSG_ENABLE_NORMAL_PASS", QSSGShaderFeatures::Feature::NormalPass },
+    { "QSSG_ENABLE_USER_RENDER_PASS", QSSGShaderFeatures::Feature::UserRenderPass}
 };
 
 static_assert(std::size(DefineTable) == QSSGShaderFeatures::Count, "Missing feature define?");
@@ -334,6 +335,7 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
                                             const QByteArray &inKey,
                                             ShaderType shaderType,
                                             const QSSGShaderFeatures &inFeatures,
+                                            const QSSGUserShaderAugmentation &shaderAugmentation,
                                             int viewCount)
 {
     m_insertStr.clear();
@@ -370,8 +372,20 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
     insertPos += int(m_insertStr.size());
 
     m_insertStr.clear();
-    if (fragOutputEnabled)
-        m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
+    if (fragOutputEnabled) {
+        if (shaderAugmentation.outputs.size() != 0) {
+            const auto &outputs = shaderAugmentation.outputs;
+            for (int i = 0; i < outputs.size(); ++i) {
+                m_insertStr += "layout(location = ";
+                m_insertStr += QByteArray::number(i);
+                m_insertStr += ") out vec4 ";
+                m_insertStr += outputs[i];
+                m_insertStr += ";\n";
+            }
+        } else {
+            m_insertStr += "layout(location = 0) out vec4 fragOutput;\n";
+        }
+    }
 
     str.insert(insertPos, m_insertStr);
 }
@@ -393,6 +407,7 @@ QByteArray QSSGShaderCache::particleShaderCollectionFile()
 
 QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
                                                         const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                                        const QSSGUserShaderAugmentation &shaderAugmentation,
                                                         int viewCount,
                                                         bool perTargetCompilation)
 {
@@ -409,10 +424,10 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     QByteArray fragmentCode = inFrag;
 
     if (!vertexCode.isEmpty())
-        addShaderPreprocessor(vertexCode, inKey, ShaderType::Vertex, inFeatures, viewCount);
+        addShaderPreprocessor(vertexCode, inKey, ShaderType::Vertex, inFeatures, shaderAugmentation, viewCount);
 
     if (!fragmentCode.isEmpty())
-        addShaderPreprocessor(fragmentCode, inKey, ShaderType::Fragment, inFeatures, viewCount);
+        addShaderPreprocessor(fragmentCode, inKey, ShaderType::Fragment, inFeatures, shaderAugmentation, viewCount);
 
     // lo and behold the final shader strings are ready
 

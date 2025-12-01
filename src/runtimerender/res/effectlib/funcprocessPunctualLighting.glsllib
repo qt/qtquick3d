@@ -137,6 +137,7 @@ vec3 qt_calculateTransmission(in vec3 qt_world_normal,
 void qt_processPunctualLighting(inout vec3 global_diffuse_light,
                                 inout vec3 global_specular_light,
                                 in vec3 qt_diffuseColor,
+                                in vec3 qt_world_position,
                                 in vec3 qt_world_normal,
                                 in vec3 qt_view_vector,
 #if QSSG_ENABLE_SPECULAR
@@ -178,9 +179,9 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
     float qt_zDepthViewSpace = 0.0;
     if (qt_lightAndShadowCounts.y > 0) {
 # if QSHADER_VIEW_COUNT >= 2
-        qt_zDepthViewSpace = abs((qt_viewMatrix[0] * vec4(qt_varWorldPos, 1.0)).z);
+        qt_zDepthViewSpace = abs((qt_viewMatrix[0] * vec4(qt_world_position, 1.0)).z);
 # else
-        qt_zDepthViewSpace = abs((qt_viewMatrix * vec4(qt_varWorldPos, 1.0)).z);
+        qt_zDepthViewSpace = abs((qt_viewMatrix * vec4(qt_world_position, 1.0)).z);
 # endif
     }
 #endif // SSG_ENABLE_SHADOWMAPPING
@@ -197,7 +198,7 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
 #if QSSG_ENABLE_SHADOWMAPPING
         // Shadows
         if (ubDirectionalLights.directionalLights[i].enableShadows > 0.0) {
-            qt_shadow_map_result = qt_sampleDirectionalShadowMap(i, qt_zDepthViewSpace, qt_varWorldPos);
+            qt_shadow_map_result = qt_sampleDirectionalShadowMap(i, qt_zDepthViewSpace, qt_world_position);
         }
 #endif // QSSG_ENABLE_SHADOWMAPPING
 
@@ -296,7 +297,7 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
         qt_shadow_map_result.isLit = true;
 
         // Directions
-        vec3 relativeDirection = qt_varWorldPos - ubLights.lights[i].position;
+        vec3 relativeDirection = qt_world_position - ubLights.lights[i].position;
         float relativeDistance = length(relativeDirection);
         vec3 normalizedDirection = relativeDirection  / relativeDistance;
         vec3 specularLightDirection = normalizedDirection;
@@ -321,7 +322,7 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
             // Point Light
 #if QSSG_ENABLE_SHADOWMAPPING
             if (ubLights.lights[i].enableShadows > 0.0) {
-                qt_shadow_map_result = qt_samplePointLight(i, qt_varWorldPos);
+                qt_shadow_map_result = qt_samplePointLight(i, qt_world_position);
             }
 #endif // QSSG_ENABLE_SHADOWMAPPING
 
@@ -352,7 +353,7 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
             // Spot Light
 #if QSSG_ENABLE_SHADOWMAPPING
             if (ubLights.lights[i].enableShadows > 0.0) {
-                qt_shadow_map_result = qt_sampleSpotLight(i, qt_varWorldPos);
+                qt_shadow_map_result = qt_sampleSpotLight(i, qt_world_position);
             }
 #endif // QSSG_ENABLE_SHADOWMAPPING
 

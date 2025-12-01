@@ -518,6 +518,7 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
                                                                          QSSGShaderLibraryManager &shaderLibraryManager,
                                                                          QSSGShaderCache &theCache,
                                                                          QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                                                         const QSSGUserShaderAugmentation &shaderAugmentation,
                                                                          int viewCount,
                                                                          bool perTargetCompilation)
 {
@@ -563,6 +564,7 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
                                    m_fs.m_finalBuilder,
                                    inFeatureSet,
                                    stageFlags,
+                                   shaderAugmentation,
                                    viewCount,
                                    perTargetCompilation);
 }

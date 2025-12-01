@@ -10,6 +10,9 @@
 #include "qquick3dviewport_p.h"
 #include "qquick3dcustommaterial_p.h"
 #include "qquick3deffect_p.h"
+#include "qquick3dtextureproviderextension.h"
+
+#include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -237,6 +240,240 @@ QT_BEGIN_NAMESPACE
     \qmlproperty Variant SetUniformValue::value
     Specifies the value that will be set on the \c target uniform.
 */
+
+/*!
+    \qmltype renderTargetBlend
+    \inqmlmodule QtQuick3D
+    \brief Defines blending parameters for a single color attachment of a render pass.
+    \since 6.11
+
+    The renderTargetBlend type is used to specify blending parameters for a single
+    color attachment of a \l RenderPass. An instance of renderTargetBlend can be
+    assigned to one of the \l PipelineStateOverride::targetBlendN properties, where N
+    is the index of the color attachment to configure.
+
+    \qmlproperty bool renderTargetBlend::blendEnabled
+    If set to true, enables blending for the color attachment. If set to false,
+    disables blending.
+
+    \qmlproperty enumeration renderTargetBlend::colorWrite
+    Sets the color channels that will be written to the color attachment.
+    \value renderTargetBlend.R
+    \value renderTargetBlend.G
+    \value renderTargetBlend.B
+    \value renderTargetBlend.A
+
+    \qmlproperty enumeration renderTargetBlend::srcColor
+    Sets the source color blend factor for the color attachment.
+    \value renderTargetBlend.Zero
+    \value renderTargetBlend.One
+    \value renderTargetBlend.SrcColor
+    \value renderTargetBlend.OneMinusSrcColor
+    \value renderTargetBlend.DstColor
+    \value renderTargetBlend.OneMinusDstColor
+    \value renderTargetBlend.SrcAlpha
+    \value renderTargetBlend.OneMinusSrcAlpha
+    \value renderTargetBlend.DstAlpha
+    \value renderTargetBlend.OneMinusDstAlpha
+    \value renderTargetBlend.ConstantColor
+    \value renderTargetBlend.OneMinusConstantColor
+    \value renderTargetBlend.ConstantAlpha
+    \value renderTargetBlend.OneMinusConstantAlpha
+    \value renderTargetBlend.SrcAlphaSaturate
+    \value renderTargetBlend.Src1Color
+    \value renderTargetBlend.OneMinusSrc1Color
+    \value renderTargetBlend.Src1Alpha
+    \value renderTargetBlend.OneMinusSrc1Alpha
+
+    \qmlproperty enumeration renderTargetBlend::dstColor
+    Sets the destination color blend factor for the color attachment.
+    \value renderTargetBlend.Zero
+    \value renderTargetBlend.One
+    \value renderTargetBlend.SrcColor
+    \value renderTargetBlend.OneMinusSrcColor
+    \value renderTargetBlend.DstColor
+    \value renderTargetBlend.OneMinusDstColor
+    \value renderTargetBlend.SrcAlpha
+    \value renderTargetBlend.OneMinusSrcAlpha
+    \value renderTargetBlend.DstAlpha
+    \value renderTargetBlend.OneMinusDstAlpha
+    \value renderTargetBlend.ConstantColor
+    \value renderTargetBlend.OneMinusConstantColor
+    \value renderTargetBlend.ConstantAlpha
+    \value renderTargetBlend.OneMinusConstantAlpha
+    \value renderTargetBlend.SrcAlphaSaturate
+    \value renderTargetBlend.Src1Color
+    \value renderTargetBlend.OneMinusSrc1Color
+    \value renderTargetBlend.Src1Alpha
+    \value renderTargetBlend.OneMinusSrc1Alpha
+
+    \qmlproperty enumeration renderTargetBlend::opColor
+    Sets the color blend operation for the color attachment.
+    \value renderTargetBlend.Add
+    \value renderTargetBlend.Subtract
+    \value renderTargetBlend.ReverseSubtract
+    \value renderTargetBlend.Min
+    \value renderTargetBlend.Max
+
+    \qmlproperty enumeration renderTargetBlend::srcAlpha
+    Sets the source alpha blend factor for the color attachment.
+    \value renderTargetBlend.Zero
+    \value renderTargetBlend.One
+    \value renderTargetBlend.SrcColor
+    \value renderTargetBlend.OneMinusSrcColor
+    \value renderTargetBlend.DstColor
+    \value renderTargetBlend.OneMinusDstColor
+    \value renderTargetBlend.SrcAlpha
+    \value renderTargetBlend.OneMinusSrcAlpha
+    \value renderTargetBlend.DstAlpha
+    \value renderTargetBlend.OneMinusDstAlpha
+    \value renderTargetBlend.ConstantColor
+    \value renderTargetBlend.OneMinusConstantColor
+    \value renderTargetBlend.ConstantAlpha
+    \value renderTargetBlend.OneMinusConstantAlpha
+    \value renderTargetBlend.SrcAlphaSaturate
+    \value renderTargetBlend.Src1Color
+    \value renderTargetBlend.OneMinusSrc1Color
+    \value renderTargetBlend.Src1Alpha
+    \value renderTargetBlend.OneMinusSrc1Alpha
+
+    \qmlproperty enumeration renderTargetBlend::dstAlpha
+    Sets the destination alpha blend factor for the color attachment.
+    \value renderTargetBlend.Zero
+    \value renderTargetBlend.One
+    \value renderTargetBlend.SrcColor
+    \value renderTargetBlend.OneMinusSrcColor
+    \value renderTargetBlend.DstColor
+    \value renderTargetBlend.OneMinusDstColor
+    \value renderTargetBlend.SrcAlpha
+    \value renderTargetBlend.OneMinusSrcAlpha
+    \value renderTargetBlend.DstAlpha
+    \value renderTargetBlend.OneMinusDstAlpha
+    \value renderTargetBlend.ConstantColor
+    \value renderTargetBlend.OneMinusConstantColor
+    \value renderTargetBlend.ConstantAlpha
+    \value renderTargetBlend.OneMinusConstantAlpha
+    \value renderTargetBlend.SrcAlphaSaturate
+    \value renderTargetBlend.Src1Color
+    \value renderTargetBlend.OneMinusSrc1Color
+    \value renderTargetBlend.Src1Alpha
+    \value renderTargetBlend.OneMinusSrc1Alpha
+
+    \qmlproperty enumeration renderTargetBlend::opAlpha
+    Sets the alpha blend operation for the color attachment.
+    \value renderTargetBlend.Add
+    \value renderTargetBlend.Subtract
+    \value renderTargetBlend.ReverseSubtract
+    \value renderTargetBlend.Min
+    \value renderTargetBlend.Max
+ */
+
+/*!
+    \qmlType PipelineStateOverride
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines pipeline state overrides for a single \l {RenderPass}{pass}.
+    \since 6.11
+
+    PipelineStateOverride is a \l Command which can be added to the list of commands in a \l RenderPass.
+    When executed, it will override the pipeline state in the render pass according to the properties set on
+    the PipelineStateOverride. Only values that are set will override the existing pipeline state's values.
+    If you want to reset a value that has been overriden to the default, then make sure to set the property
+    to \c undefined.
+
+
+    \qmlproperty bool PipelineStateOverride::depthTestEnabled
+    If set to true, enables depth testing for the render pass. If set to false, disables depth testing.
+    Setting this property to true requires a depth attachment for the render pass.
+
+    \qmlproperty bool PipelineStateOverride::depthWriteEnabled
+    If set to true, enables depth writing for the render pass. If set to false, disables depth writing.
+    Setting this property to true requires a depth attachment for the render pass.
+
+    \qmlproperty bool PipelineStateOverride::blendEnabled
+    If set to true, enables blending for the render pass. If set to false, disables blending.
+
+    \qmlproperty bool PipelineStateOverride::usesStencilReference
+    If set to true, enables the use of stencil reference value for the render pass. If set to false,
+    disables the use of stencil reference value.
+
+    \qmlproperty bool PipelineStateOverride::usesScissor
+    If set to true, enables the use of scissor test for the render pass. If set to false,
+    disables the use of scissor test.
+
+    \qmlproperty enumeration PipelineStateOverride::depthFunction
+    Sets the depth comparison function for the render pass.
+    \value PipelineStateOverride.Never
+    \value PipelineStateOverride.Less
+    \value PipelineStateOverride.Equal
+    \value PipelineStateOverride.LessOrEqual
+    \value PipelineStateOverride.Greater
+    \value PipelineStateOverride.NotEqual
+    \value PipelineStateOverride.GreaterOrEqual
+    \value PipelineStateOverride.Always
+
+    \qmlproperty enumeration PipelineStateOverride::cullMode
+    Sets the face culling mode for the render pass.
+    \value PipelineStateOverride.None
+    \value PipelineStateOverride.Front
+    \value PipelineStateOverride.Back
+
+    \qmlproperty enumeration PipelineStateOverride::polygonMode
+    Sets the polygon rasterization mode for the render pass.
+    \value PipelineStateOverride.Fill
+    \value PipelineStateOverride.Line
+
+    \qmlproperty uint PipelineStateOverride::stencilWriteMask
+    Sets the stencil write mask for the render pass.
+
+    \qmlproperty uint PipelineStateOverride::stencilReference
+    Sets the stencil reference value for the render pass.
+
+    \qmlproperty Rectangle PipelineStateOverride::viewport
+    Sets the viewport rectangle for the render pass.
+
+    \qmlproperty Rectangle PipelineStateOverride::scissor
+    Sets the scissor rectangle for the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend0
+    Sets the blending parameters for color attachment 0 of the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend1
+    Sets the blending parameters for color attachment 1 of the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend2
+    Sets the blending parameters for color attachment 2 of the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend3
+    Sets the blending parameters for color attachment 3 of the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend4
+    Sets the blending parameters for color attachment 4 of the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend5
+    Sets the blending parameters for color attachment 5 of the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend6
+    Sets the blending parameters for color attachment 6 of the render pass.
+
+    \qmlproperty TargetBlend PipelineStateOverride::targetBlend7
+    Sets the blending parameters for color attachment 7 of the render pass.
+*/
+
+//DepthStencilAttachment
+
+/*!
+    \qmltype DepthStencilAttachment
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines a depth-stencil attachment for a RenderPass.
+    \since 6.11
+
+    The DepthStencilAttachment type is used to specify a depth-stencil attachment
+    for a \l RenderPass. This represents a render buffer attachment, so it cannot be
+    directly sampled in shaders.
+*/
+
 
 namespace QSSGShaderUtils {
 
@@ -595,6 +832,11 @@ void QQuick3DShaderUtilsBuffer::setBufferFlags(AllocateBufferFlagValues flag)
     emit changed();
 }
 
+QQuick3DShaderUtilsRenderPass::~QQuick3DShaderUtilsRenderPass()
+{
+
+}
+
 void QQuick3DShaderUtilsRenderPass::qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list,
                                                      QQuick3DShaderUtilsRenderCommand *command)
 {
@@ -694,7 +936,7 @@ QQmlListProperty<QQuick3DShaderUtilsShader> QQuick3DShaderUtilsRenderPass::shade
                                                       QQuick3DShaderUtilsRenderPass::qmlShaderClear);
 }
 
-QQuick3DShaderUtilsTextureInput::QQuick3DShaderUtilsTextureInput(QObject *p) : QObject(p) {}
+QQuick3DShaderUtilsTextureInput::QQuick3DShaderUtilsTextureInput(QQuick3DObject *p) : QQuick3DObject(p) {}
 
 QQuick3DShaderUtilsTextureInput::~QQuick3DShaderUtilsTextureInput()
 {
@@ -727,4 +969,809 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     Q_EMIT textureChanged();
 }
 
+QQuick3DShaderUtilsRenderablesFilter::RenderableTypes QQuick3DShaderUtilsRenderablesFilter::renderableTypes() const
+{
+    return static_cast<QQuick3DShaderUtilsRenderablesFilter::RenderableTypes>(command.renderableTypes);
+}
+
+QQuick3DShaderUtilsRenderablesFilter::~QQuick3DShaderUtilsRenderablesFilter()
+{
+
+}
+
+void QQuick3DShaderUtilsRenderablesFilter::setRenderableTypes(RenderableTypes types)
+{
+    command.renderableTypes = static_cast<QSSGRenderablesFilterCommand::RenderableTypeT>(types.toInt());
+}
+
+QQuick3DShaderUtilsPipelineStateOverride::~QQuick3DShaderUtilsPipelineStateOverride()
+{
+
+}
+
+bool QQuick3DShaderUtilsPipelineStateOverride::depthTestEnabled() const
+{
+    if (command.m_depthTestEnabled)
+        return *command.m_depthTestEnabled;
+    return false;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setDepthTestEnabled(bool newDepthTestEnabled)
+{
+    if (command.m_depthTestEnabled && *command.m_depthTestEnabled == newDepthTestEnabled)
+        return;
+    command.m_depthTestEnabled = newDepthTestEnabled;
+    emit depthTestEnabledChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetDepthTestEnabled()
+{
+    command.m_depthTestEnabled.reset();
+    emit depthTestEnabledChanged();
+}
+
+bool QQuick3DShaderUtilsPipelineStateOverride::depthWriteEnabled() const
+{
+    if (command.m_depthWriteEnabled)
+        return *command.m_depthWriteEnabled;
+    return false;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setDepthWriteEnabled(bool newDepthWriteEnabled)
+{
+    if (command.m_depthWriteEnabled && *command.m_depthWriteEnabled == newDepthWriteEnabled)
+        return;
+    command.m_depthWriteEnabled = newDepthWriteEnabled;
+    emit depthWriteEnabledChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetDepthWriteEnabled()
+{
+    command.m_depthWriteEnabled.reset();
+    emit depthWriteEnabledChanged();
+}
+
+bool QQuick3DShaderUtilsPipelineStateOverride::blendEnabled() const
+{
+    if (command.m_blendEnabled)
+        return *command.m_blendEnabled;
+    return false;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setBlendEnabled(bool newBlendEnabled)
+{
+    if (command.m_blendEnabled && *command.m_blendEnabled == newBlendEnabled)
+        return;
+    command.m_blendEnabled = newBlendEnabled;
+    emit blendEnabledChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetBlendEnabled()
+{
+    command.m_blendEnabled.reset();
+    emit blendEnabledChanged();
+}
+
+bool QQuick3DShaderUtilsPipelineStateOverride::usesStencilReference() const
+{
+    if (command.m_usesStencilReference)
+        return *command.m_usesStencilReference;
+    return false;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setUsesStencilReference(bool newUsesStencilReference)
+{
+    if (command.m_usesStencilReference && *command.m_usesStencilReference == newUsesStencilReference)
+        return;
+    command.m_usesStencilReference = newUsesStencilReference;
+    emit usesStencilReferenceChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetUsesStencilReference()
+{
+    command.m_usesStencilReference.reset();
+    emit usesStencilReferenceChanged();
+}
+
+bool QQuick3DShaderUtilsPipelineStateOverride::usesScissor() const
+{
+    if (command.m_usesScissor)
+        return *command.m_usesScissor;
+    return false;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setUsesScissor(bool newUsesScissor)
+{
+    if (command.m_usesScissor && *command.m_usesScissor == newUsesScissor)
+        return;
+    command.m_usesScissor = newUsesScissor;
+    emit usesScissorChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetUsesScissor()
+{
+    command.m_usesScissor.reset();
+    emit usesScissorChanged();
+}
+
+QQuick3DShaderUtilsPipelineStateOverride::CompareOperation QQuick3DShaderUtilsPipelineStateOverride::depthFunction() const
+{
+    if (command.m_depthFunction)
+        return CompareOperation(*command.m_depthFunction);
+    return CompareOperation::Less;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setDepthFunction(CompareOperation newDepthFunction)
+{
+    if (command.m_depthFunction && *command.m_depthFunction == QRhiGraphicsPipeline::CompareOp(newDepthFunction))
+        return;
+    command.m_depthFunction = QRhiGraphicsPipeline::CompareOp(newDepthFunction);
+    emit depthFunctionChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetDepthFunction()
+{
+    command.m_depthFunction.reset();
+    emit depthFunctionChanged();
+}
+
+QQuick3DShaderUtilsPipelineStateOverride::CullMode QQuick3DShaderUtilsPipelineStateOverride::cullMode() const
+{
+    if (command.m_cullMode)
+        return CullMode(*command.m_cullMode);
+    return CullMode::Back;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setCullMode(CullMode newCullMode)
+{
+    if (command.m_cullMode && *command.m_cullMode == QRhiGraphicsPipeline::CullMode(newCullMode))
+        return;
+    command.m_cullMode = QRhiGraphicsPipeline::CullMode(newCullMode);
+    emit cullModeChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetCullMode()
+{
+    command.m_cullMode.reset();
+    emit cullModeChanged();
+}
+
+QQuick3DShaderUtilsPipelineStateOverride::PolygonMode QQuick3DShaderUtilsPipelineStateOverride::polygonMode() const
+{
+    if (command.m_polygonMode)
+        return PolygonMode(*command.m_polygonMode);
+    return PolygonMode::Fill;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setPolygonMode(PolygonMode newPolygonMode)
+{
+    if (command.m_polygonMode && *command.m_polygonMode == QRhiGraphicsPipeline::PolygonMode(newPolygonMode))
+        return;
+    command.m_polygonMode = QRhiGraphicsPipeline::PolygonMode(newPolygonMode);
+    emit polygonModeChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetPolygonMode()
+{
+    command.m_polygonMode.reset();
+    emit polygonModeChanged();
+}
+
+quint32 QQuick3DShaderUtilsPipelineStateOverride::stencilWriteMask() const
+{
+    if (command.m_stencilWriteMask)
+        return *command.m_stencilWriteMask;
+    return 0;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setStencilWriteMask(quint32 newStencilWriteMask)
+{
+    if (command.m_stencilWriteMask && *command.m_stencilWriteMask == newStencilWriteMask)
+        return;
+    command.m_stencilWriteMask = newStencilWriteMask;
+    emit stencilWriteMaskChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetStencilWriteMask()
+{
+    command.m_stencilWriteMask.reset();
+    emit stencilWriteMaskChanged();
+}
+
+quint32 QQuick3DShaderUtilsPipelineStateOverride::stencilReference() const
+{
+    if (command.m_stencilReference)
+        return *command.m_stencilReference;
+    return 0;
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setStencilReference(quint32 newStencilReference)
+{
+    if (command.m_stencilReference && *command.m_stencilReference == newStencilReference)
+        return;
+    command.m_stencilReference = newStencilReference;
+    emit stencilReferenceChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetStencilReference()
+{
+    command.m_stencilReference.reset();
+    emit stencilReferenceChanged();
+}
+
+QRectF QQuick3DShaderUtilsPipelineStateOverride::viewport() const
+{
+    if (command.m_viewport) {
+        const QRhiViewport &vp = *command.m_viewport;
+        return QRectF(vp.viewport()[0], vp.viewport()[1], vp.viewport()[2], vp.viewport()[3]);
+    }
+    return QRectF();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setViewport(const QRectF &newViewport)
+{
+    if (command.m_viewport) {
+        const QRhiViewport &vp = *command.m_viewport;
+        if (vp.viewport()[0] == newViewport.x() &&
+            vp.viewport()[1] == newViewport.y() &&
+            vp.viewport()[2] == newViewport.width() &&
+            vp.viewport()[3] == newViewport.height())
+        return;
+    }
+    command.m_viewport = QRhiViewport(newViewport.x(), newViewport.y(), newViewport.width(), newViewport.height());
+    emit viewportChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetViewport()
+{
+    command.m_viewport.reset();
+    emit viewportChanged();
+}
+
+QRect QQuick3DShaderUtilsPipelineStateOverride::scissor() const
+{
+    if (command.m_scissor) {
+        const QRhiScissor &sc = *command.m_scissor;
+        return QRect(sc.scissor()[0], sc.scissor()[1], sc.scissor()[2], sc.scissor()[3]);
+    }
+    return QRect();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setScissor(const QRect &newScissor)
+{
+    if (command.m_viewport) {
+        const QRhiScissor &sc = *command.m_scissor;
+        if (sc.scissor()[0] == newScissor.x() &&
+            sc.scissor()[1] == newScissor.y() &&
+            sc.scissor()[2] == newScissor.width() &&
+            sc.scissor()[3] == newScissor.height())
+            return;
+    }
+    command.m_scissor = QRhiScissor(newScissor.x(), newScissor.y(), newScissor.width(), newScissor.height());
+    emit scissorChanged();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetScissor()
+{
+    command.m_scissor.reset();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend0() const
+{
+    if (command.m_targetBlend0)
+        return *command.m_targetBlend0;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend0(const QQuick3DRenderPassTargetBlend &newTargetBlend0)
+{
+    if (command.m_targetBlend0 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend0) == newTargetBlend0)
+        return;
+
+    command.m_targetBlend0 = newTargetBlend0.toRhiTargetBlend();;
+    emit targetBlend0Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend0()
+{
+    command.m_targetBlend0.reset();
+    emit targetBlend0Changed();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend1() const
+{
+    if (command.m_targetBlend1)
+        return *command.m_targetBlend1;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend1(const QQuick3DRenderPassTargetBlend &newTargetBlend1)
+{
+    if (command.m_targetBlend1 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend1) == newTargetBlend1)
+        return;
+    command.m_targetBlend1 = newTargetBlend1.toRhiTargetBlend();
+    emit targetBlend1Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend1()
+{
+    command.m_targetBlend1.reset();
+    emit targetBlend1Changed();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend2() const
+{
+    if (command.m_targetBlend2)
+        return *command.m_targetBlend2;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend2(const QQuick3DRenderPassTargetBlend &newTargetBlend2)
+{
+    if (command.m_targetBlend2 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend2) == newTargetBlend2)
+        return;
+    command.m_targetBlend2 = newTargetBlend2.toRhiTargetBlend();
+    emit targetBlend2Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend2()
+{
+    command.m_targetBlend2.reset();
+    emit targetBlend2Changed();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend3() const
+{
+    if (command.m_targetBlend3)
+        return *command.m_targetBlend3;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend3(const QQuick3DRenderPassTargetBlend &newTargetBlend3)
+{
+    if (command.m_targetBlend3 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend3) == newTargetBlend3)
+        return;
+    command.m_targetBlend3 = newTargetBlend3.toRhiTargetBlend();
+    emit targetBlend3Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend3()
+{
+    command.m_targetBlend3.reset();
+    emit targetBlend3Changed();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend4() const
+{
+    if (command.m_targetBlend4)
+        return *command.m_targetBlend4;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend4(const QQuick3DRenderPassTargetBlend &newTargetBlend4)
+{
+    if (command.m_targetBlend4 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend4) == newTargetBlend4)
+        return;
+    command.m_targetBlend4 = newTargetBlend4.toRhiTargetBlend();
+    emit targetBlend4Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend4()
+{
+    command.m_targetBlend4.reset();
+    emit targetBlend4Changed();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend5() const
+{
+    if (command.m_targetBlend5)
+        return *command.m_targetBlend5;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend5(const QQuick3DRenderPassTargetBlend &newTargetBlend5)
+{
+    if (command.m_targetBlend5 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend5) == newTargetBlend5)
+        return;
+    command.m_targetBlend5 = newTargetBlend5.toRhiTargetBlend();
+    emit targetBlend5Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend5()
+{
+    command.m_targetBlend5.reset();
+    emit targetBlend5Changed();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend6() const
+{
+    if (command.m_targetBlend6)
+        return *command.m_targetBlend6;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend6(const QQuick3DRenderPassTargetBlend &newTargetBlend6)
+{
+    if (command.m_targetBlend6 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend6) == newTargetBlend6)
+        return;
+    command.m_targetBlend6 = newTargetBlend6.toRhiTargetBlend();
+    emit targetBlend6Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend6()
+{
+    command.m_targetBlend6.reset();
+    emit targetBlend6Changed();
+}
+
+QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend7() const
+{
+    if (command.m_targetBlend7)
+        return *command.m_targetBlend7;
+    return {};
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::setTargetBlend7(const QQuick3DRenderPassTargetBlend &newTargetBlend7)
+{
+    if (command.m_targetBlend7 && QQuick3DRenderPassTargetBlend(*command.m_targetBlend7) == newTargetBlend7)
+        return;
+    command.m_targetBlend7 = newTargetBlend7.toRhiTargetBlend();
+    emit targetBlend7Changed();
+}
+
+void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend7()
+{
+    command.m_targetBlend7.reset();
+    emit targetBlend7Changed();
+}
+
+QQuick3DShaderUtilsRenderPassTexture::TextureFormat QQuick3DShaderUtilsRenderPassTexture::format() const
+{
+    return fromRenderTextureFormat(command->format());
+}
+
+QQuick3DShaderUtilsRenderPassTexture::~QQuick3DShaderUtilsRenderPassTexture()
+{
+
+}
+
+void QQuick3DShaderUtilsRenderPassTexture::setFormat(TextureFormat newFormat)
+{
+    if (!command)
+        command = std::make_shared<QSSGAllocateTexture>();
+    command->setFormat(asRenderTextureFormat(newFormat));
+}
+
+QSSGRenderTextureFormat QQuick3DShaderUtilsRenderPassTexture::asRenderTextureFormat(TextureFormat fmt)
+{
+    switch (fmt) {
+    case TextureFormat::Unknown: return QSSGRenderTextureFormat::Unknown;
+    case TextureFormat::RGBA8: return QSSGRenderTextureFormat::RGBA8;
+    case TextureFormat::RGBA16F: return QSSGRenderTextureFormat::RGBA16F;
+    case TextureFormat::RGBA32F: return QSSGRenderTextureFormat::RGBA32F;
+    case TextureFormat::R8: return QSSGRenderTextureFormat::R8;
+    case TextureFormat::R16: return QSSGRenderTextureFormat::R16;
+    case TextureFormat::R16F: return QSSGRenderTextureFormat::R16F;
+    case TextureFormat::R32F: return QSSGRenderTextureFormat::R32F;
+    case TextureFormat::Depth16: return QSSGRenderTextureFormat::Depth16;
+    case TextureFormat::Depth24: return QSSGRenderTextureFormat::Depth24;
+    case TextureFormat::Depth32: return QSSGRenderTextureFormat::Depth32;
+    case TextureFormat::Depth24Stencil8: return QSSGRenderTextureFormat::Depth24Stencil8;
+    default:
+        break;
+    }
+    return QSSGRenderTextureFormat::Unknown;
+}
+
+QQuick3DShaderUtilsRenderPassTexture::TextureFormat QQuick3DShaderUtilsRenderPassTexture::fromRenderTextureFormat(QSSGRenderTextureFormat fmt)
+{
+    switch (fmt.format) {
+    case QSSGRenderTextureFormat::Unknown: return TextureFormat::Unknown;
+    case QSSGRenderTextureFormat::RGBA8: return TextureFormat::RGBA8;
+    case QSSGRenderTextureFormat::RGBA16F: return TextureFormat::RGBA16F;
+    case QSSGRenderTextureFormat::RGBA32F: return TextureFormat::RGBA32F;
+    case QSSGRenderTextureFormat::R8: return TextureFormat::R8;
+    case QSSGRenderTextureFormat::R16: return TextureFormat::R16;
+    case QSSGRenderTextureFormat::R16F: return TextureFormat::R16F;
+    case QSSGRenderTextureFormat::R32F: return TextureFormat::R32F;
+    case QSSGRenderTextureFormat::Depth16: return TextureFormat::Depth16;
+    case QSSGRenderTextureFormat::Depth24: return TextureFormat::Depth24;
+    case QSSGRenderTextureFormat::Depth32: return TextureFormat::Depth32;
+    case QSSGRenderTextureFormat::Depth24Stencil8: return TextureFormat::Depth24Stencil8;
+    default:
+        break;
+    }
+    return TextureFormat::Unknown;
+}
+
+QQuick3DShaderUtilsRenderPassColorAttachment::~QQuick3DShaderUtilsRenderPassColorAttachment()
+{
+
+}
+
+QByteArray QQuick3DShaderUtilsRenderPassColorAttachment::name() const
+{
+    return m_name;
+}
+
+void QQuick3DShaderUtilsRenderPassColorAttachment::setName(const QByteArray &newName)
+{
+    m_name = newName;
+}
+
+QSSGCommand *QQuick3DShaderUtilsRenderPassColorAttachment::cloneCommand()
+{
+    if (target) {
+        QSSGColorAttachment *cmd = new QSSGColorAttachment(m_name);
+        cmd->m_textureCmd = target->command;
+        return cmd;
+    }
+
+    return nullptr;
+}
+
+QQuick3DPropertyChangedTracker::~QQuick3DPropertyChangedTracker()
+{
+
+}
+
+static const char qssgSamplerNames[][18] = {
+    "sampler2D",
+    "sampler2DArray",
+    "sampler3D",
+    "samplerCube",
+    "samplerCubeArray",
+    "samplerBuffer"
+};
+
+static QByteArrayView samplerTypeName(QSSGRenderSamplerType type)
+{
+    switch (type) {
+    case QSSGRenderSamplerType::Sampler2D:
+        return QByteArrayView(qssgSamplerNames[0]);
+    case QSSGRenderSamplerType::Sampler2DArray:
+        return QByteArrayView(qssgSamplerNames[1]);
+    case QSSGRenderSamplerType::Sampler3D:
+        return QByteArrayView(qssgSamplerNames[2]);
+    case QSSGRenderSamplerType::SamplerCube:
+        return QByteArrayView(qssgSamplerNames[3]);
+    case QSSGRenderSamplerType::SamplerCubeArray:
+        return QByteArrayView(qssgSamplerNames[4]);
+    case QSSGRenderSamplerType::SamplerBuffer:
+        return QByteArrayView(qssgSamplerNames[5]);
+    default:
+        return QByteArrayView();
+    }
+}
+
+void QQuick3DPropertyChangedTracker::extractProperties(UniformPropertyList &outUniforms)
+{
+    // Ensure we start with a clean list
+    outUniforms.clear();
+
+    auto metaObject = m_owner->metaObject();
+
+    // Properties -> uniforms
+    const int propCount = metaObject->propertyCount();
+    int propOffset = metaObject->propertyOffset();
+
+    // Classes can have multilayered inheritance structure, so find the actual propOffset by
+    // walking up the inheritance chain.
+    const QMetaObject *superClass = metaObject->superClass();
+    while (superClass && qstrcmp(superClass->className(), m_superClassName) != 0)  {
+        propOffset = superClass->propertyOffset();
+        superClass = superClass->superClass();
+    }
+
+    static auto getSamplerHint = [](const QQuick3DTexture &texture) {
+        if (auto *po = QQuick3DObjectPrivate::get(&texture)) {
+            if (po->type == QQuick3DObjectPrivate::Type::TextureProvider) {
+                auto textureProvider = static_cast<QQuick3DTextureProviderExtension *>(texture.textureProvider());
+                switch (textureProvider->samplerHint()) {
+                case QQuick3DTextureProviderExtension::SamplerHint::Sampler2D:
+                    return QSSGRenderSamplerType::Sampler2D;
+                case QQuick3DTextureProviderExtension::SamplerHint::Sampler2DArray:
+                    return QSSGRenderSamplerType::Sampler2DArray;
+                case QQuick3DTextureProviderExtension::SamplerHint::Sampler3D:
+                    return QSSGRenderSamplerType::Sampler3D;
+                case QQuick3DTextureProviderExtension::SamplerHint::SamplerCube:
+                    return QSSGRenderSamplerType::SamplerCube;
+                case QQuick3DTextureProviderExtension::SamplerHint::SamplerCubeArray:
+                    return QSSGRenderSamplerType::SamplerCubeArray;
+                case QQuick3DTextureProviderExtension::SamplerHint::SamplerBuffer:
+                    return QSSGRenderSamplerType::SamplerBuffer;
+                }
+            } else if (po->type == QQuick3DObjectPrivate::Type::ImageCube) {
+                return QSSGRenderSamplerType::SamplerCube;
+            } else if (texture.textureData() && texture.textureData()->depth() > 0) {
+                return QSSGRenderSamplerType::Sampler3D;
+            }
+        }
+
+        return QSSGRenderSamplerType::Sampler2D;
+    };
+
+    const auto addTextureToUniforms = [&](const char *name, QQuick3DTexture *texture, int propertyIndex) {
+        QSSGRenderImage *ri = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(texture)->spatialNode);
+        auto samplerName = samplerTypeName(getSamplerHint(*texture)).toByteArray();
+        outUniforms.emplace_back(name, samplerName, QVariant::fromValue(ri), QSSGRenderShaderValue::Texture, propertyIndex);
+    };
+
+    // The TextureInput type needs extra watchers for its properties...
+    const auto addTextureInputWatchers = [&](QMetaProperty property, QQuick3DShaderUtilsTextureInput *textureInput) {
+        QObject::connect(textureInput, &QQuick3DShaderUtilsTextureInput::enabledChanged, m_owner, [this, property, textureInput](){ addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput); }, Qt::UniqueConnection);
+        QObject::connect(textureInput, &QQuick3DShaderUtilsTextureInput::textureChanged, m_owner, [this, property, textureInput](){ addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput); }, Qt::UniqueConnection);
+        if (auto *texture = textureInput->texture())
+            addTextureToUniforms(property.name(), texture, property.propertyIndex());
+    };
+
+    for (int i = propOffset; i != propCount; ++i) {
+        const QMetaProperty property = metaObject->property(i);
+        if (Q_UNLIKELY(!property.isValid()))
+            continue;
+
+        const char *name = property.name();
+        QMetaType propType = property.metaType();
+        QVariant propValue = property.read(m_owner);
+        if (propType == QMetaType(QMetaType::QVariant))
+            propType = propValue.metaType();
+
+        const auto type = QSSGShaderUtils::uniformType(propType);
+        if (type != QSSGRenderShaderValue::Unknown) {
+            outUniforms.emplace_back(name, QSSGShaderUtils::uniformTypeName(propType),
+                                     propValue, QSSGShaderUtils::uniformType(propType), i);
+            addPropertyWatcher(property, DirtyPropertyHint::Value);
+        } else {
+            if (propType.id() >= QMetaType::User) {
+                if (propType.id() == qMetaTypeId<QQuick3DTexture *>()) {
+                    if (QQuick3DTexture *texture = property.read(m_owner).value<QQuick3DTexture *>()) {
+                        addTextureToUniforms(name, texture, i);
+                        addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
+                    }
+                } else if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) { // For compatibility, also check for texture input types
+                    if (QQuick3DShaderUtilsTextureInput *textureInput = property.read(m_owner).value<QQuick3DShaderUtilsTextureInput *>(); textureInput && textureInput->texture()) {
+                        addTextureInputWatchers(property, textureInput);
+                        addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
+                    }
+                }
+            } else if (propType == QMetaType(QMetaType::QObjectStar)) {
+                if (QQuick3DTexture *texture = qobject_cast<QQuick3DTexture *>(propValue.value<QObject *>())) {
+                    addTextureToUniforms(name, texture, i);
+                    addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
+                } else if (QQuick3DShaderUtilsTextureInput *textureInput = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()); textureInput && textureInput->texture()) {
+                    addTextureInputWatchers(property, textureInput);
+                    addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
+                }
+            }
+        }
+    }
+}
+
+void QQuick3DPropertyChangedTracker::addPropertyWatcher(QMetaProperty property, DirtyPropertyHint hint, QQuick3DObject *object)
+{
+    if (property.isValid() && property.hasNotifySignal()) {
+        // Check if we're already watching this property.
+        const auto pid = property.propertyIndex();
+        Q_ASSERT(pid != -1);
+        auto it = std::find_if(m_trackedProperties.begin(), m_trackedProperties.end(), [pid](const Tracked &tp) { return tp.pid == pid; });
+        const bool found = (it != m_trackedProperties.end());
+        QQuick3DObject *oldObj = nullptr;
+        if (!found) {
+            QQuick3DPropertyWatcher *watcher = new QQuick3DPropertyWatcher(this, property);
+            m_trackedProperties.push_back({watcher, object, pid});
+            it = std::prev(m_trackedProperties.end());
+        } else {
+            oldObj = it->object;
+            it->object = object;
+        }
+
+        if (hint == DirtyPropertyHint::Reference) {
+            const auto &sm = QQuick3DObjectPrivate::get(m_owner)->sceneManager;
+
+            // First check if the object changed
+            const bool changed = (oldObj != object);
+
+            // Deref old object
+            if (changed && oldObj) {
+                QQuick3DObjectPrivate::get(oldObj)->derefSceneManager();
+                QObject::disconnect(oldObj, &QObject::destroyed, m_owner, nullptr);
+            }
+
+            // Ref new object
+            if (changed && object) {
+                QQuick3DObjectPrivate::get(object)->refSceneManager(*sm);
+                QObject::connect(object, &QObject::destroyed, m_owner, [this, property](QObject *obj) {
+                    Q_UNUSED(obj);
+                    addPropertyWatcher(property, DirtyPropertyHint::Reference, nullptr);
+                });
+            }
+        }
+
+        markTrackedPropertyDirty(property, hint);
+    }
+}
+
+void QQuick3DPropertyChangedTracker::markTrackedPropertyDirty(QMetaProperty property, DirtyPropertyHint hint)
+{
+    Q_UNUSED(property);
+    Q_UNUSED(hint);
+    QSSG_CHECK_X(false, "QQuick3DPropertyChangedTracker::onPropertyDirty implementation missing");
+}
+
+QQuick3DPropertyWatcher::QQuick3DPropertyWatcher(QQuick3DPropertyChangedTracker *tracker, QMetaProperty property)
+    : m_tracker(tracker)
+    , m_property(property)
+{
+    Q_ASSERT(tracker != nullptr);
+    Q_ASSERT(property.isValid() && property.hasNotifySignal());
+
+    const bool isPointerType = (property.metaType().flags().testFlag(QMetaType::IsPointer));
+
+    if (!isPointerType) {
+        // Value change notification
+        const auto idx = staticMetaObject.indexOfSlot("onValuePropertyChanged()");
+        if (QSSG_GUARD_X(idx != -1, "Method not found!")) {
+            auto onPropertyChangedMethod = staticMetaObject.method(idx);
+            connect(m_tracker->m_owner, property.notifySignal(), this, onPropertyChangedMethod);
+        }
+    } else {
+        // Pointer value change notification
+        const auto idx = staticMetaObject.indexOfSlot("onPointerPropertyChanged()");
+        if (QSSG_GUARD_X(idx != -1, "Method not found!")) {
+            auto onPointerPropertyChangedMethod = staticMetaObject.method(idx);
+            connect(m_tracker->m_owner, property.notifySignal(), this, onPointerPropertyChangedMethod);
+        }
+    }
+}
+
+void QQuick3DPropertyWatcher::onValuePropertyChanged()
+{
+    m_tracker->markTrackedPropertyDirty(m_property, QQuick3DPropertyChangedTracker::DirtyPropertyHint::Value);
+}
+
+void QQuick3DPropertyWatcher::onPointerPropertyChanged()
+{
+    m_tracker->markTrackedPropertyDirty(m_property, QQuick3DPropertyChangedTracker::DirtyPropertyHint::Reference);;
+}
+
+QQuick3DShaderUtilsRenderPassAddDefine::QQuick3DShaderUtilsRenderPassAddDefine()
+{
+
+}
+
+QQuick3DShaderUtilsRenderPassAddDefine::~QQuick3DShaderUtilsRenderPassAddDefine() = default;
+
+QSSGCommand *QQuick3DShaderUtilsRenderPassAddDefine::cloneCommand() {
+    QSSGAddShaderDefine *cmd = new QSSGAddShaderDefine(command);
+    return cmd;
+}
+
+QQuick3DShaderUtilsRenderPassDepthTextureAttachment::~QQuick3DShaderUtilsRenderPassDepthTextureAttachment()
+{
+
+}
+
+QSSGCommand *QQuick3DShaderUtilsRenderPassDepthTextureAttachment::cloneCommand()
+{
+    if (target) {
+        QSSGDepthTextureAttachment *cmd = new QSSGDepthTextureAttachment(QByteArrayLiteral("__depth__"));
+        cmd->m_textureCmd = target->command;
+        return cmd;
+    }
+
+    return nullptr;
+}
+
+QQuick3DShaderUtilsRenderPassDepthStencilAttachment::~QQuick3DShaderUtilsRenderPassDepthStencilAttachment()
+{
+
+}
+
+QSSGCommand *QQuick3DShaderUtilsRenderPassDepthStencilAttachment::cloneCommand()
+{
+    QSSGDepthStencilAttachment *cmd = new QSSGDepthStencilAttachment;
+    return cmd;
+}
+
 QT_END_NAMESPACE
+

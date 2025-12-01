@@ -265,6 +265,7 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSG
                                                                             QSSGProgramGenerator &shaderProgramGenerator,
                                                                             const QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
                                                                             const QSSGShaderFeatures &featureSet,
+                                                                            const QSSGUserShaderAugmentation &shaderAugmentation,
                                                                             QByteArray &shaderString)
 {
     shaderString = rendererLogPrefix();
@@ -310,12 +311,14 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSG
                                                                   featureSet,
                                                                   renderable.material,
                                                                   shaderLibraryManager,
-                                                                  shaderCache);
+                                                                  shaderCache,
+                                                                  shaderAugmentation);
 }
 
 QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipeline(QSSGRenderer &renderer,
                                                                         QSSGSubsetRenderable &inRenderable,
-                                                                        const QSSGShaderFeatures &inFeatureSet)
+                                                                        const QSSGShaderFeatures &inFeatureSet,
+                                                                        const QSSGUserShaderAugmentation &shaderAugmentation = {})
 {
     auto *currentLayer = renderer.m_currentLayer;
     auto &generatedShaderString = currentLayer->generatedShaderString;
@@ -323,7 +326,7 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipeline(QSSGRend
     const auto &theCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = m_contextInterface->shaderProgramGenerator();
     const auto &shaderLibraryManager = m_contextInterface->shaderLibraryManager();
-    return QSSGRendererPrivate::generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, generatedShaderString);
+    return QSSGRendererPrivate::generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, currentLayer->defaultMaterialShaderKeyProperties, inFeatureSet, shaderAugmentation, generatedShaderString);
 }
 
 void QSSGRenderer::beginFrame(QSSGRenderLayer &layer, bool allowRecursion)
@@ -1100,7 +1103,8 @@ void QSSGRendererPrivate::intersectRayWithItem2D(const QSSGRenderLayer &layer,
 
 QSSGRhiShaderPipelinePtr QSSGRendererPrivate::getShaderPipelineForDefaultMaterial(QSSGRenderer &renderer,
                                                                                   QSSGSubsetRenderable &inRenderable,
-                                                                                  const QSSGShaderFeatures &inFeatureSet)
+                                                                                  const QSSGShaderFeatures &inFeatureSet,
+                                                                                  const QSSGUserShaderAugmentation &shaderAugmentation)
 {
     auto *m_currentLayer = renderer.m_currentLayer;
     QSSG_ASSERT(m_currentLayer != nullptr, return {});
@@ -1121,14 +1125,18 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::getShaderPipelineForDefaultMateria
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find()
-    QSSGShaderMapKey skey = QSSGShaderMapKey(QByteArray(),
+    // FIXME: Would be good to have some better approach here for the key.
+    QByteArray name = shaderAugmentation.preamble + shaderAugmentation.body;
+    for (const auto &def : shaderAugmentation.defines)
+        name.append(def.name).append(def.value);
+    QSSGShaderMapKey skey = QSSGShaderMapKey(name,
                                              inFeatureSet,
                                              inRenderable.shaderDescription);
     auto it = shaderMap.find(skey);
     if (it == shaderMap.end()) {
         Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-        shaderPipeline = QSSGRendererPrivate::generateRhiShaderPipeline(renderer, inRenderable, inFeatureSet);
+        shaderPipeline = QSSGRendererPrivate::generateRhiShaderPipeline(renderer, inRenderable, inFeatureSet, shaderAugmentation);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inRenderable.material.profilingId);
         // make skey useable as a key for the QHash (makes a copy of the materialKey, instead of just referencing)
         skey.detach();

@@ -107,6 +107,7 @@ void ShaderPoker::generateShader()
                                                                                  *shaderProgramGenerator,
                                                                                  m_shaderProperties->properties(),
                                                                                  m_featureSet,
+                                                                                 { /* augmented shader */ },
                                                                                  materialInfoString);
 
     QSSGShaderCacheKey cacheKey(materialInfoString);

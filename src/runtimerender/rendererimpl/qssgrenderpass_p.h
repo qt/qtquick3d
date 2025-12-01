@@ -31,6 +31,10 @@ class QSSGRenderReflectionMap;
 class QSSGLayerRenderData;
 class QSSGRenderCamera;
 class QSGRenderer;
+class QSSGRenderExtension;
+class QSSGRenderUserPass;
+
+class QRhiTexture;
 
 class QSSGRenderPass
 {
@@ -302,9 +306,7 @@ public:
     QSSGRhiGraphicsPipelineState ps;
 };
 
-class QSSGRenderExtension;
-
-class UserPass : public QSSGRenderPass
+class UserExtensionPass : public QSSGRenderPass
 {
 public:
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
@@ -315,6 +317,37 @@ public:
     bool hasData() const { return extensions.size() != 0; }
 
     QList<QSSGRenderExtension *> extensions;
+};
+
+class UserRenderPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Standalone; }
+    void resetForFrame() final;
+
+    bool hasData() const { return (userPasses.size() != 0); }
+
+    QList<QSSGRenderUserPass *> userPasses;
+
+protected:
+    struct UserPassData
+    {
+        QSSGRhiGraphicsPipelineState ps;
+        QSSGRenderableObjectList renderables;
+        QSSGRhiRenderableTextureV2Ptr renderableTexture;
+        QSSGShaderDefineList shaderDefines;
+        QColor clearColor = Qt::black;
+        QRhiDepthStencilClearValue depthStencilClearValue = { };
+        size_t index = 0;
+
+        std::optional<SkyboxCubeMapPass> skyboxCubeMapPass;
+        std::optional<SkyboxPass> skyboxPass;
+        std::optional<Item2DPass> item2DPass;
+    };
+
+    std::vector<UserPassData> userPassData;
 };
 
 class OITRenderPass : public QSSGRenderPass

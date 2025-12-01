@@ -30,6 +30,7 @@ enum class CommandType
 {
     Unknown = 0,
     AllocateBuffer,
+    AllocateTexture,
     BindTarget,
     BindBuffer,
     BindShader,
@@ -37,6 +38,12 @@ enum class CommandType
     ApplyBufferValue,
     Render,
     ApplyValue,
+    RenderablesFilter,
+    PipelineStateOverride,
+    ColorAttachment,
+    DepthStencilAttachment,
+    DepthTextureAttachment,
+    AddShaderDefine,
 };
 
 struct QSSGCommand
@@ -241,6 +248,229 @@ struct QSSGRender : public QSSGCommand
     }
     void addDebug(QDebug &stream) const {
         stream << "(no parameters)";
+    }
+};
+
+class QSSGRenderablesFilterCommand : public QSSGCommand
+{
+public:
+    enum class RenderableType : quint32 {
+        Opaque = 0x1,
+        Transparent = 0x2,
+        Item2D = 0x4,
+    };
+
+    using RenderableTypeT = std::underlying_type<RenderableType>::type;
+    static constexpr RenderableTypeT AllRenderableTypes = std::numeric_limits<RenderableTypeT>::max();
+
+    quint32 layerMask = 0xffffffff;
+    RenderableTypeT renderableTypes = AllRenderableTypes;
+
+    QSSGRenderablesFilterCommand()
+        : QSSGCommand(CommandType::RenderablesFilter)
+    {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "layerMask:" <<  layerMask << "renderableTypes:" << renderableTypes;
+    }
+};
+
+// This is pretty much the same as QSSGAllocateBuffer but
+// we'll keep them separate as we might want to diverge further later.
+class QSSGAllocateTexture : public QSSGCommand
+{
+public:
+    QSSGAllocateTexture()
+        : QSSGCommand(CommandType::AllocateTexture)
+    {
+    }
+    QSSGAllocateTexture(QSSGRenderTextureFormat inFormat)
+        : QSSGCommand(CommandType::AllocateTexture),
+          m_format(inFormat)
+    {
+    }
+
+    const QSSGSharedRhiTextureWrapperPtr &texture() const { return m_tex; }
+    void setTexture(QSSGSharedRhiTextureWrapperPtr tex) { m_tex = tex; }
+
+    QSSGRenderTextureFormat format() const
+    {
+        return m_format;
+    }
+
+    void setFormat(QSSGRenderTextureFormat format)
+    {
+        m_format = format;
+    }
+
+    void addDebug(QDebug &stream) const
+    {
+        stream << "format:" << m_format.toString();
+    }
+
+private:
+    Q_DISABLE_COPY_MOVE(QSSGAllocateTexture)
+
+    QSSGSharedRhiTextureWrapperPtr m_tex;
+    QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::RGBA8;
+};
+
+using QSSGAllocateTexturePtr = std::shared_ptr<QSSGAllocateTexture>;
+
+class QSSGColorAttachment : public QSSGCommand
+{
+public:
+    QSSGColorAttachment(const QByteArray &name)
+        : QSSGCommand(CommandType::ColorAttachment)
+        , m_name(name)
+    {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_name;
+    }
+
+    QSSGRenderTextureFormat format() const
+    {
+        if (m_textureCmd)
+            return m_textureCmd->format();
+
+        return QSSGRenderTextureFormat::Unknown;
+    }
+
+    QByteArray m_name;
+    QSSGAllocateTexturePtr m_textureCmd;
+
+protected:
+    QSSGColorAttachment(const QByteArray &name, CommandType type)
+        : QSSGCommand(type)
+        , m_name(name)
+    {
+    }
+};
+
+class QSSGDepthTextureAttachment : public QSSGColorAttachment
+{
+public:
+    QSSGDepthTextureAttachment(const QByteArray &name)
+        : QSSGColorAttachment(name, CommandType::DepthTextureAttachment)
+    {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "name:" <<  m_name;
+    }
+};
+
+class QSSGDepthStencilAttachment : public QSSGCommand
+{
+public:
+    QSSGDepthStencilAttachment()
+        : QSSGCommand(CommandType::DepthStencilAttachment)
+    {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "(no parameters)";
+    }
+
+    QRhiTexture::Format m_format = QRhiTexture::D24S8;
+};
+
+class QSSGAddShaderDefine : public QSSGCommand
+{
+public:
+    QSSGAddShaderDefine()
+        : QSSGCommand(CommandType::AddShaderDefine)
+        , m_value(0)
+    {
+    }
+    QSSGAddShaderDefine(const QByteArray &name, int value = 0)
+        : QSSGCommand(CommandType::AddShaderDefine)
+        , m_name(name)
+        , m_value(value)
+    {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "define name:" <<  m_name << "value:" << m_value;
+    }
+
+    QByteArray m_name;
+    int m_value;
+};
+
+class QSSGPipelineStateOverrideCommand : public QSSGCommand
+{
+public:
+    std::optional<bool> m_depthTestEnabled;
+    std::optional<bool> m_depthWriteEnabled;
+    std::optional<bool> m_blendEnabled;
+    std::optional<bool> m_usesStencilReference;
+    std::optional<bool> m_usesScissor;
+    std::optional<QRhiGraphicsPipeline::CompareOp> m_depthFunction;
+    std::optional<QRhiGraphicsPipeline::CullMode> m_cullMode;
+    std::optional<QRhiGraphicsPipeline::PolygonMode> m_polygonMode;
+    std::optional<QRhiGraphicsPipeline::StencilOpState> m_stencilOpFrontState;
+    std::optional<quint32> m_stencilWriteMask;
+    std::optional<quint32> m_stencilReference;
+    std::optional<QRhiViewport> m_viewport;
+    std::optional<QRhiScissor> m_scissor;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend0;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend1;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend2;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend3;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend4;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend5;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend6;
+    std::optional<QRhiGraphicsPipeline::TargetBlend> m_targetBlend7;
+    QSSGPipelineStateOverrideCommand()
+        : QSSGCommand(CommandType::PipelineStateOverride)
+    {
+    }
+    void addDebug(QDebug &stream) const {
+        // Only print out the ones that exist
+        // Elipsis for complex types intentional
+        stream << "pipelineState:" << "{";
+        if (m_depthTestEnabled.has_value())
+            stream << " depthTestEnabled:" << m_depthTestEnabled.value();
+        if (m_depthWriteEnabled.has_value())
+            stream << " depthWriteEnabled:" << m_depthWriteEnabled.value();
+        if (m_blendEnabled.has_value())
+            stream << " blendEnabled:" << m_blendEnabled.value();
+        if (m_usesStencilReference.has_value())
+            stream << " usesStencilReference:" << m_usesStencilReference.value();
+        if (m_usesScissor.has_value())
+            stream << " usesScissor:" << m_usesScissor.value();
+        if (m_depthFunction.has_value())
+            stream << " depthFunction:" << int(m_depthFunction.value());
+        if (m_cullMode.has_value())
+            stream << " cullMode:" << int(m_cullMode.value());
+        if (m_polygonMode.has_value())
+            stream << " polygonMode:" << int(m_polygonMode.value());
+        if (m_stencilOpFrontState.has_value())
+            stream << " stencilOpFrontState:" << "{...}";
+        if (m_stencilWriteMask.has_value())
+            stream << " stencilWriteMask:" << m_stencilWriteMask.value();
+        if (m_stencilReference.has_value())
+            stream << " stencilReference:" << m_stencilReference.value();
+        if (m_viewport.has_value())
+            stream << " viewport:" << "{...}";
+        if (m_scissor.has_value())
+            stream << " scissor:" << "{...}";
+        if (m_targetBlend0.has_value())
+            stream << " targetBlend0:" << "{...}";
+        if (m_targetBlend1.has_value())
+            stream << " targetBlend1:" << "{...}";
+        if (m_targetBlend2.has_value())
+            stream << " targetBlend2:" << "{...}";
+        if (m_targetBlend3.has_value())
+            stream << " targetBlend3:" << "{...}";
+        if (m_targetBlend4.has_value())
+            stream << " targetBlend4:" << "{...}";
+        if (m_targetBlend5.has_value())
+            stream << " targetBlend5:" << "{...}";
+        if (m_targetBlend6.has_value())
+            stream << " targetBlend6:" << "{...}";
+        if (m_targetBlend7.has_value())
+            stream << " targetBlend7:" << "{...}";
+        stream << " }";
     }
 };
 

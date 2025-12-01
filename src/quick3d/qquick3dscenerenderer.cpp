@@ -32,6 +32,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgcputonemapper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
@@ -753,6 +754,12 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     for (QSSGRenderEffect *effectNode = m_layer->firstEffect; effectNode; effectNode = effectNode->m_nextEffect)
         effectNode->finalizeShaders(*m_layer, m_sgContext.get());
 
+    // NOTE: This could be done elewhere, but leaving it here for now.
+    if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
+        for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses))
+            userPass->finalizeShaders(*m_sgContext);
+    }
+
     if (newRenderStats)
         m_renderStats->setRhiContext(rhiCtx, m_layer);
 
@@ -903,6 +910,20 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             for (QSSGRenderNode &layer : rootNode->children) {
                 if (QSSG_GUARD_X(layer.type == QSSGRenderGraphObject::Type::Layer, "Layer type mismatch"))
                     static_cast<QSSGRenderLayer &>(layer).markDirty(QSSGRenderLayer::DirtyFlag::TreeDirty);
+            }
+
+            // We exploit the fact that we can use the nodes indexes to establish a dependency order
+            // for user passes by using the parent node's index.
+            if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
+                for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
+                    if (const auto *fo = sm->lookUpNode(userPass); fo && fo->parentItem()) {
+                        const auto *pi = fo->parentItem();
+                        if (const QSSGRenderGraphObject *parentNode = QQuick3DObjectPrivate::get(pi)->spatialNode; parentNode && QSSGRenderGraphObject::isNodeType(parentNode->type))
+                            userPass->setDependencyIndex(static_cast<const QSSGRenderNode *>(parentNode)->h.index());
+                        else
+                            userPass->setDependencyIndex(0); // 0 means no dependency.
+                    }
+                }
             }
         }
     }

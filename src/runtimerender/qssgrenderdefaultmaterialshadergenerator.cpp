@@ -319,7 +319,8 @@ static void generateFragmentDefines(QSSGStageGeneratorBase &fragmentShader,
                                     const QSSGShaderDefaultMaterialKey &inKey,
                                     const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                     QSSGShaderMaterialAdapter *materialAdapter,
-                                    QSSGShaderLibraryManager &shaderLibraryManager)
+                                    QSSGShaderLibraryManager &shaderLibraryManager,
+                                    const QSSGUserShaderAugmentation &shaderAugmentation)
 {
     if (materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
         auto hasCustomFunction = [&shaderLibraryManager, materialAdapter](const QByteArray &funcName) {
@@ -395,6 +396,8 @@ static void generateFragmentDefines(QSSGStageGeneratorBase &fragmentShader,
     ;}
 
 
+    for (const auto &def : std::as_const(shaderAugmentation.defines))
+        fragmentShader.addDefinition(def.name, def.value);
 }
 
 struct SamplerState {
@@ -590,6 +593,7 @@ struct PassRequirmentsState {
     bool isSpecularGlossinessWorkflow = false;
     bool isPbrMaterial = false;
     bool isOpaqueDepthPrePass = false;
+    bool isUserPass = false;
     quint32 numMorphTargets = 0;
     int viewCount = 1;
     QSSGRenderLayer::OITMethod oitMethod = QSSGRenderLayer::OITMethod::None;
@@ -598,7 +602,8 @@ struct PassRequirmentsState {
     PassRequirmentsState(const QSSGShaderDefaultMaterialKey &inKey,
                          const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                          const QSSGShaderFeatures &featureSet,
-                         const SamplerState &samplerState)
+                         const SamplerState &samplerState,
+                         const QSSGUserShaderAugmentation &shaderAugmentation)
     {
         const bool isDepthPass = featureSet.isSet(QSSGShaderFeatures::Feature::DepthPass);
         const bool isOrthoShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::OrthoShadowPass);
@@ -638,6 +643,7 @@ struct PassRequirmentsState {
         isMetallicRoughnessWorkflow = keyProps.m_metallicRoughnessEnabled.getValue(inKey);
         isSpecularGlossinessWorkflow = keyProps.m_specularGlossyEnabled.getValue(inKey);
         isPbrMaterial = isMetallicRoughnessWorkflow || isSpecularGlossinessWorkflow;
+        isUserPass = featureSet.isSet(QSSGShaderFeatures::Feature::UserRenderPass);
         hasFog = keyProps.m_fogEnabled.getValue(inKey);
         numMorphTargets = keyProps.m_targetCount.getValue(inKey);
         viewCount = featureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView) ? 1 : keyProps.m_viewCount.getValue(inKey);
@@ -660,6 +666,36 @@ struct PassRequirmentsState {
             needsWorldTangent = true;
             needsWorldBinormal = true;
             needsRoughness = true;
+        } else if (isUserPass) {
+            passType = User;
+            // Use shaderAugmentation to figure out what features are needed
+            needsBaseColor = shaderAugmentation.needsBaseColor;
+            needsRoughness = shaderAugmentation.needsRoughness;
+            needsMetalness = shaderAugmentation.needsMetalness;
+            needsEmission = shaderAugmentation.needsEmissiveLight;
+            needsWorldNormal = shaderAugmentation.needsWorldNormal;
+            needsWorldTangent = shaderAugmentation.needsWorldTangent;
+            needsWorldBinormal = shaderAugmentation.needsWorldBinormal;
+
+            if (shaderAugmentation.needsDiffuseLight ||
+                shaderAugmentation.needsSpecularLight ||
+                shaderAugmentation.needsF0 ||
+                shaderAugmentation.needsF90) {
+                // Turn everything on for now
+                needsBaseColor = true;
+                needsRoughness = true;
+                needsMetalness = true;
+                needsDiffuseLight = true;
+                needsSpecularLight = true;
+                needsEmission = true;
+                needsWorldNormal = true;
+                needsWorldTangent = true;
+                needsWorldBinormal = true;
+                needsF0 = true;
+                needsF90 = true;
+                needsAmbientOcclusion = true;
+            }
+
         } else {
             // Either a Color or Debug Pass
             passType = Color;
@@ -771,6 +807,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                    const QSSGShaderFeatures &featureSet,
                                    const QSSGRenderGraphObject &inMaterial,
+                                   const QSSGUserShaderAugmentation &shaderAugmentation,
                                    QSSGShaderLibraryManager &shaderLibraryManager)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
@@ -812,12 +849,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
     };
 
-    generateFragmentDefines(fragmentShader, inKey, keyProps, materialAdapter, shaderLibraryManager);
+    generateFragmentDefines(fragmentShader, inKey, keyProps, materialAdapter, shaderLibraryManager, shaderAugmentation);
 
     // Determine the available texture channels
     SamplerState samplerState(inKey, keyProps);
     // Determine the requirements of this rendering pass
-    const PassRequirmentsState passRequirmentState(inKey, keyProps, featureSet, samplerState);
+    const PassRequirmentsState passRequirmentState(inKey, keyProps, featureSet, samplerState, shaderAugmentation);
 
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
 
@@ -858,6 +895,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                        QByteArray::number(offset));
         }
     }
+
+    if (passRequirmentState.passType == PassRequirmentsState::User) {
+        if (shaderAugmentation.hasUserAugmentation())
+            fragmentShader << shaderAugmentation.preamble;
+    }
+
+    for (const auto &u : shaderAugmentation.propertyUniforms)
+        fragmentShader.addUniform(u.name, u.typeName);
 
     // Unshaded custom materials need no code in main (apart from calling qt_customMain)
     const bool hasCustomFrag = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
@@ -1813,7 +1858,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.append("    fragOutput = vec4(debugOutput, 1.0);\n");
         break;
     case PassRequirmentsState::User:
-        // TODO handle the user pass case by pulling the pass specific code from somewhere
+        if (shaderAugmentation.hasUserAugmentation())
+           fragmentShader << "    " << shaderAugmentation.body << ";\n";
         break;
     }
 }
@@ -1825,7 +1871,8 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                                 const QSSGShaderFeatures &inFeatureSet,
                                                                                 const QSSGRenderGraphObject &inMaterial,
                                                                                 QSSGShaderLibraryManager &shaderLibraryManager,
-                                                                                QSSGShaderCache &theCache)
+                                                                                QSSGShaderCache &theCache,
+                                                                                const QSSGUserShaderAugmentation &shaderAugmentation)
 {
     const int viewCount = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
         ? 1 : inProperties.m_viewCount.getValue(key);
@@ -1853,7 +1900,7 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
 
     // the call order is: beginVertex, beginFragment, endVertex, endFragment
     vertexPipeline.beginVertexGeneration(key, inFeatureSet, shaderLibraryManager);
-    generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, shaderLibraryManager);
+    generateFragmentShader(vertexPipeline.fragment(), vertexPipeline, key, inProperties, inFeatureSet, inMaterial, shaderAugmentation, shaderLibraryManager);
     vertexPipeline.endVertexGeneration();
     vertexPipeline.endFragmentGeneration();
 
@@ -1862,6 +1909,7 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                         shaderLibraryManager,
                                                                         theCache,
                                                                         {},
+                                                                        shaderAugmentation,
                                                                         viewCount,
                                                                         perTargetCompilation);
 }

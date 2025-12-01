@@ -35,6 +35,7 @@ class QSSGRenderContextInterface;
 class QSSGRenderRoot;
 struct QSSGRenderLayer;
 class QSSGRenderExtension;
+class QSSGRenderUserPass;
 
 class Q_QUICK3D_EXPORT QQuick3DWindowAttachment : public QObject
 {
@@ -187,6 +188,7 @@ public:
     QHash<QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
     QSet<QSSGRenderGraphObject *> resourceLoaders;
     QList<QSSGRenderExtension *> textureProviderExtensions;
+    QList<QSSGRenderUserPass *> userRenderPasses;
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;
     int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.

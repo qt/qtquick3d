@@ -35,6 +35,57 @@ class QSSGRhiShaderPipeline;
 class QShaderBaker;
 class QRhi;
 
+using QSSGUserShaderFragmentOutputs = QVector<QByteArray>;
+
+struct QSSGShaderDefine
+{
+    QByteArray name;
+    QByteArray value;
+};
+
+using QSSGShaderDefineList = QList<QSSGShaderDefine>;
+
+class QSSGUserShaderAugmentation
+{
+public:
+    QByteArray preamble;
+    QByteArray body;
+
+    bool needsBaseColor = false;
+    bool needsRoughness = false;
+    bool needsMetalness = false;
+    bool needsDiffuseLight = false;
+    bool needsSpecularLight = false;
+    bool needsEmissiveLight = false;
+    bool needsWorldNormal = false;
+    bool needsWorldTangent = false;
+    bool needsWorldBinormal = false;
+    bool needsF0 = false;
+    bool needsF90 = false;
+
+    QSSGUserShaderFragmentOutputs outputs;
+
+    using Property = QSSGBaseTypeProperty;
+
+    using PropertyUniformsList = QVector<Property>;
+    PropertyUniformsList propertyUniforms;
+
+    QSSGShaderDefineList defines;
+
+    bool hasUserAugmentation() const
+    {
+        return (body.size() > 0);
+    }
+
+    bool hasPropertyUniforms() const
+    {
+        return propertyUniforms.size() > 0;
+    }
+
+};
+
+
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderFeatures
 {
 
@@ -84,7 +135,7 @@ enum class Feature : FlagType
     DisableMultiView = (1 << 24) + 16,
     ForceIblExposure = (1 << 25) + 17,
     NormalPass = (1 << 26) + 18,
-
+    UserRenderPass = (1 << 27) + 19,
     LastFeature
 };
 
@@ -192,6 +243,7 @@ private:
                                const QByteArray &inKey,
                                ShaderType shaderType,
                                const QSSGShaderFeatures &inFeatures,
+                               const QSSGUserShaderAugmentation &shaderAugmentation,
                                int viewCount);
 
 public:
@@ -224,6 +276,7 @@ public:
                                            const QByteArray &inFrag,
                                            const QSSGShaderFeatures &inFeatures,
                                            QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                           const QSSGUserShaderAugmentation &shaderAugmentation,
                                            int viewCount,
                                            bool perTargetCompilation);
 

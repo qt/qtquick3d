@@ -74,6 +74,71 @@ void QSSGFrameData::scheduleRenderResults(RenderResults results) const
         prepResult.flags.setRequiresNormalTexture(true);
 }
 
+qsizetype QSSGFrameData::getAttachmentCount(QSSGResourceId userPassId) const
+{
+    QSSGRenderUserPass *userPassNode = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPass>(userPassId);
+    QSSG_ASSERT(userPassNode && userPassNode->type == QSSGRenderGraphObject::Type::RenderPass, return 0);
+
+    QSSGRhiRenderableTextureV2Ptr res;
+    auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
+    if (QSSG_GUARD(data))
+        res = data->requestUserRenderPassManager()->getUserPassTexureResult(*userPassNode);
+
+    return res->colorAttachmentCount();
+}
+
+/*!
+    \fn QSSGFrameData::Result QSSGFrameData::getRenderResult(QSSGResourceId userPassId, AttachmentSelector attachment) const
+
+    \return The renderable texture result from a user defined render pass with the given \a userPassId.
+    If no matching user pass could be found, or if the user pass did not produce any renderable textures,
+    an invalid Result is returned.
+
+    \note Even if the function returns a non-null result, the returned QSSGRhiRenderableTexture
+    might not be ready unless the pass rendering to the texture has been executed.
+
+    \note The returned value is only valid within the current frame. On each new frame
+    the renderable will be reset and should therefore be queried again.
+*/
+QSSGFrameData::Result QSSGFrameData::getRenderResult(QSSGResourceId userPassId, AttachmentSelector attachment) const
+{
+    QSSGRenderUserPass *userPassNode = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPass>(userPassId);
+    QSSG_ASSERT(userPassNode && userPassNode->type == QSSGRenderGraphObject::Type::RenderPass, return Result{});
+
+    QSSGRhiRenderableTextureV2Ptr res;
+    auto *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
+    if (QSSG_GUARD(data))
+        res = data->requestUserRenderPassManager()->getUserPassTexureResult(*userPassNode);
+
+    Result result;
+
+    const quint32 attachmentSelector = static_cast<quint32>(attachment);
+
+    if (res && res->isValid()) {
+        if (const qsizetype attachmentCount = res->colorAttachmentCount(); attachmentCount > qsizetype(attachmentSelector)) {
+            // Get the selected attachment
+            result = { res->getColorTexture(attachmentSelector)->texture().get(), res->getDepthStencil().get() };
+        } else {
+            qWarning() << "Requested attachment" << attachmentSelector << "but user pass only has" << attachmentCount << "attachments.";
+        }
+    }
+
+    return result;
+}
+
+/*!
+  \internal
+*/
+void QSSGFrameData::scheduleRenderResults(QSSGResourceId userPassId) const
+{
+    QSSGRenderUserPass *userPassNode = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPass>(userPassId);
+    QSSG_ASSERT(userPassNode && userPassNode->type == QSSGRenderGraphObject::Type::RenderPass, return);
+
+    QSSGLayerRenderData *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
+    if (QSSG_GUARD(data))
+        data->requestUserRenderPassManager()->scheduleUserPass(userPassNode);
+}
+
 /*!
     \return Base pipeline state for this frame
  */

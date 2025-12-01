@@ -454,6 +454,7 @@ QSSGRhiShaderPipelinePtr QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBin
                                                 shaderLib,
                                                 shaderCache,
                                                 QSSGRhiShaderPipeline::UsedWithoutIa,
+                                                {},
                                                 viewCount,
                                                 false);
 }

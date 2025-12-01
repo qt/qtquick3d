@@ -3,6 +3,10 @@
 
 #include "qquick3drenderoutputprovider_p.h"
 
+#include "private/qquick3dobject_p.h"
+
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+
 #include <ssg/qssgrenderextensions.h>
 #include <ssg/qssgrenderhelpers.h>
 #include <ssg/qssgrendercontextcore.h>
@@ -50,6 +54,7 @@ public:
     enum class SourceType {
         None,
         BuiltInPass,
+        UserPass,
     };
 
     explicit QSSGRenderOutputProviderExtension(QQuick3DRenderOutputProvider *ext);
@@ -62,11 +67,11 @@ public:
     SourceType m_sourceType = SourceType::BuiltInPass;
     QSSGFrameData::RenderResult m_builtInPass = QSSGFrameData::RenderResult::DepthTexture;
     QSSGResourceId userPassId = QSSGResourceId::Invalid;
+    QSSGFrameData::AttachmentSelector attachmentSelector = QSSGFrameData::AttachmentSelector::Attachment0;
+    bool m_disableMainPasses = false;
     bool m_isDirty = true;
 
     QPointer<QQuick3DRenderOutputProvider> m_ext;
-
-
 };
 
 QSSGRenderOutputProviderExtension::QSSGRenderOutputProviderExtension(QQuick3DRenderOutputProvider *ext)
@@ -102,10 +107,33 @@ bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
         if (extResult.texture) {
             QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, extResult.texture);
             m_isDirty = false;
+
         }
         // No "else" in this case since its likely the texture for the pass doesn't exist yet, try again in prepareRender.
     }
-    break;
+        break;
+    case SourceType::UserPass:
+    {
+        // FIXME: We need a better way to toggle this
+        if (m_disableMainPasses)
+            QSSGLayerRenderData::getCurrent(data)->disableMainPasses = m_disableMainPasses;
+
+        if (userPassId != QSSGResourceId::Invalid) {
+            // Make sure we schedule the pass to run this frame
+            data.scheduleRenderResults(userPassId);
+
+            // Check if a texture exists for the result already
+            QSSGFrameData::Result extResult = data.getRenderResult(userPassId, attachmentSelector);
+            if (extResult.texture) {
+                // Associate the texture with this extension and expose it so it can be used.
+                QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, extResult.texture);
+                m_isDirty = false;
+
+            }
+        }
+        // No "else" in this case since its likely the texture for the pass doesn't exist yet, try again in prepareRender.
+    }
+        break;
     }
 
     return wasDirty;
@@ -117,8 +145,13 @@ void QSSGRenderOutputProviderExtension::prepareRender(QSSGFrameData &data)
     QSSGExtensionId extensionId = QQuick3DExtensionHelpers::getExtensionId(*m_ext);
     Q_ASSERT(!QQuick3DExtensionHelpers::isNull(extensionId));
 
-    if (m_sourceType == SourceType::BuiltInPass) {
-        QSSGFrameData::Result extResult = data.getRenderResult(m_builtInPass);
+    QSSGFrameData::Result extResult;
+    if (m_sourceType == SourceType::BuiltInPass)
+        extResult = data.getRenderResult(m_builtInPass);
+    else if (m_sourceType == SourceType::UserPass && userPassId != QSSGResourceId::Invalid)
+        extResult = data.getRenderResult(userPassId, attachmentSelector);
+
+    if (userPassId != QSSGResourceId::Invalid) {
         if (extResult.texture) {
             QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, extResult.texture);
             m_isDirty = false;
@@ -183,10 +216,16 @@ QSSGRenderGraphObject *QQuick3DRenderOutputProvider::updateSpatialNode(QSSGRende
 
     QSSGRenderOutputProviderExtension *providerNode = static_cast<QSSGRenderOutputProviderExtension *>(node);
 
+    providerNode->m_isDirty = (m_dirtyAttributes != 0);
+
     if (m_dirtyAttributes & TextureSourceDirty) {
-        providerNode->m_isDirty = true;
         switch (m_textureSource) {
         case QQuick3DRenderOutputProvider::TextureSource::None:
+            providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::None;
+            // m_builtInPass is not used in this case
+            break;
+        case QQuick3DRenderOutputProvider::TextureSource::UserPassTexture:
+            providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::UserPass;
             break;
         case QQuick3DRenderOutputProvider::TextureSource::AoTexture:
             providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::BuiltInPass;
@@ -200,7 +239,18 @@ QSSGRenderGraphObject *QQuick3DRenderOutputProvider::updateSpatialNode(QSSGRende
             providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::BuiltInPass;
             providerNode->m_builtInPass = QSSGFrameData::RenderResult::ScreenTexture;
             break;
+        case QQuick3DRenderOutputProvider::TextureSource::MainColorTexture:
+            providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::UserPass;
+            providerNode->m_disableMainPasses = true;
+            break;
         }
+    }
+
+    if (m_dirtyAttributes & UserPassTextureDirty) {
+         // m_builtInPass is not used in this case
+        QSSGResourceId userPassId = m_renderPass ? QQuick3DExtensionHelpers::getResourceId(*m_renderPass) : QSSGResourceId::Invalid;
+        providerNode->userPassId = userPassId;
+        providerNode->attachmentSelector = QSSGFrameData::AttachmentSelector(m_attachmentSelector);
     }
 
     m_dirtyAttributes = 0;
@@ -236,6 +286,38 @@ void QQuick3DRenderOutputProvider::setTextureSource(TextureSource newTextureSour
     markDirty(TextureSourceDirty);
 }
 
+QQuick3DRenderPass *QQuick3DRenderOutputProvider::renderPass() const
+{
+    return m_renderPass;
+}
+
+void QQuick3DRenderOutputProvider::setRenderPass(QQuick3DRenderPass *newRenderPass)
+{
+    if (m_renderPass == newRenderPass)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DRenderOutputProvider::setRenderPass, newRenderPass, m_renderPass);
+
+    m_renderPass = newRenderPass;
+
+    setTextureSource(m_renderPass ? TextureSource::UserPassTexture : TextureSource::None);
+
+    markDirty(UserPassTextureDirty);
+
+    emit renderPassChanged();
+}
+
+QQuick3DRenderOutputProvider::AttachmentSelector QQuick3DRenderOutputProvider::attachmentSelector() const
+{
+    return m_attachmentSelector;
+}
+
+void QQuick3DRenderOutputProvider::setAttachmentSelector(AttachmentSelector newAttachmentSelector)
+{
+    if (m_attachmentSelector == newAttachmentSelector)
+        return;
+    m_attachmentSelector = newAttachmentSelector;
+    emit attachmentSelectorChanged();
+}
+
 QT_END_NAMESPACE
-
-

@@ -37,6 +37,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrenderresourceloader.cpp graphobjects/qssgrenderresourceloader_p.h
         graphobjects/qssgrenderreflectionprobe.cpp graphobjects/qssgrenderreflectionprobe_p.h
         graphobjects/qssgrenderroot_p.h graphobjects/qssgrenderroot.cpp
+        graphobjects/qssgrenderuserpass_p.h graphobjects/qssgrenderuserpass.cpp
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
@@ -86,6 +87,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         extensionapi/qssgrenderextensions.h extensionapi/qssgrenderextensions.cpp
         extensionapi/qssgrenderhelpers.h extensionapi/qssgrenderhelpers.cpp
         qssgdebugdrawsystem_p.h qssgdebugdrawsystem.cpp
+        qssguserrenderpassmanager.cpp qssguserrenderpassmanager_p.h
         qssgrenderparticleshaderkeys_p.h
     NO_UNITY_BUILD_SOURCES
         rendererimpl/qssglightmapper.cpp              # avoiding possible clash with tinyexr' macros

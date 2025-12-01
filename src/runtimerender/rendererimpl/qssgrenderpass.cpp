@@ -1258,7 +1258,7 @@ void DebugDrawPass::resetForFrame()
     ps = {};
 }
 
-void UserPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+void UserExtensionPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     Q_UNUSED(renderer);
     auto &frameData = data.getFrameData();
@@ -1269,7 +1269,7 @@ void UserPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     }
 }
 
-void UserPass::renderPass(QSSGRenderer &renderer)
+void UserExtensionPass::renderPass(QSSGRenderer &renderer)
 {
     auto *data = QSSGLayerRenderData::getCurrent(renderer);
     QSSG_ASSERT(data, return);
@@ -1280,7 +1280,7 @@ void UserPass::renderPass(QSSGRenderer &renderer)
     }
 }
 
-void UserPass::resetForFrame()
+void UserExtensionPass::resetForFrame()
 {
     for (const auto &p : std::as_const(extensions))
         p->resetForFrame();
@@ -1684,6 +1684,412 @@ void OITCompositePass::resetForFrame()
     shaderFeatures = {};
     rhiAccumTexture = nullptr;
     rhiRevealageTexture = nullptr;
+}
+
+Q_STATIC_LOGGING_CATEGORY(lcUserRenderPass, "qt.quick3d.rhi.userrenderpass")
+
+void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
+    QSSGRenderCamera *camera = data.renderedCameras[0];
+
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+
+    const QSize targetSize = data.layerPrepResult.textureDimensions();
+
+    static const auto needsRebuild = [](QRhiTexture *texture, const QSize &size, QRhiTexture::Format format) {
+        return !texture || texture->pixelSize() != size || texture->format() != format;
+    };
+
+    for (auto *passNode : std::as_const(userPasses)) {
+        QSSG_ASSERT(passNode != nullptr, continue);
+
+        qCDebug(lcUserRenderPass, "renderPrep in UserRenderPass");
+
+        UserPassData currentPassData;
+        QSSGRenderableObjectList renderables;
+        auto ps = data.getPipelineState();
+
+        bool needsDepthStencilRenderBuffer = false;
+        QSSGAllocateTexturePtr depthTextureAllocCommand;
+
+        QVarLengthArray<QSSGColorAttachment *, 16> colorAttachments;
+
+        // Process commands in m_passNode
+        for (const QSSGCommand *theCommand : std::as_const(passNode->commands)) {
+            QSSG_ASSERT(theCommand != nullptr, continue);
+
+            qCDebug(lcUserRenderPass) << "Exec. command:    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
+
+            switch (theCommand->m_type) {
+            case CommandType::ColorAttachment:
+            {
+                const QSSGColorAttachment *colorAttachCmd = static_cast<const QSSGColorAttachment *>(theCommand);
+                colorAttachments.push_back(const_cast<QSSGColorAttachment *>(colorAttachCmd));
+            }
+            break;
+            case CommandType::DepthTextureAttachment:
+            {
+                QSSG_ASSERT(depthTextureAllocCommand == nullptr, break);
+                const QSSGDepthTextureAttachment *depthAttachCmd = static_cast<const QSSGDepthTextureAttachment *>(theCommand);
+                needsDepthStencilRenderBuffer = false;
+                depthTextureAllocCommand = depthAttachCmd->m_textureCmd;
+            }
+            break;
+            case CommandType::AddShaderDefine:
+            {
+                const auto *defineCmd = static_cast<const QSSGAddShaderDefine *>(theCommand);
+                const auto &defineName = defineCmd->m_name;
+                if (defineName.size() > 0) {
+                    QByteArray value = QByteArray::number(defineCmd->m_value);
+                    currentPassData.shaderDefines.push_back({ defineName, value });
+                }
+            }
+            break;
+            case CommandType::RenderablesFilter:
+            {
+                auto filterCommand = static_cast<const QSSGRenderablesFilterCommand *>(theCommand);
+
+                // layer
+                // Clone the camera node, so we can set a custom layer mask
+                enum RenderableType : quint8 {
+                    Opaque = 0x1,
+                    Transparent = 0x2,
+                    Item2D = 0x4
+                };
+
+                if (filterCommand->renderableTypes & RenderableType::Opaque) // Opaque
+                    renderables = data.getSortedOpaqueRenderableObjects(*camera, 0, filterCommand->layerMask);
+                if (filterCommand->renderableTypes & RenderableType::Transparent) // Transparent
+                    renderables += data.getSortedTransparentRenderableObjects(*camera, 0, filterCommand->layerMask);
+            }
+            break;
+
+            case CommandType::PipelineStateOverride:
+            {
+                auto pipelineCommand = static_cast<const QSSGPipelineStateOverrideCommand *>(theCommand);
+                if (pipelineCommand->m_depthTestEnabled)
+                    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled, *pipelineCommand->m_depthTestEnabled);
+                if (pipelineCommand->m_depthWriteEnabled)
+                    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, *pipelineCommand->m_depthWriteEnabled);
+                if (pipelineCommand->m_blendEnabled)
+                    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, *pipelineCommand->m_blendEnabled);
+                if (pipelineCommand->m_usesStencilReference)
+                    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef, *pipelineCommand->m_usesStencilReference);
+                if (pipelineCommand->m_usesScissor)
+                    ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::UsesScissor, *pipelineCommand->m_usesScissor);
+                if (pipelineCommand->m_depthFunction)
+                    ps.depthFunc = *pipelineCommand->m_depthFunction;
+                if (pipelineCommand->m_cullMode)
+                    ps.cullMode = *pipelineCommand->m_cullMode;
+                if (pipelineCommand->m_polygonMode)
+                    ps.polygonMode = *pipelineCommand->m_polygonMode;
+                if (pipelineCommand->m_stencilOpFrontState)
+                    ps.stencilOpFrontState = *pipelineCommand->m_stencilOpFrontState;
+                if (pipelineCommand->m_stencilWriteMask)
+                    ps.stencilWriteMask = *pipelineCommand->m_stencilWriteMask;
+                if (pipelineCommand->m_stencilReference)
+                    ps.stencilRef = *pipelineCommand->m_stencilReference;
+                if (pipelineCommand->m_viewport)
+                    ps.viewport = *pipelineCommand->m_viewport;
+                if (pipelineCommand->m_scissor)
+                    ps.scissor = *pipelineCommand->m_scissor;
+                if (pipelineCommand->m_targetBlend0)
+                    ps.targetBlend[0] = *pipelineCommand->m_targetBlend0;
+                if (pipelineCommand->m_targetBlend1)
+                    ps.targetBlend[1] = *pipelineCommand->m_targetBlend1;
+                if (pipelineCommand->m_targetBlend2)
+                    ps.targetBlend[2] = *pipelineCommand->m_targetBlend2;
+                if (pipelineCommand->m_targetBlend3)
+                    ps.targetBlend[3] = *pipelineCommand->m_targetBlend3;
+                if (pipelineCommand->m_targetBlend4)
+                    ps.targetBlend[4] = *pipelineCommand->m_targetBlend4;
+                if (pipelineCommand->m_targetBlend5)
+                    ps.targetBlend[5] = *pipelineCommand->m_targetBlend5;
+                if (pipelineCommand->m_targetBlend6)
+                    ps.targetBlend[6] = *pipelineCommand->m_targetBlend6;
+                if (pipelineCommand->m_targetBlend7)
+                    ps.targetBlend[7] = *pipelineCommand->m_targetBlend7;
+                break;
+            }
+            case CommandType::DepthStencilAttachment:
+                //auto depthStencilCommand = static_cast<const QSSGDepthStencilAttachment *>(theCommand);
+                QSSG_ASSERT(depthTextureAllocCommand == nullptr, break);
+                needsDepthStencilRenderBuffer = true;
+                break;
+
+
+            default:
+                qWarning() << "Effect command" << theCommand->typeAsString() << "not implemented";
+                break;
+            }
+        }
+
+        if (colorAttachments.size() > 4) {
+            colorAttachments.resize(4);
+            qWarning() << "UserRenderPass supports up to 4 color attachments only.";
+        }
+
+        // m_passNode contains state for this UserRenderPass
+
+        // 1) Setup the render target
+        auto renderTarget = data.requestUserRenderPassManager()->getOrCreateRenderableTexture(*passNode);
+
+        bool needsBuild = !renderTarget->isValid();
+
+        const qsizetype oldAttachmentCount = renderTarget->colorAttachmentCount();
+        // If the number of attachments has changed, we need to rebuild.
+        if (oldAttachmentCount != colorAttachments.size())
+            needsBuild = true;
+
+        // Even if the render target is valid we need to check if the textures are still compatible.
+        if (!needsBuild) {
+            // Color attachments
+
+            for (int i = 0; i != oldAttachmentCount; ++i) {
+                const auto &colorAttachment = colorAttachments.at(i);
+                QSSG_ASSERT(colorAttachment != nullptr, continue);
+                const auto expectedFormat = QSSGBufferManager::toRhiFormat(colorAttachment->format());
+                const auto &texture = renderTarget->getColorTexture(i);
+                needsBuild = needsBuild || needsRebuild(&(*texture->texture()), targetSize, expectedFormat);
+            }
+
+            // depthStencilBuffer
+            if (needsDepthStencilRenderBuffer != (renderTarget->getDepthStencil() != nullptr))
+                needsBuild = true;
+
+            // depthTexture
+            if (depthTextureAllocCommand) {
+                const auto format = QSSGBufferManager::toRhiFormat(depthTextureAllocCommand->format());
+                const auto &depthTextureWrapper = renderTarget->getDepthTexture();
+                needsBuild = depthTextureWrapper == nullptr;
+                needsBuild = needsBuild || needsRebuild(&(*depthTextureWrapper->texture()), targetSize, format);
+            } else {
+                if (renderTarget->getDepthTexture() != nullptr)
+                    needsBuild = true;
+            }
+        }
+
+        if (needsBuild) {
+            renderTarget->reset();
+
+            QRhiTextureRenderTargetDescription rtDesc;
+
+            // If no attachments are specified, create one.
+            const qsizetype colorAttachmentCount = qMax<qsizetype>(colorAttachments.size(), 1);
+
+            bool createSucceeded = true;
+            bool colorAllocatorsNeedsUpdate = false;
+
+            {
+                // Used to set the color attachments in rtDesc below (don't let the raw ptrs leave this scope).
+                QVarLengthArray<QRhiTexture *, 4> textures;
+                for (qsizetype i = 0; i < colorAttachmentCount && createSucceeded ; ++i) {
+                    const auto &colorAttCmd = colorAttachments.at(i);
+                    const auto &name = colorAttCmd->m_name;
+                    const auto format = QSSGBufferManager::toRhiFormat(colorAttCmd->format());
+                    const auto &allocateTexCmd = colorAttCmd->m_textureCmd;
+                    if (allocateTexCmd->texture() && !needsRebuild(&(*allocateTexCmd->texture()->texture()), targetSize, format)) {
+                        // NOTE: The QRhiTexture is tracked by the QSSGUserRenderPassManager, even if we create a new
+                        //       shared pointer wrapper here, it will ask the manager before destroying it.
+                        textures.push_back(allocateTexCmd->texture()->texture().get());
+                    } else {
+                        auto *tex = rhiCtx->rhi()->newTexture(format, targetSize, ps.samples, QRhiTexture::RenderTarget);
+                        tex->setName(name);
+                        createSucceeded = createSucceeded && tex->create();
+                        textures.push_back(tex);
+                        // We created a new texture, so we need to update the allocator.
+                        // NOTE: Since the render target type will take ownership of the texture, we need to
+                        //       request the textures once the render target description is set!
+                        colorAllocatorsNeedsUpdate = true;
+                    }
+                }
+
+                rtDesc.setColorAttachments(textures.cbegin(), textures.cend());
+            }
+
+            if (needsDepthStencilRenderBuffer) {
+                auto renderBuffer = rhiCtx->rhi()->newRenderBuffer(QRhiRenderBuffer::DepthStencil, targetSize, ps.samples);
+                if (renderBuffer->create())
+                    rtDesc.setDepthStencilBuffer(renderBuffer);
+            } else if (depthTextureAllocCommand) {
+                const auto format = QSSGBufferManager::toRhiFormat(depthTextureAllocCommand->format());
+                QRhiTexture *depthTex = rhiCtx->rhi()->newTexture(format, targetSize, ps.samples, QRhiTexture::RenderTarget);
+                if (depthTex->create())
+                    rtDesc.setDepthTexture(depthTex);
+            }
+
+            if (createSucceeded) {
+                // Set description takes ownership of rtDesc and the textures inside it (Color + Depth).
+                renderTarget->setDescription(rhiCtx->rhi(), std::move(rtDesc));
+
+                // Now we can update the allocators for the color attachments that were created here.
+                if (colorAllocatorsNeedsUpdate) {
+                    for (qsizetype i = 0; i < colorAttachmentCount; ++i) {
+                        const auto &colorAttCmd = colorAttachments.at(i);
+                        const auto &allocateTexCmd = colorAttCmd->m_textureCmd;
+                        allocateTexCmd->setTexture(renderTarget->getColorTexture(i));
+                    }
+                }
+
+                if (depthTextureAllocCommand)
+                    depthTextureAllocCommand->setTexture(renderTarget->getDepthTexture());
+
+            } else {
+                renderTarget->resetRenderTarget();
+                qWarning() << "Failed to create textures for UserRenderPass";
+            }
+        }
+
+        Q_ASSERT(renderTarget->isValid());
+
+        ps.colorAttachmentCount = renderTarget->colorAttachmentCount();
+
+        const size_t userPassIndex = userPassData.size();
+
+        currentPassData.ps = ps;
+        currentPassData.renderables = renderables;
+        currentPassData.clearColor = passNode->clearColor;
+        currentPassData.renderableTexture = renderTarget;
+        currentPassData.depthStencilClearValue = passNode->depthStencilClearValue;
+        currentPassData.index = userPassIndex;
+
+        if (passNode->passMode == QSSGRenderUserPass::PassModes::UserPass) {
+            // If no filter is specified, render all opaque objects
+            if (renderables.isEmpty())
+                renderables = data.getSortedOpaqueRenderableObjects(*camera);
+
+            if (passNode->materialMode == QSSGRenderUserPass::MaterialModes::AugmentMaterial) {
+
+                QSSGUserShaderAugmentation shaderAugmentation = passNode->shaderAugmentation;
+
+                QSSG_ASSERT(shaderAugmentation.outputs.size() == 0, shaderAugmentation.outputs.clear());
+                shaderAugmentation.defines = std::move(currentPassData.shaderDefines);
+
+                for (int i = 0, end = colorAttachments.size(); i < end; ++i) {
+                    const auto &colorAttCmd = colorAttachments.at(i);
+                    const auto &name = colorAttCmd->m_name;
+                    if (name.size() > 0)
+                        shaderAugmentation.outputs.push_back(name);
+                    else
+                        shaderAugmentation.outputs.push_back(QByteArrayLiteral("user_fragcolor") + QByteArray::number(i));
+                }
+
+                QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
+                shaderFeatures.disableTonemapping();
+
+                RenderHelpers::rhiPrepareAugmentedUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), shaderAugmentation, data, renderables, shaderFeatures, userPassIndex);
+            } else if (passNode->materialMode == QSSGRenderUserPass::MaterialModes::OverrideMaterial) {
+                // Every renderable will use the override material
+                QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
+                shaderFeatures.disableTonemapping();
+
+                RenderHelpers::rhiPrepareOverrideMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), passNode->overrideMaterial, data, renderables, shaderFeatures, userPassIndex);
+
+            } else {
+                // Use original material of the renderables
+                QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
+                shaderFeatures.disableTonemapping();
+                RenderHelpers::rhiPrepareOriginalMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), data, renderables, shaderFeatures, userPassIndex);
+            }
+
+            userPassData.push_back(currentPassData);
+
+        } else {
+            // Wrapped Built-in Passes
+            if (passNode->passMode == QSSGRenderUserPass::PassModes::SkyboxPass) {
+                if (rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)) {
+                    if (data.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && data.layer.skyBoxCubeMap) {
+                        if (!currentPassData.skyboxCubeMapPass)
+                            currentPassData.skyboxCubeMapPass = SkyboxCubeMapPass();
+
+                        currentPassData.skyboxCubeMapPass->skipTonemapping = true;
+                        currentPassData.skyboxCubeMapPass->renderPrep(renderer, data);
+                        currentPassData.skyboxCubeMapPass->ps.samples = ps.samples;
+                        currentPassData.skyboxCubeMapPass->rpDesc = renderTarget->getRenderPassDescriptor().get();
+
+                        currentPassData.skyboxPass = std::nullopt;
+                    } else if (data.layer.background == QSSGRenderLayer::Background::SkyBox && data.layer.lightProbe) {
+                        if (!currentPassData.skyboxPass)
+                            currentPassData.skyboxPass = SkyboxPass();
+
+                        currentPassData.skyboxPass->skipTonemapping = true;
+                        currentPassData.skyboxPass->renderPrep(renderer, data);
+                        currentPassData.skyboxPass->ps.samples = ps.samples;
+                        currentPassData.skyboxPass->rpDesc = renderTarget->getRenderPassDescriptor().get();
+
+                        currentPassData.skyboxCubeMapPass = std::nullopt;
+                    }
+                    userPassData.push_back(currentPassData);
+                }
+            } else if (passNode->passMode == QSSGRenderUserPass::PassModes::Item2DPass) {
+                if (!currentPassData.item2DPass)
+                    currentPassData.item2DPass = Item2DPass();
+                const bool hasItem2Ds = (data.item2DsView.size() > 0);
+                if (hasItem2Ds) {
+                    //backup render target
+                    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(renderer.contextInterface()->rhiContext().get());
+                    QRhiRenderTarget *prevRenderTarget = rhiCtx->renderTarget();
+                    rhiCtxD->setRenderTarget(renderTarget->getRenderTarget().get());
+                    currentPassData.item2DPass->renderPrep(renderer, data);
+                    //restore render target
+                    rhiCtxD->setRenderTarget(prevRenderTarget);
+                    userPassData.push_back(currentPassData);
+                }
+            }
+        }
+    }
+}
+
+void UserRenderPass::renderPass(QSSGRenderer &renderer)
+{
+
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+
+
+    for (UserPassData &passData : userPassData) {
+
+        const auto &ps = passData.ps;
+        const auto &renderables = passData.renderables;
+        const auto &clearColor = passData.clearColor;
+        const auto &depthStencilClearValue = passData.depthStencilClearValue;
+        const auto &renderableTexture = passData.renderableTexture;
+
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D UserRenderPass"));
+
+        if (Q_LIKELY(renderableTexture && renderableTexture->isValid())) {
+            cb->beginPass(renderableTexture->getRenderTarget().get(), clearColor, depthStencilClearValue, nullptr, rhiCtx->commonPassFlags());
+            if (passData.skyboxCubeMapPass) {
+                passData.skyboxCubeMapPass->renderPass(renderer);
+            } else if (passData.skyboxPass) {
+                passData.skyboxPass->renderPass(renderer);
+            } else if (passData.item2DPass) {
+                passData.item2DPass->renderPass(renderer);
+            } else {
+                // Regular User Passes
+                bool needsSetViewport = true;
+                for (const auto &handle : std::as_const(renderables))
+                    RenderHelpers::rhiRenderRenderable(rhiCtx.get(), ps, *handle.obj, &needsSetViewport, QSSGRenderTextureCubeFaceNone, qsizetype(passData.index));
+            }
+            QRhiResourceUpdateBatch *rub = nullptr;
+
+            cb->endPass(rub);
+        }
+
+        cb->debugMarkEnd();
+    }
+}
+
+void UserRenderPass::resetForFrame()
+{
+    qCDebug(lcUserRenderPass) << "resetForFrame in UserRenderPass";
+    userPasses.clear();
+
+    userPassData.clear();
 }
 
 QT_END_NAMESPACE

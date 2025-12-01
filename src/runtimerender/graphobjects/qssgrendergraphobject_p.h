@@ -93,6 +93,11 @@ constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }
     return (type == QSSGRenderGraphObject::Type::SceneRoot);
 }
 
+[[nodiscard]] static constexpr bool isUserRenderPass(QSSGRenderGraphObject::Type type) noexcept
+{
+    return (type == QSSGRenderGraphObject::Type::RenderPass);
+}
+
 }
 
 #endif // QSSGRENDERGRAPHOBJECT_P_H
