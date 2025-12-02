@@ -2,40 +2,83 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qtquick3d-cmake-qt6-add-lightprobe-images.html
+\page qt-add-lightprobe-images.html
 \ingroup cmake-commands-qtquick3d
 
-\title qt6_add_lightprobe_images
+\title qt_add_lightprobe_images
 \keyword qt6_add_lightprobe_images
+
+\summary {Bakes HDRI map files to KTX files, adding them as Qt resouces.}
+
+\preliminarycmakecommand
+
+The command is defined in the \c Quick3D component of the \c Qt6 package, which can
+be loaded like this:
+
+\badcode
+find_package(Qt6 REQUIRED COMPONENTS Quick3D)
+\endcode
+
+\cmakecommandsince 6.2
+
+\section1 Synopsis
+
+\badcode
+qt_add_lightprobe_images(target resource_name
+                    [PREFIX prefix]
+                    [BASE base]
+                    FILES file1.hdr, file2.hdr ..
+                    [OUTPUTS file1.ktx, file2.ktx ..]
+)
+\endcode
+
+\versionlessCMakeCommandsNote qt6_add_lightprobe_images()
 
 \section1 Description
 
-\c{.hdr -> .ktx} baker. Somewhat similar to
-\l{Qt Shader Tools Build System Integration}{qt6_add_shaders()}.
+Use the command to bake \c{.hdr} files listed under \c FILES
+to \c{.ktx} files. The files will be included under in the binary
+or library \c target.
 
-For example, the following autogenerates the lightprobe map at build time and
+\c FILES should list paths to local HDRI map files. Each file must have either
+the suffix \c{.hdr}, or \c{.exr}. These files will be converted at build time
+to \c .ktx files, using the \l{Balsam Asset Import Tool}.
+
+By default, the \c .ktx files will show up in embedded Qt resources of
+the target binary under the same base name and relative path. Use \c BASE
+to remove a common directory from the relative paths at runtime. That is, if all
+the file paths under \c FILES point to a common directory \c maps/, then you
+can use \c{BASE maps/} to hide the directory in the Qt resource system. In a similar
+vein, you can use \c PREFIX to add a common prefix directory in the Qt resource
+system.
+
+While \c BASE and \c PREFIX allow you to change the comon relative paths of
+the \c .ktx files in the Qt resource system, \c OUTPUTS allow you to control
+the full path of the \c .ktx files, including the file name. If you use \c OUTPUTS,
+the number of paths have to match the number of paths to \c FILES.
+
+
+\section1 Example
+
+The following autogenerates the lightprobe map at build time and
 includes it in the executable under \c{:/maps/OpenfootageNET_garage-1024.ktx}:
 
 \badcode
-qt6_add_lightprobe_images(principledmaterial "ibl_assets"
+qt_add_lightprobe_images(principledmaterial "ibl_assets"
     PREFIX
          "/"
     FILES
-        "maps/OpenfootageNET_garage-1024.hdr" )
+        "maps/OpenfootageNET_garage-1024.hdr"
+)
 \endcode
 
-In addition to \c PREFIX, \c BASE is available, and works like in
-\c{qt6_add_resources}:
-Adding \c{BASE "maps"} in the above example would lead to getting
-\c{:/OpenfootageNET_garage-1024.ktx}
+\section1 Caveats
 
-\c OUTPUTS works like in \c qt6_add_shaders, which allows you to specify an
-alternative name for the resource system for each entry in \c FILES. For
-example, adding \c{OUTPUTS "alt/er/native/image.abc"} to the above example
-would generate \c{:/alt/er/native/image.abc}
+When adding multiple resources, \c resource_name must be unique across
+all resources linked into the final target.
 
-In short, the actual file name in the resource system is either
-\c{:/PREFIX/FILES[i]-BASE-".hdr"+".ktx"} or \c{:/PREFIX/OUTPUTS[i]}
+This especially affects static builds. There, the same resource name in
+different static libraries conflict in the consuming target.
 
 \sa{Pre-generating IBL cubemap}
 */
