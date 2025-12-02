@@ -2255,7 +2255,14 @@ void QSSGLayerRenderData::prepareForRender()
         if (rhiCtx->mainPassSampleCount() > 1)
             orderIndependentTransparencyEnabled |= rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
         if (!orderIndependentTransparencyEnabled && !oitWarningUnsupportedShown) {
-            qCWarning(lcQuick3DRender) << "Order Independent Transparency is requested, but it is not supported.";
+            qCWarning(lcQuick3DRender) << "WeightedBlended OIT is requested, but it is not supported.";
+            oitWarningUnsupportedShown = true;
+        }
+    } else if (layer.oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
+        if (rhiCtx->mainPassSampleCount() > 1)
+            orderIndependentTransparencyEnabled |= rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
+        if (!orderIndependentTransparencyEnabled && !oitWarningUnsupportedShown) {
+            qCWarning(lcQuick3DRender) << "LinkedList OIT is requested, but it is not supported.";
             oitWarningUnsupportedShown = true;
         }
     }
