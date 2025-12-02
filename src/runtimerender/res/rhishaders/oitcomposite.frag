@@ -125,9 +125,12 @@ void main()
     uint fragments = 0;  // The number of fragments for this sample.
 
 #if QSHADER_VIEW_COUNT >= 2
-    ivec2 coord = ivec2(gl_FragCoord.x + gl_SampleID * ubuf.qt_viewSize.x, gl_FragCoord.y + v_viewIndex * ubuf.qt_viewSize.y);
+    ivec2 coord = ivec2(gl_FragCoord.x, gl_FragCoord.y + v_viewIndex * ubuf.qt_viewSize.y);
 #else
-    ivec2 coord = ivec2(gl_FragCoord.x + gl_SampleID * ubuf.qt_viewSize.x, gl_FragCoord.y);
+    ivec2 coord = ivec2(gl_FragCoord.x, gl_FragCoord.y);
+#endif
+#ifdef QSSG_MULTISAMPLE
+    coord.x += gl_SampleID * ubuf.qt_viewSize.x;
 #endif
 
     uint startOffset = imageLoad(qt_imgAux, coord).r;
