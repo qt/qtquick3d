@@ -10,11 +10,11 @@
 
 \section1 Description
 
-\c {.hdr -> .ktx} baker. Somewhat similar to
-\l l{Qt Shader Tools Build System Integration}{qt6_add_shaders()}.
+\c{.hdr -> .ktx} baker. Somewhat similar to
+\l{Qt Shader Tools Build System Integration}{qt6_add_shaders()}.
 
 For example, the following autogenerates the lightprobe map at build time and
-includes it in the executable under \c {:/maps/OpenfootageNET_garage-1024.ktx}:
+includes it in the executable under \c{:/maps/OpenfootageNET_garage-1024.ktx}:
 
 \badcode
 qt6_add_lightprobe_images(principledmaterial "ibl_assets"
@@ -25,17 +25,17 @@ qt6_add_lightprobe_images(principledmaterial "ibl_assets"
 \endcode
 
 In addition to \c PREFIX, \c BASE is available, and works like in
-\c {qt6_add_resources}:
-Adding \c {BASE "maps"} in the above example would lead to getting
-\c {:/OpenfootageNET_garage-1024.ktx}
+\c{qt6_add_resources}:
+Adding \c{BASE "maps"} in the above example would lead to getting
+\c{:/OpenfootageNET_garage-1024.ktx}
 
 \c OUTPUTS works like in \c qt6_add_shaders, which allows you to specify an
 alternative name for the resource system for each entry in \c FILES. For
-example, adding \c {OUTPUTS "alt/er/native/image.abc"} to the above example
-would generate \c {:/alt/er/native/image.abc}
+example, adding \c{OUTPUTS "alt/er/native/image.abc"} to the above example
+would generate \c{:/alt/er/native/image.abc}
 
 In short, the actual file name in the resource system is either
-\c {:/PREFIX/FILES[i]-BASE-".hdr"+".ktx"} or \c {:/PREFIX/OUTPUTS[i]}
+\c{:/PREFIX/FILES[i]-BASE-".hdr"+".ktx"} or \c{:/PREFIX/OUTPUTS[i]}
 
-\sa {Pre-generating IBL cubemap}
+\sa{Pre-generating IBL cubemap}
 */
