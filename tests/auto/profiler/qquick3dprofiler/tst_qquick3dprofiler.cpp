@@ -39,6 +39,8 @@ public:
 
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override
     {
+        Q_UNUSED(until);
+        Q_UNUSED(messages);
         return 0;
     }
     void receiveData(const QVector<QQuick3DProfilerData> &new_data, const QHash<int, QByteArray> &eventData)
