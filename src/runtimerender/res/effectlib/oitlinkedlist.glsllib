@@ -35,9 +35,12 @@ vec4 qt_oitLinkedList(const vec4 color, const uint listNodeCount, const uint abu
 
     if(newOffset < listNodeCount) {
 #if QSHADER_VIEW_COUNT >= 2
-        ivec2 coord = ivec2(gl_FragCoord.x + gl_SampleID * viewSize.x, gl_FragCoord.y + viewIndex * viewSize.y);
+        ivec2 coord = ivec2(gl_FragCoord.x, gl_FragCoord.y + viewIndex * viewSize.y);
 #else
-        ivec2 coord = ivec2(gl_FragCoord.x + gl_SampleID * viewSize.x, gl_FragCoord.y);
+        ivec2 coord = ivec2(gl_FragCoord.x, gl_FragCoord.y);
+#endif
+#if QSSG_MULTISAMPLE == 1
+        coord.x += gl_SampleID * viewSize.x;
 #endif
         // Note that this is indeed thread-safe! The order in which threads
         // reach this line determines the order of the fragments in the linked list.

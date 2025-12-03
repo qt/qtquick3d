@@ -597,6 +597,7 @@ struct PassRequirmentsState {
     quint32 numMorphTargets = 0;
     int viewCount = 1;
     QSSGRenderLayer::OITMethod oitMethod = QSSGRenderLayer::OITMethod::None;
+    bool oitMSAA = false;
     QSSGRenderLayer::MaterialDebugMode debugMode = QSSGRenderLayer::MaterialDebugMode::None;
 
     PassRequirmentsState(const QSSGShaderDefaultMaterialKey &inKey,
@@ -622,6 +623,7 @@ struct PassRequirmentsState {
         hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
         hasReflectionProbe = featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe);
         oitMethod = static_cast<QSSGRenderLayer::OITMethod>(keyProps.m_orderIndependentTransparency.getValue(inKey));
+        oitMSAA = keyProps.m_oitMSAA.getValue(inKey);
         isSpecularAAEnabled = keyProps.m_specularAAEnabled.getValue(inKey);
 
         // TODO: Not sure I agree with the following, but this is the current behavior
@@ -1771,6 +1773,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addUniform("qt_listNodeCount", "uint");
             fragmentShader.addUniform("qt_ABufImageWidth", "uint");
             fragmentShader.addUniform("qt_viewSize", "ivec2");
+            if (passRequirmentState.oitMSAA)
+                fragmentShader.addDefinition("QSSG_MULTISAMPLE", "1");
             if (viewCount >= 2)
                 fragmentShader.append("    fragOutput = qt_oitLinkedList(qt_tonemap(qt_color_sum), qt_listNodeCount, qt_ABufImageWidth, qt_viewSize, qt_viewIndex);");
             else

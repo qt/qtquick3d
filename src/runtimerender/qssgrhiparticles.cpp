@@ -802,6 +802,7 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
     const int viewCount = inFeatureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
             ? 1 : shaderKeyProperties.m_viewCount.getValue(theKey);
     const int oit = shaderKeyProperties.m_orderIndependentTransparency.getValue(theKey);
+    const bool oitMSAA = shaderKeyProperties.m_oitMSAA.getValue(theKey);
 
     if (isAnimated)
         common.addDefinition("QSSG_PARTICLES_ENABLE_ANIMATED", "1");
@@ -809,6 +810,8 @@ QSSGRhiShaderPipelinePtr QSSGParticleRenderer::generateRhiShaderPipeline(QSSGRen
         common.addDefinition("QSSG_PARTICLES_ENABLE_LINE_PARTICLE", "1");
     if (oit)
         common.addDefinition("QSSG_OIT_METHOD", QStringLiteral("%1").arg(oit).toUtf8());
+    if (oitMSAA)
+        common.addDefinition("QSSG_MULTISAMPLE", "1");
 
     common.addUniform("qt_modelMatrix", "mat4");
     if (viewCount >= 2) {

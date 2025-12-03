@@ -1745,6 +1745,9 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                 // Blend particles
                 defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, usesBlendParticles);
 
+                if (defaultMaterialShaderKeyProperties.m_orderIndependentTransparency.getValue(theGeneratedKey) == int(QSSGRenderLayer::OITMethod::LinkedList))
+                    defaultMaterialShaderKeyProperties.m_oitMSAA.setValue(theGeneratedKey, rhiCtx->mainPassSampleCount() > 1);
+
                 // Skin
                 const auto boneCount = model.skin ? model.skin->boneCount :
                                                     model.skeleton ? model.skeleton->boneCount : 0;
@@ -1812,6 +1815,9 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
                     defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, true);
                 else
                     defaultMaterialShaderKeyProperties.m_blendParticles.setValue(theGeneratedKey, false);
+
+                if (defaultMaterialShaderKeyProperties.m_orderIndependentTransparency.getValue(theGeneratedKey) == int(QSSGRenderLayer::OITMethod::LinkedList))
+                    defaultMaterialShaderKeyProperties.m_oitMSAA.setValue(theGeneratedKey, rhiCtx->mainPassSampleCount() > 1);
 
                 // SoftShadow quality
                 defaultMaterialShaderKeyProperties.m_shadowSoftness.setShadowSoftness(theGeneratedKey, maxSoftShadowQuality);
@@ -1953,10 +1959,13 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
         properties.m_isMapped.setValue(theGeneratedKey, mapped);
         properties.m_hasLighting.setValue(theGeneratedKey, lit);
         properties.m_viewCount.setValue(theGeneratedKey, layer.viewCount);
-        if (renderableFlags.hasTransparency() && orderIndependentTransparencyEnabled)
+        if (renderableFlags.hasTransparency() && orderIndependentTransparencyEnabled) {
             properties.m_orderIndependentTransparency.setValue(theGeneratedKey, int(layer.oitMethod));
-        else
+            if (layer.oitMethod == QSSGRenderLayer::OITMethod::LinkedList)
+                properties.m_oitMSAA.setValue(theGeneratedKey, contextInterface.rhiContext()->mainPassSampleCount() > 1);
+        } else {
             properties.m_orderIndependentTransparency.setValue(theGeneratedKey, int(0));
+        }
 
         float opacity = getGlobalOpacity(particles);
         QVector3D center(particles.m_particleBuffer.bounds().center());

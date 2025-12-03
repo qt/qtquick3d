@@ -28,6 +28,7 @@ struct QSSGShaderParticleMaterialKeyProperties
     QSSGShaderKeyBoolean m_isLineParticle;
     QSSGShaderKeyBoolean m_isMapped;
     QSSGShaderKeyBoolean m_isAnimated;
+    QSSGShaderKeyBoolean m_oitMSAA;
     QSSGShaderKeyUnsigned<3> m_viewCount;
     QSSGShaderKeyUnsigned<3> m_orderIndependentTransparency;
 
@@ -38,6 +39,7 @@ struct QSSGShaderParticleMaterialKeyProperties
         , m_isLineParticle("isLineParticle")
         , m_isMapped("isMapped")
         , m_isAnimated("isAnimated")
+        , m_oitMSAA("oitMSAA")
         , m_viewCount("viewCount")
         , m_orderIndependentTransparency("orderIndependentTransparency")
     {
@@ -53,6 +55,7 @@ struct QSSGShaderParticleMaterialKeyProperties
         inVisitor.visit(m_isLineParticle);
         inVisitor.visit(m_isMapped);
         inVisitor.visit(m_isAnimated);
+        inVisitor.visit(m_oitMSAA);
         inVisitor.visit(m_viewCount);
         inVisitor.visit(m_orderIndependentTransparency);
     }
