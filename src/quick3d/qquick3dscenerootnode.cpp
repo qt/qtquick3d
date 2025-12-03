@@ -3,6 +3,9 @@
 
 #include "qquick3dscenerootnode_p.h"
 
+#include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
+
+
 QT_BEGIN_NAMESPACE
 
 QQuick3DSceneRootNode::QQuick3DSceneRootNode(QQuick3DViewport *view3D, QQuick3DNode *parent)
@@ -19,6 +22,16 @@ QQuick3DSceneRootNode::~QQuick3DSceneRootNode()
 QQuick3DViewport *QQuick3DSceneRootNode::view3D()
 {
     return m_view3D;
+}
+
+QSSGRenderGraphObject *QQuick3DSceneRootNode::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    if (!node) {
+        markAllDirty();
+        node = new QSSGRenderNode(QSSGRenderGraphObject::Type::SceneRoot);
+    }
+
+    return QQuick3DNode::updateSpatialNode(node);
 }
 
 QT_END_NAMESPACE

@@ -87,6 +87,12 @@ constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }
     return (QSSGRenderGraphObject::TypeT(type) & QSSGRenderGraphObject::TypeT(QSSGRenderGraphObject::Type::TextureProvider));
 }
 
+// A scene root is a special node that acts as the root of a single viewport's part of the scene graph.
+[[nodiscard]] static constexpr bool isSceneRoot(QSSGRenderGraphObject::Type type) noexcept
+{
+    return (type == QSSGRenderGraphObject::Type::SceneRoot);
+}
+
 }
 
 #endif // QSSGRENDERGRAPHOBJECT_P_H

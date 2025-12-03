@@ -1510,6 +1510,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    qt_processPunctualLighting(global_diffuse_light.rgb,\n"
                            << "                               global_specular_light.rgb,\n"
                            << "                               qt_diffuseColor.rgb,\n"
+                           << "                               qt_varWorldPos,\n"
                            << "                               qt_world_normal.xyz,\n"
                            << "                               qt_view_vector,\n"
                            << "#if QSSG_ENABLE_SPECULAR\n"

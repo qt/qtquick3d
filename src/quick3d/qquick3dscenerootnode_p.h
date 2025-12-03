@@ -31,6 +31,9 @@ public:
 
 private:
     QQuick3DViewport *m_view3D = nullptr;
+
+protected:
+    virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) final;
 };
 
 QT_END_NAMESPACE

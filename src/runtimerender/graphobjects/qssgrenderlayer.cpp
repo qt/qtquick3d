@@ -78,7 +78,7 @@ bool QSSGRenderLayer::hasEffect(QSSGRenderEffect *inEffect) const
 
 void QSSGRenderLayer::setImportScene(QSSGRenderNode &importedNode)
 {
-    if (importedNode.parent != nullptr) {
+    if (importedNode.parent != nullptr && !QSSGRenderGraphObjectUtils::isSceneRoot(importedNode.parent->type)) {
         qWarning("The root of the imported scene node is already part of another scene graph.\n"
                  "Importing a sub-scene is unsupported and may not work as expected!");
     }

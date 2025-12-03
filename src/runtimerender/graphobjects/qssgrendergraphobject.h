@@ -64,6 +64,7 @@ public:
         Skeleton, // Node (A resource to the model node)
         ImportScene, // Node
         ReflectionProbe,
+        SceneRoot, // Node
         // Light nodes
         DirectionalLight = BaseType::Light | BaseType::Node,
         PointLight,
