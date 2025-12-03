@@ -1446,3 +1446,20 @@
     \default 0.5
     \since 6.11
 */
+
+// SSR
+/*! \qmlproperty bool ExtendedSceneEnvironment::ssrEnabled
+    Enables screen-space reflections, a post-processing technique that creates
+    reflections by using data rendered on the screen.
+
+   \default false
+   \since 6.11
+   \table
+   \header
+   \li SSR disabled
+   \li SSR enabled
+   \row
+   \li \image extendedsceneenvironment_ssr_without.webp
+   \li \image extendedsceneenvironment_ssr_with.webp
+   \endtable
+*/

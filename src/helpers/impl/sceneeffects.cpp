@@ -3,6 +3,8 @@
 
 #include "sceneeffects_p.h"
 
+#include "private/qquick3dviewport_p.h"
+
 QT_BEGIN_NAMESPACE
 
 SceneEffectBase::SceneEffectBase(QQuick3DObject *parent)
@@ -133,6 +135,38 @@ void SsgiEnvEffect::setEnabled(bool newEnabled)
     emit enabledChanged();
 }
 
+SsrEnvEffect::SsrEnvEffect(QQuick3DObject *p)
+    : SceneEffectBase(p)
+{
+}
+
+void SsrEnvEffect::registerWithEnv(SceneEffectEnvironment *newEnvironment)
+{
+    if (newEnvironment)
+        newEnvironment->setSsrEffect(this);
+}
+
+void SsrEnvEffect::unregisterWithEnv(SceneEffectEnvironment *oldEnvironment)
+{
+    if (oldEnvironment)
+        oldEnvironment->setSsrEffect(nullptr);
+}
+
+bool SsrEnvEffect::enabled() const
+{
+    return m_enabled;
+}
+
+void SsrEnvEffect::setEnabled(bool newEnabled)
+{
+    if (m_enabled == newEnabled)
+        return;
+
+    m_enabled = newEnabled;
+    scheduleEnvUpdate();
+    emit enabledChanged();
+}
+
 SceneEffectEnvironment::SceneEffectEnvironment(QQuick3DObject *p)
     : QQuick3DSceneEnvironment(p)
 {
@@ -168,11 +202,35 @@ void SceneEffectEnvironment::setSsgiEffect(SsgiEnvEffect *ssgi)
     m_ssgi = ssgi;
 }
 
+void SceneEffectEnvironment::setSsrEffect(SsrEnvEffect *ssr)
+{
+    if (m_ssr == ssr)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &SceneEffectEnvironment::setSsrEffect, ssr, m_ssr);
+
+    m_ssr = ssr;
+}
+
+static QObject *findView3D(QObject *obj)
+{
+    while (obj) {
+        if (qobject_cast<QQuick3DViewport *>(obj))
+            return obj;
+        obj = obj->parent();
+    }
+    return nullptr;
+}
+
 QSSGRenderGraphObject *SceneEffectEnvironment::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     m_effects = QQuick3DSceneEnvironment::effectList();
     if (m_ssgi && m_ssgi->enabled())
         m_effects.push_back(m_ssgi);
+    if (m_ssr && m_ssr->enabled()) {
+        m_ssr->setProperty("view3d", QVariant::fromValue(findView3D(this)));
+        m_effects.push_back(m_ssr);
+    }
     if (m_dof && m_dof->enabled())
         m_effects.push_back(m_dof);
     if (m_tonemapper)

@@ -99,6 +99,26 @@ private:
     bool m_enabled = false;
 };
 
+class SsrEnvEffect : public SceneEffectBase
+{
+    Q_OBJECT
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    QML_NAMED_ELEMENT(SsrEnvEffect)
+public:
+    explicit SsrEnvEffect(QQuick3DObject *p = nullptr);
+
+    bool enabled() const;
+    void setEnabled(bool newEnabled);
+
+signals:
+    void enabledChanged();
+
+private:
+    void registerWithEnv(SceneEffectEnvironment *newEnvironment) override;
+    void unregisterWithEnv(SceneEffectEnvironment *oldEnvironment) override;
+    bool m_enabled = false;
+};
+
 class SceneEffectEnvironment : public QQuick3DSceneEnvironment
 {
     Q_OBJECT
@@ -109,6 +129,7 @@ public:
     void setMainSceneEffect(MainSceneEffect *tonemapper);
     void setDeptOfFieldEffect(DepthOfFieldEffect *dof);
     void setSsgiEffect(SsgiEnvEffect *ssgi);
+    void setSsrEffect(SsrEnvEffect *ssr);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -118,6 +139,7 @@ private:
     MainSceneEffect *m_tonemapper = nullptr;
     DepthOfFieldEffect *m_dof = nullptr;
     SsgiEnvEffect *m_ssgi = nullptr;
+    SsrEnvEffect *m_ssr = nullptr;
 
 protected:
     const QVector<QQuick3DEffect *> &effectList() const override;

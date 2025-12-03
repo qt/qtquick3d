@@ -19,6 +19,9 @@ SceneEffectEnvironment {
     property alias ssgiSliceCount: ssgiEffect.sliceCount
     property alias ssgiHitThickness: ssgiEffect.hitThickness
 
+    // SSR Effect
+    property alias ssrEnabled: ssrEffect.enabled
+
     // Depth of Field Effect
     property alias depthOfFieldEnabled: dofBlurEffect.enabled
     property alias depthOfFieldFocusDistance: dofBlurEffect.focusDistance
@@ -101,6 +104,11 @@ SceneEffectEnvironment {
 
     SsgiEffect {
         id: ssgiEffect
+        environment: sceneEnvironment
+    }
+
+    SsrEffect {
+        id: ssrEffect
         environment: sceneEnvironment
     }
 

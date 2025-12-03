@@ -17,6 +17,7 @@ qt_internal_add_qml_module(Quick3DHelpersImpl
     QML_FILES
         DepthOfFieldBlur.qml
         SsgiEffect.qml
+        SsrEffect.qml
         SceneEffect.qml
     LIBRARIES
         Qt::Qml
@@ -45,6 +46,9 @@ qt_internal_add_resource(Quick3DHelpersImpl "helpersimpl_resources"
         shaders/ssgi_dualfilterblur_down.frag
         shaders/ssgi_dualfilterblur_up.frag
         shaders/ssgi_compose.frag
+        shaders/ssr_composition.frag
+        shaders/ssr_main.frag
+        shaders/ssr_mask.frag
 
         images/lens_dirt_default.jpeg
         images/noiseTexture.png
