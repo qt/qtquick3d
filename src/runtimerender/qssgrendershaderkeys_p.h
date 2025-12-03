@@ -752,6 +752,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_fogEnabled;
     QSSGShaderKeyUnsigned<3> m_viewCount;
     QSSGShaderKeyBoolean m_usesViewIndex;
+    QSSGShaderKeyBoolean m_oitMSAA;
     QSSGShaderKeyUnsigned<3> m_orderIndependentTransparency;
     QSSGShaderKeyShadowSoftness m_shadowSoftness;
 
@@ -806,6 +807,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_fogEnabled("fogEnabled")
         , m_viewCount("viewCount")
         , m_usesViewIndex("usesViewIndex")
+        , m_oitMSAA("oitMSAA")
         , m_orderIndependentTransparency("orderIndependentTransparency")
         , m_shadowSoftness("shadowSoftness")
     {
@@ -905,6 +907,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_fogEnabled);
         inVisitor.visit(m_viewCount);
         inVisitor.visit(m_usesViewIndex);
+        inVisitor.visit(m_oitMSAA);
         inVisitor.visit(m_orderIndependentTransparency);
         inVisitor.visit(m_shadowSoftness);
     }
