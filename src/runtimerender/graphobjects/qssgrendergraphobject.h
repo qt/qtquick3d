@@ -104,7 +104,8 @@ public:
     using TypeT = std::underlying_type_t<Type>;
 
     enum class Flags : quint32 {
-        HasGraphicsResources = 0x1
+        HasGraphicsResources = 0x1,
+        InternallyReserved = 0xffff0000,
     };
     using FlagT = std::underlying_type_t<Flags>;
 

@@ -188,12 +188,14 @@ public:
     QHash<QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
     QSet<QSSGRenderGraphObject *> resourceLoaders;
     QList<QSSGRenderExtension *> textureProviderExtensions;
+    QList<QSSGRenderExtension *> autoRegisteredExtensions;
     QList<QSSGRenderUserPass *> userRenderPasses;
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;
     int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.
     bool sharedResourceRemoved = false;
     bool textureExtensionsDirty = false;
+    bool autoRegisteredExtensionsDirty = false;
     friend QQuick3DObject;
 
 Q_SIGNALS:

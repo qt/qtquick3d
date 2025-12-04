@@ -375,6 +375,11 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::cleanupNodes()
         // longer be usable from this point from the frontend
         m_nodeMap.remove(node);
 
+        if (QSSGRenderGraphObjectUtils::hasInternalFlag(*node, QSSGRenderGraphObjectUtils::InternalFlags::AutoRegisterExtension)) {
+            autoRegisteredExtensions.removeAll(node);
+            autoRegisteredExtensionsDirty = true;
+        }
+
         // Some nodes will trigger resource cleanups that need to
         // happen at a specified time (when graphics backend is active)
         // So build another queue for graphics assets marked for removal
@@ -482,6 +487,12 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateExtensions(QQuick3D
             if (shouldInsert) {
                 textureProviderExtensions.push_back(static_cast<QSSGRenderExtension *>(newNode));
                 textureExtensionsDirty = true;
+            }
+        } else if (newNode && QSSGRenderGraphObjectUtils::hasInternalFlag(*newNode, QSSGRenderGraphObjectUtils::InternalFlags::AutoRegisterExtension)) {
+            const bool shouldInsert = autoRegisteredExtensions.indexOf(static_cast<QSSGRenderExtension *>(newNode)) == -1;
+            if (shouldInsert) {
+                autoRegisteredExtensions.push_back(static_cast<QSSGRenderExtension *>(newNode));
+                autoRegisteredExtensionsDirty = true;
             }
         }
     };

@@ -797,6 +797,12 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         view3D->clearExtensionListDirty();
     }
 
+    if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm && sm->autoRegisteredExtensionsDirty) {
+        for (QSSGRenderExtension *ae : std::as_const(sm->autoRegisteredExtensions))
+            m_layer->renderExtensions[size_t(ae->stage())].push_back(ae);
+        sm->autoRegisteredExtensionsDirty = false;
+    }
+
     bool postProcessingNeeded = m_layer->firstEffect;
     bool postProcessingWasActive = m_effectSystem;
     QSSGRenderTextureFormat::Format effectOutputFormatOverride = QSSGRenderTextureFormat::Unknown;

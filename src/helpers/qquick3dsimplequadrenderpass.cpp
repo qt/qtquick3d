@@ -21,8 +21,12 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRenderSimpleQuadRenderer : public QSSGRenderExtension
 {
+    static constexpr FlagT flags = FlagT(Flags::HasGraphicsResources) | FlagT(QSSGRenderGraphObjectUtils::InternalFlags::AutoRegisterExtension);
 public:
-    QSSGRenderSimpleQuadRenderer() = default;
+    QSSGRenderSimpleQuadRenderer()
+        : QSSGRenderExtension(QSSGRenderGraphObject::Type::RenderExtension, flags)
+    {
+    }
 
     virtual bool prepareData(QSSGFrameData &data) final
     {

@@ -23,6 +23,12 @@
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
 namespace QSSGRenderGraphObjectUtils {
+
+enum class InternalFlags : quint32
+{
+    AutoRegisterExtension = 0x100001,
+};
+
 constexpr QSSGResourceId getResourceId(const QSSGRenderGraphObject &o)
 {
     QSSG_ASSERT(QSSGRenderGraphObject::isResource(o.type), return QSSGResourceId::Invalid);
@@ -98,6 +104,17 @@ constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }
     return (type == QSSGRenderGraphObject::Type::RenderPass);
 }
 
+[[nodiscard]] static constexpr bool hasInternalFlags(const QSSGRenderGraphObject &obj)
+{
+    return (obj.flags & QSSGRenderGraphObject::FlagT(QSSGRenderGraphObject::Flags::InternallyReserved));
 }
+
+[[nodiscard]] static constexpr bool hasInternalFlag(const QSSGRenderGraphObject &obj, InternalFlags flag)
+{
+    return (obj.flags & QSSGRenderGraphObject::FlagT(flag));
+
+}
+
+} // namespace QSSGRenderGraphObjectUtils
 
 #endif // QSSGRENDERGRAPHOBJECT_P_H
