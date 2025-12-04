@@ -69,12 +69,11 @@ Window {
         //! [manualInstancing]
         InstanceListEntry {
             id: redShip
-            position: Qt.vector3d(50, 10, 100)
             eulerRotation: Qt.vector3d(0, 180, 0)
             color: "red"
-            NumberAnimation on position.x {
-                from: 50
-                to: -70
+            PropertyAnimation on position {
+                from: Qt.vector3d(50, 10, 100)
+                to: Qt.vector3d(-70, 10, 100)
                 duration: 8000
             }
         }
