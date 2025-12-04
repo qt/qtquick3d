@@ -2321,4 +2321,19 @@ void QQuick3DViewport::updateSceneManagerForImportScene()
     }
 }
 
+QQuick3DViewport::RenderOverrides QQuick3DViewport::renderOverrides() const
+{
+    return m_renderOverrides;
+}
+
+void QQuick3DViewport::setRenderOverrides(RenderOverrides newRenderOverrides)
+{
+    if (m_renderOverrides == newRenderOverrides)
+        return;
+    m_renderOverrides = newRenderOverrides;
+    emit renderOverridesChanged();
+
+    update();
+}
+
 QT_END_NAMESPACE

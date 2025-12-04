@@ -385,7 +385,7 @@ public:
     bool oitWarningUnsupportedShown = false;
     bool oitWarningInvalidBlendModeShown = false;
     bool orderIndependentTransparencyEnabled = false;
-    bool disableMainPasses = false;
+    bool disableMainPasses = true;
 
     std::unique_ptr<QSSGLightmapBaker> lightmapBaker = nullptr;
 

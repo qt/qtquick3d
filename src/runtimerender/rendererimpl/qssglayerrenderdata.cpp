@@ -2205,6 +2205,10 @@ void QSSGLayerRenderData::prepareForRender()
     bool wasDataDirty = false;
     wasDirty = layer.isDirty();
 
+    const bool shouldDisableInternalPasses = (layer.renderOverrides & size_t(QSSGRenderLayer::RenderOverrides::DisableInternalPasses)) != 0;
+    wasDirty |= (shouldDisableInternalPasses != disableMainPasses);
+    disableMainPasses = shouldDisableInternalPasses;
+
     // NOTE: Prep-state is implicitly set to "DataPrep"
     layerPrepResult = { theViewport, layer };
 

@@ -134,6 +134,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         LinkedList
     };
 
+    enum class RenderOverrides : quint8
+    {
+        None = 0,
+        DisableInternalPasses = 0x1,
+    };
+    using RenderOverridesT = std::underlying_type_t<RenderOverrides>;
+
     enum class DirtyFlag : quint8
     {
         TreeDirty = 0x1
@@ -210,6 +217,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     bool progressiveAAIsActive;
     uint tempAAPassIndex;
     uint progAAPassIndex;
+
+    RenderOverridesT renderOverrides { RenderOverridesT(RenderOverrides::None) };
 
     // The camera explicitly set on the view by the user. (backend node can be null)
     QVarLengthArray<QSSGRenderCamera *, 2> explicitCameras;

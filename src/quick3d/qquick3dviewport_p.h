@@ -62,6 +62,7 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(int explicitTextureWidth READ explicitTextureWidth WRITE setExplicitTextureWidth NOTIFY explicitTextureWidthChanged FINAL REVISION(6, 7))
     Q_PROPERTY(int explicitTextureHeight READ explicitTextureHeight WRITE setExplicitTextureHeight NOTIFY explicitTextureHeightChanged FINAL REVISION(6, 7))
     Q_PROPERTY(QSize effectiveTextureSize READ effectiveTextureSize NOTIFY effectiveTextureSizeChanged FINAL REVISION(6, 7))
+    Q_PROPERTY(RenderOverrides renderOverrides READ renderOverrides WRITE setRenderOverrides NOTIFY renderOverridesChanged FINAL REVISION(6, 11))
     Q_CLASSINFO("DefaultProperty", "data")
 
     QML_NAMED_ELEMENT(View3D)
@@ -74,6 +75,14 @@ public:
         Inline
     };
     Q_ENUM(RenderMode)
+
+    enum class RenderOverride {
+        None = 0x0,
+        DisableInternalPasses = 0x1,
+    };
+    Q_ENUM(RenderOverride)
+    Q_DECLARE_FLAGS(RenderOverrides, RenderOverride)
+    Q_FLAG(RenderOverrides)
 
     explicit QQuick3DViewport(QQuickItem *parent = nullptr);
     ~QQuick3DViewport() override;
@@ -140,6 +149,9 @@ public:
 
     static void updateCameraForLayer(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode);
 
+    RenderOverrides renderOverrides() const;
+    void setRenderOverrides(RenderOverrides newRenderOverrides);
+
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
@@ -179,6 +191,8 @@ Q_SIGNALS:
     Q_REVISION(6, 7) void explicitTextureWidthChanged();
     Q_REVISION(6, 7) void explicitTextureHeightChanged();
     Q_REVISION(6, 7) void effectiveTextureSizeChanged();
+
+    void renderOverridesChanged();
 
 private:
     void setMultiViewCameras(QQuick3DCamera **firstCamera, int count);
@@ -260,6 +274,7 @@ private:
 
     QPointer<QQuickItem> m_prevMouseItem = nullptr;
     QPointF m_prevMousePos;
+    RenderOverrides m_renderOverrides;
 
     Q_QUICK3D_PROFILE_ID
 };

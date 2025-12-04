@@ -39,8 +39,6 @@ public:
         DepthTexture,
         ScreenTexture,
         UserPassTexture,
-        // Override the main color output of the render pass
-        MainColorTexture,
     };
     Q_ENUM(TextureSource)
 

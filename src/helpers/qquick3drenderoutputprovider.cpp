@@ -68,7 +68,6 @@ public:
     QSSGFrameData::RenderResult m_builtInPass = QSSGFrameData::RenderResult::DepthTexture;
     QSSGResourceId userPassId = QSSGResourceId::Invalid;
     QSSGFrameData::AttachmentSelector attachmentSelector = QSSGFrameData::AttachmentSelector::Attachment0;
-    bool m_disableMainPasses = false;
     bool m_isDirty = true;
 
     QPointer<QQuick3DRenderOutputProvider> m_ext;
@@ -114,10 +113,6 @@ bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
         break;
     case SourceType::UserPass:
     {
-        // FIXME: We need a better way to toggle this
-        if (m_disableMainPasses)
-            QSSGLayerRenderData::getCurrent(data)->disableMainPasses = m_disableMainPasses;
-
         if (userPassId != QSSGResourceId::Invalid) {
             // Make sure we schedule the pass to run this frame
             data.scheduleRenderResults(userPassId);
@@ -238,10 +233,6 @@ QSSGRenderGraphObject *QQuick3DRenderOutputProvider::updateSpatialNode(QSSGRende
         case QQuick3DRenderOutputProvider::TextureSource::ScreenTexture:
             providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::BuiltInPass;
             providerNode->m_builtInPass = QSSGFrameData::RenderResult::ScreenTexture;
-            break;
-        case QQuick3DRenderOutputProvider::TextureSource::MainColorTexture:
-            providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::UserPass;
-            providerNode->m_disableMainPasses = true;
             break;
         }
     }

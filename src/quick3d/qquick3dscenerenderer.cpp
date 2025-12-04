@@ -1464,6 +1464,8 @@ void QQuick3DSceneRenderer::updateLayerNode(QSSGRenderLayer &layerNode,
     // ResourceLoaders
     layerNode.resourceLoaders.clear();
     layerNode.resourceLoaders = resourceLoaders;
+
+    layerNode.renderOverrides = QSSGRenderLayer::RenderOverridesT(view3D.renderOverrides().toInt());
 }
 
 void QQuick3DSceneRenderer::removeNodeFromLayer(QSSGRenderNode *node)
