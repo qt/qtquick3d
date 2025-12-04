@@ -293,7 +293,7 @@ Window {
     FileDialog {
         id: fileDialog
         nameFilters: ["glTF files (*.gltf *.glb)", "All files (*)"]
-        onAccepted: importUrl = file
+        onAccepted: windowRoot.importUrl = file
         Settings {
             id: fileDialogSettings
             category: "QtQuick3D.Examples.RuntimeLoader"
