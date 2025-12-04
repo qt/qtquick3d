@@ -61,19 +61,19 @@ Window {
             ballModel.resetBall();
             targetsNode.resetTargets();
             createLevel1();
-            score = timeBonus = ballsBonus = 0;
-            currentBalls = gameBalls;
-            gameOn = true;
-            playingStarted = true;
+            mainWindow.score = mainWindow.timeBonus = mainWindow.ballsBonus = 0;
+            mainWindow.currentBalls = mainWindow.gameBalls;
+            mainWindow.gameOn = true;
+            mainWindow.playingStarted = true;
         }
 
         function endGame() {
             if (targetsNode.currentTargets == 0) {
                 // If we managed to get all targets down -> bonus points!
-                timeBonus = mainWindow.currentTime;
-                ballsBonus = currentBalls * 10;
+                mainWindow.timeBonus = mainWindow.currentTime;
+                mainWindow.ballsBonus = mainWindow.currentBalls * 10;
             }
-            gameOn = false;
+            mainWindow.gameOn = false;
             ballModel.resetBall();
         }
         //! [view functions]
