@@ -231,7 +231,7 @@ Item {
             sliderValue: mainWindow.smokeAmount
             fromValue: 5
             toValue: 50
-            onSliderValueChanged: smokeAmount = sliderValue;
+            onSliderValueChanged: mainWindow.smokeAmount = sliderValue;
         }
         CustomCheckBox {
             id: checkBoxExplosionBurst

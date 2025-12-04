@@ -319,7 +319,7 @@ Item {
                 onClicked: {
                     let instance = mainWindow.modelEmitters.pop();
                     instance.destroy();
-                    modelEmittersAmount = mainWindow.modelEmitters.length;
+                    mainWindow.modelEmittersAmount = mainWindow.modelEmitters.length;
                 }
             }
         }
@@ -345,7 +345,7 @@ Item {
                 onClicked: {
                     let instance = mainWindow.spriteEmitters.pop();
                     instance.destroy();
-                    spriteEmittersAmount = mainWindow.spriteEmitters.length;
+                    mainWindow.spriteEmittersAmount = mainWindow.spriteEmitters.length;
                 }
             }
         }
