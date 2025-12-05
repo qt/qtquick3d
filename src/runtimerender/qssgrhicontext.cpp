@@ -1894,5 +1894,5 @@ QSSGSharedRhiTextureWrapper::~QSSGSharedRhiTextureWrapper()
 
     // It's up to the owner to actually delete the texture,
     // we're only using the unique_ptr for API convenience.
-    m_texture.release();
+    (void)m_texture.release();
 }
