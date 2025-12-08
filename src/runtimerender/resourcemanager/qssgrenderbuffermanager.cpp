@@ -1579,10 +1579,14 @@ bool QSSGBufferManager::validateLightmap()
 {
     if (lightmapSourceDirty) {
         lightmapSourceDirty = false;
-        QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(lightmapSource);
-        lightmapFileValid = loader != nullptr;
-        if (!lightmapFileValid)
-            qCWarning(WARNING, "Lightmaps are disabled.");
+        if (lightmapSource.isEmpty()) {
+            lightmapFileValid = false;
+        } else {
+            QSharedPointer<QSSGLightmapLoader> loader = QSSGLightmapLoader::open(lightmapSource);
+            lightmapFileValid = loader != nullptr;
+            if (!lightmapFileValid)
+                qCWarning(WARNING, "Lightmaps are disabled.");
+        }
     }
     return lightmapFileValid;
 }

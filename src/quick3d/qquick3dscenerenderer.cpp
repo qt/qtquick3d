@@ -696,6 +696,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         // HACK: this is also set in the render layer but we need to set it here since
         // it is needed below when calculating bounding boxes from the stored lightmap mesh
         m_sgContext->bufferManager()->setLightmapSource(lightmapSource);
+        if (QQuick3DSceneManager *sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager)
+            sceneManager->lightmapSource = lightmapSource;
     }
 
     // Synchronize scene managers under this window
