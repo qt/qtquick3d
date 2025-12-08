@@ -35,10 +35,12 @@ public:
     enum class TextureSource : quint32
     {
         None = 0,
-        AoTexture = 1,
+        UserPassTexture = 1,
+        AoTexture,
         DepthTexture,
         ScreenTexture,
-        UserPassTexture,
+        NormalTexture,
+        MotionVectorTexture,
     };
     Q_ENUM(TextureSource)
 

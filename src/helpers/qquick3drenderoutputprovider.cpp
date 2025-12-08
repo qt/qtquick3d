@@ -199,6 +199,14 @@ QSSGRenderGraphObject *QQuick3DRenderOutputProvider::updateSpatialNode(QSSGRende
             providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::BuiltInPass;
             providerNode->m_builtInPass = QSSGFrameData::RenderResult::ScreenTexture;
             break;
+        case QQuick3DRenderOutputProvider::TextureSource::NormalTexture:
+            providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::BuiltInPass;
+            providerNode->m_builtInPass = QSSGFrameData::RenderResult::NormalTexture;
+            break;
+        case QQuick3DRenderOutputProvider::TextureSource::MotionVectorTexture:
+            providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::BuiltInPass;
+            providerNode->m_builtInPass = QSSGFrameData::RenderResult::MotionVectorTexture;
+            break;
         }
     }
 
@@ -232,11 +240,13 @@ void QQuick3DRenderOutputProvider::markDirty(QQuick3DRenderOutputProvider::Dirty
     \qmlproperty RenderOutputProvider::TextureSource textureSource
     This property holds which pass buffer texture to use.
 
-    \value RenderOutputProvider.AoTexture The ambient occlusion texture created by the SSAO pass.
-    \value RenderOutputProvider.DepthTexture The depth texture created by the ZPrePass.
-    \value RenderOutputProvider.ScreenTexture The texture containing the rendered scene.
+    \value RenderOutputProvider.None No texture source is selected.
     \value RenderOutputProvider.UserPassTexture A user defined pass. If this is used to access a user defined pass.
-
+    \value RenderOutputProvider.AoTexture The ambient occlusion texture created by QtQuick3D's AO pass.
+    \value RenderOutputProvider.DepthTexture The depth texture created by QtQuick3D's Depth map pass.
+    \value RenderOutputProvider.ScreenTexture The texture containing the rendered scene.
+    \value RenderOutputProvider.NormalTexture The normal texture created by QtQuick3D's Normal map pass.
+    \value RenderOutputProvider.MotionVectorTexture The motion vector texture created by QtQuick3D's Motion Vector pass.
  */
 
 QQuick3DRenderOutputProvider::TextureSource QQuick3DRenderOutputProvider::textureSource() const
