@@ -8,6 +8,24 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype RenderPass
+    \inherits Object3D
+    \inqmlmodule QtQuick3D
+    \brief The RenderPass type defines a custom render pass for rendering 3D content.
+    \since 6.11
+
+    A RenderPass allows you to define a custom rendering step in the rendering pipeline.
+    You can specify various properties such as clear color, material mode, and
+    override materials. Additionally, you can define a list of render commands
+    that dictate how the rendering should be performed.
+
+    \section1 Exposing data to the shaders
+
+    As with Effects and Custom Materials, the RenderPass will expose, and update,
+    user defined properties to the shader automatically.
+*/
+
 QQuick3DRenderPass::QQuick3DRenderPass(QQuick3DObject *parent)
     : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::RenderPass)), parent)
     , QQuick3DPropertyChangedTracker(this, QQuick3DSuperClassInfo<QQuick3DRenderPass>())
@@ -236,6 +254,25 @@ void QQuick3DRenderPass::markDirty(Dirty type)
     }
 }
 
+/*!
+    \qmlproperty list<RenderCommand> RenderPass::commands
+    This property holds the list of render commands for the render pass.
+
+    The commands in the list are executed in the order they appear in the list.
+
+    \note The commands for RenderPass and Effects are similar but not the same, only
+    those marked as compatible can be used with this RenderPass.
+
+    \sa renderTargetBlend,
+        PipelineStateOverride,
+        RenderablesFilter,
+        RenderPassTexture,
+        ColorAttachment,
+        DepthTextureAttachment,
+        DepthStencilAttachment,
+        AddDefine
+*/
+
 QQmlListProperty<QQuick3DShaderUtilsRenderCommand> QQuick3DRenderPass::commands()
 {
     return QQmlListProperty<QQuick3DShaderUtilsRenderCommand>(this,
@@ -246,6 +283,12 @@ QQmlListProperty<QQuick3DShaderUtilsRenderCommand> QQuick3DRenderPass::commands(
                                                               QQuick3DRenderPass::qmlCommandClear);
 }
 
+/*!
+    \qmlproperty color RenderPass::clearColor
+    This property holds the clear color for the render pass.
+
+    \default Qt.black
+*/
 QColor QQuick3DRenderPass::clearColor() const
 {
     return m_clearColor;
@@ -260,6 +303,16 @@ void QQuick3DRenderPass::setClearColor(const QColor &newClearColor)
     markDirty(ClearDirty);
 }
 
+/*!
+    \qmlproperty RenderPass::MaterialModes RenderPass::materialMode
+    This property holds the material mode for the render pass.
+
+    \value RenderPass.OriginalMaterial Use the original material of the object.
+    \value RenderPass.AugmentMaterial Augment the original material with custom shader code.
+    \value RenderPass.OverrideMaterial Override the original material with a user specified \l{RenderPass::overrideMaterial}{material}.
+
+    \default RenderPass.OriginalMaterial
+*/
 QQuick3DRenderPass::MaterialModes QQuick3DRenderPass::materialMode() const
 {
     return m_materialMode;
@@ -274,6 +327,11 @@ void QQuick3DRenderPass::setMaterialMode(MaterialModes newMaterialMode)
     markDirty(MaterialModeDirty);
 }
 
+/*!
+    \qmlproperty Material RenderPass::overrideMaterial
+    This property holds the override material for the render pass when
+    \l{RenderPass::materialMode}{materialMode} is set to \c OverrideMaterial.
+*/
 QQuick3DMaterial *QQuick3DRenderPass::overrideMaterial() const
 {
     return m_overrideMaterial;
@@ -291,6 +349,22 @@ void QQuick3DRenderPass::setOverrideMaterial(QQuick3DMaterial *newOverrideMateri
     markDirty(OverrideMaterialDirty);
 }
 
+/*!
+    \qmlproperty url RenderPass::augmentShader
+    This property holds the augment shader URL for the render pass when
+    \l{RenderPass::materialMode}{materialMode} is set to \c AugmentMaterial.
+
+    The shader file should contain a function with the following signature:
+    \badcode
+    void MAIN_FRAGMENT_AUGMENT() {
+        // Custom shader code here
+    }
+    \endcode
+
+    This function will be combined with the existing fragment shader of the material
+    being used by the object being rendered in this render pass. Allowing users to
+    augment the existing material shader with custom code.
+*/
 QUrl QQuick3DRenderPass::augmentShader() const
 {
     return m_augmentShader;
@@ -304,6 +378,20 @@ void QQuick3DRenderPass::setAugmentShader(const QUrl &newAugmentShader)
     emit augmentShaderChanged();
     markDirty(AugmentShaderDirty);
 }
+
+/*!
+    \qmlproperty RenderPass::PassMode RenderPass::passMode
+    This property holds the pass mode for the render pass.
+
+    In addition to standard user render passes, Qt Quick 3D supports
+    users to manually triggering internal render passes for rendering
+    the skybox and 2D items.
+
+    \value RenderPass.UserPass A user specified render pass.
+    \value RenderPass.SkyboxPass Qt Quick 3D's built-in skybox render pass.
+    \value RenderPass.Item2DPass Qt Quick 3D's built-in 2D item render pass.
+    \default RenderPass.UserPass
+*/
 
 QQuick3DRenderPass::PassMode QQuick3DRenderPass::passMode() const
 {
@@ -319,6 +407,12 @@ void QQuick3DRenderPass::setPassMode(PassMode newPassMode)
     markDirty(PassTypeDirty);
 }
 
+/*!
+    \qmlproperty real RenderPass::depthClearValue
+    This property holds the depth clear value for the render pass.
+
+    \default 1.0
+*/
 float QQuick3DRenderPass::depthClearValue() const
 {
     return m_depthClearValue;
@@ -333,6 +427,12 @@ void QQuick3DRenderPass::setDepthClearValue(float newDepthClearValue)
     markDirty(ClearDirty);
 }
 
+/*!
+    \qmlproperty int RenderPass::stencilClearValue
+    This property holds the stencil clear value for the render pass.
+
+    \default 0
+*/
 quint32 QQuick3DRenderPass::stencilClearValue() const
 {
     return m_stencilClearValue;
@@ -347,6 +447,13 @@ void QQuick3DRenderPass::setStencilClearValue(quint32 newStencilClearValue)
     markDirty(ClearDirty);
 }
 
+/*!
+    \qmlproperty bool RenderPass::enableClearBuffers
+    This property holds whether the render pass should clear its buffers
+    before rendering.
+
+    \default true.
+*/
 bool QQuick3DRenderPass::enableClearBuffers() const
 {
     return m_enableClearBuffers;
