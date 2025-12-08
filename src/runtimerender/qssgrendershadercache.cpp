@@ -131,10 +131,12 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
             isGLESModule = QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES;
 #endif
             if (format.renderableType() == QSurfaceFormat::OpenGLES || isGLESModule) {
-                if (format.majorVersion() >= 3)
+                if (format.majorVersion() >= 3) {
                     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
-                else
+                    outputs.append({ QShader::GlslShader, QShaderVersion(310, QShaderVersion::GlslEs) }); // GLES 3.1+
+                } else {
                     outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
+                }
             } else {
                 // Need to default to at least GLSL 130 (OpenGL 3.0), not 120.
                 // The difference is actually relevant when it comes to certain
@@ -189,6 +191,7 @@ void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
     outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
 #endif
     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
+    outputs.append({ QShader::GlslShader, QShaderVersion(310, QShaderVersion::GlslEs) }); // GLES 3.1+
 
     // If one of the above cannot be generated due to failing at the
     // SPIRV-Cross translation stage, it will be skipped, but bake() will not
