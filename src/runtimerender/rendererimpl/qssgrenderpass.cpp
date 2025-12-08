@@ -1812,8 +1812,20 @@ void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &dat
         qCDebug(lcUserRenderPass, "renderPrep in UserRenderPass");
 
         UserPassData currentPassData;
-        QSSGRenderableObjectList renderables;
-        auto ps = data.getPipelineState();
+        currentPassData.clearColor = passNode->clearColor;
+        currentPassData.depthStencilClearValue = passNode->depthStencilClearValue;
+        const size_t userPassIndex = userPassData.size();
+        currentPassData.index = userPassIndex;
+        currentPassData.renderableTexture = data.requestUserRenderPassManager()->getOrCreateRenderableTexture(*passNode);
+
+        QSSGRenderableObjectList &renderables = currentPassData.renderables;
+        QSSGRhiGraphicsPipelineState &ps = currentPassData.ps;
+        const auto &renderTarget = currentPassData.renderableTexture;
+
+        // Initial pipeline state from layer data
+        ps = data.getPipelineState();
+
+        bool renderablesFiltered = false;
 
         bool needsDepthStencilRenderBuffer = false;
         QSSGAllocateTexturePtr depthTextureAllocCommand;
@@ -1867,6 +1879,9 @@ void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &dat
                     renderables = data.getSortedOpaqueRenderableObjects(*camera, 0, filterCommand->layerMask);
                 if (filterCommand->renderableTypes & RenderableType::Transparent) // Transparent
                     renderables += data.getSortedTransparentRenderableObjects(*camera, 0, filterCommand->layerMask);
+
+                // NOTE: If no filter is run, all opaque objects are rendered.
+                renderablesFiltered = true;
             }
             break;
 
@@ -1938,8 +1953,6 @@ void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &dat
         // m_passNode contains state for this UserRenderPass
 
         // 1) Setup the render target
-        auto renderTarget = data.requestUserRenderPassManager()->getOrCreateRenderableTexture(*passNode);
-
         bool needsBuild = !renderTarget->isValid();
 
         const qsizetype oldAttachmentCount = renderTarget->colorAttachmentCount();
@@ -2050,18 +2063,9 @@ void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &dat
 
         ps.colorAttachmentCount = renderTarget->colorAttachmentCount();
 
-        const size_t userPassIndex = userPassData.size();
-
-        currentPassData.ps = ps;
-        currentPassData.renderables = renderables;
-        currentPassData.clearColor = passNode->clearColor;
-        currentPassData.renderableTexture = renderTarget;
-        currentPassData.depthStencilClearValue = passNode->depthStencilClearValue;
-        currentPassData.index = userPassIndex;
-
         if (passNode->passMode == QSSGRenderUserPass::PassModes::UserPass) {
             // If no filter is specified, render all opaque objects
-            if (renderables.isEmpty())
+            if (!renderablesFiltered && renderables.isEmpty())
                 renderables = data.getSortedOpaqueRenderableObjects(*camera);
 
             if (passNode->materialMode == QSSGRenderUserPass::MaterialModes::AugmentMaterial) {
