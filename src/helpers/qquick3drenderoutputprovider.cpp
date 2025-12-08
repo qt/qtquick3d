@@ -15,39 +15,6 @@
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmltype RenderOutputProvider
-    \inqmlmodule QtQuick3D.Helpers
-    \inherits TextureProviderExtension
-    \since 6.11
-    \brief Used as a bridge to use access textures provided by passes.
-
-    This type is used to provide textures that are the results of passes in the rendering pipeline.
-    Some example of when this is useful is when you want to access the depth texture result of the ZPrePass,
-    or the ambient occlusion texture result of the SSAO pass. This type can be used to access these results
-    textures and use them in materials or effects.
-
-    \code
-    Texture {
-        textureProvider: RenderOutputProvider {
-            // Specify the built-in buffer texture you want to access
-            textureSource: RenderOutputProvider.DepthTexture
-        }
-    }
-    \endcode
-*/
-
-/*!
-    \qmlproperty RenderOutputProvider::TextureSource textureSource
-    This property holds which pass buffer texture to use.
-
-    \value RenderOutputProvider.AoTexture The ambient occlusion texture created by the SSAO pass.
-    \value RenderOutputProvider.DepthTexture The depth texture created by the ZPrePass.
-    \value RenderOutputProvider.ScreenTexture The texture containing the rendered scene.
-    \value RenderOutputProvider.UserPassTexture A user defined pass. If this is used to access a user defined pass.
-
-*/
-
 class QSSGRenderOutputProviderExtension : public QSSGRenderTextureProviderExtension
 {
 public:
@@ -190,10 +157,8 @@ void QSSGRenderOutputProviderExtension::resetForFrame()
     }
     \endqml
 
-
- \sa QQuick3DTextureProviderExtension, QSSGRenderExtension
+    \sa QQuick3DTextureProviderExtension, QSSGRenderExtension
 */
-
 
 QQuick3DRenderOutputProvider::QQuick3DRenderOutputProvider(QQuick3DObject *parent)
     : QQuick3DTextureProviderExtension(parent)
@@ -263,6 +228,17 @@ void QQuick3DRenderOutputProvider::markDirty(QQuick3DRenderOutputProvider::Dirty
     }
 }
 
+/*!
+    \qmlproperty RenderOutputProvider::TextureSource textureSource
+    This property holds which pass buffer texture to use.
+
+    \value RenderOutputProvider.AoTexture The ambient occlusion texture created by the SSAO pass.
+    \value RenderOutputProvider.DepthTexture The depth texture created by the ZPrePass.
+    \value RenderOutputProvider.ScreenTexture The texture containing the rendered scene.
+    \value RenderOutputProvider.UserPassTexture A user defined pass. If this is used to access a user defined pass.
+
+ */
+
 QQuick3DRenderOutputProvider::TextureSource QQuick3DRenderOutputProvider::textureSource() const
 {
     return m_textureSource;
@@ -276,6 +252,15 @@ void QQuick3DRenderOutputProvider::setTextureSource(TextureSource newTextureSour
     emit textureSourceChanged();
     markDirty(TextureSourceDirty);
 }
+
+/*!
+    \qmlproperty RenderPass renderPass
+    This property holds the user defined render pass to use when accessing a user defined pass texture.
+
+    When this property is set, the \l textureSource property is automatically set to \value RenderOutputProvider.UserPassTexture.
+
+    \sa textureSource, RenderPass
+*/
 
 QQuick3DRenderPass *QQuick3DRenderOutputProvider::renderPass() const
 {
@@ -297,6 +282,14 @@ void QQuick3DRenderOutputProvider::setRenderPass(QQuick3DRenderPass *newRenderPa
 
     emit renderPassChanged();
 }
+
+/*!
+    \qmlproperty RenderOutputProvider::AttachmentSelector attachmentSelector
+    This property holds which attachment to use when accessing a user defined pass texture.
+
+    There are multiple attachments possible when using a user defined render pass,
+    starting from \value RenderOutputProvider.Attachment0 up to \value RenderOutputProvider.Attachment3.
+*/
 
 QQuick3DRenderOutputProvider::AttachmentSelector QQuick3DRenderOutputProvider::attachmentSelector() const
 {
