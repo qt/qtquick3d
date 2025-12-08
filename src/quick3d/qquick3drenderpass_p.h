@@ -54,9 +54,6 @@ public:
 
     QQmlListProperty<QQuick3DShaderUtilsRenderCommand> commands();
 
-    QQuick3DShaderUtilsBuffer *output() const;
-    void setOutput(QQuick3DShaderUtilsBuffer *newOutput);
-
     QColor clearColor() const;
     void setClearColor(const QColor &newClearColor);
 
