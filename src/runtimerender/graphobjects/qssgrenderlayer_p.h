@@ -20,6 +20,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qlist.h>
+#include <QMutex>
 
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;
@@ -161,6 +162,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGRenderCamera *explicitCamera;
     // The camera used for rendering (explicitCamera, nullptr or first usable camera).
     QSSGRenderCamera *renderedCamera;
+    QMutex renderedCameraMutex;
 
     // Tonemapping
     TonemapMode tonemapMode;

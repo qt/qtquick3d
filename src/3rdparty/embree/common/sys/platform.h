@@ -3,6 +3,10 @@
 
 #pragma once
 
+#if defined (__AVX__)
+#pragma GCC target("no-sse3")
+#endif
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cstddef>
@@ -384,3 +388,4 @@ namespace embree
 #undef __AVXI__
 #undef __AVX__
 #undef __SSE4_2__
+#undef __SSE4_1__
