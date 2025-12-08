@@ -249,7 +249,7 @@ QT_BEGIN_NAMESPACE
 
     The renderTargetBlend type is used to specify blending parameters for a single
     color attachment of a \l RenderPass. An instance of renderTargetBlend can be
-    assigned to one of the \l PipelineStateOverride::targetBlendN properties, where N
+    assigned to one of the \c PipelineStateOverride::targetBlendN properties, where N
     is the index of the color attachment to configure.
 
     \qmlproperty bool renderTargetBlend::blendEnabled
@@ -369,7 +369,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlType PipelineStateOverride
+    \qmltype PipelineStateOverride
     \inherits Command
     \inqmlmodule QtQuick3D
     \brief Defines pipeline state overrides for a single \l {RenderPass}{pass}.
@@ -459,8 +459,6 @@ QT_BEGIN_NAMESPACE
     \qmlproperty TargetBlend PipelineStateOverride::targetBlend7
     Sets the blending parameters for color attachment 7 of the render pass.
 */
-
-//DepthStencilAttachment
 
 /*!
     \qmltype DepthStencilAttachment
@@ -969,6 +967,35 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     Q_EMIT textureChanged();
 }
 
+/*!
+    \qmltype RenderablesFilter
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines a filter for selecting which renderables to affect in a \l {RenderPass}{pass}.
+    \since 6.11
+
+    The RenderablesFilter type is used to specify which renderables in the scene
+    should be affected by a \l RenderPass. By setting the \c renderableTypes property,
+    you can control whether the pass affects Opaque or Transparent objects.
+
+    In addition to filtering by renderable types, you can also use the \l{RenderablesFilter::layerMask}{layerMask}
+    to further refine which renderables are affected based on their assigned \l{QtQuick3D::Node::layers}{layers}.
+*/
+
+/*!
+    \qmlproperty int RenderablesFilter::layerMask
+    Sets the layer mask for the filter. Only renderables on the specified layers will be affected by the filter.
+
+    \sa l{QtQuick3D::Node::layers}
+*/
+
+/*!
+    \qmlproperty enumeration RenderablesFilter::renderableTypes
+    Sets the types of renderables that the filter will affect.
+
+    \value RenderablesFilter.Opaque
+    \value RenderablesFilter.Transparent
+*/
 QQuick3DShaderUtilsRenderablesFilter::RenderableTypes QQuick3DShaderUtilsRenderablesFilter::renderableTypes() const
 {
     return static_cast<QQuick3DShaderUtilsRenderablesFilter::RenderableTypes>(command.renderableTypes);
@@ -1425,6 +1452,43 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend7()
     emit targetBlend7Changed();
 }
 
+/*!
+    \qmltype RenderPassTexture
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines a texture to be used as a render target in a \l {RenderPass}{pass}.
+    \since 6.11
+
+    The RenderPassTexture type is used to specify a texture that will be used
+    as a render target in a \l RenderPass. You can define the format of the
+    texture using the \c format property.
+
+    Once defined, the texture can be attached as a color or depth attachment. The texture will
+    be automatically created and managed by the rendering system.
+
+    \sa ColorAttachment, DepthTextureAttachment
+*/
+
+/*!
+    \qmlproperty enumeration RenderPassTexture::format
+    Sets the format of the render target texture.
+
+    Available formats are:
+
+    \value RenderPassTexture.Unknown
+    \value RenderPassTexture.RGBA8
+    \value RenderPassTexture.RGBA16F
+    \value RenderPassTexture.RGBA32F
+    \value RenderPassTexture.R8
+    \value RenderPassTexture.R16
+    \value RenderPassTexture.R16F
+    \value RenderPassTexture.R32F
+    \value RenderPassTexture.Depth16
+    \value RenderPassTexture.Depth24
+    \value RenderPassTexture.Depth32
+    \value RenderPassTexture.Depth24Stencil8
+*/
+
 QQuick3DShaderUtilsRenderPassTexture::TextureFormat QQuick3DShaderUtilsRenderPassTexture::format() const
 {
     return fromRenderTextureFormat(command->format());
@@ -1483,6 +1547,39 @@ QQuick3DShaderUtilsRenderPassTexture::TextureFormat QQuick3DShaderUtilsRenderPas
     }
     return TextureFormat::Unknown;
 }
+
+/*!
+    \qmltype ColorAttachment
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines a color attachment for a \l {RenderPass}{pass}.
+    \since 6.11
+
+    The ColorAttachment type is used to specify a color attachment for a \l RenderPass.
+    The \l name property is used to identify the attachment within the render pass.
+    If the \l {RenderPass.AugmentMaterial}{AugmentMaterial} mode is used, the name will be
+    exposed as an output wiht \c name in the fragment shader.
+
+    \sa RenderPassTexture
+
+    \qml
+    RenderPass {
+        // Define a render target texture
+        RenderPassTexture {
+            id: colorTexture
+            format: RenderPassTexture.RGBA16F
+        }
+
+        commands: [
+            // Define a color attachment using the texture
+            ColorAttachment {
+                name: "color0"
+                target: colorTexture
+            }
+        ]
+    }
+    \endqml
+*/
 
 QQuick3DShaderUtilsRenderPassColorAttachment::~QQuick3DShaderUtilsRenderPassColorAttachment()
 {
@@ -1705,6 +1802,18 @@ void QQuick3DPropertyWatcher::onPointerPropertyChanged()
     m_tracker->markTrackedPropertyDirty(m_property, QQuick3DPropertyChangedTracker::DirtyPropertyHint::Reference);;
 }
 
+/*!
+    \qmltype AddDefine
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Adds a preprocessor define to the shader compilation for a \l {RenderPass}{pass}.
+    \since 6.11
+
+    The AddDefine type is used to specify a preprocessor define that will be
+    added to the shader compilation process for a \l RenderPass. This allows
+    you to customize the shader behavior by defining specific macros.
+*/
+
 QQuick3DShaderUtilsRenderPassAddDefine::QQuick3DShaderUtilsRenderPassAddDefine()
 {
 
@@ -1716,6 +1825,20 @@ QSSGCommand *QQuick3DShaderUtilsRenderPassAddDefine::cloneCommand() {
     QSSGAddShaderDefine *cmd = new QSSGAddShaderDefine(command);
     return cmd;
 }
+
+/*!
+    \qmltype DepthTextureAttachment
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Defines a depth texture attachment for a \l {RenderPass}{pass}.
+    \since 6.11
+
+    The DepthTextureAttachment type is used to specify a depth texture
+    that will be used as a depth attachment in a \l RenderPass. The texture
+    will be automatically created and managed by the rendering system.
+
+    \sa RenderPassTexture
+*/
 
 QQuick3DShaderUtilsRenderPassDepthTextureAttachment::~QQuick3DShaderUtilsRenderPassDepthTextureAttachment()
 {
