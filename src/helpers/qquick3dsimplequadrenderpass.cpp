@@ -19,6 +19,30 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype SimpleQuadRenderer
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits RenderExtension
+    \brief The SimpleQuadRenderer class renders a full-screen quad with a specified texture.
+
+    The SimpleQuadRenderer is a convenient way to render a texture across the entire screen.
+
+    \qml
+    import QtQuick3D.Helpers
+
+    RenderPassTexture {
+        id: outputTexture
+        format: RenderPassTexture.RGBA16F
+    }
+
+    SimpleQuadRenderer {
+        texture: outputTexture
+    }
+    \endqml
+
+    \sa RenderPassTexture
+*/
+
 class QSSGRenderSimpleQuadRenderer : public QSSGRenderExtension
 {
     static constexpr FlagT flags = FlagT(Flags::HasGraphicsResources) | FlagT(QSSGRenderGraphObjectUtils::InternalFlags::AutoRegisterExtension);
