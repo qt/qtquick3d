@@ -35,7 +35,7 @@ class QSSGRhiShaderPipeline;
 class QShaderBaker;
 class QRhi;
 
-using QSSGUserShaderFragmentOutputs = QVector<QByteArray>;
+using QSSGUserShaderFragmentOutputs = QVector<QByteArrayView>;
 
 struct QSSGShaderDefine
 {
