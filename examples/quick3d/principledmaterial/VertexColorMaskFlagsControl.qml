@@ -5,11 +5,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
-import QtQuick.Dialogs
 
 import Example
 
 RowLayout {
+    id: rootView
     property bool specularGlossyMode: false
     property int principledMaterialMask: PrincipledMaterial.NoMask
     property int specularGlossyMaterialMask: SpecularGlossyMaterial.NoMask
@@ -116,10 +116,13 @@ RowLayout {
             color:"gray"
         }
         boundsBehavior: Flickable.StopAtBounds
-        width: 170
-        height: 11 * 20
+        implicitWidth: 170
+        implicitHeight: 11 * 20
         model: rootView.specularGlossyMode ? mdlSpecularGlossyMaterialLeft : mdlPrincipledMaterialLeft
         delegate: Rectangle {
+            id: delegateRect
+            required property int index
+            required property string name
             width: ListView.view.width
             height: 20
             color: ListView.isCurrentItem ? "lightsteelblue" :
@@ -127,7 +130,7 @@ RowLayout {
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
-                    parent.ListView.view.currentIndex = index
+                    parent.ListView.view.currentIndex = delegateRect.index
                 }
             }
             Text {
@@ -135,7 +138,7 @@ RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 5
                 color: parent.ListView.isCurrentItem ? "white" : "black"
-                text: name
+                text: delegateRect.name
             }
         }
     }
@@ -150,10 +153,10 @@ RowLayout {
                         && listLeft.currentIndex < listLeft.count ) {
                     let item = listLeft.model.get(listLeft.currentIndex)
                     listRight.model.append( item )
-                    if ( specularGlossyMode )
-                        specularGlossyMaterialMask |= item.number
+                    if ( rootView.specularGlossyMode )
+                        rootView.specularGlossyMaterialMask |= item.number
                     else
-                        principledMaterialMask |= item.number
+                        rootView.principledMaterialMask |= item.number
                     listLeft.model.remove( listLeft.currentIndex, 1 )
                 }
             }
@@ -161,7 +164,7 @@ RowLayout {
                 implicitWidth: 20
                 implicitHeight: 50
                 opacity: enabled ? 1 : 0.3
-                color: parent.down ? "#d0d0d0" : "#e0e0e0"
+                color: addButton.down ? "#d0d0d0" : "#e0e0e0"
             }
         }
         Button {
@@ -173,10 +176,10 @@ RowLayout {
                         && listRight.currentIndex < listRight.count ) {
                     let item = listRight.model.get(listRight.currentIndex)
                     listLeft.model.append( item )
-                    if ( specularGlossyMode )
-                        specularGlossyMaterialMask &= ~(item.number)
+                    if ( rootView.specularGlossyMode )
+                        rootView.specularGlossyMaterialMask &= ~(item.number)
                     else
-                        principledMaterialMask &= ~(item.number)
+                        rootView.principledMaterialMask &= ~(item.number)
                     listRight.model.remove( listRight.currentIndex, 1 )
                 }
             }
@@ -184,7 +187,7 @@ RowLayout {
                 implicitWidth: 20
                 implicitHeight: 50
                 opacity: enabled ? 1 : 0.3
-                color: parent.down ? "#d0d0d0" : "#e0e0e0"
+                color: removeButton.down ? "#d0d0d0" : "#e0e0e0"
             }
         }
     }
@@ -197,10 +200,13 @@ RowLayout {
             color:"gray"
         }
         boundsBehavior: Flickable.StopAtBounds
-        width: 170
-        height: 11 * 20
+        implicitWidth: 170
+        implicitHeight: 11 * 20
         model: rootView.specularGlossyMode ? mdlSpecularGlossyMaterialRight : mdlPrincipledMaterialRight
         delegate: Rectangle {
+            id: delegateRect2
+            required property int index
+            required property string name
             width: ListView.view.width
             height: 20
             color: ListView.isCurrentItem ? "lightsteelblue" :
@@ -208,14 +214,14 @@ RowLayout {
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
-                    parent.ListView.view.currentIndex = index
+                    parent.ListView.view.currentIndex = delegateRect2.index
                 }
             }
             Text {
                 anchors.fill: parent
                 anchors.leftMargin: 5
                 color: parent.ListView.isCurrentItem ? "white" : "black"
-                text: name
+                text: delegateRect2.name
             }
         }
     }

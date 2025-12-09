@@ -31,9 +31,9 @@ You can control the usage of the mesh vertex colors here.`
             }
 
             Switch {
-                checked: targetMaterial.vertexColorsEnabled
+                checked: rootView.targetMaterial.vertexColorsEnabled
                 onCheckedChanged: {
-                    targetMaterial.vertexColorsEnabled = checked
+                    rootView.targetMaterial.vertexColorsEnabled = checked
                 }
             }
 
@@ -49,9 +49,9 @@ You can defines the vertex color channels used as the specifies mask.`
             }
             Switch {
                 id: vertexColorMaskSwitch
-                checked: targetMaterial.vertexColorsMaskEnabled
+                checked: rootView.targetMaterial.vertexColorsMaskEnabled
                 onCheckedChanged: {
-                    targetMaterial.vertexColorsMaskEnabled = checked
+                    rootView.targetMaterial.vertexColorsMaskEnabled = checked
                 }
             }
         }
@@ -66,10 +66,10 @@ You can add flags to the vertex color red channel mask to get used as the specif
             enabled: vertexColorMaskSwitch.checked
             specularGlossyMode: rootView.specularGlossyMode
             onSpecularGlossyMaterialMaskChanged: {
-                targetMaterial.vertexColorRedMask = specularGlossyMaterialMask
+                rootView.targetMaterial.vertexColorRedMask = specularGlossyMaterialMask
             }
             onPrincipledMaterialMaskChanged: {
-                targetMaterial.vertexColorRedMask = principledMaterialMask
+                rootView.targetMaterial.vertexColorRedMask = principledMaterialMask
             }
         }
 
@@ -83,10 +83,10 @@ You can add flags to the vertex color green channel mask to get used as the spec
             enabled: vertexColorMaskSwitch.checked
             specularGlossyMode: rootView.specularGlossyMode
             onSpecularGlossyMaterialMaskChanged: {
-                targetMaterial.vertexColorGreenMask = specularGlossyMaterialMask
+                rootView.targetMaterial.vertexColorGreenMask = specularGlossyMaterialMask
             }
             onPrincipledMaterialMaskChanged: {
-                targetMaterial.vertexColorGreenMask = principledMaterialMask
+                rootView.targetMaterial.vertexColorGreenMask = principledMaterialMask
             }
         }
 
@@ -100,10 +100,10 @@ You can add flags to the vertex color blue channel mask to get used as the speci
             enabled: vertexColorMaskSwitch.checked
             specularGlossyMode: rootView.specularGlossyMode
             onSpecularGlossyMaterialMaskChanged: {
-                targetMaterial.vertexColorBlueMask = specularGlossyMaterialMask
+                rootView.targetMaterial.vertexColorBlueMask = specularGlossyMaterialMask
             }
             onPrincipledMaterialMaskChanged: {
-                targetMaterial.vertexColorBlueMask = principledMaterialMask
+                rootView.targetMaterial.vertexColorBlueMask = principledMaterialMask
             }
         }
 
@@ -117,10 +117,10 @@ You can add flags to the vertex color alpha channel mask to get used as the spec
             enabled: vertexColorMaskSwitch.checked
             specularGlossyMode: rootView.specularGlossyMode
             onSpecularGlossyMaterialMaskChanged: {
-                targetMaterial.vertexColorAlphaMask = specularGlossyMaterialMask
+                rootView.targetMaterial.vertexColorAlphaMask = specularGlossyMaterialMask
             }
             onPrincipledMaterialMaskChanged: {
-                targetMaterial.vertexColorAlphaMask = principledMaterialMask
+                rootView.targetMaterial.vertexColorAlphaMask = principledMaterialMask
             }
         }
     }

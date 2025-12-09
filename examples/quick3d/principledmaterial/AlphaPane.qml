@@ -124,7 +124,7 @@ button will setup a ${rootView.specularGlossyMode ? "AlbedoMap" : "BaseColorMap"
                     alphaModeComboBox.currentIndex = alphaModeComboBox.indexOfValue(rootView.targetMaterial.alphaMode)
                     isEnabled = true
                 } else {
-                    if (specularGlossyMode)
+                    if (rootView.specularGlossyMode)
                         rootView.targetMaterial.albedoMap = revertTexture
                     else
                         rootView.targetMaterial.baseColorMap = revertTexture
@@ -279,9 +279,9 @@ Map it will make sense to leave the value of Opacity to 1.0.
                 text: "Inverts the opacity value of the opacityMap"
             }
             Switch {
-                checked: targetMaterial.invertOpacityMapValue
+                checked: rootView.targetMaterial.invertOpacityMapValue
                 onCheckedChanged: {
-                    targetMaterial.invertOpacityMapValue = checked
+                    rootView.targetMaterial.invertOpacityMapValue = checked
                 }
             }
         }

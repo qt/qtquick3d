@@ -26,24 +26,24 @@ RowLayout {
                 text: "None"
                 checked: true
                 onCheckedChanged: {
-                    targetTexture = null
+                    root.targetTexture = null
                 }
             }
             RadioButton {
                 id: selectTextureChoice
                 text: "Texture"
                 checked: false
-                onCheckedChanged: targetTexture = selectedTexture
+                onCheckedChanged: root.targetTexture = selectedTexture
             }
             RadioButton {
                 id: loadImageChoice
                 text: "Load Image"
-                onCheckedChanged: targetTexture = loadTextureTexture
+                onCheckedChanged: root.targetTexture = loadTextureTexture
             }
             RadioButton {
                 id: drawerChoice
                 text: "Draw Texture"
-                onCheckedChanged: targetTexture = drawerTexture
+                onCheckedChanged: root.targetTexture = drawerTexture
             }
             Label {
                 visible: uvScale.visible
@@ -60,9 +60,9 @@ RowLayout {
                     updateUVScale()
                 }
                 function updateUVScale(){
-                    if ( targetTexture ) {
-                        targetTexture.scaleU = value
-                        targetTexture.scaleV = value
+                    if ( root.targetTexture ) {
+                        root.targetTexture.scaleU = value
+                        root.targetTexture.scaleV = value
                     }
                 }
                 Connections {

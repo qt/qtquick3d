@@ -106,10 +106,11 @@ as intended.
             }
 
             RowLayout {
-                Label {
-                    text: "Enable base color single channel Map
+                MarkdownLabel {
+                    text: `### Enable base color single channel Map
 The material will use the single value of the baseColorChannel from
-the baseColorMap as RGB value and use 1.0 as alpha value."
+the baseColorMap as RGB value and use 1.0 as alpha value.
+`
                 }
                 Switch {
                     checked: rootView.principledMaterial.baseColorSingleChannelEnabled
@@ -344,10 +345,11 @@ as intended.
     `
             }
             RowLayout {
-                Label {
-                    text: "Enable albedo single channel Map
+                MarkdownLabel {
+                    text: `### Enable albedo single channel Map
 The material will use the single value of the albedoChannel from
-the albedoMap as RGB value and use 1.0 as alpha value."
+the albedoMap as RGB value and use 1.0 as alpha value.
+`
                 }
                 Switch {
                     checked: rootView.specularGlossyMaterial.albedoSingleChannelEnabled
@@ -440,10 +442,11 @@ Map it will make sense to leave the value of Specular to 1.0.
     `
             }
             RowLayout {
-                Label {
-                    text: "Enable specular single channel Map
+                MarkdownLabel {
+                    text: `### Enable specular single channel Map
 The material will use the single value of the specularChannel from
-the specularMap as RGB value."
+the specularMap as RGB value.
+`
                 }
                 Switch {
                     checked: rootView.specularGlossyMaterial.specularSingleChannelEnabled
