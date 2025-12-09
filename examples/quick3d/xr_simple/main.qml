@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Layouts
-import QtQuick3D.Helpers
 //! [XrView]
 import QtQuick3D
 import QtQuick3D.Xr
