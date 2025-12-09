@@ -1513,6 +1513,10 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 
         TransparentPass::prep(*ctx, data, this, ps, shaderFeatures, oitrt.renderPassDescriptor, sortedTransparentObjects, true);
     } else if (method == QSSGRenderLayer::OITMethod::LinkedList) {
+        if (this->rub) {
+            rhiCtx->commandBuffer()->resourceUpdate(this->rub);
+            this->rub = nullptr;
+        }
         // same as transparent pass
         // transparent objects (or, without LayerEnableDepthTest, all objects)
         ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);

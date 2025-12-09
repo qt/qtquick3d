@@ -83,7 +83,6 @@ public:
     const std::unique_ptr<QSSGRhiCubeRenderer> &rhiCubeRenderer() const;
 
     QSSGRenderContextInterface *contextInterface() const { return m_contextInterface; }
-    QRhiResourceUpdateBatch *postResourceUpdates(QSSGRenderLayer &inLayer);
 
     // Before we start rendering a sublayer(s), e.g., Item2D with View3Ds,
     // we need to inform the renderer about it, so we can restore the state as we

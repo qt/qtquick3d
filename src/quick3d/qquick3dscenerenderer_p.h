@@ -65,7 +65,6 @@ protected:
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
     void releaseCachedResources();
-    QRhiResourceUpdateBatch *postResourceUpdates();
 
     std::optional<QSSGRenderRay> getRayFromViewportPos(const QPointF &pos);
     PickResultList syncPick(const QSSGRenderRay &ray);
