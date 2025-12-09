@@ -1204,7 +1204,7 @@ using MorphProperty = QPair<MorphAttributes, float>;
 static QVector<MorphProperty> getMorphTargetProperties(const aiMesh &mesh)
 {
     QVector<MorphProperty> targets;
-    const quint32 numMorphTargets = qMin(8U, mesh.mNumAnimMeshes);
+    const quint32 numMorphTargets = mesh.mNumAnimMeshes;
 
     for (uint i = 0; i < numMorphTargets; ++i) {
         const auto &animMesh = mesh.mAnimMeshes[i];
@@ -1756,7 +1756,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                     const auto &nodeName = srcChannel->mName;
                     if (nodeName.length > 0) {
                         const auto morphKeys = srcChannel->mKeys;
-                        const auto numMorphTargets = qMin(morphKeys[0].mNumValuesAndWeights, 8U);
+                        const auto numMorphTargets = morphKeys[0].mNumValuesAndWeights;
                         // MorphTarget is renamed with <nodeName> + '_morph' + <targetNumber>
                         for (It j = 0; j < numMorphTargets; ++j) {
                             QString morphTargetName(nodeName.C_Str());
