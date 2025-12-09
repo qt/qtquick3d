@@ -379,6 +379,7 @@ public:
     static const char *toString(QSSGRenderTextureFormat::Format value);
     static const char *toString(QSSGRenderTextureCoordOp value);
     static const char *toString(QSSGRenderTextureFilterOp value);
+    static QByteArray toString(QSSGRenderSamplerType value);
 
     static const char *displayName(QSSGRenderTextureCubeFace face);
 

@@ -5,6 +5,15 @@
 
 QT_BEGIN_NAMESPACE
 
+static const char qssgSamplerNames[][18] = {
+    "sampler2D",
+    "sampler2DArray",
+    "sampler3D",
+    "samplerCube",
+    "samplerCubeArray",
+    "samplerBuffer"
+};
+
 const char *QSSGRenderTextureFormat::toString() const
 {
     switch (format) {
@@ -683,6 +692,11 @@ const char *QSSGBaseTypeHelpers::toString(QSSGRenderTextureFilterOp value)
     }
 
     Q_UNREACHABLE_RETURN(nullptr);
+}
+
+QByteArray QSSGBaseTypeHelpers::toString(QSSGRenderSamplerType value)
+{
+    return QByteArray(qssgSamplerNames[static_cast<size_t>(value)]);
 }
 
 const char *QSSGBaseTypeHelpers::displayName(QSSGRenderTextureCubeFace face)
