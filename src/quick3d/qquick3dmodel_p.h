@@ -231,7 +231,6 @@ private:
     static qsizetype qmlMorphTargetsCount(QQmlListProperty<QQuick3DMorphTarget> *list);
     static void qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *list);
     QVector<QQuick3DMorphTarget *> m_morphTargets;
-    size_t m_numMorphAttribs = 0;
     QQuick3DGeometry *m_geometry = nullptr;
     QQuick3DBounds3 m_bounds;
     QQuick3DSkeleton *m_skeleton = nullptr;

@@ -1052,7 +1052,6 @@ void QQuick3DModel::onMorphTargetDestroyed(QObject *object)
     }
     if (found) {
         markDirty(QQuick3DModel::MorphTargetsDirty);
-        m_numMorphAttribs = 0;
     }
 }
 
@@ -1061,14 +1060,7 @@ void QQuick3DModel::qmlAppendMorphTarget(QQmlListProperty<QQuick3DMorphTarget> *
     if (morphTarget == nullptr)
         return;
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
-    if (self->m_numMorphAttribs >= 8) {
-        qWarning("The number of morph attributes exceeds 8. This morph target will be ignored.");
-        return;
-    }
     self->m_morphTargets.push_back(morphTarget);
-    self->m_numMorphAttribs += morphTarget->numAttribs();
-    if (self->m_numMorphAttribs > 8)
-        qWarning("The number of morph attributes exceeds 8. This morph target will be supported partially.");
 
     self->markDirty(QQuick3DModel::MorphTargetsDirty);
 
@@ -1115,7 +1107,6 @@ void QQuick3DModel::qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *
         disconnect(morph, &QQuick3DMorphTarget::destroyed, self, &QQuick3DModel::onMorphTargetDestroyed);
     }
     self->m_morphTargets.clear();
-    self->m_numMorphAttribs = 0;
     self->markDirty(QQuick3DModel::MorphTargetsDirty);
 }
 
