@@ -1853,6 +1853,7 @@ void QSSGRhiRenderableTextureV2::setDescription(QRhi *rhi, QRhiTextureRenderTarg
     rt.reset(rhi->newTextureRenderTarget(rtDesc));
     rt->setName(rtName);
     rpDesc.reset(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rpDesc.get());
     if (!rt->create()) {
         qWarning("Failed to create renderable texture render target");
         rt.reset();
