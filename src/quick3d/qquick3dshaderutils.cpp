@@ -1515,35 +1515,6 @@ QQuick3DPropertyChangedTracker::~QQuick3DPropertyChangedTracker()
 
 }
 
-static const char qssgSamplerNames[][18] = {
-    "sampler2D",
-    "sampler2DArray",
-    "sampler3D",
-    "samplerCube",
-    "samplerCubeArray",
-    "samplerBuffer"
-};
-
-static QByteArrayView samplerTypeName(QSSGRenderSamplerType type)
-{
-    switch (type) {
-    case QSSGRenderSamplerType::Sampler2D:
-        return QByteArrayView(qssgSamplerNames[0]);
-    case QSSGRenderSamplerType::Sampler2DArray:
-        return QByteArrayView(qssgSamplerNames[1]);
-    case QSSGRenderSamplerType::Sampler3D:
-        return QByteArrayView(qssgSamplerNames[2]);
-    case QSSGRenderSamplerType::SamplerCube:
-        return QByteArrayView(qssgSamplerNames[3]);
-    case QSSGRenderSamplerType::SamplerCubeArray:
-        return QByteArrayView(qssgSamplerNames[4]);
-    case QSSGRenderSamplerType::SamplerBuffer:
-        return QByteArrayView(qssgSamplerNames[5]);
-    default:
-        return QByteArrayView();
-    }
-}
-
 void QQuick3DPropertyChangedTracker::extractProperties(UniformPropertyList &outUniforms)
 {
     // Ensure we start with a clean list
@@ -1593,7 +1564,7 @@ void QQuick3DPropertyChangedTracker::extractProperties(UniformPropertyList &outU
 
     const auto addTextureToUniforms = [&](const char *name, QQuick3DTexture *texture, int propertyIndex) {
         QSSGRenderImage *ri = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(texture)->spatialNode);
-        auto samplerName = samplerTypeName(getSamplerHint(*texture)).toByteArray();
+        auto samplerName = QSSGBaseTypeHelpers::toString(getSamplerHint(*texture));
         outUniforms.emplace_back(name, samplerName, QVariant::fromValue(ri), QSSGRenderShaderValue::Texture, propertyIndex);
     };
 
