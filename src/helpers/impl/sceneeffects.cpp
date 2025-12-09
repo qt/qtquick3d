@@ -3,8 +3,6 @@
 
 #include "sceneeffects_p.h"
 
-#include "private/qquick3dviewport_p.h"
-
 QT_BEGIN_NAMESPACE
 
 SceneEffectBase::SceneEffectBase(QQuick3DObject *parent)
@@ -212,23 +210,12 @@ void SceneEffectEnvironment::setSsrEffect(SsrEnvEffect *ssr)
     m_ssr = ssr;
 }
 
-static QObject *findView3D(QObject *obj)
-{
-    while (obj) {
-        if (qobject_cast<QQuick3DViewport *>(obj))
-            return obj;
-        obj = obj->parent();
-    }
-    return nullptr;
-}
-
 QSSGRenderGraphObject *SceneEffectEnvironment::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     m_effects = QQuick3DSceneEnvironment::effectList();
     if (m_ssgi && m_ssgi->enabled())
         m_effects.push_back(m_ssgi);
     if (m_ssr && m_ssr->enabled()) {
-        m_ssr->setProperty("view3d", QVariant::fromValue(findView3D(this)));
         m_effects.push_back(m_ssr);
     }
     if (m_dof && m_dof->enabled())

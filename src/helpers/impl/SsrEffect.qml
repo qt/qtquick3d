@@ -18,24 +18,6 @@ SsrEnvEffect {
     property int maxSteps: 512
     property real baseThickness: 20
 
-    property View3D view3d: null
-
-    readonly property TextureInput f0Texture: TextureInput {
-        id: f0TextureInput
-        texture: Texture {
-            sourceItem: Item {
-                width: ssrEffect.view3d !== null ? ssrEffect.view3d.width : 0
-                height: ssrEffect.view3d !== null ? ssrEffect.view3d.height : 0
-                View3D {
-                    anchors.fill: parent
-                    importScene: ssrEffect.view3d !== null ? ssrEffect.view3d.scene : null
-                    environment.tonemapMode: SceneEnvironment.TonemapModeNone
-                    environment.debugSettings.materialOverride: DebugSettings.F0
-                }
-            }
-        }
-    }
-
     readonly property TextureInput ssrSampler: TextureInput { texture: Texture {} }
     readonly property TextureInput ssrMaskSampler: TextureInput { texture: Texture {} }
     readonly property TextureInput ssrReflConfSampler: TextureInput { texture: Texture {} }
