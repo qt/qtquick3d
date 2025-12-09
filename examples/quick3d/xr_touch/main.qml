@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
 
 import QtQuick3D
 import QtQuick3D.Helpers

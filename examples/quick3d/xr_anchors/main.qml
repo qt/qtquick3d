@@ -95,7 +95,9 @@ XrView {
                     pickRay.length = pickResult.distance
                     movableObject.move(pickResult.scenePosition, pickResult.sceneNormal)
                     movableObject.visible = true
+                    // qmllint disable missing-property
                     const info = pickResult.objectHit?.anchorInfo
+                    // qmllint enable missing-property
                     labelNode.anchorInfo = info ? info : "(unknown)"
                 } else {
                     pickRay.hit = false
