@@ -499,7 +499,6 @@ public:
     enum class RenderableType : quint32 {
         Opaque = 0x1,
         Transparent = 0x2,
-        Item2D = 0x4,
     };
     Q_DECLARE_FLAGS(RenderableTypes, RenderableType)
     Q_FLAG(RenderableTypes)

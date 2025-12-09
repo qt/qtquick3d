@@ -1872,7 +1872,6 @@ void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &dat
                 enum RenderableType : quint8 {
                     Opaque = 0x1,
                     Transparent = 0x2,
-                    Item2D = 0x4
                 };
 
                 if (filterCommand->renderableTypes & RenderableType::Opaque) // Opaque
