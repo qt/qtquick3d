@@ -374,7 +374,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_textureRenderTarget));
         rhiRender();
-        cb->endPass(postResourceUpdates());
+        cb->endPass();
         QSSGRHICTX_STAT(rhiCtx, endRenderPass());
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, quint64(ssaaAdjustedWidth) | quint64(ssaaAdjustedHeight) << 32, QByteArrayLiteral("main"));
 
@@ -593,11 +593,6 @@ void QQuick3DSceneRenderer::rhiRender()
     }
 
     m_prepared = false;
-}
-
-QRhiResourceUpdateBatch *QQuick3DSceneRenderer::postResourceUpdates()
-{
-    return m_sgContext->renderer()->postResourceUpdates(*m_layer);
 }
 
 #if QT_CONFIG(quick_shadereffect)
