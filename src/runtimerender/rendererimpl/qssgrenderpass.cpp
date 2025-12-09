@@ -16,6 +16,19 @@
 
 QT_BEGIN_NAMESPACE
 
+static const char defaultFragOutputs[][12] = {
+    "fragOutput",
+    "fragOutput1",
+    "fragOutput2",
+    "fragOutput3",
+};
+
+static QByteArrayView getDefaultOutputName(size_t index)
+{
+    QSSG_ASSERT(std::size(defaultFragOutputs) > index, return defaultFragOutputs[0]);
+    return defaultFragOutputs[index];
+}
+
 static inline QMatrix4x4 correctMVPForScissor(QRectF viewportRect, QRect scissorRect, bool isYUp) {
     const auto &scissorCenter = scissorRect.center();
     const auto &viewCenter = viewportRect.center();
@@ -2080,7 +2093,7 @@ void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &dat
                     if (name.size() > 0)
                         shaderAugmentation.outputs.push_back(name);
                     else
-                        shaderAugmentation.outputs.push_back(QByteArrayLiteral("user_fragcolor") + QByteArray::number(i));
+                        shaderAugmentation.outputs.push_back(getDefaultOutputName(size_t(i)));
                 }
 
                 QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
