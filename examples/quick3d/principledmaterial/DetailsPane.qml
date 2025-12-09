@@ -288,10 +288,10 @@ have been preformed.`
         }
 
         RowLayout {
-            Label {
-                text: "Enable emissive color single channel Map
+            MarkdownLabel {
+                text: `### Enable emissive color single channel Map
 The material will use the single value of the emissiveChannel from
-the emissiveMap as RGB value."
+the emissiveMap as RGB value.`
             }
             Switch {
                 checked: rootView.targetMaterial.emissiveSingleChannelEnabled

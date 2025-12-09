@@ -257,10 +257,10 @@ an affect if the material is a dielectric (non-metallic).`
             }
             RowLayout {
                 visible: !rootView.specularGlossyMode
-                Label {
-                    text: "Enable specular single channel Map
+                MarkdownLabel {
+                    text: `### Enable specular single channel Map
 The material will use the single value of the specularChannel from
-the specularMap as RGB value."
+the specularMap as RGB value.`
                 }
                 Switch {
                     checked: rootView.targetMaterial.specularSingleChannelEnabled
