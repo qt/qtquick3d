@@ -62,6 +62,7 @@ bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
     switch (m_sourceType) {
     case SourceType::None:
         // Nothing to do
+        m_isDirty = false;
         break;
     case SourceType::BuiltInPass:
     {
@@ -117,8 +118,6 @@ void QSSGRenderOutputProviderExtension::prepareRender(QSSGFrameData &data)
         if (extResult.texture) {
             QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, extResult.texture);
             m_isDirty = false;
-        } else {
-            qWarning() << "couldn't find texture";
         }
     }
 }
