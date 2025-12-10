@@ -2847,8 +2847,6 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
     QSSGRhiGraphicsPipelineState ps = basePipelineState;
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
 
-    featureSet.set(QSSGShaderFeatures::Feature::UserRenderPass, true);
-
     const bool isCustomMaterial = (overrideMaterial->type == QSSGRenderGraphObject::Type::CustomMaterial);
     const bool isDefaultMaterial = (overrideMaterial->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
                                     overrideMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
@@ -3043,8 +3041,6 @@ void RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
 {
     QSSGRhiGraphicsPipelineState ps = basePipelineState;
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-
-    featureSet.set(QSSGShaderFeatures::Feature::UserRenderPass, true);
 
     for (const QSSGRenderableObjectHandle &handle : inObjects) {
         QSSGRenderableObject *obj = handle.obj;
