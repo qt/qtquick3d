@@ -1828,7 +1828,7 @@ QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const
     Once set the textures should be assume owned by this object references to
     individual textures can be gotten via the textures() method.
  */
-void QSSGRhiRenderableTextureV2::setDescription(QRhi *rhi, QRhiTextureRenderTargetDescription rtDesc)
+void QSSGRhiRenderableTextureV2::setDescription(QRhi *rhi, QRhiTextureRenderTargetDescription rtDesc, QRhiTextureRenderTarget::Flags flags)
 {
     Q_ASSERT(rhi);
 
@@ -1852,6 +1852,7 @@ void QSSGRhiRenderableTextureV2::setDescription(QRhi *rhi, QRhiTextureRenderTarg
 
     rt.reset(rhi->newTextureRenderTarget(rtDesc));
     rt->setName(rtName);
+    rt->setFlags(flags);
     rpDesc.reset(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rpDesc.get());
     if (!rt->create()) {

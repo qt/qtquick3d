@@ -38,6 +38,8 @@ const char *QSSGCommand::typeAsString() const
         return "PipelineStateOverride";
     case CommandType::DepthStencilAttachment:
         return "DepthStencilAttachment";
+    case CommandType::SubRenderPass:
+        return "SubRenderPass";
     }
 
     Q_UNREACHABLE_RETURN("");

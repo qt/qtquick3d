@@ -28,6 +28,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DShaderUtilsShader;
 class QQmlContext;
+class QQuick3DRenderPass;
 
 namespace QSSGShaderUtils {
 
@@ -497,6 +498,7 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderablesFilter : public QQuick3DSha
 
 public:
     enum class RenderableType : quint32 {
+        None = 0x0,
         Opaque = 0x1,
         Transparent = 0x2,
     };
@@ -627,6 +629,36 @@ public:
     QSSGAddShaderDefine command;
     QByteArray &name = command.m_name;
     int &value = command.m_value;
+};
+
+class Q_QUICK3D_EXPORT QQuick3DShaderUtilsSubRenderPass : public QQuick3DShaderUtilsRenderCommand
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuick3DRenderPass *renderPass READ renderPass WRITE setRenderPass NOTIFY renderPassChanged FINAL)
+    QML_NAMED_ELEMENT(SubRenderPass)
+    QML_ADDED_IN_VERSION(6, 11)
+
+public:
+    QQuick3DShaderUtilsSubRenderPass() = default;
+    ~QQuick3DShaderUtilsSubRenderPass() override;
+
+    QQuick3DRenderPass *renderPass() const;
+    void setRenderPass(QQuick3DRenderPass *newRenderPass);
+
+    QSSGCommand *cloneCommand() override;
+
+signals:
+    void renderPassChanged();
+
+protected:
+    virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) final;
+    virtual void itemChange(ItemChange change, const ItemChangeData &value) final;
+
+private:
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
+
+    QQuick3DRenderPass *m_renderPass = nullptr;
+    mutable bool m_hasWarnedAboutInvalidId = false;
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPass : public QQuick3DObject

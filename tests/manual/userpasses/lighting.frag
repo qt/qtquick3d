@@ -53,6 +53,10 @@ void MAIN()
     float roughness = gb1.a;
 
     vec3 worldPos = gb2.xyz;
+    float renderMask = gb2.w;
+
+    if (renderMask < 1.0)
+        discard;
 
     // View vector (from fragment to camera)
     vec3 V = normalize(CAMERA_POSITION - worldPos);

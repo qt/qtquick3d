@@ -6,7 +6,11 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 
+#include <QtCore/QLoggingCategory>
+
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQuick3DRenderPass, "qt.quick3d.renderpass")
 
 /*!
     \qmltype RenderPass
@@ -42,10 +46,12 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
         newBackendNode = true;
     }
 
-    const bool fullUpdate = newBackendNode  || (m_dirtyAttributes & Dirty::TextureDirty);
+    const bool fullUpdate = newBackendNode  || (m_dirtyAttributes & Dirty::TextureDirty) || (m_dirtyAttributes & CommandsDirty);
 
     auto &shaderAugmentation = renderPassNode->shaderAugmentation;
     auto &uniformProps = shaderAugmentation.propertyUniforms;
+
+    bool clearCommandsDirty = true;
 
     if (fullUpdate) {
         markAllDirty();
@@ -57,8 +63,13 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
         // Commands
         renderPassNode->resetCommands();
         for (QQuick3DShaderUtilsRenderCommand *command : std::as_const(m_commands)) {
-            if (auto *cmd = command->cloneCommand())
+            if (auto *cmd = command->cloneCommand()) {
                 renderPassNode->commands.push_back(cmd);
+            } else {
+                clearCommandsDirty = false; // Will try again in the second pass
+                if (m_commandCloneRetryCount == 0)
+                    qCDebug(lcQuick3DRenderPass, "RenderPass: Command cloning failed, will retry (command type: %s)", command->metaObject()->className());
+            }
         }
     }
 
@@ -84,7 +95,7 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
 
     // Clear Dirty
     if (m_dirtyAttributes & Dirty::ClearDirty) {
-        renderPassNode->clearBuffers = m_enableClearBuffers;
+        renderPassNode->renderTargetFlags = QRhiTextureRenderTarget::Flags(m_renderTargetFlags.toInt());
         renderPassNode->clearColor = m_clearColor;
         renderPassNode->depthStencilClearValue = { m_depthClearValue, m_stencilClearValue };
     }
@@ -104,6 +115,24 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
     }
 
     m_dirtyAttributes = 0;
+
+    // Handle command cloning retry logic
+    // In normal operation, SubRenderPass commands should succeed on the second pass after
+    // all referenced RenderPasses have been created during tree traversal.
+    if (!clearCommandsDirty) {
+        if (m_commandCloneRetryCount < MAX_COMMAND_CLONE_RETRIES) {
+            m_dirtyAttributes |= CommandsDirty; // Try again next time
+            m_commandCloneRetryCount++;
+        } else {
+            qWarning("RenderPass: Command cloning failed after %d retries. "
+                     "SubRenderPass may reference a RenderPass that doesn't exist or has initialization issues.",
+                     MAX_COMMAND_CLONE_RETRIES);
+            m_commandCloneRetryCount = 0; // Reset for potential future changes
+        }
+    } else {
+        // Successfully cloned all commands, reset retry counter
+        m_commandCloneRetryCount = 0;
+    }
 
     // If not a user pass, we're done
     if (m_passMode != UserPass)
@@ -218,6 +247,10 @@ void QQuick3DRenderPass::qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRe
         return;
 
     QQuick3DRenderPass *that = qobject_cast<QQuick3DRenderPass *>(list->object);
+
+    if (!command->parentItem())
+        command->setParentItem(that);
+
     that->m_commands.push_back(command);
     that->markDirty(CommandsDirty);
 }
@@ -448,23 +481,31 @@ void QQuick3DRenderPass::setStencilClearValue(quint32 newStencilClearValue)
 }
 
 /*!
-    \qmlproperty bool RenderPass::enableClearBuffers
-    This property holds whether the render pass should clear its buffers
-    before rendering.
+    \qmlproperty RenderPass::RenderTargetFlags RenderPass::renderTargetFlags
+    This property holds the render target flags for the render pass.
 
-    \default true.
+    \default RenderPass.RenderTargetFlags.None
+
+    Possible values are:
+    \value RenderPass.RenderTargetFlags.None No special behavior.
+    \value RenderPass.RenderTargetFlags.PreserveColorContents Preserve the color contents of the render target between frames.
+    \value RenderPass.RenderTargetFlags.PreserveDepthStencilContents Preserve the depth and stencil contents of the render target between frames.
+    \value RenderPass.RenderTargetFlags.DoNotStoreDepthStencilContents Do not store the depth and stencil contents of the render target after rendering.
+
+    \sa QRhiTextureRenderTarget::Flags
 */
-bool QQuick3DRenderPass::enableClearBuffers() const
+
+QQuick3DRenderPass::RenderTargetFlags QQuick3DRenderPass::renderTargetFlags() const
 {
-    return m_enableClearBuffers;
+    return m_renderTargetFlags;
 }
 
-void QQuick3DRenderPass::setEnableClearBuffers(bool newEnableClearBuffers)
+void QQuick3DRenderPass::setRenderTargetFlags(RenderTargetFlags newRenderTargetFlags)
 {
-    if (m_enableClearBuffers == newEnableClearBuffers)
+    if (m_renderTargetFlags == newRenderTargetFlags)
         return;
-    m_enableClearBuffers = newEnableClearBuffers;
-    emit enableClearBuffersChanged();
+    m_renderTargetFlags = newRenderTargetFlags;
+    emit renderTargetFlagsChanged();
     markDirty(ClearDirty);
 }
 

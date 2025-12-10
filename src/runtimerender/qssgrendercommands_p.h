@@ -18,6 +18,7 @@
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 
 #include <QDebug>
 #include <QVariant>
@@ -44,6 +45,7 @@ enum class CommandType
     DepthStencilAttachment,
     DepthTextureAttachment,
     AddShaderDefine,
+    SubRenderPass
 };
 
 struct QSSGCommand
@@ -255,6 +257,7 @@ class QSSGRenderablesFilterCommand : public QSSGCommand
 {
 public:
     enum class RenderableType : quint32 {
+        None = 0x0,
         Opaque = 0x1,
         Transparent = 0x2,
     };
@@ -393,6 +396,27 @@ public:
 
     QByteArray m_name;
     int m_value;
+};
+
+using QSSGRenderUserPassPtr = std::shared_ptr<QSSGRenderUserPass>;
+
+class QSSGSubRenderPass : public QSSGCommand
+{
+public:
+    QSSGSubRenderPass()
+        : QSSGCommand(CommandType::SubRenderPass)
+    {
+    }
+
+    void setSubPass(QSSGResourceId userPassId) {
+        m_userPassId = userPassId;
+    }
+
+    void addDebug(QDebug &stream) const {
+        stream << "userPassId:" <<  static_cast<quint64>(m_userPassId);
+    }
+
+    QSSGResourceId m_userPassId = QSSGResourceId::Invalid;
 };
 
 class QSSGPipelineStateOverrideCommand : public QSSGCommand
