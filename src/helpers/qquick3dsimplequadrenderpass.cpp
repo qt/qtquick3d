@@ -78,7 +78,8 @@ public:
             QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
             cb->debugMarkBegin(QByteArrayLiteral("QtQuick3D Blit Pass"));
 
-            const auto &shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSimpleQuadShader(ps.viewCount);
+            const auto tonemapMode = QSSGLayerRenderData::getCurrent(data)->layer.tonemapMode;
+            const auto &shaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiSimpleQuadShader(ps.viewCount, tonemapMode);
 
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });

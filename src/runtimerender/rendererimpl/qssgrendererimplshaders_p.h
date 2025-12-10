@@ -49,7 +49,7 @@ public:
     QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();
     QSSGRhiShaderPipelinePtr getRhiMotionVectorShader(bool skin, bool instance, bool morph);
     QSSGRhiShaderPipelinePtr getRhiTemporalAAShader();
-    QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader(int viewCount);
+    QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader(int viewCount, QSSGRenderLayer::TonemapMode tonemapMode = QSSGRenderLayer::TonemapMode::None);
     QSSGRhiShaderPipelinePtr getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
     QSSGRhiShaderPipelinePtr getRhiLightmapDilateShader();
     QSSGRhiShaderPipelinePtr getRhiDebugObjectShader(int viewCount);
