@@ -9,6 +9,7 @@ RenderPass {
     clearColor: Qt.rgba(0.0, 0.0, 0.0, 0.0)
 
     property alias layerMask: filter.layerMask
+    required property RenderPassTexture depthTexture
 
     RenderPassTexture {
         id: gbuffer0
@@ -28,16 +29,11 @@ RenderPass {
         // rgb: emissive, a: ao/spare
     }
 
-    RenderPassTexture {
-        id: gbufferDepth
-        format: RenderPassTexture.Depth24Stencil8
-    }
-
     commands: [
         ColorAttachment { target: gbuffer0; name: "GBUFFER0" },
         ColorAttachment { target: gbuffer1; name: "GBUFFER1" },
         ColorAttachment { target: gbuffer2; name: "GBUFFER2" },
-        DepthTextureAttachment { target: gbufferDepth },
+        DepthTextureAttachment { target: gbufferPass.depthTexture },
         RenderablesFilter {
             id: filter
             renderableTypes: RenderablesFilter.Opaque

@@ -694,7 +694,7 @@ public:
         : m_manager(manager)
     {}
 
-    void setDescription(QRhi *rhi, QRhiTextureRenderTargetDescription rtDesc);
+    void setDescription(QRhi *rhi, QRhiTextureRenderTargetDescription rtDesc, QRhiTextureRenderTarget::Flags = {});
 
     void setName(const QByteArray &name) { rtName = name; }
     const QByteArray &getName() const { return rtName; }

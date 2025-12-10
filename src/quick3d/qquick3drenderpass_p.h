@@ -25,7 +25,6 @@ class Q_QUICK3D_EXPORT QQuick3DRenderPass : public QQuick3DObject, public QQuick
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> commands READ commands)
-    Q_PROPERTY(bool enableClearBuffers READ enableClearBuffers WRITE setEnableClearBuffers NOTIFY enableClearBuffersChanged)
     Q_PROPERTY(MaterialModes materialMode READ materialMode WRITE setMaterialMode NOTIFY materialModeChanged)
     Q_PROPERTY(QColor clearColor READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
     Q_PROPERTY(float depthClearValue READ depthClearValue WRITE setDepthClearValue NOTIFY depthClearValueChanged)
@@ -33,6 +32,7 @@ class Q_QUICK3D_EXPORT QQuick3DRenderPass : public QQuick3DObject, public QQuick
     Q_PROPERTY(QQuick3DMaterial* overrideMaterial READ overrideMaterial WRITE setOverrideMaterial NOTIFY overrideMaterialChanged)
     Q_PROPERTY(QUrl augmentShader READ augmentShader WRITE setAugmentShader NOTIFY augmentShaderChanged)
     Q_PROPERTY(PassMode passMode READ passMode WRITE setPassMode NOTIFY passModeChanged)
+    Q_PROPERTY(RenderTargetFlags renderTargetFlags READ renderTargetFlags WRITE setRenderTargetFlags NOTIFY renderTargetFlagsChanged)
     QML_NAMED_ELEMENT(RenderPass)
     QML_ADDED_IN_VERSION(6, 11)
 public:
@@ -49,6 +49,15 @@ public:
         Item2DPass,
     };
     Q_ENUM(PassMode)
+
+    enum class RenderTargetFlag {
+        None = 0,
+        PreserveColorContents = 1 << 0,
+        PreserveDepthStencilContents = 1 << 1,
+        DoNotStoreDepthStencilContents = 1 << 2
+    };
+    Q_DECLARE_FLAGS(RenderTargetFlags, RenderTargetFlag)
+    Q_FLAGS(RenderTargetFlags)
 
     explicit QQuick3DRenderPass(QQuick3DObject *parent = nullptr);
 
@@ -75,8 +84,10 @@ public:
     quint32 stencilClearValue() const;
     void setStencilClearValue(quint32 newStencilClearValue);
 
-    bool enableClearBuffers() const;
-    void setEnableClearBuffers(bool newEnableClearBuffers);
+    void markAllDirty() override { m_dirtyAttributes = AllDirty; }
+
+    RenderTargetFlags renderTargetFlags() const;
+    void setRenderTargetFlags(RenderTargetFlags newRenderTargetFlags);
 
 Q_SIGNALS:
     void outputChanged();
@@ -87,7 +98,7 @@ Q_SIGNALS:
     void passModeChanged();
     void depthClearValueChanged();
     void stencilClearValueChanged();
-    void enableClearBuffersChanged();
+    void renderTargetFlagsChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -129,7 +140,9 @@ private:
     PassMode m_passMode = UserPass;
     float m_depthClearValue = 1.0f;
     quint32 m_stencilClearValue = 0;
-    bool m_enableClearBuffers = true;
+    RenderTargetFlags m_renderTargetFlags = RenderTargetFlag::None;
+    quint8 m_commandCloneRetryCount = 0;
+    static constexpr quint8 MAX_COMMAND_CLONE_RETRIES = 2;
 };
 
 QT_END_NAMESPACE

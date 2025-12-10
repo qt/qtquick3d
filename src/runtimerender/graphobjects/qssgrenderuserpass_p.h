@@ -71,7 +71,7 @@ public:
 
     QString key;
     QColor clearColor = Qt::black;
-    bool clearBuffers = true;
+    QRhiTextureRenderTarget::Flags renderTargetFlags = {};
 
     // Material Mode
     MaterialModes materialMode = OriginalMaterial;

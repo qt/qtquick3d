@@ -243,6 +243,9 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
     if (QSSGRenderGraphObject::isTexture(itemPriv->type) && qobject_cast<QQuick3DTexture *>(resourceObject)->extensionDirty())
         dirtySecondPassResources.insert(resourceObject);
 
+    if (qobject_cast<QQuick3DRenderPass *>(resourceObject))
+        dirtySecondPassResources.insert(resourceObject);
+
     // resource nodes dont go in the tree, so we dont need to parent them
 }
 

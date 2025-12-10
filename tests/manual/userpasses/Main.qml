@@ -65,32 +65,12 @@ ApplicationWindow {
 
                 }
                 backgroundMode: SceneEnvironment.SkyBox
-                // effects: [
-                //     Effect {
-                //         id: justRenderTextureEffect
-                //         property TextureInput inputTexture: TextureInput {
-                //             enabled: true
-                //             texture: Texture {
-                //                 textureProvider: mainColorTextureProvider
-                //             }
-                //         }
-                //         passes: [
-                //             Pass {
-                //                 shaders: [
-                //                     Shader {
-                //                         stage: Shader.Fragment
-                //                         shader: "blitter.frag"
-                //                     }
-                //                 ]
-                //             }
-                //         ]
-                //     }
-                // ]
             }
+            // camera: cameraNode
 
             SimpleQuadRenderer {
                 texture: Texture {
-                    textureProvider: mainColorTextureProvider
+                    textureProvider: mainColorPassProvider
                 }
             }
 
@@ -107,92 +87,12 @@ ApplicationWindow {
                 format: RenderPassTexture.RGBA16F
             }
 
-            RenderOutputProvider {
-                id: mainColorTextureProvider
-                textureSource: RenderOutputProvider.UserPassTexture
-                renderPass: deferredLightingPass
-                attachmentSelector: RenderOutputProvider.Attachment0
-            }
+
 
             RenderPassTexture {
                 id: mainDepthStencilTexture
                 format: RenderPassTexture.Depth24Stencil8
             }
-
-
-            // RenderPass {
-            //     id: skyboxPass
-            //     passMode: RenderPass.SkyboxPass
-
-            //     commands: [
-            //         ColorAttachment {
-            //             target: mainColorTexture
-            //         },
-            //         DepthTextureAttachment {
-            //             target: mainDepthStencilTexture
-            //         }
-            //     ]
-            // }
-
-            // RenderOutputProvider {
-            //     id: skyboxTextureProvider
-            //     textureSource: RenderOutputProvider.UserPassTexture
-            //     renderPass: skyboxPass
-            //     attachmentSelector: RenderOutputProvider.Attachment0
-            // }
-
-            // RenderPass {
-            //     id: item2DPass
-            //     passMode: RenderPass.Item2DPass
-            //     clearColor: "transparent"
-
-            //     RenderPassTexture {
-            //         id: item2DTexture
-            //         format: RenderPassTexture.RGBA8
-            //     }
-            //     commands: [
-            //         ColorAttachment {
-            //             target: item2DTexture
-            //         },
-            //         DepthStencilAttachment { }
-            //     ]
-            // }
-
-            // RenderOutputProvider {
-            //     id: item2DTextureProvider
-            //     textureSource: RenderOutputProvider.UserPassTexture
-            //     renderPass: item2DPass
-            //     attachmentSelector: RenderOutputProvider.Attachment0
-            // }
-
-            // RenderPass {
-            //     id: infiniteGridPass
-            //     passMode: RenderPass.InfiniteGridPass
-
-            //     RenderPassTexture {
-            //         id: infiniteGridTexture
-            //         format: RenderPassTexture.RGBA8
-            //     }
-
-            //     commands: [
-            //         ColorAttachment {
-            //             target: infiniteGridTexture
-            //         },
-            //         DepthStencilAttachment { }
-            //     ]
-            // }
-
-            // RenderOutputProvider {
-            //     id: infiniteGridTextureProvider
-            //     textureSource: RenderOutputProvider.UserPassTexture
-            //     renderPass: infiniteGridPass
-            //     attachmentSelector: RenderOutputProvider.Attachment0
-            // }
-
-
-            // NormalRoughnessPass {
-            //     id: normalMapPass
-            // }
 
             Node {
                 id: originNode
@@ -266,26 +166,95 @@ ApplicationWindow {
             }
 
             RenderPass {
-                id: deferredLightingPass
-
-                readonly property Texture gbuffer0: Texture { textureProvider: gbuffer0Provider }
-                readonly property Texture gbuffer1: Texture { textureProvider: gbuffer1Provider }
-                readonly property Texture gbuffer2: Texture { textureProvider: gbuffer2Provider }
-
-                materialMode: RenderPass.OriginalMaterial
+                id: mainColorPass
+                clearColor: "black"
+                // Don't clear the depth texture
+                renderTargetFlags: RenderPass.RenderTargetFlags.PreserveDepthStencilContents
 
                 commands: [
-                    ColorAttachment { target: mainColorTexture },
-                    DepthStencilAttachment {},
-                    //DepthTextureAttachment { target: mainDepthStencilTexture },
-                    RenderablesFilter { layerMask: ContentLayer.Layer13 }
-                ]
+                    ColorAttachment {
+                        target: mainColorTexture
+                    },
+                    DepthTextureAttachment {
+                        target: mainDepthStencilTexture
+                    },
+                    RenderablesFilter {
+                        id: filter
+                        renderableTypes: RenderablesFilter.None // Don't render anything in this pass, only SubRenderPasses
+                    },
+                    SubRenderPass {
+                        renderPass: RenderPass {
+                            id: deferredLightingPass
 
+                            readonly property Texture gbuffer0: Texture { textureProvider: gbuffer0Provider }
+                            readonly property Texture gbuffer1: Texture { textureProvider: gbuffer1Provider }
+                            readonly property Texture gbuffer2: Texture { textureProvider: gbuffer2Provider }
+
+                            materialMode: RenderPass.OriginalMaterial
+
+                            commands: [
+                                PipelineStateOverride {
+                                    // We shouldn't write the quad into the depth buffer
+                                    depthWriteEnabled: false
+                                    depthTestEnabled: false
+                                },
+                                RenderablesFilter { layerMask: ContentLayer.Layer13 }
+                            ]
+                        }
+                    },
+                    SubRenderPass {
+                        renderPass: RenderPass {
+                            id: skyboxPass
+                            passMode: RenderPass.SkyboxPass
+                            commands: [
+                                PipelineStateOverride {
+                                    depthTestEnabled: true
+                                    depthWriteEnabled: false
+                                }
+                            ]
+                        }
+                    },
+                    SubRenderPass {
+                        renderPass: RenderPass {
+                            id: item2DPass
+                            passMode: RenderPass.Item2DPass
+                        }
+                    },
+                    SubRenderPass {
+                        renderPass: RenderPass {
+                            id: transparentItemPass
+                            materialMode: RenderPass.OriginalMaterial
+
+                            commands: [
+                                RenderablesFilter {
+                                    renderableTypes: RenderablesFilter.Transparent
+                                    layerMask: ContentLayer.Layer0 | ContentLayer.Layer1 | ContentLayer.Layer2 | ContentLayer.Layer4
+                                },
+                                PipelineStateOverride {
+                                    // Enable blending for transparent objects
+                                    blendEnabled: true
+                                    depthTestEnabled: true
+                                }
+
+                            ]
+                        }
+                    }
+                ]
             }
+
+            RenderOutputProvider {
+                id: mainColorPassProvider
+                textureSource: RenderOutputProvider.UserPassTexture
+                renderPass: mainColorPass
+                attachmentSelector: RenderOutputProvider.Attachment0
+            }
+
+
 
             GBufferPass {
                 id: gbufferPass
                 layerMask: ContentLayer.Layer0 | ContentLayer.Layer1 | ContentLayer.Layer2 | ContentLayer.Layer4
+                depthTexture: mainDepthStencilTexture
             }
 
 
@@ -310,83 +279,6 @@ ApplicationWindow {
                 renderPass: gbufferPass
                 attachmentSelector: RenderOutputProvider.Attachment2
             }
-
-
-            // // Quad
-            // Model {
-            //     id: quad
-            //     y: 250
-            //     x: -100
-            //     layers: ContentLayer.Layer1 // don't be included in the normal map generation itself
-            //     geometry: PlaneGeometry {
-            //         // Geometry of the plane should match the ratio of the View3D's size, so dynamically calculate the width
-            //         width: height * view3D.width / view3D.height
-            //         height: 200
-            //         plane: PlaneGeometry.XY
-            //     }
-            //     materials: [
-            //         PrincipledMaterial {
-            //             baseColorMap: Texture {
-            //                 flipV: true
-            //                 textureProvider: item2DTextureProvider
-            //             }
-            //             alphaMode: PrincipledMaterial.Blend
-
-            //             lighting: PrincipledMaterial.NoLighting
-            //         }
-            //     ]
-            // }
-
-            // // Quad
-            // Model {
-            //     id: quad2
-            //     y: 250
-            //     x: 100
-            //     z: 1
-            //     layers: ContentLayer.Layer2 // don't be included in the normal map generation itself
-            //     geometry: PlaneGeometry {
-            //         // Geometry of the plane should match the ratio of the View3D's size, so dynamically calculate the width
-            //         width: height * view3D.width / view3D.height
-            //         height: 200
-            //         plane: PlaneGeometry.XY
-            //     }
-            //     materials: [
-            //         PrincipledMaterial {
-            //             baseColorMap: Texture {
-            //                 flipV: true
-            //                 textureProvider: skyboxTextureProvider
-            //             }
-
-            //             lighting: PrincipledMaterial.NoLighting
-            //         }
-            //     ]
-            // }
-
-            // // Quad
-            // Model {
-            //     id: quad3
-            //     y: 350
-            //     z: 2
-            //     layers: ContentLayer.Layer2 // don't be included in the normal map generation itself
-            //     geometry: PlaneGeometry {
-            //         // Geometry of the plane should match the ratio of the View3D's size, so dynamically calculate the width
-            //         width: height * view3D.width / view3D.height
-            //         height: 200
-            //         plane: PlaneGeometry.XY
-            //     }
-            //     materials: [
-            //         PrincipledMaterial {
-            //             baseColorMap: Texture {
-            //                 flipV: true
-            //                 textureProvider: depthBufferTexture3
-            //             }
-            //             alphaMode: PrincipledMaterial.Blend
-
-            //             lighting: PrincipledMaterial.NoLighting
-            //         }
-            //     ]
-            // }
-
 
             // Random Donut
 
@@ -416,6 +308,28 @@ ApplicationWindow {
                     loops: Animation.Infinite
                     running: true
                 }
+            }
+
+            Model {
+                id: cone
+                layers: ContentLayer.Layer1
+                y: 100
+                x: 0
+                source: "#Cone"
+                // geometry: ConeGeometry {
+                //     topRadius: 0
+                //     bottomRadius: 50
+                //     // slices: 64
+                // }
+
+                materials: [
+                    PrincipledMaterial {
+                        baseColor: Qt.rgba(0.0, 1.0, 0.0, 0.5)
+                        alphaMode: PrincipledMaterial.Blend
+                        metalness: 0.0
+                        roughness: 0.5
+                    }
+                ]
             }
 
 

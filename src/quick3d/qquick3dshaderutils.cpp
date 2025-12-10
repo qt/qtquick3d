@@ -11,10 +11,16 @@
 #include "qquick3dcustommaterial_p.h"
 #include "qquick3deffect_p.h"
 #include "qquick3dtextureproviderextension.h"
+#include <ssg/qssgrenderextensions.h>
+#include <ssg/qquick3dextensionhelpers.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 
+#include <QtCore/QLoggingCategory>
+
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcSubRenderPass, "qt.quick3d.subrenderpass")
 
 /*!
     \qmltype Shader
@@ -976,7 +982,10 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
 
     The RenderablesFilter type is used to specify which renderables in the scene
     should be affected by a \l RenderPass. By setting the \c renderableTypes property,
-    you can control whether the pass affects Opaque or Transparent objects.
+    you can control whether the pass affects Opaque, Transparent, or no objects at all.
+
+    Setting \c renderableTypes to \c None is useful when a RenderPass acts as a container
+    for SubRenderPasses and should not render any objects itself.
 
     In addition to filtering by renderable types, you can also use the \l{RenderablesFilter::layerMask}{layerMask}
     to further refine which renderables are affected based on their assigned \l{QtQuick3D::Node::layers}{layers}.
@@ -993,8 +1002,13 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     \qmlproperty enumeration RenderablesFilter::renderableTypes
     Sets the types of renderables that the filter will affect.
 
-    \value RenderablesFilter.Opaque
-    \value RenderablesFilter.Transparent
+    \value RenderablesFilter.None No renderables will be rendered. Useful for container passes that only have SubRenderPasses.
+    \value RenderablesFilter.Opaque Only opaque renderables will be rendered.
+    \value RenderablesFilter.Transparent Only transparent renderables will be rendered.
+
+    \note Multiple values can be combined using the | operator.
+
+    \default RenderablesFilter.Opaque | RenderablesFilter.Transparent
 */
 QQuick3DShaderUtilsRenderablesFilter::RenderableTypes QQuick3DShaderUtilsRenderablesFilter::renderableTypes() const
 {
@@ -1824,6 +1838,78 @@ QQuick3DShaderUtilsRenderPassAddDefine::~QQuick3DShaderUtilsRenderPassAddDefine(
 QSSGCommand *QQuick3DShaderUtilsRenderPassAddDefine::cloneCommand() {
     QSSGAddShaderDefine *cmd = new QSSGAddShaderDefine(command);
     return cmd;
+}
+
+QQuick3DShaderUtilsSubRenderPass::~QQuick3DShaderUtilsSubRenderPass()
+{
+
+}
+
+QSSGCommand *QQuick3DShaderUtilsSubRenderPass::cloneCommand()
+{
+    QSSGSubRenderPass *cmd = nullptr;
+
+    if (!m_renderPass) {
+        if (!m_hasWarnedAboutInvalidId) {
+            qCWarning(lcSubRenderPass, "SubRenderPass: No render pass specified. Set the 'renderPass' property.");
+            m_hasWarnedAboutInvalidId = true;
+        }
+        return nullptr;
+    }
+
+    QSSGResourceId userPassId = QQuick3DExtensionHelpers::getResourceId(*m_renderPass);
+    // Ensure we have a valid resource id before continuing.
+    if (userPassId != QSSGResourceId::Invalid) {
+        cmd = new QSSGSubRenderPass();
+        cmd->setSubPass(userPassId);
+        // Reset warning flag on success
+        m_hasWarnedAboutInvalidId = false;
+    } else {
+        // Resource ID is not ready yet - this is expected during initialization
+        qCDebug(lcSubRenderPass, "SubRenderPass: Render pass resource ID not yet available, will retry.");
+        update();
+    }
+
+    return cmd;
+}
+
+QSSGRenderGraphObject *QQuick3DShaderUtilsSubRenderPass::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    return node;
+}
+
+void QQuick3DShaderUtilsSubRenderPass::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    if (change == QQuick3DObject::ItemSceneChange)
+        updateSceneManager(value.sceneManager);
+}
+
+void QQuick3DShaderUtilsSubRenderPass::updateSceneManager(QQuick3DSceneManager *sceneManager)
+{
+    if (sceneManager)
+        QQuick3DObjectPrivate::refSceneManager(m_renderPass, *sceneManager);
+    else
+        QQuick3DObjectPrivate::derefSceneManager(m_renderPass);
+}
+
+QQuick3DRenderPass *QQuick3DShaderUtilsSubRenderPass::renderPass() const
+{
+    return m_renderPass;
+}
+
+void QQuick3DShaderUtilsSubRenderPass::setRenderPass(QQuick3DRenderPass *newRenderPass)
+{
+    if (m_renderPass == newRenderPass)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DShaderUtilsSubRenderPass::setRenderPass, newRenderPass, m_renderPass);
+
+    if (newRenderPass)
+        newRenderPass->update();
+
+    m_renderPass = newRenderPass;
+    m_hasWarnedAboutInvalidId = false; // Reset warning flag when property changes
+    emit renderPassChanged();
 }
 
 /*!
