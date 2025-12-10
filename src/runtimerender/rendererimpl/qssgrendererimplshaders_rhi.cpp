@@ -133,9 +133,21 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiTemporalAAShader()
     return getBuiltinRhiShader(QByteArrayLiteral("temporalaa"), m_cache.temporalAARhiShader);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSimpleQuadShader(int viewCount)
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSimpleQuadShader(int viewCount, QSSGRenderLayer::TonemapMode tonemapMode)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("simplequad"), m_cache.simpleQuadRhiShader, viewCount);
+    static constexpr char variant[][22] = {
+        "simplequad",
+        "simplequad_linear",
+        "simplequad_aces",
+        "simplequad_hejldawson",
+        "simplequad_filmic",
+    };
+
+    if (tonemapMode == QSSGRenderLayer::TonemapMode::Custom)
+        tonemapMode = QSSGRenderLayer::TonemapMode::None;
+
+    const size_t index = qMin(size_t(tonemapMode), std::size(variant) - 1);
+    return getBuiltinRhiShader(QByteArray(variant[index]), m_cache.simpleQuadRhiShader, viewCount);
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode)

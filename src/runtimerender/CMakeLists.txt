@@ -245,8 +245,89 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_pertarget"
         res/rhishaders/progressiveaa.frag
         res/rhishaders/temporalaa.vert
         res/rhishaders/temporalaa.frag
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_simplequad_none"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    PERTARGETCOMPILE
+    PREFIX
+        "/"
+    FILES
         res/rhishaders/simplequad.vert
         res/rhishaders/simplequad.frag
+    OUTPUTS
+        res/rhishaders/simplequad.vert.qsb
+        res/rhishaders/simplequad.frag.qsb
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_simplequad_linear"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    PERTARGETCOMPILE
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/simplequad.vert
+        res/rhishaders/simplequad.frag
+    OUTPUTS
+        res/rhishaders/simplequad_linear.vert.qsb
+        res/rhishaders/simplequad_linear.frag.qsb
+    DEFINES
+        QSSG_ENABLE_LINEAR_TONEMAPPING=1
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_simplequad_aces"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    PERTARGETCOMPILE
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/simplequad.vert
+        res/rhishaders/simplequad.frag
+    OUTPUTS
+        res/rhishaders/simplequad_aces.vert.qsb
+        res/rhishaders/simplequad_aces.frag.qsb
+    DEFINES
+        QSSG_ENABLE_ACES_TONEMAPPING=1
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_simplequad_hejldawson"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    PERTARGETCOMPILE
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/simplequad.vert
+        res/rhishaders/simplequad.frag
+    OUTPUTS
+        res/rhishaders/simplequad_hejldawson.vert.qsb
+        res/rhishaders/simplequad_hejldawson.frag.qsb
+    DEFINES
+        QSSG_ENABLE_HEJLDAWSON_TONEMAPPING=1
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_simplequad_filmic"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    PERTARGETCOMPILE
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/simplequad.vert
+        res/rhishaders/simplequad.frag
+    OUTPUTS
+        res/rhishaders/simplequad_filmic.vert.qsb
+        res/rhishaders/simplequad_filmic.frag.qsb
+    DEFINES
+        QSSG_ENABLE_FILMIC_TONEMAPPING=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_pertarget"
     SILENT
