@@ -89,7 +89,9 @@ ApplicationWindow {
             }
 
             SimpleQuadRenderer {
-                texture: mainColorTexture
+                texture: Texture {
+                    textureProvider: mainColorTextureProvider
+                }
             }
 
             // Render Path:

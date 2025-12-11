@@ -31,7 +31,9 @@ ApplicationWindow {
 
         //! [main texture]
         SimpleQuadRenderer {
-            texture: mainColorTexture
+            texture: Texture {
+                textureProvider: mainColorTextureProvider
+            }
         }
 
         RenderPassTexture {
