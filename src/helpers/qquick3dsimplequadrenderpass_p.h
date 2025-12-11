@@ -25,8 +25,8 @@ class QQuick3DSimpleQuadRenderer : public QQuick3DRenderExtension
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DShaderUtilsRenderPassTexture *texture READ texture WRITE setTexture NOTIFY textureChanged FINAL)
-
     QML_NAMED_ELEMENT(SimpleQuadRenderer)
+    QML_ADDED_IN_VERSION(6, 11)
 public:
     QQuick3DSimpleQuadRenderer();
     QQuick3DShaderUtilsRenderPassTexture *texture() const;
