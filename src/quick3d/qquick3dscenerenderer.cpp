@@ -781,11 +781,23 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     if (newRenderStats)
         m_renderStats->setRhiContext(rhiCtx, m_layer);
 
-    // Handle texture provider extensions
-    if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm && sm->textureExtensionsDirty) {
-        m_layer->renderExtensions[size_t(QSSGRenderLayer::RenderExtensionStage::TextureProviders)] = sm->textureProviderExtensions;
-        sm->textureExtensionsDirty = false;
-    }
+    static const auto getStageIndex = [](const QSSGRenderExtension &ext) -> size_t {
+        const QSSGRenderExtension::RenderMode mode = ext.mode();
+        const QSSGRenderExtension::RenderStage stage = ext.stage();
+        // If the mode is 'Standalone' then the stage is irrelevant and we put the
+        // extension in the 'TextureProvider' list.
+        if (mode == QSSGRenderExtension::RenderMode::Standalone)
+            return size_t(QSSGRenderLayer::RenderExtensionStage::TextureProviders);
+
+        switch (stage) {
+        case QSSGRenderExtension::RenderStage::PreColor:
+            return size_t(QSSGRenderLayer::RenderExtensionStage::Overlay);
+        case QSSGRenderExtension::RenderStage::PostColor:
+            return size_t(QSSGRenderLayer::RenderExtensionStage::Underlay);
+        }
+
+        Q_UNREACHABLE_RETURN(size_t(QSSGRenderLayer::RenderExtensionStage::Underlay));
+    };
 
     // if the list is dirty we rebuild (assumption is that this won't happen frequently).
     if ((requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::ExtensionsDiry) || view3D->extensionListDirty()) {
@@ -801,9 +813,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             if (QSSGRenderGraphObject::isExtension(type)) {
                 if (type == QSSGRenderGraphObject::Type::RenderExtension) {
                     if (auto *renderExt = qobject_cast<QQuick3DRenderExtension *>(ext)) {
-                        if (QQuick3DObjectPrivate::get(renderExt)->spatialNode) {
-                            const auto stage = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)->stage();
-                            QSSG_ASSERT(size_t(stage) < std::size(m_layer->renderExtensions), continue);
+                        if (QSSGRenderExtension *ssgExt = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)) {
+                            const auto stage =  getStageIndex(*ssgExt);
                             auto &list = m_layer->renderExtensions[size_t(stage)];
                             bfs(qobject_cast<QQuick3DRenderExtension *>(ext), list);
                         }
@@ -817,7 +828,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm && sm->autoRegisteredExtensionsDirty) {
         for (QSSGRenderExtension *ae : std::as_const(sm->autoRegisteredExtensions))
-            m_layer->renderExtensions[size_t(ae->stage())].push_back(ae);
+            m_layer->renderExtensions[getStageIndex(*ae)].push_back(ae);
         sm->autoRegisteredExtensionsDirty = false;
     }
 

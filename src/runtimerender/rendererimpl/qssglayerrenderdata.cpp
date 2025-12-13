@@ -2635,19 +2635,6 @@ void QSSGLayerRenderData::prepareForRender()
         prepareLights(renderableParticles);
     }
 
-    // Insert the texture provider extensions first
-    // Texture extensions are added to the render extensions list
-    {
-        auto &preColorPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionStage::Underlay)];
-        for (auto *o : std::as_const(layer.textureProviders)) {
-            auto *textureProviderExt = static_cast<QSSGRenderTextureProviderExtension *>(o);
-            if (textureProviderExt->prepareData(frameData)) {
-                wasDirty |= true;
-                preColorPass.extensions.push_back(textureProviderExt);
-            }
-        }
-    }
-
     {
         // Give user provided passes a chance to modify the renderable data before starting
         // Note: All non-active extensions should be filtered out by now
@@ -2959,9 +2946,6 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer 
 
 QSSGLayerRenderData::~QSSGLayerRenderData()
 {
-    for (auto &pass : activePasses)
-        pass->resetForFrame();
-
     for (auto &renderResult : renderResults)
         renderResult.reset();
     oitRenderContext.reset();
