@@ -26,7 +26,7 @@ namespace QSSGRenderGraphObjectUtils {
 
 enum class InternalFlags : quint32
 {
-    AutoRegisterExtension = 0x100001,
+    AutoRegisterExtension = 0x10000,
 };
 
 constexpr QSSGResourceId getResourceId(const QSSGRenderGraphObject &o)
