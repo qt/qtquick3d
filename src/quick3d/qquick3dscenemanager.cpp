@@ -385,12 +385,8 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::cleanupNodes()
         // So build another queue for graphics assets marked for removal
         if (node->hasGraphicsResources()) {
             wattached->queueForCleanup(node);
-            if (node->type == QSSGRenderGraphObject::Type::ResourceLoader) {
+            if (node->type == QSSGRenderGraphObject::Type::ResourceLoader)
                 resourceLoaders.remove(node);
-            } else if (QSSGRenderGraphObjectUtils::isTextureProvider(node->type)) {
-                textureProviderExtensions.removeAll(node);
-                textureExtensionsDirty = true;
-            }
         } else {
             delete node;
         }
@@ -480,15 +476,7 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateExtensions(QQuick3D
         if (po->spatialNode)
             m_nodeMap.insert(po->spatialNode, extension);
 
-        // We need to keep track of texture provider extensions, so we can
-        // update the textures when the extension changes.
-        if (QSSGRenderGraphObjectUtils::isTextureProvider(po->type) && backendNodeChanged) {
-            const bool shouldInsert = newNode && (textureProviderExtensions.indexOf(newNode) == -1);
-            if (shouldInsert) {
-                textureProviderExtensions.push_back(static_cast<QSSGRenderExtension *>(newNode));
-                textureExtensionsDirty = true;
-            }
-        } else if (newNode && QSSGRenderGraphObjectUtils::hasInternalFlag(*newNode, QSSGRenderGraphObjectUtils::InternalFlags::AutoRegisterExtension)) {
+        if (newNode && QSSGRenderGraphObjectUtils::hasInternalFlag(*newNode, QSSGRenderGraphObjectUtils::InternalFlags::AutoRegisterExtension)) {
             const bool shouldInsert = autoRegisteredExtensions.indexOf(static_cast<QSSGRenderExtension *>(newNode)) == -1;
             if (shouldInsert) {
                 autoRegisteredExtensions.push_back(static_cast<QSSGRenderExtension *>(newNode));

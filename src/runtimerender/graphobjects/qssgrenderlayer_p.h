@@ -271,7 +271,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     } fog;
 
     QVector<QSSGRenderGraphObject *> resourceLoaders;
-    QSet<QSSGRenderGraphObject *> textureProviders;
 
     MaterialDebugMode debugMode = MaterialDebugMode::None;
 

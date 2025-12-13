@@ -275,6 +275,8 @@ QSSGRenderExtension::~QSSGRenderExtension()
 
     \value PreColor The rendering code is recorded and executed before the main (color) pass.
     \value PostColor The rendering code is recorded and executed after the main (color) pass.
+
+    \note The \l RenderStage is only relevant when the \l RenderMode is set to \l {RenderMode::Main}{Main}.
 */
 
 
@@ -362,9 +364,8 @@ QSSGRenderExtension::RenderStage QSSGRenderExtension::stage() const
     \sa QQuick3DTextureProviderExtension
 */
 
-
 QSSGRenderTextureProviderExtension::QSSGRenderTextureProviderExtension()
-    : QSSGRenderExtension(QSSGRenderGraphObject::Type::TextureProvider, FlagT(Flags::HasGraphicsResources))
+    : QSSGRenderExtension(QSSGRenderGraphObject::Type::TextureProvider, FlagT(Flags::HasGraphicsResources) | FlagT(QSSGRenderGraphObjectUtils::InternalFlags::AutoRegisterExtension))
 {
 
 }
