@@ -1631,6 +1631,7 @@ void QQuick3DSceneEnvironment::setFog(QQuick3DFog *fog)
     Possible values are:
     \value SceneEnvironment.OITNone OIT is turned off.
     \value SceneEnvironment.OITWeightedBlended Approximates order independent transparency.
+    \value SceneEnvironment.OITLinkedList Accurate order independent transparency.
 
     The default is \c None and order independent transparency is turned off.
 
@@ -1642,6 +1643,13 @@ void QQuick3DSceneEnvironment::setFog(QQuick3DFog *fog)
     each pixel. This method doesn't follow the source-over composition rule for all fragments
     and the result is different from the correct result, however this method works also on
     older hardware and is faster than the other more rigorous methods.
+
+    \b Linked List
+
+    This is an accurate order independent transparency. The transparent fragments are
+    rendered to a linked list in the render pass and sorted by their depth and blended
+    in the composition pass.
+    \since 6.11
 
     \note OIT might not work with MSAA on devices with GLES 3.1 or lower. It is recommended
     not to use MSAA if oit is wanted on such devices.
