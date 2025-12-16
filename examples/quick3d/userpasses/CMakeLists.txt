@@ -4,9 +4,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(userpasses LANGUAGES CXX)
 
-qt_standard_project_setup(REQUIRES 6.8)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
+
+qt_standard_project_setup(REQUIRES 6.11)
 
 qt_add_executable(userpasses
     main.cpp
