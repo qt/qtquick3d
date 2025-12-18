@@ -12,7 +12,7 @@ set_property(CACHE INPUT_openxr PROPERTY STRINGS undefined no qt system)
 if(MACOS)
     set(openxr_version 1.1.40)
 else()
-    set(openxr_version 1.1.29)
+    set(openxr_version 1.0.29)
 endif()
 
 qt_find_package(WrapSystemOpenXR ${openxr_version}
