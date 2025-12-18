@@ -97,8 +97,11 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
         cb->debugMarkBegin("Quick3D lightmap baking/denoising");
 
         d->currentStatus = Status::Baking;
-        d->localThreadPool.start([this, callbacks, settings] {
+
+        const auto bakeTask = [this, callbacks, settings] {
+#if QT_CONFIG(thread)
             QThread::currentThread()->setPriority(QThread::HighestPriority);
+#endif // QT_CONFIG(thread)
             d->lightmapper->run(d->fallbackSurface);
 
             callbacks.setCurrentlyBaking(false);
@@ -111,8 +114,7 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
                 d->fallbackSurface = nullptr;
                 d->currentStatus = Status::Finished;
                 d->waitingForInvoke = false;
-            },
-            Qt::QueuedConnection);
+            }, Qt::QueuedConnection);
 #else
             d->currentStatus = Status::Finished;
 #endif
@@ -120,7 +122,13 @@ QSSGLightmapBaker::Status QSSGLightmapBaker::process()
                 qDebug("Lightmap baking/denoising done, exiting application");
                 QMetaObject::invokeMethod(qApp, "quit");
             }
-        });
+        };
+
+#if QT_CONFIG(thread)
+        d->localThreadPool.start(bakeTask);
+#else
+        bakeTask();
+#endif // QT_CONFIG(thread)
 
         // Wait until lightmapper is finished initializing
         d->lightmapper->waitForInit();

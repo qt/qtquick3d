@@ -244,6 +244,8 @@ QSSGGlobalRenderNodeData::QSSGGlobalRenderNodeData(QSSGRenderRoot *root)
 #if QT_CONFIG(thread)
     : m_threadPool(new QThreadPool)
     , m_rootNode(root)
+#else
+    : m_rootNode(root)
 #endif // QT_CONFIG(thread)
 {
 
