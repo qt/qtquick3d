@@ -202,7 +202,10 @@ private:
 
 void QQuick3DXrManagerPrivate::setErrorString(XrResult result, const char *callName)
 {
-    m_errorString = QObject::tr("%1 for runtime %2 %3 failed with %4.")
+    if (m_runtimeName.isEmpty())
+        m_errorString = QObject::tr("%1 failed: no OpenXR runtime found").arg(QLatin1StringView(callName));
+    else
+        m_errorString = QObject::tr("%1 for runtime %2 %3 failed with %4.")
                             .arg(QLatin1StringView(callName),
                                  m_runtimeName,
                                  m_runtimeVersion.toString(),
