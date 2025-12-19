@@ -67,7 +67,12 @@ public:
 
     virtual void prepareRender(QSSGFrameData &data) final
     {
-        Q_UNUSED(data);
+        if (renderImage.m_texture) {
+            const auto &rhiCtx = data.contextInterface()->rhiContext();
+            const auto &renderer = data.contextInterface()->renderer();
+            QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+            renderer->rhiQuadRenderer()->prepareQuad(rhiCtx.get(), rub);
+        }
     }
 
     virtual void render(QSSGFrameData &data) final
