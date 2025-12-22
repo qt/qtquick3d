@@ -7,6 +7,7 @@
 
 \title qt_add_materials
 \keyword qt6_add_materials
+\deprecated
 
 \summary {Generates shaders from files, adding them as Qt resources.}
 

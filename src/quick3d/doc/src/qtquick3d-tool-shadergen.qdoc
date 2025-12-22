@@ -5,13 +5,15 @@
 \page qtquick3d-tool-shadergen.html
 \title Shadergen Tool
 \brief Command line tool for generating Qt Quick 3D material shaders at build-time.
+\deprecated
 
 The shadergen tool is a command line application that is part of Qt Quick 3D's
 asset conditioning pipeline. It can be enable per project or run manually from the command line.
 Pre-generating the material shaders can have a significant impact on the start-up time and/or avoid
 unwanted stalls at run-time, as the processes of creating a material shader at run-time can be costly.
 
-\note This tool is experimental and under development, but most common use-cases should work already.
+\note This tool was experimental and has now been deprecated. Pre-existing functionality will remain
+as-is, but no new features or fixes will be added.
 
 One of the biggest obstacles for the offline shader generator is the amount of different materials
 that can be generated, not only based on the material properties themeself but also how the rest of

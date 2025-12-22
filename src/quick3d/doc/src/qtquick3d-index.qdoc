@@ -72,7 +72,6 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Anti-Aliasing Best Practices}
     \li \l{Qt Quick 3D Scenes with 2D Content}
     \li \l{Programmable Materials, Effects, Geometry, and Texture data}
-    \li \l{Shadergen Tool}{Build-time materials}
     \li \l{Vertex Skinning}{Skeletal Animation}
     \li \l{Morphing Animation}{Morphing Animation}
     \li \l{Instanced Rendering}{Instanced Rendering}

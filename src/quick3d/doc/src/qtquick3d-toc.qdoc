@@ -26,7 +26,6 @@
     \li \l {Anti-Aliasing Best Practices}{Antialiasing best practices}
     \li \l {Qt Quick 3D Introduction with glTF Assets}
 \omit the topic is empty    \li \l {Qt Quick 3D Asset Conditioning}\endomit
-    \li \l {Shadergen Tool}{Build-time materials}
     \li \l {Vertex Skinning}{Skeletal animation}
     \li \l {Morphing Animation}
     \li \l {Instanced Rendering}
