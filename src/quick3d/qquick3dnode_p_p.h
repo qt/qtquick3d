@@ -20,6 +20,7 @@
 
 #include "qquick3dobject_p.h"
 #include "qquick3dnode_p.h"
+#include "qquick3dcontentlayer_p.h"
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
