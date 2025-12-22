@@ -62,6 +62,7 @@ qt_internal_add_module(Quick3D
         qquick3dspecularglossymaterial.cpp qquick3dspecularglossymaterial_p.h
         qquick3dfog.cpp qquick3dfog_p.h
         qquick3dlightmapbaker.cpp qquick3dlightmapbaker_p.h
+        qquick3dcontentlayer.cpp qquick3dcontentlayer_p.h
         extensions/qquick3drenderextensions.cpp extensions/qquick3drenderextensions.h
         extensions/qquick3dextensionhelpers.cpp extensions/qquick3dextensionhelpers.h
         extensions/qquick3dtextureproviderextension.cpp extensions/qquick3dtextureproviderextension.h extensions/qquick3dtextureproviderextension_p.h
