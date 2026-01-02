@@ -3758,6 +3758,7 @@ bool RenderHelpers::rhiPrepareMotionVectorTexture(QSSGRhiContext *rhiCtx,
 void RenderHelpers::rhiPrepareMotionVectorRenderable(QSSGRhiContext *rhiCtx,
                                                      QSSGPassKey passKey,
                                                      const QSSGLayerRenderData &inData,
+                                                     const QMatrix4x4 &viewProjection,
                                                      QSSGRenderableObject &inObject,
                                                      QRhiRenderPassDescriptor *renderPassDescriptor,
                                                      QSSGRhiGraphicsPipelineState *ps,
@@ -3793,19 +3794,36 @@ void RenderHelpers::rhiPrepareMotionVectorRenderable(QSSGRhiContext *rhiCtx,
         boneTextureData = &modelNode.skeleton->boneTexData;
 
     QMatrix4x4 modelViewProjection = subsetRenderable.modelContext.modelViewProjections[0];
-    auto motionData = motionVectorMapManager.trackMotionData(&modelNode, modelViewProjection, boneTextureData,
-                                                           modelNode.instanceTable,
-                                                           modelNode.morphWeights);
+    QMatrix4x4 instanceLocal;
+    QMatrix4x4 instanceGlobal;
+
+    if (instance) {
+        instanceLocal = inData.getInstanceTransforms(modelNode).local;
+        instanceGlobal = inData.getInstanceTransforms(modelNode).global;
+        if (!skin)
+            modelViewProjection = viewProjection;
+    }
+    auto motionData = motionVectorMapManager.trackMotionData(&modelNode,
+                                                             modelViewProjection,
+                                                             instanceLocal,
+                                                             instanceGlobal,
+                                                             boneTextureData,
+                                                             modelNode.instanceTable,
+                                                             modelNode.morphWeights);
     float velocityAmount = subsetRenderable.modelContext.model.motionVectorScale;
     int morphTargetCount = modelNode.morphWeights.count();
 
     // mat4 mvp;                    // 64
     // mat4 prevMVP;                // 64
+    // mat4 instanceLocal;          // 64
+    // mat4 instanceGlobal;         // 64
+    // mat4 prevInstanceLocal;      // 64
+    // mat4 prevInstanceGlobal;     // 64
     // vec4 currentAndLastJitter;   // 16
     // float velocityAmount;        // 4
     // int morphTargetCount;        // 4
     // vec2 padding;                // 8
-    const int ubufSize = 160;
+    const int ubufSize = 416;
 
     if (!dcd.ubuf) {
         dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic,
@@ -3819,6 +3837,14 @@ void RenderHelpers::rhiPrepareMotionVectorRenderable(QSSGRhiContext *rhiCtx,
     memcpy(ubufData, modelViewProjection.constData(), 64);
     ubufOffset += 64;
     memcpy(ubufData + ubufOffset, motionData.prevModelViewProjection.constData(), 64);
+    ubufOffset += 64;
+    memcpy(ubufData + ubufOffset, instanceLocal.constData(), 64);
+    ubufOffset += 64;
+    memcpy(ubufData + ubufOffset, instanceGlobal.constData(), 64);
+    ubufOffset += 64;
+    memcpy(ubufData + ubufOffset, motionData.prevInstanceLocal.constData(), 64);
+    ubufOffset += 64;
+    memcpy(ubufData + ubufOffset, motionData.prevInstanceGlobal.constData(), 64);
     ubufOffset += 64;
     memcpy(ubufData + ubufOffset, &inData.layer.currentAndLastJitter, 16);
     ubufOffset += 16;
