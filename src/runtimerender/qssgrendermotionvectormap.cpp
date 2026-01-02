@@ -84,6 +84,8 @@ QSSGRenderImageTexture QSSGRenderMotionVectorMap::loadAndReleaseIfNeeded(const s
 QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMotionData(
         const void *modelKey,
         const QMatrix4x4 &currentModelViewProjection,
+        const QMatrix4x4 &currentInstanceLocal,
+        const QMatrix4x4 &currentInstanceGlobal,
         QSSGRenderTextureData *currentBoneTextureData,
         QSSGRenderInstanceTable *currentInstanceTable,
         const QVector<float> &currentMorphWeights)
@@ -93,6 +95,9 @@ QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMoti
     if (lastFrameDataIterator == m_cache.end()) {
         MotionStoreData dataToStore;
         dataToStore.prevModelViewProjection = currentModelViewProjection;
+        dataToStore.prevInstanceLocal = currentInstanceLocal;
+        dataToStore.prevInstanceGlobal = currentInstanceGlobal;
+
         dataToStore.frameAge = 0;
 
         if (currentBoneTextureData) {
@@ -118,13 +123,19 @@ QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMoti
         }
 
         m_cache[modelKey] = dataToStore;
-        return { currentModelViewProjection, QSSGRenderImageTexture(), QSSGRenderImageTexture(), QSSGRenderImageTexture(), QSSGRenderImageTexture() };
+        return { currentModelViewProjection, currentInstanceLocal, currentInstanceGlobal, QSSGRenderImageTexture(), QSSGRenderImageTexture(), QSSGRenderImageTexture(), QSSGRenderImageTexture() };
     }
 
     MotionResultData motionResult;
 
     motionResult.prevModelViewProjection = lastFrameDataIterator->prevModelViewProjection;
     lastFrameDataIterator->prevModelViewProjection = currentModelViewProjection;
+
+    motionResult.prevInstanceLocal = lastFrameDataIterator->prevInstanceLocal;
+    lastFrameDataIterator->prevInstanceLocal = currentInstanceLocal;
+
+    motionResult.prevInstanceGlobal = lastFrameDataIterator->prevInstanceGlobal;
+    lastFrameDataIterator->prevInstanceGlobal = currentInstanceGlobal;
 
     motionResult.prevBoneTexture = loadAndReleaseIfNeeded(
             lastFrameDataIterator->prevBoneTextureData,

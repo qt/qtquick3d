@@ -60,6 +60,11 @@ void MotionVectorMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData
 
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
     camera = data.renderedCameras[0];
+    QMatrix4x4 viewProjection(Qt::Uninitialized);
+    QMatrix4x4 cameraGlobalTransform(Qt::Uninitialized);
+    cameraGlobalTransform = data.getGlobalTransform(*camera);
+    data.renderedCameras[0]->calculateViewProjectionMatrix(cameraGlobalTransform, viewProjection);
+
     const auto &layerPrepResult = data.layerPrepResult;
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
 
@@ -104,6 +109,7 @@ void MotionVectorMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData
                     rhiPrepareMotionVectorRenderable(rhiCtx.get(),
                                                      this,
                                                      data,
+                                                     viewProjection,
                                                      *handle.obj,
                                                      rhiMotionVectorTexture->rpDesc,
                                                      &tempPs,

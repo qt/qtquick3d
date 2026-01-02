@@ -71,6 +71,10 @@ layout (location = 1) out vec4 vPrevPosition;
 layout (std140, binding = 0) uniform buf {
     mat4 mvp;
     mat4 prevMVP;
+    mat4 instanceLocal;
+    mat4 instanceGlobal;
+    mat4 prevInstanceLocal;
+    mat4 prevInstanceGlobal;
     vec4 currentAndLastJitter;
     float velocityAmount;
     int morphTargetCount;
@@ -146,14 +150,6 @@ void main()
     vpPre = qt_getTargetValue(vpPre, 0, qt_morphTargetTexture, lastMorphWeightTexture);
 #endif
 
-#ifdef QSSG_SKIN
-    if (attr_weights != vec4(0.0)) {
-        mat4 skinMat = getSkinMatrix(attr_joints, attr_weights, qt_boneTexture);
-        vp = skinMat * vp;
-        mat4 lastSkinMat = getSkinMatrix(attr_joints, attr_weights, lastBoneTexture);
-        vpPre = lastSkinMat * vpPre;
-    }
-#endif
 
 #ifdef QSSG_INSTANCE
     mat4 instanceMat = transpose(mat4(qt_instanceTransform0,
@@ -161,8 +157,26 @@ void main()
                                          qt_instanceTransform2,
                                          vec4(0.0, 0.0, 0.0, 1.0)));
     mat4 lastInstanceMat = getTexMatrix(gl_InstanceIndex, lastInstanceTexture);
-    vpPre = lastInstanceMat * vpPre;
-    vp = instanceMat * vp;
+
+    instanceMat = ubuf.instanceGlobal * instanceMat;
+    lastInstanceMat = ubuf.prevInstanceGlobal * lastInstanceMat;
+
+#ifndef QSSG_SKIN
+    instanceMat *= ubuf.instanceLocal;
+    lastInstanceMat *= ubuf.prevInstanceLocal;
+#endif
+
+    vpPre = instanceMat * vpPre;
+    vp = lastInstanceMat * vp;
+#endif
+
+#ifdef QSSG_SKIN
+    if (attr_weights != vec4(0.0)) {
+        mat4 skinMat = getSkinMatrix(attr_joints, attr_weights, qt_boneTexture);
+        vp = skinMat * vp;
+        mat4 lastSkinMat = getSkinMatrix(attr_joints, attr_weights, lastBoneTexture);
+        vpPre = lastSkinMat * vpPre;
+    }
 #endif
 
     gl_Position = vPosition = ubuf.mvp * vp;

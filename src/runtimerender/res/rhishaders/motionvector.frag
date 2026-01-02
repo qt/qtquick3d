@@ -10,6 +10,10 @@ layout (location = 0) out vec4 fragColor;
 layout (std140, binding = 0) uniform buf {
     mat4 mvp;
     mat4 prevMVP;
+    mat4 instanceLocal;
+    mat4 instanceGlobal;
+    mat4 prevInstanceLocal;
+    mat4 prevInstanceGlobal;
     vec4 currentAndLastJitter;
     float velocityAmount;
     int morphTargetCount;

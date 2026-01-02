@@ -37,6 +37,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderMotionVectorMap
 public:
     struct MotionResultData {
         QMatrix4x4 prevModelViewProjection;
+        QMatrix4x4 prevInstanceLocal;
+        QMatrix4x4 prevInstanceGlobal;
         QSSGRenderImageTexture prevBoneTexture;
         QSSGRenderImageTexture prevInstanceTexture;
         QSSGRenderImageTexture currentMorphWeightTexture;
@@ -48,16 +50,20 @@ public:
 
     void endFrame();
     MotionResultData trackMotionData(const void *modelKey,
-                                      const QMatrix4x4 &currentModelViewProjection,
-                                      QSSGRenderTextureData *currentBoneTextureData,
-                                      QSSGRenderInstanceTable *currentInstanceTable,
-                                      const QVector<float> &currentMorphWeights);
+                                     const QMatrix4x4 &currentModelViewProjection,
+                                     const QMatrix4x4 &currentInstanceLocal,
+                                     const QMatrix4x4 &currentInstanceGlobal,
+                                     QSSGRenderTextureData *currentBoneTextureData,
+                                     QSSGRenderInstanceTable *currentInstanceTable,
+                                     const QVector<float> &currentMorphWeights);
 
     void releaseCachedResources();
 
 private:
     struct MotionStoreData {
         QMatrix4x4 prevModelViewProjection;
+        QMatrix4x4 prevInstanceLocal;
+        QMatrix4x4 prevInstanceGlobal;
         std::shared_ptr<QSSGRenderTextureData> prevBoneTextureData;
         std::shared_ptr<QSSGRenderTextureData> prevInstanceTextureData;
         std::shared_ptr<QSSGRenderTextureData> currentMorphWeightTextureData;
