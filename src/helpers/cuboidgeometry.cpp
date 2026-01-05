@@ -280,6 +280,7 @@ void CuboidGeometry::updateGeometry(const GeometryData &geometryData)
         Q_EMIT statusChanged();
     }
     update();
+    emit geometryChanged();
 }
 
 CuboidGeometry::GeometryData CuboidGeometry::generateCuboidGeometry(float xExtent, float yExtent, float zExtent, QSize yzMeshResolution, QSize xzMeshResolution, QSize xyMeshResolution)

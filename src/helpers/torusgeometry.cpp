@@ -234,6 +234,7 @@ void TorusGeometry::updateGeometry(const GeometryData &geometryData)
         Q_EMIT statusChanged();
     }
     update();
+    emit geometryChanged();
 }
 
 const size_t FLOAT_SIZE = sizeof(float);

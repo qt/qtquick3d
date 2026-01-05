@@ -408,6 +408,7 @@ void CylinderGeometry::updateGeometry(const GeometryData &geometryData)
         Q_EMIT statusChanged();
     }
     update();
+    emit geometryChanged();
 }
 
 CylinderGeometry::GeometryData CylinderGeometry::generateCylinderGeometry(float radius, float length, int rings, int slices)

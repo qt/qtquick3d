@@ -213,6 +213,7 @@ void SphereGeometry::updateGeometry(const GeometryData &geometryData)
         Q_EMIT statusChanged();
     }
     update();
+    emit geometryChanged();
 }
 
 SphereGeometry::GeometryData SphereGeometry::generateSphereGeometry(float radius, int rings, int segments)
