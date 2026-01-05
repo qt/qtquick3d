@@ -454,6 +454,7 @@ void ConeGeometry::updateGeometry(const GeometryData &geometryData)
         Q_EMIT statusChanged();
     }
     update();
+    emit geometryChanged();
 }
 
 ConeGeometry::GeometryData ConeGeometry::generateConeGeometry(float topRadius, float bottomRadius, float length, int rings, int slices)

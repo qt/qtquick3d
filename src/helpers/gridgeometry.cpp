@@ -102,6 +102,7 @@ void GridGeometry::setHorizontalLines(int count)
     emit horizontalLinesChanged();
     updateData();
     update();
+    emit geometryChanged();
 }
 
 void GridGeometry::setVerticalLines(int count)
@@ -113,6 +114,7 @@ void GridGeometry::setVerticalLines(int count)
     emit verticalLinesChanged();
     updateData();
     update();
+    emit geometryChanged();
 }
 
 void GridGeometry::setHorizontalStep(float step)
@@ -124,6 +126,7 @@ void GridGeometry::setHorizontalStep(float step)
     emit horizontalStepChanged();
     updateData();
     update();
+    emit geometryChanged();
 }
 
 void GridGeometry::setVerticalStep(float step)
@@ -135,6 +138,7 @@ void GridGeometry::setVerticalStep(float step)
     emit verticalStepChanged();
     updateData();
     update();
+    emit geometryChanged();
 }
 
 static void fillVertexData(QByteArray &vertexData, int horLines, float horStep,

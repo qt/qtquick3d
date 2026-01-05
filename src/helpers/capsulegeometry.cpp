@@ -294,6 +294,7 @@ void CapsuleGeometry::updateGeometry(const GeometryData &geometryData)
         Q_EMIT statusChanged();
     }
     update();
+    emit geometryChanged();
 }
 
 CapsuleGeometry::GeometryData CapsuleGeometry::generateCapsuleGeometry(bool enableNormals,

@@ -335,6 +335,7 @@ void ExtrudedTextGeometry::updateGeometry(const GeometryData &geometryData)
         Q_EMIT statusChanged();
     }
     update();
+    emit geometryChanged();
 }
 
 ExtrudedTextGeometry::GeometryData ExtrudedTextGeometry::generateExtrudedTextGeometry(const QString &text,
