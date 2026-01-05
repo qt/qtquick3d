@@ -475,6 +475,7 @@ void ProceduralMesh::updateGeometry()
     }
 
     update();
+    emit geometryChanged();
 }
 
 void ProceduralMesh::subsetDestroyed(QObject *subset)

@@ -64,6 +64,7 @@ void HeightFieldGeometry::setSource(const QUrl &newSource)
 
     updateData();
     update();
+    emit geometryChanged();
 
     emit sourceChanged();
 }
@@ -81,6 +82,7 @@ void HeightFieldGeometry::setSmoothShading(bool smooth)
 
     updateData();
     update();
+    emit geometryChanged();
 
     emit smoothShadingChanged();
 }
@@ -99,6 +101,8 @@ void HeightFieldGeometry::setExtents(const QVector3D &newExtents)
 
     updateData();
     update();
+    emit geometryChanged();
+
     emit extentsChanged();
 }
 
