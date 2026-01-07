@@ -394,5 +394,6 @@ meshes and lightmaps. The application needs to ship this file, so that it can be
 found by the engine, in the location specified by \l{Lightmapper::}{source}.
 
 \sa {Qt Quick 3D - Baked Lightmap Example}
+\sa {Qt Quick 3D - SSGI Lightmap Example}
 
 */

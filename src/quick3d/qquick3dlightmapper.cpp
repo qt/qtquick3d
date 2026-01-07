@@ -39,7 +39,9 @@ QT_BEGIN_NAMESPACE
     \li the engine's built-in lightmap baker.
     \endlist
 
-    \sa {Lightmaps and Global Illumination}, {Qt Quick 3D - Baked Lightmap Example}
+    \sa {Lightmaps and Global Illumination},
+        {Qt Quick 3D - Baked Lightmap Example},
+        {Qt Quick 3D - SSGI Lightmap Example}
  */
 
 /*!
