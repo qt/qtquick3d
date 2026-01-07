@@ -227,7 +227,7 @@ ColumnLayout {
             function jumpToRotation(qRotation) {
                 cameraRotation.from = arcballController.controlledObject.rotation
                 cameraRotation.to = qRotation
-                cameraRotation.duration = 100
+                cameraRotation.duration = 200
                 cameraRotation.start()
             }
 
@@ -296,16 +296,32 @@ ColumnLayout {
                                 let rotation = originGizmo.quaternionAlign(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)
-                            } else if (event.key === Qt.Key_S) {
-                                settingsPane.toggleHide()
                             } else if (event.key === Qt.Key_Left
                                        || event.key === Qt.Key_A) {
-                                let rotation = originGizmo.quaternionRotateLeft(
+                                let rotation = originGizmo.rotateYawLeft(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)
                             } else if (event.key === Qt.Key_Right
                                        || event.key === Qt.Key_D) {
-                                let rotation = originGizmo.quaternionRotateRight(
+                                let rotation = originGizmo.rotateYawRight(
+                                    arcballController.controlledObject.rotation)
+                                arcballController.jumpToRotation(rotation)
+                            } else if (event.key === Qt.Key_Up
+                                       || event.key === Qt.Key_W) {
+                                let rotation = originGizmo.rotatePitchUp(
+                                    arcballController.controlledObject.rotation)
+                                arcballController.jumpToRotation(rotation)
+                            } else if (event.key === Qt.Key_Down
+                                       || event.key === Qt.Key_S) {
+                                let rotation = originGizmo.rotatePitchDown(
+                                    arcballController.controlledObject.rotation)
+                                arcballController.jumpToRotation(rotation)
+                            } else if (event.key === Qt.Key_Q) {
+                                let rotation = originGizmo.rotateRollLeft(
+                                    arcballController.controlledObject.rotation)
+                                arcballController.jumpToRotation(rotation)
+                            } else if (event.key === Qt.Key_E) {
+                                let rotation = originGizmo.rotateRollRight(
                                     arcballController.controlledObject.rotation)
                                 arcballController.jumpToRotation(rotation)
                             }

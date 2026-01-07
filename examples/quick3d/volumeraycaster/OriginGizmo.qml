@@ -169,18 +169,46 @@ Item {
         return rotations[closestIndex];
     }
 
-    function quaternionRotateLeft(rotation) {
-        let closestIndex = findClosestRotation(rotation, 0, 24);
-        let offset = (4 + closestIndex - 1) % 4;
-        let group = Math.floor(closestIndex / 4);
+    function rotateRollLeft(rotation) {
+        const closestIndex = findClosestRotation(rotation, 0, 24);
+        const offset = (4 + closestIndex - 1) % 4;
+        const group = Math.floor(closestIndex / 4);
         return rotations[offset + group * 4];
     }
 
-    function quaternionRotateRight(rotation) {
-        let closestIndex = findClosestRotation(rotation, 0, 24);
-        let offset = (closestIndex + 1) % 4;
-        let group = Math.floor(closestIndex / 4);
+    function rotateRollRight(rotation) {
+        const closestIndex = findClosestRotation(rotation, 0, 24);
+        const offset = (closestIndex + 1) % 4;
+        const group = Math.floor(closestIndex / 4);
         return rotations[offset + group * 4];
+    }
+
+    function rotateYawLeft(rotation) {
+        const ry90 = Qt.quaternion(Math.SQRT1_2, 0, -Math.SQRT1_2, 0);
+        const yawed = ry90.times(rotation);
+        const closestIndex = findClosestRotation(yawed, 0, 24);
+        return rotations[closestIndex];
+    }
+
+    function rotateYawRight(rotation) {
+        const ryNeg90 = Qt.quaternion(Math.SQRT1_2, 0, Math.SQRT1_2, 0);
+        const yawed = ryNeg90.times(rotation);
+        const closestIndex = findClosestRotation(yawed, 0, 24);
+        return rotations[closestIndex];
+    }
+
+    function rotatePitchUp(rotation) {
+        const rx90 = Qt.quaternion(Math.SQRT1_2, -Math.SQRT1_2, 0, 0);
+        const pitched = rx90.times(rotation);
+        const closestIndex = findClosestRotation(pitched, 0, 24);
+        return rotations[closestIndex];
+    }
+
+    function rotatePitchDown(rotation) {
+        const rxNeg90 = Qt.quaternion(Math.SQRT1_2, Math.SQRT1_2, 0, 0);
+        const pitched = rxNeg90.times(rotation);
+        const closestIndex = findClosestRotation(pitched, 0, 24);
+        return rotations[closestIndex];
     }
 
     signal axisClicked(int axis)
