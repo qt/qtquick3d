@@ -82,6 +82,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{quick3d-shadow-mapping}{Shadow Mapping}
     \li \l{\qxr}
     \li \l{Multiview Rendering}
+    \li \l{quick3d-shadercache}{Disk-based caching of shaders}
 \endlist
 
 \section1 Examples

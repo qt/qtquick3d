@@ -414,6 +414,9 @@ resources needed to render a renderable is loaded, for example geometry and
 textures set on the Model. Resources that are not loaded already are
 loaded here.
 
+See \l{quick3d-shadercache}{Disk-based caching of shaders} for a discussion
+on the disk-based caching of shaders for materials and effects.
+
 The renderables list is then sorted into 3 lists.
 \list
     \li Opaque Items: these are sorted from front to back, or in other words
