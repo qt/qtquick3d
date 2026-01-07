@@ -205,7 +205,7 @@ SPDX-FileCopyrightText = "Unknown"
 SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
-path = "examples/quick3d/xr_interaction/assets/arrows.gltf"
+path = "examples/quick3d/xr_shared/assets/arrows.gltf"
 precedence = "override"
 comment = "can't be read in file"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
