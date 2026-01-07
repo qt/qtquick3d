@@ -86,6 +86,12 @@ shaders get as their input. The following sections provide an overview of these
 features. The full reference is available in the documentation pages for the respective
 types:
 
+\note For complete control over the entire rendering pipeline, including multiple
+render passes and custom render targets, see \l{User-Defined Render Passes in Qt Quick 3D}.
+User-defined render passes complement the features described on this page by allowing you
+to define the entire rendering pipeline architecture, while CustomMaterial and Effect focus
+on customizing individual materials and post-processing steps within the pipeline.
+
 \table
 \header
 \li Feature

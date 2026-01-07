@@ -1,0 +1,2180 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtquick3d-userpasses.html
+\title User-Defined Render Passes in Qt Quick 3D
+\brief Controlling the rendering pipeline with custom render passes
+
+\since 6.11
+
+Qt Quick 3D provides a high-level API for 3D rendering that handles most rendering
+details automatically. However, for advanced use cases, applications may need complete
+control over the rendering pipeline. User-defined render passes enable this by allowing
+applications to disable the internal rendering pipeline and define their own custom passes.
+
+User render passes enable advanced rendering techniques such as:
+
+\list
+\li Deferred shading and lighting
+\li Multi-pass rendering effects
+\li Custom post-processing pipelines
+\li Selective rendering with layer-based filtering
+\li Screen-space effects (ambient occlusion, reflections, etc.)
+\li Custom shadow mapping techniques
+\li Debug visualization passes
+\endlist
+
+\section1 Levels of Customization
+
+Qt Quick 3D offers three complementary levels of rendering customization, each suited
+to different use cases:
+
+\table
+\header
+\li Level
+\li Scope
+\li Use Cases
+\row
+\li \l Effect
+\li Post-processing
+\li Applies effects after the scene is rendered (blur, color grading, etc.)
+\row
+\li \l CustomMaterial
+\li Per-material shaders
+\li Custom vertex and fragment shaders for individual materials
+\row
+\li \l RenderPass (User Render Passes)
+\li Complete pipeline control
+\li Deferred rendering, multiple passes, custom render targets
+\endtable
+
+User render passes (\l RenderPass) provide the most control, allowing you to either
+supplement or completely replace the default rendering pipeline. This complements
+\l CustomMaterial and \l Effect: \l CustomMaterial customizes how individual objects
+are rendered, while user render passes control the overall rendering strategy and
+architecture.
+
+\section1 Using User Render Passes
+
+User render passes can be used in two ways:
+
+\section2 Supplementing Internal Passes
+
+You can add custom \l RenderPass objects alongside the default rendering pipeline without
+disabling internal passes. This is useful for rendering to textures that are then used by
+\l Effect or \l CustomMaterial, or for creating auxiliary render targets.
+
+\qml
+View3D {
+    // Internal passes still run normally
+
+    RenderPassTexture { id: customTexture; format: RenderPassTexture.RGBA16F }
+
+    RenderPass {
+        // Custom pass renders to texture
+        commands: [
+            ColorAttachment { target: customTexture },
+            DepthStencilAttachment { }
+        ]
+    }
+
+    // Use customTexture in an Effect or material
+}
+\endqml
+
+\section2 Replacing Internal Passes
+
+For complete control over the rendering pipeline, disable Qt Quick 3D's internal rendering
+by setting the \l{View3D::renderOverrides}{renderOverrides} property:
+
+\qml
+View3D {
+    renderOverrides: View3D.DisableInternalPasses
+
+    // Your custom render passes go here
+}
+\endqml
+
+When internal passes are disabled, Qt Quick 3D will not perform any default rendering.
+This means you must:
+
+\list
+\li Define at least one \l RenderPass to render your scene
+\li Provide the final output texture to display via \l SimpleQuadRenderer or similar mechanism
+\li Handle all rendering aspects including depth buffers, transparency, etc.
+\endlist
+
+\note Disabling internal passes gives you complete control, but also complete responsibility.
+Features like automatic shadow rendering, transparency sorting, and environment reflections
+must be implemented in your custom passes if needed.
+
+\section1 Core Concepts
+
+User-defined render passes are built from several key components:
+
+\section2 RenderPass
+
+The \l RenderPass type is the main building block. It defines a single rendering operation
+with a set of commands that control what gets rendered and how. Each pass can:
+
+\list
+\li Render to one or more color textures (up to 4 simultaneous render targets)
+\li Write depth and stencil information
+\li Filter which objects to render based on layers
+\li Override graphics pipeline state (blending, culling, etc.)
+\li Use original materials, augment them with custom shaders, or override them entirely
+\endlist
+
+\section2 RenderPassTexture
+
+The \l RenderPassTexture type defines textures that serve as render targets. These can be
+color textures in various formats (RGBA8, RGBA16F, RGBA32F, etc.) or depth/stencil
+textures. Render pass textures are used as outputs from one pass and can be used as
+texture inputs to subsequent passes.
+
+\section2 RenderOutputProvider
+
+The \l RenderOutputProvider type connects render passes by exposing the output textures
+from one pass as texture inputs that can be used by materials or other passes. This is
+essential for multi-pass rendering where later passes need to read the results of
+earlier passes.
+
+\section2 ContentLayer
+
+The \l ContentLayer singleton provides layer constants (Layer0 through Layer23) used for
+filtering which objects render in which pass. By assigning objects to specific layers and
+using \l RenderablesFilter in your passes, you can control precisely what gets rendered
+in each pass.
+
+\section2 Render Commands
+
+Each \l RenderPass contains a list of commands that configure its behavior:
+
+\list
+\li \l ColorAttachment: Specifies a color render target
+\li \l DepthStencilAttachment: Specifies depth/stencil handling
+\li \l DepthTextureAttachment: Uses a texture for depth output
+\li \l RenderablesFilter: Filters objects by layer and type (opaque/transparent)
+\li \l PipelineStateOverride: Controls graphics pipeline state
+\li \c SubRenderPass: Executes another render pass within this pass
+\li \l AddDefine: Adds shader preprocessor defines
+\endlist
+
+\section1 Material Modes
+
+Each \l RenderPass has a \l{RenderPass::materialMode}{materialMode} property that controls
+how materials are handled during rendering. The three modes offer different levels of
+material control:
+
+\section2 OriginalMaterial Mode
+
+This mode renders objects with their assigned materials unchanged. It's useful when you
+want to control the rendering pipeline structure (multiple passes, custom render targets)
+but keep the material behavior standard.
+
+\qml
+RenderPass {
+    materialMode: RenderPass.OriginalMaterial
+    commands: [
+        ColorAttachment { target: myColorTexture },
+        DepthStencilAttachment { }
+    ]
+}
+\endqml
+
+\section2 AugmentMaterial Mode
+
+This mode injects custom shader code into the existing material pipeline. It's particularly
+useful for deferred rendering where you need to output additional data (like normals,
+positions, etc.) to multiple render targets while preserving the material's base behavior.
+
+\qml
+RenderPass {
+    materialMode: RenderPass.AugmentMaterial
+    augmentShader: "my_augment.glsl"
+    commands: [
+        ColorAttachment { target: gbuffer0; name: "GBUFFER0" },
+        ColorAttachment { target: gbuffer1; name: "GBUFFER1" },
+        DepthStencilAttachment { }
+    ]
+}
+\endqml
+
+The augment shader file contains a \c{MAIN_FRAGMENT_AUGMENT()} function:
+
+\badcode
+void MAIN_FRAGMENT_AUGMENT()
+{
+    // Access material properties
+    vec3 color = BASE_COLOR.rgb;
+    float metal = METALNESS;
+    float rough = ROUGHNESS;
+    vec3 normal = normalize(WORLD_NORMAL);
+
+    // Write to multiple render targets
+    GBUFFER0 = vec4(color, metal);
+    GBUFFER1 = vec4(normal * 0.5 + 0.5, rough);
+}
+\endcode
+
+See \l{Augment Shaders for Multiple Render Targets} for more details.
+
+\section2 OverrideMaterial Mode
+
+This mode replaces all object materials with a single material. It's useful for specialized
+passes like shadow mapping, depth prepass, or debug visualization.
+
+\qml
+RenderPass {
+    materialMode: RenderPass.OverrideMaterial
+    overrideMaterial: CustomMaterial {
+        fragmentShader: "depth_only.frag"
+        // All objects will use this material
+    }
+    commands: [
+        DepthTextureAttachment { target: depthTexture }
+    ]
+}
+\endqml
+
+\section1 Render Pass Commands
+
+Commands are specified in the \l{RenderPass::commands}{commands} property and execute
+in the order they are defined.
+
+\section2 Color Attachment
+
+The \l ColorAttachment command specifies a color render target. The \c name property
+defines how the attachment is accessed in augment shaders.
+
+\qml
+ColorAttachment {
+    target: myTexture      // RenderPassTexture to render to
+    name: "GBUFFER0"      // Name for shader access (optional)
+}
+\endqml
+
+You can have up to 4 color attachments per pass (for multiple render targets).
+
+\section2 Depth Attachments
+
+There are two ways to handle depth:
+
+\b{DepthStencilAttachment} uses an implicit depth/stencil buffer:
+
+\qml
+DepthStencilAttachment { }  // Creates depth/stencil buffer automatically
+\endqml
+
+\b{DepthTextureAttachment} uses an explicit texture for depth output:
+
+\qml
+RenderPassTexture {
+    id: depthTex
+    format: RenderPassTexture.Depth24Stencil8
+}
+
+DepthTextureAttachment {
+    target: depthTex  // Explicit depth texture
+}
+\endqml
+
+Use \l DepthTextureAttachment when you need to share the depth buffer between multiple
+passes or use it as a texture input in shaders.
+
+\section2 Renderables Filter
+
+The \l RenderablesFilter command controls which objects are rendered based on their layer
+assignment and renderable type.
+
+\qml
+RenderablesFilter {
+    layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
+    renderableTypes: RenderablesFilter.Opaque
+}
+\endqml
+
+The \c layerMask property uses bitwise OR to combine layers. The \c renderableTypes
+property can be:
+\list
+\li \c RenderablesFilter.Opaque: Render only opaque objects
+\li \c RenderablesFilter.Transparent: Render only transparent objects
+\li \c RenderablesFilter.Opaque | RenderablesFilter.Transparent: Render both
+\endlist
+
+\section2 Pipeline State Override
+
+The \l PipelineStateOverride command provides fine-grained control over graphics pipeline
+state. It can override depth testing, blending, culling, polygon mode, and more.
+
+\qml
+PipelineStateOverride {
+    depthTestEnabled: true
+    depthWriteEnabled: false
+    blendEnabled: true
+    cullMode: PipelineStateOverride.Back
+    polygonMode: PipelineStateOverride.Fill
+}
+\endqml
+
+See \l{Pipeline State Control} for more examples.
+
+\section2 Sub Render Pass
+
+The \c SubRenderPass command allows hierarchical composition of render passes by executing
+another render pass within the current pass.
+
+\qml
+RenderPass {
+    id: parentPass
+    commands: [
+        ColorAttachment { target: colorTex },
+        SubRenderPass { renderPass: childPass },
+        // More commands after child pass
+    ]
+}
+
+RenderPass {
+    id: childPass
+    // This pass executes within parentPass
+}
+\endqml
+
+\section2 Add Define
+
+The \l AddDefine command adds shader preprocessor defines that affect shader compilation.
+
+\qml
+AddDefine {
+    name: "USE_SPECIAL_MODE"
+    value: 1
+}
+\endqml
+
+\section1 Simple Example: Single Pass Rendering
+
+Here's a minimal example showing user-defined render passes:
+
+\qml
+import QtQuick
+import QtQuick3D
+import QtQuick3D.Helpers
+
+View3D {
+    anchors.fill: parent
+    renderOverrides: View3D.DisableInternalPasses
+
+    // Camera and lights
+    PerspectiveCamera { z: 300 }
+    DirectionalLight { }
+
+    // Define render target texture
+    RenderPassTexture {
+        id: colorTarget
+        format: RenderPassTexture.RGBA16F
+    }
+
+    // Define the render pass
+    RenderPass {
+        id: mainPass
+        materialMode: RenderPass.OriginalMaterial
+        clearColor: "skyblue"
+
+        commands: [
+            ColorAttachment { target: colorTarget },
+            DepthStencilAttachment { }
+        ]
+    }
+
+    // Display the result
+    SimpleQuadRenderer {
+        texture: Texture {
+            textureProvider: RenderOutputProvider {
+                textureSource: RenderOutputProvider.UserPassTexture
+                renderPass: mainPass
+                attachmentSelector: RenderOutputProvider.Attachment0
+            }
+        }
+    }
+
+    // Scene content
+    Model {
+        source: "#Sphere"
+        materials: PrincipledMaterial {
+            baseColor: "red"
+            metalness: 0.0
+            roughness: 0.3
+        }
+    }
+}
+\endqml
+
+This example:
+\list 1
+\li Disables internal passes
+\li Creates a render target texture (colorTarget)
+\li Defines a render pass that renders to that texture
+\li Uses RenderOutputProvider to expose the texture
+\li Displays the result with SimpleQuadRenderer
+\li Renders a sphere with standard material
+\endlist
+
+\section1 Working with Layers
+
+The \l ContentLayer singleton provides constants for organizing objects into layers,
+allowing fine-grained control over what renders in each pass.
+
+\section2 Layer Constants
+
+Qt Quick 3D provides 24 user-assignable layers:
+\list
+\li \c ContentLayer.Layer0 through \c ContentLayer.Layer23: Individual layers
+\li \c ContentLayer.LayerAll: All user layers combined
+\li \c ContentLayer.LayerNone: No layers
+\endlist
+
+\note Layers 24-31 are reserved for internal use.
+
+\section2 Assigning Objects to Layers
+
+Assign objects to layers using the \l{Model::layers}{layers} property:
+
+\qml
+Model {
+    source: "#Cube"
+    layers: ContentLayer.Layer0
+    materials: PrincipledMaterial { baseColor: "red" }
+}
+
+Model {
+    source: "#Sphere"
+    layers: ContentLayer.Layer1 | ContentLayer.Layer2
+    materials: PrincipledMaterial { baseColor: "blue" }
+}
+\endqml
+
+Objects can belong to multiple layers using bitwise OR.
+
+\section2 Filtering by Layer
+
+Use \l RenderablesFilter in your render passes to select which layers to render:
+
+\qml
+RenderPass {
+    id: pass1
+    commands: [
+        ColorAttachment { target: texture1 },
+        RenderablesFilter {
+            layerMask: ContentLayer.Layer0
+        }
+    ]
+    // Only renders objects on Layer0 (red cube)
+}
+
+RenderPass {
+    id: pass2
+    commands: [
+        ColorAttachment { target: texture2 },
+        RenderablesFilter {
+            layerMask: ContentLayer.Layer1 | ContentLayer.Layer2
+        }
+    ]
+    // Only renders objects on Layer1 or Layer2 (blue sphere)
+}
+\endqml
+
+\section2 Use Case: Selective Rendering
+
+A practical example is rendering certain objects as wireframe overlays:
+
+\qml
+View3D {
+    renderOverrides: View3D.DisableInternalPasses
+
+    RenderPassTexture { id: colorTex; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: depthTex; format: RenderPassTexture.Depth24Stencil8 }
+
+    // Pass 1: Render solid objects
+    RenderPass {
+        id: solidPass
+        commands: [
+            ColorAttachment { target: colorTex },
+            DepthTextureAttachment { target: depthTex },
+            RenderablesFilter { layerMask: ContentLayer.Layer0 }
+        ]
+    }
+
+    // Pass 2: Render wireframe overlay
+    RenderPass {
+        id: wireframePass
+        commands: [
+            ColorAttachment { target: colorTex },
+            DepthTextureAttachment { target: depthTex },
+            PipelineStateOverride {
+                polygonMode: PipelineStateOverride.Line
+                depthTestEnabled: true
+                depthWriteEnabled: false
+            },
+            RenderablesFilter { layerMask: ContentLayer.Layer1 }
+        ]
+    }
+
+    SimpleQuadRenderer {
+        texture: Texture {
+            textureProvider: RenderOutputProvider {
+                textureSource: RenderOutputProvider.UserPassTexture
+                renderPass: wireframePass
+                attachmentSelector: RenderOutputProvider.Attachment0
+            }
+        }
+    }
+
+    Model {
+        source: "#Sphere"
+        layers: ContentLayer.Layer0  // Rendered solid
+        materials: PrincipledMaterial { baseColor: "blue" }
+    }
+
+    Model {
+        source: "#Sphere"
+        layers: ContentLayer.Layer1  // Rendered as wireframe
+        materials: PrincipledMaterial { baseColor: "yellow" }
+    }
+}
+\endqml
+
+\section1 Texture Management
+
+User render passes rely heavily on textures both as render targets and as inputs to
+subsequent passes or materials.
+
+\section2 Render Pass Texture Formats
+
+\l RenderPassTexture supports various formats for different use cases:
+
+\b{Color Formats:}
+\table
+\header
+\li Format
+\li Description
+\li Use Case
+\row
+\li RGBA8
+\li 8-bit per channel
+\li Standard color output, lower memory usage
+\row
+\li RGBA16F
+\li 16-bit floating point
+\li HDR rendering, intermediate buffers
+\row
+\li RGBA32F
+\li 32-bit floating point
+\li High precision calculations
+\row
+\li R8, R16, R16F, R32F
+\li Single channel variants
+\li Grayscale data, specialized buffers
+\endtable
+
+\b{Depth Formats:}
+\table
+\header
+\li Format
+\li Description
+\row
+\li Depth16
+\li 16-bit depth
+\row
+\li Depth24
+\li 24-bit depth
+\row
+\li Depth32
+\li 32-bit depth
+\row
+\li Depth24Stencil8
+\li 24-bit depth + 8-bit stencil
+\endtable
+
+Example texture definitions:
+
+\qml
+RenderPassTexture {
+    id: hdrColorBuffer
+    format: RenderPassTexture.RGBA16F  // HDR color
+}
+
+RenderPassTexture {
+    id: depthBuffer
+    format: RenderPassTexture.Depth24Stencil8  // Depth + stencil
+}
+
+RenderPassTexture {
+    id: normalBuffer
+    format: RenderPassTexture.RGBA16F  // Store normals
+}
+\endqml
+
+\section2 Sharing Textures Between Passes
+
+Multiple passes can share the same depth texture, allowing depth testing across passes:
+
+\qml
+RenderPassTexture {
+    id: sharedDepth
+    format: RenderPassTexture.Depth24Stencil8
+}
+
+RenderPass {
+    id: geometryPass
+    commands: [
+        ColorAttachment { target: colorTex1 },
+        DepthTextureAttachment { target: sharedDepth }
+    ]
+}
+
+RenderPass {
+    id: transparentPass
+    renderTargetFlags: RenderPass.PreserveDepthStencilContents
+    commands: [
+        ColorAttachment { target: colorTex2 },
+        DepthTextureAttachment { target: sharedDepth }
+        // Uses depth from geometryPass for depth testing
+    ]
+}
+\endqml
+
+\section2 Render Output Provider
+
+The \l RenderOutputProvider exposes render pass outputs as \l Texture inputs:
+
+\qml
+// Define a render pass with color output
+RenderPass {
+    id: firstPass
+    commands: [
+        ColorAttachment { target: intermediateTexture }
+    ]
+}
+
+// Expose its output
+RenderOutputProvider {
+    id: intermediateProvider
+    textureSource: RenderOutputProvider.UserPassTexture
+    renderPass: firstPass
+    attachmentSelector: RenderOutputProvider.Attachment0
+}
+
+// Use in a material
+CustomMaterial {
+    property TextureInput inputTex: TextureInput {
+        texture: Texture { textureProvider: intermediateProvider }
+    }
+    fragmentShader: "process.frag"
+}
+\endqml
+
+The \c attachmentSelector property specifies which color attachment to use when a pass
+has multiple render targets:
+\list
+\li \c RenderOutputProvider.Attachment0: First color attachment
+\li \c RenderOutputProvider.Attachment1: Second color attachment
+\li \c RenderOutputProvider.Attachment2: Third color attachment
+\li \c RenderOutputProvider.Attachment3: Fourth color attachment
+\endlist
+
+\section2 Pass Chaining Example
+
+Multiple passes can be chained together where each pass processes the output of the
+previous pass:
+
+\qml
+View3D {
+    renderOverrides: View3D.DisableInternalPasses
+
+    // Intermediate textures
+    RenderPassTexture { id: tex0; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: tex1; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: tex2; format: RenderPassTexture.RGBA16F }
+
+    // Pass 1: Render scene
+    RenderPass {
+        id: scenePass
+        commands: [
+            ColorAttachment { target: tex0 },
+            DepthStencilAttachment { }
+        ]
+    }
+
+    // Pass 2: Process tex0 -> tex1
+    RenderPass {
+        id: process1
+        materialMode: RenderPass.OriginalMaterial
+        commands: [
+            ColorAttachment { target: tex1 }
+        ]
+    }
+
+    Model {
+        layers: ContentLayer.Layer10
+        geometry: PlaneGeometry { }
+        materials: CustomMaterial {
+            property TextureInput input: TextureInput {
+                texture: Texture {
+                    textureProvider: RenderOutputProvider {
+                        textureSource: RenderOutputProvider.UserPassTexture
+                        renderPass: scenePass
+                    }
+                }
+            }
+            fragmentShader: "effect1.frag"
+        }
+    }
+
+    // Pass 3: Process tex1 -> tex2
+    RenderPass {
+        id: process2
+        commands: [
+            ColorAttachment { target: tex2 },
+            RenderablesFilter { layerMask: ContentLayer.Layer11 }
+        ]
+    }
+
+    Model {
+        layers: ContentLayer.Layer11
+        geometry: PlaneGeometry { }
+        materials: CustomMaterial {
+            property TextureInput input: TextureInput {
+                texture: Texture {
+                    textureProvider: RenderOutputProvider {
+                        textureSource: RenderOutputProvider.UserPassTexture
+                        renderPass: process1
+                    }
+                }
+            }
+            fragmentShader: "effect2.frag"
+        }
+    }
+
+    // Display final result
+    SimpleQuadRenderer {
+        texture: Texture {
+            textureProvider: RenderOutputProvider {
+                textureSource: RenderOutputProvider.UserPassTexture
+                renderPass: process2
+            }
+        }
+    }
+}
+\endqml
+
+\section1 Pipeline State Control
+
+The \l PipelineStateOverride command provides detailed control over graphics pipeline state,
+allowing customization of depth testing, blending, culling, and more.
+
+\section2 Depth Testing and Writing
+
+Control how depth values are tested and written:
+
+\qml
+PipelineStateOverride {
+    depthTestEnabled: true
+    depthWriteEnabled: true
+    depthFunction: PipelineStateOverride.LessOrEqual
+}
+\endqml
+
+The \c depthFunction property can be:
+\list
+\li \c Never, \c Less, \c Equal, \c LessOrEqual
+\li \c Greater, \c NotEqual, \c GreaterOrEqual, \c Always
+\endlist
+
+\section2 Blending
+
+Enable and configure blending for transparency:
+
+\qml
+PipelineStateOverride {
+    blendEnabled: true
+    // Uses default blend mode (source alpha blending)
+}
+\endqml
+
+For multiple render targets, use per-target blend states. \l PipelineStateOverride
+exposes the per-attachment value-type properties \c targetBlend0 through
+\c targetBlend7 (of type \l renderTargetBlend) and the blend factor and
+operation enums are in the \c RenderTargetBlend namespace:
+
+\qml
+PipelineStateOverride {
+    targetBlend0.enable: true
+    targetBlend0.srcColor: RenderTargetBlend.SrcAlpha
+    targetBlend0.dstColor: RenderTargetBlend.OneMinusSrcAlpha
+    targetBlend0.opColor:  RenderTargetBlend.Add
+
+    targetBlend1.enable: false  // No blending for attachment 1
+}
+\endqml
+
+\section2 Culling
+
+Control face culling:
+
+\qml
+PipelineStateOverride {
+    cullMode: PipelineStateOverride.Back   // Override material's cull mode to Back
+}
+\endqml
+
+Setting \c cullMode here overrides the value the material would otherwise specify
+for this pass. Options: \c None (no culling), \c Front (cull front faces),
+\c Back (cull back faces).
+
+\section2 Wireframe Rendering
+
+Render geometry as wireframes:
+
+\qml
+PipelineStateOverride {
+    polygonMode: PipelineStateOverride.Line
+    cullMode: PipelineStateOverride.None  // Show both sides
+}
+\endqml
+
+The \c polygonMode can be \c Fill (default) or \c Line (wireframe).
+
+\section2 Scissor Rectangles
+
+Limit rendering to a rectangular region:
+
+\qml
+PipelineStateOverride {
+    usesScissor: true
+    scissor: Qt.rect(100, 100, 400, 300)  // x, y, width, height
+}
+\endqml
+
+\section2 Viewport Control
+
+Override the viewport:
+
+\qml
+PipelineStateOverride {
+    viewport: Qt.rect(0, 0, 800, 600)
+}
+\endqml
+
+\section2 Complete Example: Wireframe Overlay
+
+This example renders a scene normally, then overlays a wireframe version:
+
+\qml
+View3D {
+    renderOverrides: View3D.DisableInternalPasses
+
+    RenderPassTexture { id: color; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: depth; format: RenderPassTexture.Depth24Stencil8 }
+
+    // Solid pass
+    RenderPass {
+        id: solidPass
+        clearColor: "black"
+        commands: [
+            ColorAttachment { target: color },
+            DepthTextureAttachment { target: depth },
+            RenderablesFilter {
+                layerMask: ContentLayer.Layer0
+                renderableTypes: RenderablesFilter.Opaque
+            }
+        ]
+    }
+
+    // Wireframe overlay
+    RenderPass {
+        id: wirePass
+        renderTargetFlags: RenderPass.PreserveColorContents |
+                          RenderPass.PreserveDepthStencilContents
+        commands: [
+            ColorAttachment { target: color },
+            DepthTextureAttachment { target: depth },
+            PipelineStateOverride {
+                polygonMode: PipelineStateOverride.Line
+                depthTestEnabled: true
+                depthWriteEnabled: false
+                blendEnabled: true
+            },
+            RenderablesFilter { layerMask: ContentLayer.Layer0 }
+        ]
+    }
+
+    SimpleQuadRenderer {
+        texture: Texture {
+            textureProvider: RenderOutputProvider {
+                textureSource: RenderOutputProvider.UserPassTexture
+                renderPass: wirePass
+            }
+        }
+    }
+
+    PerspectiveCamera { z: 300 }
+    DirectionalLight { }
+
+    Model {
+        source: "#Sphere"
+        layers: ContentLayer.Layer0
+        materials: PrincipledMaterial {
+            baseColor: "blue"
+            metalness: 0.5
+            roughness: 0.3
+        }
+    }
+}
+\endqml
+
+\section1 Augment Shaders for Multiple Render Targets
+
+When using \c{RenderPass.AugmentMaterial} mode, you provide an augment shader that injects
+custom code into the material's fragment shader. This is particularly useful for deferred
+rendering where you need to output material data to multiple render targets (MRT).
+
+\section2 The MAIN_FRAGMENT_AUGMENT Function
+
+Your augment shader file must define a \c{MAIN_FRAGMENT_AUGMENT()} function:
+
+\badcode
+void MAIN_FRAGMENT_AUGMENT()
+{
+    // Your custom shader code here
+}
+\endcode
+
+This function is called during the fragment shader after material calculations are complete,
+giving you access to material properties and the ability to write to custom outputs.
+
+\section2 Available Built-in Variables
+
+Inside \c{MAIN_FRAGMENT_AUGMENT()}, the engine substitutes a set of macros
+that expose material pipeline data. Only the macros listed below are part of
+the augment shader API:
+
+\table
+\header
+\li Macro
+\li Type
+\li Description
+\row
+\li \c BASE_COLOR
+\li vec4
+\li Material base color (linear color space, after material processing).
+\row
+\li \c METALNESS
+\li float
+\li Material metalness in the range 0.0 to 1.0.
+\row
+\li \c ROUGHNESS
+\li float
+\li Material roughness in the range 0.0 to 1.0.
+\row
+\li \c WORLD_NORMAL
+\li vec3
+\li World-space surface normal (post normal-mapping).
+\row
+\li \c WORLD_TANGENT
+\li vec3
+\li World-space tangent vector.
+\row
+\li \c WORLD_BINORMAL
+\li vec3
+\li World-space binormal vector.
+\row
+\li \c DIFFUSE_LIGHT
+\li vec3
+\li Accumulated diffuse light contribution.
+\row
+\li \c SPECULAR_LIGHT
+\li vec3
+\li Accumulated specular light contribution.
+\row
+\li \c EMISSIVE_LIGHT
+\li vec3
+\li Material emissive contribution.
+\row
+\li \c F0
+\li vec3
+\li Fresnel reflectance at normal incidence.
+\row
+\li \c F90
+\li vec3
+\li Fresnel reflectance at grazing incidence.
+\endtable
+
+\note Some examples (including the deferred-rendering one below) read the
+world-space fragment position via \c qt_varWorldPos. This is the engine's
+underlying varying name, not an augment-shader macro, and falls into the
+same \e {semi-public} category as the \c .glsllib files described in
+\l{Built-in Shader Facilities}: it works in practice but is not guaranteed
+to remain stable across releases.
+
+\section2 Writing to Named Outputs
+
+Color attachments in your render pass can have names that correspond to output variables
+in your shader:
+
+\qml
+RenderPass {
+    commands: [
+        ColorAttachment { target: tex0; name: "GBUFFER0" },
+        ColorAttachment { target: tex1; name: "GBUFFER1" },
+        ColorAttachment { target: tex2; name: "GBUFFER2" }
+    ]
+}
+\endqml
+
+In your augment shader:
+
+\badcode
+void MAIN_FRAGMENT_AUGMENT()
+{
+    GBUFFER0 = vec4(...);  // Writes to first attachment
+    GBUFFER1 = vec4(...);  // Writes to second attachment
+    GBUFFER2 = vec4(...);  // Writes to third attachment
+}
+\endcode
+
+Qt Quick 3D supports up to 4 simultaneous color attachments (GBUFFER0 through GBUFFER3).
+
+\section2 Complete Augment Shader Example
+
+Here's a complete example for a deferred rendering G-buffer pass:
+
+\badcode
+// gbuffer_augment.glsl
+void MAIN_FRAGMENT_AUGMENT()
+{
+    // Get material properties
+    vec3 baseColor = BASE_COLOR.rgb;
+    float metalness = METALNESS;
+    float roughness = ROUGHNESS;
+    vec3 worldNormal = normalize(WORLD_NORMAL);
+    vec3 worldPos = qt_varWorldPos;
+
+    // GBuffer 0: Albedo (RGB) + Metalness (A)
+    GBUFFER0 = vec4(baseColor, metalness);
+
+    // GBuffer 1: World Normal (RGB) + Roughness (A)
+    // Encode normal from [-1,1] to [0,1] for storage
+    GBUFFER1 = vec4(worldNormal * 0.5 + 0.5, roughness);
+
+    // GBuffer 2: World Position
+    GBUFFER2 = vec4(worldPos, 1.0);
+}
+\endcode
+
+Used with a render pass (\c RenderPassTexture instances are declared as
+direct children of the enclosing \c View3D and referenced by id):
+
+\qml
+View3D {
+    RenderPassTexture { id: gbuffer0; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: gbuffer1; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: gbuffer2; format: RenderPassTexture.RGBA16F }
+
+    RenderPass {
+        id: gbufferPass
+        materialMode: RenderPass.AugmentMaterial
+        augmentShader: "gbuffer_augment.glsl"
+        commands: [
+            ColorAttachment { target: gbuffer0; name: "GBUFFER0" },
+            ColorAttachment { target: gbuffer1; name: "GBUFFER1" },
+            ColorAttachment { target: gbuffer2; name: "GBUFFER2" },
+            DepthStencilAttachment { }
+        ]
+    }
+}
+\endqml
+
+\section2 Preserving Material Behavior
+
+The augment shader runs \e{in addition to} the normal material pipeline, not instead of it.
+This means:
+
+\list
+\li The material's textures, properties, and calculations still occur
+\li You're adding extra outputs, not replacing the primary color output
+\li The original material's RGBA output is still written to the first color attachment unless overridden
+\endlist
+
+If you only need to output custom data and don't need the standard material calculations,
+consider using \c{RenderPass.OverrideMaterial} instead.
+
+\section2 When to Use Augment vs Override
+
+Use \c AugmentMaterial when:
+\list
+\li You need material properties (metalness, roughness, normals) for G-buffers
+\li You want to leverage existing material features like texture mapping
+\li You need multiple render targets with material data
+\endlist
+
+Use \c OverrideMaterial when:
+\list
+\li You need identical behavior for all objects (depth prepass, shadow maps)
+\li You don't need per-material properties
+\li You want maximum performance by bypassing material calculations
+\endlist
+
+\section2 Built-in Shader Facilities
+
+Augment shaders and custom materials used in render passes have access to Qt Quick 3D's
+built-in shader infrastructure through an include system. These shader library files
+(\c{.glsllib}) provide functionality for lighting, shadows, tonemapping, and more.
+
+\b{Include Syntax:}
+
+Use \c{\#include} directives in your shader code to import functionality:
+
+\badcode
+#include "tonemapping.glsllib"
+#include "lightsData.glsllib"
+#include "shadowMapping.glsllib"
+#include "funcprocessPunctualLighting.glsllib"
+
+void MAIN()
+{
+    // Use included functions
+    vec3 color = qt_tonemap(hdrColor);
+}
+\endcode
+
+\b{Available Shader Libraries:}
+
+These shader libraries are located in the engine at \c{src/runtimerender/res/effectlib/}
+and are considered \e{semi-public}: they are usable in user shaders but do not have the
+same binary compatibility guarantees as the rest of Qt's public API.
+
+\table
+\header
+\li Library
+\li Description
+\row
+\li \c{tonemapping.glsllib}
+\li Provides \c{qt_tonemap()} function for HDR to LDR conversion using the built-in
+    tonemapping algorithm
+\row
+\li \c{lightsData.glsllib}
+\li Contains scene lighting information (light positions, colors, directions, etc.)
+    that can be accessed in custom lighting calculations
+\row
+\li \c{shadowMapping.glsllib}
+\li Provides functions for sampling from the default shadow maps, enabling custom
+    materials to receive shadows
+\row
+\li \c{funcprocessPunctualLighting.glsllib}
+\li Contains \c{qt_processPunctualLighting()} and other built-in lighting functions
+    for standard PBR lighting calculations
+\row
+\li \c{sampleProbe.glsllib}
+\li Functions for sampling image-based lighting probes (\c{qt_sampleDiffuse()},
+    \c{qt_sampleGlossyPrincipled()})
+\endtable
+
+\b{Example: Custom Lighting with Built-in Functions}
+
+Here's an example fragment shader using the built-in lighting facilities:
+
+\badcode
+#include "lightsData.glsllib"
+#include "funcprocessPunctualLighting.glsllib"
+#include "tonemapping.glsllib"
+#include "sampleProbe.glsllib"
+
+void MAIN()
+{
+    vec3 worldPos = ...; // From G-buffer or varying
+    vec3 normal = ...;
+    vec3 viewDir = normalize(CAMERA_POSITION - worldPos);
+    vec3 baseColor = ...;
+    float roughness = ...;
+    float metalness = ...;
+
+    vec3 F0 = mix(vec3(0.04), baseColor, metalness);
+
+    vec3 diffuseAccum = vec3(0.0);
+    vec3 specAccum = vec3(0.0);
+
+    // Use built-in punctual lighting (directional, point, spot lights)
+    qt_processPunctualLighting(diffuseAccum,
+                               specAccum,
+                               baseColor,
+                               worldPos,
+                               normal,
+                               viewDir,
+                               vec3(1.0), // specularAmount
+                               vec3(1.0), // specularTint
+                               roughness,
+                               metalness,
+                               F0,
+                               vec3(1.0)); // F90
+
+    // Add image-based lighting
+    vec4 probeDiffuse = vec4(baseColor, 1.0) * qt_sampleDiffuse(normal);
+    vec4 probeSpecular = qt_sampleGlossyPrincipled(normal, viewDir, F0, roughness);
+    diffuseAccum += probeDiffuse.rgb;
+    specAccum += probeSpecular.rgb;
+
+    vec3 color = diffuseAccum + specAccum;
+
+    // Apply tonemapping
+    FRAGCOLOR = vec4(qt_tonemap(color), 1.0);
+}
+\endcode
+
+\note These shader libraries are semi-public API. While they are stable and intended for
+use in custom shaders, Qt does not guarantee that their internal implementation or
+available functions will remain unchanged between releases. However, commonly used functions
+like \c{qt_tonemap()} and \c{qt_processPunctualLighting()} are unlikely to change
+significantly.
+
+\section1 Advanced Example: Deferred Rendering
+
+Deferred rendering is a technique where geometry information is rendered to multiple textures
+(called a G-buffer or geometry buffer) in a first pass, and lighting calculations are performed
+in a second pass using the stored geometry data. This approach is particularly efficient when
+you have many lights, as each pixel is shaded only once regardless of the number of lights.
+
+\section2 Deferred Rendering Architecture
+
+The deferred rendering pipeline consists of two main passes:
+
+\list 1
+\li \b{Geometry Pass (G-Buffer Pass)}: Renders scene geometry to multiple render targets,
+    storing material properties such as albedo, normals, roughness, metalness, and world position.
+\li \b{Lighting Pass}: Renders a full-screen quad that samples the G-buffers and performs
+    lighting calculations for each pixel based on the stored geometry data.
+\endlist
+
+\section2 G-Buffer Pass Implementation
+
+First, define a G-buffer pass that outputs material data to multiple render targets:
+
+\b{GBufferPass.qml:} The G-buffer render targets are exposed as required
+properties so the enclosing \c View3D supplies them and can read their
+outputs:
+
+\qml
+import QtQuick
+import QtQuick3D
+
+RenderPass {
+    id: gbufferPass
+    clearColor: Qt.rgba(0.0, 0.0, 0.0, 0.0)
+
+    property alias layerMask: filter.layerMask
+
+    // Provided by the View3D that uses this pass
+    required property RenderPassTexture gbuffer0   // rgb: baseColor, a: metalness
+    required property RenderPassTexture gbuffer1   // rgb: normal,    a: roughness
+    required property RenderPassTexture gbuffer2   // rgb: world pos, a: spare
+    required property RenderPassTexture depthTexture
+
+    materialMode: RenderPass.AugmentMaterial
+    augmentShader: "gbuffer_augment.glsl"
+
+    commands: [
+        ColorAttachment { target: gbufferPass.gbuffer0; name: "GBUFFER0" },
+        ColorAttachment { target: gbufferPass.gbuffer1; name: "GBUFFER1" },
+        ColorAttachment { target: gbufferPass.gbuffer2; name: "GBUFFER2" },
+        DepthTextureAttachment { target: gbufferPass.depthTexture },
+        RenderablesFilter {
+            id: filter
+            renderableTypes: RenderablesFilter.Opaque
+        }
+    ]
+}
+\endqml
+
+\b{gbuffer_augment.glsl:}
+\badcode
+void MAIN_FRAGMENT_AUGMENT()
+{
+    vec3 baseColor   = BASE_COLOR.rgb;
+    float metalness  = METALNESS;
+    float roughness  = ROUGHNESS;
+    vec3 worldNormal = normalize(WORLD_NORMAL);
+
+    // GBuffer 0: albedo + metalness
+    GBUFFER0 = vec4(baseColor, metalness);
+
+    // GBuffer 1: normal (encoded to 0..1) + roughness
+    GBUFFER1 = vec4(worldNormal * 0.5 + 0.5, roughness);
+
+    // GBuffer 2: world position
+    GBUFFER2 = vec4(qt_varWorldPos, 1.0);
+}
+\endcode
+
+The augment shader accesses material properties computed by the material pipeline and
+writes them to the three G-buffer attachments. Normals are encoded from [-1,1] to [0,1]
+range for storage.
+
+\section2 Lighting Pass Implementation
+
+The lighting pass renders a full-screen quad that samples the G-buffers and computes lighting:
+
+\qml
+// Lighting pass model (full-screen quad)
+Model {
+    id: deferredLightingQuad
+    layers: ContentLayer.Layer13  // Dedicated layer for lighting quad
+
+    geometry: PlaneGeometry {
+        plane: PlaneGeometry.XY  // Quad in screen space
+    }
+
+    materials: CustomMaterial {
+        // Texture inputs for G-buffers
+        property TextureInput gbuffer0: TextureInput {
+            enabled: true
+            texture: Texture { textureProvider: gbuffer0Provider }
+        }
+        property TextureInput gbuffer1: TextureInput {
+            enabled: true
+            texture: Texture { textureProvider: gbuffer1Provider }
+        }
+        property TextureInput gbuffer2: TextureInput {
+            enabled: true
+            texture: Texture { textureProvider: gbuffer2Provider }
+        }
+
+        shadingMode: CustomMaterial.Unshaded
+        fragmentShader: "lighting.frag"
+        vertexShader: "lighting.vert"
+    }
+}
+
+// Lighting pass renders the quad to main output
+RenderPass {
+    id: deferredLightingPass
+    materialMode: RenderPass.OriginalMaterial
+
+    commands: [
+        ColorAttachment { target: mainColorTexture },
+        DepthStencilAttachment { },
+        RenderablesFilter { layerMask: ContentLayer.Layer13 }
+    ]
+}
+\endqml
+
+The lighting vertex shader (\c lighting.vert) creates a full-screen quad in normalized
+device coordinates, and the fragment shader (\c lighting.frag) samples the G-buffers and
+performs lighting calculations.
+
+\section2 Complete Integration
+
+Here's how to integrate both passes in a View3D:
+
+\qml
+View3D {
+    renderOverrides: View3D.DisableInternalPasses
+
+    // Main output texture
+    RenderPassTexture { id: mainColorTexture; format: RenderPassTexture.RGBA16F }
+
+    // Shared depth texture
+    RenderPassTexture { id: mainDepthStencilTexture; format: RenderPassTexture.Depth24Stencil8 }
+
+    // G-buffer render targets
+    RenderPassTexture { id: gbuffer0Tex; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: gbuffer1Tex; format: RenderPassTexture.RGBA16F }
+    RenderPassTexture { id: gbuffer2Tex; format: RenderPassTexture.RGBA16F }
+
+    // G-buffer pass
+    GBufferPass {
+        id: gbufferPass
+        layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
+        gbuffer0: gbuffer0Tex
+        gbuffer1: gbuffer1Tex
+        gbuffer2: gbuffer2Tex
+        depthTexture: mainDepthStencilTexture
+    }
+
+    // Expose G-buffer outputs
+    RenderOutputProvider {
+        id: gbuffer0Provider
+        textureSource: RenderOutputProvider.UserPassTexture
+        renderPass: gbufferPass
+        attachmentSelector: RenderOutputProvider.Attachment0
+    }
+
+    RenderOutputProvider {
+        id: gbuffer1Provider
+        textureSource: RenderOutputProvider.UserPassTexture
+        renderPass: gbufferPass
+        attachmentSelector: RenderOutputProvider.Attachment1
+    }
+
+    RenderOutputProvider {
+        id: gbuffer2Provider
+        textureSource: RenderOutputProvider.UserPassTexture
+        renderPass: gbufferPass
+        attachmentSelector: RenderOutputProvider.Attachment2
+    }
+
+    // Lighting pass (defined above)
+
+    // Display final result
+    SimpleQuadRenderer {
+        texture: Texture {
+            textureProvider: RenderOutputProvider {
+                textureSource: RenderOutputProvider.UserPassTexture
+                renderPass: deferredLightingPass
+                attachmentSelector: RenderOutputProvider.Attachment0
+            }
+        }
+    }
+
+    // Scene objects
+    Model {
+        layers: ContentLayer.Layer0
+        source: "#Sphere"
+        materials: PrincipledMaterial {
+            baseColor: "red"
+            metalness: 0.5
+            roughness: 0.3
+        }
+    }
+
+    // Camera and lights
+    PerspectiveCamera { z: 300 }
+    DirectionalLight { eulerRotation.x: -45 }
+}
+\endqml
+
+\section2 Rendering Flow
+
+The rendering proceeds as follows:
+
+\list 1
+\li \b{G-buffer Pass}: Scene objects on Layer0 and Layer1 are rendered. For each object,
+    the augment shader writes albedo, normals, roughness, metalness, and position to three
+    color attachments. Depth is written to the shared depth texture.
+\li \b{Lighting Pass}: The full-screen quad on Layer13 is rendered. Its custom material
+    samples the three G-buffer textures and the depth texture, reconstructs the scene
+    information, and performs lighting calculations (directional lights, image-based lighting,
+    etc.) to produce the final lit color.
+\li \b{Display}: The result of the lighting pass is displayed via SimpleQuadRenderer.
+\endlist
+
+\section2 Advantages and Limitations
+
+\b{Advantages:}
+\list
+\li Efficient with many lights (each pixel lit once)
+\li Lighting complexity independent of scene complexity
+\li Easy to implement screen-space effects
+\li Decouples geometry and lighting passes
+\endlist
+
+\b{Limitations:}
+\list
+\li Higher memory bandwidth due to G-buffer reads/writes
+\li No hardware MSAA (requires alternative anti-aliasing)
+\li Transparency requires separate forward pass
+\li More complex pipeline to set up and maintain
+\endlist
+
+For a complete working example, see \l{Qt Quick 3D - User Passes Example}.
+
+\section1 Complete Rendering Pipeline Example
+
+A realistic custom rendering pipeline often needs to combine multiple pass types: opaque
+geometry, skybox background, 2D overlays, and transparent objects. Here's a complete example
+showing how to organize these using \c SubRenderPass for hierarchical composition:
+
+\qml
+View3D {
+    renderOverrides: View3D.DisableInternalPasses
+
+    environment: SceneEnvironment {
+        backgroundMode: SceneEnvironment.SkyBox
+        lightProbe: Texture {
+            textureData: ProceduralSkyTextureData { }
+        }
+    }
+
+    RenderPassTexture {
+        id: mainColorTexture
+        format: RenderPassTexture.RGBA16F
+    }
+
+    RenderPassTexture {
+        id: mainDepthStencilTexture
+        format: RenderPassTexture.Depth24Stencil8
+    }
+
+    // Main pass orchestrates the complete render path:
+    // 1. Opaque geometry (deferred)
+    // 2. Skybox background
+    // 3. 2D UI overlays
+    // 4. Transparent objects (forward)
+    RenderPass {
+        id: mainColorPass
+        clearColor: "black"
+        renderTargetFlags: RenderPass.PreserveDepthStencilContents
+
+        commands: [
+            ColorAttachment { target: mainColorTexture },
+            DepthTextureAttachment { target: mainDepthStencilTexture },
+            RenderablesFilter {
+                renderableTypes: RenderablesFilter.None  // Parent doesn't render
+            },
+
+            // Sub-pass 1: Deferred lighting
+            SubRenderPass {
+                renderPass: RenderPass {
+                    id: deferredLightingPass
+                    materialMode: RenderPass.OriginalMaterial
+                    commands: [
+                        PipelineStateOverride {
+                            depthWriteEnabled: false
+                            depthTestEnabled: false
+                        },
+                        RenderablesFilter { layerMask: ContentLayer.Layer13 }
+                    ]
+                }
+            },
+
+            // Sub-pass 2: Skybox (behind everything)
+            SubRenderPass {
+                renderPass: RenderPass {
+                    passMode: RenderPass.SkyboxPass
+                    commands: [
+                        PipelineStateOverride {
+                            depthTestEnabled: true
+                            depthWriteEnabled: false
+                        }
+                    ]
+                }
+            },
+
+            // Sub-pass 3: 2D Qt Quick content
+            SubRenderPass {
+                renderPass: RenderPass {
+                    passMode: RenderPass.Item2DPass
+                }
+            },
+
+            // Sub-pass 4: Transparent objects (forward rendering)
+            SubRenderPass {
+                renderPass: RenderPass {
+                    materialMode: RenderPass.OriginalMaterial
+                    commands: [
+                        RenderablesFilter {
+                            renderableTypes: RenderablesFilter.Transparent
+                            layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
+                        },
+                        PipelineStateOverride {
+                            blendEnabled: true
+                            depthTestEnabled: true
+                            depthWriteEnabled: false
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+
+    // G-buffer pass (referenced by deferred lighting)
+    GBufferPass {
+        id: gbufferPass
+        layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
+        depthTexture: mainDepthStencilTexture
+    }
+
+    // Full-screen quad for deferred lighting
+    Model {
+        layers: ContentLayer.Layer13
+        geometry: PlaneGeometry { plane: PlaneGeometry.XY }
+        materials: CustomMaterial {
+            property TextureInput gbuffer0: TextureInput {
+                texture: Texture {
+                    textureProvider: RenderOutputProvider {
+                        textureSource: RenderOutputProvider.UserPassTexture
+                        renderPass: gbufferPass
+                        attachmentSelector: RenderOutputProvider.Attachment0
+                    }
+                }
+            }
+            // ... other G-buffer inputs
+            shadingMode: CustomMaterial.Unshaded
+            fragmentShader: "lighting.frag"
+            vertexShader: "lighting.vert"
+        }
+    }
+
+    // Display final result
+    SimpleQuadRenderer {
+        texture: Texture {
+            textureProvider: RenderOutputProvider {
+                textureSource: RenderOutputProvider.UserPassTexture
+                renderPass: mainColorPass
+            }
+        }
+    }
+
+    // Opaque 3D content
+    Model {
+        layers: ContentLayer.Layer0
+        source: "#Sphere"
+        materials: PrincipledMaterial { baseColor: "red" }
+    }
+
+    // Transparent 3D content
+    Model {
+        layers: ContentLayer.Layer1
+        source: "#Cone"
+        materials: PrincipledMaterial {
+            baseColor: Qt.rgba(0.0, 1.0, 0.0, 0.5)
+            alphaMode: PrincipledMaterial.Blend
+        }
+    }
+
+    // 2D content in 3D space
+    Node {
+        x: -200
+        y: 100
+        Item {
+            Button { text: "Click Me!" }
+            Rectangle {
+                color: "blue"
+                width: 50; height: 50
+            }
+        }
+    }
+
+    PerspectiveCamera { z: 300 }
+    DirectionalLight { eulerRotation.x: -45 }
+}
+\endqml
+
+\section2 Key Concepts
+
+\b{SubRenderPass for Hierarchical Organization:}
+
+The main pass uses \c SubRenderPass commands to execute child passes in sequence. The
+parent pass itself doesn't render anything (\c{RenderablesFilter.None}), it just
+orchestrates the child passes. This provides a clear structure and allows depth buffer
+sharing across all sub-passes.
+
+\b{Pass Modes:}
+
+\list
+\li \c{RenderPass.UserPass} (default): Custom rendering with your geometry and materials
+\li \c{RenderPass.SkyboxPass}: Renders the environment skybox from \l SceneEnvironment
+\li \c{RenderPass.Item2DPass}: Renders 2D Qt Quick content embedded in the 3D scene
+\endlist
+
+\b{Render Order:}
+
+\list 1
+\li Opaque geometry rendered to G-buffer
+\li Deferred lighting applied to full-screen quad
+\li Skybox rendered behind geometry (depth test enabled, depth write disabled)
+\li 2D UI overlays rendered on top
+\li Transparent objects rendered last with blending
+\endlist
+
+\b{Depth Buffer Sharing:}
+
+The \c mainDepthStencilTexture is shared across passes using \c PreserveDepthStencilContents.
+This ensures skybox renders behind geometry and transparent objects test against opaque
+geometry correctly.
+
+\b{Item2D Content:}
+
+Qt Quick 2D items (Button, Rectangle, Text, etc.) placed in \l Node objects are rendered
+by \c{RenderPass.Item2DPass}. These items are positioned in 3D space but rendered as 2D
+overlays that can receive mouse/touch input.
+
+\section1 Performance Considerations
+
+User-defined render passes provide maximum control but require careful consideration of
+performance implications.
+
+\section2 Texture Format Choices
+
+Choose texture formats based on your needs:
+
+\table
+\header
+\li Format
+\li Size per Pixel
+\li Use Case
+\row
+\li RGBA8
+\li 4 bytes
+\li Final output, simple color buffers
+\row
+\li RGBA16F
+\li 8 bytes
+\li HDR content, intermediate buffers, normals
+\row
+\li RGBA32F
+\li 16 bytes
+\li High precision calculations, positions
+\row
+\li R16F
+\li 2 bytes
+\li Single-channel HDR (depth, AO, etc.)
+\endtable
+
+For a 1920x1080 framebuffer:
+\list
+\li RGBA8: ~8 MB
+\li RGBA16F: ~16 MB
+\li RGBA32F: ~32 MB
+\li Three RGBA16F G-buffers: ~48 MB
+\endlist
+
+\b{Recommendation:} Use RGBA16F for intermediate buffers and RGBA8 or R8 where sufficient.
+
+\section2 Deferred vs Forward Rendering
+
+\table
+\header
+\li Aspect
+\li Deferred Rendering
+\li Forward Rendering
+\row
+\li Many lights
+\li Efficient (O(lights + pixels))
+\li Expensive (O(lights * objects))
+\row
+\li Memory bandwidth
+\li High (G-buffer reads/writes)
+\li Lower
+\row
+\li Transparency
+\li Requires separate pass
+\li Natural support
+\row
+\li MSAA
+\li Not directly supported
+\li Hardware MSAA works
+\row
+\li Setup complexity
+\li More complex
+\li Simpler
+\endtable
+
+\b{Use deferred rendering when:}
+\list
+\li You have many lights (10+)
+\li Screen-space effects are important
+\li Scene is mostly opaque
+\endlist
+
+\b{Use forward rendering when:}
+\list
+\li Few lights (<5)
+\li Lots of transparency
+\li Memory bandwidth is constrained
+\li Simpler pipeline is preferable
+\endlist
+
+\section2 Pass Ordering Optimization
+
+Render passes execute in the order they are encountered. Optimize by:
+
+\list
+\li Rendering opaque geometry before transparent geometry
+\li Using depth prepass when beneficial (reduces overdraw in complex scenes)
+\li Minimizing render target switches
+\li Reusing depth buffers across passes when possible
+\endlist
+
+\section2 Render Target Flags
+
+The \l{RenderPass::renderTargetFlags}{renderTargetFlags} property controls memory behavior:
+
+\qml
+RenderPass {
+    // First pass: write new content
+    renderTargetFlags: 0  // Default: clear render targets
+}
+
+RenderPass {
+    // Second pass: add to existing content
+    renderTargetFlags: RenderPass.PreserveColorContents |
+                      RenderPass.PreserveDepthStencilContents
+}
+
+RenderPass {
+    // Depth not needed after this pass
+    renderTargetFlags: RenderPass.DoNotStoreDepthStencilContents
+}
+\endqml
+
+\b{PreserveColorContents/PreserveDepthStencilContents:} Keep existing data (e.g., for
+multi-pass rendering to same target).
+
+\b{DoNotStoreDepthStencilContents:} Hint that depth/stencil can be discarded (on some
+hardware this can improve performance by avoiding memory writes).
+
+\section2 When to Use User Passes
+
+Consider using user render passes when:
+
+\list
+\li Implementing deferred rendering
+\li Creating complex multi-pass effects
+\li Needing explicit control over render order
+\li Implementing custom rendering techniques
+\li Building screen-space effects that need geometry data
+\endlist
+
+\b{Avoid user passes when:}
+\list
+\li Default rendering meets your needs
+\li You only need post-processing (use \l Effect instead)
+\li You only need custom material shaders (use \l CustomMaterial instead)
+\li Performance is critical and extra passes would be wasteful
+\endlist
+
+\section1 Common Patterns and Use Cases
+
+User render passes enable many advanced rendering techniques. Here are some common patterns:
+
+\section2 Deferred Shading/Lighting
+
+Store geometry attributes in G-buffers and perform lighting in screen space. Covered in
+detail in \l{Advanced Example: Deferred Rendering}.
+
+\section2 Edge Detection and Outlining
+
+Render scene normally, then apply edge detection in a second pass:
+
+\qml
+// Pass 1: Render scene with normals/depth
+RenderPass {
+    id: scenePass
+    commands: [
+        ColorAttachment { target: colorTex },
+        DepthTextureAttachment { target: depthTex }
+    ]
+}
+
+// Pass 2: Edge detection using depth discontinuities
+RenderPass {
+    id: edgePass
+    commands: [
+        ColorAttachment { target: outlineTex },
+        RenderablesFilter { layerMask: ContentLayer.Layer10 }
+    ]
+}
+
+Model {
+    layers: ContentLayer.Layer10
+    geometry: PlaneGeometry { }
+    materials: CustomMaterial {
+        property TextureInput depthInput: TextureInput {
+            // depthProvider is the id of a RenderOutputProvider that exposes
+            // depthTex as a sampleable texture (see "Render Output Provider"
+            // earlier in this page).
+            texture: Texture { textureProvider: depthProvider }
+        }
+        fragmentShader: "edge_detect.frag"
+        // Shader samples depth, computes gradients, draws edges
+    }
+}
+\endqml
+
+\section2 Custom Post-Processing Chains
+
+Chain multiple post-processing effects together by feeding each pass's output
+into the next via \l RenderOutputProvider. See
+\l{Pass Chaining Example} for a worked example of a multi-stage chain
+(\c scenePass → \c process1 → \c process2 → display).
+
+\section2 Selective Wireframe Overlay
+
+Render some objects solid and others as wireframe overlays. See the example in
+\l{Working with Layers}.
+
+\section2 Debug Visualization
+
+Create debug passes that visualize normals, depth, or other data:
+
+\qml
+// Normal visualization pass
+RenderPass {
+    materialMode: RenderPass.OverrideMaterial
+    overrideMaterial: CustomMaterial {
+        fragmentShader: "debug_normals.frag"
+        // FRAGCOLOR = vec4(normalize(NORMAL) * 0.5 + 0.5, 1.0);
+    }
+    commands: [
+        ColorAttachment { target: debugTex }
+    ]
+}
+\endqml
+
+\section2 Custom Shadow Mapping
+
+Implement custom shadow mapping with explicit control:
+
+\qml
+// Shadow map pass (render from light's perspective)
+RenderPass {
+    id: shadowPass
+    materialMode: RenderPass.OverrideMaterial
+    overrideMaterial: CustomMaterial {
+        fragmentShader: "depth_only.frag"
+    }
+    commands: [
+        DepthTextureAttachment { target: shadowMapTex }
+    ]
+}
+
+// Main pass using shadow map
+RenderPass {
+    id: mainPass
+    commands: [
+        ColorAttachment { target: colorTex },
+        DepthStencilAttachment { }
+    ]
+}
+
+// Materials in main pass sample shadowMapTex for shadow testing
+\endqml
+
+\section1 Important Considerations
+
+When working with user render passes, keep these important points in mind:
+
+\section2 Shadow Handling
+
+User render passes do \b{not} automatically include Qt Quick 3D's internal shadow rendering.
+If you disable internal passes and need shadows, you must:
+
+\list
+\li Implement your own shadow mapping passes
+\li Render the scene from light's perspective to a depth texture
+\li Sample the shadow map in your lighting calculations
+\endlist
+
+Alternatively, for simpler cases, you may not need shadows or can use pre-baked shadow maps.
+
+\section2 HDR and Tonemapping
+
+When using floating-point render targets (RGBA16F, RGBA32F), your rendering is in linear
+HDR space. You must apply tonemapping in your final display pass to convert to displayable
+LDR:
+
+\qml
+CustomMaterial {
+    fragmentShader: "tonemap.frag"
+}
+\endqml
+
+\badcode
+// In tonemap.frag
+vec3 tonemap(vec3 hdr) {
+    // Simple Reinhard tonemapping
+    return hdr / (hdr + vec3(1.0));
+}
+
+void MAIN() {
+    vec3 hdrColor = texture(hdrInput, UV0).rgb;
+    FRAGCOLOR = vec4(tonemap(hdrColor), 1.0);
+}
+\endcode
+
+Qt Quick 3D provides \c{qt_tonemap()} function in shaders that can be used for this purpose.
+
+\section2 Depth Texture Generation
+
+When you need depth as a texture (for effects like depth-of-field), use
+\l DepthTextureAttachment instead of \l DepthStencilAttachment:
+
+\qml
+RenderPassTexture {
+    id: depthTex
+    format: RenderPassTexture.Depth24Stencil8
+}
+
+RenderPass {
+    commands: [
+        ColorAttachment { target: colorTex },
+        DepthTextureAttachment { target: depthTex }
+        // depthTex can now be sampled in shaders
+    ]
+}
+\endqml
+
+\section2 Clear Values and Render Target Management
+
+Each pass can specify clear values:
+
+\qml
+RenderPass {
+    clearColor: Qt.rgba(0.0, 0.0, 0.0, 0.0)
+    depthClearValue: 1.0
+    stencilClearValue: 0
+}
+\endqml
+
+When a pass doesn't preserve contents (default), render targets are cleared to these values
+before rendering. When \c PreserveColorContents or \c PreserveDepthStencilContents is set,
+existing content is kept and clear values are ignored.
+
+\section2 Layer Organization Best Practices
+
+Organize your layers logically:
+
+\list
+\li \b{Layer0-2}: Main scene objects
+\li \b{Layer3-4}: Transparent objects (separate pass)
+\li \b{Layer10+}: Full-screen quads for post-processing
+\li \b{Layer15+}: UI/debug overlays
+\endlist
+
+Document your layer usage in comments and be consistent across your application.
+
+\section2 Shader Compatibility
+
+Augment shaders and custom materials used in render passes must be compatible with Qt Quick
+3D's shader infrastructure:
+
+\list
+\li Use GLSL-compatible syntax
+\li Include appropriate \c{\#include} directives for Qt Quick 3D functions
+\li Be aware of available built-in variables
+\li Test on all target platforms (OpenGL, Vulkan, Metal, D3D)
+\endlist
+
+\section2 Multiple Render Targets Limitations
+
+When using multiple render targets (MRT):
+
+\list
+\li Maximum of 4 color attachments
+\li All attachments must have the same dimensions
+\li Blend state can be specified per-attachment via \l PipelineStateOverride
+\li Not all hardware supports MRT (check device capabilities)
+\endlist
+
+\section2 Transparency
+
+Transparent objects are challenging with deferred rendering. Common approaches:
+
+\list
+\li \b{Forward pass for transparent}: Render opaque geometry deferred, transparent geometry
+    in a separate forward pass
+\li \b{Separate transparent G-buffer}: Render transparent geometry to a separate set of
+    G-buffers with blending enabled
+\li \b{Weighted blended order-independent transparency}: Use specialized OIT techniques
+\endlist
+
+For most cases, a separate forward pass for transparent objects is simplest.
+
+\section1 API Reference
+
+The following table provides a complete reference of all types related to user render passes:
+
+\table
+\header
+\li Feature
+\li QML Type
+\li Description
+\row
+\li Main render pass definition
+\li \l RenderPass
+\li Defines a rendering pass with commands and material mode
+\row
+\li Render target textures
+\li \l RenderPassTexture
+\li Texture used as render target (color or depth/stencil)
+\row
+\li Texture output provider
+\li \l RenderOutputProvider
+\li Exposes render pass output as texture input
+\row
+\li Layer constants
+\li \l ContentLayer
+\li Singleton providing layer filtering constants
+\row
+\li Color output
+\li \l ColorAttachment
+\li Specifies a color render target
+\row
+\li Depth/stencil (default)
+\li \l DepthStencilAttachment
+\li Uses implicit depth/stencil buffer
+\row
+\li Depth/stencil (texture)
+\li \l DepthTextureAttachment
+\li Uses explicit depth texture
+\row
+\li Object filtering
+\li \l RenderablesFilter
+\li Filters objects by layer and type
+\row
+\li Pipeline state
+\li \l PipelineStateOverride
+\li Overrides graphics pipeline state
+\row
+\li Nested pass execution
+\li \c SubRenderPass
+\li Executes another render pass
+\row
+\li Shader defines
+\li \l AddDefine
+\li Adds shader preprocessor define
+\row
+\li Per-target blend state
+\li \l renderTargetBlend
+\li Blend configuration for MRT
+\row
+\li Display helper
+\li \l SimpleQuadRenderer
+\li Renders final output to View3D
+\endtable
+
+\section2 Related Types
+
+\table
+\header
+\li Type
+\li Description
+\row
+\li \l CustomMaterial
+\li Custom material with vertex/fragment shaders
+\row
+\li \l Effect
+\li Post-processing effects
+\row
+\li \l View3D
+\li 3D view with \l{View3D::renderOverrides}{renderOverrides} property
+\row
+\li \l Model
+\li 3D model with \l{Model::layers}{layers} property
+\endtable
+
+\section2 Examples
+
+\list
+\li \l{Qt Quick 3D - User Passes Example}: Complete deferred rendering example
+\endlist
+
+\section2 See Also
+
+\list
+\li \l{Programmable Materials, Effects, Geometry, and Texture data}: Overview of Qt Quick 3D
+    customization features
+\li \l{Qt Quick 3D Architecture}: Understanding the rendering pipeline
+\endlist
+
+*/
