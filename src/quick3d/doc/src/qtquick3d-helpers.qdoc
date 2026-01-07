@@ -1340,6 +1340,8 @@
     \li \image extendedsceneenvironment_ssgi_with.jpg
                {Medieval hall with screen-space global illumination enabled}
     \endtable
+
+    \sa {Qt Quick 3D - SSGI Lightmap Example}
 */
 /*! \qmlproperty bool ExtendedSceneEnvironment::ssgiIndirectLightEnabled
 
