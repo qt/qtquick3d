@@ -31,7 +31,7 @@ Q_LOGGING_CATEGORY(lcQuick3DRenderPass, "qt.quick3d.renderpass")
 */
 
 QQuick3DRenderPass::QQuick3DRenderPass(QQuick3DObject *parent)
-    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::RenderPass)), parent)
+    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::RenderPass, QQuick3DObjectPrivate::Flags::RequiresSecondaryUpdate)), parent)
     , QQuick3DPropertyChangedTracker(this, QQuick3DSuperClassInfo<QQuick3DRenderPass>())
 {
 }
@@ -51,8 +51,6 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
     auto &shaderAugmentation = renderPassNode->shaderAugmentation;
     auto &uniformProps = shaderAugmentation.propertyUniforms;
 
-    bool clearCommandsDirty = true;
-
     if (fullUpdate) {
         markAllDirty();
 
@@ -62,14 +60,12 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
 
         // Commands
         renderPassNode->resetCommands();
+        clearDirty(Dirty::CommandsDirty);
         for (QQuick3DShaderUtilsRenderCommand *command : std::as_const(m_commands)) {
-            if (auto *cmd = command->cloneCommand()) {
+            if (auto *cmd = command->cloneCommand())
                 renderPassNode->commands.push_back(cmd);
-            } else {
-                clearCommandsDirty = false; // Will try again in the second pass
-                if (m_commandCloneRetryCount == 0)
-                    qCDebug(lcQuick3DRenderPass, "RenderPass: Command cloning failed, will retry (command type: %s)", command->metaObject()->className());
-            }
+            else
+                markDirty(CommandsDirty, true); // Try again next time
         }
     }
 
@@ -91,6 +87,8 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
                 }
             }
         }
+
+        clearDirty(Dirty(Dirty::PropertyDirty | Dirty::TextureDirty));
     }
 
     // Clear Dirty
@@ -98,6 +96,8 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
         renderPassNode->renderTargetFlags = QRhiTextureRenderTarget::Flags(m_renderTargetFlags.toInt());
         renderPassNode->clearColor = m_clearColor;
         renderPassNode->depthStencilClearValue = { m_depthClearValue, m_stencilClearValue };
+
+        clearDirty(Dirty::ClearDirty);
     }
 
     if (m_dirtyAttributes & Dirty::PassTypeDirty) {
@@ -112,26 +112,8 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
             renderPassNode->passMode = QSSGRenderUserPass::Item2DPass;
             break;
         }
-    }
 
-    m_dirtyAttributes = 0;
-
-    // Handle command cloning retry logic
-    // In normal operation, SubRenderPass commands should succeed on the second pass after
-    // all referenced RenderPasses have been created during tree traversal.
-    if (!clearCommandsDirty) {
-        if (m_commandCloneRetryCount < MAX_COMMAND_CLONE_RETRIES) {
-            m_dirtyAttributes |= CommandsDirty; // Try again next time
-            m_commandCloneRetryCount++;
-        } else {
-            qWarning("RenderPass: Command cloning failed after %d retries. "
-                     "SubRenderPass may reference a RenderPass that doesn't exist or has initialization issues.",
-                     MAX_COMMAND_CLONE_RETRIES);
-            m_commandCloneRetryCount = 0; // Reset for potential future changes
-        }
-    } else {
-        // Successfully cloned all commands, reset retry counter
-        m_commandCloneRetryCount = 0;
+        clearDirty(Dirty::PassTypeDirty);
     }
 
     // If not a user pass, we're done
@@ -139,14 +121,17 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
         return renderPassNode;
 
     renderPassNode->materialMode = QSSGRenderUserPass::MaterialModes(m_materialMode);
+    clearDirty(Dirty::MaterialModeDirty);
+
     if (renderPassNode->materialMode == QSSGRenderUserPass::OverrideMaterial) {
+        clearDirty(Dirty::OverrideMaterialDirty);
         if (m_overrideMaterial) {
             // Set the backend material
             QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(m_overrideMaterial)->spatialNode;
             if (graphObject)
                 renderPassNode->overrideMaterial = graphObject;
             else
-                markDirty(OverrideMaterialDirty); // Try again next time
+                markDirty(OverrideMaterialDirty, true); // Try again next time
         } else {
             // Set nullptr
             renderPassNode->overrideMaterial = nullptr;
@@ -279,12 +264,20 @@ void QQuick3DRenderPass::updateSceneManager(QQuick3DSceneManager *sceneManager)
     Q_UNUSED(sceneManager)
 }
 
-void QQuick3DRenderPass::markDirty(Dirty type)
+void QQuick3DRenderPass::markDirty(Dirty type,  bool requestSecondaryUpdate)
 {
     if (!(m_dirtyAttributes & quint32(type))) {
         m_dirtyAttributes |= quint32(type);
         update();
     }
+
+    if (requestSecondaryUpdate)
+        QQuick3DObjectPrivate::get(this)->requestSecondaryUpdate();
+}
+
+void QQuick3DRenderPass::clearDirty(Dirty type)
+{
+    m_dirtyAttributes &= ~quint32(type);
 }
 
 /*!

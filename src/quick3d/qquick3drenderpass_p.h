@@ -129,7 +129,8 @@ private:
     static constexpr DirtyT AllDirty { std::numeric_limits<DirtyT>::max() };
 
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
-    void markDirty(QQuick3DRenderPass::Dirty type);
+    void markDirty(QQuick3DRenderPass::Dirty type, bool requestSecondaryUpdate = false);
+    void clearDirty(QQuick3DRenderPass::Dirty type);
 
     quint32 m_dirtyAttributes = AllDirty;
     QVector<QQuick3DShaderUtilsRenderCommand *> m_commands;
@@ -141,8 +142,6 @@ private:
     float m_depthClearValue = 1.0f;
     quint32 m_stencilClearValue = 0;
     RenderTargetFlags m_renderTargetFlags = RenderTargetFlag::None;
-    quint8 m_commandCloneRetryCount = 0;
-    static constexpr quint8 MAX_COMMAND_CLONE_RETRIES = 2;
 };
 
 QT_END_NAMESPACE

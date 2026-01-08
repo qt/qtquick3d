@@ -189,6 +189,7 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateDirtyResourceSecond
     const auto updateDirtyResourceNode = [this](QQuick3DObject *resource) {
         QQuick3DObjectPrivate *po = QQuick3DObjectPrivate::get(resource);
         po->dirtyAttributes = 0; // Not used, but we should still reset it.
+        po->secondaryUpdateRequested = false;
         QSSGRenderGraphObject *node = po->spatialNode;
         po->spatialNode = resource->updateSpatialNode(node);
         if (po->spatialNode)
@@ -240,10 +241,7 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
         }
     }
 
-    if (QSSGRenderGraphObject::isTexture(itemPriv->type) && qobject_cast<QQuick3DTexture *>(resourceObject)->extensionDirty())
-        dirtySecondPassResources.insert(resourceObject);
-
-    if (qobject_cast<QQuick3DRenderPass *>(resourceObject))
+    if (itemPriv->hasFlag(QQuick3DObjectPrivate::Flags::RequiresSecondaryUpdate) && itemPriv->secondaryUpdateRequested)
         dirtySecondPassResources.insert(resourceObject);
 
     // resource nodes dont go in the tree, so we dont need to parent them
