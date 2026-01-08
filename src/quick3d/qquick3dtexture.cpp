@@ -93,7 +93,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
-    : QQuick3DTexture(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image2D)), parent)
+    : QQuick3DTexture(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image2D, QQuick3DObjectPrivate::Flags::RequiresSecondaryUpdate)), parent)
 {
 }
 
@@ -1143,6 +1143,8 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                 imageNode->m_extensionsSource = static_cast<QSSGRenderExtension *>(sn);
         }
 
+        if (extDirty)
+            markDirty(DirtyFlag::ExtensionDirty, true);
         m_dirtyFlags.setFlag(DirtyFlag::ExtensionDirty, extDirty);
         m_dirtyFlags.setFlag(DirtyFlag::FlipVDirty, true);
 
@@ -1478,12 +1480,15 @@ void QQuick3DTexture::sourceItemWindowChanged(QQuickWindow *window)
     }
 }
 
-void QQuick3DTexture::markDirty(QQuick3DTexture::DirtyFlag type)
+void QQuick3DTexture::markDirty(QQuick3DTexture::DirtyFlag type, bool requestSecondaryUpdate)
 {
     if (!m_dirtyFlags.testFlag(type)) {
         m_dirtyFlags.setFlag(type, true);
         update();
     }
+
+    if (requestSecondaryUpdate)
+        QQuick3DObjectPrivate::get(this)->requestSecondaryUpdate();
 }
 
 QSSGRenderImage *QQuick3DTexture::getRenderImage()

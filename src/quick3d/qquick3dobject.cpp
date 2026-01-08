@@ -262,7 +262,7 @@ void QQuick3DObject::preSync()
 
 }
 
-QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)
+QQuick3DObjectPrivate::QQuick3DObjectPrivate(Type t, FlagsT f)
     : _stateGroup(nullptr)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
@@ -272,6 +272,17 @@ QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)
     , parentItem(nullptr)
     , subFocusItem(nullptr)
     , type(t)
+    , flags(f)
+{
+}
+
+QQuick3DObjectPrivate::QQuick3DObjectPrivate(Type t, Flags f)
+    : QQuick3DObjectPrivate(t, FlagsT(f))
+{
+}
+
+QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)
+    : QQuick3DObjectPrivate(t, Flags::None)
 {
 }
 
