@@ -228,6 +228,7 @@ private:
     bool m_submitLayerDepth = false;
     bool m_handtrackingExtensionSupported = false;
     bool m_handtrackingAimExtensionSupported = false;
+    bool m_overlayExtensionSupported = false;
     bool m_isGraphicsInitialized = false;
 
     bool m_sessionRunning{false};
