@@ -604,8 +604,19 @@ bool QQuick3DXrManagerPrivate::initialize()
     // Create Session
     XrSessionCreateInfo xrSessionInfo{};
     xrSessionInfo.type = XR_TYPE_SESSION_CREATE_INFO;
-    xrSessionInfo.next = m_graphics->handle();
     xrSessionInfo.systemId = m_systemId;
+
+    auto overlayLayerPlacement = qEnvironmentVariableIntValue("QT_QUICK3D_XR_OVERLAY_PLACEMENT");
+    if (m_overlayExtensionSupported && overlayLayerPlacement > 0) {
+        XrSessionCreateInfoOverlayEXTX overlayInfo {};
+        overlayInfo.type = XR_TYPE_SESSION_CREATE_INFO_OVERLAY_EXTX;
+        overlayInfo.sessionLayersPlacement = overlayLayerPlacement;
+        overlayInfo.next = m_graphics->handle();
+        xrSessionInfo.next = &overlayInfo;
+        qCDebug(lcQuick3DXr, "requesting overlay placement: %d", overlayLayerPlacement);
+    } else {
+        xrSessionInfo.next = m_graphics->handle();
+    }
 
     result = xrCreateSession(m_instance, &xrSessionInfo, &m_session);
     if (result != XR_SUCCESS) {
@@ -2179,6 +2190,11 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
         m_spaceExtensionSupported = isSupported;
         if (isSupported)
             enabledExtensions.append(requiredExtensions);
+    }
+
+    if (isExtensionSupported(XR_EXTX_OVERLAY_EXTENSION_NAME, extensionProperties)) {
+        m_overlayExtensionSupported = true;
+        enabledExtensions.append(XR_EXTX_OVERLAY_EXTENSION_NAME);
     }
 
 #ifdef Q_OS_ANDROID
