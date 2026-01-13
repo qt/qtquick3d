@@ -1727,8 +1727,6 @@ void QSSGRhiShaderResourceBindingList::addImageLoadStore(int binding, QRhiShader
     d->u.simage.level = level;
 }
 
-QT_END_NAMESPACE
-
 bool QSSGRhiContextPrivate::shaderDebuggingEnabled()
 {
     static const bool isSet = (qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG") != 0);
@@ -1917,3 +1915,5 @@ QSSGSharedRhiTextureWrapper::~QSSGSharedRhiTextureWrapper()
     // we're only using the unique_ptr for API convenience.
     (void)m_texture.release();
 }
+
+QT_END_NAMESPACE
