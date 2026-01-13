@@ -26,7 +26,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderLayer;
-struct QSSGCommand;
+class QSSGCommand;
 class QSSGRenderContextInterface;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphObject

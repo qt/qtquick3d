@@ -48,10 +48,12 @@ enum class CommandType
     SubRenderPass
 };
 
-struct QSSGCommand
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCommand
 {
+public:
     CommandType m_type;
     QSSGCommand(CommandType inType) : m_type(inType) {}
+    virtual ~QSSGCommand();
     const char *typeAsString() const;
     QString debugString() const;
     void addDebug(QDebug &stream) const;
