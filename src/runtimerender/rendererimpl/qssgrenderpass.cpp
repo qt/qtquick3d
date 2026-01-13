@@ -1560,7 +1560,7 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 #endif
 
             if (reportedNodeCount) {
-                currentNodeCount = nextMultipleOf(reportedNodeCount, 64u * 1024u);
+                currentNodeCount = reportedNodeCount;
             } else {
                 quint32 size = RenderHelpers::rhiCalculateABufferSize(data.layerPrepResult.textureDimensions(), 4 * ps.samples * ps.viewCount);
                 currentNodeCount = nextMultipleOf(size * size, 64u * 1024u);
