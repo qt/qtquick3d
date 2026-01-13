@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGCommand;
+class QSSGCommand;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderUserPass : public QSSGRenderGraphObject
 {
