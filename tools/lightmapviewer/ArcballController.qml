@@ -9,9 +9,17 @@ import QtQuick3D
 // by Ken Shoemake, 1992
 Item {
     id: root
-    visible: false
+
+    implicitWidth: parent.width
+    implicitHeight: parent.height
+    focus: true
 
     required property Node controlledObject
+    required property Camera camera
+
+    property real zoomSpeed: 0.1
+    property real pinchSpeed: 1.0
+
     property vector3d lastPos: Qt.vector3d(0, 0, 0)
     property bool moving: false
 
@@ -40,20 +48,25 @@ Item {
         return pt
     }
 
-    function mousePressed(posNDC) {
-        lastPos = pos2DToPos3D(posNDC)
+    function screenToNDC(pos) {
+        return Qt.vector2d((2.0 * pos.x - width) / width,
+                           (height - 2.0 * pos.y) / height)
+    }
+
+    function mousePressed(pos) {
+        lastPos = pos2DToPos3D(screenToNDC(pos))
         moving = true
     }
 
-    function mouseReleased(posNDC) {
+    function mouseReleased() {
         moving = false
     }
 
-    function mouseMoved(posNDC) {
+    function mouseMoved(pos) {
         if (!moving)
             return
 
-        let currentPos = pos2DToPos3D(posNDC)
+        let currentPos = pos2DToPos3D(screenToNDC(pos))
 
         // From Shoemake 1992:
         // [q.x, q.y, q.z] <- V3_Cross[pO, p1];
@@ -66,5 +79,47 @@ Item {
         let qnow = q.times(controlledObject.rotation)
         controlledObject.rotation = qnow
         lastPos = currentPos
+    }
+
+    DragHandler {
+        target: null
+        enabled: true
+        acceptedModifiers: Qt.NoModifier
+
+        onActiveChanged: {
+            if (active)
+                root.mousePressed(centroid.position)
+            else
+                root.mouseReleased()
+        }
+
+        onCentroidChanged: {
+            root.mouseMoved(centroid.position)
+        }
+    }
+
+    PinchHandler {
+        target: null
+        enabled: true
+
+        onScaleChanged: delta => {
+                            root.camera.z *= 1.0 / (delta * root.pinchSpeed)
+                        }
+    }
+
+    WheelHandler {
+        target: null
+        enabled: true
+        orientation: Qt.Vertical
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+
+        onWheel: event => {
+                     let delta = -event.angleDelta.y * 0.01
+                     root.camera.z += root.camera.z * delta * root.zoomSpeed
+                 }
+    }
+
+    TapHandler {
+        onTapped: root.forceActiveFocus()
     }
 }

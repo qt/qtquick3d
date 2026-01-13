@@ -38,7 +38,7 @@
 
     \snippet volumeraycaster/alpha_blending.frag main
 
-    To control the volume model we add a custom Item called ArcballController that implements an arcball controller so we can freely rotate the model. The DragHandler will send commands to the ArcballController when we click and move the mouse. The WheelHandler adds zooming to the camera.
+    To control the view we add a custom Item called ArcballController that implements an arcball controller so we can freely rotate the model and zoom the camera.
 
     \snippet volumeraycaster/Main.qml arcball
 

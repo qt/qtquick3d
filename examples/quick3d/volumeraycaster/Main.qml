@@ -269,6 +269,7 @@ ApplicationWindow {
         //! [arcball]
         ArcballController {
             id: arcballController
+            camera: cameraNode
             controlledObject: cubeModel
 
             function jumpToAxis(axis) {
@@ -296,41 +297,6 @@ ApplicationWindow {
             }
         }
 
-        DragHandler {
-            id: dragHandler
-            target: null
-            acceptedModifiers: Qt.NoModifier
-            onCentroidChanged: {
-                arcballController.mouseMoved(toNDC(centroid.position.x,
-                                                   centroid.position.y))
-            }
-
-            onActiveChanged: {
-                if (active) {
-                    view.forceActiveFocus()
-                    arcballController.mousePressed(toNDC(centroid.position.x,
-                                                         centroid.position.y))
-                } else
-                    arcballController.mouseReleased(toNDC(centroid.position.x,
-                                                          centroid.position.y))
-            }
-
-            function toNDC(x, y) {
-                return Qt.vector2d((2.0 * x / view.width) - 1.0,
-                                   1.0 - (2.0 * y / view.height))
-            }
-        }
-
-        WheelHandler {
-            id: wheelHandler
-            orientation: Qt.Vertical
-            target: null
-            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-            onWheel: event => {
-                         let delta = -event.angleDelta.y * 0.01
-                         cameraNode.z += cameraNode.z * 0.1 * delta
-                     }
-        }
         //! [arcball]
 
         FrameAnimation {
