@@ -3,6 +3,11 @@
 
 #include "qssgrendercommands_p.h"
 
+QSSGCommand::~QSSGCommand()
+{
+
+}
+
 const char *QSSGCommand::typeAsString() const
 {
     switch (m_type) {
