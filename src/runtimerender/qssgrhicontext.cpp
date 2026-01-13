@@ -1612,8 +1612,6 @@ void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourc
     d->u.stex.texSamplers[0].sampler = sampler;
 }
 
-QT_END_NAMESPACE
-
 bool QSSGRhiContextPrivate::shaderDebuggingEnabled()
 {
     static const bool isSet = (qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG") != 0);
@@ -1722,3 +1720,6 @@ QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const
     // get a small performance gain with OpenGL by declaring this.
     return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
 }
+
+QT_END_NAMESPACE
+
