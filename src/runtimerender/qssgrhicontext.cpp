@@ -1836,6 +1836,12 @@ QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const
     return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
 }
 
+QSSGRhiRenderableTextureV2::~QSSGRhiRenderableTextureV2()
+{
+    for (auto &tex : textures)
+        tex->invalidate();
+}
+
 /*!
     \internal
 
@@ -1898,21 +1904,56 @@ void QSSGRhiRenderableTextureV2::reset()
     depthTexture.reset();
 }
 
-QSSGSharedRhiTextureWrapper::QSSGSharedRhiTextureWrapper(QSSGUserRenderPassManager *manager, QRhiTexture *texture, Private)
+// Called by the manager when it's being destroyed and since it owns the resource
+// it will release them.
+void QSSGRhiRenderableTextureV2::invalidate()
+{
+    // NOTE: This does not delete the texture wrappers, just releases the underlying QRhiTexture.
+    for (auto &tex : textures)
+        tex->invalidate();
+
+    if (depthTexture)
+        depthTexture->invalidate();
+
+    reset();
+}
+
+QSSGSharedRhiTextureWrapper::QSSGSharedRhiTextureWrapper(const std::shared_ptr<QSSGUserRenderPassManager> &manager, QRhiTexture *texture, Private)
     : m_manager(manager)
     , m_texture(texture)
 {
     Q_ASSERT(m_manager != nullptr);
-    m_manager->refTexture(texture);
+    m_manager->refTexture(m_texture);
+}
+
+QSSGSharedRhiTextureWrapper::QSSGSharedRhiTextureWrapper(const std::shared_ptr<QSSGUserRenderPassManager> &manager, std::unique_ptr<QRhiTexture> texture)
+    : m_manager(manager)
+    , m_texture(std::move(texture))
+{
+    Q_ASSERT(m_manager != nullptr);
+    m_manager->refTexture(m_texture);
 }
 
 QSSGSharedRhiTextureWrapper::~QSSGSharedRhiTextureWrapper()
 {
-    if (m_owner)
-        m_owner->derefTexture(m_texture.get());
+    invalidate();
+}
 
-    // It's up to the owner to actually delete the texture,
-    // we're only using the unique_ptr for API convenience.
+void QSSGSharedRhiTextureWrapper::invalidate()
+{
+    if (m_manager && m_texture && !m_manager->derefTexture(m_texture.get())) {
+        // NOTE: This is the exception case. If the manager returns false, it means that the texture
+        //       was not tracked by it which means the logic is broken somewhere, or the API was misused.
+        //       There are two alternatives here: We either leak the texture, or delete it here.
+        //       If we leak it, then in case of repeated misuse, we may run out of memory.
+        //       If we delete it here, then we may double delete and crash.
+        //       We choose to delete it here, and log a warning. While not ideal, this is the more
+        //       obvious failure mode given that this should not happen in the first place.
+        qWarning("QSSGSharedRhiTextureWrapper: Texture was not tracked by the manager, deleting it directly to avoid memory leaks.");
+        delete m_texture.release();
+    }
+
+    // Under normal circumstances, the manager is responsible for deleting the texture.
     (void)m_texture.release();
 }
 

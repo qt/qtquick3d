@@ -26,8 +26,9 @@ static const QHash<const char*, const char*> AugmentMacros = {
     { "F90", "qt_f90" }
 };
 
+// NOTE: While this class doesn't have graphics resources itself, it manages commands that do!
 QSSGRenderUserPass::QSSGRenderUserPass()
-    : QSSGRenderGraphObject(Type::RenderPass)
+    : QSSGRenderGraphObject(Type::RenderPass, FlagT(Flags::HasGraphicsResources))
 {
 
 }

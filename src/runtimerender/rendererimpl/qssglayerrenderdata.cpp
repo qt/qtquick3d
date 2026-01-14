@@ -2959,6 +2959,9 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
         renderResult.reset();
     oitRenderContext.reset();
 
+    if (userRenderPassManager)
+        userRenderPassManager->releaseAll();
+
     renderer->unregisterItem2DData(*item2DData);
 }
 
@@ -3179,8 +3182,8 @@ const QSSGRenderReflectionMapPtr &QSSGLayerRenderData::requestReflectionMapManag
 
 const QSSGUserRenderPassManagerPtr &QSSGLayerRenderData::requestUserRenderPassManager()
 {
-    if (!userRenderPassManager && QSSG_GUARD(renderer && renderer->contextInterface()))
-        userRenderPassManager.reset(new QSSGUserRenderPassManager(*renderer->contextInterface()));
+    if (!userRenderPassManager)
+        userRenderPassManager = QSSGUserRenderPassManager::create();
     return userRenderPassManager;
 }
 

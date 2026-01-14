@@ -19,18 +19,24 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGUserRenderPassManager
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGUserRenderPassManager : public std::enable_shared_from_this<QSSGUserRenderPassManager>
 {
+    enum class Private { Initialize };
 public:
     // A set of user passes (no duplicates)
     using UserPassSet = QList<QSSGRenderUserPass *>;
 
-    const QSSGRenderContextInterface &m_context;
-
-    explicit QSSGUserRenderPassManager(const QSSGRenderContextInterface &inContext);
+    explicit QSSGUserRenderPassManager(Private);
     ~QSSGUserRenderPassManager();
+
+    [[nodiscard]] static std::shared_ptr<QSSGUserRenderPassManager> create()
+    {
+        return std::make_shared<QSSGUserRenderPassManager>(Private::Initialize);
+    }
 
     void scheduleUserPass(QSSGRenderUserPass *userPasses);
 
@@ -42,10 +48,21 @@ public:
 
     const UserPassSet &scheduledUserPasses() const { return m_scheduledUserPasses; }
 
-    void derefTexture(QRhiTexture *texture);
-    void refTexture(QRhiTexture *texture);
+    void releaseAll();
 
 private:
+    Q_DISABLE_COPY_MOVE(QSSGUserRenderPassManager)
+
+    friend class QSSGSharedRhiTextureWrapper;
+    friend class QSSGBufferManager;
+
+    // If return false the texture is not tracked and should be released by caller!!!
+    [[nodiscard]] bool derefTexture(QRhiTexture *texture);
+    void refTexture(QRhiTexture *texture);
+
+    [[nodiscard]] bool derefTexture(const std::unique_ptr<QRhiTexture> &texture);
+    void refTexture(const std::unique_ptr<QRhiTexture> &texture);
+
     QHash<const QSSGRenderUserPass *, QSSGRhiRenderableTextureV2Ptr> m_renderPassRenderTargets;
     UserPassSet m_scheduledUserPasses;
 
