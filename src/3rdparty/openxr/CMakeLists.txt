@@ -21,6 +21,8 @@ qt_internal_add_3rdparty_library(BundledOpenXR
         src/loader/loader_logger.hpp
         src/loader/loader_logger_recorders.cpp
         src/loader/loader_logger_recorders.hpp
+        src/loader/loader_properties.cpp
+        src/loader/loader_properties.hpp
         src/loader/manifest_file.cpp
         src/loader/manifest_file.hpp
         src/loader/runtime_interface.cpp
