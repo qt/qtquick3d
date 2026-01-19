@@ -498,8 +498,16 @@ struct XrGeneratedDispatchTable {
     PFN_xrGetSpaceUserIdFB GetSpaceUserIdFB;
     PFN_xrDestroySpaceUserFB DestroySpaceUserFB;
 
+    // ---- XR_META_spatial_entity_discovery extension commands
+    PFN_xrDiscoverSpacesMETA DiscoverSpacesMETA;
+    PFN_xrRetrieveSpaceDiscoveryResultsMETA RetrieveSpaceDiscoveryResultsMETA;
+
     // ---- XR_META_recommended_layer_resolution extension commands
     PFN_xrGetRecommendedLayerResolutionMETA GetRecommendedLayerResolutionMETA;
+
+    // ---- XR_META_spatial_entity_persistence extension commands
+    PFN_xrSaveSpacesMETA SaveSpacesMETA;
+    PFN_xrEraseSpacesMETA EraseSpacesMETA;
 
     // ---- XR_META_passthrough_color_lut extension commands
     PFN_xrCreatePassthroughColorLutMETA CreatePassthroughColorLutMETA;
@@ -508,6 +516,10 @@ struct XrGeneratedDispatchTable {
 
     // ---- XR_META_spatial_entity_mesh extension commands
     PFN_xrGetSpaceTriangleMeshMETA GetSpaceTriangleMeshMETA;
+
+    // ---- XR_META_body_tracking_calibration extension commands
+    PFN_xrSuggestBodyTrackingCalibrationOverrideMETA SuggestBodyTrackingCalibrationOverrideMETA;
+    PFN_xrResetBodyTrackingCalibrationMETA ResetBodyTrackingCalibrationMETA;
 
     // ---- XR_FB_face_tracking2 extension commands
     PFN_xrCreateFaceTracker2FB CreateFaceTracker2FB;
@@ -573,6 +585,14 @@ struct XrGeneratedDispatchTable {
     PFN_xrDestroyBodyTrackerBD DestroyBodyTrackerBD;
     PFN_xrLocateBodyJointsBD LocateBodyJointsBD;
 
+    // ---- XR_BD_facial_simulation extension commands
+    PFN_xrEnumerateFacialSimulationModesBD EnumerateFacialSimulationModesBD;
+    PFN_xrCreateFaceTrackerBD CreateFaceTrackerBD;
+    PFN_xrDestroyFaceTrackerBD DestroyFaceTrackerBD;
+    PFN_xrGetFacialSimulationDataBD GetFacialSimulationDataBD;
+    PFN_xrSetFacialSimulationModeBD SetFacialSimulationModeBD;
+    PFN_xrGetFacialSimulationModeBD GetFacialSimulationModeBD;
+
     // ---- XR_BD_spatial_sensing extension commands
     PFN_xrEnumerateSpatialEntityComponentTypesBD EnumerateSpatialEntityComponentTypesBD;
     PFN_xrGetSpatialEntityUuidBD GetSpatialEntityUuidBD;
@@ -618,6 +638,41 @@ struct XrGeneratedDispatchTable {
     PFN_xrGetPlaneDetectionsEXT GetPlaneDetectionsEXT;
     PFN_xrGetPlanePolygonBufferEXT GetPlanePolygonBufferEXT;
 
+    // ---- XR_ANDROID_trackables extension commands
+    PFN_xrEnumerateSupportedTrackableTypesANDROID EnumerateSupportedTrackableTypesANDROID;
+    PFN_xrEnumerateSupportedAnchorTrackableTypesANDROID EnumerateSupportedAnchorTrackableTypesANDROID;
+    PFN_xrCreateTrackableTrackerANDROID CreateTrackableTrackerANDROID;
+    PFN_xrDestroyTrackableTrackerANDROID DestroyTrackableTrackerANDROID;
+    PFN_xrGetAllTrackablesANDROID GetAllTrackablesANDROID;
+    PFN_xrGetTrackablePlaneANDROID GetTrackablePlaneANDROID;
+    PFN_xrCreateAnchorSpaceANDROID CreateAnchorSpaceANDROID;
+
+    // ---- XR_ANDROID_device_anchor_persistence extension commands
+    PFN_xrEnumerateSupportedPersistenceAnchorTypesANDROID EnumerateSupportedPersistenceAnchorTypesANDROID;
+    PFN_xrCreateDeviceAnchorPersistenceANDROID CreateDeviceAnchorPersistenceANDROID;
+    PFN_xrDestroyDeviceAnchorPersistenceANDROID DestroyDeviceAnchorPersistenceANDROID;
+    PFN_xrPersistAnchorANDROID PersistAnchorANDROID;
+    PFN_xrGetAnchorPersistStateANDROID GetAnchorPersistStateANDROID;
+    PFN_xrCreatePersistedAnchorSpaceANDROID CreatePersistedAnchorSpaceANDROID;
+    PFN_xrEnumeratePersistedAnchorsANDROID EnumeratePersistedAnchorsANDROID;
+    PFN_xrUnpersistAnchorANDROID UnpersistAnchorANDROID;
+
+    // ---- XR_ANDROID_face_tracking extension commands
+    PFN_xrCreateFaceTrackerANDROID CreateFaceTrackerANDROID;
+    PFN_xrDestroyFaceTrackerANDROID DestroyFaceTrackerANDROID;
+    PFN_xrGetFaceStateANDROID GetFaceStateANDROID;
+    PFN_xrGetFaceCalibrationStateANDROID GetFaceCalibrationStateANDROID;
+
+    // ---- XR_ANDROID_passthrough_camera_state extension commands
+    PFN_xrGetPassthroughCameraStateANDROID GetPassthroughCameraStateANDROID;
+
+    // ---- XR_ANDROID_raycast extension commands
+    PFN_xrEnumerateRaycastSupportedTrackableTypesANDROID EnumerateRaycastSupportedTrackableTypesANDROID;
+    PFN_xrRaycastANDROID RaycastANDROID;
+
+    // ---- XR_ANDROID_trackables_object extension commands
+    PFN_xrGetTrackableObjectANDROID GetTrackableObjectANDROID;
+
     // ---- XR_EXT_future extension commands
     PFN_xrPollFutureEXT PollFutureEXT;
     PFN_xrCancelFutureEXT CancelFutureEXT;
@@ -653,6 +708,17 @@ struct XrGeneratedDispatchTable {
     PFN_xrStopColocationDiscoveryMETA StopColocationDiscoveryMETA;
     PFN_xrStartColocationAdvertisementMETA StartColocationAdvertisementMETA;
     PFN_xrStopColocationAdvertisementMETA StopColocationAdvertisementMETA;
+
+    // ---- XR_ANDROID_anchor_sharing_export extension commands
+#if defined(XR_USE_PLATFORM_ANDROID)
+    PFN_xrShareAnchorANDROID ShareAnchorANDROID;
+#endif // defined(XR_USE_PLATFORM_ANDROID)
+#if defined(XR_USE_PLATFORM_ANDROID)
+    PFN_xrUnshareAnchorANDROID UnshareAnchorANDROID;
+#endif // defined(XR_USE_PLATFORM_ANDROID)
+
+    // ---- XR_ANDROID_trackables_marker extension commands
+    PFN_xrGetTrackableMarkerANDROID GetTrackableMarkerANDROID;
 
     // ---- XR_EXT_spatial_entity extension commands
     PFN_xrEnumerateSpatialCapabilitiesEXT EnumerateSpatialCapabilitiesEXT;
