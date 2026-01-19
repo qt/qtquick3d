@@ -134,4 +134,9 @@ void QQuick3DTextureProviderExtension::setSamplerHint(SamplerHint newSamplerHint
     emit samplerHintChanged();
 }
 
+bool QQuick3DTextureProviderExtension::event(QEvent *event)
+{
+    return QQuick3DRenderExtension::event(event);
+}
+
 QT_END_NAMESPACE

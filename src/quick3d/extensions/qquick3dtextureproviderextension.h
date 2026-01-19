@@ -42,6 +42,7 @@ Q_SIGNALS:
     void samplerHintChanged();
 
 protected:
+    bool event(QEvent *event) override;
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 };
 
