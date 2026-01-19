@@ -2843,7 +2843,7 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
                                                        const QSSGRhiGraphicsPipelineState &basePipelineState,
                                                        QRhiRenderPassDescriptor *rpDesc,
                                                        QSSGRenderGraphObject *overrideMaterial,
-                                                       const QSSGLayerRenderData &inData,
+                                                       QSSGLayerRenderData &inData,
                                                        QSSGRenderableObjectList &inObjects,
                                                        QSSGShaderFeatures featureSet,
                                                        size_t index)
@@ -2874,6 +2874,38 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
         QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
         const void *modelNode = &subsetRenderable.modelContext.model;
         QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ passKey, modelNode, overrideMaterial, 0 });
+
+        // Update the shader key to reflect the override material's properties
+        // The subsetRenderable.shaderDescription was set during prepareModelsForRender for the original material,
+        // but we need it to reflect the override material when paired with this model/subset.
+        {
+            QSSGRenderableObjectFlags renderableFlags = subsetRenderable.renderableFlags;
+            float opacity = subsetRenderable.opacity;
+
+            // Determine lighting conditions from the subset's lights
+            const bool hasAnyLights = !subsetRenderable.lights.isEmpty();
+            const bool anyLightHasShadows = std::any_of(subsetRenderable.lights.begin(),
+                                                        subsetRenderable.lights.end(),
+                                                        [](const QSSGShaderLight &light) { return light.shadows; });
+
+            // We need a non-const reference to layerPrepResult flags
+            // Make a copy since the prepare functions might modify it
+            auto layerPrepFlags = inData.layerPrepResult.getFlags();
+
+            if (isCustomMaterial) {
+                auto &material = static_cast<QSSGRenderCustomMaterial &>(*overrideMaterial);
+                auto prepResult = inData.prepareCustomMaterialForRender(material, renderableFlags, opacity,
+                                                                        false, hasAnyLights, anyLightHasShadows,
+                                                                        layerPrepFlags);
+                subsetRenderable.shaderDescription = prepResult.materialKey;
+            } else {
+                auto &material = static_cast<QSSGRenderDefaultMaterial &>(*overrideMaterial);
+                auto prepResult = inData.prepareDefaultMaterialForRender(material, renderableFlags, opacity,
+                                                                         hasAnyLights, anyLightHasShadows,
+                                                                         layerPrepFlags);
+                subsetRenderable.shaderDescription = prepResult.materialKey;
+            }
+        }
 
         QSSGRhiShaderPipelinePtr shaderPipeline;
 

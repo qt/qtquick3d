@@ -645,6 +645,20 @@ public:
 
     [[nodiscard]] static QSSGLayerRenderData *getCurrent(const QSSGFrameData &data) { return data.getCurrent(); }
 
+    QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
+                                                                         QSSGRenderableObjectFlags &inExistingFlags,
+                                                                         float inOpacity,
+                                                                         bool hasAnyLights,
+                                                                         bool anyLightHasShadows,
+                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
+
+    QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
+                                                                        QSSGRenderableObjectFlags &inExistingFlags,
+                                                                        float inOpacity, bool alreadyDirty,
+                                                                        bool hasAnyLights,
+                                                                        bool anyLightHasShadows,
+                                                                        QSSGLayerRenderPreparationResultFlags &ioFlags);
+
 private:
     friend class QSSGRenderer;
     friend class QSSGRendererPrivate;
@@ -707,20 +721,6 @@ private:
     [[nodiscard]] const QSSGRenderCameraDataList &getCachedCameraDatas();
     void ensureCachedCameraDatas();
     void updateSortedDepthObjectsListImp(const QSSGRenderCamera &camera, size_t index);
-
-
-    QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
-                                                                         QSSGRenderableObjectFlags &inExistingFlags,
-                                                                         float inOpacity,
-                                                                         bool hasAnyLights,
-                                                                         bool anyLightHasShadows,
-                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
-
-    QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
-                                                                        QSSGRenderableObjectFlags &inExistingFlags,
-                                                                        float inOpacity, bool alreadyDirty,
-                                                                        bool hasAnyLights, bool anyLightHasShadows,
-                                                                        QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     static void prepareModelMaterials(RenderableNodeEntries &renderableModels, bool cullUnrenderables);
     static void prepareModelMaterials(const RenderableNodeEntries::ConstIterator &begin,
