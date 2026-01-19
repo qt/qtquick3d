@@ -10,9 +10,9 @@
         "pkg:github/zeux/meshoptimizer@v$<VERSION>"
     ],
     "Comment": "No relevant CPE found",
-    "Version": "0.23",
+    "Version": "1.0",
     "License": "MIT License",
     "LicenseId": "MIT",
     "LicenseFile": "LICENSE.md",
-    "Copyright": "Copyright (c) 2016-2025 Arseny Kapoulkine"
+    "Copyright": "Copyright (c) 2016-2026 Arseny Kapoulkine"
 }
