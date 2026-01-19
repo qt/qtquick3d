@@ -41,7 +41,7 @@ qt_internal_extend_target(Quick3DXr CONDITION LINUX AND QT_FEATURE_wayland
 )
 
 # Linux / egl
-qt_internal_extend_target(Quick3DXr CONDITION LINUX AND QT_FEATURE_egl
+qt_internal_extend_target(Quick3DXr CONDITION LINUX AND QT_FEATURE_egl AND (QT_FEATURE_opengles2 OR QT_FEATURE_opengl)
     DEFINES
         XR_USE_PLATFORM_EGL
     LIBRARIES
