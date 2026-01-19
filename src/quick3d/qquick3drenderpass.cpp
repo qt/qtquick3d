@@ -261,7 +261,21 @@ void QQuick3DRenderPass::qmlCommandClear(QQmlListProperty<QQuick3DShaderUtilsRen
 
 void QQuick3DRenderPass::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
-    Q_UNUSED(sceneManager)
+    if (sceneManager) {
+        // Handle inline override material that may not have had a scene manager when it was set
+        if (m_overrideMaterial && !m_overrideMaterial->parentItem() && !QQuick3DObjectPrivate::get(m_overrideMaterial)->sceneManager) {
+            if (!m_overrideMaterialRefed) {
+                QQuick3DObjectPrivate::refSceneManager(m_overrideMaterial, *sceneManager);
+                m_overrideMaterialRefed = true;
+            }
+        }
+    } else {
+        // Deref the material when scene manager is removed
+        if (m_overrideMaterial && m_overrideMaterialRefed) {
+            QQuick3DObjectPrivate::derefSceneManager(m_overrideMaterial);
+            m_overrideMaterialRefed = false;
+        }
+    }
 }
 
 void QQuick3DRenderPass::markDirty(Dirty type,  bool requestSecondaryUpdate)
@@ -368,9 +382,34 @@ void QQuick3DRenderPass::setOverrideMaterial(QQuick3DMaterial *newOverrideMateri
     if (m_overrideMaterial == newOverrideMaterial)
         return;
 
+    // Deref the old material if we had ref'd it
+    if (m_overrideMaterial && m_overrideMaterialRefed) {
+        QQuick3DObjectPrivate::derefSceneManager(m_overrideMaterial);
+        m_overrideMaterialRefed = false;
+    }
+
     QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DRenderPass::setOverrideMaterial, newOverrideMaterial, m_overrideMaterial);
 
     m_overrideMaterial = newOverrideMaterial;
+
+    // Handle inline material declarations by ensuring they get registered with the scene manager
+    if (m_overrideMaterial && m_overrideMaterial->parentItem() == nullptr) {
+        // If the material has no parent, check if it has a hierarchical parent that's a QQuick3DObject
+        // and re-parent it to that, e.g., inline materials
+        QQuick3DObject *parentItem = qobject_cast<QQuick3DObject *>(m_overrideMaterial->parent());
+        if (parentItem) {
+            m_overrideMaterial->setParentItem(parentItem);
+        } else {
+            // If no valid parent was found, make sure the material refs our scene manager
+            const auto &sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager;
+            if (sceneManager) {
+                QQuick3DObjectPrivate::refSceneManager(m_overrideMaterial, *sceneManager);
+                m_overrideMaterialRefed = true;
+            }
+            // else: If there's no scene manager, defer until one is set, see itemChange()
+        }
+    }
+
     emit overrideMaterialChanged();
     markDirty(OverrideMaterialDirty);
 }
