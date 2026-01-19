@@ -137,6 +137,7 @@ private:
     QColor m_clearColor = Qt::black;
     MaterialModes m_materialMode = OriginalMaterial;
     QQuick3DMaterial *m_overrideMaterial = nullptr;
+    bool m_overrideMaterialRefed = false;
     QUrl m_augmentShader;
     PassMode m_passMode = UserPass;
     float m_depthClearValue = 1.0f;
