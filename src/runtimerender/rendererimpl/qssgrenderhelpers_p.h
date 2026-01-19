@@ -134,7 +134,7 @@ void rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
                                         const QSSGRhiGraphicsPipelineState &basePipelineState,
                                         QRhiRenderPassDescriptor *rpDesc,
                                         QSSGRenderGraphObject *overrideMaterial,
-                                        const QSSGLayerRenderData &inData,
+                                        QSSGLayerRenderData &inData,
                                         QSSGRenderableObjectList &inObjects,
                                         QSSGShaderFeatures featureSet,
                                         size_t index);
