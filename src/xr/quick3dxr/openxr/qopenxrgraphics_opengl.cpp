@@ -10,10 +10,6 @@
 
 #include <rhi/qrhi.h>
 
-#ifdef XR_USE_PLATFORM_EGL
-#include <EGL/egl.h>
-#endif
-
 #if defined(XR_USE_PLATFORM_XLIB) || defined(XR_USE_PLATFORM_XCB)
 #include <GL/glx.h>
 #endif

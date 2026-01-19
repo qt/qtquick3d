@@ -29,14 +29,8 @@
 # include <d3d12.h>
 #endif
 
-#ifdef XR_USE_GRAPHICS_API_OPENGL
+#if defined(XR_USE_GRAPHICS_API_OPENGL) || defined(XR_USE_GRAPHICS_API_OPENGL_ES)
 # include <QtGui/QOpenGLContext>
-#endif
-
-
-#ifdef XR_USE_GRAPHICS_API_OPENGL_ES
-# include <QtGui/QOpenGLContext>
-# include <EGL/egl.h>
 #endif
 
 #ifdef XR_USE_PLATFORM_ANDROID
@@ -47,6 +41,10 @@
 #ifdef XR_USE_PLATFORM_XCB
 # include <xcb/xcb.h>
 # include <xcb/glx.h>
+#endif
+
+#if defined(XR_USE_PLATFORM_EGL) || defined(XR_USE_GRAPHICS_API_OPENGL_ES)
+# include <EGL/egl.h>
 #endif
 
 #ifdef XR_USE_PLATFORM_XLIB
