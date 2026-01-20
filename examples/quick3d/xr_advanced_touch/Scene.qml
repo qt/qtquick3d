@@ -18,6 +18,7 @@ Node {
 
     property alias isGrabbing: grabAction.pressed
 
+    //! [color swatch]
     component ColorSwatch: Rectangle {
         implicitWidth: 100
         implicitHeight: 100
@@ -53,6 +54,7 @@ Node {
             }
         }
     }
+    //! [color swatch]
 
     PrincipledMaterial {
         id: material
@@ -66,6 +68,7 @@ Node {
     }
 
 
+    //! [grab action]
     XrInputAction {
         id: grabAction
         controller: XrInputAction.RightHand
@@ -76,7 +79,9 @@ Node {
                 grabController.startGrab()
         }
     }
+    //! [grab action]
 
+    //! [grab controller]
     XrController {
         id: grabController
         controller: XrController.RightHand
@@ -100,6 +105,7 @@ Node {
             }
         }
     }
+    //! [grab controller]
 
     XrGadget {
         id: selectableModel
@@ -107,10 +113,12 @@ Node {
         x: 0
         z: -40
 
+        //! [gadget touch]
         onTouched: (uvPosition, touchID, pressed) => {
             if (!isGrabbing)
                 painterItem.setUv(uvPosition.x, uvPosition.y, touchID, pressed);
         }
+        //! [gadget touch]
 
         TorusGeometry {
             id: torusG
@@ -148,6 +156,7 @@ Node {
         scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
     }
 
+    //! [curved screen]
     Model {
         objectName: "curved screen"
         x: 0
@@ -330,4 +339,5 @@ Node {
         }
         opacity: 0.99 // enable alpha blending
     }
+    //! [curved screen]
 }
