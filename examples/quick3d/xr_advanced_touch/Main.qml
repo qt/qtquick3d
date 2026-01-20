@@ -48,6 +48,7 @@ XrView {
 
     Scene {
         id: theScene
+        //! [color change]
         y: xrView.referenceSpace === XrView.ReferenceSpaceLocalFloor ? 130 : 0
         onColorChange: (col, id) => {
             if (id === 1)
@@ -55,5 +56,6 @@ XrView {
             else
                 leftHand.color = col
         }
+        //! [color change]
     }
 }
