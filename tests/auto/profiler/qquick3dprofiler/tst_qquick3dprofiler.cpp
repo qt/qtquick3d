@@ -92,7 +92,7 @@ class tst_QQuick3DProfiler : public QQmlDataTest
 public:
     tst_QQuick3DProfiler();
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void testProfiling();
 };
 
