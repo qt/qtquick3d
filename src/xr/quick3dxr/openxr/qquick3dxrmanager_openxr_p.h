@@ -53,6 +53,8 @@ public:
     static QQuick3DXrManagerPrivate *get(QQuick3DXrManager *manager);
 
     [[nodiscard]] bool supportsPassthrough() const;
+    bool supportsTransparentBlendMode() const;
+    bool supportsFBPassthrough() const;
 
     bool isValid() const { return m_graphics != nullptr; }
 
@@ -81,7 +83,10 @@ public:
     bool isMultiViewRenderingEnabled() const { return m_multiviewRendering; }
 
     [[nodiscard]] bool setPassthroughEnabled(bool enable);
-    bool isPassthroughEnabled() const { return m_enablePassthrough; }
+    bool isPassthroughEnabled() const;
+
+    void setFBPassthroughEnabled(bool enable);
+    bool setTransparentBlendMode(bool enable);
 
     void setDepthSubmissionEnabled(bool enable);
     bool isDepthSubmissionEnabled() const { return m_compositionLayerDepthSupported && m_submitLayerDepth; }
@@ -211,9 +216,7 @@ private:
     int64_t m_depthSwapchainFormat = -1;
     int m_samples = 1;
 
-    bool m_passThroughEnabled = false;
-    bool m_passthroughSupported = false;
-    bool m_enablePassthrough = false;
+    bool m_fbPassthroughEnabled = false;
     bool m_multiviewRendering = true;
     bool m_spaceExtensionSupported = false;
     QQuick3DXrAnchorManager *m_spaceExtension = nullptr;
@@ -254,6 +257,7 @@ private:
     bool m_wantUpdate = false;
     QQuick3DOpenXRThreadWorker *m_worker = nullptr;
     QThread *m_workerThread = nullptr;
+    QVector<XrEnvironmentBlendMode> m_blendModes;
 };
 
 QT_END_NAMESPACE
