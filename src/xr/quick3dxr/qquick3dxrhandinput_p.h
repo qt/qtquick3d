@@ -72,7 +72,7 @@ private:
     QList<QVector3D> m_jointPositions;
     QList<QQuaternion> m_jointRotations;
     QVector3D m_pokePosition;
-    bool m_isHandTracking;
+    bool m_isHandTracking = false;
 };
 
 QT_END_NAMESPACE
