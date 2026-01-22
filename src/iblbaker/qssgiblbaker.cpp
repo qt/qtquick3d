@@ -544,7 +544,8 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
             // Read back texture
             Q_ASSERT(rhi->isRecordingFrame());
 
-            const auto texture = renderTarget->description().cbeginColorAttachments()->texture();
+            const auto descr = renderTarget->description();
+            const auto texture = descr.cbeginColorAttachments()->texture();
 
             QRhiReadbackResult result;
             QRhiReadbackDescription readbackDesc(texture); // null src == read from swapchain backbuffer
