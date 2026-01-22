@@ -146,8 +146,8 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        minimumValue: 0
-                        maximumValue: 1
+                        minimumValue: -9999999
+                        maximumValue: 9999999
                         decimals: 2
                         stepSize: 0.01
                         backendValue: backendValues.emissiveFactor_x
@@ -169,8 +169,8 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        minimumValue: 0
-                        maximumValue: 1
+                        minimumValue: -9999999
+                        maximumValue: 9999999
                         decimals: 2
                         stepSize: 0.01
                         backendValue: backendValues.emissiveFactor_y
@@ -192,8 +192,8 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        minimumValue: 0
-                        maximumValue: 1
+                        minimumValue: -9999999
+                        maximumValue: 9999999
                         decimals: 2
                         stepSize: 0.01
                         backendValue: backendValues.emissiveFactor_z
