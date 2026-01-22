@@ -1638,7 +1638,8 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
                 rhiCtxD->setMainRenderPassDescriptor(rt->renderPassDescriptor());
                 rhiCtxD->setCommandBuffer(cb);
                 rhiCtxD->setRenderTarget(rt);
-                const QRhiColorAttachment *color0 = rt->description().cbeginColorAttachments();
+                const auto descr = rt->description();
+                const QRhiColorAttachment *color0 = descr.cbeginColorAttachments();
                 if (color0 && color0->texture()) {
                     sampleCount = color0->texture()->sampleCount();
                     if (rt->resourceType() == QRhiResource::TextureRenderTarget) {
