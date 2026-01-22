@@ -40,17 +40,6 @@ void SceneEffectBase::scheduleEnvUpdate()
         m_environment->update();
 }
 
-void SceneEffectBase::registerWithEnv(SceneEffectEnvironment *env)
-{
-    Q_UNUSED(env);
-    qWarning() << "We shouldn't be here!!!";
-}
-void SceneEffectBase::unregisterWithEnv(SceneEffectEnvironment *oldEnvironment)
-{
-    Q_UNUSED(oldEnvironment);
-    qWarning() << "We shouldn't be here!!!";
-}
-
 MainSceneEffect::MainSceneEffect(QQuick3DObject *p)
     : SceneEffectBase(p)
 {
