@@ -608,11 +608,6 @@ public:
         return item2DData->getItem2DRenderer(item);
     }
 
-    [[nodiscard]] const std::unique_ptr<QRhiRenderPassDescriptor> &getItem2DRenderPassDescriptor() const
-    {
-        return item2DData->getItem2DRenderPassDescriptor();
-    }
-
     [[nodiscard]] ModelViewProjections getItem2DMvps(QSSGRenderItem2DHandle h) const
     {
         return item2DData->getModelViewProjection(h);

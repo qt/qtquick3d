@@ -264,7 +264,6 @@ public:
     [[nodiscard]] ModelViewProjections getModelViewProjection(const QSSGRenderItem2D &item) const;
 
     [[nodiscard]] Item2DRenderer getItem2DRenderer(const QSSGRenderItem2D &item) const;
-    [[nodiscard]] const std::unique_ptr<QRhiRenderPassDescriptor> &getItem2DRenderPassDescriptor() const { return rpd; }
 
     [[nodiscard]] const QSSGGlobalRenderNodeDataPtr &globalNodeData() const { return m_gnd; }
 
@@ -283,7 +282,6 @@ private:
 
     QPointer<QSGRenderContext> item2DRenderContext;
     Item2DRendererStore item2DRenderers;
-    std::unique_ptr<QRhiRenderPassDescriptor> rpd;
     ModelViewProjectionStore modelViewProjections;
 
     const QMatrix4x4 flipMatrix { 1.0f, 0.0f, 0.0f, 0.0f,

@@ -1183,8 +1183,6 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
     // end up with a mismatched state in the QtQuick3D renderer.
     // See the end of this function for the corresponding end call (endSubLayerRender()).
     renderer.beginSubLayerRender(data);
-    const auto &rpd = data.getItem2DRenderPassDescriptor();
-    QSSG_ASSERT(rpd, return);
     for (const auto *item2D: std::as_const(item2Ds)) {
         // Find data for item
         auto item2DData = data.getItem2DRenderer(*item2D);
@@ -1208,6 +1206,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         auto layerPrepResult = data.layerPrepResult;
 
         QRhiRenderTarget *renderTarget = rhiCtx->renderTarget();
+        auto *rpd = renderTarget->renderPassDescriptor();
         renderer2d->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
         const int viewCount = data.layer.viewCount;
@@ -1227,7 +1226,7 @@ void Item2DPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
             renderer2d->setViewportRect(RenderHelpers::correctViewportCoordinates(layerPrepResult.getViewport(), deviceRect));
         }
         renderer2d->setDeviceRect(deviceRect);
-        QSGRenderTarget sgRt(renderTarget, rpd.get(), rhiCtx->commandBuffer());
+        QSGRenderTarget sgRt(renderTarget, rpd, rhiCtx->commandBuffer());
         sgRt.multiViewCount = data.layer.viewCount;
         renderer2d->setRenderTarget(sgRt);
         renderer2d->prepareSceneInline();

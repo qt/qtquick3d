@@ -734,9 +734,6 @@ void QSSGRenderItem2DData::updateItem2DData(QSSGItem2DsView &items, QSSGRenderer
     const bool contextChanged = (item2DRenderContext && item2DRenderContext != sgRc);
     item2DRenderContext = sgRc;
 
-    if (contextChanged || !rpd)
-        rpd.reset(rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor());
-
     for (const QSSGRenderItem2D *theItem2D : std::as_const(items)) {
         auto item2DRenderer = getItem2DRenderer(*theItem2D);
         if (contextChanged) {
@@ -777,7 +774,6 @@ void QSSGRenderItem2DData::releaseAll()
 {
     for (auto &it : item2DRenderers)
         delete it.second;
-    rpd.reset();
     item2DRenderers.clear();
     item2DRenderContext = nullptr;
     modelViewProjections.clear();
