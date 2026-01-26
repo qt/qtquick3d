@@ -367,6 +367,9 @@ bool QQuick3DXrView::init()
  */
 QQuick3DPickResult QQuick3DXrView::rayPick(const QVector3D &origin, const QVector3D &direction) const
 {
+    if (!m_xrManager.m_vrViewport)
+        return QQuick3DPickResult();
+
     return m_xrManager.m_vrViewport->rayPick(origin, direction);
 }
 
@@ -386,6 +389,9 @@ QQuick3DPickResult QQuick3DXrView::rayPick(const QVector3D &origin, const QVecto
  */
 QList<QQuick3DPickResult> QQuick3DXrView::rayPickAll(const QVector3D &origin, const QVector3D &direction) const
 {
+    if (!m_xrManager.m_vrViewport)
+        return {};
+
     return m_xrManager.m_vrViewport->rayPickAll(origin, direction);
 }
 
