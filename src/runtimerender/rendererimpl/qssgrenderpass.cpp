@@ -1405,10 +1405,17 @@ void UserExtensionPass::resetForFrame()
     extensions.clear();
 }
 
-template <typename T>
-static T nextMultipleOf(T value, T multiple)
+static quint32 nextMultipleOf(quint32 value, quint32 multiple)
 {
     return multiple * ((value / multiple) + 1);
+}
+
+static quint32 ensureFreeNodes(quint32 value, quint32 multiple)
+{
+    quint32 multipleOf = nextMultipleOf(value, multiple);
+    if (multipleOf - value < multiple)
+        multipleOf += multiple;
+    return multipleOf;
 }
 
 void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
@@ -1547,23 +1554,29 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         if (!rhiAuxiliaryImage->texture || rhiAuxiliaryImage->texture->pixelSize() != dim || currentNodeCount == 0 || currentNodeCount != reportedNodeCount)
 #endif
         {
+            quint32 extraNodeCount = 0;
 #ifdef QSSG_OIT_USE_BUFFERS
             if (rhiAuxBuffer && rhiAuxBuffer->size() != (dim.width() * dim.height() * 4u)) {
+                if (rhiAuxBuffer->size() < (dim.width() * dim.height() * 4u))
+                    extraNodeCount = ensureFreeNodes((dim.width() * dim.height() * 4u) - rhiAuxBuffer->size(), 32u * 1024u);
                 rhiAuxBuffer->destroy();
                 rhiAuxBuffer = nullptr;
             }
 #else
             if (rhiABufferImage->texture) {
+                const auto s = rhiAuxiliaryImage->texture->pixelSize();
+                if (s.width() * s.height() < dim.width() * dim.height())
+                    extraNodeCount = ensureFreeNodes(s.width() * s.height() - dim.width() * dim.height(), 32u * 1024u);
                 rhiABufferImage->texture->destroy();
                 rhiAuxiliaryImage->texture->destroy();
             }
 #endif
 
             if (reportedNodeCount) {
-                currentNodeCount = reportedNodeCount;
+                currentNodeCount = reportedNodeCount + extraNodeCount;
             } else {
                 quint32 size = RenderHelpers::rhiCalculateABufferSize(data.layerPrepResult.textureDimensions(), 4 * ps.samples * ps.viewCount);
-                currentNodeCount = nextMultipleOf(size * size, 64u * 1024u);
+                currentNodeCount = ensureFreeNodes(size * size, 32u * 1024u);
             }
             data.layer.oitNodeCount = currentNodeCount;
 
@@ -1631,14 +1644,18 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         clearImageData[7] = ps.viewCount;
 
         rub->updateDynamicBuffer(ubuf, 0, ubufSize, clearImageData);
+        quint32 zero = 0;
+#ifdef QSSG_OIT_USE_BUFFERS
+        rub->uploadStaticBuffer(rhiCounterBuffer, 0, 4, &zero);
+#else
+        rub->uploadTexture(rhiCounterImage->texture, {{0, 0, {&zero, 4}}});
+#endif
 
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
 #ifdef QSSG_OIT_USE_BUFFERS
         bindings.addStorageBuffer(1, QRhiShaderResourceBinding::FragmentStage, rhiAuxBuffer);
-        bindings.addStorageBuffer(2, QRhiShaderResourceBinding::FragmentStage, rhiCounterBuffer);
 #else
         bindings.addImageStore(1, QRhiShaderResourceBinding::FragmentStage, rhiAuxiliaryImage->texture, 0);
-        bindings.addImageStore(2, QRhiShaderResourceBinding::FragmentStage, rhiCounterImage->texture, 0);
 #endif
 
         clearSrb = rhiCtxD->srb(bindings);
@@ -1707,7 +1724,7 @@ void OITRenderPass::renderPass(QSSGRenderer &renderer)
                 const quint32 *d = reinterpret_cast<const quint32 *>(result->data.constData());
                 quint32 nodeCount = *d;
                 if (nodeCount)
-                    this->reportedNodeCount = nextMultipleOf(nodeCount, 64u * 1024u);
+                    this->reportedNodeCount = ensureFreeNodes(nodeCount, 32u * 1024u);
                 this->results.append(result);
             }
         };
@@ -1733,7 +1750,7 @@ void OITRenderPass::renderPass(QSSGRenderer &renderer)
                 const quint32 *d = reinterpret_cast<const quint32 *>(result->data.constData());
                 quint32 nodeCount = *d;
                 if (nodeCount)
-                    this->reportedNodeCount = nextMultipleOf(nodeCount, 64u * 1024u);
+                    this->reportedNodeCount = ensureFreeNodes(nodeCount, 32u * 1024u);
                 this->results.append(result);
             }
         };
