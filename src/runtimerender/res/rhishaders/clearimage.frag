@@ -17,13 +17,8 @@ layout(std430, binding = 1) buffer qt_imgAux
 {
     uint auxData[];
 };
-layout(std430, binding = 2) buffer qt_imgCounter
-{
-    uint counter;
-};
 #else
 layout(binding = 1, rgba32ui) uniform restrict writeonly uimage2D qt_imgAux;
-layout(binding = 2, r32ui) uniform restrict writeonly uimage2D qt_imgCounter;
 #endif
 
 void main()
@@ -41,9 +36,4 @@ void main()
             imageStore(qt_imgAux, ivec2(coord.x + s, coord.y + 1), ubuf.clearColor);
 #endif
     }
-#if QSSG_CLEAR_BUFFER == 1
-    counter = 0;
-#else
-    imageStore(qt_imgCounter, ivec2(0), uvec4(0));
-#endif
 }
