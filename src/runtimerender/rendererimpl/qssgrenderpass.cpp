@@ -2284,7 +2284,7 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
 
     Q_ASSERT(renderTarget->isValid());
 
-    ps.colorAttachmentCount = renderTarget->colorAttachmentCount();
+    ps.colorAttachmentCount = int(renderTarget->colorAttachmentCount());
 
     // Subpasses
     for (const auto &subPassId : std::as_const(subPassIds)) {
