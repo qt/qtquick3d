@@ -24,8 +24,13 @@ Rectangle {
         }
 
         Text {
-            text: "Default   |   autoOrientation: false   |   flipV: true   |   autoOrientation: false; flipV: true"
-            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Default | autoOrientation: false | flipV: true | autoOrientation: false; flipV: true"
+            anchors.top: parent.top
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: 8
+            font.pixelSize: 16
         }
 
         // Row 1
