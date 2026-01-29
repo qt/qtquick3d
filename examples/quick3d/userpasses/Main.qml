@@ -75,6 +75,8 @@ ApplicationWindow {
         Model {
             id: deferredLightingQuad
             layers: ContentLayer.Layer13
+            castsShadows: false
+            receivesShadows: false
             geometry: PlaneGeometry {
                 // geometry doesn't matter, just need 4 verts
                 plane: PlaneGeometry.XY

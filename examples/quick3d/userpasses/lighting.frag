@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 VARYING vec2 texcoord;
-#if QSSG_ENABLE_ORTHO_SHADOW_PASS
-VARYING float var_depth;
-#endif
 
 #if !(QSSG_ENABLE_DEPTH_PASS || QSSG_ENABLE_ORTHO_SHADOW_PASS || QSSG_ENABLE_PERSPECTIVE_SHADOW_PASS || QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS)
 #define LIGHTING_PASS
@@ -90,20 +87,6 @@ void MAIN()
     color = max(color, vec3(0.0));
 
     FRAGCOLOR = vec4(qt_tonemap(color), 1.0);
-#else
-#if QSSG_ENABLE_PERSPECTIVE_SHADOW_PASS
-    // Perspective shadow pass
-    vec3 qt_shadowCamPos = vec3(qt_cameraPosition.x, qt_cameraPosition.y, qt_cameraPosition.z);
-    float qt_shadowDist = length(var_world_position - qt_shadowCamPos);
-    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);
-    FRAGCOLOR = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);
-#elif QSSG_ENABLE_ORTHO_SHADOW_PASS
-    // Ortho Shadow pass (directional)
-    float qt_shadowDepth = (var_depth + qt_shadowDepthAdjust.x) * qt_shadowDepthAdjust.y;
-    FRAGCOLOR = vec4(qt_shadowDepth);
-#else
-    FRAGCOLOR = vec4(1.0, 0, 0, 1);
-#endif
 #endif // LIGHTING_PASS
 
 }
