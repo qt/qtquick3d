@@ -1855,13 +1855,13 @@ void QSSGRhiRenderableTextureV2::setDescription(QRhi *rhi, QRhiTextureRenderTarg
 {
     Q_ASSERT(rhi);
 
-    textures = {};
+    textures.clear();
     const size_t colorAttachmentCount = rtDesc.colorAttachmentCount();
     for (size_t i = 0; i < colorAttachmentCount; ++i)
-        textures.push_back(std::make_shared<QSSGSharedRhiTextureWrapper>(m_manager, rtDesc.colorAttachmentAt(i)->texture(), QSSGSharedRhiTextureWrapper::Private::Initialize));
+        textures.push_back(std::make_unique<QSSGManagedRhiTexture>(m_manager, rtDesc.colorAttachmentAt(i)->texture(), QSSGManagedRhiTexture::Private::Initialize));
 
     if (rtDesc.depthTexture()) {
-        depthTexture = std::make_shared<QSSGSharedRhiTextureWrapper>(m_manager, rtDesc.depthTexture(), QSSGSharedRhiTextureWrapper::Private::Initialize);
+        depthTexture = std::make_unique<QSSGManagedRhiTexture>(m_manager, rtDesc.depthTexture(), QSSGManagedRhiTexture::Private::Initialize);
         depthStencil.reset();
     } else if (rtDesc.depthStencilBuffer()) {
         depthStencil.reset(rtDesc.depthStencilBuffer());
@@ -1898,7 +1898,7 @@ void QSSGRhiRenderableTextureV2::reset()
 
     resetRenderTarget();
 
-    textures = {};
+    textures.clear();
 
     depthStencil = nullptr;
     depthTexture.reset();
@@ -1918,38 +1918,34 @@ void QSSGRhiRenderableTextureV2::invalidate()
     reset();
 }
 
-QSSGSharedRhiTextureWrapper::QSSGSharedRhiTextureWrapper(const std::shared_ptr<QSSGUserRenderPassManager> &manager, QRhiTexture *texture, Private)
+QSSGManagedRhiTexture::QSSGManagedRhiTexture(const std::shared_ptr<QSSGUserRenderPassManager> &manager, QRhiTexture *texture, Private)
     : m_manager(manager)
     , m_texture(texture)
 {
     Q_ASSERT(m_manager != nullptr);
-    m_manager->refTexture(m_texture);
+    m_manager->registerManagedTexture(this);
 }
 
-QSSGSharedRhiTextureWrapper::QSSGSharedRhiTextureWrapper(const std::shared_ptr<QSSGUserRenderPassManager> &manager, std::unique_ptr<QRhiTexture> texture)
+QSSGManagedRhiTexture::QSSGManagedRhiTexture(const std::shared_ptr<QSSGUserRenderPassManager> &manager, std::unique_ptr<QRhiTexture> texture)
     : m_manager(manager)
     , m_texture(std::move(texture))
 {
     Q_ASSERT(m_manager != nullptr);
-    m_manager->refTexture(m_texture);
+    m_manager->registerManagedTexture(this);
 }
 
-QSSGSharedRhiTextureWrapper::~QSSGSharedRhiTextureWrapper()
+QSSGManagedRhiTexture::~QSSGManagedRhiTexture()
 {
     invalidate();
 }
 
-void QSSGSharedRhiTextureWrapper::invalidate()
+void QSSGManagedRhiTexture::invalidate()
 {
-    if (m_manager && m_texture && !m_manager->derefTexture(m_texture.get())) {
-        // NOTE: This is the exception case. If the manager returns false, it means that the texture
-        //       was not tracked by it which means the logic is broken somewhere, or the API was misused.
-        //       There are two alternatives here: We either leak the texture, or delete it here.
-        //       If we leak it, then in case of repeated misuse, we may run out of memory.
-        //       If we delete it here, then we may double delete and crash.
-        //       We choose to delete it here, and log a warning. While not ideal, this is the more
-        //       obvious failure mode given that this should not happen in the first place.
-        qWarning("QSSGSharedRhiTextureWrapper: Texture was not tracked by the manager, deleting it directly to avoid memory leaks.");
+    if (m_manager)
+        m_manager->unregisterManagedTexture(this);
+
+    if (Q_UNLIKELY(!m_manager && m_texture)) {
+        qWarning("QSSGManagedRhiTexture: No manager for tracked resource!");
         delete m_texture.release();
     }
 

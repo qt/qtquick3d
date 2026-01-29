@@ -3,7 +3,11 @@
 
 #include "qssguserrenderpassmanager_p.h"
 
+#include <QtCore/qloggingcategory.h>
+
 QT_BEGIN_NAMESPACE
+
+Q_STATIC_LOGGING_CATEGORY(QSSGUserRenderPassManagerLog, "qt.quick3d.runtimerender.userpassmanager")
 
 QSSGUserRenderPassManager::QSSGUserRenderPassManager(Private)
 {
@@ -68,7 +72,7 @@ bool QSSGUserRenderPassManager::derefTexture(QRhiTexture *texture)
     if (wasFound) {
         if (!(foundIt.value() > 1)) {
             m_trackedTextures.erase(foundIt);
-            delete texture;
+            m_deferredReleaseTextures.insert(texture);
         } else {
             foundIt.value() -= 1;
         }
@@ -82,11 +86,10 @@ bool QSSGUserRenderPassManager::derefTexture(QRhiTexture *texture)
 void QSSGUserRenderPassManager::refTexture(QRhiTexture *texture)
 {
     auto it = m_trackedTextures.find(texture);
-    if (it != m_trackedTextures.end()) {
+    if (it != m_trackedTextures.end())
         it.value() += 1;
-    } else {
+    else
         m_trackedTextures.insert(texture, 1);
-    }
 }
 
 bool QSSGUserRenderPassManager::derefTexture(const std::unique_ptr<QRhiTexture> &texture)
@@ -97,6 +100,36 @@ bool QSSGUserRenderPassManager::derefTexture(const std::unique_ptr<QRhiTexture> 
 void QSSGUserRenderPassManager::refTexture(const std::unique_ptr<QRhiTexture> &texture)
 {
     refTexture(texture.get());
+}
+
+void QSSGUserRenderPassManager::unregisterManagedTexture(QSSGManagedRhiTexture *textureWrapper)
+{
+    QSSG_ASSERT(textureWrapper != nullptr, return);
+
+    const auto foundIt = std::find(m_trackedTextureWrappers.cbegin(), m_trackedTextureWrappers.cend(), textureWrapper);
+    if (foundIt != m_trackedTextureWrappers.cend()) {
+        auto &texture = textureWrapper->texture();
+        if (!derefTexture(texture))
+            qWarning("QSSGSharedRhiTextureWrapper: Texture was not tracked by the manager, possible resource leak.");
+        m_trackedTextureWrappers.erase(foundIt);
+    }
+}
+
+void QSSGUserRenderPassManager::registerManagedTexture(QSSGManagedRhiTexture *textureWrapper)
+{
+    QSSG_ASSERT(textureWrapper != nullptr, return);
+
+    const auto foundIt = std::find(m_trackedTextureWrappers.cbegin(), m_trackedTextureWrappers.cend(), textureWrapper);
+    if (foundIt == m_trackedTextureWrappers.cend()) {
+        refTexture(textureWrapper->texture());
+        m_trackedTextureWrappers.push_back(textureWrapper);
+    }
+}
+
+void QSSGUserRenderPassManager::resetForFrame()
+{
+    qDeleteAll(m_deferredReleaseTextures.cbegin(), m_deferredReleaseTextures.cend());
+    m_deferredReleaseTextures.clear();
 }
 
 void QSSGUserRenderPassManager::releaseAll()
@@ -111,10 +144,23 @@ void QSSGUserRenderPassManager::releaseAll()
 
     m_renderPassRenderTargets.clear();
 
+    { // We make a copy since invalidate() will call back into us to unregister itself!
+        auto cpy = m_trackedTextureWrappers;
+        for (auto &tw : cpy)
+            tw->invalidate();
+
+        cpy.clear();
+    }
+
+    qDeleteAll(m_deferredReleaseTextures.cbegin(), m_deferredReleaseTextures.cend());
+    m_deferredReleaseTextures.clear();
+
+    Q_ASSERT(m_trackedTextureWrappers.size() == 0);
+
     if (m_trackedTextures.size() > 0) {
         qWarning() << "QSSGUserRenderPassManager::releaseAll: There are still tracked textures (" << m_trackedTextures.size() << ") when releasing all. This indicates a resource leak.";
         for (auto it = m_trackedTextures.constBegin(); it != m_trackedTextures.constEnd(); ++it)
-            qDebug() << "Texture: " << it.key()->name() << ", has ref count: " << it.value();
+            qCDebug(QSSGUserRenderPassManagerLog) << "Texture: " << it.key()->name() << ", has ref count: " << it.value();
     }
 }
 
