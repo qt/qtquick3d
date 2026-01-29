@@ -668,21 +668,30 @@ struct QSSGRhiDrawCallData
     }
 };
 
-class QSSGSharedRhiTextureWrapper
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGManagedRhiTexture
 {
     enum class Private { Initialize };
-    Q_DISABLE_COPY(QSSGSharedRhiTextureWrapper)
+    Q_DISABLE_COPY(QSSGManagedRhiTexture)
 public:
+    using Ptr = std::unique_ptr<QSSGManagedRhiTexture>;
+
     const std::unique_ptr<QRhiTexture> &texture() const { return m_texture; }
 
     [[nodiscard]] bool isValid() const { return m_texture != nullptr; }
 
-    QSSGSharedRhiTextureWrapper(const std::shared_ptr<QSSGUserRenderPassManager> &manager, QRhiTexture *texture, Private);
-    QSSGSharedRhiTextureWrapper(const std::shared_ptr<QSSGUserRenderPassManager> &manager, std::unique_ptr<QRhiTexture> texture);
-    ~QSSGSharedRhiTextureWrapper();
+    QSSGManagedRhiTexture() = default;
+    QSSGManagedRhiTexture(const std::shared_ptr<QSSGUserRenderPassManager> &manager, QRhiTexture *texture, Private);
+    QSSGManagedRhiTexture(const std::shared_ptr<QSSGUserRenderPassManager> &manager, std::unique_ptr<QRhiTexture> texture);
+    ~QSSGManagedRhiTexture();
+
+    [[nodiscard]] static Ptr make_copy(const Ptr &other)
+    {
+        return std::make_unique<QSSGManagedRhiTexture>(other->m_manager, other->m_texture.get(), Private::Initialize);
+    }
 
 private:
     friend class QSSGRhiRenderableTextureV2;
+    friend class QSSGUserRenderPassManager;
 
     void invalidate();
 
@@ -690,7 +699,7 @@ private:
     std::unique_ptr<QRhiTexture> m_texture;
 };
 
-using QSSGSharedRhiTextureWrapperPtr = std::shared_ptr<QSSGSharedRhiTextureWrapper>;
+using QSSGManagedRhiTexturePtr = QSSGManagedRhiTexture::Ptr;
 
 class QSSGRhiRenderableTextureV2
 {
@@ -707,13 +716,13 @@ public:
     void setName(const QByteArray &name) { rtName = name; }
     const QByteArray &getName() const { return rtName; }
 
-    const QSSGSharedRhiTextureWrapperPtr &getDepthTexture() const { return depthTexture; }
+    const QSSGManagedRhiTexturePtr &getDepthTexture() const { return depthTexture; }
     const std::unique_ptr<QRhiRenderBuffer> &getDepthStencil() const { return depthStencil; }
     const std::unique_ptr<QRhiRenderPassDescriptor> &getRenderPassDescriptor() const { return rpDesc; }
     const std::unique_ptr<QRhiTextureRenderTarget> &getRenderTarget() const { return rt; }
 
     size_t colorAttachmentCount() const { return textures.size(); }
-    const QSSGSharedRhiTextureWrapperPtr &getColorTexture(int index) const { return textures[index]; }
+    const QSSGManagedRhiTexturePtr &getColorTexture(int index) const { return textures[index]; }
 
     bool isValid() const { return (textures.size() > 0) && rt && rpDesc; }
 
@@ -738,9 +747,9 @@ private:
 
     std::shared_ptr<QSSGUserRenderPassManager> m_manager;
 
-    QVarLengthArray<QSSGSharedRhiTextureWrapperPtr, 4> textures {};
+    QVarLengthArray<QSSGManagedRhiTexturePtr, 4> textures {};
     std::unique_ptr<QRhiRenderBuffer> depthStencil;
-    QSSGSharedRhiTextureWrapperPtr depthTexture; // either depthStencil or depthTexture are valid, never both
+    QSSGManagedRhiTexturePtr depthTexture; // either depthStencil or depthTexture are valid, never both
 
     std::unique_ptr<QRhiRenderPassDescriptor> rpDesc;
     std::unique_ptr<QRhiTextureRenderTarget> rt;

@@ -2922,6 +2922,9 @@ void QSSGLayerRenderData::resetForFrame()
 
         renderablesModifiedByExtension = false;
     }
+
+    if (userRenderPassManager)
+        userRenderPassManager->resetForFrame();
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer)

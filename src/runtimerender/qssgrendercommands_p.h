@@ -294,8 +294,8 @@ public:
     {
     }
 
-    const QSSGSharedRhiTextureWrapperPtr &texture() const { return m_tex; }
-    void setTexture(QSSGSharedRhiTextureWrapperPtr tex) { m_tex = tex; }
+    const QSSGManagedRhiTexturePtr &texture() const { return m_tex; }
+    void setTexture(const QSSGManagedRhiTexturePtr &tex) { m_tex = QSSGManagedRhiTexture::make_copy(tex); }
 
     QSSGRenderTextureFormat format() const
     {
@@ -315,7 +315,7 @@ public:
 private:
     Q_DISABLE_COPY_MOVE(QSSGAllocateTexture)
 
-    QSSGSharedRhiTextureWrapperPtr m_tex;
+    QSSGManagedRhiTexturePtr m_tex;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::RGBA8;
 };
 

@@ -50,11 +50,18 @@ public:
 
     void releaseAll();
 
+    void unregisterManagedTexture(QSSGManagedRhiTexture *textureWrapper);
+    void registerManagedTexture(QSSGManagedRhiTexture *textureWrapper);
+
+    void resetForFrame();
+
 private:
     Q_DISABLE_COPY_MOVE(QSSGUserRenderPassManager)
 
-    friend class QSSGSharedRhiTextureWrapper;
     friend class QSSGBufferManager;
+
+    using TextureWrappers = std::vector<QSSGManagedRhiTexture *>;
+    using DeferredReleaseTextures = QSet<QRhiTexture *>;
 
     // If return false the texture is not tracked and should be released by caller!!!
     [[nodiscard]] bool derefTexture(QRhiTexture *texture);
@@ -67,6 +74,12 @@ private:
     UserPassSet m_scheduledUserPasses;
 
     QHash<QRhiTexture *, size_t> m_trackedTextures;
+
+    // We keep a list of these so we can notify them that it's
+    // time to release their textures.
+    TextureWrappers m_trackedTextureWrappers;
+
+    DeferredReleaseTextures m_deferredReleaseTextures;
 
     bool m_passlistDirty = false;
 };
