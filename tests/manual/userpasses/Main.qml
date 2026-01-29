@@ -137,6 +137,8 @@ ApplicationWindow {
                     // geometry doesn't matter, just need 4 verts
                     plane: PlaneGeometry.XY
                 }
+                castsShadows: false
+                receivesShadows: false
                 materials: [
                     CustomMaterial {
                         id: lightingPassMaterial
