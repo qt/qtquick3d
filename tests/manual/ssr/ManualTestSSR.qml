@@ -148,12 +148,12 @@ ApplicationWindow {
                                             from: 10
                                             to: 2048
                                             stepSize: 1.0
-                                            value: window.ssr ? window.ssr.maxSteps : 2048
-                                            onValueChanged: if (window.ssr) window.ssr.maxSteps = value
+                                            value: v3d.environment.ssrMaxSteps
+                                            onValueChanged: v3d.environment.ssrMaxSteps = value
                                             Layout.fillWidth: true
                                         }
                                         Label {
-                                            text: window.ssr ? window.ssr.maxSteps.toFixed(0) : "2048"
+                                            text: v3d.environment.ssrMaxSteps.toFixed(0)
                                             Layout.minimumWidth: 50
                                         }
                                     }
@@ -175,17 +175,17 @@ ApplicationWindow {
                                     }
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Label { text: "baseThickness" }
+                                        Label { text: "Thickness" }
                                         Slider {
                                             from: 0
                                             to: 50
                                             stepSize: 0.001
-                                            value: window.ssr ? window.ssr.baseThickness : 0
-                                            onValueChanged: if (window.ssr) window.ssr.baseThickness = value
+                                            value: v3d.environment.ssrThickness
+                                            onValueChanged: v3d.environment.ssrThickness = value
                                             Layout.fillWidth: true
                                         }
                                         Label {
-                                            text: window.ssr ? window.ssr.baseThickness.toFixed(3) : "0"
+                                            text: v3d.environment.ssrThickness.toFixed(3)
                                             Layout.minimumWidth: 50
                                         }
                                     }

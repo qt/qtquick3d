@@ -21,6 +21,8 @@ SceneEffectEnvironment {
 
     // SSR Effect
     property alias ssrEnabled: ssrEffect.enabled
+    property alias ssrThickness: ssrEffect.baseThickness
+    property alias ssrMaxSteps: ssrEffect.maxSteps
 
     // Depth of Field Effect
     property alias depthOfFieldEnabled: dofBlurEffect.enabled

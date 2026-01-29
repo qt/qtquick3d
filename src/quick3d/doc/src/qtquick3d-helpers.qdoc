@@ -1465,3 +1465,23 @@
    \li \image extendedsceneenvironment_ssr_with.webp
    \endtable
 */
+
+/*! \qmlproperty real ExtendedSceneEnvironment::ssrThickness
+
+   Assumed thickness of scene geometry used by screen-space reflections.
+   Larger values reduce reflection breakups (similar to shadow acne)
+   but may cause reflections to look physically incorrect.
+
+   \default 20
+   \since 6.12
+*/
+
+/*! \qmlproperty int ExtendedSceneEnvironment::ssrMaxSteps
+
+   Limits how many steps the reflection ray can take across the screen.
+   Larger values improve reflection reach and quality, but reduces
+   performance.
+
+   \default 256
+   \since 6.12
+*/

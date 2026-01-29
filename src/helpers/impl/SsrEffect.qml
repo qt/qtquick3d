@@ -15,7 +15,7 @@ SsrEnvEffect {
     property real stepSize: 0.01
     property real minRayStep: 0.01
     property int binarySteps: 8
-    property int maxSteps: 512
+    property int maxSteps: 256
     property real baseThickness: 20
 
     readonly property TextureInput ssrSampler: TextureInput { texture: Texture {} }
