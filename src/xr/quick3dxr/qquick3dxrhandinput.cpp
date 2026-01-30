@@ -1,5 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// Qt-Security score:significant reason:default
+
 
 #include "qquick3dxrhandinput_p.h"
 #include "qquick3dxrinputmanager_p.h"
