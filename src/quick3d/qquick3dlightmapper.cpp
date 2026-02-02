@@ -29,7 +29,7 @@ QT_BEGIN_NAMESPACE
     to the original mesh files, Lightmapper settings or other scene changes will
     require a new bake to be executed to see the updated result.
 
-    \note As of Qt 6.4, lightmap baking is in an early technical preview state.
+    \note As of Qt 6.4, lightmap baking is in an early technology preview state.
     Changes to features, quality, and API are likely to happen in future releases.
 
     The Lightmapper object works in combination with:

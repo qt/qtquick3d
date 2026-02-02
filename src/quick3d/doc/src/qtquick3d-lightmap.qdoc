@@ -8,7 +8,7 @@
 
 \section1 Introduction
 
-\note As of Qt 6.4, lightmap baking is in an early technical preview state.
+\note As of Qt 6.4, lightmap baking is in an early technology preview state.
 Changes to features, quality, and API are likely to happen in future releases.
 
 Baked lightmaps allow pre-generating the \b{direct lighting} from lights such

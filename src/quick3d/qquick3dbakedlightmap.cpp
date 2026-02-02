@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
     For more information on how to bake lightmaps, see the \l Lightmapper
     documentation.
 
-    \note As of Qt 6.4, lightmap baking is in an early technical preview state.
+    \note As of Qt 6.4, lightmap baking is in an early technology preview state.
     Changes to features, quality, and API are likely happen in future releases.
 
     \sa Lightmapper, Model::usedInBakedLighting

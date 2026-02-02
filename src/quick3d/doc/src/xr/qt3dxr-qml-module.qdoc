@@ -5,7 +5,7 @@
     \qmlmodule QtQuick3D.Xr
     \title \qxr QML Types
     \since 6.8
-    \modulestate Technical Preview
+    \modulestate Technology Preview
 
     \brief Provides QML types for XR and VR applications.
 
