@@ -103,7 +103,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                                                                     renderable.shaderDescription,
                                                                                     defaultMaterialShaderKeyProperties,
                                                                                     featureSet,
-                                                                                    renderable.material,
+                                                                                    material,
                                                                                     *context->shaderLibraryManager(),
                                                                                     *context->shaderCache(),
                                                                                     shaderAugmentation);
