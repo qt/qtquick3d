@@ -800,36 +800,47 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     };
 
     // if the list is dirty we rebuild (assumption is that this won't happen frequently).
-    if ((requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::ExtensionsDiry) || view3D->extensionListDirty()) {
-        // Clear existing extensions
-        // NOTE: We skip the TextureProvider ones, they are handled elsewhere)
-        for (size_t i = size_t(QSSGRenderLayer::RenderExtensionStage::Underlay); i != size_t(QSSGRenderLayer::RenderExtensionStage::Count); ++i)
-            m_layer->renderExtensions[i].clear();
+    // NOTE: We do this is two steps as extensions can be added both via the extensionList
+    //       or via auto-registration.
+    if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
+        const bool rebuildExtensionLists = (requestSharedUpdate & QQuick3DWindowAttachment::SyncResultFlag::ExtensionsDiry)
+                                           || view3D->extensionListDirty()
+                                           || sm->autoRegisteredExtensionsDirty;
 
-        // All items in the extension list are root items,
-        const auto &extensions = view3D->extensionList();
-        for (const auto &ext : extensions) {
-            const auto type = QQuick3DObjectPrivate::get(ext)->type;
-            if (QSSGRenderGraphObject::isExtension(type)) {
-                if (type == QSSGRenderGraphObject::Type::RenderExtension) {
-                    if (auto *renderExt = qobject_cast<QQuick3DRenderExtension *>(ext)) {
-                        if (QSSGRenderExtension *ssgExt = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)) {
-                            const auto stage =  getStageIndex(*ssgExt);
-                            auto &list = m_layer->renderExtensions[size_t(stage)];
-                            bfs(qobject_cast<QQuick3DRenderExtension *>(ext), list);
+        // Explicit extensions from the extension list
+        // NOTE: If either the explicit or auto-registered extensions are dirty we need to
+        //       rebuild the list of active extensions.
+        if (rebuildExtensionLists) {
+            // Clear existing extensions
+            for (size_t i = 0; i != size_t(QSSGRenderLayer::RenderExtensionStage::Count); ++i)
+                m_layer->renderExtensions[i].clear();
+
+            // All items in the extension list are root items,
+            const auto &extensions = view3D->extensionList();
+            for (const auto &ext : extensions) {
+                const auto type = QQuick3DObjectPrivate::get(ext)->type;
+                if (QSSGRenderGraphObject::isExtension(type)) {
+                    if (type == QSSGRenderGraphObject::Type::RenderExtension) {
+                        if (auto *renderExt = qobject_cast<QQuick3DRenderExtension *>(ext)) {
+                            if (QSSGRenderExtension *ssgExt = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)) {
+                                const auto stage =  getStageIndex(*ssgExt);
+                                auto &list = m_layer->renderExtensions[size_t(stage)];
+                                bfs(qobject_cast<QQuick3DRenderExtension *>(ext), list);
+                            }
                         }
                     }
                 }
             }
+
+            view3D->clearExtensionListDirty();
         }
 
-        view3D->clearExtensionListDirty();
-    }
-
-    if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm && sm->autoRegisteredExtensionsDirty) {
-        for (QSSGRenderExtension *ae : std::as_const(sm->autoRegisteredExtensions))
-            m_layer->renderExtensions[getStageIndex(*ae)].push_back(ae);
-        sm->autoRegisteredExtensionsDirty = false;
+        // Auto-registered extensions
+        if (sm->autoRegisteredExtensionsDirty) {
+            for (QSSGRenderExtension *ae : std::as_const(sm->autoRegisteredExtensions))
+                m_layer->renderExtensions[getStageIndex(*ae)].push_back(ae);
+            sm->autoRegisteredExtensionsDirty = false;
+        }
     }
 
     bool postProcessingNeeded = m_layer->firstEffect;
