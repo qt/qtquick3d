@@ -40,6 +40,7 @@ private:
     }
 
     QPointer<RenderExtension> m_ext;
+    QSSGExtensionId m_extensionId {};
 
     std::unique_ptr<QRhiTexture> texture;
     std::unique_ptr<QRhiTextureRenderTarget> rt;
@@ -61,8 +62,15 @@ TextureProvider::TextureProvider(RenderExtension *ext)
 bool TextureProvider::prepareData(QSSGFrameData &data)
 {
     Q_UNUSED(data);
-    bool ret = true;
-    return ret;
+
+    // Update the extension ID.
+    // NOTE: This needs to be done on each call, the extension object may have changed.
+    //       If the extension is destroyed (m_ext == nullptr), we cannot proceed and should return false!
+    m_extensionId = m_ext ? QQuick3DExtensionHelpers::getExtensionId(*m_ext) : QSSGExtensionId{};
+    if (QQuick3DExtensionHelpers::isNull(m_extensionId))
+        return false;
+
+    return true;
 }
 
 void TextureProvider::prepareRender(QSSGFrameData &data)
@@ -82,9 +90,7 @@ void TextureProvider::prepareRender(QSSGFrameData &data)
         rt->setRenderPassDescriptor(rpDesc.get());
         rt->create();
 
-        QSSGExtensionId extensionId = QQuick3DExtensionHelpers::getExtensionId(*m_ext);
-        Q_ASSERT(!QQuick3DExtensionHelpers::isNull(extensionId));
-        QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, texture.get());
+        QSSGRenderExtensionHelpers::registerRenderResult(data, m_extensionId, texture.get());
     }
 
     if (!ps) {

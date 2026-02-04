@@ -38,6 +38,7 @@ public:
     bool m_isDirty = true;
 
     QPointer<QQuick3DRenderOutputProvider> m_ext;
+    QSSGExtensionId m_extensionId {};
 };
 
 QSSGRenderOutputProviderExtension::QSSGRenderOutputProviderExtension(QQuick3DRenderOutputProvider *ext)
@@ -53,9 +54,12 @@ QSSGRenderOutputProviderExtension::~QSSGRenderOutputProviderExtension()
 
 bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
 {
-    // Get a handle the requested texture, then register that as the render result for this provider
-    QSSGExtensionId extensionId = QQuick3DExtensionHelpers::getExtensionId(*m_ext);
-    Q_ASSERT(!QQuick3DExtensionHelpers::isNull(extensionId));
+    // Update the extension ID.
+    // NOTE: This needs to be done on each call, the extension object may have changed.
+    //       If the extension is destroyed (m_ext == nullptr), we cannot proceed and should return false!
+    m_extensionId = m_ext ? QQuick3DExtensionHelpers::getExtensionId(*m_ext) : QSSGExtensionId::Invalid;
+    if (QQuick3DExtensionHelpers::isNull(m_extensionId))
+        return false;
 
     const bool wasDirty = m_isDirty;
 
@@ -72,7 +76,7 @@ bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
         // Check if a texture exists for the result already
         QSSGFrameData::Result extResult = data.getRenderResult(m_builtInPass);
         if (extResult.texture) {
-            QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, extResult.texture);
+            QSSGRenderExtensionHelpers::registerRenderResult(data, m_extensionId, extResult.texture);
             m_isDirty = false;
 
         }
@@ -89,7 +93,7 @@ bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
             QSSGFrameData::Result extResult = data.getRenderResult(userPassId, attachmentSelector);
             if (extResult.texture) {
                 // Associate the texture with this extension and expose it so it can be used.
-                QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, extResult.texture);
+                QSSGRenderExtensionHelpers::registerRenderResult(data, m_extensionId, extResult.texture);
                 m_isDirty = false;
 
             }
@@ -104,9 +108,8 @@ bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
 
 void QSSGRenderOutputProviderExtension::prepareRender(QSSGFrameData &data)
 {
-    // Get a handle the requested texture, then register that as the render result for this provider
-    QSSGExtensionId extensionId = QQuick3DExtensionHelpers::getExtensionId(*m_ext);
-    Q_ASSERT(!QQuick3DExtensionHelpers::isNull(extensionId));
+    // If no id is set prepareData() should return false and this should not be called!
+    Q_ASSERT(!QQuick3DExtensionHelpers::isNull(m_extensionId));
 
     QSSGFrameData::Result extResult;
     if (m_sourceType == SourceType::BuiltInPass)
@@ -116,7 +119,7 @@ void QSSGRenderOutputProviderExtension::prepareRender(QSSGFrameData &data)
 
     if (userPassId != QSSGResourceId::Invalid) {
         if (extResult.texture) {
-            QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, extResult.texture);
+            QSSGRenderExtensionHelpers::registerRenderResult(data, m_extensionId, extResult.texture);
             m_isDirty = false;
         }
     }

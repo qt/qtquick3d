@@ -52,6 +52,7 @@ public:
 private:
 
     QPointer<GradientTextureProvider> m_ext;
+    QSSGExtensionId extensionId {};
 
     std::unique_ptr<QRhiBuffer> quadGeometryVertexBuffer;
     std::unique_ptr<QRhiBuffer> quadGeometryIndexBuffer;
@@ -91,6 +92,10 @@ bool GradientTextureProviderNode::prepareData(QSSGFrameData &data)
     if (!rhiCtx)
         return false;
 
+    extensionId = m_ext ? QQuick3DExtensionHelpers::getExtensionId(*m_ext) : QSSGExtensionId{};
+    if (QQuick3DExtensionHelpers::isNull(extensionId))
+        return false;
+
     // Make sure that the output texture is created and registered as the texture provider
     if (!outputTexture ||
         outputTexture->pixelSize().width() != m_width ||
@@ -104,8 +109,6 @@ bool GradientTextureProviderNode::prepareData(QSSGFrameData &data)
         outputTextureRenderTarget->create();
 
         // Register the output as the texture provider
-        QSSGExtensionId extensionId = QQuick3DExtensionHelpers::getExtensionId(*m_ext);
-        Q_ASSERT(!QQuick3DExtensionHelpers::isNull(extensionId));
         QSSGRenderExtensionHelpers::registerRenderResult(data, extensionId, outputTexture.get());
 
         gradientTexture2dPipeline.reset();
