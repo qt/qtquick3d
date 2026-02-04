@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qssguserrenderpassmanager_p.h"
+#include "graphobjects/qssgrenderuserpass_p.h"
 
 #include <QtCore/qloggingcategory.h>
 
@@ -29,6 +30,17 @@ void QSSGUserRenderPassManager::scheduleUserPass(QSSGRenderUserPass *userPasses)
         auto it = std::find(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), userPasses);
         if (it == m_scheduledUserPasses.end()) {
             m_scheduledUserPasses.push_back(userPasses);
+            m_passlistDirty = true;
+        }
+    }
+}
+
+void QSSGUserRenderPassManager::unscheduleUserPass(const QSSGRenderUserPass *userPasses)
+{
+    if (userPasses != nullptr) {
+        auto it = std::find(m_scheduledUserPasses.cbegin(), m_scheduledUserPasses.cend(), userPasses);
+        if (it != m_scheduledUserPasses.cend()) {
+            m_scheduledUserPasses.erase(it);
             m_passlistDirty = true;
         }
     }

@@ -21,6 +21,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
+#include <QtQuick3DRuntimeRender/private/qssguserrenderpassmanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
@@ -144,6 +146,7 @@ public:
     void releaseTextureData(const QSSGRenderTextureData *data);
     void releaseTextureData(const CustomImageCacheKey &key);
     void releaseExtensionResult(const QSSGRenderExtension &rext);
+    void releaseUserRenderPass(const QSSGRenderUserPass &upass);
 
     void commitBufferResourceUpdates();
 
@@ -182,6 +185,8 @@ public:
     void setLightmapSource(const QString &source);
     void setCurrentlyLightmapBaking(bool value);
 
+    void registerUserRenderPassManager(const QSSGUserRenderPassManagerPtr &userPassManager);
+
 private:
     void clear();
     QRhiResourceUpdateBatch *meshBufferUpdateBatch();
@@ -218,6 +223,9 @@ private:
     QHash<const QSSGRenderExtension *, ImageData> renderExtensionTexture; // Textures (from QQuick3DRenderExtension)
     QHash<QSSGRenderPath, MeshData> meshMap;                    // Meshes (specififed by path)
     QHash<QSSGRenderGeometry *, MeshData> customMeshMap;        // Meshes (QQuick3DGeometry)
+
+    using QSSGUserRenderPassManagerWeakPtr = std::weak_ptr<QSSGUserRenderPassManager>;
+    std::vector<QSSGUserRenderPassManagerWeakPtr> userRenderPassManagers;
 
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
     QMutex meshBufferMutex;

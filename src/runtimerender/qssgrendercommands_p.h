@@ -400,8 +400,6 @@ public:
     int m_value;
 };
 
-using QSSGRenderUserPassPtr = std::shared_ptr<QSSGRenderUserPass>;
-
 class QSSGSubRenderPass : public QSSGCommand
 {
 public:

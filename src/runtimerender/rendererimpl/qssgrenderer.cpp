@@ -216,6 +216,9 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
         } else if (resource->type == QSSGRenderGraphObject::Type::Item2D) {
             auto *item2D = static_cast<QSSGRenderItem2D *>(resource);
             rci.renderer()->releaseItem2DData(*item2D);
+        } else if (resource->type == QSSGRenderGraphObject::Type::RenderPass) {
+            auto *userPass = static_cast<QSSGRenderUserPass *>(resource);
+            bufferManager->releaseUserRenderPass(*userPass);
         }
 
         // ### There might be more types that need to be supported

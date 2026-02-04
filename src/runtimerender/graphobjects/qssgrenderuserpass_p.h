@@ -87,6 +87,8 @@ public:
     void resetCommands();
 };
 
+using QSSGRenderUserPassPtr = std::shared_ptr<QSSGRenderUserPass>;
+
 QT_END_NAMESPACE
 
 #endif // QSSGRENDERUSERPASS_P_H

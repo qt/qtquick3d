@@ -15,13 +15,15 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
+
+#include <QtCore/qlist.h>
 
 #include <memory>
 
 QT_BEGIN_NAMESPACE
+
+class QSSGRenderUserPass;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGUserRenderPassManager : public std::enable_shared_from_this<QSSGUserRenderPassManager>
 {
@@ -39,6 +41,7 @@ public:
     }
 
     void scheduleUserPass(QSSGRenderUserPass *userPasses);
+    void unscheduleUserPass(const QSSGRenderUserPass *userPasses);
 
     QSSGRhiRenderableTextureV2Ptr getOrCreateRenderableTexture(const QSSGRenderUserPass &userPass);
     QSSGRhiRenderableTextureV2Ptr getUserPassTexureResult(const QSSGRenderUserPass &userPass) const;

@@ -3192,8 +3192,10 @@ const QSSGRenderReflectionMapPtr &QSSGLayerRenderData::requestReflectionMapManag
 
 const QSSGUserRenderPassManagerPtr &QSSGLayerRenderData::requestUserRenderPassManager()
 {
-    if (!userRenderPassManager)
+    if (!userRenderPassManager) {
         userRenderPassManager = QSSGUserRenderPassManager::create();
+        renderer->contextInterface()->bufferManager()->registerUserRenderPassManager(userRenderPassManager);
+    }
     return userRenderPassManager;
 }
 
