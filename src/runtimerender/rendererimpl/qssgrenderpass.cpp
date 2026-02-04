@@ -8,6 +8,7 @@
 #include "qssgdebugdrawsystem_p.h"
 #include "extensionapi/qssgrenderextensions.h"
 #include "qssgrenderhelpers_p.h"
+#include "qssgrendercommands_p.h"
 
 #include "../utils/qssgassert_p.h"
 

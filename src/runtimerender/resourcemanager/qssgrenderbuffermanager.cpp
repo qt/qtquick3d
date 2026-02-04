@@ -1520,6 +1520,21 @@ void QSSGBufferManager::releaseExtensionResult(const QSSGRenderExtension &rext)
     renderExtensionTexture.remove(&rext);
 }
 
+void QSSGBufferManager::releaseUserRenderPass(const QSSGRenderUserPass &upass)
+{
+    // Go through the user pass managers and tell them to unschedule this pass
+    std::vector<QSSGUserRenderPassManagerWeakPtr> activeManagers;
+    activeManagers.reserve(userRenderPassManagers.size());
+    for (const auto &wmptr : std::as_const(userRenderPassManagers)) {
+        if (const auto &mng = wmptr.lock()) {
+            mng->unscheduleUserPass(&upass);
+            activeManagers.push_back(wmptr);
+        }
+    }
+
+    userRenderPassManagers = std::move(activeManagers);
+}
+
 void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
 {
     QMutexLocker meshMutexLocker(&meshBufferMutex);
@@ -2258,6 +2273,11 @@ void QSSGBufferManager::setLightmapSource(const QString &source)
 void QSSGBufferManager::setCurrentlyLightmapBaking(bool value)
 {
     currentlyLightmapBaking = value;
+}
+
+void QSSGBufferManager::registerUserRenderPassManager(const QSSGUserRenderPassManagerPtr &userPassManager)
+{
+    userRenderPassManagers.push_back(userPassManager);
 }
 
 size_t qHash(const QSSGBufferManager::CustomImageCacheKey &k, size_t seed) noexcept
