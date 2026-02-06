@@ -832,6 +832,17 @@ QVariantMap QQuick3DXrView::touchpointState(int pointId) const
     \c ReferenceSpaceLocalFloor is mainly useful for stationary applications (seated or standing) where the content is
     positioned relative to the floor. The content will move when the user resets the view.
 
+    \note On visionOS, the reference space is always \c ReferenceSpaceLocalFloor and
+    cannot be changed. This means that applications designed with \c ReferenceSpaceLocal
+    will have their origin at floor level on visionOS, which can cause content to appear
+    at an unexpected position. To handle this, applications can check the
+    \l referenceSpace property at runtime and adjust the vertical position of their
+    content accordingly. For example:
+
+    \code
+    y: xrView.referenceSpace === XrView.ReferenceSpaceLocalFloor ? 130 : 0
+    \endcode
+
     \default XrView.ReferenceSpaceLocal
 */
 
