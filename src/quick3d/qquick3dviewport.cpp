@@ -1010,6 +1010,8 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
     and return information about the nearest intersection with an object in the scene.
 
     This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
+
+    \sa pickAll(), pickSubset(), pickInRect()
 */
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
@@ -1036,6 +1038,8 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
     This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
 
     \since 6.8
+
+    \sa pickAll(), pickSubset(), pickInRect()
 */
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y, QQuick3DModel *model) const
 {
@@ -1069,6 +1073,8 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y, QQuick3DModel *model
     Works with both property list<Model> and dynamic JavaScript arrays of models.
 
     \since 6.8
+
+    \sa pick(), pickAll(), pickInRect()
 */
 QList<QQuick3DPickResult> QQuick3DViewport::pickSubset(float x, float y, const QJSValue &models) const
 {
@@ -1154,6 +1160,8 @@ QList<QQuick3DPickResult> QQuick3DViewport::pickSubset(float x, float y, const Q
     This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
 
     \since 6.2
+
+    \sa pick(), pickSubset(), pickInRect()
 */
 QList<QQuick3DPickResult> QQuick3DViewport::pickAll(float x, float y) const
 {
@@ -1286,6 +1294,19 @@ QQuick3DPickResult QQuick3DViewport::closestPointPick(const QVector3D &origin, f
     return processPickResult(pickResult.value());
 }
 
+/*!
+    \qmlmethod list<Object3D> View3D::pickInRect(point start, point end)
+    \since 6.11
+
+    This method picks all objects within a rectangular region defined by
+    \a start and \a end points in view coordinates.
+
+    Returns a list of objects that are within the specified rectangle. This
+    can be used for marquee selection, where the user drags a rectangle to
+    select multiple objects.
+
+    \sa pick(), pickAll(), pickSubset()
+*/
 QList<QQuick3DObject *> QQuick3DViewport::pickInRect(const QPointF &start, const QPointF &end) const
 {
     const qreal minX = qMin(start.x(), end.x());
