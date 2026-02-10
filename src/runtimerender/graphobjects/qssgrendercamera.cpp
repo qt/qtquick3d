@@ -156,6 +156,7 @@ static QQuaternion rotationQuaternionForLookAt(const QVector3D &sourcePosition,
         rotationAxis = upDirection;
 
     float dot = QVector3D::dotProduct(sourceDirection, targetDirection);
+    dot = qBound(-1.0f, dot, 1.0f);
     float rotationAngle = float(qRadiansToDegrees(qAcos(qreal(dot))));
 
     return QQuaternion::fromAxisAndAngle(rotationAxis, rotationAngle);

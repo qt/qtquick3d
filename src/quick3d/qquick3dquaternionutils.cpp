@@ -113,13 +113,15 @@ QQuaternion QQuick3DQuaternionUtils::lookAt(const QVector3D &sourcePosition,
     QVector3D targetDirection = targetPosition - sourcePosition;
     targetDirection.normalize();
 
-    QVector3D rotationAxis = QVector3D::crossProduct(forwardDirection, targetDirection);
+    const QVector3D forwardDirectionNormal = forwardDirection.normalized();
+    QVector3D rotationAxis = QVector3D::crossProduct(forwardDirectionNormal, targetDirection);
 
     const QVector3D normalizedAxis = rotationAxis.normalized();
     if (qFuzzyIsNull(normalizedAxis.lengthSquared()))
         rotationAxis = upDirection;
 
-    float dot = QVector3D::dotProduct(forwardDirection, targetDirection);
+    float dot = QVector3D::dotProduct(forwardDirectionNormal, targetDirection);
+    dot = qBound(-1.0f, dot, 1.0f);
     float rotationAngle = qRadiansToDegrees(qAcos(dot));
 
     return QQuaternion::fromAxisAndAngle(rotationAxis, rotationAngle);
