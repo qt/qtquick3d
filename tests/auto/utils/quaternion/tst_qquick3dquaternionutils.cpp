@@ -279,9 +279,7 @@ void tst_qquick3dquaternionutils::lookAt_QTBUG_143886()
     QVector3D up(0, 1, 0);
 
     const QQuaternion q = QQuick3DQuaternionUtils::lookAt(source, target, forward, up);
-    QEXPECT_FAIL("", "QTBUG-143886", Continue);
-    // GLM result, might be wrong
-    QVERIFY(fuzzyQuaternionCompare(q, QQuaternion(0.0675753, 0.70387, 0.0675753, 0.70387)));
+    QVERIFY(fuzzyQuaternionCompare(q, QQuaternion()));
 }
 
 QTEST_APPLESS_MAIN(tst_qquick3dquaternionutils)
