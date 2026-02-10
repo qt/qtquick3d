@@ -564,19 +564,19 @@ void QQuick3DParticleEmitter::setReversed(bool reversed)
 }
 
 /*!
-    \qmlproperty EmitType ParticleEmitter3D::emitType
+    \qmlproperty EmitMode ParticleEmitter3D::emitMode
     \since 6.10
 
-    This property defines the type of the shape.
+    This property defines the emit mode of the emitter with shape.
 
     \default ParticleEmitter3D.Default
 */
 
 /*!
-    \qmlproperty enumeration ParticleEmitter3D::EmitType
+    \qmlproperty enumeration ParticleEmitter3D::EmitMode
     \since 6.10
 
-    Defines the emit type of the emitter with shape.
+    Defines the emit mode of the emitter with shape.
 
     \value ParticleEmitter3D.Default
         Default emit behavior.
