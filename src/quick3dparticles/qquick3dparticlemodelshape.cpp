@@ -106,6 +106,8 @@ QVector3D QQuick3DParticleModelShape::getPosition(int particleIndex)
 
 QVector3D QQuick3DParticleModelShape::getSurfaceNormal(int particleIndex)
 {
+    if (m_fill)
+        return QVector3D();
     if (m_cachedIndex != particleIndex)
         getPosition(particleIndex);
     return m_cachedNormal;
