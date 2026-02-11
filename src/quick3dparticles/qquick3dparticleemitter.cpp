@@ -803,9 +803,8 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         QVector3D pos = centerPos;
         if (m_shape) {
             pos += m_shape->getPosition(particleIdIndex);
-            QVariant fill = m_shape->property("fill");
-            if (fill.isValid() && !fill.toBool()) {
-                const auto n = m_shape->getSurfaceNormal(particleIdIndex);
+            const auto n = m_shape->getSurfaceNormal(particleIdIndex);
+            if (!n.isNull()) {
                 d->surfaceNormal = n;
                 if (m_emitMode != EmitMode::Default)
                     normalBasedVelocity = true;
