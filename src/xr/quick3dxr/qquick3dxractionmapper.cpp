@@ -521,8 +521,8 @@ void QQuick3DXrHapticFeedback::setCondition(enum Condition newCondition)
 }
 
 /*!
-    \qmlmethod void XrHapticFeedback::start
-    \brief Starts the haptic feedback effect
+    \qmlmethod void XrHapticFeedback::start()
+    \brief Starts the haptic feedback effect.
  */
 void QQuick3DXrHapticFeedback::start()
 {
@@ -530,8 +530,8 @@ void QQuick3DXrHapticFeedback::start()
 }
 
 /*!
-    \qmlmethod void XrHapticFeedback::stop
-    \brief Stops the haptic feedback effect
+    \qmlmethod void XrHapticFeedback::stop()
+    \brief Stops the haptic feedback effect.
  */
 void QQuick3DXrHapticFeedback::stop()
 {

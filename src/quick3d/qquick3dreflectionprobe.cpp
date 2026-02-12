@@ -194,7 +194,7 @@ QQuick3DCubeMapTexture *QQuick3DReflectionProbe::texture() const
 }
 
 /*!
-    \qmlmethod ReflectionProbe::scheduleUpdate()
+    \qmlmethod void ReflectionProbe::scheduleUpdate()
 
     Updates the reflection probe render when called while \l ReflectionProbe::refreshMode
     is set as \c ReflectionProbe.FirstFrame.

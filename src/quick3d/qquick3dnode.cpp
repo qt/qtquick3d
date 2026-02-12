@@ -740,7 +740,7 @@ void QQuick3DNode::setEulerRotation(const QVector3D &eulerRotation) {
 }
 
 /*!
-    \qmlmethod QtQuick3D::Node::rotate(real degrees, vector3d axis, enumeration space)
+    \qmlmethod void QtQuick3D::Node::rotate(real degrees, vector3d axis, enumeration space)
 
     Rotates this node around an \a axis by the given \a degrees. The specified
     rotation will be added to the node's current rotation. The axis can

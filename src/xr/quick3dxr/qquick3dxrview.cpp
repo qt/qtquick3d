@@ -669,7 +669,7 @@ QQuick3DPickResult QQuick3DXrView::closestPointPick(const QVector3D &origin, flo
 }
 
 /*!
-    \qmlmethod XrView::setTouchpoint(Item target, point position, int pointId, bool pressed)
+    \qmlmethod void XrView::setTouchpoint(Item target, point position, int pointId, bool pressed)
 
     Sends a synthetic touch event to \a target, moving the touch point with ID \a pointId to \a position,
     with \a pressed determining if the point is pressed.
