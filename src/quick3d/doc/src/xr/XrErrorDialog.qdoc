@@ -27,7 +27,7 @@
 */
 
 /*!
-    \qmlmethod XrErrorDialog::run(string title, string message)
+    \qmlmethod void XrErrorDialog::run(string title, string message)
 
     Displays an error dialog with the title \a title and message contents \a message.
 */
