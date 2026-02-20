@@ -794,6 +794,14 @@ struct PassRequirmentsState {
                 }
             }
         }
+
+        // Parallax mapping requires world tangent/binormal in all pass types,
+        // since qt_tangent and qt_binormal are passed to qt_parallaxMapping().
+        if (hasParallaxMapping) {
+            needsWorldNormal = true;
+            needsWorldTangent = true;
+            needsWorldBinormal = true;
+        }
     }
 
     bool shouldIncludeCustomFragmentMain() const {
@@ -1000,6 +1008,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 } else if (samplerState.hasImage(QSSGRenderableImage::Type::ClearcoatNormal)) {
                     // For the corner case that there is only a clearcoat normal map
                     id = QSSGRenderableImage::Type::ClearcoatNormal;
+                } else if (passRequirmentState.hasParallaxMapping) {
+                    // For the corner case that there is only a height map (parallax mapping),
+                    // use its UV coordinates to derive tangents analytically.
+                    id = QSSGRenderableImage::Type::Height;
                 }
 
                 if (id > QSSGRenderableImage::Type::Unknown) {
