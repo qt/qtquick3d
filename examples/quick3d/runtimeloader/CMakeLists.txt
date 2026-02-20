@@ -6,7 +6,7 @@ project(runtimeloader LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D Quick3DAssetImport Widgets)
 
 qt_add_executable(runtimeloader
     main.cpp
@@ -22,6 +22,7 @@ target_link_libraries(runtimeloader PUBLIC
     Qt::Gui
     Qt::Quick
     Qt::Quick3D
+    Qt::Quick3DAssetImport
 )
 
 if(TARGET Qt::Widgets)
