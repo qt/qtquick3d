@@ -48,14 +48,10 @@ qt_internal_add_qml_module(${target_name}
         syntaxhighlighter.h syntaxhighlighter.cpp
         uniformmodel.h uniformmodel.cpp
         buildmessage.h buildmessage.cpp
-        materialadapter.h materialadapter.cpp
         resourceserver.h resourceserver.cpp
         resourceclient.h resourceclient.cpp
-        syntaxhighlighter.h syntaxhighlighter.cpp
-        uniformmodel.h uniformmodel.cpp
         custommaterial.h custommaterial.cpp
         message.h message.cpp
-        buildmessage.h buildmessage.cpp
     QML_FILES
         main.qml
         ShaderEditor.qml
