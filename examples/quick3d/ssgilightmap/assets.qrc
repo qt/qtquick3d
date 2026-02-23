@@ -13,5 +13,6 @@
         <file>assets/icons/ssgi.svg</file>
         <file>IconButton.qml</file>
         <file>Main.qml</file>
+        <file>assets/SceneBase.qml</file>
     </qresource>
 </RCC>

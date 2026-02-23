@@ -58,6 +58,7 @@ qt_add_qml_module(ssgilightmap
     QML_FILES
         Main.qml
         IconButton.qml
+        assets/SceneBase.qml
         assets/Bedroom/Bedroom.qml
         assets/CornellBox/CornellBox.qml
         assets/Sponza/Sponza.qml

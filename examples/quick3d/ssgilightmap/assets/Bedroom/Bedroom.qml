@@ -3,26 +3,41 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Helpers
+import ".."
 
-Node {
+SceneBase {
     id: node
 
-    eulerRotation: Qt.vector3d(0, -90, 0)
-
-    property list<vector3d> cameraPositions: [
+    // SceneBase properties
+    cameraIndex : 0
+    cameraPositions: [
         Qt.vector3d(-127.619, 111.187, 7.55733),
         Qt.vector3d(321.195, 193.044, -161.709),
         Qt.vector3d(656.723, 84.3417, 75.358)
     ]
-
-    property list<vector3d> cameraRotations: [
+    cameraRotations: [
         Qt.vector3d(-0.431445, -91.3556, 0),
         Qt.vector3d(-25.4781, -132.766, 0),
         Qt.vector3d(-0.228459, -45.7822, 0)
     ]
+    lightmapper: Lightmapper {
+        source: "qrc:/assets/lightmaps/" + node.lightmapSource
+        samples: node.samples
+        texelsPerUnit: node.texelsPerUnit
+        bounces: node.bounces
+        denoiseSigma: node.denoiseSigma
+        indirectLightFactor: node.indirectLightFactor
+        opacityThreshold: 1
+    }
+    backgroundMode: SceneEnvironment.SkyBox
+    lightProbe: Texture {
+        source: "qrc:/assets/Bedroom/bambanani_sunset_4k.ktx"
+    }
+    enableLightmaps: true
+    ssgiIndirectLightBoost: 10
+    probeExposure: 1.0
 
-    property int cameraIndex : 0
+    eulerRotation: Qt.vector3d(0, -90, 0)
 
     DirectionalLight {
         id: dirLight
@@ -40,17 +55,7 @@ Node {
     }
 
     // Common
-    property Lightmapper lightmapper: Lightmapper {
-        source: "qrc:/assets/lightmaps/" + node.lightmapSource
-        samples: node.samples
-        texelsPerUnit: node.texelsPerUnit
-        bounces: node.bounces
-        denoiseSigma: node.denoiseSigma
-        indirectLightFactor: node.indirectLightFactor
-        opacityThreshold: 1
-    }
     property string lightmapSource: "bedroom/lm_bedroom.bin"
-    property bool enableLightmaps: true
     property real indirectLightFactor: 5.0
     property int samples: 16384
     property real texelsPerUnit: 0.1
@@ -62,16 +67,6 @@ Node {
     property int shadowMapQuality: Light.ShadowMapQualityUltra
     property int softShadowQuality: Light.PCF16
     property real pcfFactor: 5
-
-    property real ssgiIndirectLightBoost: 10
-
-    // Environment
-    property int backgroundMode: SceneEnvironment.SkyBox
-    property Texture lightProbe: Texture {
-        source: "qrc:/assets/Bedroom/bambanani_sunset_4k.ktx"
-    }
-
-    property real probeExposure: 1.0
 
     // Directional light
     property real dirLightX: -45.0
