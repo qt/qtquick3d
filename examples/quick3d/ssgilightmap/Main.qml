@@ -4,23 +4,25 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
-import QtQuick3D.AssetUtils
 
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQml.Models
+
+import "assets"
 
 ApplicationWindow {
     width: 1480
     height: 900
     visible: true
     title: qsTr("QtQuick3D SSGI Lightmap Demo")
+    id: window
 
     View3D {
         id: view
         anchors.fill: parent
 
         property Loader3D currentLoader: loaderCornell
+        property SceneBase currentScene
         property url currentSource: "assets/CornellBox/CornellBox.qml"
         onCurrentSourceChanged: {
             updateLoadedScene()
@@ -36,7 +38,7 @@ ApplicationWindow {
             posAnim.stop()
             rotAnim.stop()
             let loaders = [loaderCornell, loaderBedroom, loaderSponza]
-            for (var i = 0; i < loaders.length; i++) {
+            for (let i = 0; i < loaders.length; i++) {
                 let loader = loaders[i]
                 let item = loader.item
                 if (item === null) {
@@ -55,6 +57,7 @@ ApplicationWindow {
                     env.probeExposure = item.probeExposure
                     item.visible = true
                     view.currentLoader = loader
+                    view.currentScene = loader.item as SceneBase
                 } else {
                     item.enableLightmaps = false
                     item.visible = false
@@ -157,8 +160,8 @@ ApplicationWindow {
         }
 
         Rectangle {
-            width: 1
-            height: 60
+            implicitWidth: 1
+            implicitHeight: 60
             color: "#aaa"
             opacity: 0.4
         } // separator
@@ -170,7 +173,7 @@ ApplicationWindow {
             toggable: true
             onClicked: {
                 if (demoButton.checked) {
-                    nextCamera()
+                    window.nextCamera()
                 }
             }
         }
@@ -180,13 +183,13 @@ ApplicationWindow {
             iconSource: "qrc:/assets/icons/right-arrow.svg"
             checkable: false
             onClicked: {
-                nextCamera()
+                window.nextCamera()
             }
         }
 
         Rectangle {
-            width: 1
-            height: 60
+            implicitWidth: 1
+            implicitHeight: 60
             color: "#aaa"
             opacity: 0.4
         } // separator
@@ -227,15 +230,13 @@ ApplicationWindow {
     }
 
     function nextCamera() {
-        let loader = view.currentLoader
-        let item = loader.item
-        if (item === null) {
+        if (!view.currentScene)
             return
-        }
 
         posAnim.stop()
         rotAnim.stop()
 
+        let item = view.currentScene
         item.cameraIndex = (item.cameraIndex + 1) % item.cameraPositions.length
         posAnim.to = item.cameraPositions[item.cameraIndex]
         rotAnim.to = item.cameraRotations[item.cameraIndex]
@@ -250,7 +251,7 @@ ApplicationWindow {
         repeat: true
         running: demoButton.checked
         onTriggered: {
-            nextCamera()
+            window.nextCamera()
         }
     }
 

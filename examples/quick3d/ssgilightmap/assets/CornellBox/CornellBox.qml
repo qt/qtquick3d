@@ -3,26 +3,37 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Helpers
+import ".."
 
-Node {
+SceneBase {
     id: node
-
     visible: false
 
-    property list<vector3d> cameraPositions: [
+    // SceneBase properties
+    cameraIndex : 0
+    cameraPositions: [
         Qt.vector3d(0, 100, 300),
         Qt.vector3d(72.1542, 224.708, -71.7909),
         Qt.vector3d(-216.724, 83.6405, 200.725)
     ]
-
-    property list<vector3d> cameraRotations: [
+    cameraRotations: [
         Qt.vector3d(0, 0, 0),
         Qt.vector3d(-63.034, 117.714, 0),
         Qt.vector3d(-1.47937, 315.361 - 360, 0)
     ]
-
-    property int cameraIndex : 0
+    lightmapper: Lightmapper {
+        source: "qrc:/assets/lightmaps/" + node.lightmapSource
+        samples: node.samples
+        texelsPerUnit: node.texelsPerUnit
+        bounces: node.bounces
+        denoiseSigma: node.denoiseSigma
+        indirectLightFactor: node.indirectLightFactor
+    }
+    backgroundMode: SceneEnvironment.Color
+    lightProbe: null
+    enableLightmaps: true
+    ssgiIndirectLightBoost: 1
+    probeExposure: 1.0
 
     PointLight {
         bakeMode: node.lightBakeMode
@@ -36,17 +47,7 @@ Node {
         pcfFactor: node.pcfFactor
     }
 
-    // Common
-    property Lightmapper lightmapper: Lightmapper {
-        source: "qrc:/assets/lightmaps/" + node.lightmapSource
-        samples: node.samples
-        texelsPerUnit: node.texelsPerUnit
-        bounces: node.bounces
-        denoiseSigma: node.denoiseSigma
-        indirectLightFactor: node.indirectLightFactor
-    }
     property string lightmapSource: "cornell-box/lm_cornellBox.bin"
-    property bool enableLightmaps: true
     property real indirectLightFactor: 2.5
     property int samples: 2048
     property real texelsPerUnit: 2.0
@@ -58,14 +59,6 @@ Node {
     property int shadowMapQuality: Light.ShadowMapQualityUltra
     property int softShadowQuality: Light.PCF16
     property real pcfFactor: 1
-
-    property real ssgiIndirectLightBoost: 1
-
-    // Environment
-    property int backgroundMode: SceneEnvironment.Color
-    property Texture lightProbe: null
-
-    property real probeExposure: 1.0
 
     // Directional light
     property real dirLightX: -11.0

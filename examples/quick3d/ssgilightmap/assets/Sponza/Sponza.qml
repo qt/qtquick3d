@@ -3,26 +3,39 @@
 
 import QtQuick
 import QtQuick3D
-import QtQuick3D.Helpers
+import ".."
 
-Node {
+SceneBase {
     id: node
-
     visible: false
 
-    property list<vector3d> cameraPositions: [
+    // SceneBase properties
+    cameraIndex : 0
+    cameraPositions: [
         Qt.vector3d(-501.325, 326.578, -66.7134),
         Qt.vector3d(912.591, 211.582, -33.0186),
         Qt.vector3d(1062.89, 256.128, -472.006)
     ]
-
-    property list<vector3d> cameraRotations: [
+    cameraRotations: [
         Qt.vector3d(-4.76112, -91.447, 0),
         Qt.vector3d(-10.0246, -90.3894, 0),
         Qt.vector3d(-18.0934, 88.4485, 0)
     ]
-
-    property int cameraIndex : 0
+    lightmapper: Lightmapper {
+        source: "qrc:/assets/lightmaps/" + node.lightmapSource
+        samples: node.samples
+        texelsPerUnit: node.texelsPerUnit
+        bounces: node.bounces
+        denoiseSigma: node.denoiseSigma
+        indirectLightFactor: node.indirectLightFactor
+    }
+    backgroundMode: SceneEnvironment.SkyBox
+    lightProbe: Texture {
+        source: "qrc:/assets/Sponza/moonless_golf_4k.ktx"
+    }
+    enableLightmaps: true
+    ssgiIndirectLightBoost: 5
+    probeExposure: 0.2
 
     DirectionalLight {
         id: dirLight
@@ -57,17 +70,7 @@ Node {
     }
 
 
-    // Common
-    property Lightmapper lightmapper: Lightmapper {
-        source: "qrc:/assets/lightmaps/" + node.lightmapSource
-        samples: node.samples
-        texelsPerUnit: node.texelsPerUnit
-        bounces: node.bounces
-        denoiseSigma: node.denoiseSigma
-        indirectLightFactor: node.indirectLightFactor
-    }
     property string lightmapSource: "sponza/lm_sponza.bin"
-    property bool enableLightmaps: true
     property real indirectLightFactor: 2.5
     property int samples: 1024
     property real texelsPerUnit: 0.1
@@ -79,16 +82,6 @@ Node {
     property int shadowMapQuality: Light.ShadowMapQualityUltra
     property int softShadowQuality: Light.PCF16
     property real pcfFactor: 5
-
-    property real ssgiIndirectLightBoost: 5
-
-    // Environment
-    property int backgroundMode: SceneEnvironment.SkyBox
-    property Texture lightProbe: Texture {
-        source: "qrc:/assets/Sponza/moonless_golf_4k.ktx"
-    }
-
-    property real probeExposure: 0.2
 
     // Directional light
     property real dirLightX: -60.0
