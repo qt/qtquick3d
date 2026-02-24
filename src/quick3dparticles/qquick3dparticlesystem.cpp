@@ -247,7 +247,7 @@ QQuick3DParticleSystemLogging *QQuick3DParticleSystem::loggingData() const
 }
 
 /*!
-    \qmlmethod  ParticleSystem3D::reset()
+    \qmlmethod void ParticleSystem3D::reset()
 
     This method resets the internal state of the particle system to it's initial state.
     This can be used when \l running property is \c false to reset the system.
