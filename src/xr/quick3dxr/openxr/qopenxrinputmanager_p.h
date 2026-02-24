@@ -49,18 +49,18 @@ public:
 
     static QQuick3DXrInputManagerPrivate *get(QQuick3DXrInputManager *inputManager);
 
-    using Hand = QtQuick3DXr::Hand;
+    using Handedness = QtQuick3DXr::Handedness;
     using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
 
     void pollActions();
     void updatePoses(XrTime predictedDisplayTime, XrSpace appSpace);
     void updateHandtracking(XrTime predictedDisplayTime, XrSpace appSpace, bool aimExtensionEnabled);
 
-    XrSpace handSpace(Hand hand, HandPoseSpace poseSpace);
-    bool isHandActive(Hand hand);
-    bool isHandTrackerActive(Hand hand);
+    XrSpace handSpace(Handedness handedness, HandPoseSpace poseSpace);
+    bool isHandActive(Handedness handedness);
+    bool isHandTrackerActive(Handedness handedness);
 
-    void setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation);
+    void setPosePositionAndRotation(Handedness handedness, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation);
 
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;
@@ -69,7 +69,7 @@ public:
     void registerController(QQuick3DXrController *controller);
     void unregisterController(QQuick3DXrController *controller);
 
-    bool isPoseInUse(Hand hand, HandPoseSpace poseSpace);
+    bool isPoseInUse(Handedness handedness, HandPoseSpace poseSpace);
 
     // NOTE: Static for now...
     qsizetype getPokeJointIndex() const { return qsizetype(XR_HAND_JOINT_INDEX_TIP_EXT); }
@@ -86,10 +86,10 @@ public:
     XrHandJointVelocityEXT jointVelocities[2][XR_HAND_JOINT_COUNT_EXT];
 
 private:
-    void setupHandModelInternal(QQuick3DXrHandModel *model, Hand hand);
+    void setupHandModelInternal(QQuick3DXrHandModel *model, Handedness handedness);
 
     void setupHandTracking();
-    bool queryHandMesh(Hand hand);
+    bool queryHandMesh(Handedness handedness);
     void setupActions();
     void destroyActions();
     [[nodiscard]] bool checkXrResult(const XrResult &result);
@@ -104,7 +104,7 @@ private:
     void getBoolInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(bool)> setter);
     void getFloatInputState(XrActionStateGetInfo &getInfo, const XrAction &action, std::function<void(float)> setter);
 
-    void setInputValue(Hand hand, int id, const char *shortName, float value);
+    void setInputValue(Handedness handedness, int id, const char *shortName, float value);
 
     QQuick3DXrInputManager *q_ptr = nullptr;
 
@@ -235,7 +235,7 @@ private:
     } m_handGeometryData[2];
 
     QQuick3DGeometry *createHandMeshGeometry(const HandMeshData &handMeshData);
-    void createHandModelData(Hand hand);
+    void createHandModelData(Handedness handedness);
     friend class QOpenXrHandModel;
 };
 

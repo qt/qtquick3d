@@ -41,7 +41,7 @@ class QQuick3DXrInputManagerPrivate
 {
     Q_DECLARE_PUBLIC(QQuick3DXrInputManager)
 public:
-    using Hand = QtQuick3DXr::Hand;
+    using Handedness = QtQuick3DXr::Handedness;
     using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
 
     explicit QQuick3DXrInputManagerPrivate(QQuick3DXrInputManager &manager);
@@ -59,12 +59,12 @@ public:
 
     static QQuick3DXrInputManagerPrivate *get(QQuick3DXrInputManager *inputManager);
 
-    void setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation);
+    void setPosePositionAndRotation(Handedness handedness, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation);
 
     void registerController(QQuick3DXrController *controller);
     void unregisterController(QQuick3DXrController *controller);
 
-    bool isPoseInUse(Hand hand, HandPoseSpace poseSpace);
+    bool isPoseInUse(Handedness handedness, HandPoseSpace poseSpace);
 
     QQuick3DXrHandInput *leftHandInput() const;
     QQuick3DXrHandInput *rightHandInput() const;

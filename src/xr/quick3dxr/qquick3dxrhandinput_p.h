@@ -23,6 +23,8 @@
 #include <QQuaternion>
 #include <QtQml/qqml.h>
 
+#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuick3DXrHandInput : public QObject
@@ -30,12 +32,7 @@ class QQuick3DXrHandInput : public QObject
     Q_OBJECT
 
 public:
-    enum class HandPoseSpace {
-        GripPose,
-        AimPose
-    };
-    Q_ENUM(HandPoseSpace)
-
+    using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
 
     explicit QQuick3DXrHandInput(QObject *parent = nullptr);
 

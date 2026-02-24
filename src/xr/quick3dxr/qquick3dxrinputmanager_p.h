@@ -35,7 +35,7 @@ class QQuick3DXrInputManager : public QObject
     Q_DECLARE_PRIVATE(QQuick3DXrInputManager)
 
 public:
-    using Hand = QtQuick3DXr::Hand;
+    using Handedness = QtQuick3DXr::Handedness;
     using HandPoseSpace = QtQuick3DXr::HandPoseSpace;
 
     static QQuick3DXrInputManager *instance();

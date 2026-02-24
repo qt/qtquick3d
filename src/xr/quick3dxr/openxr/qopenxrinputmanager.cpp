@@ -24,25 +24,25 @@ Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 QQuick3DXrInputManagerPrivate::QQuick3DXrInputManagerPrivate(QQuick3DXrInputManager &manager)
     : q_ptr(&manager)
 {
-    m_handInputState[Hand::LeftHand] = new QQuick3DXrHandInput(this);
-    m_handInputState[Hand::RightHand] = new QQuick3DXrHandInput(this);
+    m_handInputState[uint(Handedness::Left)] = new QQuick3DXrHandInput(this);
+    m_handInputState[uint(Handedness::Right)] = new QQuick3DXrHandInput(this);
 }
 
 QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
 {
     teardown();
-    delete m_handInputState[Hand::LeftHand];
-    delete m_handInputState[Hand::RightHand];
+    delete m_handInputState[uint(Handedness::Left)];
+    delete m_handInputState[uint(Handedness::Right)];
 
-    m_handInputState[Hand::LeftHand] = nullptr;
-    m_handInputState[Hand::RightHand] = nullptr;
+    m_handInputState[uint(Handedness::Left)] = nullptr;
+    m_handInputState[uint(Handedness::Right)] = nullptr;
 }
 
 QQuick3DXrInputManagerPrivate::QXRHandComponentPath QQuick3DXrInputManagerPrivate::makeHandInputPaths(const QByteArrayView path)
 {
     QXRHandComponentPath res;
-    setPath(res.paths[Hand::LeftHand], "/user/hand/left/" + path);
-    setPath(res.paths[Hand::RightHand], "/user/hand/right/" + path);
+    setPath(res.paths[uint(Handedness::Left)], "/user/hand/left/" + path);
+    setPath(res.paths[uint(Handedness::Right)], "/user/hand/right/" + path);
     return res;
 }
 
@@ -335,9 +335,9 @@ void QQuick3DXrInputManagerPrivate::setUpBindings(QList<ControllerBindings>* con
 
         for (const auto &[actionId, path, selector] : controllerBindings.profileMappingDefs) {
             if (selector & LeftHandSubPath)
-                bindings.push_back({m_inputActions[actionId], handComponentPaths->value(path).paths[Hand::LeftHand]});
+                bindings.push_back({m_inputActions[actionId], handComponentPaths->value(path).paths[uint(Handedness::Left)]});
             if (selector & RightHandSubPath)
-                bindings.push_back({m_inputActions[actionId], handComponentPaths->value(path).paths[Hand::RightHand]});
+                bindings.push_back({m_inputActions[actionId], handComponentPaths->value(path).paths[uint(Handedness::Right)]});
         }
 
         XrInteractionProfileSuggestedBinding suggestedBindings{};
@@ -454,8 +454,8 @@ void QQuick3DXrInputManagerPrivate::teardown()
     destroyActions();
 
     if (xrDestroyHandTrackerEXT_) {
-        xrDestroyHandTrackerEXT_(handTracker[Hand::LeftHand]);
-        xrDestroyHandTrackerEXT_(handTracker[Hand::RightHand]);
+        xrDestroyHandTrackerEXT_(handTracker[uint(Handedness::Left)]);
+        xrDestroyHandTrackerEXT_(handTracker[uint(Handedness::Right)]);
     }
 
     m_instance = {XR_NULL_HANDLE};
@@ -493,10 +493,10 @@ void QQuick3DXrInputManagerPrivate::pollActions()
     // Hands
     XrActionStateGetInfo getInfo{};
     getInfo.type = XR_TYPE_ACTION_STATE_GET_INFO;
-    for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
+    for (auto handedness : {Handedness::Left, Handedness::Right}) {
 
-        getInfo.subactionPath = m_handSubactionPath[hand];
-        auto &inputState = m_handInputState[hand];
+        getInfo.subactionPath = m_handSubactionPath[uint(handedness)];
+        auto &inputState = m_handInputState[uint(handedness)];
 
         for (const auto &def : m_handInputActionDefs) {
             getInfo.action = m_inputActions[def.id];
@@ -507,7 +507,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
                 if (checkXrResult(xrGetActionStateBoolean(m_session, &getInfo, &boolValue))) {
                     if (boolValue.isActive && boolValue.changedSinceLastSync) {
                         //qDebug() << "ACTION" << i << def.shortName << bool(boolValue.currentState);
-                        setInputValue(hand, def.id, def.shortName, float(boolValue.currentState));
+                        setInputValue(handedness, def.id, def.shortName, float(boolValue.currentState));
                     }
                 } else {
                     qWarning("Failed to get action state for bool hand input");
@@ -520,7 +520,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
                 if (checkXrResult(xrGetActionStateFloat(m_session, &getInfo, &floatValue))) {
                     if (floatValue.isActive && floatValue.changedSinceLastSync) {
                         //qDebug() << "ACTION" << i << def.shortName << floatValue.currentState;
-                        setInputValue(hand, def.id, def.shortName, float(floatValue.currentState));
+                        setInputValue(handedness, def.id, def.shortName, float(floatValue.currentState));
                     }
                 } else {
                     qWarning("Failed to get action state for float hand input");
@@ -548,7 +548,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
     //    XrAction aimPoseAction{XR_NULL_HANDLE};
     //    XrAction hapticAction{XR_NULL_HANDLE};
 
-        const QList<QPointer<QQuick3DXrHapticFeedback>> hapticOutputData = QQuick3DXrActionMapper::getHapticEffects(static_cast<QQuick3DXrInputAction::Controller>(hand));
+        const QList<QPointer<QQuick3DXrHapticFeedback>> hapticOutputData = QQuick3DXrActionMapper::getHapticEffects(static_cast<QtQuick3DXr::Controller>(handedness));
 
         for (auto &hapticFeedback : hapticOutputData) {
             const bool triggered = hapticFeedback->testAndClear();
@@ -559,7 +559,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
                     vibration.duration = hapticEffect->duration() * 1000000; // Change from milliseconds to nanoseconds
                     vibration.frequency = hapticEffect->frequency();
 
-                    XrHapticActionInfo hapticActionInfo {XR_TYPE_HAPTIC_ACTION_INFO, nullptr, m_handActions.hapticAction, m_handSubactionPath[hand]};
+                    XrHapticActionInfo hapticActionInfo {XR_TYPE_HAPTIC_ACTION_INFO, nullptr, m_handActions.hapticAction, m_handSubactionPath[uint(handedness)]};
 
                     if (!checkXrResult(xrApplyHapticFeedback(m_session, &hapticActionInfo, (const XrHapticBaseHeader*)&vibration))) {
                         qWarning("Failed to trigger haptic feedback");
@@ -575,17 +575,17 @@ void QQuick3DXrInputManagerPrivate::updatePoses(XrTime predictedDisplayTime, XrS
     // Update the Hands pose
 
     for (auto poseSpace : {HandPoseSpace::AimPose, HandPoseSpace::GripPose}) {
-        for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
-            if (!isPoseInUse(hand, poseSpace))
+        for (auto handedness : {Handedness::Left, Handedness::Right}) {
+            if (!isPoseInUse(handedness, poseSpace))
                 continue;
             XrSpaceLocation spaceLocation{};
             spaceLocation.type = XR_TYPE_SPACE_LOCATION;
             XrResult res;
-            res = xrLocateSpace(handSpace(hand, poseSpace), appSpace, predictedDisplayTime, &spaceLocation);
+            res = xrLocateSpace(handSpace(handedness, poseSpace), appSpace, predictedDisplayTime, &spaceLocation);
             // qDebug() << "LOCATE SPACE hand:" << hand << "res" << res << "flags" << spaceLocation.locationFlags
             //          << "active" << m_handInputState[hand]->isActive()
             //          << "Pos" << spaceLocation.pose.position.x << spaceLocation.pose.position.y << spaceLocation.pose.position.z;
-            m_validAimStateFromUpdatePoses[hand] = poseSpace == HandPoseSpace::AimPose
+            m_validAimStateFromUpdatePoses[uint(handedness)] = poseSpace == HandPoseSpace::AimPose
                     && XR_UNQUALIFIED_SUCCESS(res) && (spaceLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT)
                     && (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT); // ### Workaround for Quest issue with hand interaction aim pose
 
@@ -594,7 +594,7 @@ void QQuick3DXrInputManagerPrivate::updatePoses(XrTime predictedDisplayTime, XrS
                     (spaceLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0) {
 
                     // Update hand transform
-                    setPosePositionAndRotation(hand, poseSpace,
+                    setPosePositionAndRotation(handedness, poseSpace,
                                                QVector3D(spaceLocation.pose.position.x,
                                                          spaceLocation.pose.position.y,
                                                          spaceLocation.pose.position.z) * 100.0f,
@@ -606,9 +606,9 @@ void QQuick3DXrInputManagerPrivate::updatePoses(XrTime predictedDisplayTime, XrS
             } else {
                 // Tracking loss is expected when the hand is not active so only log a message
                 // if the hand is active.
-                if (isHandActive(hand)) {
+                if (isHandActive(handedness)) {
                     const char* handName[] = {"left", "right"};
-                    qCDebug(lcQuick3DXr, "Unable to locate %s hand action space in app space: %d", handName[hand], res);
+                    qCDebug(lcQuick3DXr, "Unable to locate %s hand action space in app space: %d", handName[uint(handedness)], res);
                 }
             }
         }
@@ -624,49 +624,49 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking(XrTime predictedDisplayTi
         XrHandJointLocationsEXT locations[2]{{}, {}};
         XrHandJointsLocateInfoEXT locateInfo[2] = {{}, {}};
 
-        for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
-            if (handTracker[hand] == XR_NULL_HANDLE)
+        for (auto handedness : {Handedness::Left, Handedness::Right}) {
+            if (handTracker[uint(handedness)] == XR_NULL_HANDLE)
                 continue;
 
-            aimState[hand].type = XR_TYPE_HAND_TRACKING_AIM_STATE_FB;
+            aimState[uint(handedness)].type = XR_TYPE_HAND_TRACKING_AIM_STATE_FB;
 
-            velocities[hand].type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
-            velocities[hand].jointCount = XR_HAND_JOINT_COUNT_EXT;
-            velocities[hand].jointVelocities = jointVelocities[hand];
-            velocities[hand].next = aimExtensionEnabled ? &aimState[hand] : nullptr;
+            velocities[uint(handedness)].type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
+            velocities[uint(handedness)].jointCount = XR_HAND_JOINT_COUNT_EXT;
+            velocities[uint(handedness)].jointVelocities = jointVelocities[uint(handedness)];
+            velocities[uint(handedness)].next = aimExtensionEnabled ? &aimState[uint(handedness)] : nullptr;
 
-            locations[hand].type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
-            locations[hand].next = &velocities[hand];
-            locations[hand].jointCount = XR_HAND_JOINT_COUNT_EXT;
-            locations[hand].jointLocations = jointLocations[hand];
+            locations[uint(handedness)].type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
+            locations[uint(handedness)].next = &velocities[uint(handedness)];
+            locations[uint(handedness)].jointCount = XR_HAND_JOINT_COUNT_EXT;
+            locations[uint(handedness)].jointLocations = jointLocations[uint(handedness)];
 
-            locateInfo[hand].type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT;
-            locateInfo[hand].baseSpace = appSpace;
-            locateInfo[hand].time = predictedDisplayTime;
-            if (!checkXrResult(xrLocateHandJointsEXT_(handTracker[hand], &locateInfo[hand], &locations[hand])))
+            locateInfo[uint(handedness)].type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT;
+            locateInfo[uint(handedness)].baseSpace = appSpace;
+            locateInfo[uint(handedness)].time = predictedDisplayTime;
+            if (!checkXrResult(xrLocateHandJointsEXT_(handTracker[uint(handedness)], &locateInfo[uint(handedness)], &locations[uint(handedness)])))
                 qWarning("Failed to locate hand joints for hand tracker");
 
             QList<QVector3D> jp;
             jp.reserve(XR_HAND_JOINT_COUNT_EXT);
             QList<QQuaternion> jr;
             jr.reserve(XR_HAND_JOINT_COUNT_EXT);
-            for (uint i = 0; i < locations[hand].jointCount; ++i) {
-                auto &pose = jointLocations[hand][i].pose;
+            for (uint i = 0; i < locations[uint(handedness)].jointCount; ++i) {
+                auto &pose = jointLocations[uint(handedness)][i].pose;
                 jp.append(OpenXRHelpers::toQVector(pose.position));
                 jr.append(OpenXRHelpers::toQQuaternion(pose.orientation));
             }
-            m_handInputState[hand]->setJointPositionsAndRotations(jp, jr);
-            m_handInputState[hand]->setIsHandTrackingActive(locations[hand].isActive);
+            m_handInputState[uint(handedness)]->setJointPositionsAndRotations(jp, jr);
+            m_handInputState[uint(handedness)]->setIsHandTrackingActive(locations[uint(handedness)].isActive);
         }
 
         if (aimExtensionEnabled) {
             // Finger pinch handling
-            for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
-                const uint state = aimState[hand].status;
-                const uint oldState = m_aimStateFlags[hand];
+            for (auto handedness : {Handedness::Left, Handedness::Right}) {
+                const uint state = aimState[uint(handedness)].status;
+                const uint oldState = m_aimStateFlags[uint(handedness)];
                 auto updateState = [&](const char *name, QQuick3DXrInputAction::Action id, uint flag) {
                     if ((state & flag) != (oldState & flag))
-                        setInputValue(hand, id, name, float(!!(state & flag)));
+                        setInputValue(handedness, id, name, float(!!(state & flag)));
                 };
 
                 updateState("index_pinch", QQuick3DXrInputAction::IndexFingerPinch, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
@@ -674,22 +674,22 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking(XrTime predictedDisplayTi
                 updateState("ring_pinch", QQuick3DXrInputAction::RingFingerPinch, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
                 updateState("little_pinch", QQuick3DXrInputAction::LittleFingerPinch, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
                 updateState("hand_tracking_menu_press", QQuick3DXrInputAction::HandTrackingMenuPress, XR_HAND_TRACKING_AIM_MENU_PRESSED_BIT_FB);
-                m_aimStateFlags[hand] = state;
+                m_aimStateFlags[uint(handedness)] = state;
             }
 
             // ### Workaround for Quest issue with hand interaction aim pose
-            for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
-                if (isPoseInUse(hand, HandPoseSpace::AimPose) && !m_validAimStateFromUpdatePoses[hand]) {
-                    if ((aimState[hand].status & XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-                        setPosePositionAndRotation(hand, HandPoseSpace::AimPose,
-                                                   QVector3D(aimState[hand].aimPose.position.x,
-                                                        aimState[hand].aimPose.position.y,
-                                                        aimState[hand].aimPose.position.z) * 100.0f,
-                                                   QQuaternion(aimState[hand].aimPose.orientation.w,
-                                                          aimState[hand].aimPose.orientation.x,
-                                                          aimState[hand].aimPose.orientation.y,
-                                                          aimState[hand].aimPose.orientation.z));
-                        m_handInputState[hand]->setIsActive(true); // TODO: clean up
+            for (auto handedness : {Handedness::Left, Handedness::Right}) {
+                if (isPoseInUse(handedness, HandPoseSpace::AimPose) && !m_validAimStateFromUpdatePoses[uint(handedness)]) {
+                    if ((aimState[uint(handedness)].status & XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+                        setPosePositionAndRotation(handedness, HandPoseSpace::AimPose,
+                                                   QVector3D(aimState[uint(handedness)].aimPose.position.x,
+                                                        aimState[uint(handedness)].aimPose.position.y,
+                                                        aimState[uint(handedness)].aimPose.position.z) * 100.0f,
+                                                   QQuaternion(aimState[uint(handedness)].aimPose.orientation.w,
+                                                          aimState[uint(handedness)].aimPose.orientation.x,
+                                                          aimState[uint(handedness)].aimPose.orientation.y,
+                                                          aimState[uint(handedness)].aimPose.orientation.z));
+                        m_handInputState[uint(handedness)]->setIsActive(true); // TODO: clean up
                     }
                 }
             }
@@ -721,26 +721,26 @@ void QQuick3DXrInputManagerPrivate::setupHandTracking()
         createInfo.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT;
         createInfo.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT;
         createInfo.hand = XR_HAND_LEFT_EXT;
-        if (!checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[QtQuick3DXr::LeftHand])))
+        if (!checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[uint(QtQuick3DXr::Handedness::Left)])))
             qWarning("Failed to create left hand tracker");
         createInfo.hand = XR_HAND_RIGHT_EXT;
-        if (!checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[QtQuick3DXr::RightHand])))
+        if (!checkXrResult(xrCreateHandTrackerEXT_(m_session, &createInfo, &handTracker[uint(QtQuick3DXr::Handedness::Right)])))
             qWarning("Failed to create right hand tracker");
     }
     if (xrGetHandMeshFB_) {
-        for (auto hand : {Hand::LeftHand, Hand::RightHand}) {
-            if (queryHandMesh(hand))
-                createHandModelData(hand);
+        for (auto handedness : {Handedness::Left, Handedness::Right}) {
+            if (queryHandMesh(handedness))
+                createHandModelData(handedness);
         }
     }
 }
 
-bool QQuick3DXrInputManagerPrivate::queryHandMesh(Hand hand)
+bool QQuick3DXrInputManagerPrivate::queryHandMesh(Handedness handedness)
 {
     XrHandTrackingMeshFB mesh {};
     mesh.type = XR_TYPE_HAND_TRACKING_MESH_FB;
     // Left hand
-    if (!checkXrResult(xrGetHandMeshFB_(handTracker[hand], &mesh))) {
+    if (!checkXrResult(xrGetHandMeshFB_(handTracker[uint(handedness)], &mesh))) {
         qWarning("Failed to query hand mesh info.");
         return false;
     }
@@ -748,23 +748,23 @@ bool QQuick3DXrInputManagerPrivate::queryHandMesh(Hand hand)
     mesh.jointCapacityInput = mesh.jointCountOutput;
     mesh.vertexCapacityInput = mesh.vertexCountOutput;
     mesh.indexCapacityInput = mesh.indexCountOutput;
-    m_handMeshData[hand].vertexPositions.resize(mesh.vertexCapacityInput);
-    m_handMeshData[hand].vertexNormals.resize(mesh.vertexCapacityInput);
-    m_handMeshData[hand].vertexUVs.resize(mesh.vertexCapacityInput);
-    m_handMeshData[hand].vertexBlendIndices.resize(mesh.vertexCapacityInput);
-    m_handMeshData[hand].vertexBlendWeights.resize(mesh.vertexCapacityInput);
-    m_handMeshData[hand].indices.resize(mesh.indexCapacityInput);
-    mesh.jointBindPoses = m_handMeshData[hand].jointBindPoses;
-    mesh.jointParents = m_handMeshData[hand].jointParents;
-    mesh.jointRadii = m_handMeshData[hand].jointRadii;
-    mesh.vertexPositions = m_handMeshData[hand].vertexPositions.data();
-    mesh.vertexNormals = m_handMeshData[hand].vertexNormals.data();
-    mesh.vertexUVs = m_handMeshData[hand].vertexUVs.data();
-    mesh.vertexBlendIndices = m_handMeshData[hand].vertexBlendIndices.data();
-    mesh.vertexBlendWeights = m_handMeshData[hand].vertexBlendWeights.data();
-    mesh.indices = m_handMeshData[hand].indices.data();
+    m_handMeshData[uint(handedness)].vertexPositions.resize(mesh.vertexCapacityInput);
+    m_handMeshData[uint(handedness)].vertexNormals.resize(mesh.vertexCapacityInput);
+    m_handMeshData[uint(handedness)].vertexUVs.resize(mesh.vertexCapacityInput);
+    m_handMeshData[uint(handedness)].vertexBlendIndices.resize(mesh.vertexCapacityInput);
+    m_handMeshData[uint(handedness)].vertexBlendWeights.resize(mesh.vertexCapacityInput);
+    m_handMeshData[uint(handedness)].indices.resize(mesh.indexCapacityInput);
+    mesh.jointBindPoses = m_handMeshData[uint(handedness)].jointBindPoses;
+    mesh.jointParents = m_handMeshData[uint(handedness)].jointParents;
+    mesh.jointRadii = m_handMeshData[uint(handedness)].jointRadii;
+    mesh.vertexPositions = m_handMeshData[uint(handedness)].vertexPositions.data();
+    mesh.vertexNormals = m_handMeshData[uint(handedness)].vertexNormals.data();
+    mesh.vertexUVs = m_handMeshData[uint(handedness)].vertexUVs.data();
+    mesh.vertexBlendIndices = m_handMeshData[uint(handedness)].vertexBlendIndices.data();
+    mesh.vertexBlendWeights = m_handMeshData[uint(handedness)].vertexBlendWeights.data();
+    mesh.indices = m_handMeshData[uint(handedness)].indices.data();
 
-    if (!checkXrResult(xrGetHandMeshFB_(handTracker[hand], &mesh))) {
+    if (!checkXrResult(xrGetHandMeshFB_(handTracker[uint(handedness)], &mesh))) {
         qWarning("Failed to get hand mesh data.");
         return false;
     }
@@ -915,48 +915,48 @@ void QQuick3DXrInputManagerPrivate::getFloatInputState(XrActionStateGetInfo &get
     }
 }
 
-XrSpace QQuick3DXrInputManagerPrivate::handSpace(QQuick3DXrInputManagerPrivate::Hand hand, HandPoseSpace poseSpace)
+XrSpace QQuick3DXrInputManagerPrivate::handSpace(QQuick3DXrInputManagerPrivate::Handedness handedness, HandPoseSpace poseSpace)
 {
     if (poseSpace == HandPoseSpace::GripPose)
-        return m_handGripSpace[hand];
+        return m_handGripSpace[uint(handedness)];
     else
-        return m_handAimSpace[hand];
+        return m_handAimSpace[uint(handedness)];
 }
 
-bool QQuick3DXrInputManagerPrivate::isHandActive(QQuick3DXrInputManagerPrivate::Hand hand)
+bool QQuick3DXrInputManagerPrivate::isHandActive(QQuick3DXrInputManagerPrivate::Handedness handedness)
 {
-    return m_handInputState[hand]->isActive();
+    return m_handInputState[uint(handedness)]->isActive();
 }
 
-bool QQuick3DXrInputManagerPrivate::isHandTrackerActive(Hand hand)
+bool QQuick3DXrInputManagerPrivate::isHandTrackerActive(Handedness handedness)
 {
-    return m_handInputState[hand]->isHandTrackingActive();
+    return m_handInputState[uint(handedness)]->isHandTrackingActive();
 }
 
-void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation)
+void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Handedness handedness, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation)
 {
     for (auto *controller : std::as_const(m_controllers)) {
-        if (QtQuick3DXr::handForController(controller->controller()) == hand && QtQuick3DXr::pose_cast(controller->poseSpace()) == poseSpace) {
+        if (QtQuick3DXr::handednessForController(static_cast<QtQuick3DXr::Controller>(controller->controller())) == handedness && static_cast<QtQuick3DXr::HandPoseSpace>(controller->poseSpace()) == poseSpace) {
             controller->setPosition(position);
             controller->setRotation(rotation);
         }
     }
 }
 
-void QQuick3DXrInputManagerPrivate::setInputValue(Hand hand, int id, const char *shortName, float value)
+void QQuick3DXrInputManagerPrivate::setInputValue(Handedness handedness, int id, const char *shortName, float value)
 {
-    QSSG_ASSERT(hand < 2, hand = Hand::LeftHand);
-    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Controller>(hand), shortName, value);
+    QSSG_ASSERT(uint(handedness) < 2, handedness = Handedness::Left);
+    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QtQuick3DXr::Controller>(handedness), shortName, value);
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const
 {
-    return m_handInputState[Hand::LeftHand];
+    return m_handInputState[uint(Handedness::Left)];
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::rightHandInput() const
 {
-    return m_handInputState[Hand::RightHand];
+    return m_handInputState[uint(Handedness::Right)];
 }
 
 static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuaternion &rotation)
@@ -970,9 +970,9 @@ static inline QMatrix4x4 transformMatrix(const QVector3D &position, const QQuate
     return transform;
 }
 
-void QQuick3DXrInputManagerPrivate::setupHandModelInternal(QQuick3DXrHandModel *model, Hand hand)
+void QQuick3DXrInputManagerPrivate::setupHandModelInternal(QQuick3DXrHandModel *model, Handedness handedness)
 {
-    QQuick3DGeometry *geometry = m_handGeometryData[hand].geometry;
+    QQuick3DGeometry *geometry = m_handGeometryData[uint(handedness)].geometry;
     if (!geometry)
         return;
 
@@ -983,7 +983,7 @@ void QQuick3DXrInputManagerPrivate::setupHandModelInternal(QQuick3DXrHandModel *
     QList<QMatrix4x4> inverseBindPoses;
     inverseBindPoses.reserve(XR_HAND_JOINT_COUNT_EXT);
 
-    const auto &handMeshData = m_handMeshData[hand];
+    const auto &handMeshData = m_handMeshData[uint(handedness)];
 
     for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; ++i) {
         const auto &pose = handMeshData.jointBindPoses[i];
@@ -1008,20 +1008,20 @@ void QQuick3DXrInputManagerPrivate::setupHandModel(QQuick3DXrHandModel *model)
         return;
     }
 
-    auto hand = model->hand();
-    if (hand == QQuick3DXrHandModel::LeftHand)
-        setupHandModelInternal(model, Hand::LeftHand);
-    else if (hand == QQuick3DXrHandModel::RightHand)
-        setupHandModelInternal(model, Hand::RightHand);
-    else
+    auto controller = static_cast<QtQuick3DXr::Controller>(model->hand());
+    if (controller == QtQuick3DXr::Controller::UnknownController)
         qWarning() << "No matching hand tracker input found for hand model.";
+    else if (controller == QtQuick3DXr::Controller::LeftHand)
+        setupHandModelInternal(model, Handedness::Left);
+    else if (controller == QtQuick3DXr::Controller::RightHand)
+        setupHandModelInternal(model, Handedness::Right);
 }
 
 // Used both to add a new controller, and notify that an existing one has changed
 void QQuick3DXrInputManagerPrivate::registerController(QQuick3DXrController *controller)
 {
     m_poseUsageDirty = true;
-    if (controller->controller() == QQuick3DXrController::ControllerNone) {
+    if (static_cast<QtQuick3DXr::Controller>(controller->controller()) == QtQuick3DXr::Controller::UnknownController) {
         m_controllers.remove(controller);
         return;
     }
@@ -1034,9 +1034,9 @@ void QQuick3DXrInputManagerPrivate::unregisterController(QQuick3DXrController *c
     m_poseUsageDirty = m_controllers.remove(controller);
 }
 
-bool QQuick3DXrInputManagerPrivate::isPoseInUse(Hand hand, HandPoseSpace poseSpace)
+bool QQuick3DXrInputManagerPrivate::isPoseInUse(Handedness handedness, HandPoseSpace poseSpace)
 {
-    QSSG_ASSERT(uint(hand) < 2 && uint(poseSpace) < 2, return false);
+    QSSG_ASSERT(uint(handedness) < 2 && uint(poseSpace) < 2, return false);
     if (m_poseUsageDirty) {
         std::fill_n(&m_poseInUse[0][0], 4, false);
         for (const auto *controller : std::as_const(m_controllers)) {
@@ -1044,14 +1044,14 @@ bool QQuick3DXrInputManagerPrivate::isPoseInUse(Hand hand, HandPoseSpace poseSpa
         }
         m_poseUsageDirty = false;
     }
-    return m_poseInUse[uint(hand)][uint(poseSpace)];
+    return m_poseInUse[uint(handedness)][uint(poseSpace)];
 }
 
-void QQuick3DXrInputManagerPrivate::createHandModelData(Hand hand)
+void QQuick3DXrInputManagerPrivate::createHandModelData(Handedness handedness)
 {
-    const auto &handMeshData = m_handMeshData[hand];
+    const auto &handMeshData = m_handMeshData[uint(handedness)];
 
-    auto &geometry = m_handGeometryData[hand].geometry;
+    auto &geometry = m_handGeometryData[uint(handedness)].geometry;
     delete geometry;
     geometry = createHandMeshGeometry(handMeshData);
 }

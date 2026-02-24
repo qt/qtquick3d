@@ -21,8 +21,8 @@ Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
 QQuick3DXrInputManagerPrivate::QQuick3DXrInputManagerPrivate(QQuick3DXrInputManager &manager)
     : q_ptr(&manager)
 {
-    m_handInputState[Hand::LeftHand] = new QQuick3DXrHandInput(&manager);
-    m_handInputState[Hand::RightHand] = new QQuick3DXrHandInput(&manager);
+    m_handInputState[uint(Handedness::Left)] = new QQuick3DXrHandInput(&manager);
+    m_handInputState[uint(Handedness::Right)] = new QQuick3DXrHandInput(&manager);
 }
 
 QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
@@ -30,10 +30,10 @@ QQuick3DXrInputManagerPrivate::~QQuick3DXrInputManagerPrivate()
 
 }
 
-static inline void setInputValue(QtQuick3DXr::Hand hand, int id, const char *shortName, float value)
+static inline void setInputValue(QtQuick3DXr::Handedness handedness, int id, const char *shortName, float value)
 {
-    QSSG_ASSERT(hand < 2, hand = QtQuick3DXr::Hand::LeftHand);
-    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QQuick3DXrInputAction::Controller>(hand), shortName, value);
+    QSSG_ASSERT(uint(handedness) < 2, handedness = QtQuick3DXr::Handedness::Left);
+    QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action(id), static_cast<QtQuick3DXr::Controller>(handedness), shortName, value);
 }
 
 
@@ -56,8 +56,8 @@ void QQuick3DXrInputManagerPrivate::prepareHandtracking(ar_data_providers_t data
 void QQuick3DXrInputManagerPrivate::initHandtracking()
 {
     if (m_isHandTrackingSupported) {
-        m_handAnchors[Hand::LeftHand] = ar_hand_anchor_create();
-        m_handAnchors[Hand::RightHand] = ar_hand_anchor_create();
+        m_handAnchors[uint(Handedness::Left)] = ar_hand_anchor_create();
+        m_handAnchors[uint(Handedness::Right)] = ar_hand_anchor_create();
         m_initialized = true;
     }
 
@@ -68,10 +68,10 @@ void QQuick3DXrInputManagerPrivate::teardown()
 {
 }
 
-void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation)
+void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Handedness handedness, HandPoseSpace poseSpace, const QVector3D &position, const QQuaternion &rotation)
 {
     for (QQuick3DXrController *controller : std::as_const(m_controllers)) {
-        if (QtQuick3DXr::handForController(controller->controller()) == hand && QtQuick3DXr::pose_cast(controller->poseSpace()) == poseSpace) {
+        if (QtQuick3DXr::handednessForController(static_cast<QtQuick3DXr::Controller>(controller->controller())) == handedness && static_cast<QtQuick3DXr::HandPoseSpace>(controller->poseSpace()) == poseSpace) {
             controller->setPosition(position);
             controller->setRotation(rotation);
         }
@@ -82,7 +82,7 @@ void QQuick3DXrInputManagerPrivate::setPosePositionAndRotation(Hand hand, HandPo
 void QQuick3DXrInputManagerPrivate::registerController(QQuick3DXrController *controller)
 {
     m_poseUsageDirty = true;
-    if (controller->controller() == QQuick3DXrController::ControllerNone) {
+    if (static_cast<QtQuick3DXr::Controller>(controller->controller()) == QtQuick3DXr::Controller::UnknownController) {
         m_controllers.remove(controller);
         return;
     }
@@ -95,9 +95,9 @@ void QQuick3DXrInputManagerPrivate::unregisterController(QQuick3DXrController *c
     m_poseUsageDirty = m_controllers.remove(controller);
 }
 
-bool QQuick3DXrInputManagerPrivate::isPoseInUse(Hand hand, HandPoseSpace poseSpace)
+bool QQuick3DXrInputManagerPrivate::isPoseInUse(Handedness handedness, HandPoseSpace poseSpace)
 {
-    QSSG_ASSERT(uint(hand) < 2 && uint(poseSpace) < 2, return false);
+    QSSG_ASSERT(uint(handedness) < 2 && uint(poseSpace) < 2, return false);
     if (m_poseUsageDirty) {
         std::fill_n(&m_poseInUse[0][0], 4, false);
         for (const auto *controller : std::as_const(m_controllers)) {
@@ -105,17 +105,17 @@ bool QQuick3DXrInputManagerPrivate::isPoseInUse(Hand hand, HandPoseSpace poseSpa
         }
         m_poseUsageDirty = false;
     }
-    return m_poseInUse[uint(hand)][uint(poseSpace)];
+    return m_poseInUse[uint(handedness)][uint(poseSpace)];
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::leftHandInput() const
 {
-    return m_handInputState[Hand::LeftHand];
+    return m_handInputState[uint(Handedness::Left)];
 }
 
 QQuick3DXrHandInput *QQuick3DXrInputManagerPrivate::rightHandInput() const
 {
-    return m_handInputState[Hand::RightHand];
+    return m_handInputState[uint(Handedness::Right)];
 }
 
 QQuick3DXrInputManagerPrivate *QQuick3DXrInputManagerPrivate::get(QQuick3DXrInputManager *inputManager)
@@ -266,7 +266,7 @@ static const ActionTypeAndName VOPinchGestures[] {
     { "little_pinch", 0.01, QQuick3DXrInputAction::LittleFingerPinch },
 };
 
-static void detectGestures(ar_hand_skeleton_t handSkeleton, QtQuick3DXr::Hand hand)
+static void detectGestures(ar_hand_skeleton_t handSkeleton, QtQuick3DXr::Handedness handedness)
 {
     enum PinchJoints {
         ThumbTip,
@@ -312,7 +312,7 @@ static void detectGestures(ar_hand_skeleton_t handSkeleton, QtQuick3DXr::Hand ha
 
         const simd_float4 diff = jointTransforms[i].columns[3] - thumbTip;
         const float distance = simd_length(diff);
-        setInputValue(hand, VOPinchGestures[i].type, VOPinchGestures[i].name, float(distance < VOPinchGestures[i].pinchDistanceThreshold));
+        setInputValue(handedness, VOPinchGestures[i].type, VOPinchGestures[i].name, float(distance < VOPinchGestures[i].pinchDistanceThreshold));
     }
 }
 
@@ -329,32 +329,32 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
         return;
 
     QSSG_ASSERT(m_handTrackingProvider != nullptr, return);
-    QSSG_ASSERT(m_handAnchors[Hand::LeftHand] != nullptr && m_handAnchors[Hand::RightHand] != nullptr, return);
+    QSSG_ASSERT(m_handAnchors[uint(Handedness::Left)] != nullptr && m_handAnchors[uint(Handedness::Right)] != nullptr, return);
 
-    ar_hand_tracking_provider_get_latest_anchors(m_handTrackingProvider, m_handAnchors[Hand::LeftHand], m_handAnchors[Hand::RightHand]);
+    ar_hand_tracking_provider_get_latest_anchors(m_handTrackingProvider, m_handAnchors[uint(Handedness::Left)], m_handAnchors[uint(Handedness::Right)]);
 
     // FIXME: We can and probably should cache the hand skeleton.
     ar_hand_skeleton_t handSkeletons[2] {};
     uint64_t handJointCount = 0;
-    for (const auto hand : { Hand::LeftHand, Hand::RightHand }) {
-        handSkeletons[hand] = ar_hand_anchor_get_hand_skeleton(m_handAnchors[hand]);
-        handJointCount = qMax(handJointCount, ar_hand_skeleton_get_joint_count(handSkeletons[hand]));
+    for (const auto handedness : { Handedness::Left, Handedness::Right }) {
+        handSkeletons[uint(handedness)] = ar_hand_anchor_get_hand_skeleton(m_handAnchors[uint(handedness)]);
+        handJointCount = qMax(handJointCount, ar_hand_skeleton_get_joint_count(handSkeletons[uint(handedness)]));
     }
 
     const auto &jointNames = getJointNameTable();
     // Sanity check the joint count.
     QSSG_CHECK(handJointCount <= size_t(jointNames.size()));
 
-    for (const auto hand : { Hand::LeftHand, Hand::RightHand }) {
-        const auto handSkeleton = handSkeletons[hand];
+    for (const auto handedness : { Handedness::Left, Handedness::Right }) {
+        const auto handSkeleton = handSkeletons[uint(handedness)];
         if (handSkeleton == nullptr) {
-            m_handInputState[hand]->setIsHandTrackingActive(false);
+            m_handInputState[uint(handedness)]->setIsHandTrackingActive(false);
             continue;
         }
 
         // Clear cached joint data.
-        auto &jpositions = jcache[hand].positions;
-        auto &jrotations = jcache[hand].rotations;
+        auto &jpositions = jcache[uint(handedness)].positions;
+        auto &jrotations = jcache[uint(handedness)].rotations;
         jpositions.clear();
         jrotations.clear();
 
@@ -363,7 +363,7 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
         const bool isWristTracked = ar_skeleton_joint_is_tracked(wristJoinOrigin);
 
         // The hand transform is relative to the head anchor. The wrist is at the origin of the hand anchor.
-        const simd_float4x4 handTransform = ar_anchor_get_origin_from_anchor_transform(m_handAnchors[hand]);
+        const simd_float4x4 handTransform = ar_anchor_get_origin_from_anchor_transform(m_handAnchors[uint(handedness)]);
 
         // Get the joint data.
         for (auto jointName : jointNames) {
@@ -376,27 +376,27 @@ void QQuick3DXrInputManagerPrivate::updateHandtracking()
         }
 
         // Detect gestures.
-        detectGestures(handSkeleton, hand);
+        detectGestures(handSkeleton, handedness);
 
         // Get and set the aim/grip pose.
 
-        if (isPoseInUse(hand, HandPoseSpace::AimPose) ) {
+        if (isPoseInUse(handedness, HandPoseSpace::AimPose) ) {
             QVector3D handPosition;
             QQuaternion handRotation;
             getHandPose<HandPoseSpace::AimPose>(handSkeleton, handTransform, handPosition, handRotation);
 
-            setPosePositionAndRotation(hand, HandPoseSpace::AimPose, handPosition, handRotation);
-        } else if (isPoseInUse(hand, HandPoseSpace::GripPose)) {
+            setPosePositionAndRotation(handedness, HandPoseSpace::AimPose, handPosition, handRotation);
+        } else if (isPoseInUse(handedness, HandPoseSpace::GripPose)) {
             QVector3D handPosition;
             QQuaternion handRotation;
             getHandPose<HandPoseSpace::GripPose>(handSkeleton, handTransform, handPosition, handRotation);
 
-            setPosePositionAndRotation(hand, HandPoseSpace::GripPose, handPosition, handRotation);
+            setPosePositionAndRotation(handedness, HandPoseSpace::GripPose, handPosition, handRotation);
         }
 
-        m_handInputState[hand]->setJointPositionsAndRotations(jpositions, jrotations);
+        m_handInputState[uint(handedness)]->setJointPositionsAndRotations(jpositions, jrotations);
 
-        m_handInputState[hand]->setIsActive(isWristTracked);
+        m_handInputState[uint(handedness)]->setIsActive(isWristTracked);
     }
 }
 

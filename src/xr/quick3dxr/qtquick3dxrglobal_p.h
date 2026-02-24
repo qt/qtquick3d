@@ -42,12 +42,27 @@ enum class ReferenceSpace {
     ReferenceSpaceLocalFloor
 };
 
-enum Hand : quint8 {
-    LeftHand = 0,
-    RightHand = 1,
+enum class Handedness : quint8 {
+    Left = 0,
+    Right = 1,
     Unknown = 2,
 };
 
+// QML item specific enums in the following classes
+// QQuick3DXrHandModel
+// QQuick3DXrHapticFeedback
+// QQuick3DXrInputAction
+// QQuick3DXrController
+enum class Controller {
+    LeftController = 0,
+    RightController = 1,
+    UnknownController = 2,
+    LeftHand = LeftController,
+    RightHand = RightController,
+};
+
+// QML item specific enums in the following classes
+// QQuick3DXrController
 enum class HandPoseSpace {
     GripPose,
     AimPose,

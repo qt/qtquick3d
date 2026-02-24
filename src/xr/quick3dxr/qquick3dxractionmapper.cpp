@@ -12,14 +12,14 @@ QQuick3DXrActionMapper::QQuick3DXrActionMapper(QObject *parent) : QObject(parent
 {
 }
 
-static inline quint32 actionIntKey(const QQuick3DXrInputAction::Action id, const QQuick3DXrInputAction::Controller hand)
+static inline quint32 actionIntKey(const QQuick3DXrInputAction::Action id, const QtQuick3DXr::Controller controller)
 {
-    return quint16(id) | (quint32(hand) << 16);
+    return quint16(id) | (quint32(controller) << 16);
 }
 
-static inline QString actionStringKey(const QString &name, const QQuick3DXrInputAction::Controller hand)
+static inline QString actionStringKey(const QString &name, const QtQuick3DXr::Controller controller)
 {
-    return QString::number(hand) + name;
+    return QString::number(uint(controller)) + name;
 }
 
 QQuick3DXrActionMapper *QQuick3DXrActionMapper::instance()
@@ -28,7 +28,7 @@ QQuick3DXrActionMapper *QQuick3DXrActionMapper::instance()
     return &instance;
 }
 
-void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuick3DXrInputAction::Controller hand, const char *shortName, float value)
+void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QtQuick3DXr::Controller controller, const char *shortName, float value)
 {
     auto *that = instance();
     auto set = [](auto action, auto value) {
@@ -42,9 +42,9 @@ void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuic
 
     QList<QQuick3DXrInputAction *> actions;
     if (id == QQuick3DXrInputAction::CustomAction) {
-        actions = that->m_customActions.values(actionStringKey(name, hand));
+        actions = that->m_customActions.values(actionStringKey(name, controller));
     } else {
-        actions = that->m_actions.values(actionIntKey(id, hand));
+        actions = that->m_actions.values(actionIntKey(id, controller));
     }
 
     for (const auto &action : std::as_const(actions))
@@ -52,10 +52,10 @@ void QQuick3DXrActionMapper::handleInput(QQuick3DXrInputAction::Action id, QQuic
             set(action, value);
 }
 
-QList<QPointer<QQuick3DXrHapticFeedback>> QQuick3DXrActionMapper::getHapticEffects(QQuick3DXrInputAction::Controller hand)
+QList<QPointer<QQuick3DXrHapticFeedback>> QQuick3DXrActionMapper::getHapticEffects(QtQuick3DXr::Controller controller)
 {
     auto *that = instance();
-    return that->m_hapticData[hand].m_hapticEffects;
+    return that->m_hapticData[uint(controller)].m_hapticEffects;
 }
 
 // Note: it is the responsibility of the caller to call removeAction() before the action is destroyed or actionId/actionName is changed
@@ -64,14 +64,14 @@ void QQuick3DXrActionMapper::registerAction(QQuick3DXrInputAction *action)
     auto *that = instance();
 
     const auto &idList = action->actionId();
-    const auto hand = action->hand();
+    const auto controller = static_cast<QtQuick3DXr::Controller>(action->controller());
 
     if (idList.isEmpty()) {
-        that->m_customActions.insert(actionStringKey(action->actionName(), hand), action);
+        that->m_customActions.insert(actionStringKey(action->actionName(), controller), action);
     } else {
         for (const auto &id : idList) {
             if (id != QQuick3DXrInputAction::CustomAction)
-                that->m_actions.insert(actionIntKey(id, hand), action);
+                that->m_actions.insert(actionIntKey(id, controller), action);
         }
     }
 }
@@ -88,13 +88,13 @@ void QQuick3DXrActionMapper::removeAction(QQuick3DXrInputAction *action)
     auto *that = instance();
 
     const auto idList = action->actionId();
-    const auto hand = action->hand();
+    const auto controller = static_cast<QtQuick3DXr::Controller>(action->controller());
     if (idList.isEmpty()) {
         that->m_customActions.remove(action->actionName(), action);
     } else {
         for (const auto &id : idList) {
             if (id != QQuick3DXrInputAction::CustomAction)
-                that->m_actions.remove(actionIntKey(id, hand));
+                that->m_actions.remove(actionIntKey(id, controller));
         }
     }
 }
@@ -302,7 +302,7 @@ void QQuick3DXrInputAction::setActionId(const QList<Action> &newActionId)
 
 QQuick3DXrInputAction::Controller QQuick3DXrInputAction::hand() const
 {
-    return m_controller;
+    return static_cast<Controller>(m_controller);
 }
 
 void QQuick3DXrInputAction::setHand(Controller newHand)
@@ -330,7 +330,7 @@ void QQuick3DXrInputAction::setHand(Controller newHand)
 
 QQuick3DXrInputAction::Controller QQuick3DXrInputAction::controller() const
 {
-    return m_controller;
+    return static_cast<Controller>(m_controller);
 }
 
 void QQuick3DXrInputAction::setController(Controller newController)

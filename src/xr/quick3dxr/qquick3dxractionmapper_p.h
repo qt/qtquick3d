@@ -23,6 +23,7 @@
 #include <QMultiHash>
 #include <QPointer>
 #include "qquick3dxrabstracthapticeffect_p.h"
+#include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,14 +49,15 @@ class QQuick3DXrInputAction : public QObject, public QQmlParserStatus
 
 public:
 
-    // Same values as XrController and XrHandModel enums
-    enum Controller : quint8 {
-        LeftHand = 0,
-        RightHand,
-        Unknown,
-        LeftController = LeftHand,
-        RightController = RightHand,
-        UnknownController = Unknown
+    enum class Controller {
+        LeftController = uint(QtQuick3DXr::Controller::LeftController),
+        RightController = uint(QtQuick3DXr::Controller::RightController),
+        UnknownController = uint(QtQuick3DXr::Controller::UnknownController),
+        LeftHand = uint(QtQuick3DXr::Controller::LeftHand),
+        RightHand = uint(QtQuick3DXr::Controller::RightHand),
+        ControllerLeft = LeftController,
+        ControllerRight = RightController,
+        ControllerNone = UnknownController,
     };
     Q_ENUM(Controller)
 
@@ -159,11 +161,16 @@ class QQuick3DXrHapticFeedback : public QObject, public QQmlParserStatus
 
 public:
 
-    // Same values as XrController and XrHandModel enums
-    enum class Controller : quint8 {
-        LeftController = 0,
-        RightController,
-        UnknownController,
+    // Values here must match the QtQuick3DXr::Controller enum
+    enum class Controller {
+        LeftController = uint(QtQuick3DXr::Controller::LeftController),
+        RightController = uint(QtQuick3DXr::Controller::RightController),
+        UnknownController = uint(QtQuick3DXr::Controller::UnknownController),
+        LeftHand = uint(QtQuick3DXr::Controller::LeftHand),
+        RightHand = uint(QtQuick3DXr::Controller::RightHand),
+        ControllerLeft = LeftController,
+        ControllerRight = RightController,
+        ControllerNone = UnknownController,
     };
     Q_ENUM(Controller)
 
@@ -219,9 +226,9 @@ class QQuick3DXrActionMapper : public QObject
 public:
     static QQuick3DXrActionMapper *instance();
 
-    static QList<QPointer<QQuick3DXrHapticFeedback>> getHapticEffects(QQuick3DXrInputAction::Controller hand);
+    static QList<QPointer<QQuick3DXrHapticFeedback>> getHapticEffects(QtQuick3DXr::Controller controller);
 
-    static void handleInput(QQuick3DXrInputAction::Action id, QQuick3DXrInputAction::Controller hand, const char *shortName, float value);
+    static void handleInput(QQuick3DXrInputAction::Action id, QtQuick3DXr::Controller controller, const char *shortName, float value);
     static void registerAction(QQuick3DXrInputAction *action);
     static void registerHapticEffect(QPointer<QQuick3DXrHapticFeedback>);
     static void removeAction(QQuick3DXrInputAction *action);

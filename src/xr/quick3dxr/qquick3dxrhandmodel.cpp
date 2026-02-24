@@ -82,9 +82,9 @@ void QQuick3DXrHandModel::setupModel()
         return;
     }
     QQuick3DXrInputManager *inputMan = QQuick3DXrInputManager::instance();
-    if (m_hand == RightHand)
+    if (m_hand == Hand::RightHand)
         m_handTracker = inputMan->rightHandInput();
-    else if (m_hand == LeftHand)
+    else if (m_hand == Hand::LeftHand)
         m_handTracker = inputMan->leftHandInput();
     if (!m_handTracker)
         return;
@@ -120,7 +120,6 @@ void QQuick3DXrHandModel::componentComplete()
     \warning This property must be set when the XrHandModel is constructed.
     Changing hands later is not currently supported.
 */
-
 QQuick3DXrHandModel::Hand QQuick3DXrHandModel::hand() const
 {
     return m_hand;
