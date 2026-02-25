@@ -267,6 +267,8 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
                   QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled,
                   QSSGRhiGraphicsPipelineState::Flag::BlendEnabled };
 
+    QSSG_ASSERT(data.reflectionProbesView.size() != 0, return);
+
     reflectionProbes = { data.reflectionProbesView.begin(), data.reflectionProbesView.end() };
     reflectionMapManager = data.requestReflectionMapManager();
 
@@ -309,7 +311,7 @@ void ReflectionMapPass::renderPass(QSSGRenderer &renderer)
     QSSG_ASSERT(layerData, return);
 
     QSSG_CHECK(reflectionMapManager);
-    if (!reflectionPassObjects.isEmpty() || !reflectionProbes.isEmpty()) {
+    if (!reflectionPassObjects.isEmpty() || (reflectionProbes.size() != 0)) {
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D reflection map"));
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D reflection map"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);

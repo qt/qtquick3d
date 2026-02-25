@@ -2936,7 +2936,8 @@ void QSSGLayerRenderData::prepareForRender()
         activePasses.push_back(&screenMapPass);
 
     // Reflection pass
-    activePasses.push_back(&reflectionMapPass);
+    if (reflectionProbesView.size() != 0)
+        activePasses.push_back(&reflectionMapPass);
 
     auto &textureExtensionPass = userPasses[size_t(QSSGRenderLayer::RenderExtensionStage::TextureProviders)];
     if (textureExtensionPass.hasData())
