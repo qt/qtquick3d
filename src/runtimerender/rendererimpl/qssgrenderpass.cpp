@@ -769,7 +769,7 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             // Reflection cube maps are not available at this point, make sure they are turned off.
             bool recRef = handle.obj->renderableFlags.receivesReflections();
             handle.obj->renderableFlags.setReceivesReflections(false);
-            rhiPrepareRenderable(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1, data.layer.viewCount);
+            rhiPrepareRenderableForScreenMapPass(rhiCtx.get(), this, data, *handle.obj, rhiScreenTexture->rpDesc, &ps, shaderFeatures, 1, data.layer.viewCount);
             handle.obj->renderableFlags.setReceivesReflections(recRef);
         }
     }

@@ -175,6 +175,21 @@ Q_QUICK3DRUNTIMERENDER_EXPORT void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                         QSSGReflectionMapEntry *entry = nullptr,
                                                         bool oit = false);
 
+Q_QUICK3DRUNTIMERENDER_EXPORT void rhiPrepareRenderableForScreenMapPass(QSSGRhiContext *rhiCtx,
+                                                                        QSSGPassKey passKey,
+                                                                        const QSSGLayerRenderData &inData,
+                                                                        QSSGRenderableObject &inObject,
+                                                                        QRhiRenderPassDescriptor *renderPassDescriptor,
+                                                                        QSSGRhiGraphicsPipelineState *ps,
+                                                                        QSSGShaderFeatures featureSet,
+                                                                        int samples,
+                                                                        int viewCount,
+                                                                        QSSGRenderCamera *alteredCamera = nullptr,
+                                                                        QMatrix4x4 *alteredModelViewProjection = nullptr,
+                                                                        QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
+                                                                        QSSGReflectionMapEntry *entry = nullptr,
+                                                                        bool oit = false);
+
 Q_QUICK3DRUNTIMERENDER_EXPORT void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                        const QSSGRhiGraphicsPipelineState &state,
                                                        QSSGRenderableObject &object,
