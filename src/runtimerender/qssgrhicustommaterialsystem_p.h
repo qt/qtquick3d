@@ -98,6 +98,7 @@ public:
                               QRhiRenderPassDescriptor *renderPassDescriptor,
                               int samples,
                               int viewCount,
+                              bool screenMapPass,
                               QSSGRenderCamera *camera = nullptr,
                               QSSGRenderTextureCubeFace cubeFace = QSSGRenderTextureCubeFaceNone,
                               QMatrix4x4 *modelViewProjection = nullptr,

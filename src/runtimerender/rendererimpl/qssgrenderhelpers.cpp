@@ -934,20 +934,21 @@ static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSG
     }
 }
 
-void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
-                                         QSSGPassKey passKey,
-                                         const QSSGLayerRenderData &inData,
-                                         QSSGRenderableObject &inObject,
-                                         QRhiRenderPassDescriptor *renderPassDescriptor,
-                                         QSSGRhiGraphicsPipelineState *ps,
-                                         QSSGShaderFeatures featureSet,
-                                         int samples,
-                                         int viewCount,
-                                         QSSGRenderCamera *alteredCamera,
-                                         QMatrix4x4 *alteredModelViewProjection,
-                                         QSSGRenderTextureCubeFace cubeFace,
-                                         QSSGReflectionMapEntry *entry,
-                                         bool oit)
+void rhiPrepareRenderableImp(QSSGRhiContext *rhiCtx,
+                             QSSGPassKey passKey,
+                             const QSSGLayerRenderData &inData,
+                             QSSGRenderableObject &inObject,
+                             QRhiRenderPassDescriptor *renderPassDescriptor,
+                             QSSGRhiGraphicsPipelineState *ps,
+                             QSSGShaderFeatures featureSet,
+                             int samples,
+                             int viewCount,
+                             bool screenMapPass,
+                             QSSGRenderCamera *alteredCamera,
+                             QMatrix4x4 *alteredModelViewProjection,
+                             QSSGRenderTextureCubeFace cubeFace,
+                             QSSGReflectionMapEntry *entry,
+                             bool oit)
 {
     const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
@@ -1190,6 +1191,17 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     const int screenTextureBinding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
                     const int screenTextureArrayBinding = shaderPipeline->bindingForTexture("qt_screenTextureArray", int(QSSGRhiSamplerBindingHints::ScreenTextureArray));
                     if (screenTextureBinding >= 0 || screenTextureArrayBinding >= 0) {
+                        QRhiTexture *screenTexture = shaderPipeline->screenTexture();
+                        // If we're called as part of the screen map pass there's obviosly no screen texture available, but the shader may still expect it, so bind a dummy texture.
+                        if (screenMapPass) {
+                            QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                            // Just mirror what is set up by the ScreenMap pass.
+                            const QRhiTexture::Flags flags = screenTexture->flags();
+                            // and set the dummy texture so there's something for the shader to sample.
+                            screenTexture = rhiCtx->dummyTexture(flags, resourceUpdates);
+                            rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                        }
+
                         // linear min/mag, mipmap filtering depends on the
                         // texture, with SCREEN_TEXTURE there are no mipmaps, but
                         // once SCREEN_MIP_TEXTURE is seen the texture (the same
@@ -1201,12 +1213,12 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                         if (screenTextureBinding >= 0) {
                             bindings.addTexture(screenTextureBinding,
                                                 QRhiShaderResourceBinding::FragmentStage,
-                                                shaderPipeline->screenTexture(), sampler);
+                                                screenTexture, sampler);
                         }
                         if (screenTextureArrayBinding >= 0) {
                             bindings.addTexture(screenTextureArrayBinding,
                                                 QRhiShaderResourceBinding::FragmentStage,
-                                                shaderPipeline->screenTexture(), sampler);
+                                                screenTexture, sampler);
                         }
                     } // else ignore, not an error
                 }
@@ -1303,7 +1315,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             featureSet.set(QSSGShaderFeatures::Feature::Lightmap, true);
 
         customMaterialSystem.rhiPrepareRenderable(ps, passKey, subsetRenderable, featureSet,
-                                                  material, inData, renderPassDescriptor, samples, viewCount,
+                                                  material, inData, renderPassDescriptor, samples, viewCount, screenMapPass,
                                                   alteredCamera, cubeFace, alteredModelViewProjection, entry, oit);
         break;
     }
@@ -1318,6 +1330,44 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         break;
     }
     }
+}
+
+void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
+                                         QSSGPassKey passKey,
+                                         const QSSGLayerRenderData &inData,
+                                         QSSGRenderableObject &inObject,
+                                         QRhiRenderPassDescriptor *renderPassDescriptor,
+                                         QSSGRhiGraphicsPipelineState *ps,
+                                         QSSGShaderFeatures featureSet,
+                                         int samples,
+                                         int viewCount,
+                                         QSSGRenderCamera *alteredCamera,
+                                         QMatrix4x4 *alteredModelViewProjection,
+                                         QSSGRenderTextureCubeFace cubeFace,
+                                         QSSGReflectionMapEntry *entry,
+                                         bool oit)
+{
+    rhiPrepareRenderableImp(rhiCtx, passKey, inData, inObject, renderPassDescriptor, ps, featureSet, samples, viewCount,
+                             false, alteredCamera, alteredModelViewProjection, cubeFace, entry, oit);
+}
+
+void RenderHelpers::rhiPrepareRenderableForScreenMapPass(QSSGRhiContext *rhiCtx,
+                                                         QSSGPassKey passKey,
+                                                         const QSSGLayerRenderData &inData,
+                                                         QSSGRenderableObject &inObject,
+                                                         QRhiRenderPassDescriptor *renderPassDescriptor,
+                                                         QSSGRhiGraphicsPipelineState *ps,
+                                                         QSSGShaderFeatures featureSet,
+                                                         int samples,
+                                                         int viewCount,
+                                                         QSSGRenderCamera *alteredCamera,
+                                                         QMatrix4x4 *alteredModelViewProjection,
+                                                         QSSGRenderTextureCubeFace cubeFace,
+                                                         QSSGReflectionMapEntry *entry,
+                                                         bool oit)
+{
+    rhiPrepareRenderableImp(rhiCtx, passKey, inData, inObject, renderPassDescriptor, ps, featureSet, samples, viewCount,
+                             true, alteredCamera, alteredModelViewProjection, cubeFace, entry, oit);
 }
 
 void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
