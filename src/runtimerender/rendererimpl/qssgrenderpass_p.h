@@ -110,7 +110,7 @@ public:
     void resetForFrame() final;
 
     std::shared_ptr<QSSGRenderReflectionMap> reflectionMapManager;
-    QList<QSSGRenderReflectionProbe *> reflectionProbes;
+    std::vector<QSSGRenderReflectionProbe *> reflectionProbes;
     QSSGRenderableObjectList reflectionPassObjects;
     QSSGRhiGraphicsPipelineState ps;
     bool m_includeSTO = false; // Compatibility flag to include STO objects in reflection map rendering.

@@ -1867,7 +1867,7 @@ void RenderHelpers::rhiRenderReflectionMap(const QSSGRenderContextInterface &con
                                            const QSSGLayerRenderData &inData,
                                            QSSGRhiGraphicsPipelineState *ps,
                                            QSSGRenderReflectionMap &reflectionMapManager,
-                                           const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
+                                           const std::vector<QSSGRenderReflectionProbe *> &reflectionProbes,
                                            const QSSGRenderableObjectList &reflectionPassObjects,
                                            QSSGRenderer &renderer)
 {
