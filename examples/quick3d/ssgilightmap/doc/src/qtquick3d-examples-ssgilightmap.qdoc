@@ -6,7 +6,7 @@
     \example ssgilightmap
     \ingroup quick3d-examples
     \brief An example showing scenes using SSGI and Lightmaps.
-    \examplecategory {3D, Graphics}
+    \examplecategory {3D}
     \meta {tag} {quick, 3d, ssgi, lightmaps}
     \meta {docdependencies} {QtQuick3D}
 
