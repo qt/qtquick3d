@@ -162,11 +162,21 @@ qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &c
     qint32 back = end - 1;
 
     while (front <= back) {
-        const auto &b = renderables.at(front).obj->globalBounds;
-        if (clipFrustum.intersectsWith(b))
-            ++front;
-        else
+        bool cull = true;
+        const QSSGRenderableObject &obj = *renderables.at(front).obj;
+        if (obj.isInstanced) {
+            // when instancing is enabled we can use the shadowmap bounds if they are set, otherwise we disable culling
+            if (obj.globalBoundsInstancing.isEmpty() || clipFrustum.intersectsWith(obj.globalBoundsInstancing)) {
+                cull = false;
+            }
+        } else if (clipFrustum.intersectsWith(obj.globalBounds)) {
+            cull = false;
+        }
+
+        if (cull)
             renderables.swapItemsAt(front, back--);
+        else
+            ++front;
     }
 
     return back + 1;
