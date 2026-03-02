@@ -70,6 +70,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
 
     // Do we need instanced bounds
     const QSSGRenderInstanceTable *instanceTable = inModelContext.model.instanceTable;
+    isInstanced = instanceTable != nullptr;
     if (!instanceTable || !anyLightHasShadows || !(inFlags.castsShadows() || inFlags.receivesShadows()))
         return;
 
