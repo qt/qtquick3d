@@ -270,6 +270,7 @@ public:
     const Type type;
     float instancingLodMin = -1;
     float instancingLodMax = -1;
+    bool isInstanced = false;
 
     QSSGRenderableObject(Type ty,
                          QSSGRenderableObjectFlags inFlags,
