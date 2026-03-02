@@ -141,20 +141,6 @@ static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderData::MAX_AA_
     QVector2D(0.235760f, 0.527760f), // 8x
 };
 
-qsizetype QSSGLayerRenderData::frustumCulling(const QSSGClippingFrustum &clipFrustum, const QSSGRenderableObjectList &renderables, QSSGRenderableObjectList &visibleRenderables)
-{
-    QSSG_ASSERT(visibleRenderables.isEmpty(), visibleRenderables.clear());
-    visibleRenderables.reserve(renderables.size());
-    for (quint32 end = renderables.size(), idx = quint32(0); idx != end; ++idx) {
-        auto handle = renderables.at(idx);
-        const auto &b = handle.obj->globalBounds;
-        if (clipFrustum.intersectsWith(b))
-            visibleRenderables.push_back(handle);
-    }
-
-    return visibleRenderables.size();
-}
-
 qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &clipFrustum, QSSGRenderableObjectList &renderables)
 {
     const qint32 end = renderables.size();

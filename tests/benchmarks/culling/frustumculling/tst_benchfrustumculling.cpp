@@ -24,7 +24,6 @@ private slots:
     void initTestCase();
     void cleanupTestCase();
     void test_frustumCulling();
-    void bench_outputlist();
     void bench_inline();
 
 private:
@@ -111,65 +110,6 @@ void BenchFrustumCulling::test_frustumCulling()
 }
 
 constexpr auto Identity = QQuaternion{1, 0, 0, 0};
-
-void BenchFrustumCulling::bench_outputlist()
-{
-    // bounds 10x10x10 all in world coordinates
-    constexpr float widthAndHeight = 10.0f;
-    constexpr QSSGBounds3 bounds { { -widthAndHeight / 2.0f, -widthAndHeight / 2.0f, -widthAndHeight / 2.0f }, { widthAndHeight / 2.0f, widthAndHeight / 2.0f, widthAndHeight / 2.0f } };
-
-    // For simplicity we only do put "cullable" object in front or behind the frustum for now.
-    const float frustumNearBorder = camera.position().z() - camera.clipNear() + widthAndHeight;
-    const float frustumFarBorder = camera.position().z() - camera.clipFar() - widthAndHeight;
-
-    const quint32 objectCount = 10000;
-    const quint32 nonCulledItemCount = 3;
-
-    QSet<quint32> replaceIndexes;
-    while (replaceIndexes.size() < nonCulledItemCount)
-        replaceIndexes.insert(QRandomGenerator::global()->bounded(objectCount));
-
-    QList<ObjectData> objects;
-    objects.reserve(objectCount);
-
-    // Fill the list with object data that should be culled
-    for (quint32 i = 0, end = objectCount; i != end; ++i) {
-        if (i % 2)
-            objects.push_back(createRenderableData({0.0f, 0.0f, frustumNearBorder }, Identity, bounds));
-        else
-            objects.push_back(createRenderableData({0.0f, 0.0f, frustumFarBorder }, Identity, bounds));
-    }
-
-    // Insert items at random positions in the list that should not be culled
-    for (auto v : std::as_const(replaceIndexes))
-        objects.replace(v, createRenderableData({0.0f, 0.0f, 0.0f}, Identity, bounds));
-
-    QCOMPARE(objects.size(), objectCount);
-
-    QList<QSSGRenderableObject *> renderableObjects;
-
-    // List of renderables
-    populateRenderableList(objects, renderableObjects);
-
-    // Renderable object handle class...
-    QSSGRenderableObjectList renderables;
-    renderables.reserve(objects.size());
-
-    QSSGRenderableObjectList culledrenderables;
-    renderables.reserve(objects.size());
-
-    for (auto *ro : renderableObjects)
-        renderables.push_back({ ro, 0.0f, {}});
-
-    QVERIFY(!cameraNode->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
-
-    QBENCHMARK {
-        culledrenderables.clear();
-        QSSGLayerRenderData::frustumCulling(clipFrustum, renderables, culledrenderables);
-    }
-
-    QCOMPARE(culledrenderables.size(), nonCulledItemCount);
-}
 
 void BenchFrustumCulling::bench_inline()
 {

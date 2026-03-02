@@ -362,7 +362,6 @@ public:
     // Helper function used during prepareForRender
     void prepareReflectionProbesForRender();
 
-    static qsizetype frustumCulling(const QSSGClippingFrustum &clipFrustum, const QSSGRenderableObjectList &renderables, QSSGRenderableObjectList &visibleRenderables);
     [[nodiscard]] static qsizetype frustumCullingInline(const QSSGClippingFrustum &clipFrustum, QSSGRenderableObjectList &renderables);
 
     [[nodiscard]] static qsizetype filterLayerMaskInline(quint32 layerMask, QSSGRenderableObjectList &renderables);
