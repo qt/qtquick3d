@@ -212,7 +212,11 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
         // The scene root is created by the scene manager and realeased by the
         // the normal cleanup of scene nodes, since we're deleting the layer
         // at a later point, we need to remove the scene root node from the layer now.
-        if (m_sceneRootNode)
+
+        // If the scene is destroyed outside of the normal destroy sequence(like fom a timer),
+        // the scene root node might already have been deallocated and pointing
+        // to an invalid memory in which case the winAttacment is also not valid anymore.
+        if (m_sceneRootNode && winAttacment)
             removeNodeFromLayer(m_sceneRootNode);
 
         // There might be nodes queued for cleanup that still reference the layer,
