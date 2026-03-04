@@ -1698,6 +1698,12 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
 
     if (filePath.startsWith(":"))
         importer->SetIOHandler(new ResourceIOSystem);
+#ifdef Q_OS_WASM
+    // Always use QFile-based IO on wasm, so that URL schemes like
+    // weblocalfile: are handled by Qt's file engine abstraction.
+    else
+        importer->SetIOHandler(new ResourceIOSystem);
+#endif
 
     auto sourceScene = importer->ReadFile(filePath.toStdString(), postProcessSteps);
     if (!sourceScene) {
