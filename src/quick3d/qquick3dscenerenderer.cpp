@@ -363,6 +363,8 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
         Q_TRACE(QSSG_renderFrame_entry, ssaaAdjustedWidth, ssaaAdjustedHeight);
+        if (m_renderStats)
+            m_renderStats->startRender();
 
         QColor clearColor = Qt::transparent;
         if (m_backgroundMode == QSSGRenderLayer::Background::Color
@@ -549,9 +551,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                                       STAT_PAYLOAD(QSSGRhiContextStats::get(*rhiCtx)),
                                       profilingId);
         endFrame();
-
+        if (m_renderStats)
+            m_renderStats->endRender(dumpRenderTimes());
         Q_TRACE(QSSG_renderFrame_exit);
-
     }
 
     return currentTexture;
@@ -1718,6 +1720,8 @@ void QQuick3DSGRenderNode::prepare()
     if (!renderer->m_sgContext->rhiContext()->isValid())
         return;
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
+    if (renderer->renderStats())
+        renderer->renderStats()->startRenderPrepare();
 
     queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().get());
 
@@ -1732,6 +1736,8 @@ void QQuick3DSGRenderNode::prepare()
     renderer->beginFrame();
     renderer->rhiPrepare(vp, dpr);
     Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(vp.width()) | quint64(vp.height()) << 32, renderer->profilingId);
+    if (renderer->renderStats())
+        renderer->renderStats()->endRenderPrepare();
 }
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
@@ -1741,6 +1747,8 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     const auto &rhiContext = renderer->m_sgContext->rhiContext();
 
     if (rhiContext->isValid()) {
+        if (renderer->renderStats())
+            renderer->renderStats()->startRender();
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
         Q_TRACE_SCOPE(QSSG_renderFrame, 0, 0);
 
@@ -1750,6 +1758,8 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
                                       STAT_PAYLOAD(QSSGRhiContextStats::get(*rhiContext)), renderer->profilingId);
         renderer->endFrame();
+        if (renderer->renderStats())
+            renderer->renderStats()->endRender(dumpRenderTimes());
     }
 }
 
@@ -1836,10 +1846,8 @@ void QQuick3DSGDirectRenderer::prepare()
         else
         {
             QQuick3DRenderStats *renderStats = m_renderer->renderStats();
-            if (renderStats) {
-                renderStats->startRender();
+            if (renderStats)
                 renderStats->startRenderPrepare();
-            }
 
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
@@ -1912,6 +1920,8 @@ void QQuick3DSGDirectRenderer::render()
         {
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
             Q_TRACE_SCOPE(QSSG_renderFrame, 0, 0);
+            if (m_renderer->renderStats())
+                m_renderer->renderStats()->startRender();
 
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, rhiContext.get());
 
