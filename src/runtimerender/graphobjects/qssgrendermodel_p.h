@@ -49,9 +49,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     bool receivesShadows = true;
     float instancingLodMin = -1;
     float instancingLodMax = -1;
+    mutable int instanceLodCount = -1;
 
     QSSGRenderInstanceTable *instanceTable = nullptr;
-    int instanceCount() const { return instanceTable ? instanceTable->count() : 0; }
+    int instanceCount() const { return instanceTable ? (instanceLodCount >= 0) ? instanceLodCount : instanceTable->count() : 0; }
     bool instancing() const { return instanceTable;}
 
     QSSGParticleBuffer *particleBuffer = nullptr;
