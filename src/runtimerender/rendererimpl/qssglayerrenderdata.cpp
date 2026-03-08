@@ -3043,23 +3043,28 @@ static void sortInstances(QByteArray &sortedData, QList<QSSGRhiSortData> &sortDa
     }
 }
 
-static void cullLodInstances(QByteArray &lodData, const void *instances, int count,
-                             const QVector3D &cameraPosition, float minThreshold, float maxThreshold)
+static int cullLodInstances(QByteArray &lodData, const void *instances, int count,
+                            const QVector3D &cameraPosition, float minThreshold, float maxThreshold)
 {
     const QSSGRenderInstanceTableEntry *instance = reinterpret_cast<const QSSGRenderInstanceTableEntry *>(instances);
     QSSGRenderInstanceTableEntry *dest = reinterpret_cast<QSSGRenderInstanceTableEntry *>(lodData.data());
+
+    int realSize = 0;
     for (int i = 0; i < count; ++i) {
         const float x = cameraPosition.x() - instance->row0.w();
         const float y = cameraPosition.y() - instance->row1.w();
         const float z = cameraPosition.z() - instance->row2.w();
         const float distanceSq = x * x + y * y + z * z;
-        if (distanceSq >= minThreshold * minThreshold && (maxThreshold < 0 || distanceSq < maxThreshold * maxThreshold))
+        if (distanceSq >= minThreshold * minThreshold && (maxThreshold < 0 || distanceSq < maxThreshold * maxThreshold)) {
+            realSize++;
             *dest = *instance;
-        else
-            *dest= {};
-        dest++;
+            dest++;
+        }
+
         instance++;
     }
+
+    return realSize;
 }
 
 bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
@@ -3124,16 +3129,33 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
         }
         if (data) {
             if (updateForLod) {
+                instanceData.lodData.resize(table->dataSize());
                 if (table->isDepthSortingEnabled()) {
-                    instanceData.lodData.resize(table->dataSize());
-                    cullLodInstances(instanceData.lodData, instanceData.sortedData.constData(), instanceData.sortedData.size(), cameraPosition, minThreshold, maxThreshold);
-                    data = instanceData.lodData.constData();
+                    modelContext.model.instanceLodCount = cullLodInstances(instanceData.lodData,
+                                                                           instanceData.sortedData.constData(),
+                                                                           instanceData.sortedData.size(),
+                                                                           cameraPosition,
+                                                                           minThreshold,
+                                                                           maxThreshold);
+
                 } else {
-                    instanceData.lodData.resize(table->dataSize());
-                    cullLodInstances(instanceData.lodData, table->constData(), table->count(), cameraPosition, minThreshold, maxThreshold);
-                    data = instanceData.lodData.constData();
+                    modelContext.model.instanceLodCount = cullLodInstances(instanceData.lodData,
+                                                                           table->constData(),
+                                                                           table->count(),
+                                                                           cameraPosition,
+                                                                           minThreshold,
+                                                                           maxThreshold);
                 }
+                data = instanceData.lodData.constData();
+
+                // Force clear the buffer to upload empty instance data.
+                // If this step is skipped, the updateDynamicBuffer function will load data for all instances.
+                if (!modelContext.model.instanceLodCount)
+                    instanceData.lodData.clear();
+
+                instanceBufferSize = modelContext.model.instanceLodCount * sizeof(QSSGRenderInstanceTableEntry);
             }
+
             QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
             rub->updateDynamicBuffer(instanceData.buffer, 0, instanceBufferSize, data);
             rhiCtx->commandBuffer()->resourceUpdate(rub);
