@@ -562,8 +562,9 @@ struct PassRequirmentsState {
     bool needsSpecularLight = false; // global_specular_light
     bool needsEmission = false;      // global_emission
     bool needsWorldNormal = false;   // qt_world_normal
-    bool needsWorldTangent = false;  // qt_world_tangent
-    bool needsWorldBinormal = false; // qt_world_binormal
+    bool needsWorldTangent = false;  // qt_tangent
+    bool needsWorldBinormal = false; // qt_binormal
+
     bool needsF0 = false;            // qt_f0
     bool needsF90 = false;           // qt_f90
     bool needsAmbientOcclusion = false; // qt_ao_factor
@@ -679,8 +680,10 @@ struct PassRequirmentsState {
             needsMetalness = shaderAugmentation.needsMetalness;
             needsEmission = shaderAugmentation.needsEmissiveLight;
             needsWorldNormal = shaderAugmentation.needsWorldNormal;
-            needsWorldTangent = shaderAugmentation.needsWorldTangent;
-            needsWorldBinormal = shaderAugmentation.needsWorldBinormal;
+            // WORLD_NORMAL for a normal-mapped material requires tangent space to be set up.
+            // Ensure tangent/binormal are generated whenever the world normal is requested.
+            needsWorldTangent = shaderAugmentation.needsWorldTangent || shaderAugmentation.needsWorldNormal;
+            needsWorldBinormal = shaderAugmentation.needsWorldBinormal || shaderAugmentation.needsWorldNormal;
 
             if (shaderAugmentation.needsDiffuseLight ||
                 shaderAugmentation.needsSpecularLight ||

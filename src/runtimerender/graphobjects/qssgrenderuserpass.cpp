@@ -22,8 +22,8 @@ static const QHash<const char*, const char*> AugmentMacros = {
     { "SPECULAR_LIGHT", "global_specular_light" },
     { "EMISSIVE_LIGHT", "global_emission" },
     { "WORLD_NORMAL", "qt_world_normal" },
-    { "WORLD_TANGENT", "qt_world_tangent" },
-    { "WORLD_BINORMAL", "qt_world_binormal" },
+    { "WORLD_TANGENT", "qt_tangent" },
+    { "WORLD_BINORMAL", "qt_binormal" },
     { "F0", "qt_f0" },
     { "F90", "qt_f90" }
 };
