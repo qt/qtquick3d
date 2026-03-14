@@ -992,7 +992,6 @@ bool QQuick3DXrManagerPrivate::createSwapchains()
     qCDebug(lcQuick3DXr, "System Hand Tracking Properties: handTracking=%s",
            handTrackingSystemProperties.supportsHandTracking == XR_TRUE ? "True" : "False");
 
-           // View Config type has to be Stereo, because OpenXR doesn't support any other mode yet.
     quint32 viewCount;
     if (!checkXrResult(xrEnumerateViewConfigurationViews(m_instance,
                                                          m_systemId,
@@ -2452,6 +2451,14 @@ void QQuick3DXrManagerPrivate::checkViewConfiguration()
             qCDebug(lcQuick3DXr, "Empty view configuration type");
         }
         checkEnvironmentBlendMode(viewConfigType);
+    }
+
+    // Select view configuration type based on what the runtime supports.
+    if (!viewConfigTypes.contains(XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO)
+        && viewConfigTypes.contains(XR_VIEW_CONFIGURATION_TYPE_PRIMARY_MONO)) {
+        m_viewConfigType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_MONO;
+        m_multiviewRendering = false;
+        qCDebug(lcQuick3DXr, "Mono view mode selected (only mode supported by runtime)");
     }
 }
 
