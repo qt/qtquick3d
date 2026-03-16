@@ -2344,6 +2344,20 @@ void QQuick3DViewport::updateSceneManagerForImportScene()
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick3D::View3D::renderOverrides
+
+    Controls how Qt Quick 3D performs rendering.
+
+    \value View3D.None Rendering proceeds normally. Internal passes are scheduled as required by the
+    features used in the application.
+
+    \value View3D.DisableInternalPasses Disables Qt Quick 3D's internal rendering passes.
+    When this mode is set, the application is responsible for producing and presenting the final frame.
+    Typically, this involves implementing custom \l {User passes} and presenting the result to the
+    viewport using \l {SimpleQuadRenderer} or a custom \l {QQuick3DRenderExtension}{render extension}.
+*/
+
 QQuick3DViewport::RenderOverrides QQuick3DViewport::renderOverrides() const
 {
     return m_renderOverrides;
