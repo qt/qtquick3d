@@ -414,20 +414,36 @@ public:
 
     using LayerNodes = std::vector<QSSGRenderNode *>;
     QSSGGlobalRenderNodeData::LayerNodeView layerNodes;
-    LayerNodes layerNodesCategorized;
 
     // renderableNodes have all lights, but properties configured for specific node
     RenderableNodeEntries renderableModels;
     RenderableNodeEntries renderableParticles;
 
     // Views into the collected nodes (unsorted)
-    QSSGModelsView modelsView;
-    QSSGParticlesView particlesView;
-    QSSGItem2DsView item2DsView;
-    QSSGCamerasView camerasView;
-    QSSGLightsView lightsView;
-    QSSGReflectionProbesView reflectionProbesView;
-    QSSGNonCategorizedView nonCategorizedView;
+    class NodeCollection
+    {
+        Q_DISABLE_COPY(NodeCollection)
+    public:
+        NodeCollection() = default;
+
+        QSSGModelsView modelsView;
+        QSSGParticlesView particlesView;
+        QSSGItem2DsView item2DsView;
+        QSSGCamerasView camerasView;
+        QSSGLightsView lightsView;
+        QSSGReflectionProbesView reflectionProbesView;
+        QSSGNonCategorizedView nonCategorizedView;
+        LayerNodes layerNodesCategorized;
+    };
+    NodeCollection nodeCollection;
+    // FIXME: Convenience for now
+    QSSGModelsView &modelsView = nodeCollection.modelsView;
+    QSSGParticlesView &particlesView = nodeCollection.particlesView;
+    QSSGItem2DsView &item2DsView = nodeCollection.item2DsView;
+    QSSGCamerasView &camerasView = nodeCollection.camerasView;
+    QSSGLightsView &lightsView = nodeCollection.lightsView;
+    QSSGReflectionProbesView &reflectionProbesView = nodeCollection.reflectionProbesView;
+    QSSGNonCategorizedView &nonCategorizedView = nodeCollection.nonCategorizedView;
 
     // Results of prepare for render.
     QSSGRenderCameraList renderedCameras; // multiple items with multiview, one otherwise (or zero if no cameras at all)
@@ -446,6 +462,7 @@ public:
 
     QQsbCollection::EntryMap m_particleShaderEntries;
 
+    bool nonExplicitCameraWithLayerMaskWarningShown = false;
     bool tooManyLightsWarningShown = false;
     bool tooManyDirectionalLightsWarningShown = false;
     bool oitWarningUnsupportedShown = false;
@@ -655,6 +672,10 @@ public:
                                                                         bool anyLightHasShadows,
                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
+    static void categorizeAndFilterNodes(const QSSGGlobalRenderNodeData::LayerNodeView &layerNodes,
+                                          QSSGLayerRenderData::NodeCollection &nodeCollection,
+                                          quint32 layerMask);
+    void updateFilteredLayerNodes(quint32 layerMask);
 private:
     friend class QSSGRenderer;
     friend class QSSGRendererPrivate;

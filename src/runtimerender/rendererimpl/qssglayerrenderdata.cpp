@@ -107,8 +107,10 @@ static LayerNodeStatResult statLayerNodes(const QSSGLayerRenderData::LayerNodes 
     LayerNodeStatResult stat;
 
     for (auto *node : layerNodes) {
-        if (node->getGlobalState(QSSGRenderNode::GlobalState::Active) && (node->tag.isSet(layerMask))) {
-            if (node->type == QSSGRenderGraphObject::Type::Model)
+        if (node->getGlobalState(QSSGRenderNode::GlobalState::Active)) {
+            if (!node->tag.isSet(layerMask))
+                ++stat.otherCount;
+            else if (node->type == QSSGRenderGraphObject::Type::Model)
                 ++stat.modelCount;
             else if (node->type == QSSGRenderGraphObject::Type::Particles)
                 ++stat.particlesCount;
@@ -2185,6 +2187,123 @@ QSSGNodeIdList QSSGLayerRenderData::filter(const QSSGGlobalRenderNodeData::Layer
     return res;
 }
 
+void QSSGLayerRenderData::categorizeAndFilterNodes(const QSSGGlobalRenderNodeData::LayerNodeView &layerNodes,
+                                                   QSSGLayerRenderData::NodeCollection &nodeCollection,
+                                                   quint32 layerMask)
+{
+    auto &modelsView = nodeCollection.modelsView;
+    auto &particlesView = nodeCollection.particlesView;
+    auto &item2DsView = nodeCollection.item2DsView;
+    auto &camerasView = nodeCollection.camerasView;
+    auto &lightsView = nodeCollection.lightsView;
+    auto &reflectionProbesView = nodeCollection.reflectionProbesView;
+    auto &nonCategorizedView = nodeCollection.nonCategorizedView;
+
+    auto &layerNodesCategorized = nodeCollection.layerNodesCategorized;
+
+    modelsView.clear();
+    particlesView.clear();
+    item2DsView.clear();
+    camerasView.clear();
+    lightsView.clear();
+    reflectionProbesView.clear();
+    nonCategorizedView.clear();
+
+    enum NodeType : size_t { Model = 0, Particles, Item2D, Camera, ImportedCamera, Light, ReflectionProbe, Other, Inactive };
+    const auto nodeType = [layerMask](QSSGRenderNode *node) -> NodeType {
+        if (!(node->getGlobalState(QSSGRenderNode::GlobalState::Active)))
+            return NodeType::Inactive;
+        if (!(node->tag.isSet(layerMask)))
+            return NodeType::Other;
+        switch (node->type) {
+        case QSSGRenderGraphObject::Type::Model: return NodeType::Model;
+        case QSSGRenderGraphObject::Type::Particles: return NodeType::Particles;
+        case QSSGRenderGraphObject::Type::Item2D: return NodeType::Item2D;
+        case QSSGRenderGraphObject::Type::ReflectionProbe: return NodeType::ReflectionProbe;
+        default: break;
+        }
+
+        if (QSSGRenderGraphObject::isCamera(node->type)) {
+            // NOTE: To keep compatibility with old code, we collect shared and non-shared cameras differently,
+            // so that shared cameras (import scene) are picked after non-shared ones.
+            const bool isImported = node->getGlobalState(QSSGRenderNode::GlobalState::Imported);
+            constexpr NodeType cameraTypes[2] { NodeType::Camera, NodeType::ImportedCamera };
+            return cameraTypes[size_t(isImported)];
+        }
+        if (QSSGRenderGraphObject::isLight(node->type))
+            return NodeType::Light;
+
+        return NodeType::Other;
+    };
+    // sort nodes by type - We could do this on insert, but it's not given that it would be beneficial.
+    // Depending on how we want to handle the nodes later it might just not give us anything
+    // so, keep it simple for now.
+    // We could also speed up this by having the pointer and the type in the same struct and sort without
+    // indirection. However, that' slightly less convenient and the idea here is that we don't process
+    // this list unless things change, which is not something that should happen often if the user is
+    // concerned about performance, as it means we need to reevaluate the whole scene anyway.
+    {
+        // Sort the nodes by type (we copy the pointers to avoid sorting the original list,
+        // which is stored based on the nodes' order in the world tree).
+        layerNodesCategorized = { layerNodes.begin(), layerNodes.end() };
+        // NOTE: Due to the ordering of item2ds, we need to use stable_sort.
+        std::stable_sort(layerNodesCategorized.begin(), layerNodesCategorized.end(), [nodeType](QSSGRenderNode *a, QSSGRenderNode *b) {
+            return nodeType(a) < nodeType(b);
+        });
+    }
+
+    // Group nodes by type inline and keep track of the individual parts using QSSGDataViews
+    const LayerNodeStatResult stat = statLayerNodes(layerNodesCategorized, layerMask);
+
+    // Go through the sorted nodes and create the views
+    size_t next = 0;
+
+    if (stat.modelCount > 0) {
+        modelsView = QSSGModelsView((QSSGRenderModel **)(layerNodesCategorized.data() + next), stat.modelCount);
+        next = modelsView.size();
+    }
+    if (stat.particlesCount > 0) {
+        particlesView = QSSGParticlesView((QSSGRenderParticles **)(layerNodesCategorized.data() + next), stat.particlesCount);
+        next += particlesView.size();
+    }
+    if (stat.item2DCount > 0) {
+        item2DsView = QSSGItem2DsView((QSSGRenderItem2D **)(layerNodesCategorized.data() + next), stat.item2DCount);
+        next += item2DsView.size();
+    }
+    if (stat.cameraCount > 0) {
+        camerasView = QSSGCamerasView((QSSGRenderCamera **)(layerNodesCategorized.data() + next), stat.cameraCount);
+        next += camerasView.size();
+    }
+    if (stat.lightCount > 0) {
+        lightsView = QSSGLightsView((QSSGRenderLight **)(layerNodesCategorized.data() + next), stat.lightCount);
+        next += lightsView.size();
+    }
+    if (stat.reflectionProbeCount > 0) {
+        reflectionProbesView = QSSGReflectionProbesView((QSSGRenderReflectionProbe **)(layerNodesCategorized.data() + next), stat.reflectionProbeCount);
+        next += reflectionProbesView.size();
+    }
+    if (stat.otherCount > 0) {
+        nonCategorizedView = QSSGNonCategorizedView((QSSGRenderNode **)(layerNodesCategorized.data() + next), stat.otherCount);
+        next += nonCategorizedView.size();
+        (void)next;
+    }
+}
+
+void QSSGLayerRenderData::updateFilteredLayerNodes(quint32 layerMask)
+{
+    categorizeAndFilterNodes(layerNodes, nodeCollection, layerMask);
+
+    // FIXME: Compatability with old code (Will remove later).
+    // NOTE: see resetForFrame() as well for extensions usage
+    renderableModels.clear();
+    renderableParticles.clear();
+    renderableModels.reserve(modelsView.size());
+    renderableParticles.reserve(particlesView.size());
+
+    renderableModels = {modelsView.begin(), modelsView.end()};
+    renderableParticles = {particlesView.begin(), particlesView.end()};
+}
+
 void QSSGLayerRenderData::prepareForRender()
 {
     QSSG_ASSERT_X(layerPrepResult.isNull(), "Prep-result was not reset for render!", layerPrepResult = {});
@@ -2384,102 +2503,8 @@ void QSSGLayerRenderData::prepareForRender()
 
     const bool restatNodes = (layerTreeWasDirty || (globalStateResult & QSSGRenderDataHelpers::GlobalStateResult::ActiveChanged) || cameraLayerMaskDirty);
 
-    if (restatNodes) {
-        modelsView.clear();
-        particlesView.clear();
-        item2DsView.clear();
-        camerasView.clear();
-        lightsView.clear();
-        reflectionProbesView.clear();
-        nonCategorizedView.clear();
-
-        enum NodeType : size_t { Model = 0, Particles, Item2D, Camera, ImportedCamera, Light, ReflectionProbe, Other, Inactive };
-        const auto nodeType = [layerMask](QSSGRenderNode *node) -> NodeType {
-            if (!(node->getGlobalState(QSSGRenderNode::GlobalState::Active) && (node->tag.isSet(layerMask))))
-                return NodeType::Inactive;
-            switch (node->type) {
-            case QSSGRenderGraphObject::Type::Model: return NodeType::Model;
-            case QSSGRenderGraphObject::Type::Particles: return NodeType::Particles;
-            case QSSGRenderGraphObject::Type::Item2D: return NodeType::Item2D;
-            case QSSGRenderGraphObject::Type::ReflectionProbe: return NodeType::ReflectionProbe;
-            default: break;
-            }
-
-            if (QSSGRenderGraphObject::isCamera(node->type)) {
-                // NOTE: To keep compatibility with old code, we collect shared and non-shared cameras differently,
-                // so that shared cameras (import scene) are picked after non-shared ones.
-                const bool isImported = node->getGlobalState(QSSGRenderNode::GlobalState::Imported);
-                constexpr NodeType cameraTypes[2] { NodeType::Camera, NodeType::ImportedCamera };
-                return cameraTypes[size_t(isImported)];
-            }
-            if (QSSGRenderGraphObject::isLight(node->type))
-                return NodeType::Light;
-
-            return NodeType::Other;
-        };
-        // sort nodes by type - We could do this on insert, but it's not given that it would be beneficial.
-        // Depending on how we want to handle the nodes later it might just not give us anything
-        // so, keep it simple for now.
-        // We could also speed up this by having the pointer and the type in the same struct and sort without
-        // indirection. However, that' slightly less convenient and the idea here is that we don't process
-        // this list unless things change, which is not something that should happen often if the user is
-        // concerned about performance, as it means we need to reevaluate the whole scene anyway.
-        {
-            // Sort the nodes by type (we copy the pointers to avoid sorting the original list,
-            // which is stored based on the nodes' order in the world tree).
-            layerNodesCategorized = { layerNodes.begin(), layerNodes.end() };
-            // NOTE: Due to the ordering of item2ds, we need to use stable_sort.
-            std::stable_sort(layerNodesCategorized.begin(), layerNodesCategorized.end(), [nodeType](QSSGRenderNode *a, QSSGRenderNode *b) {
-                return nodeType(a) < nodeType(b);
-            });
-        }
-
-        // Group nodes by type inline and keep track of the individual parts using QSSGDataViews
-        const LayerNodeStatResult stat = statLayerNodes(layerNodesCategorized, layerMask);
-
-        // Go through the sorted nodes and create the views
-        size_t next = 0;
-
-        if (stat.modelCount > 0) {
-            modelsView = QSSGModelsView((QSSGRenderModel **)(layerNodesCategorized.data() + next), stat.modelCount);
-            next = modelsView.size();
-        }
-        if (stat.particlesCount > 0) {
-            particlesView = QSSGParticlesView((QSSGRenderParticles **)(layerNodesCategorized.data() + next), stat.particlesCount);
-            next += particlesView.size();
-        }
-        if (stat.item2DCount > 0) {
-            item2DsView = QSSGItem2DsView((QSSGRenderItem2D **)(layerNodesCategorized.data() + next), stat.item2DCount);
-            next += item2DsView.size();
-        }
-        if (stat.cameraCount > 0) {
-            camerasView = QSSGCamerasView((QSSGRenderCamera **)(layerNodesCategorized.data() + next), stat.cameraCount);
-            next += camerasView.size();
-        }
-        if (stat.lightCount > 0) {
-            lightsView = QSSGLightsView((QSSGRenderLight **)(layerNodesCategorized.data() + next), stat.lightCount);
-            next += lightsView.size();
-        }
-        if (stat.reflectionProbeCount > 0) {
-            reflectionProbesView = QSSGReflectionProbesView((QSSGRenderReflectionProbe **)(layerNodesCategorized.data() + next), stat.reflectionProbeCount);
-            next += reflectionProbesView.size();
-        }
-        if (stat.otherCount > 0) {
-            nonCategorizedView = QSSGNonCategorizedView((QSSGRenderNode **)(layerNodesCategorized.data() + next), stat.otherCount);
-            next += nonCategorizedView.size();
-            (void)next;
-        }
-
-        // FIXME: Compatability with old code (Will remove later).
-        // NOTE: see resetForFrame() as well for extensions usage
-        renderableModels.clear();
-        renderableParticles.clear();
-        renderableModels.reserve(modelsView.size());
-        renderableParticles.reserve(particlesView.size());
-
-        renderableModels = {modelsView.begin(), modelsView.end()};
-        renderableParticles = {particlesView.begin(), particlesView.end()};
-    }
+    if (restatNodes)
+        updateFilteredLayerNodes(layerMask);
 
     // Cameras
     // 1. If there's an explicit camera set and it's active (visible) we'll use that.
@@ -2513,6 +2538,22 @@ void QSSGLayerRenderData::prepareForRender()
                 else
                     qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
             }
+        }
+
+        // Now check if the camera has a layer mask, if it does we need to filter the nodes again!
+        // Issue a warning letting the user know that they should set an explicit camera!
+        // If you are reading this due to seeing the warning: Not requiring an explicit camera was
+        // a mistake, but we kept it for compatability reasons unfortunately.
+        if (renderedCameras.size() > 0 && renderedCameras[0]->layerMask != QSSGRenderCamera::LayerMaskAll) {
+            if (!nonExplicitCameraWithLayerMaskWarningShown) {
+                nonExplicitCameraWithLayerMaskWarningShown = true;
+                qWarning() << "Scenes with non-explicit cameras with a layer detected!"
+                              " Set the camera explicitly to avoid unecessery evaluation of scene nodes!";
+            }
+
+            // Now filter the nodes, again.
+            layerMask = renderedCameras[0]->layerMask;
+            updateFilteredLayerNodes(layerMask);
         }
     }
 
