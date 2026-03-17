@@ -43,26 +43,10 @@ depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickcontrols qtshader
 
 headerdirs  += .. \
                ../../quick3dparticles \
-               ../../runtimerender/extensionapi
+               ../../runtimerender/extensionapi \
+               ../../helpers/
 
-headers += ../../helpers/gridgeometry_p.h \
-           ../../helpers/randominstancing_p.h \
-           ../../helpers/infinitegrid_p.h \
-           ../../helpers/instancerepeater_p.h \
-           ../../helpers/lookatnode_p.h \
-           ../../helpers/heightfieldgeometry_p.h \
-           ../../helpers/proceduralskytexturedata_p.h \
-           ../../helpers/qquick3dtexturedatafrontend_p.h \
-           ../../helpers/proceduralmesh_p.h \
-           ../../helpers/extrudedtextgeometry_p.h \
-           ../../helpers/torusgeometry_p.h \
-           ../../helpers/conegeometry_p.h \
-           ../../helpers/cylindergeometry_p.h \
-           ../../helpers/spheregeometry_p.h \
-           ../../helpers/planegeometry_p.h \
-           ../../helpers/cuboidgeometry_p.h \
-           ../../helpers/capsulegeometry_p.h \
-           ../../assetutils/qquick3druntimeloader_p.h \
+headers += ../../assetutils/qquick3druntimeloader_p.h \
            ../../runtimerender/qssgrendercontextcore.h \
            ../../runtimerender/qssgrhicontext.h \
            ../../runtimerender/qssgrenderpickresult.h
@@ -71,26 +55,10 @@ sourcedirs  += .. \
                src \
                ../../quick3dparticles \
                ../../runtimerender/extensionapi \
-               ../../xr
+               ../../xr \
+               ../../helpers/
 
-sources += ../../helpers/gridgeometry.cpp \
-           ../../helpers/randominstancing.cpp \
-           ../../helpers/infinitegrid.cpp \
-           ../../helpers/instancerepeater.cpp \
-           ../../helpers/lookatnode.cpp \
-           ../../helpers/heightfieldgeometry.cpp \
-           ../../helpers/proceduralskytexturedata.cpp \
-           ../../helpers/qquick3dtexturedatafrontend.cpp \
-           ../../helpers/proceduralmesh.cpp \
-           ../../helpers/extrudedtextgeometry.cpp \
-           ../../helpers/torusgeometry.cpp \
-           ../../helpers/conegeometry.cpp \
-           ../../helpers/cylindergeometry.cpp \
-           ../../helpers/spheregeometry.cpp \
-           ../../helpers/planegeometry.cpp \
-           ../../helpers/cuboidgeometry.cpp \
-           ../../helpers/capsulegeometry.cpp \
-           ../../assetutils/qquick3druntimeloader.cpp \
+sources += ../../assetutils/qquick3druntimeloader.cpp \
            ../../runtimerender/qssgrendercontextcore.cpp \
            ../../runtimerender/qssgrhicontext.cpp
 
