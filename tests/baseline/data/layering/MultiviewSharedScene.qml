@@ -65,6 +65,7 @@ Item {
         }
 
         DirectionalLight {
+            layers: scene.leftViewTag
 
         }
 
@@ -119,7 +120,7 @@ Item {
         }
 
         DirectionalLight {
-
+            layers: scene.rightViewTag
         }
 
         importScene: scene
