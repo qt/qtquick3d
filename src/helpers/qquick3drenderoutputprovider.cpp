@@ -241,7 +241,7 @@ void QQuick3DRenderOutputProvider::markDirty(QQuick3DRenderOutputProvider::Dirty
 }
 
 /*!
-    \qmlproperty RenderOutputProvider::TextureSource textureSource
+    \qmlproperty enumeration RenderOutputProvider::textureSource
     This property holds which pass buffer texture to use.
 
     \value RenderOutputProvider.None No texture source is selected.
@@ -268,10 +268,10 @@ void QQuick3DRenderOutputProvider::setTextureSource(TextureSource newTextureSour
 }
 
 /*!
-    \qmlproperty RenderPass renderPass
+    \qmlproperty RenderPass RenderOutputProvider::renderPass
     This property holds the user defined render pass to use when accessing a user defined pass texture.
 
-    When this property is set, the \l textureSource property is automatically set to \value RenderOutputProvider.UserPassTexture.
+    When this property is set, the \l textureSource property is automatically set to \l RenderOutputProvider.UserPassTexture.
 
     \sa textureSource, RenderPass
 */
@@ -298,11 +298,15 @@ void QQuick3DRenderOutputProvider::setRenderPass(QQuick3DRenderPass *newRenderPa
 }
 
 /*!
-    \qmlproperty RenderOutputProvider::AttachmentSelector attachmentSelector
+    \qmlproperty enumeration RenderOutputProvider::attachmentSelector
     This property holds which attachment to use when accessing a user defined pass texture.
 
-    There are multiple attachments possible when using a user defined render pass,
-    starting from \value RenderOutputProvider.Attachment0 up to \value RenderOutputProvider.Attachment3.
+    Possible attachments when using a user defined render pass:
+
+    \value RenderOutputProvider.Attachment0
+    \value RenderOutputProvider.Attachment1
+    \value RenderOutputProvider.Attachment2
+    \value RenderOutputProvider.Attachment3
 */
 
 QQuick3DRenderOutputProvider::AttachmentSelector QQuick3DRenderOutputProvider::attachmentSelector() const
