@@ -30,8 +30,8 @@ class Q_QUICK3D_EXPORT QQuick3DQuaternionAnimation : public QQuickPropertyAnimat
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuick3DQuaternionAnimation)
-    Q_PROPERTY(QQuaternion from READ from WRITE setFrom)
-    Q_PROPERTY(QQuaternion to READ to WRITE setTo)
+    Q_PROPERTY(QQuaternion from READ from WRITE setFrom OVERRIDE)
+    Q_PROPERTY(QQuaternion to READ to WRITE setTo OVERRIDE)
     Q_PROPERTY(Type type READ type WRITE setType NOTIFY typeChanged)
 
     Q_PROPERTY(float fromXRotation READ fromXRotation WRITE setFromXRotation NOTIFY fromXRotationChanged)
