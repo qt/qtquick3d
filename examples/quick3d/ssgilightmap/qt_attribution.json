@@ -6,6 +6,7 @@
     "License": "CC0 License",
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/414252/bake",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/baked.svg" ]
   },
   {
@@ -14,6 +15,7 @@
     "LicenseId": "CC0-1.0",
     "License": "CC0 License",
     "Copyright": "The Qt Company",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/cornell.svg" ]
   },
   {
@@ -23,6 +25,7 @@
     "License": "CC0 License",
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/72904/colosseum",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/sponza.svg" ]
   },
   {
@@ -32,6 +35,7 @@
     "License": "MIT License",
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/437538/camera-viewfinder",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/reset-camera.svg" ]
   },
   {
@@ -41,6 +45,7 @@
     "License": "MIT License",
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/362806/house-simple-bold",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/bedroom.svg" ]
   },
   {
@@ -50,6 +55,7 @@
     "License": "LGPL 3.0 License",
     "Copyright": "GNOME",
     "Homepage": "https://www.svgrepo.com/svg/451859/screen-shared",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/ssgi.svg" ]
   },
   {
@@ -59,6 +65,7 @@
     "License": "LGPL 3.0 License",
     "Copyright": "GNOME",
     "Homepage": "https://www.svgrepo.com/svg/451794/night-light-disabled",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/off.svg" ]
   },
   {
@@ -68,6 +75,7 @@
     "License": "CC0 License",
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/486236/right-arrow-backup-2",
+    "QDocModule": "qtquick3d",
     "Files": [ "assets/icons/right-arrow.svg" ]
   }
 ]
