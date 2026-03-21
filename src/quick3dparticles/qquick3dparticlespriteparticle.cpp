@@ -42,7 +42,7 @@ QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
 {
     if (m_spriteSequence)
         m_spriteSequence->m_parentParticle = nullptr;
-    for (const auto &connection : std::as_const(m_connections))
+    for (auto &connection : m_connections)
         QObject::disconnect(connection);
     deleteNodes();
 
