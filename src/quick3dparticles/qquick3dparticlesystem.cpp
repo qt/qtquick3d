@@ -459,17 +459,6 @@ void QQuick3DParticleSystem::registerParticleSprite(QQuick3DParticleSpritePartic
 
 void QQuick3DParticleSystem::unRegisterParticle(QQuick3DParticle *particle)
 {
-    auto *model = qobject_cast<QQuick3DParticleModelParticle *>(particle);
-    if (model) {
-        m_particles.removeAll(particle);
-        return;
-    }
-    auto *sprite = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
-    if (sprite) {
-        m_particles.removeAll(particle);
-        return;
-    }
-
     m_particles.removeAll(particle);
 }
 
