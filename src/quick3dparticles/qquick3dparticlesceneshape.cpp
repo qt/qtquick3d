@@ -593,7 +593,7 @@ QVector3D QQuick3DParticleSceneShape::randomPositionModel(int particleIndex)
 
 void QQuick3DParticleSceneShape::clearModelVertexPositions()
 {
-    for (const auto &model : std::as_const(m_data)) {
+    for (auto &model : m_data) {
         QObject::disconnect(model.sceneTransformConnection);
         QObject::disconnect(model.visibilityConnection);
     }
