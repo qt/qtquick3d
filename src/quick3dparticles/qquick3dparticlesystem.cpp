@@ -476,8 +476,7 @@ void QQuick3DParticleSystem::registerParticleAffector(QQuick3DParticleAffector *
 
 void QQuick3DParticleSystem::unRegisterParticleAffector(QQuick3DParticleAffector *a)
 {
-    QObject::disconnect(m_connections[a]);
-    m_connections.remove(a);
+    QObject::disconnect(m_connections.take(a));
     m_affectors.removeAll(a);
 }
 
