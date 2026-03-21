@@ -52,7 +52,7 @@ QQuick3DSkin::QQuick3DSkin(QQuick3DObject *parent)
 
 QQuick3DSkin::~QQuick3DSkin()
 {
-    for (const auto &conn : std::as_const(m_jointsConnections)) {
+    for (auto &conn : m_jointsConnections) {
         disconnect(conn.first);
         disconnect(conn.second);
     }
@@ -127,7 +127,7 @@ qsizetype QQuick3DSkin::qmlJointsCount(QQmlListProperty<QQuick3DNode> *list)
 void QQuick3DSkin::qmlClearJoints(QQmlListProperty<QQuick3DNode> *list)
 {
     QQuick3DSkin *self = static_cast<QQuick3DSkin *>(list->object);
-    for (const auto &conn : std::as_const(self->m_jointsConnections)) {
+    for (auto &conn : self->m_jointsConnections) {
         disconnect(conn.first);
         disconnect(conn.second);
     }
