@@ -98,11 +98,7 @@ public:
                 if (auto old3dO = qobject_cast<QQuick3DObject *>(oldO))
                     QQuick3DObjectPrivate::derefSceneManager(old3dO);
 
-                auto it = connectionMap.constFind(key);
-                if (it != connectionMap.cend()) {
-                    QObject::disconnect(*it);
-                    connectionMap.erase(it);
-                }
+                QObject::disconnect(connectionMap.take(key));
             }
 
             // Watch new object
