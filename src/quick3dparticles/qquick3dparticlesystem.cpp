@@ -93,7 +93,7 @@ QQuick3DParticleSystem::~QQuick3DParticleSystem()
     m_animation->stop();
     m_updateAnimation->stop();
 
-    for (const auto &connection : std::as_const(m_connections))
+    for (auto &connection : std::exchange(m_connections, {}))
         QObject::disconnect(connection);
     // prevent each item removing itself one by one (which would be O(N²)):
     const auto particles = std::exchange(m_particles, {});
