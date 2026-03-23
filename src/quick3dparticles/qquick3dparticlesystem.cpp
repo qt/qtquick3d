@@ -95,11 +95,11 @@ QQuick3DParticleSystem::~QQuick3DParticleSystem()
 
     for (const auto &connection : std::as_const(m_connections))
         QObject::disconnect(connection);
-    // purposeful copy
-    const auto particles = m_particles;
-    const auto emitters = m_emitters;
-    const auto trailEmitters = m_trailEmitters;
-    const auto affectors = m_affectors;
+    // prevent each item removing itself one by one (which would be O(N²)):
+    const auto particles = std::exchange(m_particles, {});
+    const auto emitters = std::exchange(m_emitters, {});
+    const auto trailEmitters = std::exchange(m_trailEmitters, {});
+    const auto affectors = std::exchange(m_affectors, {});
     for (auto *particle : particles)
         particle->setSystem(nullptr);
     for (auto *emitter : emitters)
