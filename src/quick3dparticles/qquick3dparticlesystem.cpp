@@ -436,27 +436,7 @@ int QQuick3DParticleSystem::particleCount() const
 
 void QQuick3DParticleSystem::registerParticle(QQuick3DParticle *particle)
 {
-    auto *model = qobject_cast<QQuick3DParticleModelParticle *>(particle);
-    if (model) {
-        registerParticleModel(model);
-        return;
-    }
-    auto *sprite = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
-    if (sprite) {
-        registerParticleSprite(sprite);
-        return;
-    }
     m_particles << particle;
-}
-
-void QQuick3DParticleSystem::registerParticleModel(QQuick3DParticleModelParticle *m)
-{
-    m_particles << m;
-}
-
-void QQuick3DParticleSystem::registerParticleSprite(QQuick3DParticleSpriteParticle *m)
-{
-    m_particles << m;
 }
 
 void QQuick3DParticleSystem::unRegisterParticle(QQuick3DParticle *particle)
