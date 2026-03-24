@@ -123,8 +123,6 @@ protected:
     void componentComplete() override;
 
 private:
-    void registerParticleModel(QQuick3DParticleModelParticle* m);
-    void registerParticleSprite(QQuick3DParticleSpriteParticle* m);
     void updateLoggingData();
     void resetLoggingVariables();
     void doSeedRandomization();
