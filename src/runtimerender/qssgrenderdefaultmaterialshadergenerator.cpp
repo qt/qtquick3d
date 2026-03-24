@@ -802,6 +802,14 @@ struct PassRequirmentsState {
             needsWorldTangent = true;
             needsWorldBinormal = true;
         }
+
+        // Normal/bump map sampling uses the TBN matrix (qt_tangent, qt_binormal)
+        // to transform the sampled normal to world space. Ensure tangent and binormal
+        // are generated whenever a normal map is present and the world normal is needed.
+        if (needsWorldNormal && hasBumpNormalMap) {
+            needsWorldTangent = true;
+            needsWorldBinormal = true;
+        }
     }
 
     bool shouldIncludeCustomFragmentMain() const {
