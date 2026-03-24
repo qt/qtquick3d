@@ -310,6 +310,14 @@ public:
     }
 };
 
+namespace QQuick3DRenderTargetBlendForeign
+{
+Q_NAMESPACE_EXPORT(Q_QUICK3D_EXPORT)
+QML_FOREIGN_NAMESPACE(QQuick3DRenderPassTargetBlend)
+QML_NAMED_ELEMENT(RenderTargetBlend)
+QML_ADDED_IN_VERSION(6, 11)
+}
+
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsPipelineStateOverride : public QQuick3DShaderUtilsRenderCommand
 {
     Q_OBJECT

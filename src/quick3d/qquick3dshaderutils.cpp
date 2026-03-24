@@ -266,115 +266,116 @@ Q_LOGGING_CATEGORY(lcSubRenderPass, "qt.quick3d.subrenderpass")
 
     \qmlproperty enumeration renderTargetBlend::colorWrite
     Sets the color channels that will be written to the color attachment.
-    \value renderTargetBlend.R
-    \value renderTargetBlend.G
-    \value renderTargetBlend.B
-    \value renderTargetBlend.A
+    \value RenderTargetBlend.R
+    \value RenderTargetBlend.G
+    \value RenderTargetBlend.B
+    \value RenderTargetBlend.A
 
     \qmlproperty enumeration renderTargetBlend::srcColor
     Sets the source color blend factor for the color attachment.
-    \value renderTargetBlend.Zero
-    \value renderTargetBlend.One
-    \value renderTargetBlend.SrcColor
-    \value renderTargetBlend.OneMinusSrcColor
-    \value renderTargetBlend.DstColor
-    \value renderTargetBlend.OneMinusDstColor
-    \value renderTargetBlend.SrcAlpha
-    \value renderTargetBlend.OneMinusSrcAlpha
-    \value renderTargetBlend.DstAlpha
-    \value renderTargetBlend.OneMinusDstAlpha
-    \value renderTargetBlend.ConstantColor
-    \value renderTargetBlend.OneMinusConstantColor
-    \value renderTargetBlend.ConstantAlpha
-    \value renderTargetBlend.OneMinusConstantAlpha
-    \value renderTargetBlend.SrcAlphaSaturate
-    \value renderTargetBlend.Src1Color
-    \value renderTargetBlend.OneMinusSrc1Color
-    \value renderTargetBlend.Src1Alpha
-    \value renderTargetBlend.OneMinusSrc1Alpha
+    \value RenderTargetBlend.Zero
+    \value RenderTargetBlend.One
+    \value RenderTargetBlend.SrcColor
+    \value RenderTargetBlend.OneMinusSrcColor
+    \value RenderTargetBlend.DstColor
+    \value RenderTargetBlend.OneMinusDstColor
+    \value RenderTargetBlend.SrcAlpha
+    \value RenderTargetBlend.OneMinusSrcAlpha
+    \value RenderTargetBlend.DstAlpha
+    \value RenderTargetBlend.OneMinusDstAlpha
+    \value RenderTargetBlend.ConstantColor
+    \value RenderTargetBlend.OneMinusConstantColor
+    \value RenderTargetBlend.ConstantAlpha
+    \value RenderTargetBlend.OneMinusConstantAlpha
+    \value RenderTargetBlend.SrcAlphaSaturate
+    \value RenderTargetBlend.Src1Color
+    \value RenderTargetBlend.OneMinusSrc1Color
+    \value RenderTargetBlend.Src1Alpha
+    \value RenderTargetBlend.OneMinusSrc1Alpha
 
     \qmlproperty enumeration renderTargetBlend::dstColor
     Sets the destination color blend factor for the color attachment.
-    \value renderTargetBlend.Zero
-    \value renderTargetBlend.One
-    \value renderTargetBlend.SrcColor
-    \value renderTargetBlend.OneMinusSrcColor
-    \value renderTargetBlend.DstColor
-    \value renderTargetBlend.OneMinusDstColor
-    \value renderTargetBlend.SrcAlpha
-    \value renderTargetBlend.OneMinusSrcAlpha
-    \value renderTargetBlend.DstAlpha
-    \value renderTargetBlend.OneMinusDstAlpha
-    \value renderTargetBlend.ConstantColor
-    \value renderTargetBlend.OneMinusConstantColor
-    \value renderTargetBlend.ConstantAlpha
-    \value renderTargetBlend.OneMinusConstantAlpha
-    \value renderTargetBlend.SrcAlphaSaturate
-    \value renderTargetBlend.Src1Color
-    \value renderTargetBlend.OneMinusSrc1Color
-    \value renderTargetBlend.Src1Alpha
-    \value renderTargetBlend.OneMinusSrc1Alpha
+    \value RenderTargetBlend.Zero
+    \value RenderTargetBlend.One
+    \value RenderTargetBlend.SrcColor
+    \value RenderTargetBlend.OneMinusSrcColor
+    \value RenderTargetBlend.DstColor
+    \value RenderTargetBlend.OneMinusDstColor
+    \value RenderTargetBlend.SrcAlpha
+    \value RenderTargetBlend.OneMinusSrcAlpha
+    \value RenderTargetBlend.DstAlpha
+    \value RenderTargetBlend.OneMinusDstAlpha
+    \value RenderTargetBlend.ConstantColor
+    \value RenderTargetBlend.OneMinusConstantColor
+    \value RenderTargetBlend.ConstantAlpha
+    \value RenderTargetBlend.OneMinusConstantAlpha
+    \value RenderTargetBlend.SrcAlphaSaturate
+    \value RenderTargetBlend.Src1Color
+    \value RenderTargetBlend.OneMinusSrc1Color
+    \value RenderTargetBlend.Src1Alpha
+    \value RenderTargetBlend.OneMinusSrc1Alpha
 
     \qmlproperty enumeration renderTargetBlend::opColor
     Sets the color blend operation for the color attachment.
-    \value renderTargetBlend.Add
-    \value renderTargetBlend.Subtract
-    \value renderTargetBlend.ReverseSubtract
-    \value renderTargetBlend.Min
-    \value renderTargetBlend.Max
+    \value RenderTargetBlend.Add
+    \value RenderTargetBlend.Subtract
+    \value RenderTargetBlend.ReverseSubtract
+    \value RenderTargetBlend.Min
+    \value RenderTargetBlend.Max
 
     \qmlproperty enumeration renderTargetBlend::srcAlpha
     Sets the source alpha blend factor for the color attachment.
-    \value renderTargetBlend.Zero
-    \value renderTargetBlend.One
-    \value renderTargetBlend.SrcColor
-    \value renderTargetBlend.OneMinusSrcColor
-    \value renderTargetBlend.DstColor
-    \value renderTargetBlend.OneMinusDstColor
-    \value renderTargetBlend.SrcAlpha
-    \value renderTargetBlend.OneMinusSrcAlpha
-    \value renderTargetBlend.DstAlpha
-    \value renderTargetBlend.OneMinusDstAlpha
-    \value renderTargetBlend.ConstantColor
-    \value renderTargetBlend.OneMinusConstantColor
-    \value renderTargetBlend.ConstantAlpha
-    \value renderTargetBlend.OneMinusConstantAlpha
-    \value renderTargetBlend.SrcAlphaSaturate
-    \value renderTargetBlend.Src1Color
-    \value renderTargetBlend.OneMinusSrc1Color
-    \value renderTargetBlend.Src1Alpha
-    \value renderTargetBlend.OneMinusSrc1Alpha
+    \value RenderTargetBlend.Zero
+    \value RenderTargetBlend.One
+    \value RenderTargetBlend.SrcColor
+    \value RenderTargetBlend.OneMinusSrcColor
+    \value RenderTargetBlend.DstColor
+    \value RenderTargetBlend.OneMinusDstColor
+    \value RenderTargetBlend.SrcAlpha
+    \value RenderTargetBlend.OneMinusSrcAlpha
+    \value RenderTargetBlend.DstAlpha
+    \value RenderTargetBlend.OneMinusDstAlpha
+    \value RenderTargetBlend.ConstantColor
+    \value RenderTargetBlend.OneMinusConstantColor
+    \value RenderTargetBlend.ConstantAlpha
+    \value RenderTargetBlend.OneMinusConstantAlpha
+    \value RenderTargetBlend.SrcAlphaSaturate
+    \value RenderTargetBlend.Src1Color
+    \value RenderTargetBlend.OneMinusSrc1Color
+    \value RenderTargetBlend.Src1Alpha
+    \value RenderTargetBlend.OneMinusSrc1Alpha
 
     \qmlproperty enumeration renderTargetBlend::dstAlpha
     Sets the destination alpha blend factor for the color attachment.
-    \value renderTargetBlend.Zero
-    \value renderTargetBlend.One
-    \value renderTargetBlend.SrcColor
-    \value renderTargetBlend.OneMinusSrcColor
-    \value renderTargetBlend.DstColor
-    \value renderTargetBlend.OneMinusDstColor
-    \value renderTargetBlend.SrcAlpha
-    \value renderTargetBlend.OneMinusSrcAlpha
-    \value renderTargetBlend.DstAlpha
-    \value renderTargetBlend.OneMinusDstAlpha
-    \value renderTargetBlend.ConstantColor
-    \value renderTargetBlend.OneMinusConstantColor
-    \value renderTargetBlend.ConstantAlpha
-    \value renderTargetBlend.OneMinusConstantAlpha
-    \value renderTargetBlend.SrcAlphaSaturate
-    \value renderTargetBlend.Src1Color
-    \value renderTargetBlend.OneMinusSrc1Color
-    \value renderTargetBlend.Src1Alpha
-    \value renderTargetBlend.OneMinusSrc1Alpha
+    \value RenderTargetBlend.Zero
+    \value RenderTargetBlend.One
+    \value RenderTargetBlend.SrcColor
+    \value RenderTargetBlend.OneMinusSrcColor
+    \value RenderTargetBlend.DstColor
+    \value RenderTargetBlend.OneMinusDstColor
+    \value RenderTargetBlend.SrcAlpha
+    \value RenderTargetBlend.OneMinusSrcAlpha
+    \value RenderTargetBlend.DstAlpha
+    \value RenderTargetBlend.OneMinusDstAlpha
+    \value RenderTargetBlend.ConstantColor
+    \value RenderTargetBlend.OneMinusConstantColor
+    \value RenderTargetBlend.ConstantAlpha
+    \value RenderTargetBlend.OneMinusConstantAlpha
+    \value RenderTargetBlend.SrcAlphaSaturate
+    \value RenderTargetBlend.Src1Color
+    \value RenderTargetBlend.OneMinusSrc1Color
+    \value RenderTargetBlend.Src1Alpha
+    \value RenderTargetBlend.OneMinusSrc1Alpha
 
     \qmlproperty enumeration renderTargetBlend::opAlpha
     Sets the alpha blend operation for the color attachment.
-    \value renderTargetBlend.Add
-    \value renderTargetBlend.Subtract
-    \value renderTargetBlend.ReverseSubtract
-    \value renderTargetBlend.Min
-    \value renderTargetBlend.Max
+    \value RenderTargetBlend.Add
+    \value RenderTargetBlend.Subtract
+    \value RenderTargetBlend.ReverseSubtract
+    \value RenderTargetBlend.Min
+    \value RenderTargetBlend.Max
  */
+
 
 /*!
     \qmltype PipelineStateOverride
