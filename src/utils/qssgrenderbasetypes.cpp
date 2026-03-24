@@ -5,16 +5,9 @@
 
 #include "qssgrenderbasetypes_p.h"
 
-QT_BEGIN_NAMESPACE
+using namespace Qt::StringLiterals;
 
-static const char qssgSamplerNames[][18] = {
-    "sampler2D",
-    "sampler2DArray",
-    "sampler3D",
-    "samplerCube",
-    "samplerCubeArray",
-    "samplerBuffer"
-};
+QT_BEGIN_NAMESPACE
 
 const char *QSSGRenderTextureFormat::toString() const
 {
@@ -698,7 +691,24 @@ const char *QSSGBaseTypeHelpers::toString(QSSGRenderTextureFilterOp value)
 
 QByteArray QSSGBaseTypeHelpers::toString(QSSGRenderSamplerType value)
 {
-    return QByteArray(qssgSamplerNames[static_cast<size_t>(value)]);
+    switch (value) {
+    case QSSGRenderSamplerType::Unknown:
+        return "unknown"_ba;
+    case QSSGRenderSamplerType::Sampler2D:
+        return "sampler2D"_ba;
+    case QSSGRenderSamplerType::Sampler2DArray:
+        return "sampler2DArray"_ba;
+    case QSSGRenderSamplerType::Sampler3D:
+        return "sampler3D"_ba;
+    case QSSGRenderSamplerType::SamplerCube:
+        return "samplerCube"_ba;
+    case QSSGRenderSamplerType::SamplerCubeArray:
+        return "samplerCubeArray"_ba;
+    case QSSGRenderSamplerType::SamplerBuffer:
+        return "samplerBuffer"_ba;
+    }
+
+    Q_UNREACHABLE_RETURN(QByteArray());
 }
 
 const char *QSSGBaseTypeHelpers::displayName(QSSGRenderTextureCubeFace face)
