@@ -813,9 +813,12 @@ struct PassRequirmentsState {
     }
 
     bool shouldIncludeCustomFragmentMain() const {
-        if (needsBaseColor || needsRoughness || needsMetalness || needsDiffuseLight || needsSpecularLight || needsEmission)
+        // In debug passes, the custom fragment main must be called so that
+        // material-derived values (e.g. NORMAL modified by normal-map sampling code in
+        // MAIN()) are applied before the debug output is generated.
+        if (passType == Debug)
             return true;
-        return false;
+        return needsBaseColor || needsRoughness || needsMetalness || needsDiffuseLight || needsSpecularLight || needsEmission;
     }
 
     bool shouldDiscardNonOpaque() const {
