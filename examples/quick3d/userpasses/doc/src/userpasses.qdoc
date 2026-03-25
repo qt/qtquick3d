@@ -11,8 +11,10 @@
            {A 3D scene rendered using custom user passes}}
 
     The \e {User Passes} example demonstrates how to create custom render passes
-    in Qt Quick 3D. It shows a simple 3D scene rendered using multiple user-defined
-    render passes to achieve a simplined deferred lighting technique.
+    in Qt Quick 3D. It implements a deferred lighting rendering pipeline using
+    multiple user-defined render passes and shows how to handle the complete
+    rendering sequence: opaque geometry, skybox, 2D items embedded in the scene,
+    and transparent geometry.
 
     \section1 Disabling internal render passes
 
@@ -62,42 +64,99 @@
 
     \snippet userpasses/Main.qml GBufferPass usage
 
-    Three instances of RenderPassTexture are created to provide references to the rendered
-    G-buffer textures, which will be used in the subsequent lighting pass.
+    Three \l {QtQuick3D::RenderOutputProvider}{RenderOutputProvider} instances are created to provide
+    references to the rendered G-buffer textures, which will be used in the subsequent lighting pass.
 
     The \c layerMask property of the G-buffer pass is set to only render objects
     that are on ContentLayer.Layer0 and ContentLayer.Layer1. This allows us to control
     which objects are rendered in the G-buffer pass by setting their \l {QtQuick3D::Model::layers}{layers}
     property accordingly.
 
-    \section1 Deferred Lighting Pass
+    \section1 Main Color Pass and SubRenderPasses
 
-    The second custom render pass is a deferred lighting pass that uses the data
-    stored in the G-buffer to compute lighting for the scene. This pass renders a full-screen
-    quad that samples the G-buffer textures and applies lighting calculations in the fragment shader.
+    Rather than a single flat render pass, this example uses a composite \c mainColorPass
+    that owns the main color and depth textures and orchestrates all rendering through
+    a sequence of \l {QtQuick3D::SubRenderPass}{SubRenderPass} children.
 
-    The deferred lighting pass is defined in \c Main.qml as follows:
+    Each SubRenderPass shares the same render targets as the outer pass and executes
+    in order. This makes it straightforward to build a layered rendering pipeline where
+    each stage adds to the result of the previous one.
+
+    \snippet userpasses/Main.qml main color pass
+
+    The outer pass sets \c renderableTypes: RenderablesFilter.None so that nothing
+    renders directly in the parent pass — all rendering is delegated to the
+    sub-passes. The \c PreserveDepthStencilContents flag ensures that depth values
+    written by the G-buffer pass are available to every sub-pass.
+
+    \section2 Deferred Lighting SubPass
+
+    The first sub-pass runs the deferred lighting computation. It renders
+    the full-screen \c deferredLightingQuad model which samples the G-buffer
+    textures and evaluates lighting for every pixel.
+
     \snippet userpasses/Main.qml deferred lighting quad
 
-    The \c deferredLightingQuad Model uses a CustomMaterial with vertex and fragment
-    shaders defined in \c lighting.vert and \c lighting.frag files.
-    The CustomMaterial has three TextureInput properties that are used to pass the
-    G-buffer textures to the shaders.
+    The \c deferredLightingQuad is placed on \c ContentLayer.Layer13 so that it is
+    invisible to the G-buffer pass and only rendered by this sub-pass.
 
-    The \c deferredLightingPass RenderPass renders the full-screen quad to the main color
-    texture of the View3D. It uses a RenderablesFilter to only render objects on
-    ContentLayer.Layer13, which is where the \c deferredLightingQuad Model is placed.
+    A \l {QtQuick3D::PipelineStateOverride}{PipelineStateOverride} disables both
+    depth writes and depth tests for the quad. The G-buffer pass already wrote correct
+    depth for the scene geometry, so the full-screen quad must not alter or test depth.
+
+    \section2 Skybox SubPass
+
+    The second sub-pass renders the scene environment skybox using the special
+    \c RenderPass.SkyboxPass pass mode. Qt Quick 3D takes care of drawing the
+    skybox geometry using the \l {QtQuick3D::SceneEnvironment::lightProbe}{lightProbe}
+    and \l {QtQuick3D::SceneEnvironment::backgroundMode}{backgroundMode} settings from
+    the \l {QtQuick3D::SceneEnvironment}{SceneEnvironment}.
+
+    A PipelineStateOverride enables depth testing so the skybox is correctly hidden
+    behind scene geometry, while depth writes are disabled because the skybox sits "at
+    infinity" and must never occlude geometry.
+
+    \section2 Transparent Objects SubPass
+
+    Transparent objects cannot be stored in the G-buffer because they require
+    back-to-front sorted blending. Instead they are rendered last using their
+    original materials via a dedicated sub-pass.
+
+    The transparent cone in the scene is declared as follows:
+
+    \snippet userpasses/Main.qml transparent cone
+
+    The transparent sub-pass uses a \l {QtQuick3D::RenderablesFilter}{RenderablesFilter}
+    to select only transparent renderables on the matching layers, and a
+    PipelineStateOverride enables alpha blending while keeping depth testing active
+    so transparent objects sort correctly against opaque geometry.
+
+    Transparent objects must be rendered \e after all opaque passes so that the
+    depth buffer is fully populated before blending occurs.
+
+    \section2 2D Items in 3D SubPass
+
+    Qt Quick 3D can embed standard Qt Quick 2D items inside the 3D scene using
+    \l {QtQuick3D::Node}{Node} as a container. To include these items in a custom
+    render pipeline, add a sub-pass with \c passMode: RenderPass.Item2DPass.
+
+    \snippet userpasses/Main.qml item2d node
+
+    The \c Item2DPass mode instructs Qt Quick 3D to render all Qt Quick items
+    that are children of 3D nodes into the current render target, composited with
+    the 3D content already present.
 
     \section1 Rendering to the screen
 
     Finally, to display the result of our custom render passes on the screen,
     we need to ensure that the View3D's main color texture is updated with the
-    result of the deferred lighting pass.
+    result of the main color pass.
 
     \snippet userpasses/Main.qml main texture
 
-    Here the SimpleQuadRenderer is used to render the main color texture of the View3D
-    using the texture provided by the \c deferredLightingPass.
-
-    This is a highly simplified example of using custom user passes in Qt Quick 3D.
+    The \l {QtQuick3D::SimpleQuadRenderer}{SimpleQuadRenderer} is used to blit the
+    main color texture produced by the \c mainColorPass to the View3D's framebuffer.
+    The \l {QtQuick3D::RenderOutputProvider}{RenderOutputProvider} exposes the first
+    color attachment of \c mainColorPass as a texture the SimpleQuadRenderer can
+    sample.
 */
