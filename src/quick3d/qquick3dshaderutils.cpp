@@ -250,132 +250,109 @@ Q_LOGGING_CATEGORY(lcSubRenderPass, "qt.quick3d.subrenderpass")
 */
 
 /*!
-    \qmltype renderTargetBlend
+    \qmlvaluetype renderTargetBlend
     \inqmlmodule QtQuick3D
     \brief Defines blending parameters for a single color attachment of a render pass.
     \since 6.11
 
     The renderTargetBlend type is used to specify blending parameters for a single
     color attachment of a \l RenderPass. An instance of renderTargetBlend can be
-    assigned to one of the \c PipelineStateOverride::targetBlendN properties, where N
-    is the index of the color attachment to configure.
+    assigned to one of the \l PipelineStateOverride \c targetBlend0 through \c targetBlend7
+    properties, where the index corresponds to the color attachment slot.
 
+    The color blend equation is:
+    \badcode
+    result.rgb = srcColor * src.rgb  opColor  dstColor * dst.rgb
+    result.a   = srcAlpha * src.a   opAlpha  dstAlpha * dst.a
+    \endcode
+*/
+
+/*!
     \qmlproperty bool renderTargetBlend::blendEnabled
-    If set to true, enables blending for the color attachment. If set to false,
-    disables blending.
+    If set to \c true, enables blending for the color attachment. If set to \c false,
+    disables blending and the output color is written directly to the attachment.
+    The default value is \c false.
+*/
 
+/*!
     \qmlproperty enumeration renderTargetBlend::colorWrite
-    Sets the color channels that will be written to the color attachment.
-    \value RenderTargetBlend.R
-    \value RenderTargetBlend.G
-    \value RenderTargetBlend.B
-    \value RenderTargetBlend.A
+    A bitmask that controls which color channels are written to the color attachment.
+    Multiple values can be combined with the \c | operator.
+    The default value is \c {R | G | B | A}.
 
+    \value RenderTargetBlend.R Write to the red channel.
+    \value RenderTargetBlend.G Write to the green channel.
+    \value RenderTargetBlend.B Write to the blue channel.
+    \value RenderTargetBlend.A Write to the alpha channel.
+*/
+
+/*!
     \qmlproperty enumeration renderTargetBlend::srcColor
-    Sets the source color blend factor for the color attachment.
-    \value RenderTargetBlend.Zero
-    \value RenderTargetBlend.One
-    \value RenderTargetBlend.SrcColor
-    \value RenderTargetBlend.OneMinusSrcColor
-    \value RenderTargetBlend.DstColor
-    \value RenderTargetBlend.OneMinusDstColor
-    \value RenderTargetBlend.SrcAlpha
-    \value RenderTargetBlend.OneMinusSrcAlpha
-    \value RenderTargetBlend.DstAlpha
-    \value RenderTargetBlend.OneMinusDstAlpha
-    \value RenderTargetBlend.ConstantColor
-    \value RenderTargetBlend.OneMinusConstantColor
-    \value RenderTargetBlend.ConstantAlpha
-    \value RenderTargetBlend.OneMinusConstantAlpha
-    \value RenderTargetBlend.SrcAlphaSaturate
-    \value RenderTargetBlend.Src1Color
-    \value RenderTargetBlend.OneMinusSrc1Color
-    \value RenderTargetBlend.Src1Alpha
-    \value RenderTargetBlend.OneMinusSrc1Alpha
+    Sets the source color blend factor. This value scales the RGB components of the
+    fragment shader output before the blend operation. The default value is \c One.
 
+    \value RenderTargetBlend.Zero Factor is (0, 0, 0).
+    \value RenderTargetBlend.One Factor is (1, 1, 1).
+    \value RenderTargetBlend.SrcColor Factor is the source color (r, g, b).
+    \value RenderTargetBlend.OneMinusSrcColor Factor is (1-r, 1-g, 1-b) of the source.
+    \value RenderTargetBlend.DstColor Factor is the destination color (r, g, b).
+    \value RenderTargetBlend.OneMinusDstColor Factor is (1-r, 1-g, 1-b) of the destination.
+    \value RenderTargetBlend.SrcAlpha Factor is the source alpha (a, a, a).
+    \value RenderTargetBlend.OneMinusSrcAlpha Factor is (1-a, 1-a, 1-a) of the source.
+    \value RenderTargetBlend.DstAlpha Factor is the destination alpha (a, a, a).
+    \value RenderTargetBlend.OneMinusDstAlpha Factor is (1-a, 1-a, 1-a) of the destination.
+    \value RenderTargetBlend.ConstantColor Factor is the constant color set on the pipeline.
+    \value RenderTargetBlend.OneMinusConstantColor Factor is one minus the constant color.
+    \value RenderTargetBlend.ConstantAlpha Factor is the constant alpha.
+    \value RenderTargetBlend.OneMinusConstantAlpha Factor is one minus the constant alpha.
+    \value RenderTargetBlend.SrcAlphaSaturate Factor is min(src.a, 1-dst.a) for RGB, 1 for A.
+    \value RenderTargetBlend.Src1Color Factor is from the second color output of the fragment shader.
+    \value RenderTargetBlend.OneMinusSrc1Color Factor is one minus the second color output.
+    \value RenderTargetBlend.Src1Alpha Factor is the alpha of the second color output.
+    \value RenderTargetBlend.OneMinusSrc1Alpha Factor is one minus the alpha of the second output.
+*/
+
+/*!
     \qmlproperty enumeration renderTargetBlend::dstColor
-    Sets the destination color blend factor for the color attachment.
-    \value RenderTargetBlend.Zero
-    \value RenderTargetBlend.One
-    \value RenderTargetBlend.SrcColor
-    \value RenderTargetBlend.OneMinusSrcColor
-    \value RenderTargetBlend.DstColor
-    \value RenderTargetBlend.OneMinusDstColor
-    \value RenderTargetBlend.SrcAlpha
-    \value RenderTargetBlend.OneMinusSrcAlpha
-    \value RenderTargetBlend.DstAlpha
-    \value RenderTargetBlend.OneMinusDstAlpha
-    \value RenderTargetBlend.ConstantColor
-    \value RenderTargetBlend.OneMinusConstantColor
-    \value RenderTargetBlend.ConstantAlpha
-    \value RenderTargetBlend.OneMinusConstantAlpha
-    \value RenderTargetBlend.SrcAlphaSaturate
-    \value RenderTargetBlend.Src1Color
-    \value RenderTargetBlend.OneMinusSrc1Color
-    \value RenderTargetBlend.Src1Alpha
-    \value RenderTargetBlend.OneMinusSrc1Alpha
+    Sets the destination color blend factor. This value scales the RGB components of the
+    current value in the color attachment before the blend operation.
+    The default value is \c OneMinusSrcAlpha.
+    See \c srcColor for the list of available values.
+*/
 
+/*!
     \qmlproperty enumeration renderTargetBlend::opColor
-    Sets the color blend operation for the color attachment.
-    \value RenderTargetBlend.Add
-    \value RenderTargetBlend.Subtract
-    \value RenderTargetBlend.ReverseSubtract
-    \value RenderTargetBlend.Min
-    \value RenderTargetBlend.Max
+    Sets the arithmetic operation used to combine the scaled source and destination
+    color components. The default value is \c Add.
 
+    \value RenderTargetBlend.Add Result = src + dst.
+    \value RenderTargetBlend.Subtract Result = src - dst.
+    \value RenderTargetBlend.ReverseSubtract Result = dst - src.
+    \value RenderTargetBlend.Min Result = min(src, dst).
+    \value RenderTargetBlend.Max Result = max(src, dst).
+*/
+
+/*!
     \qmlproperty enumeration renderTargetBlend::srcAlpha
-    Sets the source alpha blend factor for the color attachment.
-    \value RenderTargetBlend.Zero
-    \value RenderTargetBlend.One
-    \value RenderTargetBlend.SrcColor
-    \value RenderTargetBlend.OneMinusSrcColor
-    \value RenderTargetBlend.DstColor
-    \value RenderTargetBlend.OneMinusDstColor
-    \value RenderTargetBlend.SrcAlpha
-    \value RenderTargetBlend.OneMinusSrcAlpha
-    \value RenderTargetBlend.DstAlpha
-    \value RenderTargetBlend.OneMinusDstAlpha
-    \value RenderTargetBlend.ConstantColor
-    \value RenderTargetBlend.OneMinusConstantColor
-    \value RenderTargetBlend.ConstantAlpha
-    \value RenderTargetBlend.OneMinusConstantAlpha
-    \value RenderTargetBlend.SrcAlphaSaturate
-    \value RenderTargetBlend.Src1Color
-    \value RenderTargetBlend.OneMinusSrc1Color
-    \value RenderTargetBlend.Src1Alpha
-    \value RenderTargetBlend.OneMinusSrc1Alpha
+    Sets the source alpha blend factor. This value scales the alpha component of the
+    fragment shader output before the blend operation. The default value is \c One.
+    See \c srcColor for the list of available values.
+*/
 
+/*!
     \qmlproperty enumeration renderTargetBlend::dstAlpha
-    Sets the destination alpha blend factor for the color attachment.
-    \value RenderTargetBlend.Zero
-    \value RenderTargetBlend.One
-    \value RenderTargetBlend.SrcColor
-    \value RenderTargetBlend.OneMinusSrcColor
-    \value RenderTargetBlend.DstColor
-    \value RenderTargetBlend.OneMinusDstColor
-    \value RenderTargetBlend.SrcAlpha
-    \value RenderTargetBlend.OneMinusSrcAlpha
-    \value RenderTargetBlend.DstAlpha
-    \value RenderTargetBlend.OneMinusDstAlpha
-    \value RenderTargetBlend.ConstantColor
-    \value RenderTargetBlend.OneMinusConstantColor
-    \value RenderTargetBlend.ConstantAlpha
-    \value RenderTargetBlend.OneMinusConstantAlpha
-    \value RenderTargetBlend.SrcAlphaSaturate
-    \value RenderTargetBlend.Src1Color
-    \value RenderTargetBlend.OneMinusSrc1Color
-    \value RenderTargetBlend.Src1Alpha
-    \value RenderTargetBlend.OneMinusSrc1Alpha
+    Sets the destination alpha blend factor. This value scales the alpha component of the
+    current value in the color attachment before the blend operation.
+    The default value is \c OneMinusSrcAlpha.
+    See \c srcColor for the list of available values.
+*/
 
+/*!
     \qmlproperty enumeration renderTargetBlend::opAlpha
-    Sets the alpha blend operation for the color attachment.
-    \value RenderTargetBlend.Add
-    \value RenderTargetBlend.Subtract
-    \value RenderTargetBlend.ReverseSubtract
-    \value RenderTargetBlend.Min
-    \value RenderTargetBlend.Max
- */
-
+    Sets the arithmetic operation used to combine the scaled source and destination
+    alpha components. The default value is \c Add.
+    See \c opColor for the list of available values.
+*/
 
 /*!
     \qmltype PipelineStateOverride
@@ -387,86 +364,10 @@ Q_LOGGING_CATEGORY(lcSubRenderPass, "qt.quick3d.subrenderpass")
     PipelineStateOverride is a \l Command which can be added to the list of commands in a \l RenderPass.
     When executed, it will override the pipeline state in the render pass according to the properties set on
     the PipelineStateOverride. Only values that are set will override the existing pipeline state's values.
-    If you want to reset a value that has been overriden to the default, then make sure to set the property
+    If you want to reset a value that has been overridden to the default, then set the property
     to \c undefined.
 
-
-    \qmlproperty bool PipelineStateOverride::depthTestEnabled
-    If set to true, enables depth testing for the render pass. If set to false, disables depth testing.
-    Setting this property to true requires a depth attachment for the render pass.
-
-    \qmlproperty bool PipelineStateOverride::depthWriteEnabled
-    If set to true, enables depth writing for the render pass. If set to false, disables depth writing.
-    Setting this property to true requires a depth attachment for the render pass.
-
-    \qmlproperty bool PipelineStateOverride::blendEnabled
-    If set to true, enables blending for the render pass. If set to false, disables blending.
-
-    \qmlproperty bool PipelineStateOverride::usesStencilReference
-    If set to true, enables the use of stencil reference value for the render pass. If set to false,
-    disables the use of stencil reference value.
-
-    \qmlproperty bool PipelineStateOverride::usesScissor
-    If set to true, enables the use of scissor test for the render pass. If set to false,
-    disables the use of scissor test.
-
-    \qmlproperty enumeration PipelineStateOverride::depthFunction
-    Sets the depth comparison function for the render pass.
-    \value PipelineStateOverride.Never
-    \value PipelineStateOverride.Less
-    \value PipelineStateOverride.Equal
-    \value PipelineStateOverride.LessOrEqual
-    \value PipelineStateOverride.Greater
-    \value PipelineStateOverride.NotEqual
-    \value PipelineStateOverride.GreaterOrEqual
-    \value PipelineStateOverride.Always
-
-    \qmlproperty enumeration PipelineStateOverride::cullMode
-    Sets the face culling mode for the render pass.
-    \value PipelineStateOverride.None
-    \value PipelineStateOverride.Front
-    \value PipelineStateOverride.Back
-
-    \qmlproperty enumeration PipelineStateOverride::polygonMode
-    Sets the polygon rasterization mode for the render pass.
-    \value PipelineStateOverride.Fill
-    \value PipelineStateOverride.Line
-
-    \qmlproperty uint PipelineStateOverride::stencilWriteMask
-    Sets the stencil write mask for the render pass.
-
-    \qmlproperty uint PipelineStateOverride::stencilReference
-    Sets the stencil reference value for the render pass.
-
-    \qmlproperty Rectangle PipelineStateOverride::viewport
-    Sets the viewport rectangle for the render pass.
-
-    \qmlproperty Rectangle PipelineStateOverride::scissor
-    Sets the scissor rectangle for the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend0
-    Sets the blending parameters for color attachment 0 of the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend1
-    Sets the blending parameters for color attachment 1 of the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend2
-    Sets the blending parameters for color attachment 2 of the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend3
-    Sets the blending parameters for color attachment 3 of the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend4
-    Sets the blending parameters for color attachment 4 of the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend5
-    Sets the blending parameters for color attachment 5 of the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend6
-    Sets the blending parameters for color attachment 6 of the render pass.
-
-    \qmlproperty TargetBlend PipelineStateOverride::targetBlend7
-    Sets the blending parameters for color attachment 7 of the render pass.
+    \sa renderTargetBlend
 */
 
 /*!
@@ -476,11 +377,27 @@ Q_LOGGING_CATEGORY(lcSubRenderPass, "qt.quick3d.subrenderpass")
     \brief Defines a depth-stencil attachment for a RenderPass.
     \since 6.11
 
-    The DepthStencilAttachment type is used to specify a depth-stencil attachment
-    for a \l RenderPass. This represents a render buffer attachment, so it cannot be
-    directly sampled in shaders.
-*/
+    DepthStencilAttachment adds an implicit depth/stencil render buffer to a
+    \l RenderPass. The render buffer is automatically created and managed by the
+    rendering system. Because it is backed by an opaque render buffer rather
+    than a texture, its contents cannot be sampled in shaders. If you need to
+    read back depth values in a later pass, use \l DepthTextureAttachment instead.
 
+    Use DepthStencilAttachment when you need depth testing and/or stencil
+    operations in a pass but do not need to access the depth data afterwards.
+
+    \qml
+    RenderPass {
+        commands: [
+            ColorAttachment { name: "color0"; target: colorTexture },
+            // Add a depth buffer so depth testing works in this pass
+            DepthStencilAttachment {}
+        ]
+    }
+    \endqml
+
+    \sa DepthTextureAttachment, RenderPassTexture
+*/
 
 namespace QSSGShaderUtils {
 
@@ -985,20 +902,46 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
 
     The RenderablesFilter type is used to specify which renderables in the scene
     should be affected by a \l RenderPass. By setting the \c renderableTypes property,
-    you can control whether the pass affects Opaque, Transparent, or no objects at all.
+    you can control whether the pass affects opaque objects, transparent objects, or
+    no objects at all.
 
     Setting \c renderableTypes to \c None is useful when a RenderPass acts as a container
-    for SubRenderPasses and should not render any objects itself.
+    for \l SubRenderPass commands and should not render any scene objects itself.
 
-    In addition to filtering by renderable types, you can also use the \l{RenderablesFilter::layerMask}{layerMask}
-    to further refine which renderables are affected based on their assigned \l{QtQuick3D::Node::layers}{layers}.
+    In addition to filtering by renderable types, you can use the \l {RenderablesFilter::layerMask}{layerMask}
+    to further refine which renderables are affected based on their assigned \l{Node::layers}{layers}.
+
+    \qml
+    // A pass that renders only opaque scene objects
+    RenderPass {
+        id: opaquePass
+        commands: [
+            ColorAttachment { name: "color0"; target: opaqueColorTexture },
+            DepthTextureAttachment { target: depthTexture },
+            RenderablesFilter {
+                renderableTypes: RenderablesFilter.Opaque
+            }
+        ]
+    }
+
+    // A pass that renders only transparent objects on top
+    RenderPass {
+        id: transparentPass
+        commands: [
+            ColorAttachment { name: "color0"; target: transparentColorTexture },
+            RenderablesFilter {
+                renderableTypes: RenderablesFilter.Transparent
+            }
+        ]
+    }
+    \endqml
 */
 
 /*!
     \qmlproperty int RenderablesFilter::layerMask
     Sets the layer mask for the filter. Only renderables on the specified layers will be affected by the filter.
 
-    \sa l{QtQuick3D::Node::layers}
+    \sa Node::layers
 */
 
 /*!
@@ -1033,6 +976,11 @@ QQuick3DShaderUtilsPipelineStateOverride::~QQuick3DShaderUtilsPipelineStateOverr
 
 }
 
+/*!
+    \qmlproperty bool PipelineStateOverride::depthTestEnabled
+    If set to \c true, enables depth testing for the render pass. If set to \c false, disables depth testing.
+    Setting this property to \c true requires a depth attachment for the render pass.
+*/
 bool QQuick3DShaderUtilsPipelineStateOverride::depthTestEnabled() const
 {
     if (command.m_depthTestEnabled)
@@ -1054,6 +1002,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetDepthTestEnabled()
     emit depthTestEnabledChanged();
 }
 
+/*!
+    \qmlproperty bool PipelineStateOverride::depthWriteEnabled
+    If set to \c true, enables depth writing for the render pass. If set to \c false, disables depth writing.
+    Setting this property to \c true requires a depth attachment for the render pass.
+*/
 bool QQuick3DShaderUtilsPipelineStateOverride::depthWriteEnabled() const
 {
     if (command.m_depthWriteEnabled)
@@ -1075,6 +1028,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetDepthWriteEnabled()
     emit depthWriteEnabledChanged();
 }
 
+/*!
+    \qmlproperty bool PipelineStateOverride::blendEnabled
+    If set to \c true, enables blending for the render pass. If set to \c false, disables blending.
+    For per-attachment blend settings, use the \c targetBlend0 through \c targetBlend7 properties.
+*/
 bool QQuick3DShaderUtilsPipelineStateOverride::blendEnabled() const
 {
     if (command.m_blendEnabled)
@@ -1096,6 +1054,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetBlendEnabled()
     emit blendEnabledChanged();
 }
 
+/*!
+    \qmlproperty bool PipelineStateOverride::usesStencilReference
+    If set to \c true, enables the use of the stencil reference value for the render pass. If set to \c false,
+    disables the use of the stencil reference value.
+*/
 bool QQuick3DShaderUtilsPipelineStateOverride::usesStencilReference() const
 {
     if (command.m_usesStencilReference)
@@ -1117,6 +1080,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetUsesStencilReference()
     emit usesStencilReferenceChanged();
 }
 
+/*!
+    \qmlproperty bool PipelineStateOverride::usesScissor
+    If set to \c true, enables scissor testing for the render pass. If set to \c false,
+    disables the scissor test. Use the \c scissor property to set the scissor rectangle.
+*/
 bool QQuick3DShaderUtilsPipelineStateOverride::usesScissor() const
 {
     if (command.m_usesScissor)
@@ -1138,6 +1106,19 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetUsesScissor()
     emit usesScissorChanged();
 }
 
+/*!
+    \qmlproperty enumeration PipelineStateOverride::depthFunction
+    Sets the depth comparison function for the render pass.
+
+    \value PipelineStateOverride.Never The depth test never passes.
+    \value PipelineStateOverride.Less The depth test passes when the incoming depth is less than the stored depth.
+    \value PipelineStateOverride.Equal The depth test passes when the incoming depth equals the stored depth.
+    \value PipelineStateOverride.LessOrEqual The depth test passes when the incoming depth is less than or equal to the stored depth.
+    \value PipelineStateOverride.Greater The depth test passes when the incoming depth is greater than the stored depth.
+    \value PipelineStateOverride.NotEqual The depth test passes when the incoming depth does not equal the stored depth.
+    \value PipelineStateOverride.GreaterOrEqual The depth test passes when the incoming depth is greater than or equal to the stored depth.
+    \value PipelineStateOverride.Always The depth test always passes.
+*/
 QQuick3DShaderUtilsPipelineStateOverride::CompareOperation QQuick3DShaderUtilsPipelineStateOverride::depthFunction() const
 {
     if (command.m_depthFunction)
@@ -1159,6 +1140,14 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetDepthFunction()
     emit depthFunctionChanged();
 }
 
+/*!
+    \qmlproperty enumeration PipelineStateOverride::cullMode
+    Sets the face culling mode for the render pass.
+
+    \value PipelineStateOverride.None No face culling.
+    \value PipelineStateOverride.Front Front-facing polygons are culled.
+    \value PipelineStateOverride.Back Back-facing polygons are culled.
+*/
 QQuick3DShaderUtilsPipelineStateOverride::CullMode QQuick3DShaderUtilsPipelineStateOverride::cullMode() const
 {
     if (command.m_cullMode)
@@ -1180,6 +1169,13 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetCullMode()
     emit cullModeChanged();
 }
 
+/*!
+    \qmlproperty enumeration PipelineStateOverride::polygonMode
+    Sets the polygon rasterization mode for the render pass.
+
+    \value PipelineStateOverride.Fill Polygons are filled (default).
+    \value PipelineStateOverride.Line Polygon edges are drawn as lines (wireframe).
+*/
 QQuick3DShaderUtilsPipelineStateOverride::PolygonMode QQuick3DShaderUtilsPipelineStateOverride::polygonMode() const
 {
     if (command.m_polygonMode)
@@ -1201,6 +1197,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetPolygonMode()
     emit polygonModeChanged();
 }
 
+/*!
+    \qmlproperty uint PipelineStateOverride::stencilWriteMask
+    Sets the stencil write mask for the render pass. Each bit controls whether the corresponding
+    bit in the stencil buffer can be written.
+*/
 quint32 QQuick3DShaderUtilsPipelineStateOverride::stencilWriteMask() const
 {
     if (command.m_stencilWriteMask)
@@ -1222,6 +1223,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetStencilWriteMask()
     emit stencilWriteMaskChanged();
 }
 
+/*!
+    \qmlproperty uint PipelineStateOverride::stencilReference
+    Sets the stencil reference value for the render pass. This value is used in stencil
+    comparison operations when \c usesStencilReference is \c true.
+*/
 quint32 QQuick3DShaderUtilsPipelineStateOverride::stencilReference() const
 {
     if (command.m_stencilReference)
@@ -1243,6 +1249,12 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetStencilReference()
     emit stencilReferenceChanged();
 }
 
+/*!
+    \qmlproperty rect PipelineStateOverride::viewport
+    Sets the viewport rectangle for the render pass. The rectangle specifies the region
+    of the render target to draw into, in pixels (x, y, width, height).
+    If not set, the full render target dimensions are used.
+*/
 QRectF QQuick3DShaderUtilsPipelineStateOverride::viewport() const
 {
     if (command.m_viewport) {
@@ -1272,6 +1284,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetViewport()
     emit viewportChanged();
 }
 
+/*!
+    \qmlproperty rect PipelineStateOverride::scissor
+    Sets the scissor rectangle for the render pass. Fragments outside this rectangle are
+    discarded. Requires \c usesScissor to be \c true.
+*/
 QRect QQuick3DShaderUtilsPipelineStateOverride::scissor() const
 {
     if (command.m_scissor) {
@@ -1300,6 +1317,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetScissor()
     command.m_scissor.reset();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend0
+    Sets the blending parameters for color attachment 0 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend0() const
 {
     if (command.m_targetBlend0)
@@ -1322,6 +1344,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend0()
     emit targetBlend0Changed();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend1
+    Sets the blending parameters for color attachment 1 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend1() const
 {
     if (command.m_targetBlend1)
@@ -1343,6 +1370,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend1()
     emit targetBlend1Changed();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend2
+    Sets the blending parameters for color attachment 2 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend2() const
 {
     if (command.m_targetBlend2)
@@ -1364,6 +1396,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend2()
     emit targetBlend2Changed();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend3
+    Sets the blending parameters for color attachment 3 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend3() const
 {
     if (command.m_targetBlend3)
@@ -1385,6 +1422,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend3()
     emit targetBlend3Changed();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend4
+    Sets the blending parameters for color attachment 4 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend4() const
 {
     if (command.m_targetBlend4)
@@ -1406,6 +1448,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend4()
     emit targetBlend4Changed();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend5
+    Sets the blending parameters for color attachment 5 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend5() const
 {
     if (command.m_targetBlend5)
@@ -1427,6 +1474,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend5()
     emit targetBlend5Changed();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend6
+    Sets the blending parameters for color attachment 6 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend6() const
 {
     if (command.m_targetBlend6)
@@ -1448,6 +1500,11 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend6()
     emit targetBlend6Changed();
 }
 
+/*!
+    \qmlproperty renderTargetBlend PipelineStateOverride::targetBlend7
+    Sets the blending parameters for color attachment 7 of the render pass.
+    \sa renderTargetBlend
+*/
 QQuick3DRenderPassTargetBlend QQuick3DShaderUtilsPipelineStateOverride::targetBlend7() const
 {
     if (command.m_targetBlend7)
@@ -1471,19 +1528,38 @@ void QQuick3DShaderUtilsPipelineStateOverride::resetTargetBlend7()
 
 /*!
     \qmltype RenderPassTexture
-    \inherits Command
+    \inherits Object3D
     \inqmlmodule QtQuick3D
     \brief Defines a texture to be used as a render target in a \l {RenderPass}{pass}.
     \since 6.11
 
-    The RenderPassTexture type is used to specify a texture that will be used
-    as a render target in a \l RenderPass. You can define the format of the
-    texture using the \c format property.
+    RenderPassTexture declares an off-screen texture that a \l RenderPass can
+    render into. The texture is automatically created and managed by the
+    rendering system. Its size tracks the \l View3D viewport by default.
 
-    Once defined, the texture can be attached as a color or depth attachment. The texture will
-    be automatically created and managed by the rendering system.
+    Once declared, attach the texture to a pass via \l ColorAttachment (for
+    color output) or \l DepthTextureAttachment (for depth output). The
+    resulting texture can then be accessed from a subsequent pass or a
+    \l Texture component using \l RenderOutputProvider.
 
-    \sa ColorAttachment, DepthTextureAttachment
+    \qml
+    // Declare a float color buffer
+    RenderPassTexture {
+        id: hdrColorTexture
+        format: RenderPassTexture.RGBA16F
+    }
+
+    RenderPass {
+        commands: [
+            ColorAttachment {
+                name: "color0"
+                target: hdrColorTexture
+            }
+        ]
+    }
+    \endqml
+
+    \sa ColorAttachment, DepthTextureAttachment, RenderOutputProvider
 */
 
 /*!
@@ -1575,7 +1651,7 @@ QQuick3DShaderUtilsRenderPassTexture::TextureFormat QQuick3DShaderUtilsRenderPas
     The ColorAttachment type is used to specify a color attachment for a \l RenderPass.
     The \l name property is used to identify the attachment within the render pass.
     If the \l {RenderPass.AugmentMaterial}{AugmentMaterial} mode is used, the name will be
-    exposed as an output wiht \c name in the fragment shader.
+    exposed as an output with \c name in the fragment shader.
 
     \sa RenderPassTexture
 
@@ -1596,6 +1672,20 @@ QQuick3DShaderUtilsRenderPassTexture::TextureFormat QQuick3DShaderUtilsRenderPas
         ]
     }
     \endqml
+*/
+
+/*!
+    \qmlproperty RenderPassTexture ColorAttachment::target
+    The \l RenderPassTexture that will be used as the color attachment. The texture
+    must have a color-compatible format (e.g. \c RGBA8, \c RGBA16F).
+*/
+
+/*!
+    \qmlproperty string ColorAttachment::name
+    The name used to identify this color attachment within the render pass. When
+    \l {RenderPass::materialMode}{materialMode} is set to \c AugmentMaterial, this name
+    is exposed as a fragment shader output variable, allowing custom shader code to
+    write to this attachment.
 */
 
 QQuick3DShaderUtilsRenderPassColorAttachment::~QQuick3DShaderUtilsRenderPassColorAttachment()
@@ -1826,9 +1916,39 @@ void QQuick3DPropertyWatcher::onPointerPropertyChanged()
     \brief Adds a preprocessor define to the shader compilation for a \l {RenderPass}{pass}.
     \since 6.11
 
-    The AddDefine type is used to specify a preprocessor define that will be
-    added to the shader compilation process for a \l RenderPass. This allows
-    you to customize the shader behavior by defining specific macros.
+    The AddDefine type is used to inject a \c {#define} into the shader
+    compilation for a \l RenderPass. This lets you branch shader behavior
+    at compile time depending on which pass is being executed.
+
+    In the shader code, the define can be used with the standard preprocessor
+    \c {#ifdef} / \c {#if} directives:
+    \badcode
+    #ifdef CUSTOM_PASS_MODE
+    // code compiled only when this define is present
+    #endif
+    \endcode
+
+    \qml
+    RenderPass {
+        commands: [
+            ColorAttachment { name: "color0"; target: colorTexture },
+            AddDefine { name: "CUSTOM_PASS_MODE" },
+            AddDefine { name: "OUTPUT_VERSION"; value: 2 }
+        ]
+    }
+    \endqml
+*/
+
+/*!
+    \qmlproperty string AddDefine::name
+    The name of the preprocessor macro to define. This becomes the identifier
+    used in \c {#ifdef} or \c {#if} checks in the shader code.
+*/
+
+/*!
+    \qmlproperty int AddDefine::value
+    The integer value assigned to the preprocessor macro. Defaults to \c 1.
+    When non-zero, \c {#if NAME} evaluates to \c true in the shader.
 */
 
 QQuick3DShaderUtilsRenderPassAddDefine::QQuick3DShaderUtilsRenderPassAddDefine()
@@ -1842,6 +1962,84 @@ QSSGCommand *QQuick3DShaderUtilsRenderPassAddDefine::cloneCommand() {
     QSSGAddShaderDefine *cmd = new QSSGAddShaderDefine(command);
     return cmd;
 }
+
+/*!
+    \qmltype SubRenderPass
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Renders a sub-section of work within the same render target as the parent RenderPass.
+    \since 6.11
+
+    SubRenderPass is a \l Command that subdivides a \l RenderPass into
+    smaller, independently configured pieces while sharing the same render
+    target. Only the parent \l RenderPass controls which textures are
+    rendered into (via \l ColorAttachment and \l DepthTextureAttachment)
+    and when the pass begins (and therefore when the render target is
+    cleared). A SubRenderPass cannot set its own render target or clear
+    settings — those are always inherited from the parent pass.
+
+    What a SubRenderPass \e can control is \e what gets rendered and
+    \e how: it has its own \l{RenderPass::commands}{commands}, so it can
+    carry a \l RenderablesFilter to select a subset of objects, a
+    \l PipelineStateOverride to change depth/blend state, a different
+    \l{RenderPass::materialMode}{materialMode}, and so on.
+
+    A typical use is a forward-rendering pipeline where a single color
+    pass uses separate SubRenderPasses for the background, opaque
+    objects, and transparent objects. All three sub-passes write into the
+    same color and depth textures, but each has different pipeline state:
+
+    \qml
+    RenderPass {
+        id: mainColorPass
+        commands: [
+            // Render targets are set at the parent RenderPass level only
+            ColorAttachment { name: "color0"; target: colorTexture },
+            DepthTextureAttachment { target: depthTexture },
+
+            // Sub-pass 1: render the skybox background
+            SubRenderPass { renderPass: skyboxSubPass },
+
+            // Sub-pass 2: opaque objects with depth testing and writing
+            SubRenderPass { renderPass: opaqueSubPass },
+
+            // Sub-pass 3: transparent objects with blending, no depth write
+            SubRenderPass { renderPass: transparentSubPass }
+        ]
+    }
+
+    // Sub-passes share mainColorPass's render target
+    RenderPass {
+        id: skyboxSubPass
+        passMode: RenderPass.SkyboxPass
+    }
+
+    RenderPass {
+        id: opaqueSubPass
+        commands: [
+            RenderablesFilter { renderableTypes: RenderablesFilter.Opaque }
+        ]
+    }
+
+    RenderPass {
+        id: transparentSubPass
+        commands: [
+            RenderablesFilter { renderableTypes: RenderablesFilter.Transparent },
+            PipelineStateOverride {
+                blendEnabled: true
+                depthWriteEnabled: false
+            }
+        ]
+    }
+    \endqml
+
+    \sa RenderPass, RenderablesFilter, PipelineStateOverride
+*/
+
+/*!
+    \qmlproperty RenderPass SubRenderPass::renderPass
+    The RenderPass that will be executed as a sub-pass when this command is processed.
+*/
 
 QQuick3DShaderUtilsSubRenderPass::~QQuick3DShaderUtilsSubRenderPass()
 {
@@ -1922,11 +2120,42 @@ void QQuick3DShaderUtilsSubRenderPass::setRenderPass(QQuick3DRenderPass *newRend
     \brief Defines a depth texture attachment for a \l {RenderPass}{pass}.
     \since 6.11
 
-    The DepthTextureAttachment type is used to specify a depth texture
-    that will be used as a depth attachment in a \l RenderPass. The texture
-    will be automatically created and managed by the rendering system.
+    DepthTextureAttachment attaches a \l RenderPassTexture with a depth
+    format as the depth buffer for a \l RenderPass. Unlike
+    \l DepthStencilAttachment (which uses an opaque render buffer), the
+    resulting depth data is stored in a texture that can be read by
+    subsequent passes via \l RenderOutputProvider.
 
-    \sa RenderPassTexture
+    \qml
+    RenderPassTexture {
+        id: depthTexture
+        format: RenderPassTexture.Depth24
+    }
+
+    RenderPass {
+        commands: [
+            ColorAttachment { name: "color0"; target: colorTexture },
+            DepthTextureAttachment { target: depthTexture }
+        ]
+    }
+
+    // Expose the depth texture to a material via RenderOutputProvider
+    Texture {
+        textureProvider: RenderOutputProvider {
+            textureSource: RenderOutputProvider.UserPassTexture
+            renderPass: myRenderPass
+        }
+    }
+    \endqml
+
+    \sa RenderPassTexture, DepthStencilAttachment, RenderOutputProvider
+*/
+
+/*!
+    \qmlproperty RenderPassTexture DepthTextureAttachment::target
+    The \l RenderPassTexture that will be used as the depth attachment. The texture
+    must have a depth-compatible format (e.g. \c Depth16, \c Depth24, \c Depth32,
+    or \c Depth24Stencil8).
 */
 
 QQuick3DShaderUtilsRenderPassDepthTextureAttachment::~QQuick3DShaderUtilsRenderPassDepthTextureAttachment()
