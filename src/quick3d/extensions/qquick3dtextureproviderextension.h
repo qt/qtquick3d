@@ -42,6 +42,7 @@ public:
 
 Q_SIGNALS:
     void samplerHintChanged();
+    void surfaceChanged();
 
 protected:
     bool event(QEvent *event) override;

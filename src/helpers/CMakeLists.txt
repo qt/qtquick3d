@@ -26,6 +26,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         qquick3dtexturedatafrontend_p.h qquick3dtexturedatafrontend.cpp
         qquick3drenderoutputprovider_p.h qquick3drenderoutputprovider.cpp
         qquick3dsimplequadrenderpass_p.h qquick3dsimplequadrenderpass.cpp
+        qquick3dquadtextureprovider_p.h qquick3dquadtextureprovider.cpp
         proceduralmesh_p.h proceduralmesh.cpp
         extrudedtextgeometry_p.h extrudedtextgeometry.cpp
         torusgeometry_p.h torusgeometry.cpp

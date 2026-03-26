@@ -1760,6 +1760,13 @@ std::optional<QQuick3DPropertyChangedTracker::UniformProperty> QQuick3DPropertyC
         QSSGRenderImage *ri = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(texture)->spatialNode);
         auto samplerName = QSSGBaseTypeHelpers::toString(getSamplerHint(*texture));
         if (addWatchers) {
+            if (auto textureProvider = qobject_cast<QQuick3DTextureProviderExtension *>(texture->textureProvider())) {
+                // FIXME? We don't have a way of adding watchers after the initial extraction so switching
+                // textureProvider during runtime will not give a callback.
+                QObject::connect(textureProvider, &QQuick3DTextureProviderExtension::surfaceChanged, m_owner, [this, property, texture]() {
+                    addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
+                });
+            }
             QObject::connect(texture, &QQuick3DTexture::textureProviderChanged, m_owner, [this, property, texture]() {
                 addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
             });
