@@ -242,15 +242,17 @@ void QQuick3DRenderOutputProvider::markDirty(QQuick3DRenderOutputProvider::Dirty
 
 /*!
     \qmlproperty enumeration RenderOutputProvider::textureSource
-    This property holds which pass buffer texture to use.
+    This property holds which pass buffer texture to expose.
 
     \value RenderOutputProvider.None No texture source is selected.
-    \value RenderOutputProvider.UserPassTexture A user defined pass. If this is used to access a user defined pass.
-    \value RenderOutputProvider.AoTexture The ambient occlusion texture created by QtQuick3D's AO pass.
-    \value RenderOutputProvider.DepthTexture The depth texture created by QtQuick3D's Depth map pass.
+    \value RenderOutputProvider.UserPassTexture Accesses a color attachment from a user-defined
+           \l RenderPass. Use the \l renderPass and \l attachmentSelector properties to specify
+           which pass and attachment to use.
+    \value RenderOutputProvider.AoTexture The ambient occlusion texture created by QtQuick3D's SSAO pass.
+    \value RenderOutputProvider.DepthTexture The depth texture created by QtQuick3D's depth pre-pass.
     \value RenderOutputProvider.ScreenTexture The texture containing the rendered scene.
-    \value RenderOutputProvider.NormalTexture The normal texture created by QtQuick3D's Normal map pass.
-    \value RenderOutputProvider.MotionVectorTexture The motion vector texture created by QtQuick3D's Motion Vector pass.
+    \value RenderOutputProvider.NormalTexture The world-space normal texture created by QtQuick3D's normal pre-pass.
+    \value RenderOutputProvider.MotionVectorTexture The motion vector texture created by QtQuick3D's motion vector pass.
  */
 
 QQuick3DRenderOutputProvider::TextureSource QQuick3DRenderOutputProvider::textureSource() const
@@ -269,11 +271,11 @@ void QQuick3DRenderOutputProvider::setTextureSource(TextureSource newTextureSour
 
 /*!
     \qmlproperty RenderPass RenderOutputProvider::renderPass
-    This property holds the user defined render pass to use when accessing a user defined pass texture.
+    The \l RenderPass whose output attachments will be exposed as a texture. Setting this
+    property automatically sets \l textureSource to \c UserPassTexture. Use
+    \l attachmentSelector to choose which color attachment of the pass to expose.
 
-    When this property is set, the \l textureSource property is automatically set to \l RenderOutputProvider.UserPassTexture.
-
-    \sa textureSource, RenderPass
+    \sa attachmentSelector, textureSource, RenderPass
 */
 
 QQuick3DRenderPass *QQuick3DRenderOutputProvider::renderPass() const
@@ -299,14 +301,15 @@ void QQuick3DRenderOutputProvider::setRenderPass(QQuick3DRenderPass *newRenderPa
 
 /*!
     \qmlproperty enumeration RenderOutputProvider::attachmentSelector
-    This property holds which attachment to use when accessing a user defined pass texture.
+    Selects which color attachment of the user-defined \l RenderPass to expose as a texture.
+    Only relevant when \l textureSource is set to \c UserPassTexture.
 
-    Possible attachments when using a user defined render pass:
+    \value RenderOutputProvider.Attachment0 Use color attachment 0 (default).
+    \value RenderOutputProvider.Attachment1 Use color attachment 1.
+    \value RenderOutputProvider.Attachment2 Use color attachment 2.
+    \value RenderOutputProvider.Attachment3 Use color attachment 3.
 
-    \value RenderOutputProvider.Attachment0
-    \value RenderOutputProvider.Attachment1
-    \value RenderOutputProvider.Attachment2
-    \value RenderOutputProvider.Attachment3
+    \sa renderPass, textureSource
 */
 
 QQuick3DRenderOutputProvider::AttachmentSelector QQuick3DRenderOutputProvider::attachmentSelector() const

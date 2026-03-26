@@ -9,59 +9,54 @@
     \qmltype ContentLayer
     \inqmlmodule QtQuick3D
     \since 6.11
-    \brief Provides enumeration of content layers available in a QtQuick3D.
+    \brief Singleton providing layer flag constants for grouping and filtering scene nodes.
 
- This class is used to represent a layer of content in a 3D scene. It can be used
- to manage different layers of content, such as background, foreground, or UI elements.
+    ContentLayer is a singleton that exposes the \c LayerFlag enumeration, which provides
+    bit flag constants for assigning nodes to named content layers. Layers can be used to
+    group scene nodes together or to filter which nodes are rendered by a camera.
 
- The \l ContentLayer enumeration defines the available layer flags that can be used,
- for example, to group scene nodes together or filter which nodes are rendered by the camera.
+    The predefined layer names are not necessarily descriptive for specific use cases. You
+    can define your own semantic layer names by aliasing the \l ContentLayer values. For
+    example, in a city scene with buildings, streets, and vehicles:
 
- The predefined layer names are not necessarily descriptive enough for specific use cases, in
- which case you can define your own layers by aliasing the \l ContentLayer enumeration values.
- Consider a city scene where you have different layers for buildings, streets, and vehicles.
- You can assign each of these layers a specific flag, such as \c layerBuildings, \c layerStreets,
- and \c layerVehicles by aliasing the \l ContentLayer enumeration values. Once the layers are defined,
- you can assign these flags to the nodes in the scene and have the camera filter which layers to render
- by setting the same \l {Node::layer}{layer} property on the \l Camera.
+    \qml
+    readonly property int layerBuildings: ContentLayer.Layer1
+    readonly property int layerStreets: ContentLayer.Layer2
+    readonly property int layerVehicles: ContentLayer.Layer3 | ContentLayer.Layer4
+    \endqml
 
- \qml
- readonly property int layerBuildings: ContentLayer.Layer1
- readonly property int layerStreets: ContentLayer.Layer2
- readonly property int layerVehicles: ContentLayer.Layer3 | ContentLayer.Layer4
- \endqml
+    Once defined, assign these flags to nodes via \l {Node::layers}{Node.layers} and set
+    the matching flags on a \l Camera to control which layers it renders.
 
- \sa {Qt Quick 3D - Layers Example}{Layers Example}
+    \sa {Qt Quick 3D - Layers Example}{Layers Example}
 
- \note Some of the layers have special meanings:
+    \note Some layers have special meanings:
 
- \table
- \header
-     \li Layer
-     \li Description
- \row
-     \li LayerNone
-     \li No layer assigned, used to indicate that a node does not belong to any layer and should not be rendered.
- \row
-     \li Layer0
-     \li The main layer, used for the primary content in the scene. Nodes are assigned to this layer by default.
- \row
-     \li Layer1-23
-     \li Freely assignable layers, used for grouping nodes together based on their purpose or functionality.
- \row
-     \li Layer24 and up
-     \li Reserved layers, used for special purposes or future extensions.
- \row
-     \li LayerAll
-     \li Indicates that a node belongs to all layers, used for nodes that should be rendered in every layer.
- \endtable
+    \table
+    \header
+        \li Layer
+        \li Description
+    \row
+        \li LayerNone
+        \li No layer assigned. Nodes with this value do not belong to any layer and are not rendered.
+    \row
+        \li Layer0
+        \li The default main layer. Nodes are assigned to this layer by default.
+    \row
+        \li Layer1–Layer23
+        \li Freely assignable user layers for grouping nodes by purpose or functionality.
+    \row
+        \li Layer24 and above
+        \li Reserved for internal use by Qt Quick 3D.
+    \row
+        \li LayerAll
+        \li Matches all layers; nodes with this value are rendered by every camera.
+    \endtable
 
- \note The layers are defined as flags, which means that you can combine multiple layers
+    \note Layers are bit flags and can be combined with the \c | operator.
 
- \note This class is not intended to be instantiated directly. Instead, it is used as a
- singleton in QML to access the layer flags.
-
- */
+    \note ContentLayer is a singleton and is not intended to be instantiated directly.
+*/
 
 QT_BEGIN_NAMESPACE
 

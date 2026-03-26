@@ -18,18 +18,67 @@ Q_LOGGING_CATEGORY(lcQuick3DRenderPass, "qt.quick3d.renderpass")
     \qmltype RenderPass
     \inherits Object3D
     \inqmlmodule QtQuick3D
-    \brief The RenderPass type defines a custom render pass for rendering 3D content.
+    \brief Defines a custom render pass for rendering 3D content.
     \since 6.11
 
-    A RenderPass allows you to define a custom rendering step in the rendering pipeline.
-    You can specify various properties such as clear color, material mode, and
-    override materials. Additionally, you can define a list of render commands
-    that dictate how the rendering should be performed.
+    A RenderPass defines a rendering step and the render target it writes
+    into. It is the combination of three concerns:
+
+    \list
+    \li \b {Where to render} — one or more output textures declared as
+        \l ColorAttachment or \l DepthTextureAttachment commands in
+        \l {RenderPass::commands}{commands}.
+    \li \b {What to render} — which scene objects the pass draws,
+        controlled by \l RenderablesFilter commands. Sub-divisions of
+        work within the same render target are described using
+        \l SubRenderPass commands.
+    \li \b {How to render} — the \l materialMode and any
+        \l PipelineStateOverride commands.
+    \endlist
+
+    A RenderPass becomes active for a scene when it is placed as a child
+    of a \l View3D or a \l Node.
+
+    The following example sets up a simple off-screen pass that renders
+    all scene objects into a custom texture, which can then be consumed
+    by a material or a \l SimpleQuadRenderer:
+
+    \qml
+    import QtQuick3D
+
+    View3D {
+        // Declare the off-screen color buffer
+        RenderPassTexture {
+            id: myColorTexture
+            format: RenderPassTexture.RGBA8
+        }
+
+        // The render pass: where + what + how
+        RenderPass {
+            id: myRenderPass
+            commands: [
+                // Where: attach the texture as the color output
+                ColorAttachment {
+                    name: "color0"
+                    target: myColorTexture
+                },
+                // What: render all objects into it
+                RenderablesFilter {
+                    renderableTypes: RenderablesFilter.Opaque | RenderablesFilter.Transparent
+                }
+            ]
+        }
+    }
+    \endqml
 
     \section1 Exposing data to the shaders
 
-    As with Effects and Custom Materials, the RenderPass will expose, and update,
-    user defined properties to the shader automatically.
+    As with Effects and Custom Materials, the RenderPass will expose and
+    update user-defined properties to the shaders automatically. Any QML
+    properties declared on a RenderPass subtype will be available as
+    uniforms in the shader.
+
+    \sa SubRenderPass, RenderOutputProvider, RenderablesFilter
 */
 
 QQuick3DRenderPass::QQuick3DRenderPass(QQuick3DObject *parent)
@@ -305,14 +354,15 @@ void QQuick3DRenderPass::clearDirty(Dirty type)
     \note The commands for RenderPass and Effects are similar but not the same, only
     those marked as compatible can be used with this RenderPass.
 
-    \sa renderTargetBlend,
+    \sa SubRenderPass,
         PipelineStateOverride,
         RenderablesFilter,
         RenderPassTexture,
         ColorAttachment,
         DepthTextureAttachment,
         DepthStencilAttachment,
-        AddDefine
+        AddDefine,
+        renderTargetBlend
 */
 
 QQmlListProperty<QQuick3DShaderUtilsRenderCommand> QQuick3DRenderPass::commands()
@@ -347,11 +397,33 @@ void QQuick3DRenderPass::setClearColor(const QColor &newClearColor)
 
 /*!
     \qmlproperty RenderPass::MaterialModes RenderPass::materialMode
-    This property holds the material mode for the render pass.
+    Controls how object materials are handled when rendering into this pass.
 
-    \value RenderPass.OriginalMaterial Use the original material of the object.
-    \value RenderPass.AugmentMaterial Augment the original material with custom shader code.
-    \value RenderPass.OverrideMaterial Override the original material with a user specified \l{RenderPass::overrideMaterial}{material}.
+    \value RenderPass.OriginalMaterial
+        Objects are rendered using their own assigned materials, with full
+        lighting, textures, and material properties applied normally. This is
+        the standard mode for rendering a faithful copy of the scene into a
+        custom render target — for example, a secondary viewpoint for a
+        reflection probe, a rear-view camera, or a picture-in-picture effect.
+        The \c overrideMaterial, \c augmentShader, and \c shaders properties
+        are not used in this mode.
+
+    \value RenderPass.AugmentMaterial
+        Each object is rendered with its own material, but the contents of
+        the \c {MAIN_FRAGMENT_AUGMENT()} function defined in \l augmentShader
+        are injected after the original material's output definition. This
+        allows the augment code to read the material's computed color and write
+        to additional color outputs defined by \l ColorAttachment commands in
+        the pass. This is useful for multi-render-target (MRT) passes that need
+        per-material shading, such as writing the lit color to one attachment
+        and a world-space normal to another in a single draw call.
+
+    \value RenderPass.OverrideMaterial
+        All objects rendered by this pass use the single \l overrideMaterial
+        instead of their own. This is useful for depth-only passes, shadow maps,
+        silhouette or outline effects, and any other case where you want all
+        geometry to be shaded identically regardless of what material is
+        assigned to it. The \c augmentShader property is not used in this mode.
 
     \default RenderPass.OriginalMaterial
 */
@@ -516,15 +588,15 @@ void QQuick3DRenderPass::setStencilClearValue(quint32 newStencilClearValue)
 
 /*!
     \qmlproperty RenderPass::RenderTargetFlags RenderPass::renderTargetFlags
-    This property holds the render target flags for the render pass.
+    This property holds the render target flags for the render pass. These flags affect how
+    the render target contents are handled at the beginning and end of each frame.
 
-    \default RenderPass.RenderTargetFlags.None
+    \value RenderPass.None No special behavior. Color and depth/stencil contents are cleared at the start of each frame.
+    \value RenderPass.PreserveColorContents Preserve the color contents of the render target between frames, so the previous frame's output remains until explicitly overwritten.
+    \value RenderPass.PreserveDepthStencilContents Preserve the depth and stencil contents of the render target between frames.
+    \value RenderPass.DoNotStoreDepthStencilContents Do not store the depth and stencil contents of the render target after rendering (may improve performance on tiled GPUs).
 
-    Possible values are:
-    \value RenderPass.RenderTargetFlags.None No special behavior.
-    \value RenderPass.RenderTargetFlags.PreserveColorContents Preserve the color contents of the render target between frames.
-    \value RenderPass.RenderTargetFlags.PreserveDepthStencilContents Preserve the depth and stencil contents of the render target between frames.
-    \value RenderPass.RenderTargetFlags.DoNotStoreDepthStencilContents Do not store the depth and stencil contents of the render target after rendering.
+    \default RenderPass.None
 
     \sa QRhiTextureRenderTarget::Flags
 */

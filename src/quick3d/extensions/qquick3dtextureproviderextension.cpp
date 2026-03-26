@@ -37,9 +37,15 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \inherits RenderExtension
     \since 6.11
-    \brief An uncreatable abstract base type for texture provider extensions.
+    \brief Abstract base type for render extensions that produce a texture.
 
-    \sa QQuick3DTextureProviderExtension, QSSGRenderExtension
+    TextureProviderExtension is an uncreatable abstract base type for render extensions
+    that expose a GPU texture to the Qt Quick 3D scene. Subclasses (such as
+    \l RenderOutputProvider) can be assigned to the \l {Texture::textureProvider}
+    {textureProvider} property of a \l Texture, causing the extension's render code
+    to run automatically when the texture is needed by the scene.
+
+    \sa RenderOutputProvider, QQuick3DTextureProviderExtension, QSSGRenderExtension
 */
 
 /*!
