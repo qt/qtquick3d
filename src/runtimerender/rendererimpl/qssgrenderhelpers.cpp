@@ -66,7 +66,8 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                              QSSGSubsetRenderable &subsetRenderable,
                                              const QSSGRenderCameraList &cameras,
                                              const QVector2D *depthAdjust,
-                                             const QMatrix4x4 *alteredModelViewProjection)
+                                             const QMatrix4x4 *alteredModelViewProjection,
+                                             const QSSGRenderGraphObject *materialOverride = nullptr)
 {
     const auto &renderer(subsetRenderable.renderer);
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
@@ -84,7 +85,7 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                                           shaderPipeline,
                                                           ubufData,
                                                           ps,
-                                                          subsetRenderable.material,
+                                                          materialOverride ? *materialOverride : subsetRenderable.material,
                                                           subsetRenderable.shaderDescription,
                                                           inData.getDefaultMaterialPropertyTable(),
                                                           cameras,
@@ -2934,7 +2935,7 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
                 shaderPipeline->ensureCombinedUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
                 updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, inData, ubufData, &ps, subsetRenderable,
-                                                  inData.renderedCameras, nullptr, nullptr);
+                                                  inData.renderedCameras, nullptr, nullptr, overrideMaterial);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             }
         }
