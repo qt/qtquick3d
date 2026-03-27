@@ -361,7 +361,7 @@ protected:
         QSSGShaderDefineList shaderDefines;
         QColor clearColor = Qt::black;
         QRhiDepthStencilClearValue depthStencilClearValue = { };
-        size_t index = 0;
+        qsizetype index = 0;
 
         std::optional<SkyboxCubeMapPass> skyboxCubeMapPass;
         std::optional<SkyboxPass> skyboxPass;

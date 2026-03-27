@@ -384,7 +384,7 @@ public:
             QRhiGraphicsPipeline *pipeline = nullptr;
             QRhiShaderResourceBindings *srb = nullptr;
         } motionVectorPass;
-        RhiPassData userPassData[16] {};
+        RhiPassData userPassData[QSSGUserRenderPassManager::maxUserPassSlots()] {};
     } rhiRenderData;
 
     QSSGSubsetRenderable(Type type,
