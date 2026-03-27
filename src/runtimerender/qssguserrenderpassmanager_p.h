@@ -58,6 +58,9 @@ public:
     void unregisterManagedTexture(QSSGManagedRhiTexture *textureWrapper);
     void registerManagedTexture(QSSGManagedRhiTexture *textureWrapper);
 
+    static constexpr size_t maxUserPassSlots() { return 16; }
+    qsizetype acquireUserPassSlot();
+
     void resetForFrame();
 
 private:
@@ -85,6 +88,8 @@ private:
     TextureWrappers m_trackedTextureWrappers;
 
     DeferredReleaseTextures m_deferredReleaseTextures;
+
+    size_t m_userPassSlotsUsed = 0;
 
     bool m_passlistDirty = false;
 };

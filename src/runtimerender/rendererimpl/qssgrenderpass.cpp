@@ -1970,8 +1970,10 @@ void UserRenderPass::renderPass(QSSGRenderer &renderer)
             } else {
                 // Regular User Passes
                 bool needsSetViewport = true;
-                for (const auto &handle : std::as_const(renderables))
-                    RenderHelpers::rhiRenderRenderable(rhiCtx.get(), ps, *handle.obj, &needsSetViewport, QSSGRenderTextureCubeFaceNone, qsizetype(passData.index));
+                if (passData.index >= 0) {
+                    for (const auto &handle : std::as_const(renderables))
+                        RenderHelpers::rhiRenderRenderable(rhiCtx.get(), ps, *handle.obj, &needsSetViewport, QSSGRenderTextureCubeFaceNone, qsizetype(passData.index));
+                }
             }
             QRhiResourceUpdateBatch *rub = nullptr;
 
@@ -1988,8 +1990,10 @@ void UserRenderPass::renderPass(QSSGRenderer &renderer)
                     subPassData.item2DPass->renderPass(renderer);
                 } else {
                     bool needsSetViewport = true;
-                    for (const auto &handle : std::as_const(subRenderables))
-                        RenderHelpers::rhiRenderRenderable(rhiCtx.get(), subPs, *handle.obj, &needsSetViewport, QSSGRenderTextureCubeFaceNone, qsizetype(subPassData.index));
+                    if (subPassData.index >= 0) {
+                        for (const auto &handle : std::as_const(subRenderables))
+                            RenderHelpers::rhiRenderRenderable(rhiCtx.get(), subPs, *handle.obj, &needsSetViewport, QSSGRenderTextureCubeFaceNone, qsizetype(subPassData.index));
+                    }
                 }
             }
 
@@ -2046,8 +2050,6 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
     UserPassData currentPassData;
     currentPassData.clearColor = passNode->clearColor;
     currentPassData.depthStencilClearValue = passNode->depthStencilClearValue;
-    const size_t userPassIndex = outData.size();
-    currentPassData.index = userPassIndex;
     if (isTopLevelPass)
         renderableTexture = currentPassData.renderableTexture = data.requestUserRenderPassManager()->getOrCreateRenderableTexture(*passNode);
     else
@@ -2343,19 +2345,19 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
             QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
             shaderFeatures.disableTonemapping();
 
-            RenderHelpers::rhiPrepareAugmentedUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), shaderAugmentation, data, renderables, shaderFeatures, userPassIndex);
+            currentPassData.index = RenderHelpers::rhiPrepareAugmentedUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), shaderAugmentation, data, renderables, shaderFeatures);
         } else if (passNode->materialMode == QSSGRenderUserPass::MaterialModes::OverrideMaterial) {
             // Every renderable will use the override material
             QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
             shaderFeatures.disableTonemapping();
 
-            RenderHelpers::rhiPrepareOverrideMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), passNode->overrideMaterial, data, renderables, shaderFeatures, userPassIndex);
+            currentPassData.index = RenderHelpers::rhiPrepareOverrideMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), passNode->overrideMaterial, data, renderables, shaderFeatures);
 
         } else {
             // Use original material of the renderables
             QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
             shaderFeatures.disableTonemapping();
-            RenderHelpers::rhiPrepareOriginalMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), data, renderables, shaderFeatures, userPassIndex);
+            currentPassData.index = RenderHelpers::rhiPrepareOriginalMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), data, renderables, shaderFeatures);
         }
         outData.push_back(currentPassData);
     } else {

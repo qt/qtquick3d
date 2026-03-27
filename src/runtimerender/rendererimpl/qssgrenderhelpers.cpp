@@ -1318,8 +1318,12 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));
 
-        QRhiGraphicsPipeline *ps = (userPassIndex >= 0) ? subsetRenderable.rhiRenderData.userPassData[userPassIndex].pipeline : subsetRenderable.rhiRenderData.mainPass.pipeline;
-        QRhiShaderResourceBindings *srb = (userPassIndex >= 0) ? subsetRenderable.rhiRenderData.userPassData[userPassIndex].srb : subsetRenderable.rhiRenderData.mainPass.srb;
+        QSSG_ASSERT(QSSGUserRenderPassManager::maxUserPassSlots() == std::size(subsetRenderable.rhiRenderData.userPassData), return);
+
+        QRhiGraphicsPipeline *ps = (userPassIndex >= 0 && size_t(userPassIndex) < QSSGUserRenderPassManager::maxUserPassSlots())
+                ? subsetRenderable.rhiRenderData.userPassData[userPassIndex].pipeline : subsetRenderable.rhiRenderData.mainPass.pipeline;
+        QRhiShaderResourceBindings *srb = (userPassIndex >= 0 && size_t(userPassIndex) < QSSGUserRenderPassManager::maxUserPassSlots())
+                ? subsetRenderable.rhiRenderData.userPassData[userPassIndex].srb : subsetRenderable.rhiRenderData.mainPass.srb;
 
         if (cubeFace != QSSGRenderTextureCubeFaceNone) {
             const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
@@ -2841,18 +2845,20 @@ void RenderHelpers::rhiRenderNormalPass(QSSGRhiContext *rhiCtx,
     }
 }
 
-void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
-                                                       QSSGPassKey passKey,
-                                                       const QSSGRhiGraphicsPipelineState &basePipelineState,
-                                                       QRhiRenderPassDescriptor *rpDesc,
-                                                       QSSGRenderGraphObject *overrideMaterial,
-                                                       QSSGLayerRenderData &inData,
-                                                       QSSGRenderableObjectList &inObjects,
-                                                       QSSGShaderFeatures featureSet,
-                                                       size_t index)
+qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
+                                                            QSSGPassKey passKey,
+                                                            const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                                            QRhiRenderPassDescriptor *rpDesc,
+                                                            QSSGRenderGraphObject *overrideMaterial,
+                                                            QSSGLayerRenderData &inData,
+                                                            QSSGRenderableObjectList &inObjects,
+                                                            QSSGShaderFeatures featureSet)
 {
-    if (!overrideMaterial)
-        return;
+    // Make sure we have a valid override material before acquireing a user pass slot!
+    const qsizetype index = overrideMaterial ? inData.getUserRenderPassManager()->acquireUserPassSlot() : -1;
+    // If the index is negative, it means there are no more available slots for user passes, so we can skip the preparation and rendering of this pass.
+    if (index < 0)
+        return index;
 
     QSSGRhiGraphicsPipelineState ps = basePipelineState;
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
@@ -2864,7 +2870,7 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
 
     if (!isCustomMaterial && !isDefaultMaterial) {
         qDebug() << "Override material must be a default or custom material.";
-        return;
+        return -1;
     }
 
     for (const QSSGRenderableObjectHandle &handle : inObjects) {
@@ -3064,23 +3070,27 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
         QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 
         QSSG_ASSERT(srb, continue);
-        QSSG_ASSERT(std::size(subsetRenderable.rhiRenderData.userPassData) > index, continue);
-
         auto &rhiPassData = subsetRenderable.rhiRenderData.userPassData[index];
         rhiPassData.pipeline = rhiCtxD->pipeline(ps, rpDesc, srb);
         rhiPassData.srb = srb;
     }
+
+    return index;
 }
 
-void RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
-                                                       QSSGPassKey passKey,
-                                                       const QSSGRhiGraphicsPipelineState &basePipelineState,
-                                                       QRhiRenderPassDescriptor *rpDesc,
-                                                       const QSSGLayerRenderData &inData,
-                                                       QSSGRenderableObjectList &inObjects,
-                                                       QSSGShaderFeatures featureSet,
-                                                       size_t index)
+qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
+                                                            QSSGPassKey passKey,
+                                                            const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                                            QRhiRenderPassDescriptor *rpDesc,
+                                                            const QSSGLayerRenderData &inData,
+                                                            QSSGRenderableObjectList &inObjects,
+                                                            QSSGShaderFeatures featureSet)
 {
+    const qsizetype index = inData.getUserRenderPassManager()->acquireUserPassSlot();
+    // If the index is negative, it means there are no more available slots for user passes, so we can't prepare the original material pass.
+    if (index < 0)
+        return index;
+
     QSSGRhiGraphicsPipelineState ps = basePipelineState;
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
 
@@ -3359,26 +3369,31 @@ void RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
             QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 
             QSSG_ASSERT(srb, continue);
-            QSSG_ASSERT(std::size(subsetRenderable.rhiRenderData.userPassData) > index, continue);
 
             auto &rhiPassData = subsetRenderable.rhiRenderData.userPassData[index];
             rhiPassData.pipeline = rhiCtxD->pipeline(ps, rpDesc, srb);
             rhiPassData.srb = srb;
         }
     }
+
+    return index;
 }
 
 
-void RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
-                                                QSSGPassKey passKey,
-                                                const QSSGRhiGraphicsPipelineState &basePipelineState,
-                                                QRhiRenderPassDescriptor *rpDesc,
-                                                const QSSGUserShaderAugmentation &shaderAugmentation,
-                                                const QSSGLayerRenderData &inData,
-                                                QSSGRenderableObjectList &inObjects,
-                                                QSSGShaderFeatures featureSet,
-                                                size_t index)
+qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
+                                                     QSSGPassKey passKey,
+                                                     const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                                     QRhiRenderPassDescriptor *rpDesc,
+                                                     const QSSGUserShaderAugmentation &shaderAugmentation,
+                                                     const QSSGLayerRenderData &inData,
+                                                     QSSGRenderableObjectList &inObjects,
+                                                     QSSGShaderFeatures featureSet)
 {
+    const qsizetype index = inData.getUserRenderPassManager()->acquireUserPassSlot();
+
+    // If there's no available slot, we can't prepare this pass. This can happen if the user shader augmentation tries to use more slots than the maximum allowed.
+    if (index < 0)
+        return index;
 
     QSSGRhiGraphicsPipelineState ps = basePipelineState;
     for (const QSSGRenderableObjectHandle &handle : inObjects) {
@@ -3438,7 +3453,7 @@ void RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
         if (!shaderPipeline) {
             // bail
             qDebug() << "Failed to prepare user augmented pass for object.";
-            return;
+            return -1;
         }
 
         // the rest is common, only relying on QSSGSubsetRenderableBase, not the subclasses
@@ -3687,19 +3702,14 @@ void RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
             } // END
 
             QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
-
-            QSSG_ASSERT(srb, return);
-
-            QSSG_ASSERT(std::size(subsetRenderable.rhiRenderData.userPassData) > index, return);
-
+            QSSG_ASSERT(srb, return -1);
             auto &rhiPassData = subsetRenderable.rhiRenderData.userPassData[index];
-            rhiPassData.pipeline = rhiCtxD->pipeline(ps,
-                                                     rpDesc,
-                                                     srb);
+            rhiPassData.pipeline = rhiCtxD->pipeline(ps, rpDesc, srb);
             rhiPassData.srb = srb;
-
         }
     }
+
+    return index;
 }
 
 bool RenderHelpers::rhiPrepareMotionVectorTexture(QSSGRhiContext *rhiCtx,

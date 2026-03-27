@@ -140,10 +140,22 @@ void QSSGUserRenderPassManager::registerManagedTexture(QSSGManagedRhiTexture *te
     }
 }
 
+qsizetype QSSGUserRenderPassManager::acquireUserPassSlot()
+{
+    if (m_userPassSlotsUsed < maxUserPassSlots() - 1)
+        return qsizetype(m_userPassSlotsUsed++);
+
+    qWarning() << "Exceeded maximum number of user render passes(" << QSSGUserRenderPassManager::maxUserPassSlots() << ")";
+
+    return -1;
+}
+
 void QSSGUserRenderPassManager::resetForFrame()
 {
     qDeleteAll(m_deferredReleaseTextures.cbegin(), m_deferredReleaseTextures.cend());
     m_deferredReleaseTextures.clear();
+
+    m_userPassSlotsUsed = 0;
 }
 
 void QSSGUserRenderPassManager::releaseAll()

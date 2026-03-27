@@ -131,33 +131,31 @@ void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
                                       QSSGReflectionMapEntry *entry,
                                       QSSGRenderTextureCubeFace cubeFace);
 
-void rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
-                                        QSSGPassKey passKey,
-                                        const QSSGRhiGraphicsPipelineState &basePipelineState,
-                                        QRhiRenderPassDescriptor *rpDesc,
-                                        QSSGRenderGraphObject *overrideMaterial,
-                                        QSSGLayerRenderData &inData,
-                                        QSSGRenderableObjectList &inObjects,
-                                        QSSGShaderFeatures featureSet,
-                                        size_t index);
+[[nodiscard]] qsizetype rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
+                                                           QSSGPassKey passKey,
+                                                           const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                                           QRhiRenderPassDescriptor *rpDesc,
+                                                           QSSGRenderGraphObject *overrideMaterial,
+                                                           QSSGLayerRenderData &inData,
+                                                           QSSGRenderableObjectList &inObjects,
+                                                           QSSGShaderFeatures featureSet);
 
-void rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
-                                        QSSGPassKey passKey,
-                                        const QSSGRhiGraphicsPipelineState &basePipelineState,
-                                        QRhiRenderPassDescriptor *rpDesc,
-                                        const QSSGLayerRenderData &inData,
-                                        QSSGRenderableObjectList &inObjects,
-                                        QSSGShaderFeatures featureSet,
-                                        size_t index);
+[[nodiscard]] qsizetype rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
+                                                           QSSGPassKey passKey,
+                                                           const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                                           QRhiRenderPassDescriptor *rpDesc,
+                                                           const QSSGLayerRenderData &inData,
+                                                           QSSGRenderableObjectList &inObjects,
+                                                           QSSGShaderFeatures featureSet);
 
-void rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
-                                 QSSGPassKey passKey,
-                                 const QSSGRhiGraphicsPipelineState &basePipelineState,
-                                 QRhiRenderPassDescriptor *rpDesc,
-                                 const QSSGUserShaderAugmentation &shaderAugmentation,
-                                 const QSSGLayerRenderData &inData,
-                                 QSSGRenderableObjectList &inObjects,
-                                 QSSGShaderFeatures featureSet, size_t index);
+[[nodiscard]] qsizetype rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
+                                                    QSSGPassKey passKey,
+                                                    const QSSGRhiGraphicsPipelineState &basePipelineState,
+                                                    QRhiRenderPassDescriptor *rpDesc,
+                                                    const QSSGUserShaderAugmentation &shaderAugmentation,
+                                                    const QSSGLayerRenderData &inData,
+                                                    QSSGRenderableObjectList &inObjects,
+                                                    QSSGShaderFeatures featureSet);
 
 void rhiRenderUserAugmentedPass(QSSGRhiContext *rhiCtx,
                                QSSGRenderableObjectList &inObjects);
