@@ -220,7 +220,7 @@ bool QQuick3DXrManager::event(QEvent *e)
 
 bool QQuick3DXrManager::isMultiviewRenderingDisabled()
 {
-    static bool disabled = qEnvironmentVariableIntValue("QT_QUICK3D_XR_DISABLE_MULTIVIEW") != 0;
+    const bool disabled = qEnvironmentVariableIntValue("QT_QUICK3D_XR_DISABLE_MULTIVIEW") != 0;
     return disabled;
 }
 
