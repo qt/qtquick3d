@@ -458,13 +458,14 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-            if (temporalAA || (*aaIndex < quint32(m_layer->antialiasingQuality))) {
-                auto *rub = rhi->nextResourceUpdateBatch();
-                if (progressiveAA)
-                    rub->copyTexture(m_prevTempAATexture, blendResult);
-                else
-                    rub->copyTexture(m_prevTempAATexture, currentTexture);
-                cb->resourceUpdate(rub);
+            if (m_prevTempAATexture && (temporalAA || (*aaIndex < quint32(m_layer->antialiasingQuality)))) {
+                QRhiTexture *srcTexture = (blendResult && progressiveAA) ? blendResult : currentTexture;
+
+                if (srcTexture) {
+                    auto *rub = rhi->nextResourceUpdateBatch();
+                    rub->copyTexture(m_prevTempAATexture, srcTexture);
+                    cb->resourceUpdate(rub);
+                }
             }
 
             (*aaIndex)++;
