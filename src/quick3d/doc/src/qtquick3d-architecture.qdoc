@@ -423,7 +423,7 @@ The renderables list is then sorted into 3 lists.
     from items that are closest to the camera to items that are furthest from the
     camera. This is done to take advantage of hardware occlusion culling or
     early z detection in the fragment shader.
-    \li 2D Items: these are QtQuick Items that are rendered by the Qt Quick
+    \li 2D Items: these are \l[QML]{QtQuick} Items that are rendered by the Qt Quick
     renderer.
     \li Transparent Items: these are sorted from back to front, or in other
     words from items that are farthest from the camera to items that are nearest
