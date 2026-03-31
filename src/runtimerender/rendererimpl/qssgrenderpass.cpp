@@ -262,6 +262,14 @@ void ShadowMapPass::resetForFrame()
 
 // REFLECTIONMAP PASS
 
+ReflectionMapPass::ReflectionMapPass()
+{
+    // Read the environment variable to check if the old behavior of including the screen texture objects
+    // in the reflection pass should be kept for compatibility reasons.
+    // Besides being expensive, we shouldn't be using the main screen texture in the probes at all.
+    m_includeSTO = qEnvironmentVariableIntValue("QT_QUICK3D_REFLECTION_PASS_INCLUDE_SCREEN_TEXTURE_OBJECTS") != 0;
+}
+
 void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     Q_UNUSED(renderer);
@@ -280,7 +288,8 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
 
     const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
     const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
-    const auto &sortedScreenTextureObjects = data.getSortedScreenTextureRenderableObjects(*camera);
+    QSSGRenderableObjectList emptyList{};
+    const auto &sortedScreenTextureObjects = m_includeSTO ? data.getSortedScreenTextureRenderableObjects(*camera) : emptyList;
 
     QSSG_ASSERT(reflectionPassObjects.isEmpty(), reflectionPassObjects.clear());
 
