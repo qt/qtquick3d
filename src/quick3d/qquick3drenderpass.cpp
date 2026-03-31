@@ -276,6 +276,11 @@ void QQuick3DRenderPass::onMaterialDestroyed(QObject *object)
     }
 }
 
+void QQuick3DRenderPass::onCommandChanged()
+{
+    markDirty(CommandsDirty);
+}
+
 void QQuick3DRenderPass::qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, QQuick3DShaderUtilsRenderCommand *command)
 {
     if (!command)
@@ -288,6 +293,10 @@ void QQuick3DRenderPass::qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRe
 
     that->m_commands.push_back(command);
     that->markDirty(CommandsDirty);
+
+    // Re-clone commands whenever a property changes so the render thread
+    // sees the updated state.
+    QObject::connect(command, &QQuick3DShaderUtilsRenderCommand::changed, that, &QQuick3DRenderPass::onCommandChanged);
 }
 
 QQuick3DShaderUtilsRenderCommand *QQuick3DRenderPass::qmlCommandAt(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, qsizetype index)
@@ -305,6 +314,8 @@ qsizetype QQuick3DRenderPass::qmlCommandCount(QQmlListProperty<QQuick3DShaderUti
 void QQuick3DRenderPass::qmlCommandClear(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list)
 {
     QQuick3DRenderPass *that = qobject_cast<QQuick3DRenderPass *>(list->object);
+    for (QQuick3DShaderUtilsRenderCommand *cmd : std::as_const(that->m_commands))
+        QObject::disconnect(cmd, nullptr, that, nullptr);
     that->m_commands.clear();
     that->markDirty(CommandsDirty);
 }

@@ -971,6 +971,19 @@ void QQuick3DShaderUtilsRenderablesFilter::setRenderableTypes(RenderableTypes ty
     command.renderableTypes = static_cast<QSSGRenderablesFilterCommand::RenderableTypeT>(types.toInt());
 }
 
+QQuick3DShaderUtilsPipelineStateOverride::QQuick3DShaderUtilsPipelineStateOverride()
+{
+    // Forward all our own signals to the base class changed() signal so that
+    // QQuick3DRenderPass can connect once and be notified of any change.
+    const QMetaObject *mo = metaObject();
+    const QMetaMethod changedSignal = QMetaMethod::fromSignal(&QQuick3DShaderUtilsRenderCommand::changed);
+    for (int i = QQuick3DShaderUtilsRenderCommand::staticMetaObject.methodCount(); i < mo->methodCount(); ++i) {
+        const QMetaMethod mm = mo->method(i);
+        if (mm.methodType() == QMetaMethod::Signal)
+            connect(this, mm, this, changedSignal);
+    }
+}
+
 QQuick3DShaderUtilsPipelineStateOverride::~QQuick3DShaderUtilsPipelineStateOverride()
 {
 
@@ -2038,6 +2051,34 @@ QQuick3DShaderUtilsRenderPassAddDefine::QQuick3DShaderUtilsRenderPassAddDefine()
 
 QQuick3DShaderUtilsRenderPassAddDefine::~QQuick3DShaderUtilsRenderPassAddDefine() = default;
 
+QByteArray QQuick3DShaderUtilsRenderPassAddDefine::name() const
+{
+    return command.m_name;
+}
+
+void QQuick3DShaderUtilsRenderPassAddDefine::setName(const QByteArray &newName)
+{
+    if (command.m_name != newName) {
+        command.m_name = newName;
+        emit nameChanged();
+        emit changed();
+    }
+}
+
+int QQuick3DShaderUtilsRenderPassAddDefine::value() const
+{
+    return command.m_value;
+}
+
+void QQuick3DShaderUtilsRenderPassAddDefine::setValue(int newValue)
+{
+    if (command.m_value != newValue) {
+        command.m_value = newValue;
+        emit valueChanged();
+        emit changed();
+    }
+}
+
 QSSGCommand *QQuick3DShaderUtilsRenderPassAddDefine::cloneCommand() {
     QSSGAddShaderDefine *cmd = new QSSGAddShaderDefine(command);
     return cmd;
@@ -2191,6 +2232,7 @@ void QQuick3DShaderUtilsSubRenderPass::setRenderPass(QQuick3DRenderPass *newRend
     m_renderPass = newRenderPass;
     m_hasWarnedAboutInvalidId = false; // Reset warning flag when property changes
     emit renderPassChanged();
+    emit changed();
 }
 
 /*!

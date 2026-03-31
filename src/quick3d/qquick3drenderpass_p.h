@@ -109,6 +109,7 @@ protected:
 
 private Q_SLOTS:
     void onMaterialDestroyed(QObject *object);
+    void onCommandChanged();
 
 private:
     static void qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, QQuick3DShaderUtilsRenderCommand *command);

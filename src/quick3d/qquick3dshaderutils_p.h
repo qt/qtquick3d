@@ -166,6 +166,9 @@ public:
     virtual QSSGCommand *cloneCommand() { Q_ASSERT(0); return nullptr; }
     virtual int bufferCount() const { return 0; }
     virtual QQuick3DShaderUtilsBuffer *bufferAt(int idx) const { Q_UNUSED(idx); return nullptr; }
+
+Q_SIGNALS:
+    void changed();
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBufferInput : public QQuick3DShaderUtilsRenderCommand
@@ -370,7 +373,7 @@ public:
     };
     Q_ENUM(PolygonMode)
 
-    QQuick3DShaderUtilsPipelineStateOverride() = default;
+    QQuick3DShaderUtilsPipelineStateOverride();
     ~QQuick3DShaderUtilsPipelineStateOverride() override;
 
     bool depthTestEnabled() const;
@@ -625,8 +628,8 @@ public:
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPassAddDefine : public QQuick3DShaderUtilsRenderCommand
 {
     Q_OBJECT
-    Q_PROPERTY(QByteArray name MEMBER name)
-    Q_PROPERTY(int value MEMBER value)
+    Q_PROPERTY(QByteArray name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
     QML_NAMED_ELEMENT(AddDefine)
     QML_ADDED_IN_VERSION(6, 11)
 
@@ -636,9 +639,17 @@ public:
 
     QSSGCommand *cloneCommand() override;
 
+    QByteArray name() const;
+    void setName(const QByteArray &newName);
+
+    int value() const;
+    void setValue(int newValue);
+
     QSSGAddShaderDefine command;
-    QByteArray &name = command.m_name;
-    int &value = command.m_value;
+
+Q_SIGNALS:
+    void nameChanged();
+    void valueChanged();
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsSubRenderPass : public QQuick3DShaderUtilsRenderCommand
