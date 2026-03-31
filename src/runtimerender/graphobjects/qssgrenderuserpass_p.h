@@ -42,6 +42,11 @@ public:
         InfiniteGridPass
     };
 
+    enum class Role : quint8 {
+        TopLevel,
+        SubPass
+    };
+
     enum class DirtyFlag : quint8
     {
         ShaderDirty = 0x1
@@ -81,6 +86,7 @@ public:
     QSSGUserShaderAugmentation shaderAugmentation;
     QRhiDepthStencilClearValue depthStencilClearValue = { };
     PassModes passMode = UserPass;
+    Role role = Role::TopLevel;
 
     FlagT m_dirtyFlags = 0;
     State m_state = State::None;

@@ -37,6 +37,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderskymaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
@@ -794,10 +795,40 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     for (QSSGRenderEffect *effectNode = m_layer->firstEffect; effectNode; effectNode = effectNode->m_nextEffect)
         effectNode->finalizeShaders(*m_layer, m_sgContext.get());
 
-    // NOTE: This could be done elewhere, but leaving it here for now.
+    // Re-schedule top-level user passes in QML declaration order so a
+    // RenderOutputProvider that scheduled a later pass first cannot
+    // reorder them. A pass referenced by a SubRenderPass command is
+    // tagged SubPass and invoked by its parent, so it is never
+    // scheduled here.
     if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
         for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses))
+            userPass->role = QSSGRenderUserPass::Role::TopLevel;
+        for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
+            for (const QSSGCommand *cmd : std::as_const(userPass->commands)) {
+                if (cmd->m_type != CommandType::SubRenderPass)
+                    continue;
+                const auto *subCmd = static_cast<const QSSGSubRenderPass *>(cmd);
+                if (subCmd->m_userPassId == QSSGResourceId::Invalid)
+                    continue;
+                if (auto *subPass = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPass>(subCmd->m_userPassId))
+                    subPass->role = QSSGRenderUserPass::Role::SubPass;
+            }
+        }
+
+        QSSGUserRenderPassManagerPtr upm;
+        if (m_layer->renderData)
+            upm = m_layer->renderData->requestUserRenderPassManager();
+        if (upm) {
+            for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
+                if (userPass->role == QSSGRenderUserPass::Role::TopLevel)
+                    upm->unscheduleUserPass(userPass);
+            }
+        }
+        for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
             userPass->finalizeShaders(*m_sgContext);
+            if (upm && userPass->role == QSSGRenderUserPass::Role::TopLevel)
+                upm->scheduleUserPass(userPass);
+        }
     }
 
     if (newRenderStats)
