@@ -2225,6 +2225,13 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
                 if (renderTarget->getDepthTexture() != nullptr)
                     needsBuild = true;
             }
+
+            // Flags are baked into the render pass descriptor.
+            if (!needsBuild) {
+                const auto &rt = renderTarget->getRenderTarget();
+                if (rt && rt->flags() != passNode->renderTargetFlags)
+                    needsBuild = true;
+            }
         }
 
         if (needsBuild) {
