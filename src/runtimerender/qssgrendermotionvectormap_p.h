@@ -75,6 +75,8 @@ private:
         QSize lastPrevMorphWeightTextureDataSize;
         QSize lastCurrentMorphWeightTextureDataSize;
         int frameAge = 0;
+        bool visitedThisFrame = false;
+        MotionResultData cachedResult;
     };
 
     const QSSGRenderContextInterface &m_context;

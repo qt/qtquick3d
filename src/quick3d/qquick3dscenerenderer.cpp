@@ -434,7 +434,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     }
                     int idx = *aaIndex - 1;
 
-                    const QSize textureSize = currentTexture->pixelSize();
+                    const QSize textureSize = m_prevTempAATexture->pixelSize();
                     QVector2D bufferData;
                     if (progressiveAA)
                         bufferData = s_ProgressiveAABlendFactors[idx];
@@ -482,17 +482,20 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-            if ((temporalAA && m_layer->temporalAAMode != QSSGRenderLayer::TAAMode::MotionVector) ||
-                *aaIndex <
-                        (temporalAA && m_layer->temporalAAMode == QSSGRenderLayer::TAAMode::MotionVector ?
-                                 quint32(QSSGLayerRenderData::MAX_AA_LEVELS) :
-                                 quint32(m_layer->antialiasingQuality))) {
-                auto *rub = rhi->nextResourceUpdateBatch();
-                if (progressiveAA || m_layer->temporalAAMode == QSSGRenderLayer::TAAMode::MotionVector)
-                    rub->copyTexture(m_prevTempAATexture, blendResult);
-                else
-                    rub->copyTexture(m_prevTempAATexture, currentTexture);
-                cb->resourceUpdate(rub);
+            const bool isMotionVector = m_layer->temporalAAMode == QSSGRenderLayer::TAAMode::MotionVector;
+            const quint32 aaLimit = (temporalAA && isMotionVector) ? quint32(QSSGLayerRenderData::MAX_AA_LEVELS) : quint32(m_layer->antialiasingQuality);
+
+            const bool aaActive = (temporalAA && !isMotionVector) || (*aaIndex < aaLimit);
+            const bool usePrevTexture = m_prevTempAATexture != nullptr;
+
+            if (aaActive && usePrevTexture) {
+                QRhiTexture *copySource = (blendResult && (progressiveAA || isMotionVector)) ? blendResult : currentTexture;
+
+                if (copySource) {
+                    auto *rub = rhi->nextResourceUpdateBatch();
+                    rub->copyTexture(m_prevTempAATexture, copySource);
+                    cb->resourceUpdate(rub);
+                }
             }
 
             (*aaIndex)++;
