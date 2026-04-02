@@ -99,8 +99,8 @@ QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMoti
         dataToStore.prevModelViewProjection = currentModelViewProjection;
         dataToStore.prevInstanceLocal = currentInstanceLocal;
         dataToStore.prevInstanceGlobal = currentInstanceGlobal;
-
         dataToStore.frameAge = 0;
+        dataToStore.visitedThisFrame = true;
 
         if (currentBoneTextureData) {
             dataToStore.prevBoneTextureData = std::make_shared<QSSGRenderTextureData>();
@@ -124,9 +124,16 @@ QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMoti
             dataToStore.lastPrevMorphWeightTextureDataSize = dataToStore.prevMorphWeightTextureData->size();
         }
 
+        MotionResultData firstFrameResult = { currentModelViewProjection, currentInstanceLocal, currentInstanceGlobal,
+                                              QSSGRenderImageTexture(), QSSGRenderImageTexture(),
+                                              QSSGRenderImageTexture(), QSSGRenderImageTexture() };
+        dataToStore.cachedResult = firstFrameResult;
         m_cache[modelKey] = dataToStore;
-        return { currentModelViewProjection, currentInstanceLocal, currentInstanceGlobal, QSSGRenderImageTexture(), QSSGRenderImageTexture(), QSSGRenderImageTexture(), QSSGRenderImageTexture() };
+        return firstFrameResult;
     }
+
+    if (lastFrameDataIterator->visitedThisFrame)
+        return lastFrameDataIterator->cachedResult;
 
     MotionResultData motionResult;
 
@@ -183,7 +190,10 @@ QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMoti
         lastFrameDataIterator->lastCurrentMorphWeightTextureDataSize = lastFrameDataIterator->currentMorphWeightTextureData->size();
         copyToTextureData(lastFrameDataIterator->currentMorphWeightTextureData.get(), currentMorphWeights);
     }
+
     lastFrameDataIterator->frameAge = 0;
+    lastFrameDataIterator->visitedThisFrame = true;
+    lastFrameDataIterator->cachedResult = motionResult;
 
     return motionResult;
 }
@@ -212,6 +222,7 @@ void QSSGRenderMotionVectorMap::cleanupStaleEntries()
     constexpr int maxFrameAge = 2;
     auto it = m_cache.begin();
     while (it != m_cache.end()) {
+        it->visitedThisFrame = false;
         it->frameAge++;
         if (it->frameAge > maxFrameAge) {
             releaseEntryResources(*it);
