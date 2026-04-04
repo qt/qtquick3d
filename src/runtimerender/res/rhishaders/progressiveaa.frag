@@ -6,6 +6,7 @@ layout(location = 0) in vec2 uv_coord;
 
 layout(std140, binding = 0) uniform buf {
     vec2 blend;
+    vec2 padding;
 } ubuf;
 
 layout(binding = 1) uniform sampler2D tex1;
