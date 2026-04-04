@@ -8,6 +8,8 @@ layout(location = 0) in vec2 uv_coord;
 
 layout(std140, binding = 0) uniform buf {
     vec2 invSize;
+    float strength;
+    float padding;
 } ubuf;
 
 layout(binding = 1) uniform sampler2D currentTexture;
@@ -63,5 +65,5 @@ void main()
 
     vec4 clampPrevColor = clamp(prevColor, minColor, maxColor);
 
-    fragOutput = mix(currentColor, clampPrevColor, 0.9);
+    fragOutput = mix(currentColor, clampPrevColor, ubuf.strength);
 }

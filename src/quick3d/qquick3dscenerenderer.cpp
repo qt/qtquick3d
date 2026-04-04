@@ -427,7 +427,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
                     QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ m_layer, nullptr, nullptr, 0 }));
                     QRhiBuffer *&ubuf = dcd.ubuf;
-                    const int ubufSize = 2 * sizeof(float);
+                    const int ubufSize = 4 * sizeof(float);
                     if (!ubuf) {
                         ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
                         ubuf->create();
@@ -435,15 +435,16 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     int idx = *aaIndex - 1;
 
                     const QSize textureSize = m_prevTempAATexture->pixelSize();
-                    QVector2D bufferData;
+                    QVector4D bufferData;
                     if (progressiveAA)
-                        bufferData = s_ProgressiveAABlendFactors[idx];
+                        bufferData = QVector4D(s_ProgressiveAABlendFactors[idx]);
                     else if (m_layer->temporalAAMode == QSSGRenderLayer::TAAMode::Default)
-                        bufferData = s_TemporalAABlendFactors;
+                        bufferData = QVector4D(s_TemporalAABlendFactors);
                     else
-                        bufferData = QVector2D(1.0f / qMax(textureSize.width(), 1), 1.0f / qMax(textureSize.height(), 1));
+                        bufferData = QVector4D(1.0f / qMax(textureSize.width(), 1), 1.0f / qMax(textureSize.height(), 1),
+                                               0.9f + (qMin(qMax(m_layer->temporalAAStrength, 0.3f), 1.0f) - 0.3f) / 0.7f * 0.09f, 0.0f); //map it to 0.9 to 0.99
 
-                    rub->updateDynamicBuffer(ubuf, 0, 2 * sizeof(float), &bufferData);
+                    rub->updateDynamicBuffer(ubuf, 0, 4 * sizeof(float), &bufferData);
                     QSSGRhiGraphicsPipelineState ps;
                     ps.viewport = QRhiViewport(0, 0, float(textureSize.width()), float(textureSize.height()));
 

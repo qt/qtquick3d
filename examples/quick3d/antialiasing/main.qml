@@ -191,7 +191,7 @@ ApplicationWindow {
                 }
 
                 ColumnLayout {
-                    enabled: temporalModeButton.checked && temporalModeDefault.checked
+                    enabled: temporalModeButton.checked
                     Label {
                         text: qsTr("Temporal AA Strength")
                     }

@@ -830,8 +830,7 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
     \since 5.15
 
     This property modifies the amount of temporal movement (antialiasing).
-    This has an effect only when temporalAAEnabled property is true and
-    temporalAAMode property is SceneEnvironment.TAADefault.
+    This has an effect only when temporalAAEnabled property is true.
 
     \default 0.3
 
