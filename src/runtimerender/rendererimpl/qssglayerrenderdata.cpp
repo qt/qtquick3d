@@ -1771,15 +1771,24 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
 
                 int currentLod = -1;
                 if (model.levelOfDetailBias > 0.0f) {
-                    const float threshold = distanceThreshold * lodDistanceMultiplier;
-                    const float modelBias = 1 / model.levelOfDetailBias;
-                    for (qsizetype i = 0; i < theSubset.lods.count(); ++i) {
-                        float subsetDistance = theSubset.lods[i].distance * modelScale * modelBias;
-                        float screenSize = subsetDistance / threshold;
-                        if (screenSize > lodThreshold)
-                            break;
-                        currentLod = i;
+
+                    // At this stage, the distance and position of the most detailed instance are unknown;
+                    // therefore, the level of detail is managed manually using instancingLodFactor.
+                    int lodsCount = theSubset.lods.size();
+                    if (model.instanceTable && lodsCount) {
+                        currentLod = qRound((lodsCount - 1) * qBound(0.f, model.instancingLodFactor, 1.f));
+                    } else {
+                        const float threshold = distanceThreshold * lodDistanceMultiplier;
+                        const float modelBias = 1 / model.levelOfDetailBias;
+                        for (qsizetype i = 0; i < lodsCount; ++i) {
+                            float subsetDistance = theSubset.lods[i].distance * modelScale * modelBias;
+                            float screenSize = subsetDistance / threshold;
+                            if (screenSize > lodThreshold)
+                                break;
+                            currentLod = i;
+                        }
                     }
+
                 }
                 if (currentLod == -1)
                     subsetLevelOfDetail = 0;

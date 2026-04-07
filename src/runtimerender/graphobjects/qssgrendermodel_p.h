@@ -47,6 +47,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     float m_depthBiasSq = 0.0f; // Depth bias is expected to be squared!
     bool castsShadows = true;
     bool receivesShadows = true;
+    float instancingLodFactor = 0.0f; // 0.0f is the most detailed version of objects, and 1.0f is the last LoD.
     float instancingLodMin = -1;
     float instancingLodMax = -1;
     mutable int instanceLodCount = -1;

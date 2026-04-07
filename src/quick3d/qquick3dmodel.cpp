@@ -914,6 +914,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         const QString path = translateMeshSource(m_source, this);
         modelNode->meshPath = QSSGRenderPath(path, modelNode->lightmapKey);
         modelNode->levelOfDetailBias = m_levelOfDetailBias;
+        modelNode->instancingLodFactor = m_instancingLodFactor;
         modelNode->motionVectorEnabled = m_motionVectorEnabled;
         modelNode->motionVectorScale = m_motionVectorScale;
     }
@@ -1128,6 +1129,46 @@ void QQuick3DModel::setInstancingLodMax(float maxDistance)
     m_instancingLodMax = maxDistance;
     emit instancingLodMaxChanged();
     markDirty(LodDirty);
+}
+
+/*!
+    \qmlproperty real Model::instancingLodFactor
+    \since 6.12
+    \default 0.0
+
+    This property allows manual determination of the level of detail (LOD) for
+    specific levels of instanced models.
+
+    In situations where a scene contains multiple LOD levels for large instance
+    tables, it is necessary to manually select the most appropriate detail level.
+    This is required because automatic LOD management cannot correctly calculate
+    the detail for individual instances, as their transformation data only becomes
+    available during the GPU rendering stage.
+
+    To reduce geometry overhead at specific LOD levels, you can manually specify
+    \c instancingLodFactor. The closer the value is to \c 1.0, the less geometry
+    will be rendered for the object. A value of \c 0.0 means the entire geometry
+    will be offloaded/rendered at full detail.
+
+    \note This property is specifically used to override automatic LOD calculation
+    when the proximity of individual instances to the camera is not predetermined.
+
+    \sa levelOfDetailBias
+*/
+
+float QQuick3DModel::instancingLodFactor() const
+{
+    return m_instancingLodFactor;
+}
+
+void QQuick3DModel::setInstancingLodFactor(float newInstancingLodFactor)
+{
+    if (qFuzzyCompare(m_instancingLodFactor, newInstancingLodFactor))
+        return;
+
+    m_instancingLodFactor = newInstancingLodFactor;
+    emit instancingLodFactorChanged();
+    markDirty(QQuick3DModel::PropertyDirty);
 }
 
 /*!

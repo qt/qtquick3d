@@ -83,6 +83,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQuick3DBakedLightmap *bakedLightmap READ bakedLightmap WRITE setBakedLightmap NOTIFY bakedLightmapChanged REVISION(6, 4))
     Q_PROPERTY(float instancingLodMin READ instancingLodMin WRITE setInstancingLodMin NOTIFY instancingLodMinChanged REVISION(6, 5))
     Q_PROPERTY(float instancingLodMax READ instancingLodMax WRITE setInstancingLodMax NOTIFY instancingLodMaxChanged REVISION(6, 5))
+    Q_PROPERTY(float instancingLodFactor READ instancingLodFactor WRITE setInstancingLodFactor NOTIFY instancingLodFactorChanged REVISION(6, 12))
     Q_PROPERTY(float levelOfDetailBias READ levelOfDetailBias WRITE setLevelOfDetailBias NOTIFY levelOfDetailBiasChanged REVISION(6, 5))
     Q_PROPERTY(float texelsPerUnit READ texelsPerUnit WRITE setTexelsPerUnit NOTIFY texelsPerUnitChanged FINAL REVISION(6, 10))
     Q_PROPERTY(bool motionVectorEnabled READ motionVectorEnabled WRITE setMotionVectorEnabled NOTIFY motionVectorEnabledChanged REVISION(6, 11))
@@ -122,6 +123,7 @@ public:
     Q_REVISION(6, 5) float instancingLodMin() const;
     Q_REVISION(6, 5) float instancingLodMax() const;
     Q_REVISION(6, 5) float levelOfDetailBias() const;
+    Q_REVISION(6, 12) float instancingLodFactor() const;
 
     Q_REVISION(6, 10) float texelsPerUnit() const;
     Q_REVISION(6, 10) void setTexelsPerUnit(float newTexelsPerUnit);
@@ -151,6 +153,7 @@ public Q_SLOTS:
     Q_REVISION(6, 5) void setInstancingLodMin(float minDistance);
     Q_REVISION(6, 5) void setInstancingLodMax(float maxDistance);
     Q_REVISION(6, 5) void setLevelOfDetailBias(float newLevelOfDetailBias);
+    Q_REVISION(6, 12) void setInstancingLodFactor(float newInstancingLodFactor);
 
     Q_REVISION(6, 11) void setMotionVectorScale(float newMotionVectorScale);
     Q_REVISION(6, 11) void setMotionVectorEnabled(bool newMotionVectorEnabled);
@@ -177,6 +180,7 @@ Q_SIGNALS:
 
     Q_REVISION(6, 5) void instancingLodMinChanged();
     Q_REVISION(6, 5) void instancingLodMaxChanged();
+    Q_REVISION(6, 12) void instancingLodFactorChanged();
     Q_REVISION(6, 5) void levelOfDetailBiasChanged();
 
     Q_REVISION(6, 10) void texelsPerUnitChanged();
@@ -254,6 +258,7 @@ private:
     QQuick3DSkin *m_skin = nullptr;
     float m_instancingLodMin = -1;
     float m_instancingLodMax = -1;
+    float m_instancingLodFactor = 0.0f;
     float m_levelOfDetailBias = 1.0f;
     float m_texelsPerUnit = 0.0f;
     bool m_motionVectorEnabled = true;
