@@ -79,7 +79,7 @@ bool QQsbCollection::readEndHeader(QDataStream &ds, qint64 *startPos, quint8 *ve
         return false;
     }
     if (qtver != QtVersion) {
-        qWarning("qsbc file is for a different Qt version");
+        qDebug("qsbc file is for a different Qt version");
         return false;
     }
     return true;
@@ -190,7 +190,7 @@ bool QQsbInMemoryCollection::load(const QString &filename)
     EntryMap entryMap;
     quint8 version = 0;
     if (!readEndHeader(&f, &entryMap, &version)) {
-        qWarning("Ignoring qsbc file %s", qPrintable(filename));
+        qDebug("Ignoring qsbc file %s", qPrintable(filename));
         return false;
     }
 
