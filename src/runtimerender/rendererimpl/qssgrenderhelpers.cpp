@@ -1108,16 +1108,23 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             if (shaderPipeline->isLightingEnabled()) {
                 // Shadow map atlas
-                auto shadowMapAtlas = shaderPipeline->shadowMapAtlasTexture();
-                if (shadowMapAtlas) {
-                    int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture");
-                    if (binding >= 0) {
-                        QRhiTexture *texture = shadowMapAtlas;
-                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                                 QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                        Q_ASSERT(texture && sampler);
-                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+                if (int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture"); binding >= 0) {
+                    QRhiTexture *texture = shaderPipeline->shadowMapAtlasTexture();
+
+                    if (!texture) {
+                        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                        texture = rhiCtx->dummyTexture({ }, resourceUpdates, QSize(1, 1), Qt::black, 2);
+                        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                     }
+
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             QRhiSampler::None,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::Repeat });
+
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
                 }
 
                 // Shadow map blue noise
@@ -3036,16 +3043,23 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
                                       sizeof(QSSGShaderDirectionalLightsUniformData));
 
             // Shadow map atlas
-            auto shadowMapAtlas = shaderPipeline->shadowMapAtlasTexture();
-            if (shadowMapAtlas) {
-                int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture");
-                if (binding >= 0) {
-                    QRhiTexture *texture = shadowMapAtlas;
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                    Q_ASSERT(texture && sampler);
-                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+            if (int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture"); binding >= 0) {
+                QRhiTexture *texture = shaderPipeline->shadowMapAtlasTexture();
+
+                if (!texture) {
+                    QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                    texture = rhiCtx->dummyTexture({ }, resourceUpdates, QSize(1, 1), Qt::black, 2);
+                    rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                 }
+
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                         QRhiSampler::Linear,
+                                                         QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge,
+                                                         QRhiSampler::ClampToEdge,
+                                                         QRhiSampler::Repeat });
+
+                bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
             }
 
             // Light probe
@@ -3226,16 +3240,23 @@ void RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiCtx,
                                           sizeof(QSSGShaderDirectionalLightsUniformData));
 
                 // Shadow map atlas
-                auto shadowMapAtlas = shaderPipeline->shadowMapAtlasTexture();
-                if (shadowMapAtlas) {
-                    int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture");
-                    if (binding >= 0) {
-                        QRhiTexture *texture = shadowMapAtlas;
-                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                                 QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                        Q_ASSERT(texture && sampler);
-                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+                if (int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture"); binding >= 0) {
+                    QRhiTexture *texture = shaderPipeline->shadowMapAtlasTexture();
+
+                    if (!texture) {
+                        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                        texture = rhiCtx->dummyTexture({ }, resourceUpdates);
+                        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                     }
+
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             QRhiSampler::None,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::Repeat });
+
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
                 }
 
                 // Shadow map blue noise
@@ -3539,16 +3560,23 @@ void RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
                                           sizeof(QSSGShaderDirectionalLightsUniformData));
 
                 // Shadow map atlas
-                auto shadowMapAtlas = shaderPipeline->shadowMapAtlasTexture();
-                if (shadowMapAtlas) {
-                    int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture");
-                    if (binding >= 0) {
-                        QRhiTexture *texture = shadowMapAtlas;
-                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                                 QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                        Q_ASSERT(texture && sampler);
-                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+                if (int binding = shaderPipeline->bindingForTexture("qt_shadowmap_texture"); binding >= 0) {
+                    QRhiTexture *texture = shaderPipeline->shadowMapAtlasTexture();
+
+                    if (!texture) {
+                        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                        texture = rhiCtx->dummyTexture({ }, resourceUpdates, QSize(1, 1), Qt::black, 2);
+                        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                     }
+
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             QRhiSampler::None,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::Repeat });
+
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
                 }
 
                // Shadow map blue noise
