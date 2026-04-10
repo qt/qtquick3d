@@ -3062,6 +3062,22 @@ void RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiCtx,
                 bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
             }
 
+            // Shadow map blue noise
+            if (int binding = shaderPipeline->bindingForTexture("qt_shadowmap_blue_noise_texture"); binding >= 0) {
+                QRhiTexture *texture = shaderPipeline->shadowMapBlueNoiseTexture();
+
+                if (!texture) {
+                    QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                    texture = rhiCtx->dummyTexture({ }, resourceUpdates);
+                    rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                }
+
+                QRhiSampler *sampler = rhiCtx->sampler(
+                        { QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::Repeat, QRhiSampler::Repeat, QRhiSampler::Repeat });
+
+                bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+            }
+
             // Light probe
             if (shaderPipeline->lightProbeTexture()) {
                 int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
