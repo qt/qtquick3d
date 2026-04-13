@@ -82,4 +82,6 @@ Qt's low-level and Qt Quick 3D's material cache will get disabled.
 \c{--enable-shader-cache} command-line argument to get a behavior identical to
 standalone Qt applications.
 
+Enable the logging category \c{qt.quick3d.cache} to get some information printed
+regarding the 3D material cache at run time.
 */

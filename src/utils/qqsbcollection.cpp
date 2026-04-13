@@ -7,9 +7,12 @@
 #include <QtCore/QLockFile>
 #include <QtCore/QSaveFile>
 #include <QtCore/QCryptographicHash>
+#include <QtCore/QLoggingCategory>
 #include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_STATIC_LOGGING_CATEGORY(lcQuick3DCache, "qt.quick3d.cache")
 
 QQsbCollection::~QQsbCollection()
 {
@@ -71,15 +74,15 @@ bool QQsbCollection::readEndHeader(QDataStream &ds, qint64 *startPos, quint8 *ve
     quint32 qtver = 0;
     ds >> *startPos >> *version >> qtver >> fileId;
     if (fileId != MagicaDS) {
-        qWarning("Corrupt qsbc file");
+        qCDebug(lcQuick3DCache, "Corrupt qsbc file");
         return false;
     }
     if (*version != Version::Two) {
-        qWarning("qsbc file has an unsupported version");
+        qCDebug(lcQuick3DCache, "qsbc file has an unsupported version");
         return false;
     }
     if (qtver != QtVersion) {
-        qDebug("qsbc file is for a different Qt version");
+        qCDebug(lcQuick3DCache, "qsbc file is for a different Qt version");
         return false;
     }
     return true;
@@ -176,21 +179,21 @@ bool QQsbInMemoryCollection::load(const QString &filename)
 {
     QLockFile lock(lockFileName(filename));
     if (!lock.lock()) {
-        qWarning("Could not create shader cache lock file '%s'",
+        qCDebug(lcQuick3DCache, "Could not create shader cache lock file '%s'",
                  qPrintable(lock.fileName()));
         return false;
     }
 
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly)) {
-        qWarning("Failed to open qsbc file %s", qPrintable(filename));
+        qCDebug(lcQuick3DCache, "Failed to open qsbc file %s", qPrintable(filename));
         return false;
     }
 
     EntryMap entryMap;
     quint8 version = 0;
     if (!readEndHeader(&f, &entryMap, &version)) {
-        qDebug("Ignoring qsbc file %s", qPrintable(filename));
+        qCDebug(lcQuick3DCache, "Ignoring qsbc file %s", qPrintable(filename));
         return false;
     }
 
@@ -199,6 +202,7 @@ bool QQsbInMemoryCollection::load(const QString &filename)
 
     clear();
 
+    const qsizetype entryCountBefore = entries.size();
     for (const Entry &e : entryMap) {
         const qint64 offset = e.value;
         if (e.isValid() && offset >= 0 && size > offset && f.seek(offset)) {
@@ -209,6 +213,9 @@ bool QQsbInMemoryCollection::load(const QString &filename)
             entries.insert(Entry(e.key), entryDesc);
         }
     }
+    qCDebug(lcQuick3DCache, "Loaded %d material cache entries from %s",
+            int(entries.size() - entryCountBefore),
+            qPrintable(filename));
 
     return true;
 }
@@ -217,7 +224,7 @@ bool QQsbInMemoryCollection::save(const QString &filename)
 {
     QLockFile lock(lockFileName(filename));
     if (!lock.lock()) {
-        qWarning("Could not create shader cache lock file '%s'",
+        qCDebug(lcQuick3DCache, "Could not create shader cache lock file '%s'",
                  qPrintable(lock.fileName()));
         return false;
     }
@@ -228,7 +235,7 @@ bool QQsbInMemoryCollection::save(const QString &filename)
     QFile f(filename);
 #endif
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qWarning("Failed to write qsbc file %s", qPrintable(filename));
+        qCDebug(lcQuick3DCache, "Failed to write qsbc file %s", qPrintable(filename));
         return false;
     }
 
@@ -243,6 +250,10 @@ bool QQsbInMemoryCollection::save(const QString &filename)
     }
 
     writeEndHeader(&f, entryMap);
+
+    qCDebug(lcQuick3DCache, "Writing %d material cache entries to %s",
+            int(entryMap.size()),
+            qPrintable(filename));
 
 #if QT_CONFIG(temporaryfile)
     return f.commit();
