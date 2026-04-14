@@ -52,6 +52,7 @@ qt_add_qml_module(volumeraycaster
         images/colormap-plasma.png
         images/colormap-rainbow.png
         images/colormap-viridis.png
+        images/Menu_Icon.svg
         alpha_blending.frag
         alpha_blending.vert
         SpacingMap.mjs

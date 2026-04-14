@@ -363,7 +363,7 @@ ApplicationWindow {
 
     RoundButton {
         id: iconOpen
-        text: "\u2630" // Unicode Character 'TRIGRAM FOR HEAVEN', no qsTr()
+        icon.source: "images/Menu_Icon.svg"
         x: settingsPane.x + settingsPane.width + 10
         y: 10
         onClicked: settingsPane.toggleHide()
