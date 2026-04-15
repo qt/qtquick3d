@@ -13,12 +13,16 @@ set_property(CACHE INPUT_quick3d_assimp PROPERTY STRINGS undefined no qt system)
 
 #### Libraries
 
-qt_find_package(WrapQuick3DAssimp 5.1.6 PROVIDED_TARGETS WrapQuick3DAssimp::WrapQuick3DAssimp
+qt_find_package(WrapQuick3DAssimp PROVIDED_TARGETS WrapQuick3DAssimp::WrapQuick3DAssimp
     MODULE_NAME assetimporters
     QMAKE_LIB quick3d_assimp
     VCPKG_PORT assimp
     VCPKG_ADD_TO_FEATURE quick3d-assimp
 )
+set(assimp_minimum_version 5.1.6)
+if (assimp_VERSION AND assimp_VERSION VERSION_LESS assimp_minimum_version)
+    message(FATAL_ERROR "Assimp version ${assimp_VERSION} is not supported, please use version ${assimp_minimum_version} or later")
+endif()
 
 # Work around QTBUG-115064
 # Assimp depends on draco_X, but only one of the two targets gets promoted by qt_find_package
@@ -40,7 +44,7 @@ qt_config_compile_test("quick3d_assimp"
                    LABEL "Assimp"
                    PROJECT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../config.tests/quick3d_assimp"
                    LIBRARIES WrapQuick3DAssimp::WrapQuick3DAssimp
-                   PACKAGES PACKAGE WrapQuick3DAssimp 5.1.6)
+                   PACKAGES PACKAGE WrapQuick3DAssimp)
 
 
 #### Tests
