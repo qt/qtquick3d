@@ -1162,9 +1162,16 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                  // values for the light probe.
                 if (featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe)) {
                     int reflectionSampler = shaderPipeline->bindingForTexture("qt_reflectionMap");
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
-                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
                     QRhiTexture* reflectionTexture = inData.getReflectionMapManager()->reflectionMapEntry(subsetRenderable.reflectionProbeIndex)->m_rhiPrefilteredCube;
+                    const auto mipMapFilter = reflectionTexture && reflectionTexture->flags().testFlag(QRhiTexture::Flag::MipMapped)
+                            ? QRhiSampler::Linear
+                            : QRhiSampler::None;
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             mipMapFilter,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::Repeat });
                     if (reflectionSampler >= 0 && reflectionTexture)
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
                 } else if (shaderPipeline->lightProbeTexture()) {
@@ -3318,9 +3325,16 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
                 // Reflection probe or light probe
                 if (featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe)) {
                     int reflectionSampler = shaderPipeline->bindingForTexture("qt_reflectionMap");
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
-                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
                     QRhiTexture* reflectionTexture = inData.getReflectionMapManager()->reflectionMapEntry(subsetRenderable.reflectionProbeIndex)->m_rhiPrefilteredCube;
+                    const auto mipMapFilter = reflectionTexture && reflectionTexture->flags().testFlag(QRhiTexture::Flag::MipMapped)
+                            ? QRhiSampler::Linear
+                            : QRhiSampler::None;
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             mipMapFilter,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::Repeat });
                     if (reflectionSampler >= 0 && reflectionTexture)
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
                 } else if (shaderPipeline->lightProbeTexture()) {
@@ -3645,9 +3659,16 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
                 // values for the light probe.
                 if (featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe)) {
                     int reflectionSampler = shaderPipeline->bindingForTexture("qt_reflectionMap");
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
-                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
                     QRhiTexture* reflectionTexture = inData.getReflectionMapManager()->reflectionMapEntry(subsetRenderable.reflectionProbeIndex)->m_rhiPrefilteredCube;
+                    const auto mipMapFilter = reflectionTexture && reflectionTexture->flags().testFlag(QRhiTexture::Flag::MipMapped)
+                            ? QRhiSampler::Linear
+                            : QRhiSampler::None;
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             mipMapFilter,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::Repeat });
                     if (reflectionSampler >= 0 && reflectionTexture)
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
                 } else if (shaderPipeline->lightProbeTexture()) {
