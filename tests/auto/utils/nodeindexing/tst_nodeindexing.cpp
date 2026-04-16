@@ -22,6 +22,7 @@ private slots:
     void testIndexingWithChildren();
     void testIndexingWithMultipleViews();
     void testIndexingWithImportScene();
+    void testVersionWrapAround();
 
 private:
     static void removeFromLayer(QSSGRenderLayer &layer, std::vector<QSSGRenderNode *> &nodes);
@@ -218,6 +219,43 @@ void tst_NodeIndexing::testIndexingWithImportScene()
     }
 
     qDeleteAll(mainLayerNodes);
+}
+
+void tst_NodeIndexing::testVersionWrapAround()
+{
+    using VersionType = QSSGRenderNodeVersionType;
+
+    QSSGRenderLayer layer;
+    layer.ref(&rootNode);
+    rootNode.addChild(layer);
+
+    auto *node = new QSSGRenderNode(QSSGRenderNode::Type::Node);
+    layer.addChild(*node);
+
+    rootNode.reindex();
+    QVERIFY(node->h.hasId());
+
+    // Bypass the counter directly to just below the maximum, avoiding the need
+    // to iterate through all 65535 values in the test.
+    auto &gnd = *rootNode.globalNodeData();
+    gnd.m_version = std::numeric_limits<VersionType>::max() - 1;
+
+    // Reindex to reach the maximum version value.
+    rootNode.reindex();
+    QVERIFY(node->h.hasId());
+    QCOMPARE(node->h.version(), std::numeric_limits<VersionType>::max());
+    QCOMPARE(layer.lh.version(), std::numeric_limits<VersionType>::max());
+
+    // One more reindex wraps max + 1 to 0; the guard skips 0 and bumps to 1.
+    // Nodes and the layer handle must remain valid.
+    rootNode.reindex();
+    QVERIFY(node->h.hasId());
+    QCOMPARE(node->h.version(), VersionType(1));
+    QCOMPARE(layer.lh.version(), VersionType(1));
+
+    layer.removeChild(*node);
+    delete node;
+    rootNode.removeChild(layer);
 }
 
 void tst_NodeIndexing::removeFromLayer(QSSGRenderLayer &layer, std::vector<QSSGRenderNode *> &nodes)

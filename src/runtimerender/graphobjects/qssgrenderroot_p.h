@@ -33,6 +33,8 @@ public:
     QSSGRenderRoot();
     ~QSSGRenderRoot();
 
+    using VersionType = QSSGRenderNodeVersionType;
+
     enum class DirtyFlag : quint8
     {
         TreeDirty = 0x1
@@ -62,12 +64,12 @@ public:
     // changes, as that avoids accidentally re-using the same
     // version when re-indexing the layer node, as that can cause
     // issues.
-    void setStartVersion(quint32 startVersion)
+    void setStartVersion(VersionType startVersion)
     {
         m_startVersion = startVersion;
     }
 
-    [[nodiscard]] quint32 startVersion() const
+    [[nodiscard]] VersionType startVersion() const
     {
         return m_startVersion;
     }
@@ -81,7 +83,7 @@ public:
 
 private:
     QSSGRenderRoot *self = this;
-    quint32 m_startVersion = 0;
+    VersionType m_startVersion = 0;
     std::shared_ptr<QSSGGlobalRenderNodeData> m_gnd;
     FlagT m_rootDirtyFlags = FlagT(DirtyFlag::TreeDirty);
 };

@@ -25,6 +25,8 @@
 #include <unordered_map>
 #include <memory>
 
+class tst_NodeIndexing;
+
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderNode;
@@ -52,6 +54,8 @@ public:
         size_t size = 0;
     };
 
+    using VersionType = QSSGRenderNodeVersionType;
+
     using LayerNodeView = QSSGDataView<QSSGRenderNode *>;
 
     using GlobalTransformStore = std::vector<QMatrix4x4>;
@@ -70,7 +74,7 @@ public:
     // anyone holding a reference to us decides to query something.
     void invalidate();
 
-    [[nodiscard]] quint32 version() const { return m_version; }
+    [[nodiscard]] VersionType version() const { return m_version; }
 
     // NOTE: The node count is the number of nodes in the "world" tree.
     //       This is not the the same as the storage size. as some nodes
@@ -104,6 +108,8 @@ public:
 #endif // QT_CONFIG(thread)
 
 private:
+    friend class ::tst_NodeIndexing;
+
     void collectNodes(QSSGRenderRoot *rootNode);
     void updateGlobalState();
 
@@ -114,7 +120,7 @@ private:
     QSSGRenderRoot *m_rootNode = nullptr;
     size_t m_size = 0;
     size_t m_nodeCount = 0;
-    quint32 m_version = 0;
+    VersionType m_version = 0;
 };
 
 using QSSGGlobalRenderNodeDataPtr = std::shared_ptr<QSSGGlobalRenderNodeData>;
@@ -137,6 +143,7 @@ public:
     };
 
     using GlobalStateResultT = std::underlying_type_t<GlobalStateResult>;
+    using VersionType = QSSGRenderNodeVersionType;
 
     /*!
         \brief calcGlobalNodeData
@@ -155,7 +162,7 @@ public:
     */
     template <Strategy strategy>
     static bool calcGlobalNodeData(QSSGRenderNode *node,
-                                   const quint32 version,
+                                   const VersionType version,
                                    QSSGGlobalRenderNodeData::GlobalTransformStore &globalTransforms,
                                    QSSGGlobalRenderNodeData::GlobalOpacityStore &globalOpacities)
     {
@@ -179,7 +186,7 @@ public:
               indexed!!!
     */
     static bool calcInstanceTransforms(QSSGRenderNode *node,
-                                       const quint32 version,
+                                       const VersionType version,
                                        QSSGGlobalRenderNodeData::GlobalTransformStore &globalTransforms,
                                        QSSGGlobalRenderNodeData::InstanceTransformStore &instanceTransforms);
 
@@ -193,14 +200,14 @@ public:
         The function is used to update the global state flagsfor the given node,
         meaning the global active and pickable state of the node.
     */
-    static GlobalStateResult updateGlobalNodeState(QSSGRenderNode *node, const quint32 version);
+    static GlobalStateResult updateGlobalNodeState(QSSGRenderNode *node, const VersionType version);
 private:
     static bool updateGlobalNodeDataIndexed(QSSGRenderNode *node,
-                                            const quint32 version,
+                                            const VersionType version,
                                             QSSGGlobalRenderNodeData::GlobalTransformStore &globalTransforms,
                                             QSSGGlobalRenderNodeData::GlobalOpacityStore &globalOpacities);
     static bool calcGlobalVariablesIndexed(QSSGRenderNode *node,
-                                           const quint32 version,
+                                           const VersionType version,
                                            QSSGGlobalRenderNodeData::GlobalTransformStore &globalTransforms,
                                            QSSGGlobalRenderNodeData::GlobalOpacityStore &globalOpacities);
 };

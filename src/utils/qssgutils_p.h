@@ -46,31 +46,40 @@ enum class HandleType
     Item2D
 };
 
+using QSSGRenderNodeVersionType = quint16;
+
 template <HandleType>
 class QSSGRenderStorageHandle
 {
 public:
+    using ContextType = quint16;
+    using VersionType = QSSGRenderNodeVersionType;
+    using IndexType = quint32;
+    static constexpr size_t ContextBits = std::numeric_limits<ContextType>::digits;
+    static constexpr size_t VersionBits = std::numeric_limits<VersionType>::digits;
+    static constexpr size_t IndexBits = std::numeric_limits<IndexType>::digits;
+
     QSSGRenderStorageHandle() = default;
-    explicit QSSGRenderStorageHandle(quint32 ctx, quint32 version, quint32 index)
+    explicit QSSGRenderStorageHandle(ContextType ctx, VersionType version, IndexType index)
         : m_ctx(ctx), m_version(version), m_index(index)
     {
     }
 
-    // NOTE: Version and index should always be > 0 when used.
+    // NOTE: Version should always be > 0 when used (0 = default-constructed / invalid).
     bool hasId() const { return m_id != 0; }
 
-    quint32 context() const { return quint32(m_ctx); }
-    quint32 version() const { return quint32(m_version); }
-    quint32 index() const { return quint32(m_index); }
+    ContextType context() const { return m_ctx; }
+    VersionType version() const { return m_version; }
+    IndexType index() const { return m_index; }
 
     quint64 id() const { return m_id; }
 
 private:
     union {
         struct {
-            quint64 m_ctx : 16;
-            quint64 m_version : 16;
-            quint64 m_index : 32;
+            quint64 m_ctx : ContextBits;
+            quint64 m_version : VersionBits;
+            quint64 m_index : IndexBits;
         };
         quint64 m_id = 0;
     };
