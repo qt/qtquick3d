@@ -767,7 +767,7 @@ private:
     QSSGFrameData frameData;
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set
-    quint32 version = 0;
+    QSSGRenderNodeVersionType version = 0;
     bool particlesEnabled = true;
     bool hasDepthWriteObjects = false;
     bool zPrePassActive = false;
