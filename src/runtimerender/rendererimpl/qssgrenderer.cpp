@@ -893,7 +893,7 @@ QSSGRendererPrivate::closestPointOnSubsetRenderable(const QSSGRenderLayer& layer
 
     QMutexLocker mutexLocker(bufferManager.meshUpdateMutex());
 
-    auto mesh = bufferManager.getMeshForPicking(model);
+    auto mesh = bufferManager.getMeshForPicking(model, model.hasLightmap() ? layer.lightmapSource : QString());
     if (!mesh)
         return std::nullopt;
 
@@ -985,7 +985,7 @@ void QSSGRendererPrivate::intersectRayWithSubsetRenderable(const QSSGRenderLayer
     // guard should really only be locked whenever a custom geometry buffer is being updated
     // on the render thread.  Still naughty though because this can block the render thread.
     QMutexLocker mutexLocker(bufferManager.meshUpdateMutex());
-    auto mesh = bufferManager.getMeshForPicking(model);
+    auto mesh = bufferManager.getMeshForPicking(model, model.hasLightmap() ? layer.lightmapSource : QString());
     if (!mesh)
         return;
 

@@ -134,7 +134,7 @@ public:
     QSSGRenderImageTexture loadLightmap(const QSSGRenderModel &model);
     QSSGRenderImageTexture loadSkinmap(QSSGRenderTextureData *skin);
 
-    QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model) const;
+    QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model, const QString &lightmap) const;
     QSSGBounds3 getModelBounds(const QSSGRenderModel *model);
 
     QSSGRenderMesh *loadMesh(const QSSGRenderModel &model);
@@ -144,7 +144,7 @@ public:
     void cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *layer);
     void resetUsageCounters(quint32 frameId, QSSGRenderLayer *layer);
 
-    void releaseGeometry(QSSGRenderGeometry *geometry);
+    void releaseGeometry(QSSGRenderGeometry *geometry, const QString &lightmapSource = QString());
     void releaseTextureData(const QSSGRenderTextureData *data);
     void releaseTextureData(const CustomImageCacheKey &key);
     void releaseExtensionResult(const QSSGRenderExtension &rext);
@@ -181,8 +181,8 @@ public:
     const QHash<ImageCacheKey, ImageData> &getImageMap() const { return imageMap; }
     const QHash<CustomImageCacheKey, ImageData> &getCustomTextureMap() const { return customTextureMap; }
     const QHash<QSGTexture *, ImageData> &getSGImageMap() const { return qsgImageMap; }
-    const QHash<QSSGRenderPath, MeshData> &getMeshMap() const { return meshMap; }
-    const QHash<QSSGRenderGeometry *, MeshData> &getCustomMeshMap() const { return customMeshMap; }
+    const QHash<std::pair<QSSGRenderPath, QString>, MeshData> &getMeshMap() const { return meshMap; }
+    const QHash<std::pair<QSSGRenderGeometry *, QString>, MeshData> &getCustomMeshMap() const { return customMeshMap; }
 
     void setLightmapSource(const QString &source);
     void setCurrentlyLightmapBaking(bool value);
@@ -223,8 +223,8 @@ private:
     QHash<CustomImageCacheKey, ImageData> customTextureMap;     // Textures (QQuick3DTextureData)
     QHash<QSGTexture *, ImageData> qsgImageMap;                 // Textures (from Qt Quick)
     QHash<const QSSGRenderExtension *, ImageData> renderExtensionTexture; // Textures (from QQuick3DRenderExtension)
-    QHash<QSSGRenderPath, MeshData> meshMap;                    // Meshes (specififed by path)
-    QHash<QSSGRenderGeometry *, MeshData> customMeshMap;        // Meshes (QQuick3DGeometry)
+    QHash<std::pair<QSSGRenderPath, QString>, MeshData> meshMap; // Meshes (specififed by path)
+    QHash<std::pair<QSSGRenderGeometry *, QString>, MeshData> customMeshMap; // Meshes (QQuick3DGeometry)
 
     using QSSGUserRenderPassManagerWeakPtr = std::weak_ptr<QSSGUserRenderPassManager>;
     std::vector<QSSGUserRenderPassManagerWeakPtr> userRenderPassManagers;

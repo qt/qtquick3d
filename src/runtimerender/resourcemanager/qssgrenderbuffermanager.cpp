@@ -378,16 +378,18 @@ QSSGRenderImageTexture QSSGBufferManager::loadSkinmap(QSSGRenderTextureData *ski
     return loadTextureData(skin, MipModeDisable);
 }
 
-QSSGRenderMesh *QSSGBufferManager::getMeshForPicking(const QSSGRenderModel &model) const
+QSSGRenderMesh *QSSGBufferManager::getMeshForPicking(const QSSGRenderModel &model, const QString &lightmap) const
 {
     if (!model.meshPath.isNull()) {
-        const auto foundIt = meshMap.constFind(model.meshPath);
+        auto key = std::make_pair(model.meshPath, lightmap);
+        const auto foundIt = meshMap.constFind(key);
         if (foundIt != meshMap.constEnd())
             return foundIt->mesh;
     }
 
     if (model.geometry) {
-        const auto foundIt = customMeshMap.constFind(model.geometry);
+        auto key = std::make_pair(model.geometry, lightmap);
+        const auto foundIt = customMeshMap.constFind(key);
         if (foundIt != customMeshMap.constEnd())
             return foundIt->mesh;
     }
@@ -1260,7 +1262,8 @@ QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model)
     } else if (!model->meshPath.isNull()){
         // Check if the Mesh is already loaded
         QSSGRenderMesh *theMesh = nullptr;
-        auto meshItr = meshMap.constFind(model->meshPath);
+        auto key = std::make_pair(model->meshPath, QString());
+        auto meshItr = meshMap.constFind(key);
         if (meshItr != meshMap.cend())
             theMesh = meshItr.value().mesh;
         if (theMesh) {
@@ -1467,10 +1470,11 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
     return newMesh;
 }
 
-void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
+void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry, const QString &lightmapSource)
 {
     QMutexLocker meshMutexLocker(&meshBufferMutex);
-    const auto meshItr = customMeshMap.constFind(geometry);
+    auto key = std::make_pair(geometry, lightmapSource);
+    const auto meshItr = customMeshMap.constFind(key);
     if (meshItr != customMeshMap.cend()) {
         if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
             qDebug() << "- releaseGeometry: " << geometry << currentLayer;
@@ -1540,7 +1544,8 @@ void QSSGBufferManager::releaseUserRenderPass(const QSSGRenderUserPass &upass)
 void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
 {
     QMutexLocker meshMutexLocker(&meshBufferMutex);
-    const auto meshItr = meshMap.constFind(inSourcePath);
+    auto key = std::make_pair(inSourcePath, lightmapSource);
+    const auto meshItr = meshMap.constFind(key);
     if (meshItr != meshMap.cend()) {
         if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
             qDebug() << "- releaseMesh: " << inSourcePath.path() << currentLayer;
@@ -1615,7 +1620,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
         while (meshIterator != meshMap.cend()) {
             if (isUnused(meshIterator.value().usageCounts)) {
                 if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
-                   qDebug() << "- releaseGeometry: " << meshIterator.key().path() << currentLayer;
+                    qDebug() << "- releaseGeometry: " << meshIterator.key().first.path() << currentLayer;
                 decreaseMemoryStat(meshIterator.value().mesh);
                 rhiCtxD->releaseMesh(meshIterator.value().mesh);
                 meshIterator = meshMap.erase(meshIterator);
@@ -1769,8 +1774,10 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
     if (inMeshPath.isNull())
         return nullptr;
 
+    auto key = std::make_pair(inMeshPath, options.lightmapPath);
+
     // check if it is already loaded
-    auto meshItr = meshMap.find(inMeshPath);
+    auto meshItr = meshMap.find(key);
     if (meshItr != meshMap.cend()) {
         if (options.isCompatible(meshItr.value().options)) {
             meshItr.value().usageCounts[currentLayer]++;
@@ -1780,7 +1787,8 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
             // mesh to be released before the next frame starts.
             auto *mesh = meshItr->mesh;
             meshMap.erase(meshItr);
-            meshMap.insert(QSSGRenderPath(inMeshPath.path() + u"@reaped"), { mesh, {{currentLayer, 0}}, 0, {} });
+            auto keyReaped = std::make_pair(QSSGRenderPath(inMeshPath.path() + u"@reaped"), QString());
+            meshMap.insert(keyReaped, { mesh, { { currentLayer, 0 } }, 0, { } });
         }
     }
 
@@ -1804,7 +1812,7 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
         qDebug() << "+ uploadGeometry: " << inMeshPath.path() << currentLayer;
 
     auto ret = createRenderMesh(mesh, debugObjectName);
-    meshMap.insert(inMeshPath, { ret, {{currentLayer, 1}}, 0, options });
+    meshMap.insert(key, { ret, { { currentLayer, 1 } }, 0, options });
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
     rhiCtxD->registerMesh(ret);
     increaseMemoryStat(ret);
@@ -1816,14 +1824,14 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
 QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, QSSGMeshProcessingOptions options)
 {
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
-
-    auto meshIterator = customMeshMap.find(geometry);
+    auto key = std::make_pair(geometry, options.lightmapPath);
+    auto meshIterator = customMeshMap.find(key);
     if (meshIterator == customMeshMap.end()) {
-        meshIterator = customMeshMap.insert(geometry, MeshData());
+        meshIterator = customMeshMap.insert(key, MeshData());
     } else if (geometry->generationId() != meshIterator->generationId || !options.isCompatible(meshIterator->options)) {
         // Release old data
-        releaseGeometry(geometry);
-        meshIterator = customMeshMap.insert(geometry, MeshData());
+        releaseGeometry(geometry, options.lightmapPath);
+        meshIterator = customMeshMap.insert(key, MeshData());
     } else {
         // An up-to-date mesh was found
         meshIterator.value().usageCounts[currentLayer]++;
@@ -2021,7 +2029,7 @@ void QSSGBufferManager::clear()
             QSSGRenderMesh *theMesh = iter.value().mesh;
             if (theMesh) {
                 if (QSSGBufferManagerStat::enabled(QSSGBufferManagerStat::Level::Debug))
-                    qDebug() << "- releaseGeometry: " << iter.key().path() << currentLayer;
+                    qDebug() << "- releaseGeometry: " << iter.key().first.path() << currentLayer;
                 decreaseMemoryStat(theMesh);
                 rhiCtxD->releaseMesh(theMesh);
             }
