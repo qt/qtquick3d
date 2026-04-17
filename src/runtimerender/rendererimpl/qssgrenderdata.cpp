@@ -19,6 +19,9 @@
 #include "qssgrenderer_p.h"
 #include "resourcemanager/qssgrenderbuffermanager_p.h"
 
+#include <mutex>
+#include <condition_variable>
+
 QT_BEGIN_NAMESPACE
 
 Q_STATIC_LOGGING_CATEGORY(lcLayerData, "qt.quick3d.render.layerdata")
@@ -593,6 +596,13 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
         }
     }
 
+#if QT_CONFIG(thread)
+    bool matrixesDone = false;
+    bool mvpsDone = false;
+    std::mutex mutex;
+    std::condition_variable cv;
+#endif
+
     // - Normal matrices
     const auto doNormalMatrices = [&]() {
         for (const QSSGRenderModel *model : std::as_const(models)) {
@@ -600,6 +610,11 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
             const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*model);
             QSSGRenderNode::calculateNormalMatrix(globalTransform, normalMatrix);
         }
+#if QT_CONFIG(thread)
+        std::lock_guard<std::mutex> guard(mutex);
+        matrixesDone = true;
+        cv.notify_all();
+#endif
     };
 
     // - MVPs
@@ -611,6 +626,11 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
             for (const QSSGRenderCameraData &cameraData : renderCameraData)
                 QSSGRenderNode::calculateMVP(globalTransform, cameraData.viewProjection, mvp[mvpCount++]);
         }
+#if QT_CONFIG(thread)
+        std::lock_guard<std::mutex> guard(mutex);
+        mvpsDone = true;
+        cv.notify_all();
+#endif
     };
 
 #if QT_CONFIG(thread)
@@ -620,13 +640,9 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
         qWarning("Unable to start thread for %s!", #func); \
         func(); \
     }
-#define qssgTryWaitForDone() \
-    threadPool->waitForDone();
 #else
 #define qssgTryThreadedStart(func) \
     func();
-#define qssgTryWaitForDone() \
-    /* no-op */
 #endif // QT_CONFIG(thread)
 
     qssgTryThreadedStart(doNormalMatrices);
@@ -638,7 +654,10 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     prepareMeshData(models, renderer);
 
     // Wait for the threads to finish
-    qssgTryWaitForDone();
+#if QT_CONFIG(thread)
+    std::unique_lock<std::mutex> guard(mutex);
+    cv.wait(guard, [&]() { return matrixesDone && mvpsDone; });
+#endif
 }
 
 bool QSSGRenderDataHelpers::updateGlobalNodeDataIndexed(QSSGRenderNode *node, const VersionType version, QSSGGlobalRenderNodeData::GlobalTransformStore &globalTransforms, QSSGGlobalRenderNodeData::GlobalOpacityStore &globalOpacities)
