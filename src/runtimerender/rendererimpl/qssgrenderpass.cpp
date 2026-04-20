@@ -2132,8 +2132,10 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
                 ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::UsesScissor, *pipelineCommand->m_usesScissor);
             if (pipelineCommand->m_depthFunction)
                 ps.depthFunc = *pipelineCommand->m_depthFunction;
-            if (pipelineCommand->m_cullMode)
+            if (pipelineCommand->m_cullMode) {
                 ps.cullMode = *pipelineCommand->m_cullMode;
+                ps.userSetCullMode = true;
+            }
             if (pipelineCommand->m_polygonMode)
                 ps.polygonMode = *pipelineCommand->m_polygonMode;
             if (pipelineCommand->m_stencilOpFrontState)

@@ -2955,7 +2955,8 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
 
         if (isCustomMaterial) {
             const auto &material = static_cast<const QSSGRenderCustomMaterial &>(*overrideMaterial);
-            ps.cullMode = QSSGRhiHelpers::toCullMode(material.m_cullMode);
+            if (!ps.userSetCullMode)
+                ps.cullMode = QSSGRhiHelpers::toCullMode(material.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
             shaderPipeline = customMaterialSystem.shadersForCustomMaterial(&ps, material, subsetRenderable,
@@ -2969,7 +2970,8 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
             }
         } else {
             const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(*overrideMaterial);
-            ps.cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
+            if (!ps.userSetCullMode)
+                ps.cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
 
             shaderPipeline = shadersForDefaultMaterial(&ps, subsetRenderable, featureSet);
             if (shaderPipeline) {
@@ -3167,7 +3169,8 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
-            ps.cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
+            if (!ps.userSetCullMode)
+                ps.cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
 
             shaderPipeline = shadersForDefaultMaterial(&ps, subsetRenderable, featureSet);
             if (shaderPipeline) {
@@ -3180,7 +3183,8 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
         } else if (obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const auto &material = static_cast<const QSSGRenderCustomMaterial &>(subsetRenderable.getMaterial());
-            ps.cullMode = QSSGRhiHelpers::toCullMode(material.m_cullMode);
+            if (!ps.userSetCullMode)
+                ps.cullMode = QSSGRhiHelpers::toCullMode(material.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
             shaderPipeline = customMaterialSystem.shadersForCustomMaterial(&ps, material, subsetRenderable,
@@ -3486,7 +3490,8 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const auto &material = static_cast<const QSSGRenderDefaultMaterial &>(subsetRenderable.getMaterial());
-            ps.cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
+            if (!ps.userSetCullMode)
+                ps.cullMode = QSSGRhiHelpers::toCullMode(material.cullMode);
 
             shaderPipeline = shadersForDefaultMaterial(&ps, subsetRenderable, featureSet, shaderAugmentation);
             if (shaderPipeline) {
@@ -3501,7 +3506,8 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
         } else if (obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const auto &material = static_cast<const QSSGRenderCustomMaterial &>(subsetRenderable.getMaterial());
-            ps.cullMode = QSSGRhiHelpers::toCullMode(material.m_cullMode);
+            if (!ps.userSetCullMode)
+                ps.cullMode = QSSGRhiHelpers::toCullMode(material.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
             // Don't apply a shader augmentation to an unshaded custom material (they should do their own augmentations with preprocessor conditionals)
