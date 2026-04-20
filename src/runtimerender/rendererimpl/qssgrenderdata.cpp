@@ -248,7 +248,7 @@ bool QSSGRenderDataHelpers::calcInstanceTransforms(QSSGRenderNode *node,
 }
 
 QSSGGlobalRenderNodeData::QSSGGlobalRenderNodeData(QSSGRenderRoot *root)
-#if QT_CONFIG(thread)
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
     : m_threadPool(new QThreadPool)
     , m_rootNode(root)
 #else
@@ -347,7 +347,11 @@ float QSSGGlobalRenderNodeData::getGlobalOpacity(const QSSGRenderNode &node) con
 }
 
 #if QT_CONFIG(thread)
-const std::unique_ptr<QThreadPool> &QSSGGlobalRenderNodeData::threadPool() const { return m_threadPool; }
+#ifdef Q_OS_WASM
+QThreadPool *QSSGGlobalRenderNodeData::threadPool() const { return nullptr; }
+#else
+QThreadPool *QSSGGlobalRenderNodeData::threadPool() const { return m_threadPool.get(); }
+#endif
 #endif // QT_CONFIG(thread)
 
 QSSGGlobalRenderNodeData::LayerNodeView QSSGGlobalRenderNodeData::getLayerNodeView(QSSGRenderLayerHandle h) const
@@ -596,7 +600,7 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
         }
     }
 
-#if QT_CONFIG(thread)
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
     bool matrixesDone = false;
     bool mvpsDone = false;
     std::mutex mutex;
@@ -610,7 +614,7 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
             const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*model);
             QSSGRenderNode::calculateNormalMatrix(globalTransform, normalMatrix);
         }
-#if QT_CONFIG(thread)
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
         std::lock_guard<std::mutex> guard(mutex);
         matrixesDone = true;
         cv.notify_all();
@@ -626,7 +630,7 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
             for (const QSSGRenderCameraData &cameraData : renderCameraData)
                 QSSGRenderNode::calculateMVP(globalTransform, cameraData.viewProjection, mvp[mvpCount++]);
         }
-#if QT_CONFIG(thread)
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
         std::lock_guard<std::mutex> guard(mutex);
         mvpsDone = true;
         cv.notify_all();
@@ -634,9 +638,11 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     };
 
 #if QT_CONFIG(thread)
-    const auto &threadPool = m_gnd->threadPool();
+    auto *threadPool = m_gnd->threadPool();
 #define qssgTryThreadedStart(func) \
-    if (!threadPool->tryStart(func)) { \
+    if (!threadPool) { \
+        func(); \
+    } else if (!threadPool->tryStart(func)) { \
         qWarning("Unable to start thread for %s!", #func); \
         func(); \
     }
@@ -654,7 +660,7 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     prepareMeshData(models, renderer);
 
     // Wait for the threads to finish
-#if QT_CONFIG(thread)
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
     std::unique_lock<std::mutex> guard(mutex);
     cv.wait(guard, [&]() { return matrixesDone && mvpsDone; });
 #endif
