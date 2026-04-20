@@ -2496,7 +2496,9 @@ void QSSGLayerRenderData::prepareForRender()
     quint32 layerMask = QSSGRenderCamera::LayerMaskAll;
     if (hasExplicitCamera) {
         QSSGRenderCamera *explicitCamera = layer.explicitCameras[0];
-        layerMask = explicitCamera->tag.value();
+        // For now we add the reserved bits to the camera layer mask.
+        // In the future we might want to control which reserved bits are added.
+        layerMask = explicitCamera->tag.value() | QSSGRenderCamera::ReservedLayerMask;
         cameraLayerMaskDirty = explicitCamera->isDirty(QSSGRenderCamera::DirtyFlag::LayerMaskDirty);
         explicitCamera->clearDirty(QSSGRenderCamera::DirtyFlag::LayerMaskDirty);
     }
@@ -2544,11 +2546,11 @@ void QSSGLayerRenderData::prepareForRender()
         // Issue a warning letting the user know that they should set an explicit camera!
         // If you are reading this due to seeing the warning: Not requiring an explicit camera was
         // a mistake, but we kept it for compatability reasons unfortunately.
-        if (renderedCameras.size() > 0 && renderedCameras[0]->layerMask != QSSGRenderCamera::LayerMaskAll) {
+        if (renderedCameras.size() > 0 && (renderedCameras[0]->layerMask & QSSGRenderCamera::LayerMaskUserAll) != QSSGRenderCamera::LayerMaskUserAll) {
             if (!nonExplicitCameraWithLayerMaskWarningShown) {
                 nonExplicitCameraWithLayerMaskWarningShown = true;
                 qWarning() << "Scenes with non-explicit cameras with a layer detected!"
-                              " Set the camera explicitly to avoid unecessery evaluation of scene nodes!";
+                              " Set the camera explicitly to avoid unnecessary evaluation of scene nodes!";
             }
 
             // Now filter the nodes, again.

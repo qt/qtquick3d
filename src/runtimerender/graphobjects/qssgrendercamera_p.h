@@ -125,7 +125,10 @@ public:
 
     static constexpr DirtyFlag DirtyMask { std::numeric_limits<FlagT>::max() };
 
-    static constexpr quint32 LayerMaskAll = 0xFFFFFFFF; // Default to all layers
+    static constexpr quint32 ReservedLayerMask = 0xFF000000; // The upper 8 bits are reserved for internal use.
+    static constexpr quint32 LayerMaskUserAll = 0x00FFFFFF; // The lower 24 bits are available for user layers.
+    // Default to all layers (user + reserved).
+    static constexpr quint32 LayerMaskAll = LayerMaskUserAll | ReservedLayerMask;
 
     class ClipPlanes : public QVector2D
     {
