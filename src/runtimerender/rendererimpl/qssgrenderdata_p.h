@@ -104,7 +104,7 @@ public:
     //       This thread pool is not intended for async calls.
     //       For long running tasks use the global thread pool instead.
     //       (Threads executed here are expected to be done before the sync has ended).
-    const std::unique_ptr<QThreadPool> &threadPool() const;
+    QThreadPool *threadPool() const;
 #endif // QT_CONFIG(thread)
 
 private:
@@ -113,7 +113,7 @@ private:
     void collectNodes(QSSGRenderRoot *rootNode);
     void updateGlobalState();
 
-#if QT_CONFIG(thread)
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
     std::unique_ptr<QThreadPool> m_threadPool;
 #endif // QT_CONFIG(thread)
 
