@@ -37,7 +37,8 @@ class QSSGRenderPath
 public:
     QSSGRenderPath() = default;
     explicit inline QSSGRenderPath(const QString &p, const QString &lightmapKey = {}) noexcept
-        : m_path(p), m_lightmapKey(lightmapKey), m_key(qHash(p + lightmapKey, QHashSeed::globalSeed()))
+        : m_path(p), m_lightmapKey(lightmapKey),
+          m_key{qHashMulti(QHashSeed::globalSeed(), p, lightmapKey)}
     {
     }
 
@@ -46,7 +47,10 @@ public:
     QString path() const { return m_path; }
 private:
     friend bool operator==(const QSSGRenderPath &, const QSSGRenderPath &);
-    friend size_t qHash(const QSSGRenderPath &, size_t) Q_DECL_NOTHROW;
+    friend size_t qHash(const QSSGRenderPath &key, size_t seed = 0) noexcept
+    {
+        return key.m_key ? key.m_key : qHashMulti(seed, key.m_path, key.m_lightmapKey);
+    }
     QString m_path;
     QString m_lightmapKey;
     size_t m_key = 0;
@@ -55,11 +59,6 @@ private:
 inline bool operator==(const QSSGRenderPath &p1, const QSSGRenderPath &p2)
 {
     return (p1.m_key == p2.m_key) && (p1.m_path == p2.m_path) && (p1.m_lightmapKey == p2.m_lightmapKey);
-}
-
-inline size_t qHash(const QSSGRenderPath &path, size_t seed) Q_DECL_NOTHROW
-{
-    return (path.m_key) ? path.m_key : qHash(path.m_path + path.m_lightmapKey, seed);
 }
 
 QT_END_NAMESPACE
