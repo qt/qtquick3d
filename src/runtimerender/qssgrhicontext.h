@@ -54,6 +54,7 @@ public:
     Flags flags;
     QRhiViewport viewport;
     QRhiScissor scissor;
+    bool userSetCullMode = false; // set by PipelineStateOverride; not part of the pipeline cache key
 
 private:
     friend struct QSSGRhiGraphicsPipelineStatePrivate;
