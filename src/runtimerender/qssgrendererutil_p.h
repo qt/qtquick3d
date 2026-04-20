@@ -20,6 +20,9 @@
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
+#include <QtCore/qhashfunctions.h>
+#include <QtCore/qstring.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QSSGRendererUtil
