@@ -36,30 +36,36 @@ class QSSGRenderPath
 {
 public:
     QSSGRenderPath() = default;
-    explicit inline QSSGRenderPath(const QString &p, const QString &lightmapKey = {}) noexcept
+    explicit QSSGRenderPath(const QString &p, const QString &lightmapKey = {}) noexcept
         : m_path(p), m_lightmapKey(lightmapKey),
-          m_key{qHashMulti(QHashSeed::globalSeed(), p, lightmapKey)}
+          m_key{qHashMulti(size_t(0), p, lightmapKey)}
     {
     }
 
-    inline bool isNull() const { return m_path.isNull(); }
-    inline bool isEmpty() const { return m_path.isEmpty(); }
+    bool isNull() const { return m_path.isNull(); }
+    bool isEmpty() const { return m_path.isEmpty(); }
     QString path() const { return m_path; }
+
 private:
-    friend bool operator==(const QSSGRenderPath &, const QSSGRenderPath &);
-    friend size_t qHash(const QSSGRenderPath &key, size_t seed = 0) noexcept
+    friend bool operator==(const QSSGRenderPath &p1, const QSSGRenderPath &p2) noexcept
     {
-        return key.m_key ? key.m_key : qHashMulti(seed, key.m_path, key.m_lightmapKey);
+        return p1.m_key == p2.m_key
+                && p1.m_path == p2.m_path
+                && p1.m_lightmapKey == p2.m_lightmapKey;
     }
+    friend bool operator!=(const QSSGRenderPath &p1, const QSSGRenderPath &p2) noexcept
+    {
+        return !(p1 == p2);
+    }
+    friend size_t qHash(const QSSGRenderPath &key, size_t seed) noexcept
+    {
+        return qHash(key.m_key, seed);
+    }
+
     QString m_path;
     QString m_lightmapKey;
     size_t m_key = 0;
 };
-
-inline bool operator==(const QSSGRenderPath &p1, const QSSGRenderPath &p2)
-{
-    return (p1.m_key == p2.m_key) && (p1.m_path == p2.m_path) && (p1.m_lightmapKey == p2.m_lightmapKey);
-}
 
 QT_END_NAMESPACE
 
