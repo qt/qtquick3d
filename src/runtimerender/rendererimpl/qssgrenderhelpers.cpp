@@ -107,35 +107,6 @@ static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeli
                                                           lightmapTexture);
 }
 
-std::pair<QSSGBounds3, QSSGBounds3> RenderHelpers::calculateSortedObjectBounds(const QSSGRenderableObjectList &sortedOpaqueObjects,
-                                                                               const QSSGRenderableObjectList &sortedTransparentObjects)
-{
-    QSSGBounds3 boundsCasting;
-    QSSGBounds3 boundsReceiving;
-    for (const auto handles : { &sortedOpaqueObjects, &sortedTransparentObjects }) {
-        // Since we may have nodes that are not a child of the camera parent we go through all
-        // the opaque objects and include them in the bounds. Failing to do this can result in
-        // too small bounds.
-        for (const QSSGRenderableObjectHandle &handle : *handles) {
-            const QSSGRenderableObject &obj = *handle.obj;
-            // We skip objects not casting or receiving shadows since they don't influence or need to be covered by the shadow map
-            if (obj.renderableFlags.castsShadows()) {
-                if (!obj.globalBoundsInstancing.isEmpty())
-                    boundsCasting.include(obj.globalBoundsInstancing);
-                else
-                    boundsCasting.include(obj.globalBounds);
-            }
-            if (obj.renderableFlags.receivesShadows()) {
-                if (!obj.globalBoundsInstancing.isEmpty())
-                    boundsReceiving.include(obj.globalBoundsInstancing);
-                else
-                    boundsReceiving.include(obj.globalBounds);
-            }
-        }
-    }
-    return { boundsCasting, boundsReceiving };
-}
-
 static QSSGBoxPoints computeFrustumBounds(const QMatrix4x4 &projection)
 {
     bool invertible = false;

@@ -157,6 +157,18 @@ qsizetype QSSGLayerRenderData::frustumCulling(const QSSGClippingFrustum &clipFru
     return visibleRenderables.size();
 }
 
+static bool isObjectCullable(const QSSGClippingFrustum &clipFrustum, const QSSGRenderableObject &obj)
+{
+    if (obj.isInstanced) {
+        // when instancing is enabled we can use the shadowmap bounds if they are set, otherwise we disable culling
+        if (obj.globalBoundsInstancing.isEmpty() || clipFrustum.intersectsWith(obj.globalBoundsInstancing))
+            return false;
+    } else if (clipFrustum.intersectsWith(obj.globalBounds)) {
+        return false;
+    }
+    return true;
+}
+
 qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &clipFrustum, QSSGRenderableObjectList &renderables)
 {
     const qint32 end = renderables.size();
@@ -164,18 +176,8 @@ qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &c
     qint32 back = end - 1;
 
     while (front <= back) {
-        bool cull = true;
         const QSSGRenderableObject &obj = *renderables.at(front).obj;
-        if (obj.isInstanced) {
-            // when instancing is enabled we can use the shadowmap bounds if they are set, otherwise we disable culling
-            if (obj.globalBoundsInstancing.isEmpty() || clipFrustum.intersectsWith(obj.globalBoundsInstancing)) {
-                cull = false;
-            }
-        } else if (clipFrustum.intersectsWith(obj.globalBounds)) {
-            cull = false;
-        }
-
-        if (cull)
+        if (isObjectCullable(clipFrustum, obj))
             renderables.swapItemsAt(front, back--);
         else
             ++front;
@@ -886,6 +888,85 @@ const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedrenderedOpaqueDept
 {
     updateSortedDepthObjectsListImp(camera, index);
     return sortedOpaqueDepthPrepassCache[index][{&camera, camera.layerMask}];
+}
+
+void QSSGLayerRenderData::getShadowCastingObjects(const QSSGRenderCamera &camera,
+                                                  QSSGRenderableObjectList &outObjects,
+                                                  QSSGBounds3 &outBoundsCasting,
+                                                  QSSGBounds3 &outBoundsReceiving)
+{
+    constexpr int index = 0;
+
+    const QSSGRenderableObjectList transparentObjects = std::as_const(transparentObjectStore)[index];
+    const QSSGRenderableObjectList opaqueObjects = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)
+            ? std::as_const(opaqueObjectStore)[index]
+            : QSSGRenderableObjectList();
+    const QSSGRenderableObjectList screenTextureObjects = std::as_const(screenTextureObjectStore)[index];
+
+    outObjects.clear();
+    outObjects.reserve(transparentObjects.size() + opaqueObjects.size() + screenTextureObjects.size());
+
+    if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
+        if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::Opaque)) != 0) {
+            for (const auto &opaqueObject : std::as_const(opaqueObjects)) {
+                const auto depthMode = opaqueObject.obj->depthWriteMode;
+                if (opaqueObject.obj->renderableFlags.castsShadows() && opaqueObject.tag.value() & camera.layerMask
+                    && (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly
+                        || depthMode == QSSGDepthDrawMode::OpaquePrePass))
+                    outObjects.push_back(opaqueObject);
+            }
+        }
+        if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::Transparent)) != 0) {
+            for (const auto &transparentObject : std::as_const(transparentObjects)) {
+                const auto depthMode = transparentObject.obj->depthWriteMode;
+                if (transparentObject.obj->renderableFlags.castsShadows() && transparentObject.tag.value() & camera.layerMask
+                    && (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaquePrePass))
+                    outObjects.push_back(transparentObject);
+            }
+        }
+        if (hasDepthWriteObjects || (depthPrepassObjectsState & DepthPrepassObjectStateT(DepthPrepassObject::ScreenTexture)) != 0) {
+            for (const auto &screenTextureObject : std::as_const(screenTextureObjects)) {
+                const auto depthMode = screenTextureObject.obj->depthWriteMode;
+                if (screenTextureObject.obj->renderableFlags.castsShadows() && screenTextureObject.tag.value() & camera.layerMask
+                    && (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly
+                        || depthMode == QSSGDepthDrawMode::OpaquePrePass))
+                    outObjects.push_back(screenTextureObject);
+            }
+        }
+    }
+
+    outBoundsCasting = QSSGBounds3();
+    outBoundsReceiving = QSSGBounds3();
+
+    const auto &clippingFrustum = getCameraRenderData(&camera).clippingFrustum;
+    const bool doCulling = clippingFrustum.has_value();
+
+    for (const auto handles : { &opaqueObjects, &transparentObjects, &screenTextureObjects }) {
+        // Since we may have nodes that are not a child of the camera parent we go through all
+        // the opaque objects and include them in the bounds. Failing to do this can result in
+        // too small bounds.
+        for (const QSSGRenderableObjectHandle &handle : *handles) {
+            const QSSGRenderableObject &obj = *handle.obj;
+            if (!(handle.tag.value() & camera.layerMask))
+                continue;
+            // We skip objects not casting or receiving shadows since they don't influence or need to be covered by the shadow map
+            if (obj.renderableFlags.castsShadows()) {
+                if (!obj.globalBoundsInstancing.isEmpty())
+                    outBoundsCasting.include(obj.globalBoundsInstancing);
+                else
+                    outBoundsCasting.include(obj.globalBounds);
+            }
+            if (obj.renderableFlags.receivesShadows()) {
+                // We only cull receiving shadow objects from the bounds
+                if (doCulling && isObjectCullable(*clippingFrustum, obj))
+                    ; // skip
+                else if (!obj.globalBoundsInstancing.isEmpty())
+                    outBoundsReceiving.include(obj.globalBoundsInstancing);
+                else
+                    outBoundsReceiving.include(obj.globalBounds);
+            }
+        }
+    }
 }
 
 /**

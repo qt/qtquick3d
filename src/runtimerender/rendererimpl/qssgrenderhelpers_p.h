@@ -36,9 +36,6 @@ class QSSGRhiShaderPipeline;
 namespace RenderHelpers
 {
 
-std::pair<QSSGBounds3, QSSGBounds3> calculateSortedObjectBounds(const QSSGRenderableObjectList &sortedOpaqueObjects,
-                                                                const QSSGRenderableObjectList &sortedTransparentObjects);
-
 void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                         QSSGPassKey passKey,
                         QSSGRhiGraphicsPipelineState &ps,

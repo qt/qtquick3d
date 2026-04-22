@@ -173,20 +173,11 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
     camera = data.renderedCameras[0];
 
-    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects(*camera);
-    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects(*camera);
-
     QSSG_ASSERT(shadowPassObjects.isEmpty(), shadowPassObjects.clear());
 
-    for (const auto &handles : { &renderedDepthWriteObjects, &renderedOpaqueDepthPrepassObjects }) {
-        for (const auto &handle : *handles) {
-            if (handle.obj->renderableFlags.castsShadows())
-                shadowPassObjects.push_back(handle);
-        }
-    }
+    data.getShadowCastingObjects(*camera, shadowPassObjects, castingObjectsBox, receivingObjectsBox);
 
     globalLights = data.globalLights;
-
     enabled = !shadowPassObjects.isEmpty() || !globalLights.isEmpty();
 
     if (enabled) {
@@ -197,13 +188,6 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         // Try reducing self-shadowing and artifacts.
         ps.depthBias = 2;
         ps.slopeScaledDepthBias = 1.5f;
-
-        const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects(*camera);
-        const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects(*camera);
-        const auto [casting, receiving] = calculateSortedObjectBounds(sortedOpaqueObjects,
-                                                                      sortedTransparentObjects);
-        castingObjectsBox = casting;
-        receivingObjectsBox = receiving;
 
         if (!debugCamera) {
             debugCamera = std::make_unique<QSSGRenderCamera>(QSSGRenderGraphObject::Type::OrthographicCamera);
