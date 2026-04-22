@@ -376,6 +376,10 @@ public:
     const RenderableItem2DEntries &getRenderableItem2Ds();
     const QSSGRenderableObjectList &getSortedRenderedDepthWriteObjects(const QSSGRenderCamera &camera, size_t index = 0);
     const QSSGRenderableObjectList &getSortedrenderedOpaqueDepthPrepassObjects(const QSSGRenderCamera &camera, size_t index = 0);
+    void getShadowCastingObjects(const QSSGRenderCamera &camera,
+                                 QSSGRenderableObjectList &outObjects,
+                                 QSSGBounds3 &outBoundsCasting,
+                                 QSSGBounds3 &outBoundsReceiving);
 
     void resetForFrame();
 
