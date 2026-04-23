@@ -7,8 +7,8 @@
     "SecurityCritical": true,
 
     "Homepage": "https://github.com/syoyo/tinyexr",
-    "Version": "1.0.12",
-    "DownloadLocation": "https://github.com/syoyo/tinyexr/releases/tag/v1.0.12",
+    "Version": "1.0.13",
+    "DownloadLocation": "https://github.com/syoyo/tinyexr/releases/tag/v1.0.13",
     "PURL": [
         "pkg:github/syoyo/tinyexr@$v<VERSION>"
     ],

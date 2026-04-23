@@ -20,7 +20,13 @@
 #define TINYEXR_USE_MINIZ 0
 #define TINYEXR_USE_THREAD 1
 #include <zlib.h>
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_CLANG("-Wunused-parameter")
+QT_WARNING_DISABLE_CLANG("-Wunused-function")
+QT_WARNING_DISABLE_GCC("-Wunused-parameter")
+QT_WARNING_DISABLE_GCC("-Wunused-function")
 #include <tinyexr.h>
+QT_WARNING_POP
 #include "qssglightmapio_p.h"
 
 QT_BEGIN_NAMESPACE
