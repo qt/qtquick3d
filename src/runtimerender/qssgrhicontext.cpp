@@ -1622,7 +1622,7 @@ void QSSGRhiContextStats::printRenderPass(const QSSGRhiContextStats::RenderPassI
     }
 }
 
-void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size)
+void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size, bool hasDynamicOffset)
 {
 #ifdef QT_DEBUG
     if (p == MAX_SIZE) {
@@ -1638,10 +1638,10 @@ void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhiShaderR
     d->u.ubuf.buf = buf;
     d->u.ubuf.offset = offset;
     d->u.ubuf.maybeSize = size; // 0 = all
-    d->u.ubuf.hasDynamicOffset = false;
+    d->u.ubuf.hasDynamicOffset = hasDynamicOffset;
 }
 
-void QSSGRhiShaderResourceBindingList::addStorageBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size)
+void QSSGRhiShaderResourceBindingList::addStorageBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size, bool hasDynamicOffset)
 {
 #ifdef QT_DEBUG
     if (p == MAX_SIZE) {
@@ -1657,7 +1657,7 @@ void QSSGRhiShaderResourceBindingList::addStorageBuffer(int binding, QRhiShaderR
     d->u.ubuf.buf = buf;
     d->u.ubuf.offset = offset;
     d->u.ubuf.maybeSize = size; // 0 = all
-    d->u.ubuf.hasDynamicOffset = false;
+    d->u.ubuf.hasDynamicOffset = hasDynamicOffset;
 }
 
 void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, QRhiSampler *sampler)

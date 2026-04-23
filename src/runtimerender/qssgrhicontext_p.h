@@ -620,12 +620,12 @@ public:
         return *this;
     }
 
-    void addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset = 0 , int size = 0);
+    void addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset = 0 , int size = 0, bool hasDynamicOffset = false);
     void addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, QRhiSampler *sampler);
     void addImageLoad(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
     void addImageStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
     void addImageLoadStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
-    void addStorageBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset = 0 , int size = 0);
+    void addStorageBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset = 0 , int size = 0, bool hasDynamicOffset = false);
 };
 
 inline bool operator==(const QSSGRhiShaderResourceBindingList &a, const QSSGRhiShaderResourceBindingList &b) Q_DECL_NOTHROW
