@@ -45,7 +45,7 @@ Item {
             antialiasingQuality: SceneEnvironment.High
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
         }

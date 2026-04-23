@@ -17,7 +17,7 @@ Rectangle {
             clearColor: "black"
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(300, -135, 300)
         }

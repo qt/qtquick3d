@@ -33,7 +33,7 @@ Rectangle {
             eulerRotation.y: 45
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 350
         }
 

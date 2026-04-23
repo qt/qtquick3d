@@ -19,7 +19,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             //position: Qt.vector3d(0, 400, 600)
             eulerRotation: Qt.vector3d(-20, 0, 0)

@@ -11,12 +11,13 @@ Item {
     width: 460
     height: 460
 
+    PerspectiveCamera {
+        id: cam
+        z: 100
+    }
+
     Node {
         id: scene
-        PerspectiveCamera {
-            id: camera
-            z: 100
-        }
 
         DirectionalLight {
 
@@ -49,6 +50,7 @@ Item {
                 probeExposure: 0
                 exposure: 1.0
             }
+            camera: cam
 
             importScene: scene
         }
@@ -66,6 +68,7 @@ Item {
                 probeExposure: 10.0
                 exposure: 1.0
             }
+            camera: cam
 
             importScene: scene
         }
@@ -83,6 +86,7 @@ Item {
                 probeExposure: 1.0
                 exposure: 1.0
             }
+            camera: cam
 
             importScene: scene
         }
@@ -100,6 +104,7 @@ Item {
                 probeExposure: 1.0
                 exposure: 10.0
             }
+            camera: cam
 
             importScene: scene
         }

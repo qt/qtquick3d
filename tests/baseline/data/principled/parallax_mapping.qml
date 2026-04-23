@@ -13,7 +13,6 @@ Rectangle {
 
     View3D {
         anchors.fill: parent
-        camera: camera
         renderMode: View3D.Offscreen
 
         environment: SceneEnvironment {
@@ -29,7 +28,7 @@ Rectangle {
 
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 150
         }
 

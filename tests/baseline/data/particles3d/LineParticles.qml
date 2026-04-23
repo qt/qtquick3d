@@ -207,7 +207,7 @@ Item {
             antialiasingMode: SceneEnvironment.MSAA
             antialiasingQuality: SceneEnvironment.VeryHigh
         }
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(-50, 100, 500)
             clipFar: 2000

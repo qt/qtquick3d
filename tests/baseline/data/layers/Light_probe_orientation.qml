@@ -9,13 +9,13 @@ Rectangle {
     width: 800
     height: 480
     color: Qt.rgba(1, 1, 1, 1)
+    PerspectiveCamera {
+        id: cam
+        position.z: 200
+    }
 
     Node {
         id: sharedScene
-        PerspectiveCamera {
-            id: camera
-            position.z: 200
-        }
 
         PrincipledMaterial {
             id: default_002
@@ -48,6 +48,7 @@ Rectangle {
             backgroundMode: SceneEnvironment.SkyBox
             lightProbe: layer_lightprobe
         }
+        camera: cam
     }
     View3D {
         id: layer2
@@ -61,6 +62,7 @@ Rectangle {
             lightProbe: layer_lightprobe
             probeOrientation.x: 90
         }
+        camera: cam
     }
     View3D {
         id: layer3
@@ -74,6 +76,7 @@ Rectangle {
             lightProbe: layer_lightprobe
             probeOrientation.y: 90
         }
+        camera: cam
     }
     View3D {
         id: layer4
@@ -87,5 +90,6 @@ Rectangle {
             lightProbe: layer_lightprobe
             probeOrientation.z: 90
         }
+        camera: cam
     }
 }

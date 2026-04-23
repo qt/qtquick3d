@@ -97,7 +97,7 @@ Rectangle {
             eulerRotation.x: -20
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera1
             z: 600
             y: 250

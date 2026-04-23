@@ -13,7 +13,7 @@ Rectangle {
         id: v3d
         anchors.fill: parent
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 200, 300)
             eulerRotation: Qt.vector3d(-30, 0, 0)

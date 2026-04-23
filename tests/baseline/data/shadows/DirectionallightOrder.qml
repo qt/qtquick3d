@@ -9,7 +9,7 @@ Item {
         width: parent.width/2
         height: parent.height
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 500
         }
 
@@ -48,7 +48,7 @@ Item {
         height: parent.height
         x: parent.width/2
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 500
         }
 

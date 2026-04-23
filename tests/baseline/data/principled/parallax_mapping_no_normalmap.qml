@@ -31,7 +31,7 @@ Rectangle {
             castsShadow: true
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 400
             y: 80
             eulerRotation.x: -10

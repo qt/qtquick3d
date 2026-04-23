@@ -18,7 +18,7 @@ Rectangle {
             tonemapMode: SceneEnvironment.TonemapModeAces
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position.z: 600
         }
 

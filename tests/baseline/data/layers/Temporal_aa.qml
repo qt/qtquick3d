@@ -27,7 +27,7 @@ Rectangle {
             temporalAAEnabled: true
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
             clipFar: 5000

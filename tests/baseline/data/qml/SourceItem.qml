@@ -82,7 +82,7 @@ Rectangle {
             clearColor: Qt.rgba(0, 0, 0, 1)
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 350)
             clipFar: 5000

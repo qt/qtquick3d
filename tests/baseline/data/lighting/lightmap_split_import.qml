@@ -24,7 +24,7 @@ Rectangle {
         width: parent.width/2
         height: parent.height
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 300
             y: 100
         }
@@ -55,7 +55,7 @@ Rectangle {
         height: parent.height
         x: parent.width/2
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 300
             y: 100
         }

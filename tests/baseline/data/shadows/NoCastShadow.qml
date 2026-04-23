@@ -17,7 +17,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 300)
             clipFar: 1000

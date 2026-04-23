@@ -24,8 +24,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        OrthographicCamera {
-            id: camera
+        camera: OrthographicCamera {
             position: Qt.vector3d(0, 0, 600)
             clipFar: 5000
         }

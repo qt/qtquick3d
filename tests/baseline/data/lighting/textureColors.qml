@@ -13,7 +13,7 @@ Rectangle {
         DirectionalLight {
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 200
         }
 

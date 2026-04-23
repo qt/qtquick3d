@@ -37,7 +37,7 @@ Rectangle {
             castsShadow: true
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             z: 350
         }

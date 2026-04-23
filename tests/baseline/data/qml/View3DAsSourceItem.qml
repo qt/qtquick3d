@@ -16,7 +16,7 @@ Rectangle {
             clearColor: Qt.rgba(0, 0, 0, 1)
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
         }
@@ -33,7 +33,7 @@ Rectangle {
                 clearColor: "green"
             }
             DirectionalLight { }
-            PerspectiveCamera { z: 600 }
+            camera: PerspectiveCamera { z: 600 }
             Model {
                 eulerRotation: Qt.vector3d(30, 30, 0)
                 source: "#Cube"

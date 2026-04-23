@@ -17,7 +17,7 @@ Rectangle {
             color: "#ffffffff"
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             z: 10
             clipNear: 0.1

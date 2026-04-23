@@ -25,9 +25,7 @@ Rectangle {
                 backgroundMode: SceneEnvironment.Color
             }
 
-            camera: camera
-
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
                 id: camera
                 position: Qt.vector3d(0, 0, 600)
                 eulerRotation.x: index == 0 ? 0 : index == 1 ? -20 : index == 2 ? -165 : -250

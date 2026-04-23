@@ -15,7 +15,7 @@ Rectangle {
             backgroundMode: SceneEnvironment.Color
             clearColor: "#848895"
         }
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             z: 500
         }

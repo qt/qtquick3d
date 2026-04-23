@@ -49,7 +49,7 @@ Item {
             antialiasingQuality: SceneEnvironment.High
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position.z: 700
         }

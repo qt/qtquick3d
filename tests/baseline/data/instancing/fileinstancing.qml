@@ -18,9 +18,7 @@ Rectangle {
             backgroundMode: SceneEnvironment.Color
         }
 
-        camera: camera
-        OrthographicCamera {
-            id: camera
+        camera: OrthographicCamera {
             position: Qt.vector3d(0, 0, 600)
         }
 

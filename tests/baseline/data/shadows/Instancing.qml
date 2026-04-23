@@ -22,7 +22,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             z: 1000
             position: Qt.vector3d(0, -527.889, 2790.73)
@@ -138,7 +138,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 1000
             position: Qt.vector3d(0, -527.889, 2790.73)
         }

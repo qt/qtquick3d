@@ -46,7 +46,7 @@ Item {
             antialiasingQuality: SceneEnvironment.High
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             property real cameraAnim: 0
             SequentialAnimation on cameraAnim {

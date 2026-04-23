@@ -35,7 +35,7 @@ Item {
             visible: false
             width: 512
             height: 512
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
                 z: 300
             }
 

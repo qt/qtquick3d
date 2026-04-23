@@ -24,11 +24,13 @@ Item {
         color: "#606060"
     }
 
+    PerspectiveCamera {
+        id: cam
+        position: Qt.vector3d(0, 0, 350)
+    }
+
     Node {
         id: sceneRoot
-        PerspectiveCamera {
-            position: Qt.vector3d(0, 0, 350)
-        }
         DirectionalLight {
         }
         Model {
@@ -52,6 +54,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
             clearColor: "red"
         }
+        camera: cam
         renderMode: View3D.Offscreen
         importScene: sceneRoot
         Node {
@@ -72,6 +75,7 @@ Item {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Transparent
         }
+        camera: cam
         renderMode: View3D.Inline
         importScene: sceneRoot
         Node {
@@ -95,6 +99,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
             clearColor: "white"
         }
+        camera: cam
         renderMode: View3D.Underlay
         importScene: sceneRoot
         Node {
@@ -115,6 +120,7 @@ Item {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Transparent
         }
+        camera: cam
         renderMode: View3D.Overlay
         importScene: sceneRoot
         Node {

@@ -22,7 +22,7 @@ Rectangle {
             probeExposure: 1
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position.z: 0.5
             position.y: 1.75

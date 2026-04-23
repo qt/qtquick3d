@@ -28,7 +28,7 @@ Item {
 
     View3D {
         anchors.fill: parent
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             // Positioned in a way so the "Background" text on top of the
             // background image is reflected on the top face of the cube.

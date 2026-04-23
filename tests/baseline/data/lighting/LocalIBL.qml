@@ -12,7 +12,7 @@ Rectangle {
     View3D {
         anchors.fill: parent
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: cam
             position: Qt.vector3d(50, 50, 150)
         }

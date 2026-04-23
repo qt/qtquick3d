@@ -14,7 +14,7 @@ Rectangle {
         anchors.fill: parent
         renderMode: View3D.Offscreen
 
-        OrthographicCamera {
+        camera: OrthographicCamera {
             z: 500
         }
 

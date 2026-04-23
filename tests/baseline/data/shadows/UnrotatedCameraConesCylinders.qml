@@ -59,7 +59,6 @@ Item {
     View3D {
         id: view
         anchors.fill: parent
-        camera: camera
         environment: SceneEnvironment {
             clearColor: "lightblue"
             backgroundMode: SceneEnvironment.Color
@@ -67,7 +66,7 @@ Item {
             antialiasingQuality: SceneEnvironment.High
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             clipFar: 15000
             clipNear: 0.3

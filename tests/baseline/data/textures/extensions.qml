@@ -53,7 +53,7 @@ Rectangle {
         height: parent.height - y
         renderMode: View3D.Offscreen
 
-        OrthographicCamera {
+        camera: OrthographicCamera {
             z: 500
         }
 

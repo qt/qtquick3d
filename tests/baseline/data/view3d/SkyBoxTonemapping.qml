@@ -30,7 +30,7 @@ Rectangle {
                 backgroundMode: SceneEnvironment.SkyBoxCubeMap
                 skyBoxCubeMap: sRgbCubeMap
             }
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
             }
         }
         View3D {
@@ -41,7 +41,7 @@ Rectangle {
                 backgroundMode: SceneEnvironment.SkyBoxCubeMap
                 skyBoxCubeMap: sRgbCubeMap
             }
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
             }
         }
         View3D {
@@ -52,7 +52,7 @@ Rectangle {
                 backgroundMode: SceneEnvironment.SkyBoxCubeMap
                 skyBoxCubeMap: linearCubeMap
             }
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
             }
         }
         View3D {
@@ -63,7 +63,7 @@ Rectangle {
                 backgroundMode: SceneEnvironment.SkyBoxCubeMap
                 skyBoxCubeMap: linearCubeMap
             }
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
             }
         }
     }

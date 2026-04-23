@@ -17,13 +17,12 @@ Item {
         anchors.bottom: parent.bottom
         width: parent.width / 3
         visible: false
+        camera: PerspectiveCamera {
+            z: 550
+        }
 
         Node {
             DirectionalLight {
-            }
-
-            PerspectiveCamera {
-                z: 550
             }
 
             Model {
@@ -44,14 +43,13 @@ Item {
         anchors.bottom: parent.bottom
         x: parent.width / 3
         width: parent.width / 3
+        camera: PerspectiveCamera {
+            z: 550
+        }
 
         Node {
             DirectionalLight {
                 id: directionalLight
-            }
-
-            PerspectiveCamera {
-                z: 550
             }
 
             // Center view should show two cubes, blue and red.
@@ -76,13 +74,12 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         width: parent.width / 3
+        camera: PerspectiveCamera {
+            z: 550
+        }
 
         Node {
             DirectionalLight {
-            }
-
-            PerspectiveCamera {
-                z: 550
             }
 
             Model {

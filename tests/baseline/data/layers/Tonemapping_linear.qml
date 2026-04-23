@@ -19,7 +19,7 @@ Rectangle {
             tonemapMode: SceneEnvironment.TonemapModeLinear
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position.z: 600
         }

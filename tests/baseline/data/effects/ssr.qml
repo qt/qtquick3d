@@ -72,7 +72,7 @@ Item {
                 pcfFactor: 2
             }
 
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
                 id: camera
                 position: Qt.vector3d(0, 100, 1500)
             }

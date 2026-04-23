@@ -23,7 +23,7 @@ Item {
             antialiasingQuality: SceneEnvironment.High
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 400, 600)
             eulerRotation.x: -30
             clipFar: 2000

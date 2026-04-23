@@ -13,7 +13,6 @@ Rectangle {
     View3D {
         id: view
         anchors.fill: parent
-        camera: camera1
 
         DirectionalLight {
             castsShadow: true
@@ -71,7 +70,7 @@ Rectangle {
             receivesShadows: false // the sphere above would shadow it otherwise
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera1
             z: 600
             y: 300

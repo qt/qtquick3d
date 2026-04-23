@@ -16,7 +16,7 @@ Rectangle {
             ambientColor: "white"
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 500
         }
 
@@ -52,7 +52,7 @@ Rectangle {
     View3D {
         anchors.fill: parent
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 500
         }
 

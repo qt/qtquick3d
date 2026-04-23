@@ -22,7 +22,7 @@ Rectangle {
             }
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 300, 600)
             eulerRotation.x: -45

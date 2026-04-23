@@ -18,7 +18,7 @@ Rectangle {
             }
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera1
             z: 300
         }

@@ -39,7 +39,7 @@ Node {
                 }
             }
             DirectionalLight {}
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
                 z: 100
             }
         }

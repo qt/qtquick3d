@@ -114,7 +114,7 @@ Item {
         // that the filtering works even if the camera automatically picked up.
         // NOTE: This is not recommended and will issue a warning in the console,
         // but it is common enought that we want to test it.
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 0, 400)
             layers: scene.rightViewTag
         }

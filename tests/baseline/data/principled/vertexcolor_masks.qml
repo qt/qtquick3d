@@ -11,7 +11,6 @@ Rectangle {
 
     View3D {
         anchors.fill: parent
-        camera: camera
         renderMode: View3D.Offscreen
 
         environment: SceneEnvironment {
@@ -22,7 +21,7 @@ Rectangle {
             }
         }
 
-        OrthographicCamera {
+        camera: OrthographicCamera {
             id: camera
             z: 500
         }

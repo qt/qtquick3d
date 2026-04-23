@@ -22,7 +22,7 @@ Rectangle {
                 source: "../shared/maps/clouds1_%p.jpg"
             }
         }
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: dummyCamera
         }
     }

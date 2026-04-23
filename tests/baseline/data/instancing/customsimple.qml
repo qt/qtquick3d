@@ -18,8 +18,6 @@ Rectangle {
             backgroundMode: SceneEnvironment.Color
         }
 
-        camera: camera
-
         InstanceList {
             id: manualInstancing
             instances: [
@@ -36,8 +34,7 @@ Rectangle {
             ]
         }
 
-        PerspectiveCamera {
-            id: camera
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 0, 600)
         }
 

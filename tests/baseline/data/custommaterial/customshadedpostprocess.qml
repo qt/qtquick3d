@@ -12,9 +12,7 @@ Rectangle {
 
     View3D {
         anchors.fill: parent
-        camera: camera
-
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             z: 20
         }

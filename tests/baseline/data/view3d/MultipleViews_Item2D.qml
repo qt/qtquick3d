@@ -61,7 +61,7 @@ Item {
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
         importScene: sceneRoot
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 0, 300)
         }
     }
@@ -78,7 +78,7 @@ Item {
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
         importScene: sceneRoot
-        OrthographicCamera {
+        camera: OrthographicCamera {
             position: Qt.vector3d(0, 0, 200)
         }
     }
@@ -95,7 +95,7 @@ Item {
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
         importScene: sceneRoot
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 200, 0)
             eulerRotation.x: -90
         }

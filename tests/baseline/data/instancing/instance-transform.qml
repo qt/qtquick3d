@@ -10,7 +10,7 @@ Rectangle {
     visible: true
     View3D {
         anchors.fill: parent
-        camera: camera
+        camera: cam
         id: view3d
 
         environment: SceneEnvironment {
@@ -21,7 +21,7 @@ Rectangle {
         Node {
             id: cameraNode
             PerspectiveCamera {
-                id: camera
+                id: cam
                 position: Qt.vector3d(0, 0, 600)
             }
             eulerRotation.x: -45

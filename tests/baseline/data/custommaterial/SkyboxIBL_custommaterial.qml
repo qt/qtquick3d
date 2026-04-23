@@ -11,7 +11,6 @@ Rectangle {
 
     View3D {
         anchors.fill: parent
-        camera: camera
 
         DirectionalLight {
             eulerRotation.y: -100
@@ -27,8 +26,7 @@ Rectangle {
             probeOrientation: Qt.vector3d(0, -90, 0)
         }
 
-        PerspectiveCamera {
-            id: camera
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 0, 600)
         }
 

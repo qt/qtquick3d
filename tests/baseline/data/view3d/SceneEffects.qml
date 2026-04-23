@@ -25,7 +25,7 @@ Rectangle {
             effects: [blur1, blur2, blur3]
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 200, 300)
             eulerRotation.x: -30
         }
@@ -49,7 +49,7 @@ Rectangle {
             effects: [blur0, blur0, blur0]
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 200, 300)
             eulerRotation.x: -30
         }

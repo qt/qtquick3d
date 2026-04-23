@@ -18,7 +18,7 @@ Rectangle {
             depthPrePassEnabled: true
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(250, -100, 600)
         }
 

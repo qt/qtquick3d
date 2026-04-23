@@ -12,13 +12,13 @@ Rectangle {
 
         property real myScale: 0.01
 
-        Node {
-            PerspectiveCamera {
-                position: Qt.vector3d(0, 0, 10)
-                clipFar: 11
-                clipNear: 0.001
-            }
+        camera: PerspectiveCamera {
+            position: Qt.vector3d(0, 0, 10)
+            clipFar: 11
+            clipNear: 0.001
+        }
 
+        Node {
             DirectionalLight {
                 eulerRotation.x: -45
                 eulerRotation.y: 45

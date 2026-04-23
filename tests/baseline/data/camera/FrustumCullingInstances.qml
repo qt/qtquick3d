@@ -35,7 +35,7 @@ Item {
 
                     environment: SceneEnvironment { clearColor: "black" }
 
-                    PerspectiveCamera {
+                    camera: PerspectiveCamera {
                         id: cam
                         position: Qt.vector3d(${posX}, ${posY}, ${posZ})
                         eulerRotation: Qt.vector3d(${rotX}, ${rotY}, ${rotZ})

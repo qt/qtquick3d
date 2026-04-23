@@ -28,7 +28,7 @@ Item {
 
     View3D {
         anchors.fill: parent
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             // Zoom out just so that we can see the Qt Quick rendered Text on
             // top of the Image.

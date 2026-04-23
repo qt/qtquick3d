@@ -12,15 +12,13 @@ Rectangle {
 
     View3D {
         anchors.fill: parent
-        camera: camera
 
         environment: SceneEnvironment {
             clearColor: "#434343"
             backgroundMode: SceneEnvironment.Color
         }
 
-        PerspectiveCamera {
-            id: camera
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 10, 10)
             eulerRotation: Qt.vector3d(-45, 0, 0)
         }

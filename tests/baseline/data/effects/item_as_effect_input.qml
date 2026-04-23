@@ -22,7 +22,7 @@ Item {
                 backgroundMode: SceneEnvironment.Transparent
             }
 
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
                 position.z : 300
             }
 
@@ -45,7 +45,7 @@ Item {
                 effects: effect
             }
 
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
                 id: camera2
                 position.z : 300
             }

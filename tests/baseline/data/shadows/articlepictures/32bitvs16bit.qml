@@ -24,7 +24,7 @@ Item {
         width: parent.width/2
         environment: sceneEnvironment
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 400, 700)
             rotation: Quaternion.fromEulerAngles(-30, 0, 0)
             clipFar: 20000
@@ -74,7 +74,7 @@ Item {
         x: parent.width/2
         environment: sceneEnvironment
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 400, 700)
             rotation: Quaternion.fromEulerAngles(-30, 0, 0)
             clipFar: 20000

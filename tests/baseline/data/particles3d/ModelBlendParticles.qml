@@ -14,7 +14,7 @@ Item {
 
     View3D {
         anchors.fill: parent
-        camera: camera
+        camera: cam
 
         environment: SceneEnvironment {
             clearColor: "#404040"
@@ -26,7 +26,7 @@ Item {
             property real rot: 0.0
             eulerRotation: Qt.vector3d(-45, 0, 0)
             PerspectiveCamera {
-                id: camera
+                id: cam
                 position: Qt.vector3d(0, 0, 1250)
                 clipFar: 2000
             }

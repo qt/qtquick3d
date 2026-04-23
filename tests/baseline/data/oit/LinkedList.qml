@@ -19,7 +19,7 @@ Rectangle {
             oitMethod: SceneEnvironment.OITLinkedList
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 500)
             clipFar: 1000

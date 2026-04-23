@@ -19,7 +19,7 @@ Item {
             clearColor: "lightGray"
             backgroundMode: SceneEnvironment.Color
         }
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 0, 600);
         }
         DirectionalLight {
@@ -49,7 +49,7 @@ Item {
             clearColor: "black"
             backgroundMode: SceneEnvironment.Color
         }
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 0, 600);
         }
         Model {

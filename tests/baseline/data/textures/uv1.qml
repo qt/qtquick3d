@@ -17,12 +17,10 @@ Item {
             backgroundMode: SceneEnvironment.Color
         }
 
-        OrthographicCamera { // no need to confuse the output with depth, orthographic is good here
+        camera: OrthographicCamera { // no need to confuse the output with depth, orthographic is good here
             id: camera
             position: Qt.vector3d(0, 0, 600)
         }
-
-        camera: camera
 
         DirectionalLight {
         }

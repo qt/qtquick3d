@@ -11,10 +11,9 @@ Rectangle {
 
     View3D {
         anchors.fill: parent
-        camera: camera
         renderMode: View3D.Offscreen
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             z: 10
         }

@@ -15,7 +15,7 @@ Rectangle {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Transparent
         }
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: dummyCamera
         }
     }

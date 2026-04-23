@@ -28,7 +28,7 @@ Rectangle {
             probeExposure: 10
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 1000)
             clipFar: 5000
@@ -255,7 +255,7 @@ Rectangle {
             probeExposure: 10
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera_001
             position: Qt.vector3d(0, 0, 1000)
             clipFar: 5000

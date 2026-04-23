@@ -20,7 +20,7 @@ Item {
                 ssgiEnabled: true
             }
 
-            PerspectiveCamera {
+            camera: PerspectiveCamera {
                 position: Qt.vector3d(0, 200, 300)
                 eulerRotation.x: -20
                 clipNear: 100

@@ -21,7 +21,7 @@ Rectangle {
                 mappingMode: Texture.LightProbe
             }
         }
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: dummyCamera
         }
     }

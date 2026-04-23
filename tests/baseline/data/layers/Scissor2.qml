@@ -21,7 +21,7 @@ Rectangle {
             scissorRect: Qt.rect(-20, 100, 300, 250)
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
         }

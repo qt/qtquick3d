@@ -8,12 +8,14 @@ Item {
     width: 460
     height: 460
 
+    PerspectiveCamera {
+        id: cam
+        position: Qt.vector3d(0, 0, 200)
+    }
+
     // This exactly same content should appear 4 times, in different ways.
     Node {
         id: sceneRoot
-        PerspectiveCamera {
-            position: Qt.vector3d(0, 0, 200)
-        }
         DirectionalLight {
 
         }
@@ -42,6 +44,7 @@ Item {
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
         importScene: sceneRoot
+        camera: cam
     }
 
     // View2, importScene with node id of external component
@@ -56,6 +59,7 @@ Item {
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
         importScene: sceneRoot2
+        camera: cam
     }
 
     // View3, importScene with external component
@@ -72,6 +76,7 @@ Item {
         importScene: SceneComponent {
             id: sceneRoot3
         }
+        camera: cam
     }
 
     // View4, content inside
@@ -87,9 +92,6 @@ Item {
         }
         Node {
             id: sceneRoot4
-            PerspectiveCamera {
-                position: Qt.vector3d(0, 0, 200)
-            }
             DirectionalLight {
             }
             Model {
@@ -100,5 +102,6 @@ Item {
                 eulerRotation: Qt.vector3d(45, 45, 45)
             }
         }
+        camera: cam
     }
 }

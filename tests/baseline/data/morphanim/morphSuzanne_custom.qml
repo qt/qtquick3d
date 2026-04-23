@@ -18,8 +18,6 @@ Rectangle {
             backgroundMode: SceneEnvironment.Color
         }
 
-        camera: camera
-
         InstanceList {
             id: manualInstancing
             instances: [
@@ -39,7 +37,7 @@ Rectangle {
             ]
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             z: 600
         }

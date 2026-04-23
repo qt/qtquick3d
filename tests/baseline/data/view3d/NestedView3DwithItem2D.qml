@@ -12,7 +12,7 @@ Item {
     View3D {
         id: origin
         anchors.fill: parent
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(-200, 300, 500)
             eulerRotation.x: -20
@@ -57,7 +57,7 @@ Item {
                 }
                 DirectionalLight { }
 
-                PerspectiveCamera {
+                camera: PerspectiveCamera {
                     id: cam2
                     position: Qt.vector3d(200, 300, 500)
                     eulerRotation.x: -20

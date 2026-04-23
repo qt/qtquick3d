@@ -20,7 +20,7 @@ Rectangle {
             probeExposure: 3.0
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera1
             z: 0.75
             clipNear: 0.01

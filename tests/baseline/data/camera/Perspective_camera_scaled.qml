@@ -14,7 +14,7 @@ Item {
         width: parent.width/2
         height: parent.height/2
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 100, 200)
             eulerRotation.x: -30
             scale: Qt.vector3d(1, 1, 1)
@@ -40,7 +40,7 @@ Item {
         height: parent.height/2
         x: parent.width/2
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 100, 200)
             eulerRotation.x: -30
             scale: Qt.vector3d(1, 2, 3)
@@ -66,9 +66,7 @@ Item {
         width: parent.width/2
         height: parent.height/2
         y: parent.height/2
-        camera: camera1
-
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera1
             position: Qt.vector3d(0, 100, 200)
             eulerRotation.x: -30
@@ -99,9 +97,7 @@ Item {
         height: parent.height/2
         x: parent.width/2
         y: parent.height/2
-        camera: camera2
-
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera2
             position: Qt.vector3d(0, 100, 200)
             eulerRotation.x: -30

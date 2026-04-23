@@ -19,7 +19,7 @@ Rectangle {
             aoSoftness: 50
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             id: camera
             position: Qt.vector3d(0, 0, 600)
         }

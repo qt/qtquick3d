@@ -8,13 +8,15 @@ Item {
     width: 460
     height: 460
 
+    PerspectiveCamera {
+        id: cam
+        position: Qt.vector3d(0, 0, 200)
+    }
+
     // This exactly same content should appear 4 times, in different ways.
     Node {
         id: sceneRoot
         opacity: 0.8
-        PerspectiveCamera {
-            position: Qt.vector3d(0, 0, 200)
-        }
         DirectionalLight {
         }
         Model {
@@ -42,6 +44,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
+        camera: cam
         Component.onCompleted: {
             importScene = sceneRoot;
         }
@@ -81,6 +84,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
+        camera: cam
         importScene: sceneRoot2
         Component.onCompleted: {
             // Currently this doesn't do anything
@@ -121,6 +125,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
+        camera: cam
         importScene: SceneComponent {
             id: sceneRoot3
             opacity: 0.8
@@ -160,6 +165,7 @@ Item {
             backgroundMode: SceneEnvironment.Color
             clearColor: Qt.rgba(0.5, 0.5, 0.5, 1)
         }
+        camera: cam
         Node {
             id: sceneRoot4
             opacity: 0.8

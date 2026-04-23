@@ -28,10 +28,12 @@ Rectangle {
             }
         }
 
+        camera: cam
+
         Node {
             id: scene
             PerspectiveCamera {
-                id: camera
+                id: cam
                 position: Qt.vector3d(0, 0, 360)
                 eulerRotation: Qt.vector3d(0, 0, 0)
                 clipFar: 1000

@@ -24,7 +24,7 @@ Rectangle {
             }
         }
 
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             z: 300
         }
 

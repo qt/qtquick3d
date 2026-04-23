@@ -11,6 +11,7 @@ Rectangle {
     View3D {
         id: view
         anchors.fill: parent
+        camera: cameraNode
 
         environment: SceneEnvironment {
             clearColor: "skyblue"
