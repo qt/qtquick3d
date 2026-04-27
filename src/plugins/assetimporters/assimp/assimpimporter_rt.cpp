@@ -967,8 +967,14 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                                            clearcoatRoughnessTexture);
 
             // normal texture
-            if (auto clearcoatNormalTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_NORMAL_TEXTURE))
+            if (auto clearcoatNormalTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_NORMAL_TEXTURE)) {
                 QSSGSceneDesc::setProperty(target, "clearcoatNormalMap", &QQuick3DSpecularGlossyMaterial::setClearcoatNormalMap, clearcoatNormalTexture);
+
+                ai_real clearcoatNormalStrength = 0.0f;
+                result = source.Get(AI_MATKEY_GLTF_TEXTURE_SCALE(aiTextureType_CLEARCOAT, 2), clearcoatNormalTexture);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target, "clearcoatNormalStrength", &QQuick3DPrincipledMaterial::setClearcoatNormalStrength, float(clearcoatNormalStrength));
+            }
         }
 
         {
