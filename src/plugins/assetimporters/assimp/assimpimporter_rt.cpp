@@ -762,6 +762,18 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                                            float(ior));
         }
 
+        {
+            // opacity AI_MATKEY_OPACITY
+            ai_real opacity = 1.0f;
+            result = source.Get(AI_MATKEY_OPACITY, opacity);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "opacity", &QQuick3DPrincipledMaterial::setOpacity, float(opacity));
+
+            // opacityMap aiTextureType_OPACITY 0
+            if (auto opacityTexture = createTextureNode(source, aiTextureType_OPACITY, 0))
+                QSSGSceneDesc::setProperty(target, "opacityMap", &QQuick3DPrincipledMaterial::setOpacityMap, opacityTexture);
+        }
+
     } else if (type == QSSGSceneDesc::Material::RuntimeType::DefaultMaterial) { // Ver1
         int shadingModel = 0;
         auto material = &source;
