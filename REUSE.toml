@@ -209,3 +209,17 @@ precedence = "override"
 comment = "can't be read in file"
 SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
 SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR BSD-3-Clause"
+
+[[annotations]]
+path = "tests/baseline/data/shared/obj/plane_prb_opacity.mtl"
+precedence = "override"
+comment = "Can't be read in file"
+SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
+SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"
+
+[[annotations]]
+path = "tests/baseline/data/shared/obj/plane_prb_opacity.obj"
+precedence = "override"
+comment = "Can't be read in file"
+SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
+SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"

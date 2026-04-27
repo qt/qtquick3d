@@ -1,0 +1,20 @@
+# Blender 5.1.0 MTL File: 'None'
+# www.blender.org
+#
+# Copyright (C) 2024 The Qt Company Ltd.,
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+newmtl Material.001
+Kd 0.000000 1.000000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 9
+Pr 0.500000
+Pm 0.000000
+Ps 0.000000
+Pc 0.000000
+Pcr 0.030000
+aniso 0.000000
+anisor 0.000000
+map_d ../maps/rgba.png
