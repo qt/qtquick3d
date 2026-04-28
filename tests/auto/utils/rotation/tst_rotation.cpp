@@ -36,8 +36,8 @@ void tst_RotationDataClass::test_initialState()
     // Initial state
     RotationData rotation;
     QCOMPARE(isDirty(rotation), false);
-    QVERIFY(qFuzzyCompare(QVector3D(rotation), QVector3D()));
-    QVERIFY(qFuzzyCompare(QQuaternion(rotation), QQuaternion()));
+    QVERIFY(qFuzzyCompare(rotation.toEulerAngles(), QVector3D()));
+    QVERIFY(qFuzzyCompare(rotation.toQuaternion(), QQuaternion()));
 }
 
 void tst_RotationDataClass::test_construct()
@@ -51,14 +51,13 @@ void tst_RotationDataClass::test_construct()
     RotationData b(quatRot);
     QCOMPARE(isDirty(b), true);
 
-    QEXPECT_FAIL("", "fromEulerAngles() introduces too much changes for RotationData's compare function", Continue);
     QCOMPARE(a, b);
     QCOMPARE(a.m_quatRot, b.m_quatRot); // Compensate for the XFAIL. Verify that the two quaternions a componentwise equal.
     // NOTE: Comparison is done based on the stored quaternion
     QCOMPARE(isDirty(a), false); // Dirty is cleared as 'a' was set using euler angles
     QCOMPARE(isDirty(b), true); // Still dirty, as the Euler angles where never compared and therefore not calculated
     QCOMPARE(b.m_dirty, Dirty::Euler);
-    QVERIFY(qFuzzyCompare(QVector3D(b), eulerRot));
+    QVERIFY(qFuzzyCompare(b.toEulerAngles(), eulerRot));
     QCOMPARE(isDirty(b), false); // Both internal values queried, so neither should be dirty
 
 
@@ -68,8 +67,8 @@ void tst_RotationDataClass::test_eulerAssign()
 {
     RotationData rotation;
     QCOMPARE(isDirty(rotation), false);
-    QVERIFY(qFuzzyCompare(QVector3D(rotation), QVector3D()));
-    QVERIFY(qFuzzyCompare(QQuaternion(rotation), QQuaternion()));
+    QVERIFY(qFuzzyCompare(rotation.toEulerAngles(), QVector3D()));
+    QVERIFY(qFuzzyCompare(rotation.toQuaternion(), QQuaternion()));
 
     QVector3D eulerRot = QVector3D(1.0f, 0.0f, 0.0f);
     QQuaternion quatRot = QQuaternion::fromEulerAngles(eulerRot);
@@ -80,7 +79,7 @@ void tst_RotationDataClass::test_eulerAssign()
 
     {
         QCOMPARE(rotation.m_dirty, RotationData::Dirty::Quaternion);
-        QQuaternion retQuatRot(rotation);
+        QQuaternion retQuatRot = rotation.toQuaternion();
         QCOMPARE(isDirty(rotation), false);
         QVERIFY(qFuzzyCompare(retQuatRot, quatRot));
         QVERIFY(qFuzzyCompare(rotation.m_quatRot, quatRot));
@@ -91,8 +90,8 @@ void tst_RotationDataClass::test_quatAssign()
 {
     RotationData rotation;
     QCOMPARE(isDirty(rotation), false);
-    QVERIFY(qFuzzyCompare(QVector3D(rotation), QVector3D()));
-    QVERIFY(qFuzzyCompare(QQuaternion(rotation), QQuaternion()));
+    QVERIFY(qFuzzyCompare(rotation.toEulerAngles(), QVector3D()));
+    QVERIFY(qFuzzyCompare(rotation.toQuaternion(), QQuaternion()));
 
     QVector3D eulerRot = QVector3D(1.0f, 0.0f, 0.0f);
     QQuaternion quatRot = QQuaternion::fromEulerAngles(eulerRot);
@@ -103,7 +102,7 @@ void tst_RotationDataClass::test_quatAssign()
 
     {
         QCOMPARE(rotation.m_dirty, RotationData::Dirty::Euler);
-        QVector3D retEulerRot(rotation);
+        QVector3D retEulerRot = rotation.toEulerAngles();
         QCOMPARE(isDirty(rotation), false);
         QVERIFY(qFuzzyCompare(retEulerRot, eulerRot));
         QVERIFY(qFuzzyCompare(rotation.m_eulerRot, eulerRot));
@@ -188,7 +187,7 @@ void tst_RotationDataClass::test_compare2()
         QVERIFY(a == qaNormalized);
         QVERIFY(a == v);
 
-        b = -a;
+        b = -a.toQuaternion();
         QVERIFY(a == b);
         QVERIFY(b == a);
     }
@@ -222,18 +221,15 @@ void tst_RotationDataClass::test_compare2()
             QVERIFY(!qFuzzyCompare(qb, qa));
         }
         a = qa;
-        QEXPECT_FAIL("", "Normalization introduces too much changes for RotationData's compare function", Continue);
         QVERIFY(a == qaNormalized);
         QVERIFY(a.m_quatRot == qaNormalized); // Compensate for the XFAIL
         QVERIFY(a == v);
 
-        b = -a;
-        QEXPECT_FAIL("", "Negation introduces too much changes for RotationData's compare function", Continue);
+        b = -a.toQuaternion();
         QVERIFY(a == b);
-        QVERIFY(-a.m_quatRot == b.m_quatRot); // Compensate for the XFAIL
-        QEXPECT_FAIL("", "Negation introduces too much changes for RotationData's compare function", Continue);
+        QVERIFY(-a.m_quatRot == b.m_quatRot);
         QVERIFY(b == a);
-        QVERIFY(b.m_quatRot == -a.m_quatRot); // Compensate for the XFAIL
+        QVERIFY(b.m_quatRot == -a.m_quatRot);
     }
 }
 
@@ -351,10 +347,10 @@ void tst_RotationDataClass::test_compare_precision()
             a = qad;
             b = qbd;
             QVERIFY(a.m_quatRot == b.m_quatRot);
-            // Rotation data should still treat these as being different
-            QVERIFY(a != b);
+            // When float components are identical after normalization, RotationData correctly reports equal
+            QVERIFY(a == b);
             b = -qbd;
-            QVERIFY(a != b);
+            QVERIFY(a == b);
         }
     }
     {
@@ -378,6 +374,20 @@ void tst_RotationDataClass::test_compare_precision()
         QVERIFY(a != b);
         b = -qb;
         QVERIFY(a != b);
+    }
+
+    // As above but with a non-normalized quaternion, to verify that the precision
+    // is not lost when normalizing the quaternion in the constructor or assignment operator.
+    {
+        const QQuaternion qa = QQuaternion::fromEulerAngles(QVector3D(45.0f, 30.0f, 15.0f));
+        const QQuaternion qb = qa * (1.0f + 1e-6f);
+
+        RotationData rd;
+        rd = qb;
+        QVERIFY(rd == qb);
+        QVERIFY(qb == rd);
+        QVERIFY(rd == -qb);
+        QVERIFY(-qb == rd);
     }
 }
 

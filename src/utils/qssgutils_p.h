@@ -305,34 +305,42 @@ public:
         return *this;
     }
 
-    friend inline bool operator ==(const RotationData &a, const RotationData &b) {
+    friend bool operator ==(const RotationData &a, const RotationData &b) {
         if (a.m_dirty == Dirty::None && b.m_dirty == Dirty::None)
             return fuzzyQuaternionCompare(a.m_quatRot, b.m_quatRot);
 
-        return fuzzyQuaternionCompare(QQuaternion(a), QQuaternion(b));
+        return fuzzyQuaternionCompare(a.toQuaternion(), b.toQuaternion());
     }
 
-    friend inline bool operator !=(const RotationData &a, const RotationData &b) { return !(a == b); }
+    friend bool operator !=(const RotationData &a, const RotationData &b) { return !(a == b); }
 
-    friend inline bool operator ==(const RotationData &a, const QVector3D &eulerRotation)
+    friend bool operator ==(const RotationData &a, const QVector3D &eulerRotation)
     {
         if (a.m_dirty == Dirty::None)
             return qFuzzyCompare(a.m_eulerRot, eulerRotation);
 
-        return qFuzzyCompare(QVector3D(a), eulerRotation);
+        return qFuzzyCompare(a.toEulerAngles(), eulerRotation);
     }
-    friend inline bool operator !=(const RotationData &a, const QVector3D &eulerRotation) { return !(a == eulerRotation); }
 
-    friend inline bool operator ==(const RotationData &a, const QQuaternion &rotation)
+    friend bool operator !=(const RotationData &a, const QVector3D &eulerRotation) { return !(a == eulerRotation); }
+
+    friend bool operator ==(const QVector3D &eulerRotation, const RotationData &a) { return a == eulerRotation; }
+    friend bool operator !=(const QVector3D &eulerRotation, const RotationData &a) { return !(a == eulerRotation); }
+
+    friend bool operator ==(const RotationData &a, const QQuaternion &rotation)
     {
+        const QQuaternion normalizedRotation = rotation.normalized();
         if (a.m_dirty == Dirty::None)
-            return fuzzyQuaternionCompare(a.m_quatRot, rotation);
+            return fuzzyQuaternionCompare(a.m_quatRot, normalizedRotation);
 
-        return fuzzyQuaternionCompare(QQuaternion(a), rotation);
+        return fuzzyQuaternionCompare(a.toQuaternion(), normalizedRotation);
     }
-    friend inline bool operator !=(const RotationData &a, const QQuaternion &rotation) { return !(a == rotation); }
+    friend bool operator !=(const RotationData &a, const QQuaternion &rotation) { return !(a == rotation); }
 
-    [[nodiscard]] inline QVector3D getEulerRotation() const
+    friend bool operator ==(const QQuaternion &rotation, const RotationData &a) { return a == rotation; }
+    friend bool operator !=(const QQuaternion &rotation, const RotationData &a) { return !(a == rotation); }
+
+    [[nodiscard]] inline QVector3D toEulerAngles() const
     {
         if (m_dirty == Dirty::Euler) {
             m_eulerRot = m_quatRot.toEulerAngles();
@@ -342,7 +350,7 @@ public:
         return m_eulerRot;
     }
 
-    [[nodiscard]] inline QQuaternion getQuaternionRotation() const
+    [[nodiscard]] inline QQuaternion toQuaternion() const
     {
         if (m_dirty == Dirty::Quaternion) {
             m_quatRot = QQuaternion::fromEulerAngles(m_eulerRot).normalized();
@@ -352,10 +360,7 @@ public:
         return m_quatRot;
     }
 
-    [[nodiscard]] inline QMatrix3x3 toRotationMatrix() const { return getQuaternionRotation().toRotationMatrix(); }
-
-    [[nodiscard]] inline operator QQuaternion() const { return getQuaternionRotation(); }
-    [[nodiscard]] inline operator QVector3D() const { return getEulerRotation(); }
+    [[nodiscard]] inline QMatrix3x3 toRotationMatrix() const { return toQuaternion().toRotationMatrix(); }
 
 private:
     friend class ::tst_RotationDataClass;
@@ -370,6 +375,10 @@ private:
 
     [[nodiscard]] static constexpr bool fuzzyQuaternionCompare(const QQuaternion &a, const QQuaternion &b)
     {
+        // Do a component for component check, this ensures that we skip the expensive call when we
+        // anyway have a perfect match or an exact opposite match (which is also the same rotation).
+        if (a == b || a == -b)
+            return true;
         return qFuzzyCompare(qAbs(dotProduct(a, b)), 1.0);
     }
 
