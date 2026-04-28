@@ -199,7 +199,7 @@ float QQuick3DNode::z() const
 QQuaternion QQuick3DNode::rotation() const
 {
     Q_D(const QQuick3DNode);
-    return d->m_rotation;
+    return d->m_rotation.toQuaternion();
 }
 
 /*!
@@ -387,7 +387,7 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
 {
     Q_Q(QQuick3DNode);
     m_sceneTransformDirty = false;
-    QMatrix4x4 localTransform = QSSGRenderNode::calculateTransformMatrix(m_position, m_scale, m_pivot, m_rotation);
+    QMatrix4x4 localTransform = QSSGRenderNode::calculateTransformMatrix(m_position, m_scale, m_pivot, m_rotation.toQuaternion());
     QQuick3DNode *parent = q->parentNode();
     if (!parent) {
         m_sceneTransform = localTransform;
@@ -827,11 +827,11 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         if (!transformIsDirty && !qFuzzyCompare(d->m_scale, QSSGUtils::mat44::getScale(spacialNode->localTransform)))
             transformIsDirty = true;
 
-        if (!transformIsDirty && !qFuzzyCompare(d->m_rotation, QQuaternion::fromRotationMatrix(QSSGUtils::mat44::getUpper3x3(spacialNode->localTransform))))
+        if (!transformIsDirty && d->m_rotation != QQuaternion::fromRotationMatrix(QSSGUtils::mat44::getUpper3x3(spacialNode->localTransform)))
             transformIsDirty = true;
 
         if (transformIsDirty) {
-            spacialNode->localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);
+            spacialNode->localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation.toQuaternion());
             spacialNode->markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
         }
     }
@@ -1015,7 +1015,7 @@ QVector3D QQuick3DNode::eulerRotation() const
 {
     const Q_D(QQuick3DNode);
 
-    return d->m_rotation;
+    return d->m_rotation.toEulerAngles();
 }
 
 void QQuick3DNode::itemChange(ItemChange change, const ItemChangeData &)
