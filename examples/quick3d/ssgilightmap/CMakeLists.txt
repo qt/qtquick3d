@@ -12,11 +12,8 @@ if(CMAKE_GENERATOR STREQUAL "Xcode" AND IOS)
     return()
 endif()
 
-if(EMSCRIPTEN)
-    # Emscripten runs out of memory: QTBUG-142678
-    message(WARNING "Skipping ssgilightmap example because webassembly detected")
-    return()
-endif()
+# WASM: We need to increase the amount of memory for this example
+set(QT_WASM_INITIAL_MEMORY 500MB)
 
 include(FetchContent)
 
