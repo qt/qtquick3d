@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 // Qt-Security score:significant reason:default
 
-
-#ifndef ASSIMPUTILS_H
-#define ASSIMPUTILS_H
+#pragma once
 
 #include <QtCore/qglobal.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
@@ -38,5 +36,3 @@ inline size_t qHash(const QVector3D &vector, size_t seed = 0) {
 }
 
 QT_END_NAMESPACE
-
-#endif // ASSIMPUTILS_H

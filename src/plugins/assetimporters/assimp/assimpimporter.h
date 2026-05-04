@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 // Qt-Security score:significant reason:default
 
-
-#ifndef ASSIMPIMPORTER_H
-#define ASSIMPIMPORTER_H
+#pragma once
 
 #include <QtQuick3DAssetImport/private/qssgassetimporter_p.h>
 #include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
@@ -38,5 +36,3 @@ private:
 };
 
 QT_END_NAMESPACE
-
-#endif // ASSIMPIMPORTER_H

@@ -2,20 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 // Qt-Security score:significant reason:default
 
-
-#ifndef QQUICK3DPROFILERADAPTER_H
-#define QQUICK3DPROFILERADAPTER_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#pragma once
 
 #include <QtQml/private/qqmlabstractprofileradapter_p.h>
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
@@ -37,5 +24,3 @@ private:
 };
 
 QT_END_NAMESPACE
-
-#endif // QQUICK3DPROFILERADAPTER_H
