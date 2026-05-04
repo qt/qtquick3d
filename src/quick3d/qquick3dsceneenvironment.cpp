@@ -1421,13 +1421,18 @@ void QQuick3DSceneEnvironment::setLightmapper(QQuick3DLightmapper *lightmapper)
 
     m_lightmapper = lightmapper;
 
-    m_lightmapperSignalConnection = QObject::connect(m_lightmapper, &QQuick3DLightmapper::changed, this,
-                                                     [this] { update(); });
+    m_dirtyFlags |= InternalDirtyFlag::LightmapperDirty;
+
+    m_lightmapperSignalConnection = QObject::connect(m_lightmapper, &QQuick3DLightmapper::changed, this, [this] {
+        m_dirtyFlags |= InternalDirtyFlag::LightmapperDirty;
+        update();
+    });
 
     QObject::connect(m_lightmapper, &QObject::destroyed, this,
                      [this](QObject *obj)
     {
         if (m_lightmapper == obj) {
+            m_dirtyFlags |= InternalDirtyFlag::LightmapperDirty;
             m_lightmapper = nullptr;
             update();
         }
