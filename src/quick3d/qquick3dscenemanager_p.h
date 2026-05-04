@@ -197,7 +197,11 @@ public:
     bool sharedResourceRemoved = false;
     bool autoRegisteredExtensionsDirty = false;
     friend QQuick3DObject;
-    QString lightmapSource;
+    struct LightmapSourceTracker
+    {
+        QString lightmapSource;
+        bool isDirty = true;
+    } lightmapSourceTracker;
 
 Q_SIGNALS:
     void needsUpdate();

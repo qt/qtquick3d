@@ -140,7 +140,11 @@ void QQuick3DSceneManager::sync()
 
 void QQuick3DSceneManager::updateBoundingBoxes(QSSGBufferManager &mgr)
 {
-    mgr.setLightmapSource(lightmapSource);
+    if (lightmapSourceTracker.isDirty) {
+        mgr.setLightmapSource(lightmapSourceTracker.lightmapSource);
+        lightmapSourceTracker.isDirty = false;
+    }
+
     const QList<QQuick3DObject *> dirtyList = dirtyBoundingBoxList;
     for (auto object : dirtyList) {
         QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(object);

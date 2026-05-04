@@ -276,6 +276,12 @@ protected:
 private:
     friend class QQuick3DSceneRenderer;
 
+    enum InternalDirtyFlag : quint32
+    {
+        LightmapperDirty = 0x1,
+    };
+    using InternalDirtyFlagT = std::underlying_type_t<InternalDirtyFlag>;
+
     static constexpr float defaultAoDistance() { return 5.0f; }
 
     QVector<QQuick3DEffect *> m_effects;
@@ -325,6 +331,7 @@ private:
     QQuick3DFog *m_fog = nullptr;
     QMetaObject::Connection m_fogSignalConnection;
     QQuick3DEnvironmentOITMethod m_oitMethod = QQuick3DEnvironmentOITMethod::OITNone;
+    InternalDirtyFlagT m_dirtyFlags = { LightmapperDirty };
 };
 
 QT_END_NAMESPACE

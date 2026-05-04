@@ -684,7 +684,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         lmOptions = {};
     }
 
-    { // Resolve lightmaps source url
+
+    if (environment->m_dirtyFlags & QQuick3DSceneEnvironment::InternalDirtyFlag::LightmapperDirty) {
+        environment->m_dirtyFlags &= ~QQuick3DSceneEnvironment::InternalDirtyFlag::LightmapperDirty;
+        // Resolve lightmaps source url
         const QQmlContext *context = qmlContext(view3D);
         const QUrl originalSource = environment->lightmapper() ? environment->lightmapper()->source()
                                                                : QUrl::fromLocalFile(QStringLiteral("lightmaps.bin"));
@@ -695,9 +698,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_layer->lightmapSource = lightmapSource;
         // HACK: this is also set in the render layer but we need to set it here since
         // it is needed below when calculating bounding boxes from the stored lightmap mesh
-        m_sgContext->bufferManager()->setLightmapSource(lightmapSource);
+        m_sgContext->bufferManager()->setLightmapSource(m_layer->lightmapSource);
         if (QQuick3DSceneManager *sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager)
-            sceneManager->lightmapSource = lightmapSource;
+            sceneManager->lightmapSourceTracker = { m_layer->lightmapSource, true };
     }
 
     // Synchronize scene managers under this window
