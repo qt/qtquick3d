@@ -145,8 +145,7 @@ void QQuick3DSceneManager::updateBoundingBoxes(QSSGBufferManager &mgr)
         lightmapSourceTracker.isDirty = false;
     }
 
-    const QList<QQuick3DObject *> dirtyList = dirtyBoundingBoxList;
-    for (auto object : dirtyList) {
+    for (auto *object : std::as_const(dirtyBoundingBoxList)) {
         QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(object);
         if (itemPriv->sceneManager == nullptr)
             continue;
@@ -155,8 +154,9 @@ void QQuick3DSceneManager::updateBoundingBoxes(QSSGBufferManager &mgr)
             QSSGBounds3 bounds = mgr.getModelBounds(model);
             static_cast<QQuick3DModel *>(object)->setBounds(bounds.minimum, bounds.maximum);
         }
-        dirtyBoundingBoxList.removeOne(object);
     }
+
+    dirtyBoundingBoxList.clear();
 }
 
 QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateDirtyResourceNodes()
