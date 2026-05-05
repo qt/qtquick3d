@@ -381,14 +381,14 @@ void QQuick3DXrManagerPrivate::processXrEvents()
 
 void QQuick3DXrManagerPrivate::destroySwapchain()
 {
-    for (const Swapchain &swapchain : m_swapchains)
+    for (const Swapchain &swapchain : std::as_const(m_swapchains))
         xrDestroySwapchain(swapchain.handle);
 
     m_swapchains.clear();
     m_swapchainImages.clear();
     m_configViews.clear();
 
-    for (const Swapchain &swapchain : m_depthSwapchains)
+    for (const Swapchain &swapchain : std::as_const(m_depthSwapchains))
         xrDestroySwapchain(swapchain.handle);
 
     m_depthSwapchains.clear();
@@ -769,7 +769,7 @@ void QQuick3DXrManagerPrivate::checkReferenceSpaces()
     }
 
     qCDebug(lcQuick3DXr, "Available reference spaces: %d", spaceCount);
-    for (XrReferenceSpaceType space : m_availableReferenceSpace) {
+    for (XrReferenceSpaceType space : std::as_const(m_availableReferenceSpace)) {
         qCDebug(lcQuick3DXr, "  Name: %s", to_string(space));
     }
 }
@@ -1045,7 +1045,7 @@ bool QQuick3DXrManagerPrivate::createSwapchains()
         // Print swapchain formats and the selected one.
         {
             QString swapchainFormatsString;
-            for (int64_t format : swapchainFormats) {
+            for (int64_t format : std::as_const(swapchainFormats)) {
                 const bool selectedColor = format == m_colorSwapchainFormat;
                 const bool selectedDepth = format == m_depthSwapchainFormat;
                 swapchainFormatsString += u" ";
@@ -1165,7 +1165,7 @@ bool QQuick3DXrManagerPrivate::createSwapchains()
                 swapchainCreateInfo.faceCount = 1;
                 swapchainCreateInfo.sampleCount = 1; // we do MSAA on our own, do not need ms textures from the swapchain
                 swapchainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
-                Swapchain swapchain;
+                Swapchain swapchain {};
                 swapchain.width = swapchainCreateInfo.width;
                 swapchain.height = swapchainCreateInfo.height;
                 if (checkXrResult(xrCreateSwapchain(m_session, &swapchainCreateInfo, &swapchain.handle))) {
@@ -1900,7 +1900,7 @@ void QQuick3DXrManagerPrivate::setupMetaQuestFoveation()
     PFN_xrUpdateSwapchainFB pfnUpdateSwapchainFB;
     OpenXRHelpers::resolveXrFunction(m_instance, "xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB));
 
-    for (auto swapchain : m_swapchains) {
+    for (const auto &swapchain : std::as_const(m_swapchains)) {
         XrFoveationLevelProfileCreateInfoFB levelProfileCreateInfo = {};
         levelProfileCreateInfo.type = XR_TYPE_FOVEATION_LEVEL_PROFILE_CREATE_INFO_FB;
         levelProfileCreateInfo.level = m_foveationLevel;
@@ -2140,7 +2140,7 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     qCDebug(lcQuick3DXr) << "Requesting to enable XR API layers:" << enabledApiLayers;
 
     m_enabledApiLayers.clear();
-    for (const char *layer : enabledApiLayers)
+    for (const char *layer : std::as_const(enabledApiLayers))
         m_enabledApiLayers.append(QString::fromLatin1(layer));
 
     // Load extensions
@@ -2266,7 +2266,7 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     qCDebug(lcQuick3DXr) << "Requesting to enable XR extensions:" << enabledExtensions;
 
     m_enabledExtensions.clear();
-    for (const char *extension : enabledExtensions)
+    for (const char *extension : std::as_const(enabledExtensions))
         m_enabledExtensions.append(QString::fromLatin1(extension));
 
     // Create Instance
