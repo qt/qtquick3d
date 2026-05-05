@@ -297,7 +297,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         QVector<QShaderDescription::InOutVariable> samplerVars =
                 shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
-        for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
+        const auto combinedSamplers = shaderPipeline->vertexStage()->shader().description().combinedImageSamplers();
+        for (const QShaderDescription::InOutVariable &var : combinedSamplers) {
             auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
                                    [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
             if (it == samplerVars.cend())
@@ -305,7 +306,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         int maxSamplerBinding = -1;
-        for (const QShaderDescription::InOutVariable &var : samplerVars)
+        for (const QShaderDescription::InOutVariable &var : std::as_const(samplerVars))
             maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
 
         // Will need to set unused image-samplers to something dummy
@@ -577,7 +578,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                           QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
 
-            for (const QShaderDescription::InOutVariable &var : samplerVars) {
+            for (const QShaderDescription::InOutVariable &var : std::as_const(samplerVars)) {
                 if (!samplerBindingsSpecified.testBit(var.binding)) {
                     QRhiTexture *t = nullptr;
                     if (var.type == QShaderDescription::SamplerCube)

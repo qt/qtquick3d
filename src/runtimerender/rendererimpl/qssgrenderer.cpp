@@ -905,7 +905,7 @@ QSSGRendererPrivate::closestPointOnSubsetRenderable(const QSSGRenderLayer& layer
 
     // Early culling: check if sphere can reach model bounds
     QSSGBounds3 modelBounds;
-    for (const auto &subset : mesh->subsets)
+    for (const auto &subset : std::as_const(mesh->subsets))
         modelBounds.include(subset.bounds);
 
     if (modelBounds.isEmpty())

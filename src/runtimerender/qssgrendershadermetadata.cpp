@@ -195,7 +195,8 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
             it = obj.constFind(QLatin1String("inputs"));
             if (it != end) {
                 if (it->type() == QJsonValue::Array) {
-                    for (const auto valueRef : it->toArray()) {
+                    const auto array = it->toArray();
+                    for (const auto &valueRef : array) {
                         if (!valueRef.isObject())
                             continue;
                         const auto inOutVar = toInputOutput(valueRef.toObject());
@@ -219,7 +220,8 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
             it = obj.constFind(QLatin1String("outputs"));
             if (it != end) {
                 if (it->type() == QJsonValue::Array) {
-                    for (const auto valueRef : it->toArray()) {
+                    const auto array = it->toArray();
+                    for (const auto &valueRef : array) {
                         if (!valueRef.isObject())
                             continue;
                         const auto inOutVar = toInputOutput(valueRef.toObject());

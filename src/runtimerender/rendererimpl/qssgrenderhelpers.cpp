@@ -441,7 +441,8 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
     if (isCustomMaterialMeshSubset) {
         QVector<QShaderDescription::InOutVariable> samplerVars =
                 shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
-        for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
+        const auto combinedSamplers = shaderPipeline->vertexStage()->shader().description().combinedImageSamplers();
+        for (const QShaderDescription::InOutVariable &var : combinedSamplers) {
             auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
                                    [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
             if (it == samplerVars.cend())
@@ -2908,7 +2909,7 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
         return -1;
     }
 
-    for (const QSSGRenderableObjectHandle &handle : inObjects) {
+    for (const QSSGRenderableObjectHandle &handle : std::as_const(inObjects)) {
         QSSGRenderableObject *obj = handle.obj;
 
         if (obj->type != QSSGRenderableObject::Type::DefaultMaterialMeshSubset &&
@@ -3154,7 +3155,7 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
     QSSGRhiGraphicsPipelineState ps = basePipelineState;
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
 
-    for (const QSSGRenderableObjectHandle &handle : inObjects) {
+    for (const QSSGRenderableObjectHandle &handle : std::as_const(inObjects)) {
         QSSGRenderableObject *obj = handle.obj;
         QSSGRhiShaderPipelinePtr shaderPipeline;
 
@@ -3415,7 +3416,8 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
                 int maxSamplerBinding = -1;
                 QVector<QShaderDescription::InOutVariable> samplerVars =
                         shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
-                for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
+                const auto combinedSamplers = shaderPipeline->vertexStage()->shader().description().combinedImageSamplers();
+                for (const QShaderDescription::InOutVariable &var : combinedSamplers) {
                     auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
                                            [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
                     if (it == samplerVars.cend())
@@ -3472,7 +3474,7 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
         return index;
 
     QSSGRhiGraphicsPipelineState ps = basePipelineState;
-    for (const QSSGRenderableObjectHandle &handle : inObjects) {
+    for (const QSSGRenderableObjectHandle &handle : std::as_const(inObjects)) {
         QSSGRenderableObject *obj = handle.obj;
         QSSGRhiShaderPipelinePtr shaderPipeline;
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
@@ -3754,7 +3756,8 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
 
                 QVector<QShaderDescription::InOutVariable> samplerVars =
                         shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
-                for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
+                const auto combinedSamplers = shaderPipeline->vertexStage()->shader().description().combinedImageSamplers();
+                for (const QShaderDescription::InOutVariable &var : combinedSamplers) {
                     auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
                                            [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
                     if (it == samplerVars.cend())
