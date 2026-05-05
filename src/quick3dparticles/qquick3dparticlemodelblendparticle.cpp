@@ -506,7 +506,8 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
                                     indexBuffer.data,
                                     u16IndexType,
                                     primitiveCount);
-            m_modelGeometry->setBounds(mesh.subsets().first().bounds.min, mesh.subsets().first().bounds.max);
+            const auto meshSubsets = mesh.subsets();
+            m_modelGeometry->setBounds(meshSubsets.constFirst().bounds.min, meshSubsets.constFirst().bounds.max);
             m_modelGeometry->setStride(vertexBuffer.stride);
             m_modelGeometry->setVertexData(unindexedVertexData);
             m_modelGeometry->setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
@@ -521,7 +522,8 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
                                 vertexBuffer.stride,
                                 entryOffset(vertexBuffer, QByteArray(QSSGMesh::MeshInternal::getPositionAttrName())),
                                 primitiveCount);
-            m_modelGeometry->setBounds(mesh.subsets().first().bounds.min, mesh.subsets().first().bounds.max);
+            const auto meshSubsets = mesh.subsets();
+            m_modelGeometry->setBounds(meshSubsets.constFirst().bounds.min, meshSubsets.constFirst().bounds.max);
             m_modelGeometry->setStride(vertexBuffer.stride);
             m_modelGeometry->setVertexData(vertexBuffer.data);
             m_modelGeometry->setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
