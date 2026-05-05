@@ -1719,24 +1719,13 @@ QQuick3DPropertyChangedTracker::~QQuick3DPropertyChangedTracker()
 
 }
 
-void QQuick3DPropertyChangedTracker::extractProperties(UniformPropertyList &outUniforms)
+std::optional<QQuick3DPropertyChangedTracker::UniformProperty> QQuick3DPropertyChangedTracker::createOrUpdateTrackedProperty(const QMetaProperty property,
+                                                                                                                             bool addWatchers)
 {
-    // Ensure we start with a clean list
-    outUniforms.clear();
+    Q_ASSERT(property.isValid());
 
-    auto metaObject = m_owner->metaObject();
-
-    // Properties -> uniforms
-    const int propCount = metaObject->propertyCount();
-    int propOffset = metaObject->propertyOffset();
-
-    // Classes can have multilayered inheritance structure, so find the actual propOffset by
-    // walking up the inheritance chain.
-    const QMetaObject *superClass = metaObject->superClass();
-    while (superClass && qstrcmp(superClass->className(), m_superClassName) != 0)  {
-        propOffset = superClass->propertyOffset();
-        superClass = superClass->superClass();
-    }
+    std::optional<QQuick3DPropertyChangedTracker::UniformProperty> result;
+    const int propertyIndex = property.propertyIndex();
 
     static auto getSamplerHint = [](const QQuick3DTexture &texture) {
         if (auto *po = QQuick3DObjectPrivate::get(&texture)) {
@@ -1766,60 +1755,136 @@ void QQuick3DPropertyChangedTracker::extractProperties(UniformPropertyList &outU
         return QSSGRenderSamplerType::Sampler2D;
     };
 
-    const auto addTextureToUniforms = [&](const char *name, QQuick3DTexture *texture, int propertyIndex) {
+    const auto addTextureToUniforms =
+            [&](const char *name, QQuick3DTexture *texture, int propertyIndex) -> QQuick3DPropertyChangedTracker::UniformProperty {
         QSSGRenderImage *ri = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(texture)->spatialNode);
         auto samplerName = QSSGBaseTypeHelpers::toString(getSamplerHint(*texture));
-        outUniforms.emplace_back(name, samplerName, QVariant::fromValue(ri), QSSGRenderShaderValue::Texture, propertyIndex);
+        if (addWatchers) {
+            QObject::connect(texture, &QQuick3DTexture::textureProviderChanged, m_owner, [this, property, texture]() {
+                addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
+            });
+        }
+
+        return UniformProperty(name, samplerName, QVariant::fromValue(ri), QSSGRenderShaderValue::Texture, propertyIndex);
     };
 
     // The TextureInput type needs extra watchers for its properties...
     const auto addTextureInputWatchers = [&](QMetaProperty property, QQuick3DShaderUtilsTextureInput *textureInput) {
-        QObject::connect(textureInput, &QQuick3DShaderUtilsTextureInput::enabledChanged, m_owner, [this, property, textureInput](){ addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput); }, Qt::UniqueConnection);
-        QObject::connect(textureInput, &QQuick3DShaderUtilsTextureInput::textureChanged, m_owner, [this, property, textureInput](){ addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput); }, Qt::UniqueConnection);
-        if (auto *texture = textureInput->texture())
-            addTextureToUniforms(property.name(), texture, property.propertyIndex());
+        QObject::connect(textureInput, &QQuick3DShaderUtilsTextureInput::enabledChanged, m_owner, [this, property, textureInput]() {
+            addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
+        });
+        QObject::connect(textureInput, &QQuick3DShaderUtilsTextureInput::textureChanged, m_owner, [this, property, textureInput]() {
+            addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
+        });
     };
 
-    for (int i = propOffset; i != propCount; ++i) {
-        const QMetaProperty property = metaObject->property(i);
-        if (Q_UNLIKELY(!property.isValid()))
-            continue;
+    const char *name = property.name();
+    QMetaType propType = property.metaType();
+    QVariant propValue = property.read(m_owner);
+    if (propType == QMetaType(QMetaType::QVariant))
+        propType = propValue.metaType();
 
-        const char *name = property.name();
-        QMetaType propType = property.metaType();
-        QVariant propValue = property.read(m_owner);
-        if (propType == QMetaType(QMetaType::QVariant))
-            propType = propValue.metaType();
-
-        const auto type = QSSGShaderUtils::uniformType(propType);
-        if (type != QSSGRenderShaderValue::Unknown) {
-            outUniforms.emplace_back(name, QSSGShaderUtils::uniformTypeName(propType),
-                                     propValue, QSSGShaderUtils::uniformType(propType), i);
+    const auto type = QSSGShaderUtils::uniformType(propType);
+    if (type != QSSGRenderShaderValue::Unknown) {
+        result = UniformProperty(name, QSSGShaderUtils::uniformTypeName(propType), propValue, QSSGShaderUtils::uniformType(propType), propertyIndex);
+        if (addWatchers)
             addPropertyWatcher(property, DirtyPropertyHint::Value);
-        } else {
-            if (propType.id() >= QMetaType::User) {
-                if (propType.id() == qMetaTypeId<QQuick3DTexture *>()) {
-                    if (QQuick3DTexture *texture = property.read(m_owner).value<QQuick3DTexture *>()) {
-                        addTextureToUniforms(name, texture, i);
+    } else {
+        if (propType.id() >= QMetaType::User) {
+            if (propType.id() == qMetaTypeId<QQuick3DTexture *>()) {
+                if (QQuick3DTexture *texture = property.read(m_owner).value<QQuick3DTexture *>()) {
+                    result = addTextureToUniforms(name, texture, propertyIndex);
+                    if (addWatchers)
                         addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
-                    }
-                } else if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) { // For compatibility, also check for texture input types
-                    if (QQuick3DShaderUtilsTextureInput *textureInput = property.read(m_owner).value<QQuick3DShaderUtilsTextureInput *>(); textureInput && textureInput->texture()) {
+                }
+            } else if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) { // For compatibility, also check for texture input types
+                if (QQuick3DShaderUtilsTextureInput *textureInput = property.read(m_owner).value<QQuick3DShaderUtilsTextureInput *>();
+                    textureInput && textureInput->texture()) {
+                    result = addTextureToUniforms(property.name(), textureInput->texture(), propertyIndex);
+                    if (addWatchers) {
                         addTextureInputWatchers(property, textureInput);
                         addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
                     }
                 }
-            } else if (propType == QMetaType(QMetaType::QObjectStar)) {
-                if (QQuick3DTexture *texture = qobject_cast<QQuick3DTexture *>(propValue.value<QObject *>())) {
-                    addTextureToUniforms(name, texture, i);
+            }
+        } else if (propType == QMetaType(QMetaType::QObjectStar)) {
+            if (QQuick3DTexture *texture = qobject_cast<QQuick3DTexture *>(propValue.value<QObject *>())) {
+                result = addTextureToUniforms(name, texture, propertyIndex);
+                if (addWatchers)
                     addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
-                } else if (QQuick3DShaderUtilsTextureInput *textureInput = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()); textureInput && textureInput->texture()) {
+            } else if (QQuick3DShaderUtilsTextureInput *textureInput = qobject_cast<QQuick3DShaderUtilsTextureInput *>(
+                               propValue.value<QObject *>());
+                       textureInput && textureInput->texture()) {
+                result = addTextureToUniforms(property.name(), textureInput->texture(), propertyIndex);
+                if (addWatchers) {
                     addTextureInputWatchers(property, textureInput);
                     addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
                 }
             }
         }
     }
+
+    return result;
+}
+
+QList<QQuick3DPropertyChangedTracker::UniformProperty> QQuick3DPropertyChangedTracker::extractProperties()
+{
+    if (!m_dirtyProperties.empty()) {
+        for (int propertyIndex : std::as_const(m_dirtyProperties)) {
+            auto it = std::lower_bound(m_propertyList.begin(),
+                                       m_propertyList.end(),
+                                       propertyIndex,
+                                       [](const UniformProperty &p, int index) { return p.pid < index; });
+            if (it == m_propertyList.end()) {
+                Q_ASSERT(false);
+                continue;
+            }
+
+            QMetaProperty property = m_owner->metaObject()->property(propertyIndex);
+            if (Q_UNLIKELY(!property.isValid())) {
+                m_propertyList.erase(it);
+                continue;
+            }
+
+            if (auto trackedProperty = createOrUpdateTrackedProperty(property, false); trackedProperty.has_value())
+                *it = *trackedProperty;
+            else
+                m_propertyList.erase(it);
+        }
+        m_dirtyProperties.clear();
+    }
+
+    if (m_extracted)
+        return m_propertyList;
+
+    auto metaObject = m_owner->metaObject();
+
+    // Properties -> uniforms
+    const int propCount = metaObject->propertyCount();
+    int propOffset = metaObject->propertyOffset();
+    m_propertyList.reserve(propCount);
+
+    // Classes can have multilayered inheritance structure, so find the actual propOffset by
+    // walking up the inheritance chain.
+    const QMetaObject *superClass = metaObject->superClass();
+    while (superClass && qstrcmp(superClass->className(), m_superClassName) != 0) {
+        propOffset = superClass->propertyOffset();
+        superClass = superClass->superClass();
+    }
+
+    for (int i = propOffset; i != propCount; ++i) {
+        const QMetaProperty property = metaObject->property(i);
+        if (Q_UNLIKELY(!property.isValid()))
+            continue;
+        if (auto uniformProperty = createOrUpdateTrackedProperty(property, true); uniformProperty.has_value()) {
+            m_propertyList.push_back(*uniformProperty);
+        }
+    }
+
+    m_dirtyProperties.reserve(m_propertyList.size());
+
+    m_extracted = true;
+    return m_propertyList;
 }
 
 void QQuick3DPropertyChangedTracker::addPropertyWatcher(QMetaProperty property, DirtyPropertyHint hint, QQuick3DObject *object)
@@ -1828,13 +1893,12 @@ void QQuick3DPropertyChangedTracker::addPropertyWatcher(QMetaProperty property, 
         // Check if we're already watching this property.
         const auto pid = property.propertyIndex();
         Q_ASSERT(pid != -1);
-        auto it = std::find_if(m_trackedProperties.begin(), m_trackedProperties.end(), [pid](const Tracked &tp) { return tp.pid == pid; });
+        auto it = m_trackedProperties.find(pid);
         const bool found = (it != m_trackedProperties.end());
         QQuick3DObject *oldObj = nullptr;
         if (!found) {
             QQuick3DPropertyWatcher *watcher = new QQuick3DPropertyWatcher(this, property);
-            m_trackedProperties.push_back({watcher, object, pid});
-            it = std::prev(m_trackedProperties.end());
+            it = m_trackedProperties.insert(pid, Tracked { watcher, object, pid });
         } else {
             oldObj = it->object;
             it->object = object;
@@ -1862,6 +1926,7 @@ void QQuick3DPropertyChangedTracker::addPropertyWatcher(QMetaProperty property, 
             }
         }
 
+        m_dirtyProperties.push_back(property.propertyIndex());
         markTrackedPropertyDirty(property, hint);
     }
 }
@@ -1901,11 +1966,13 @@ QQuick3DPropertyWatcher::QQuick3DPropertyWatcher(QQuick3DPropertyChangedTracker 
 
 void QQuick3DPropertyWatcher::onValuePropertyChanged()
 {
+    m_tracker->m_dirtyProperties.push_back(m_property.propertyIndex());
     m_tracker->markTrackedPropertyDirty(m_property, QQuick3DPropertyChangedTracker::DirtyPropertyHint::Value);
 }
 
 void QQuick3DPropertyWatcher::onPointerPropertyChanged()
 {
+    m_tracker->m_dirtyProperties.push_back(m_property.propertyIndex());
     m_tracker->markTrackedPropertyDirty(m_property, QQuick3DPropertyChangedTracker::DirtyPropertyHint::Reference);;
 }
 

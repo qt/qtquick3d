@@ -106,8 +106,7 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
         markAllDirty();
 
         // Properties -> uniforms.
-        // NOTE: Calling extractProperties clears existing properties
-        extractProperties(uniformProps);
+        uniformProps = extractProperties();
 
         // Commands
         renderPassNode->resetCommands();
