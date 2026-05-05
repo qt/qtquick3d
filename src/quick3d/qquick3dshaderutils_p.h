@@ -759,7 +759,7 @@ private:
     QMetaProperty m_property;
 };
 
-class QQuick3DPropertyChangedTracker
+class Q_QUICK3D_EXPORT QQuick3DPropertyChangedTracker
 {
 public:
     enum class DirtyPropertyHint
@@ -782,7 +782,8 @@ public:
 protected:
     friend class QQuick3DPropertyWatcher;
 
-    void extractProperties(UniformPropertyList &outUniforms);
+    // Will re-use already extracted list and update dirty properties
+    QList<UniformProperty> extractProperties();
 
     void addPropertyWatcher(QMetaProperty property, DirtyPropertyHint hint, QQuick3DObject *object = nullptr);
 
@@ -795,10 +796,15 @@ protected:
         int pid = -1;
     };
 
-    using TrackedProperties = std::vector<Tracked>;
-    TrackedProperties m_trackedProperties;
+    QHash<int, Tracked> m_trackedProperties;
     QQuick3DObject *m_owner = nullptr;
     const char *m_superClassName = nullptr;
+    QList<UniformProperty> m_propertyList; // always sorted by propertyIndex
+
+private:
+    std::optional<UniformProperty> createOrUpdateTrackedProperty(const QMetaProperty property, bool addWatchers);
+    std::vector<int> m_dirtyProperties;
+    bool m_extracted = false;
 };
 
 QT_END_NAMESPACE
