@@ -54,7 +54,7 @@ static bool isforceInputHandlingSet()
 struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
 {
     static void removeAll() {
-        for (auto o : owners) {
+        for (const auto &o : std::as_const(owners)) {
             if (!o.isNull())
                 o->setSceneTransform(nullptr);
         }
@@ -1380,7 +1380,7 @@ QList<QQuick3DObject *> QQuick3DViewport::pickInRect(const QPointF &start, const
     QList<QQuick3DObject *> ret;
     if (QQuick3DSceneRenderer *renderer = getRenderer()) {
         auto nodes = renderer->syncPickInFrustum(frustum);
-        for (auto node : nodes) {
+        for (const auto *node : std::as_const(nodes)) {
             if (QQuick3DObject *m = findFrontendNode(node))
                 ret.append(m);
         }
@@ -1925,9 +1925,9 @@ bool QQuick3DViewport::forwardEventToSubscenes(QPointerEvent *event,
     originalScenePositions.resize(event->pointCount());
     for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex)
         originalScenePositions[pointIndex] = event->point(pointIndex).scenePosition();
-    for (auto subscene : visitedSubscenes) {
+    for (const auto &subscene : visitedSubscenes) {
         QQuickItem *subsceneRoot = subscene.first;
-        auto &subsceneInfo = subscene.second;
+        const auto &subsceneInfo = subscene.second;
         Q_ASSERT(subsceneInfo.eventPointScenePositions.size() == event->pointCount());
         auto da = QQuickItemPrivate::get(subsceneRoot)->deliveryAgent();
         for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex) {
@@ -2220,7 +2220,7 @@ QQuick3DSceneManager *QQuick3DViewport::findChildSceneManager(QQuick3DObject *in
         return manager;
 
     auto children = QQuick3DObjectPrivate::get(inObject)->childItems;
-    for (auto child : children) {
+    for (auto *child : std::as_const(children)) {
         if (auto m = QQuick3DObjectPrivate::get(child)->sceneManager) {
             manager = m;
             break;

@@ -690,7 +690,7 @@ qsizetype QQuick3DInstanceList::qmlInstanceListEntriesCount(QQmlListProperty<QQu
 void QQuick3DInstanceList::qmlClearInstanceListEntries(QQmlListProperty<QQuick3DInstanceListEntry> *list)
 {
     auto *self = static_cast<QQuick3DInstanceList *>(list->object);
-    for (auto *instance : self->m_instances) {
+    for (auto *instance : std::as_const(self->m_instances)) {
         disconnect(instance, &QObject::destroyed, self, &QQuick3DInstanceList::onInstanceDestroyed);
         disconnect(instance, &QQuick3DInstanceListEntry::changed, self, &QQuick3DInstanceList::handleInstanceChange);
     }

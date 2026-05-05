@@ -788,7 +788,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         if (!m_materials.isEmpty()) {
             if (modelNode->materials.isEmpty()) {
                 // Easy mode, just add each material
-                for (const Material &material : m_materials) {
+                for (const Material &material : std::as_const(m_materials)) {
                     QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(material.material)->spatialNode;
                     if (graphObject)
                         modelNode->materials.append(graphObject);

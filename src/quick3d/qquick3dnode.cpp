@@ -577,8 +577,8 @@ void QQuick3DNodePrivate::markSceneTransformDirty()
     if (m_sceneTransformConnectionCount > 0 || m_directionConnectionCount > 0)
         emitChangesToSceneTransform();
 
-    auto children = QQuick3DObjectPrivate::get(q)->childItems;
-    for (auto child : children) {
+    const auto children = QQuick3DObjectPrivate::get(q)->childItems;
+    for (auto *child : children) {
         if (auto node = qobject_cast<QQuick3DNode *>(child)) {
             QQuick3DNodePrivate::get(node)->markSceneTransformDirty();
         }
