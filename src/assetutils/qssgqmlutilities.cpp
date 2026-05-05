@@ -1556,7 +1556,7 @@ QPair<QString, QString> writeQmlForAnimation(const QSSGSceneDesc::Animation &ani
                 indent(output) << "keyframeSource: " << toQuotedString(animSourceName) << "\n";
             } else {
                 Q_ASSERT(!channel->keys.isEmpty());
-                for (const auto &key : channel->keys) {
+                for (const auto &key : std::as_const(channel->keys)) {
                     indent(output) << "Keyframe {\n";
                     {
                         QSSGQmlScopedIndent scopedIndent(output);
@@ -1619,7 +1619,7 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     output.type = OutputContext::NodeTree;
     stream << "\n";
     stream << indent() << "// Nodes:\n";
-    for (const auto &cld : root->children)
+    for (const auto &cld : std::as_const(root->children))
         writeQmlForNode(*cld, output);
 
     // animations
@@ -1677,7 +1677,7 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
             keyframeGroup->setKeyframeData(keyframeData);
         } else {
             auto keyframes = keyframeGroup->keyframes();
-            for (const auto &key : channel->keys) {
+            for (const auto &key : std::as_const(channel->keys)) {
                 auto keyframe = new QQuickKeyframe(keyframeGroup);
                 keyframe->setFrame(key->time);
                 keyframe->setValue(key->getValue());

@@ -174,7 +174,8 @@ static void boxBoundsRecursive(const QQuick3DNode *baseNode, const QQuick3DNode 
                 accBounds.bounds.include(p);
         }
     }
-    for (auto *child : node->childItems())
+    const auto childItems1 = node->childItems();
+    for (auto *child : childItems1)
         boxBoundsRecursive(baseNode, qobject_cast<const QQuick3DNode *>(child), accBounds);
 }
 
@@ -183,7 +184,8 @@ static void applyToModels(QQuick3DObject *obj, Func &&lambda)
 {
     if (!obj)
         return;
-    for (auto *child : obj->childItems()) {
+    const auto childItems2 = obj->childItems();
+    for (auto *child : childItems2) {
         if (auto *model = qobject_cast<QQuick3DModel *>(child))
             lambda(model);
         applyToModels(child, lambda);
