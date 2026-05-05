@@ -26,7 +26,8 @@ QSSGAssetImportManager::QSSGAssetImportManager(QObject *parent) : QObject(parent
         if (importer) {
             m_assetImporters.append(importer);
             // Add to extension map
-            for (const auto &extension : importer->inputExtensions()) {
+            const auto extensions = importer->inputExtensions();
+            for (const auto &extension : extensions) {
                 m_extensionsMap.insert(extension, importer);
             }
         } else {
@@ -37,9 +38,8 @@ QSSGAssetImportManager::QSSGAssetImportManager(QObject *parent) : QObject(parent
 
 QSSGAssetImportManager::~QSSGAssetImportManager()
 {
-    for (auto importer : m_assetImporters) {
+    for (auto *importer : std::as_const(m_assetImporters))
         delete importer;
-    }
 }
 
 // Compatibility with old API
@@ -85,7 +85,7 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QSt
     }
 
     // debug output
-    for (const auto &file : generatedFiles)
+    for (const auto &file : std::as_const(generatedFiles))
         qDebug() << "generated file: " << file;
 
     return ImportState::Success;

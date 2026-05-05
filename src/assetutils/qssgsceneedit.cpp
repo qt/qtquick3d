@@ -56,7 +56,7 @@ static QSSGSceneDesc::Node::Type nodeTypeFromName(const QByteArrayView &typeName
 
 static void replaceReferencesToResource(QSSGSceneDesc::Node *node, QSSGSceneDesc::Node *resource, QSSGSceneDesc::Node *replacement)
 {
-    for (auto *prop : node->properties) {
+    for (auto *prop : std::as_const(node->properties)) {
         auto &val = prop->value;
         if (qvariant_cast<QSSGSceneDesc::Node *>(val) == resource) {
             if (replacement)
@@ -71,7 +71,7 @@ static void replaceReferencesToResource(QSSGSceneDesc::Node *node, QSSGSceneDesc
             }
         }
     }
-    for (auto *child : node->children)
+    for (auto *child : std::as_const(node->children))
         replaceReferencesToResource(child, resource, replacement);
 }
 
@@ -85,7 +85,7 @@ static QSSGSceneDesc::Node *findNode(QSSGSceneDesc::Node *root, const QByteArray
     if (root->name == name && root->nodeType == type)
         return root;
 
-    for (auto *child : root->children) {
+    for (auto *child : std::as_const(root->children)) {
         if (auto *ret = findNode(child, name, type, parent)) {
             if (parent && !*parent)
                 *parent = root;
@@ -113,7 +113,7 @@ typedef bool NodeFilter(QSSGSceneDesc::Node *);
 static NodeSet flattenTree(QSSGSceneDesc::Node *node, NodeFilter *excludeFunction = nullptr)
 {
     NodeSet ret = { node };
-    for (auto *child : node->children)
+    for (auto *child : std::as_const(node->children))
         if (!excludeFunction || !excludeFunction(child))
             ret.unite(flattenTree(child));
     return ret;
@@ -137,7 +137,7 @@ static void removeFromAnimation(QSSGSceneDesc::Animation *animation, const NodeS
 static void deleteTree(QSSGSceneDesc::Node *node)
 {
     const auto children = flattenTree(node);
-    for (auto *animation : node->scene->animations)
+    for (auto *animation : std::as_const(node->scene->animations))
         removeFromAnimation(animation, children);
     for (auto *child : children)
         delete child;
