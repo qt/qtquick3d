@@ -1382,7 +1382,7 @@ void QQuick3DSceneEnvironment::qmlAppendEffect(QQmlListProperty<QQuick3DEffect> 
     if (effect->parentItem() == nullptr)
         effect->setParentItem(self);
 
-    for (QQuick3DEffect *e : self->m_effects)
+    for (QQuick3DEffect *e : std::as_const(self->m_effects))
         e->effectChainDirty();
 
     self->update();

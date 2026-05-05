@@ -160,7 +160,7 @@ static void detachWindow(QQuickItem *item, QObject *win)
         itemPriv->nextDirtyItem = nullptr;
     }
 
-    for (auto *child: itemPriv->childItems)
+    for (auto *child : std::as_const(itemPriv->childItems))
         detachWindow(child, win);
 }
 
