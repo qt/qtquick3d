@@ -271,12 +271,12 @@ bool Semantic::visit(MemberAccessExpressionAST *ast)
             if (Symbol *s = vecTy->find(*ast->field))
                 _expr.type = s->type();
             else
-                _engine->error(ast->lineno, QString::fromLatin1("`%1' has no member named `%2'").arg(vecTy->name()).arg(*ast->field));
+                _engine->error(ast->lineno, QString::fromLatin1("`%1' has no member named `%2'").arg(vecTy->name(), *ast->field));
         } else if (const Struct *structTy = expr.type->asStructType()) {
             if (Symbol *s = structTy->find(*ast->field))
                 _expr.type = s->type();
             else
-                _engine->error(ast->lineno, QString::fromLatin1("`%1' has no member named `%2'").arg(structTy->name()).arg(*ast->field));
+                _engine->error(ast->lineno, QString::fromLatin1("`%1' has no member named `%2'").arg(structTy->name(), *ast->field));
         } else {
             _engine->error(ast->lineno, QString::fromLatin1("Requested for member `%1', in a non class or vec instance").arg(*ast->field));
         }
