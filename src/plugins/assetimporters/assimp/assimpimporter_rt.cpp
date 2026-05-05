@@ -1943,7 +1943,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                     // Target propert[y|ies]
 
                     const auto currentPropertyValue = [targetNode](const char *propertyName) -> QVariant {
-                        for (auto *p : targetNode->properties) {
+                        for (const auto *p : std::as_const(targetNode->properties)) {
                             if (!qstrcmp(propertyName, p->name))
                                 return p->value;
                         }
