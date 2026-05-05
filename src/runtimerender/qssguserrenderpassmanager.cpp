@@ -83,7 +83,7 @@ void QSSGUserRenderPassManager::updateUserPassOrder(bool forceUpdate)
 bool QSSGUserRenderPassManager::derefTexture(QRhiTexture *texture)
 {
     auto foundIt = m_trackedTextures.find(texture);
-    const bool wasFound = foundIt != m_trackedTextures.constEnd();
+    const bool wasFound = foundIt != m_trackedTextures.end();
 
     if (wasFound) {
         if (!(foundIt.value() > 1)) {
