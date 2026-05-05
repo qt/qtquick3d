@@ -329,11 +329,11 @@ void QQuick3DXrInputManagerPrivate::setUpBindings(QList<ControllerBindings>* con
 
         std::vector<XrActionSuggestedBinding> bindings {};
 
-        for (const auto& path : controllerBindings.supportedActionPaths) {
+        for (const auto &path : std::as_const(controllerBindings.supportedActionPaths)) {
             bindings.push_back(actionPaths.value(path));
         }
 
-        for (const auto &[actionId, path, selector] : controllerBindings.profileMappingDefs) {
+        for (const auto &[actionId, path, selector] : std::as_const(controllerBindings.profileMappingDefs)) {
             if (selector & LeftHandSubPath)
                 bindings.push_back({m_inputActions[actionId], handComponentPaths->value(path).paths[uint(Handedness::Left)]});
             if (selector & RightHandSubPath)
@@ -498,7 +498,7 @@ void QQuick3DXrInputManagerPrivate::pollActions()
         getInfo.subactionPath = m_handSubactionPath[uint(handedness)];
         auto &inputState = m_handInputState[uint(handedness)];
 
-        for (const auto &def : m_handInputActionDefs) {
+        for (const auto &def : std::as_const(m_handInputActionDefs)) {
             getInfo.action = m_inputActions[def.id];
             switch (def.type) {
             case XR_ACTION_TYPE_BOOLEAN_INPUT: {
@@ -816,7 +816,7 @@ void QQuick3DXrInputManagerPrivate::setupActions()
     setPath(m_handSubactionPath[0], "/user/hand/left");
     setPath(m_handSubactionPath[1], "/user/hand/right");
 
-    for (const auto &def : m_handInputActionDefs) {
+    for (const auto &def : std::as_const(m_handInputActionDefs)) {
         createAction(def.type,
                      def.shortName,
                      def.localizedName,
