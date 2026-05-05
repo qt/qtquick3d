@@ -677,9 +677,9 @@ bool QSSGLightmapperPrivate::commitGeometry()
                                                                  arg(lm.model->lightmapKey));
             return false;
         }
-        sendOutputInfo(QSSGLightmapper::BakingStatus::Info, QStringLiteral("Lightmap UV unwrap done for model %1 in %2").
-                                                              arg(lm.model->lightmapKey).
-                                                              arg(formatDuration(unwrapTimer.elapsed())));
+        sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
+                       QStringLiteral("Lightmap UV unwrap done for model %1 in %2")
+                               .arg(lm.model->lightmapKey, formatDuration(unwrapTimer.elapsed())));
 
         if (lm.model->hasLightmap()) {
             QByteArray meshData = meshToByteArray(mesh);
@@ -700,7 +700,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
             drawInfo.meshIndex = meshIndex;
         }
 
-        drawInfo.lightmapSize = mesh.subsets().first().lightmapSizeHint;
+        drawInfo.lightmapSize = mesh.subsets().constFirst().lightmapSizeHint;
         drawInfo.vertexData = mesh.vertexBuffer().data;
         drawInfo.vertexStride = mesh.vertexBuffer().stride;
         drawInfo.indexData = mesh.indexBuffer().data;
@@ -728,7 +728,8 @@ bool QSSGLightmapperPrivate::commitGeometry()
             break;
         }
 
-        for (const QSSGMesh::Mesh::VertexBufferEntry &vbe : mesh.vertexBuffer().entries) {
+        const auto vertexBuffer = mesh.vertexBuffer();
+        for (const QSSGMesh::Mesh::VertexBufferEntry &vbe : vertexBuffer.entries) {
             if (vbe.name == QSSGMesh::MeshInternal::getPositionAttrName()) {
                 drawInfo.positionOffset = vbe.offset;
                 drawInfo.positionFormat = QSSGRhiHelpers::toVertexInputFormat(QSSGRenderComponentType(vbe.componentType), vbe.componentCount);
@@ -1359,11 +1360,11 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                        QStringLiteral(
                                "Successfully rasterized %1/%2 lightmap texels for model %3, lightmap size %4 in %5")
-                               .arg(texels.size() - unusedEntries)
-                               .arg(texels.size())
-                               .arg(lm.model->lightmapKey)
-                               .arg(QStringLiteral("(%1, %2)").arg(w).arg(h))
-                               .arg(formatDuration(rasterizeTimer.elapsed())));
+                               .arg(QString::number(texels.size() - unusedEntries),
+                                    QString::number(texels.size()),
+                                    lm.model->lightmapKey,
+                                    QStringLiteral("(%1, %2)").arg(QString::number(w), QString::number(h)),
+                                    formatDuration(rasterizeTimer.elapsed())));
         for (const SubMeshInfo &subMeshInfo : std::as_const(subMeshInfos[lmIdx])) {
             if (!lm.model->castsShadows) // only matters if it's in the raytracer scene
                 continue;
@@ -1993,7 +1994,7 @@ QVector<QVector3D> QSSGLightmapperPrivate::computeDirectLight(int lmIdx)
             uvs.push_back(QVector2D(x, 1.0f - y)); // NOTE: Flip y
         }
 
-        for (auto [i0, i1, i2] : triangles) {
+        for (const auto [i0, i1, i2] : std::as_const(triangles)) {
             const QVector3D triVert[3] = { positions[i0], positions[i1], positions[i2] };
             const QVector3D triNorm[3] = { normals[i0], normals[i1], normals[i2] };
             const QVector2D triUV[3] = { uvs[i0], uvs[i1], uvs[i2] };
@@ -2486,7 +2487,8 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     }
 
     QSet<QString> lightmapKeys;
-    for (const auto &[key, tag] : tmpFile->getKeys()) {
+    const auto keys = tmpFile->getKeys();
+    for (const auto &[key, tag] : keys) {
         if (tag == QSSGLightmapIODataTag::SceneMetadata) continue; // Will write at end
 
         if (tag != QSSGLightmapIODataTag::Texture_Direct && tag != QSSGLightmapIODataTag::Texture_Indirect
@@ -2522,7 +2524,7 @@ bool QSSGLightmapperPrivate::denoiseLightmaps()
     sceneMetadata[QStringLiteral("denoise_start_time")] = QDateTime::currentMSecsSinceEpoch();
 
     int lmIdx = -1;
-    for (const QString &key : lightmapKeys) {
+    for (const QString &key : std::as_const(lightmapKeys)) {
         ++lmIdx;
         auto incrementTracker = QScopeGuard([this, lmIdx, bakedLightingModelCount]() {
             progressTracker.denoisedModelDone(lmIdx + 1, bakedLightingModelCount);
@@ -2990,10 +2992,10 @@ bool QSSGLightmapper::bake()
         const QVector<QVector3D> directLight = d->computeDirectLight(lmIdx);
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                           QStringLiteral("[%1/%2] '%3' took %4")
-                              .arg(lmIdx + 1)
-                              .arg(bakedLightingModelCount)
-                              .arg(lm.model->lightmapKey)
-                              .arg(formatDuration(timer.elapsed())));
+                                  .arg(QString::number(lmIdx + 1),
+                                       QString::number(bakedLightingModelCount),
+                                       lm.model->lightmapKey,
+                                       formatDuration(timer.elapsed())));
 
         if (directLight.empty()) {
             d->sendOutputInfo(QSSGLightmapper::BakingStatus::Failed,
@@ -3050,10 +3052,10 @@ bool QSSGLightmapper::bake()
 
             d->sendOutputInfo(QSSGLightmapper::BakingStatus::Info,
                               QStringLiteral("[%1/%2] '%3' took %4")
-                                  .arg(lmIdx + 1)
-                                  .arg(bakedLightingModelCount)
-                                  .arg(lm.model->lightmapKey)
-                                  .arg(formatDuration(timer.elapsed())));
+                                      .arg(QString::number(lmIdx + 1),
+                                           QString::number(bakedLightingModelCount),
+                                           lm.model->lightmapKey,
+                                           formatDuration(timer.elapsed())));
 
             if (d->userCancelled()) {
                 d->updateStage(QStringLiteral("Cancelled"));
