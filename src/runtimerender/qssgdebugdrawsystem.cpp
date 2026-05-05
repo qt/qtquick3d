@@ -67,13 +67,13 @@ void QSSGDebugDrawSystem::prepareGeometry(QSSGRhiContext *rhiCtx, QRhiResourceUp
     QVector<VertexData> vertexData;
     QVector<quint32> indexData;
     QVector<VertexData> pointsData;
-    for (const auto &line : m_persistentLines)
+    for (const auto &line : std::as_const(m_persistentLines))
         generateLine(line, vertexData, indexData);
-    for (const auto &line : m_lines)
+    for (const auto &line : std::as_const(m_lines))
         generateLine(line, vertexData, indexData);
-    for (const auto &bounds : m_persistentBounds)
+    for (const auto &bounds : std::as_const(m_persistentBounds))
         generateBox(bounds, vertexData, indexData);
-    for (const auto &bounds : m_bounds)
+    for (const auto &bounds : std::as_const(m_bounds))
         generateBox(bounds, vertexData, indexData);
     pointsData = m_persistentPoints + m_points;
 
@@ -286,7 +286,8 @@ void QSSGDebugDrawSystem::debugNormals(QSSGBufferManager &bufferManager, const Q
     quint32 positionOffset = UINT_MAX;
     quint32 normalOffset = UINT_MAX;
 
-    for (const QSSGMesh::Mesh::VertexBufferEntry &vbe : mesh.vertexBuffer().entries) {
+    const auto vertexBuffer = mesh.vertexBuffer();
+    for (const QSSGMesh::Mesh::VertexBufferEntry &vbe : vertexBuffer.entries) {
         if (vbe.name == QSSGMesh::MeshInternal::getPositionAttrName()) {
             positionOffset = vbe.offset;
             if (vbe.componentType != QSSGMesh::Mesh::ComponentType::Float32 &&

@@ -582,7 +582,7 @@ void QSSGRhiEffectSystem::renderCmd(const QSSGRenderEffect *inEffect, QSSGRhiEff
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
-    for (QRhiTextureRenderTarget *rt : m_pendingClears) {
+    for (QRhiTextureRenderTarget *rt : std::as_const(m_pendingClears)) {
         // Effects like motion blur use an accumulator texture that should
         // start out empty (and they are sampled in the first pass), so such
         // textures need an explicit clear. It is not applicable for the common
@@ -616,7 +616,7 @@ void QSSGRhiEffectSystem::renderCmd(const QSSGRenderEffect *inEffect, QSSGRhiEff
     const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
             QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
     QSSGRhiShaderResourceBindingList bindings;
-    for (const QSSGRhiTexture &rhiTex : m_currentTextures) {
+    for (const QSSGRhiTexture &rhiTex : std::as_const(m_currentTextures)) {
         int binding = m_currentShaderPipeline->bindingForTexture(rhiTex.name);
         if (binding < 0) // may not be used in the shader (think qt_inputTexture, it's not given a shader samples INPUT)
             continue;
