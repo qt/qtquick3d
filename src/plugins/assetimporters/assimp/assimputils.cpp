@@ -507,7 +507,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
     positions.reserve(vertexAttributes.size());
     QVector<QVector3D> normals;
     normals.reserve(vertexAttributes.size());
-    for (const auto &vertex : vertexAttributes) {
+    for (const auto &vertex : std::as_const(vertexAttributes)) {
         positions.append(vertex.aData.position);
         normals.append(vertex.aData.normal);
     }
@@ -593,7 +593,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
                 QVector3D newNormal;
                 // Find all vertices that share the same position
                 const auto &sharedPositions = positionHash.value(position);
-                for (auto positionIndex2 : sharedPositions) {
+                for (const auto positionIndex2 : sharedPositions) {
                     if (positionIndex == positionIndex2) {
                         // Don't test against the current face under test
                         newNormal += faceNormal;
@@ -626,7 +626,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
             }
 
             // Do index remap now that all new normals have been calculated
-            for (auto pair : remapIndexes)
+            for (const auto &pair : std::as_const(remapIndexes))
                 newIndexes[pair.first] = pair.second;
         }
 
@@ -720,7 +720,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
             // populate meshLods with push_front though because subset lod data is sorted from
             // highest detail to lowest
             auto lods = generateMeshLevelsOfDetail(vertexAttributes, indexes, normalMergeAngle, normalSplitAngle);
-            for (const auto &lodPair : lods) {
+            for (const auto &lodPair : std::as_const(lods)) {
                 QSSGMesh::Mesh::Lod lod;
                 lod.offset = baseIndexOffset;
                 lod.count = lodPair.second.size();
@@ -764,7 +764,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
         baseIndex += vertexAttributes.size(); // Final count of vertices added
         // Increase target buffers before adding data
         vertexBufferData.targetVData.resize(requirments.numMorphTargets);
-        for (const auto &vertex : vertexAttributes)
+        for (const auto &vertex : std::as_const(vertexAttributes))
             vertexBufferData.addVertexAttributeData(vertex, requirments);
 
     }

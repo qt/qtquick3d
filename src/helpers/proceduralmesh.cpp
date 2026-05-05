@@ -438,7 +438,7 @@ void ProceduralMesh::updateGeometry()
     // Subsets
     // Subsets are optional so if none are specified the whole mesh is a single submesh
     if (!m_subsets.isEmpty()) {
-        for (const auto &subset : m_subsets) {
+        for (const auto &subset : std::as_const(m_subsets)) {
             QVector3D subsetMinBounds;
             QVector3D subsetMaxBounds;
             // Range checking is necessary because the user could have specified subset values
