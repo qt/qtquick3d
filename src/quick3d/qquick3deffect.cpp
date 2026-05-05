@@ -1181,7 +1181,7 @@ void QQuick3DEffect::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass
 {
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
 
-    for (QQuick3DShaderUtilsRenderPass *pass : that->m_passes)
+    for (QQuick3DShaderUtilsRenderPass *pass : std::as_const(that->m_passes))
         pass->disconnect(that);
 
     that->m_passes.clear();

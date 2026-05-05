@@ -582,7 +582,7 @@ QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
 
 QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
 {
-    for (auto manager: sceneManagerCleanupQueue) {
+    for (auto *manager : std::as_const(sceneManagerCleanupQueue)) {
         sceneManagers.removeOne(manager);
         delete manager;
     }
@@ -692,7 +692,7 @@ void QQuick3DWindowAttachment::onInvalidated()
 QQuick3DWindowAttachment::SyncResult QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders)
 {
     // Terminate old scene managers
-    for (auto manager: sceneManagerCleanupQueue) {
+    for (auto *manager : std::as_const(sceneManagerCleanupQueue)) {
         sceneManagers.removeOne(manager);
         delete manager;
     }
