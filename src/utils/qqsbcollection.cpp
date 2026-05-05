@@ -203,7 +203,7 @@ bool QQsbInMemoryCollection::load(const QString &filename)
     clear();
 
     const qsizetype entryCountBefore = entries.size();
-    for (const Entry &e : entryMap) {
+    for (const Entry &e : std::as_const(entryMap)) {
         const qint64 offset = e.value;
         if (e.isValid() && offset >= 0 && size > offset && f.seek(offset)) {
             QDataStream ds(&f);
