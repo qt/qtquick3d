@@ -579,7 +579,7 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
     }
 
     float time = system()->currentTime() * 0.001f;
-    for (const FadeOutLineData &fdata : m_fadeOutData) {
+    for (const FadeOutLineData &fdata : std::as_const(m_fadeOutData)) {
         if (fdata.emitterIndex == perEmitter.emitterIndex) {
             float factor = 1.0f - (time - fdata.beginTime) * fdata.timeFactor;
             genLine(fdata.endPoint, fdata.header, fdata.lineData.data(), bounds, segments,

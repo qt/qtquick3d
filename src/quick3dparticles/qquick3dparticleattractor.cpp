@@ -235,7 +235,7 @@ void QQuick3DParticleAttractor::updateShapePositions()
             pCount = m_positionsAmount;
         } else {
             if (!m_particles.isEmpty()) {
-                for (auto p : m_particles) {
+                for (auto *p : std::as_const(m_particles)) {
                     auto pp = qobject_cast<QQuick3DParticle *>(p);
                     pCount += pp->maxAmount();
                 }
