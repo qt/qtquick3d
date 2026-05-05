@@ -189,7 +189,7 @@ void QSSGStageGeneratorBase::addShaderIncomingMap()
 void QSSGStageGeneratorBase::addShaderUniformMap()
 {
     addShaderItemMap(ShaderItemType::Uniform, m_uniforms);
-    for (TStrTableSizedStrMap::const_iterator iter = m_uniformArrays.begin(), end = m_uniformArrays.end(); iter != end; ++iter) {
+    for (TStrTableSizedStrMap::const_iterator iter = m_uniformArrays.cbegin(), end = m_uniformArrays.cend(); iter != end; ++iter) {
         const QByteArray name = iter.key() +
                                 "[" + QByteArray::number(iter.value().first) + "]";
         if (iter.value().second.startsWith(QByteArrayLiteral("sampler")))
@@ -224,7 +224,7 @@ void QSSGStageGeneratorBase::addShaderConstantBufferItemMap(const QByteArray &it
         m_finalBuilder.append(iter.key());
         m_finalBuilder.append(" {\n");
         // iterate over all param entries and add match
-        for (TConstantBufferParamArray::const_iterator iter1 = cbParamsArray.begin(), end = cbParamsArray.end(); iter1 != end;
+        for (TConstantBufferParamArray::const_iterator iter1 = cbParamsArray.cbegin(), end = cbParamsArray.cend(); iter1 != end;
              ++iter1) {
             if (iter1->first == iter.key()) {
                 m_finalBuilder.append(iter1->second.second);
