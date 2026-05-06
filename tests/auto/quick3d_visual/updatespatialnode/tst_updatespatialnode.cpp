@@ -14,6 +14,7 @@ class tst_UpdateSpatialNode : public QQuick3DDataTest
 
 private slots:
     void initTestCase() override;
+    void cleanupTestCase() override;
     void updateResource();
 };
 
@@ -25,6 +26,13 @@ void tst_UpdateSpatialNode::initTestCase()
 extern TestData testData_ResourceObject;
 extern TestData testData_NodeObject;
 extern TestData testData_ExtensionObject;
+
+void tst_UpdateSpatialNode::cleanupTestCase()
+{
+    testData_ResourceObject.resetCounts();
+    testData_NodeObject.resetCounts();
+    testData_ExtensionObject.resetCounts();
+}
 
 void tst_UpdateSpatialNode::updateResource()
 {
