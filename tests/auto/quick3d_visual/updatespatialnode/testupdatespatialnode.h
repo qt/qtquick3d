@@ -31,6 +31,12 @@ public:
     const int expectedCallCount = -1;
     int callCount = 0;
     int destroyedCount = 0;
+
+    void resetCounts()
+    {
+        callCount = 0;
+        destroyedCount = 0;
+    }
 };
 
 
