@@ -1763,6 +1763,12 @@ std::optional<QQuick3DPropertyChangedTracker::UniformProperty> QQuick3DPropertyC
             QObject::connect(texture, &QQuick3DTexture::textureProviderChanged, m_owner, [this, property, texture]() {
                 addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
             });
+            // Re-register watcher when the texture backend node is (re)created
+            QObject::connect(texture, &QQuick3DTexture::textureInternalChange, m_owner,
+                             [this, property, texture](QQuick3DTextureInternalChange change) {
+                if (change.type == QQuick3DTextureInternalChange::Type::BackendNode)
+                    addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
+            });
         }
 
         return UniformProperty(name, samplerName, QVariant::fromValue(ri), QSSGRenderShaderValue::Texture, propertyIndex);

@@ -1367,8 +1367,10 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         imageNode->m_flags.setFlag(QSSGRenderImage::Flag::TransformDirty);
     }
 
-    if (nodeChanged)
+    if (nodeChanged) {
         imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
+        emit textureInternalChange(QQuick3DTextureInternalChange{QQuick3DTextureInternalChange::Type::BackendNode}, QPrivateSignal{});
+    }
 
     return imageNode;
 }

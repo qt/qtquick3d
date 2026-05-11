@@ -33,6 +33,15 @@ struct QSSGRenderImage;
 class QQuick3DRenderExtension;
 class QQuickWindow;
 
+class QQuick3DTextureInternalChange
+{
+public:
+    enum class Type {
+        BackendNode,
+    };
+    Type type;
+};
+
 class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickItemChangeListener
 {
     Q_OBJECT
@@ -170,6 +179,7 @@ Q_SIGNALS:
     void generateMipmapsChanged();
     void autoOrientationChanged();
     Q_REVISION(6, 7) void textureProviderChanged();
+    Q_REVISION(6, 12) void textureInternalChange(QQuick3DTextureInternalChange, QPrivateSignal);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
