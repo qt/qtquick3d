@@ -4,6 +4,7 @@
 
 
 #include "qssgrenderroot_p.h"
+#include "qssgrenderlayer_p.h"
 
 #include "../rendererimpl/qssgrenderdata_p.h"
 
@@ -37,8 +38,11 @@ void QSSGRenderRoot::clearDirty(DirtyFlag dirtyFlag)
 
 void QSSGRenderRoot::reindex()
 {
-    // Reindex the world root node
     m_gnd->reindex();
+    for (QSSGRenderNode &chld : children) {
+        if (QSSG_GUARD_X(chld.type == QSSGRenderNode::Type::Layer, "Layer type mismatch"))
+            static_cast<QSSGRenderLayer &>(chld).markDirty(QSSGRenderLayer::DirtyFlag::TreeDirty);
+    }
     clearDirty(QSSGRenderRoot::DirtyFlag::TreeDirty);
 }
 

@@ -962,18 +962,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_importSceneRootNode = importSceneRootNode;
     }
 
-    // If the tree is dirty, we need to mark all layers as dirty
-    // so that they get updated.
-    // The _layer_ dirty flag is cleared in the layer prep function and the reindex and
-    // root dirty flag is cleared right before the first layer is prepared (see: prepareLayerForRender().
+    // If the tree is dirty, reindex() rebuilds node indices and marks all
+    // child layers tree-dirty so they rebuild their node views during prep.
+    // The layer dirty flag is cleared in the layer prep function; the root
+    // dirty flag is cleared inside reindex() itself.
     {
         QSSGRenderRoot *rootNode = winAttacment->rootNode();
         if (rootNode->isDirty(QSSGRenderRoot::DirtyFlag::TreeDirty)) {
-            rootNode->reindex(); // Clears TreeDirty flag
-            for (QSSGRenderNode &layer : rootNode->children) {
-                if (QSSG_GUARD_X(layer.type == QSSGRenderGraphObject::Type::Layer, "Layer type mismatch"))
-                    static_cast<QSSGRenderLayer &>(layer).markDirty(QSSGRenderLayer::DirtyFlag::TreeDirty);
-            }
+            rootNode->reindex();
 
             // We exploit the fact that we can use the nodes indexes to establish a dependency order
             // for user passes by using the parent node's index.
