@@ -291,6 +291,9 @@ void QSSGGlobalRenderNodeData::reindex()
         globalTransforms.resize(m_size, QMatrix4x4{ Qt::Uninitialized });
         globalOpacities.resize(m_size, 1.0f);
         instanceTransforms.resize(m_size, { QMatrix4x4{ Qt::Uninitialized }, QMatrix4x4{ Qt::Uninitialized } });
+        normalMatrices.resize(m_size, QMatrix3x3{});
+        meshes.resize(m_size, nullptr);
+        materials.resize(m_size, {});
 
         collectNodes(m_rootNode);
         // NOTE: If the tree was dirty we force a full rebuild of the global transforms etc. since
@@ -437,62 +440,52 @@ QSSGRenderModelData::QSSGRenderModelData(const QSSGGlobalRenderNodeDataPtr &glob
 
 }
 
-QMatrix3x3 QSSGRenderModelData::getNormalMatrix(QSSGRenderModelHandle h, QMatrix3x3 defaultValue) const
+QMatrix3x3 QSSGRenderModelData::getNormalMatrix(QSSGRenderNodeHandle h, QMatrix3x3 defaultValue) const
 {
     const bool hasId = h.hasId();
-    const bool validVersion = hasId && (h.version() == m_version);
+    const bool validVersion = hasId && (h.version() == m_gnd->version());
     const auto index = h.index();
-    if (!validVersion || !(normalMatrices.size() > index))
+    if (!validVersion || !(m_gnd->normalMatrices.size() > index))
         return defaultValue;
 
-    return normalMatrices[index];
+    return m_gnd->normalMatrices[index];
 }
 
 QMatrix3x3 QSSGRenderModelData::getNormalMatrix(const QSSGRenderModel &model) const
 {
-    return getNormalMatrix(model.mh, QMatrix3x3{ Qt::Uninitialized });
-}
-
-QSSGRenderMesh *QSSGRenderModelData::getMesh(QSSGRenderModelHandle h) const
-{
-    const bool hasId = h.hasId();
-    const bool validVersion = hasId && (h.version() == m_version);
-    const auto index = h.index();
-
-    if (!validVersion || !(meshes.size() > index))
-        return nullptr;
-
-    return meshes[index];
+    return getNormalMatrix(model.h, QMatrix3x3{ Qt::Uninitialized });
 }
 
 QSSGRenderMesh *QSSGRenderModelData::getMesh(const QSSGRenderModel &model) const
 {
-    return getMesh(model.mh);
-}
+    const bool hasId = model.h.hasId();
+    const bool validVersion = hasId && (model.h.version() == m_gnd->version());
+    const auto index = model.h.index();
 
-QSSGRenderModelData::MaterialList QSSGRenderModelData::getMaterials(QSSGRenderModelHandle h) const
-{
-    const bool hasId = h.hasId();
-    const bool validVersion = hasId && (h.version() == m_version);
-    const auto index = h.index();
+    if (!validVersion || !(m_gnd->meshes.size() > index))
+        return nullptr;
 
-    if (!validVersion || !(materials.size() > index))
-        return {};
-
-    return materials[index];
+    return m_gnd->meshes[index];
 }
 
 QSSGRenderModelData::MaterialList QSSGRenderModelData::getMaterials(const QSSGRenderModel &model) const
 {
-    return getMaterials(model.mh);
+    const bool hasId = model.h.hasId();
+    const bool validVersion = hasId && (model.h.version() == m_gnd->version());
+    const auto index = model.h.index();
+
+    if (!validVersion || !(m_gnd->materials.size() > index))
+        return {};
+
+    return m_gnd->materials[index];
 }
 
 QSSGRenderModelData::ModelViewProjections QSSGRenderModelData::getModelViewProjection(const QSSGRenderModel &model) const
 {
-    return getModelViewProjection(model.mh);
+    return getModelViewProjection(model.h);
 }
 
-QSSGRenderModelData::ModelViewProjections QSSGRenderModelData::getModelViewProjection(QSSGRenderModelHandle h) const
+QSSGRenderModelData::ModelViewProjections QSSGRenderModelData::getModelViewProjection(QSSGRenderNodeHandle h) const
 {
     const bool hasId = h.hasId();
     const bool validVersion = hasId && (h.version() == m_version);
@@ -520,7 +513,7 @@ void QSSGRenderModelData::prepareMeshData(const QSSGModelsView &models, QSSGRend
 
         // Ensure we have a mesh
         if (auto *theMesh = bufferManager->loadMesh(*model)) {
-            meshes[model->mh.index()] = theMesh;
+            m_gnd->meshes[model->h.index()] = theMesh;
             // Completely transparent models cannot be pickable.  But models with completely
             // transparent materials still are.  This allows the artist to control pickability
             // in a somewhat fine-grained style.
@@ -548,9 +541,7 @@ void QSSGRenderModelData::prepareMeshData(const QSSGModelsView &models, QSSGRend
                 }
             }
         } else {
-            const size_t index = model->mh.index();
-            if (QSSG_GUARD(meshes.size() > index))
-                meshes[model->mh.index()] = nullptr;
+            m_gnd->meshes[model->h.index()] = nullptr;
         }
     }
 
@@ -563,42 +554,21 @@ void QSSGRenderModelData::prepareMeshData(const QSSGModelsView &models, QSSGRend
 
 void QSSGRenderModelData::prepareMaterials(const QSSGModelsView &models)
 {
-    for (auto *model : models) {
-        const size_t index = model->mh.index();
-        if (QSSG_GUARD(materials.size() > index))
-            materials[index] = model->materials;
-    }
+    for (auto *model : models)
+        m_gnd->materials[model->h.index()] = model->materials;
 }
 
 void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *renderer, const QSSGRenderCameraDataList &renderCameraData)
 {
-    const auto modelCount = size_t(models.size());
     const bool versionChanged = m_version != m_gnd->version();
-    const bool storageSizeChanged = (normalMatrices.size() < modelCount);
-
-    // If the version or storage size changed we need to re-index the models.
-    // NOTE: We always do this due to layer masking with shared scenes (import scene)
-    // in the future we should find a way to track when it is actually needed.
-    const bool reIndexNeeded = versionChanged || storageSizeChanged || true;
-
-    const QMatrix3x3 defaultNormalMatrix;
-    const QMatrix4x4 defaultModelViewProjection;
-
-    // resize the storage if needed
-    modelViewProjections.resize(modelCount, { defaultModelViewProjection, defaultModelViewProjection });
-    normalMatrices.resize(modelCount, defaultNormalMatrix);
-    meshes.resize(modelCount, nullptr);
-    materials.resize(modelCount, {});
-
-    if (reIndexNeeded) {
-        // NOTE: Node data's version is incremented when the node graph changes and starts at 1.
+    if (versionChanged)
         m_version = m_gnd->version();
 
-        for (quint32 i = 0; i < modelCount; ++i) {
-            QSSGRenderModel *model = models[i];
-            model->mh = QSSGRenderModelHandle(model->h.context(), model->h.version(), i);
-        }
-    }
+    const QMatrix4x4 defaultModelViewProjection;
+
+    // Resize per-layer MVP store to the GND storage size so import-scene shared nodes
+    // never alias each other's slots (GND indices are stable and unique across all layers).
+    modelViewProjections.resize(m_gnd->storageSize(), { defaultModelViewProjection, defaultModelViewProjection });
 
 #if QT_CONFIG(thread) && !defined(Q_OS_WASM)
     bool matrixesDone = false;
@@ -607,10 +577,10 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     std::condition_variable cv;
 #endif
 
-    // - Normal matrices
+    // - Normal matrices (stored in GND, shared across layers)
     const auto doNormalMatrices = [&]() {
         for (const QSSGRenderModel *model : std::as_const(models)) {
-            auto &normalMatrix = normalMatrices[model->mh.index()];
+            auto &normalMatrix = m_gnd->normalMatrices[model->h.index()];
             const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*model);
             QSSGRenderNode::calculateNormalMatrix(globalTransform, normalMatrix);
         }
@@ -621,12 +591,12 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
 #endif
     };
 
-    // - MVPs
+    // - MVPs (per-layer, indexed by GND node index)
     const auto doMVPs = [&]() {
         for (const QSSGRenderModel *model : std::as_const(models)) {
             int mvpCount = 0;
             const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*model);
-            auto &mvp = modelViewProjections[model->mh.index()];
+            auto &mvp = modelViewProjections[model->h.index()];
             for (const QSSGRenderCameraData &cameraData : renderCameraData)
                 QSSGRenderNode::calculateMVP(globalTransform, cameraData.viewProjection, mvp[mvpCount++]);
         }
@@ -682,7 +652,7 @@ QSSGRenderItem2DData::Item2DRenderer QSSGRenderItem2DData::getItem2DRenderer(con
     return (foundIt != item2DRenderers.cend()) ? foundIt->second : Item2DRenderer{};
 }
 
-QSSGRenderItem2DData::ModelViewProjections QSSGRenderItem2DData::getModelViewProjection(QSSGRenderItem2DHandle h) const
+QSSGRenderItem2DData::ModelViewProjections QSSGRenderItem2DData::getModelViewProjection(QSSGRenderNodeHandle h) const
 {
     const bool hasId = h.hasId();
     const bool validVersion = hasId && (h.version() == m_version);
@@ -696,7 +666,7 @@ QSSGRenderItem2DData::ModelViewProjections QSSGRenderItem2DData::getModelViewPro
 
 QSSGRenderItem2DData::ModelViewProjections QSSGRenderItem2DData::getModelViewProjection(const QSSGRenderItem2D &item) const
 {
-    return getModelViewProjection(item.ih);
+    return getModelViewProjection(item.h);
 }
 
 QSSGRenderItem2DData::QSSGRenderItem2DData(const QSSGGlobalRenderNodeDataPtr &globalNodeData)
@@ -718,38 +688,24 @@ void QSSGRenderItem2DData::updateItem2DData(QSSGItem2DsView &items, QSSGRenderer
         return;
 
     const bool versionChanged = m_version != m_gnd->version();
-    const bool storageSizeChanged = (modelViewProjections.size() < itemCount);
-
-    // NOTE: We always do this due to layer masking with shared scenes (import scene)
-    // in the future we should find a way to track when it is actually needed.
-    const bool reIndexNeeded = versionChanged || storageSizeChanged || true;
+    if (versionChanged)
+        m_version = m_gnd->version();
 
     const QMatrix4x4 defaultModelViewProjection;
 
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
 
-    // resize the storage if needed
-    modelViewProjections.resize(itemCount, { defaultModelViewProjection, defaultModelViewProjection });
-
-    if (reIndexNeeded) {
-        // NOTE: Node data's version is incremented when the node graph changes and starts at 1.
-        m_version = m_gnd->version();
-
-        for (quint32 i = 0; i < itemCount; ++i) {
-            QSSGRenderItem2D *item = items[i];
-            item->ih = QSSGRenderItem2DHandle(item->h.context(), item->h.version(), i);
-        }
-    }
-
+    // Resize to GND storage size so import-scene shared nodes use their stable GND indices.
+    modelViewProjections.resize(m_gnd->storageSize(), { defaultModelViewProjection, defaultModelViewProjection });
 
     const auto &clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
 
-    // - MVPs
+    // - MVPs (indexed by GND node index)
     const auto doMVPs = [&]() {
         for (const QSSGRenderItem2D *item : std::as_const(items)) {
             int mvpCount = 0;
             const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*item);
-            auto &mvps = modelViewProjections[item->ih.index()];
+            auto &mvps = modelViewProjections[item->h.index()];
             for (const QSSGRenderCameraData &cameraData : renderCameraData) {
                 const QMatrix4x4 &mvp = cameraData.viewProjection * globalTransform;
                 mvps[mvpCount++] = clipSpaceCorrMatrix * mvp * flipMatrix;

@@ -64,6 +64,11 @@ public:
     using NodeStore = std::vector<QSSGRenderNode *>;
     using LayerNodeViewStore = std::vector<LayerNodeSection>;
 
+    using NormalMatrixStore = std::vector<QMatrix3x3>;
+    using MeshStore         = std::vector<QSSGRenderMesh *>;
+    using MaterialList      = QVector<QSSGRenderGraphObject *>;
+    using MaterialStore     = std::vector<MaterialList>;
+
     explicit QSSGGlobalRenderNodeData(QSSGRenderRoot *root);
     ~QSSGGlobalRenderNodeData();
 
@@ -98,6 +103,9 @@ public:
     InstanceTransformStore instanceTransforms { };
     NodeStore nodes { };
     LayerNodeViewStore layerNodes { };
+    NormalMatrixStore normalMatrices { };
+    MeshStore meshes { };
+    MaterialStore materials { };
 
 #if QT_CONFIG(thread)
     // NOTE: Thread pool for parallel processing of render data.
@@ -220,23 +228,18 @@ public:
     explicit QSSGRenderModelData(const QSSGGlobalRenderNodeDataPtr &globalNodeData);
 
     using ModelViewProjections = std::array<QMatrix4x4, 2>;
-    using MaterialList = QVector<QSSGRenderGraphObject *>;
+    using MaterialList = QSSGGlobalRenderNodeData::MaterialList;
 
     using ModelViewProjectionStore = std::vector<ModelViewProjections>;
-    using NormalMatrixStore = std::vector<QMatrix3x3>;
-    using MeshStore = std::vector<QSSGRenderMesh *>;
-    using MaterialStore = std::vector<MaterialList>;
 
-    [[nodiscard]] ModelViewProjections getModelViewProjection(QSSGRenderModelHandle h) const;
+    [[nodiscard]] ModelViewProjections getModelViewProjection(QSSGRenderNodeHandle h) const;
     [[nodiscard]] ModelViewProjections getModelViewProjection(const QSSGRenderModel &model) const;
 
-    [[nodiscard]] QMatrix3x3 getNormalMatrix(QSSGRenderModelHandle h, QMatrix3x3 defaultValue) const;
+    [[nodiscard]] QMatrix3x3 getNormalMatrix(QSSGRenderNodeHandle h, QMatrix3x3 defaultValue) const;
     [[nodiscard]] QMatrix3x3 getNormalMatrix(const QSSGRenderModel &model) const;
 
-    [[nodiscard]] QSSGRenderMesh *getMesh(QSSGRenderModelHandle h) const;
     [[nodiscard]] QSSGRenderMesh *getMesh(const QSSGRenderModel &model) const;
 
-    [[nodiscard]] MaterialList getMaterials(QSSGRenderModelHandle h) const;
     [[nodiscard]] MaterialList getMaterials(const QSSGRenderModel &model) const;
 
     [[nodiscard]] const QSSGGlobalRenderNodeDataPtr &globalNodeData() const { return m_gnd; }
@@ -245,9 +248,6 @@ public:
 
 private:
     ModelViewProjectionStore modelViewProjections;
-    NormalMatrixStore normalMatrices;
-    MeshStore meshes;
-    MaterialStore materials;
 
     void prepareMeshData(const QSSGModelsView &models, QSSGRenderer *renderer);
     void prepareMaterials(const QSSGModelsView &models);
@@ -269,7 +269,7 @@ public:
 
     using Item2DRenderer = QPointer<QSGRenderer>;
 
-    [[nodiscard]] ModelViewProjections getModelViewProjection(QSSGRenderItem2DHandle h) const;
+    [[nodiscard]] ModelViewProjections getModelViewProjection(QSSGRenderNodeHandle h) const;
     [[nodiscard]] ModelViewProjections getModelViewProjection(const QSSGRenderItem2D &item) const;
 
     [[nodiscard]] Item2DRenderer getItem2DRenderer(const QSSGRenderItem2D &item) const;
