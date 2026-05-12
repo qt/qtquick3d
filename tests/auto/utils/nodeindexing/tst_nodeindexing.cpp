@@ -23,6 +23,7 @@ private slots:
     void testIndexingWithMultipleViews();
     void testIndexingWithImportScene();
     void testVersionWrapAround();
+    void testActiveStateSuppressesReindex();
 
 private:
     static void removeFromLayer(QSSGRenderLayer &layer, std::vector<QSSGRenderNode *> &nodes);
@@ -256,6 +257,56 @@ void tst_NodeIndexing::testVersionWrapAround()
     layer.removeChild(*node);
     delete node;
     rootNode.removeChild(layer);
+}
+
+void tst_NodeIndexing::testActiveStateSuppressesReindex()
+{
+    QSSGRenderLayer layer;
+    layer.ref(&rootNode);
+    rootNode.addChild(layer);
+
+    std::vector<QSSGRenderNode *> nodes;
+    buildBasicNodeHierarchy(&layer, nodes);
+
+    rootNode.reindex();
+
+    auto &gnd = *rootNode.globalNodeData();
+    const auto versionBefore = gnd.m_version;
+
+    // Capture the current handle state of every node.
+    std::vector<std::pair<QSSGRenderNodeVersionType, quint32>> snapshot;
+    snapshot.reserve(nodes.size());
+    for (auto *node : nodes)
+        snapshot.push_back({ node->h.version(), node->h.index() });
+
+    // nodes[0] is added directly to the layer; nodes[1] and nodes[2] are its children.
+    // nodes[3..5] form a sibling group with no relation to nodes[0..2].
+    nodes.front()->setState(QSSGRenderNode::LocalState::Active, false);
+
+    // The GND version must not have changed — no reindex should have occurred.
+    QCOMPARE(gnd.m_version, versionBefore);
+
+    // All handles must remain valid and unchanged.
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        QCOMPARE(nodes[i]->h.version(), snapshot[i].first);
+        QCOMPARE(nodes[i]->h.index(),   snapshot[i].second);
+    }
+
+    // The changed node and its children must have ActiveDirty set.
+    // markDirty() propagates ActiveDirty to descendants via SubtreeUpdateMask.
+    using DirtyFlag = QSSGRenderNode::DirtyFlag;
+    QVERIFY( nodes[0]->isDirty(DirtyFlag::ActiveDirty));
+    QVERIFY( nodes[1]->isDirty(DirtyFlag::ActiveDirty));
+    QVERIFY( nodes[2]->isDirty(DirtyFlag::ActiveDirty));
+
+    // The sibling sub-tree must not be affected.
+    QVERIFY(!nodes[3]->isDirty(DirtyFlag::ActiveDirty));
+    QVERIFY(!nodes[4]->isDirty(DirtyFlag::ActiveDirty));
+    QVERIFY(!nodes[5]->isDirty(DirtyFlag::ActiveDirty));
+
+    removeFromLayer(layer, nodes);
+    rootNode.removeChild(layer);
+    qDeleteAll(nodes);
 }
 
 void tst_NodeIndexing::removeFromLayer(QSSGRenderLayer &layer, std::vector<QSSGRenderNode *> &nodes)
