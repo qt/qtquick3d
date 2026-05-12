@@ -61,8 +61,6 @@ void QSSGRenderNode::setState(LocalState state, bool on)
         switch (state) {
         case QSSGRenderNode::LocalState::Active:
             markDirty(DirtyFlag::ActiveDirty);
-            if (QSSGRenderRoot *rootNode = QSSGRenderRoot::get(rootNodeRef))
-                rootNode->markDirty(QSSGRenderRoot::DirtyFlag::TreeDirty);
             break;
         case QSSGRenderNode::LocalState::Pickable:
             markDirty(DirtyFlag::PickableDirty);

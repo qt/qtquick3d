@@ -186,7 +186,7 @@ QSSGRenderDataHelpers::GlobalStateResult QSSGRenderDataHelpers::updateGlobalNode
         node->clearDirty(ClearDirtyMask);
     }
 
-    return GlobalStateResult((activeDirty << 1) | (pickableDirty << 2));
+    return GlobalStateResult(FlagT(activeDirty) | (FlagT(pickableDirty) << 1));
 }
 
 bool QSSGRenderDataHelpers::calcInstanceTransforms(QSSGRenderNode *node,
