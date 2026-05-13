@@ -354,7 +354,7 @@ void tst_Picking::test_view_picking()
 
     // Enable the 2D item
     item2d->setEnabled(true);
-    QTest::qWait(100);
+    QVERIFY(waitForFrames(view.data(), 1));
     // Then picking on top of model1 should not pick it anymore
     result = view3d->pick(200, 200);
     QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Item);
@@ -369,7 +369,7 @@ void tst_Picking::test_view_picking()
     QCOMPARE(result.objectHit(), nullptr);
     // Hide the 2D item
     item2d->setVisible(false);
-    QTest::qWait(100);
+    QVERIFY(waitForFrames(view.data(), 1));
     // Then picking on top of model1 should pick it again
     result = view3d->pick(200, 200);
     QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
@@ -385,7 +385,7 @@ void tst_Picking::test_view_picking()
 
     // Add the 2D item
     item2d->setVisible(true);
-    QTest::qWait(100);
+    QVERIFY(waitForFrames(view.data(), 1));
     resultList = view3d->pickAll(200, 200);
     QCOMPARE(resultList.size(), 3);
     QCOMPARE(resultList[0].hitType(), QQuick3DPickResultEnums::HitType::Item);
@@ -396,7 +396,7 @@ void tst_Picking::test_view_picking()
     QCOMPARE(resultList[2].objectHit(), model2);
     // Hide the 2D item
     item2d->setVisible(false);
-    QTest::qWait(100);
+    QVERIFY(waitForFrames(view.data(), 1));
 
     // Top right corner of model1, center of model2
     resultList = view3d->pickAll(250, 150);
@@ -444,7 +444,7 @@ void tst_Picking::test_ray_picking()
 
     item2d->setEnabled(true);
     item2d->setVisible(true);
-    QTest::qWait(100);
+    QVERIFY(waitForFrames(view.data(), 1));
 
     // Ray based picking one result
 
@@ -1152,7 +1152,7 @@ void tst_Picking::test_closest_point_picking()
 
     item2d->setEnabled(true);
     item2d->setVisible(true);
-    QTest::qWait(100);
+    QVERIFY(waitForFrames(view.data(), 1));
 
     // model1 is a unit cube at (0,0,0), so it has a surface point at (0, 0, 50)
 
