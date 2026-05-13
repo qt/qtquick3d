@@ -82,7 +82,7 @@ public:
     [[nodiscard]] size_t nodeCount() const { return m_nodeCount; }
     [[nodiscard]] size_t storageSize() const { return m_size; }
 
-    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h, QMatrix4x4 defaultValue) const;
+    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h, const QMatrix4x4 &defaultValue) const;
     [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h) const;
     [[nodiscard]] QMatrix4x4 getGlobalTransform(const QSSGRenderNode &node) const;
     [[nodiscard]] float getGlobalOpacity(QSSGRenderNodeHandle h, float defaultValue = 1.0f) const;

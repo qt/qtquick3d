@@ -579,7 +579,7 @@ public:
                                                                float lodThreshold);
 
     // Convenience wrappers for getting values from the node, model store.
-    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h, QMatrix4x4 defaultValue) const
+    [[nodiscard]] QMatrix4x4 getGlobalTransform(QSSGRenderNodeHandle h, const QMatrix4x4 &defaultValue) const
     {
         return nodeData->getGlobalTransform(h, defaultValue);
     }
