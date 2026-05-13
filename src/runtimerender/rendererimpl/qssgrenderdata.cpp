@@ -304,7 +304,7 @@ void QSSGGlobalRenderNodeData::invalidate()
     m_rootNode = nullptr;
 }
 
-QMatrix4x4 QSSGGlobalRenderNodeData::getGlobalTransform(QSSGRenderNodeHandle h, QMatrix4x4 defaultValue) const
+QMatrix4x4 QSSGGlobalRenderNodeData::getGlobalTransform(QSSGRenderNodeHandle h, const QMatrix4x4 &defaultValue) const
 {
     // Ensure we have an valid index.
     const bool hasId = h.hasId();
