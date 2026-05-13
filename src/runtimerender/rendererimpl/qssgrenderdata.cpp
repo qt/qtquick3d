@@ -581,7 +581,7 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     const auto doNormalMatrices = [&]() {
         for (const QSSGRenderModel *model : std::as_const(models)) {
             auto &normalMatrix = m_gnd->normalMatrices[model->h.index()];
-            const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*model);
+            const QMatrix4x4 &globalTransform = m_gnd->globalTransforms[model->h.index()];
             QSSGRenderNode::calculateNormalMatrix(globalTransform, normalMatrix);
         }
 #if QT_CONFIG(thread) && !defined(Q_OS_WASM)
@@ -595,7 +595,7 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     const auto doMVPs = [&]() {
         for (const QSSGRenderModel *model : std::as_const(models)) {
             int mvpCount = 0;
-            const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*model);
+            const QMatrix4x4 &globalTransform = m_gnd->globalTransforms[model->h.index()];
             auto &mvp = modelViewProjections[model->h.index()];
             for (const QSSGRenderCameraData &cameraData : renderCameraData)
                 QSSGRenderNode::calculateMVP(globalTransform, cameraData.viewProjection, mvp[mvpCount++]);
@@ -704,7 +704,7 @@ void QSSGRenderItem2DData::updateItem2DData(QSSGItem2DsView &items, QSSGRenderer
     const auto doMVPs = [&]() {
         for (const QSSGRenderItem2D *item : std::as_const(items)) {
             int mvpCount = 0;
-            const QMatrix4x4 globalTransform = m_gnd->getGlobalTransform(*item);
+            const QMatrix4x4 &globalTransform = m_gnd->globalTransforms[item->h.index()];
             auto &mvps = modelViewProjections[item->h.index()];
             for (const QSSGRenderCameraData &cameraData : renderCameraData) {
                 const QMatrix4x4 &mvp = cameraData.viewProjection * globalTransform;
