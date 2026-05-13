@@ -37,6 +37,8 @@ public:
     QQuickWindow *createWindow(const QString &filename, const QSize &windowSize);
     QImage grab(QQuickWindow *window);
 
+    static bool waitForFrames(QQuickWindow *window, int frames, int timeoutMs = 5000);
+
     bool comparePixel(const QImage &image, int logicalX, int logicalY, qreal dpr, const QColor &expected, int fuzz = 2);
     inline bool comparePixel(const QImage &image, const QPoint &logicalPos, qreal dpr, const QColor &expected, int fuzz = 2)
     {
