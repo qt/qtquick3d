@@ -24,6 +24,10 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
+#include <mutex>
+#include <condition_variable>
+#endif
 
 class tst_NodeIndexing;
 
@@ -247,6 +251,8 @@ public:
     void updateModelData(QSSGModelsView &models, QSSGRenderer *renderer, const QSSGRenderCameraDataList &renderCameraData);
 
 private:
+    static quint32 getThreadPoolThreshold();
+
     ModelViewProjectionStore modelViewProjections;
 
     void prepareMeshData(const QSSGModelsView &models, QSSGRenderer *renderer);
@@ -255,6 +261,11 @@ private:
     QSSGGlobalRenderNodeDataPtr m_gnd;
 
     quint32 m_version = 0;
+    const quint32 m_threadPoolThreshold = getThreadPoolThreshold();
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
+    std::mutex m_mutex;
+    std::condition_variable m_cv;
+#endif
 };
 
 class QSSGRenderItem2DData
