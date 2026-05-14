@@ -262,14 +262,13 @@ QSSGRenderCameraData QSSGLayerRenderData::getCameraDataImpl(const QSSGRenderCame
     if (camera) {
         // Calculate viewProjection and clippingFrustum for Render Camera
         QMatrix4x4 viewProjection(Qt::Uninitialized);
-        QMatrix4x4 cameraGlobalTransform = getGlobalTransform(*camera);
+        const QMatrix4x4 cameraGlobalTransform = getGlobalTransform(*camera);
         camera->calculateViewProjectionMatrix(cameraGlobalTransform, viewProjection);
         std::optional<QSSGClippingFrustum> clippingFrustum;
-        const QMatrix4x4 camGlobalTransform = getGlobalTransform(*camera);
-        const QVector3D camGlobalPos = QSSGRenderNode::getGlobalPos(camGlobalTransform);
+        const QVector3D camGlobalPos = QSSGRenderNode::getGlobalPos(cameraGlobalTransform);
         if (camera->enableFrustumClipping) {
             QSSGClipPlane nearPlane;
-            QMatrix3x3 theUpper33(camGlobalTransform.normalMatrix());
+            QMatrix3x3 theUpper33(cameraGlobalTransform.normalMatrix());
             QVector3D dir(QSSGUtils::mat33::transform(theUpper33, QVector3D(0, 0, -1)));
             dir.normalize();
             nearPlane.normal = dir;
@@ -279,8 +278,7 @@ QSSGRenderCameraData QSSGLayerRenderData::getCameraDataImpl(const QSSGRenderCame
             // constructor.
             clippingFrustum = QSSGClippingFrustum{viewProjection, nearPlane};
         }
-        QMatrix4x4 globalTransform = getGlobalTransform(*camera);
-        ret = { viewProjection, clippingFrustum, camera->getScalingCorrectDirection(globalTransform), camGlobalPos };
+        ret = { viewProjection, clippingFrustum, camera->getScalingCorrectDirection(cameraGlobalTransform), camGlobalPos };
     }
 
     return ret;
@@ -2049,8 +2047,9 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
         }
 
         float opacity = getGlobalOpacity(particles);
+        const QMatrix4x4 globalTransform = getGlobalTransform(particles);
         QVector3D center(particles.m_particleBuffer.bounds().center());
-        center = QSSGUtils::mat44::transform(getGlobalTransform(particles), center);
+        center = QSSGUtils::mat44::transform(globalTransform, center);
 
         QSSGRenderableImage *firstImage = nullptr;
         if (particles.m_sprite) {
@@ -2080,7 +2079,6 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
         }
 
         if (opacity > 0.0f && particles.m_particleBuffer.particleCount()) {
-            const auto globalTransform = getGlobalTransform(particles);
             auto *theRenderableObject = RENDER_FRAME_NEW<QSSGParticlesRenderable>(contextInterface,
                                                                                   renderableFlags,
                                                                                   center,
