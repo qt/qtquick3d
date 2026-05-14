@@ -9,6 +9,8 @@
 #include <QtCore/qthreadpool.h>
 #endif // QT_CONFIG(thread)
 
+#include <QtCore/qtenvironmentvariables.h>
+
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
@@ -18,9 +20,6 @@
 #include "qssgrendercontextcore.h"
 #include "qssgrenderer_p.h"
 #include "resourcemanager/qssgrenderbuffermanager_p.h"
-
-#include <mutex>
-#include <condition_variable>
 
 QT_BEGIN_NAMESPACE
 
@@ -570,11 +569,14 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
     // never alias each other's slots (GND indices are stable and unique across all layers).
     modelViewProjections.resize(m_gnd->storageSize(), { defaultModelViewProjection, defaultModelViewProjection });
 
+#if QT_CONFIG(thread)
+    QThreadPool *threadPool = (static_cast<size_t>(models.size()) >= m_threadPoolThreshold)
+                              ? m_gnd->threadPool() : nullptr;
+#endif
+
 #if QT_CONFIG(thread) && !defined(Q_OS_WASM)
     bool matrixesDone = false;
     bool mvpsDone = false;
-    std::mutex mutex;
-    std::condition_variable cv;
 #endif
 
     // - Normal matrices (stored in GND, shared across layers)
@@ -585,9 +587,11 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
             QSSGRenderNode::calculateNormalMatrix(globalTransform, normalMatrix);
         }
 #if QT_CONFIG(thread) && !defined(Q_OS_WASM)
-        std::lock_guard<std::mutex> guard(mutex);
-        matrixesDone = true;
-        cv.notify_all();
+        if (threadPool) {
+            std::lock_guard<std::mutex> guard(m_mutex);
+            matrixesDone = true;
+            m_cv.notify_all();
+        }
 #endif
     };
 
@@ -601,14 +605,15 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
                 QSSGRenderNode::calculateMVP(globalTransform, cameraData.viewProjection, mvp[mvpCount++]);
         }
 #if QT_CONFIG(thread) && !defined(Q_OS_WASM)
-        std::lock_guard<std::mutex> guard(mutex);
-        mvpsDone = true;
-        cv.notify_all();
+        if (threadPool) {
+            std::lock_guard<std::mutex> guard(m_mutex);
+            mvpsDone = true;
+            m_cv.notify_all();
+        }
 #endif
     };
 
 #if QT_CONFIG(thread)
-    auto *threadPool = m_gnd->threadPool();
 #define qssgTryThreadedStart(func) \
     if (!threadPool) { \
         func(); \
@@ -631,9 +636,18 @@ void QSSGRenderModelData::updateModelData(QSSGModelsView &models, QSSGRenderer *
 
     // Wait for the threads to finish
 #if QT_CONFIG(thread) && !defined(Q_OS_WASM)
-    std::unique_lock<std::mutex> guard(mutex);
-    cv.wait(guard, [&]() { return matrixesDone && mvpsDone; });
+    if (threadPool) {
+        std::unique_lock<std::mutex> guard(m_mutex);
+        m_cv.wait(guard, [&]() { return matrixesDone && mvpsDone; });
+    }
 #endif
+}
+
+quint32 QSSGRenderModelData::getThreadPoolThreshold()
+{
+    // The threshold is the minimum number of models in a layer to consider using the thread pool for per-model calculations.
+    const int ret = qEnvironmentVariableIntValue("QSSG_MODEL_DATA_THREAD_POOL_THRESHOLD");
+    return (ret > 0) ? quint32(ret) : 32u;
 }
 
 bool QSSGRenderDataHelpers::updateGlobalNodeDataIndexed(QSSGRenderNode *node, const VersionType version, QSSGGlobalRenderNodeData::GlobalTransformStore &globalTransforms, QSSGGlobalRenderNodeData::GlobalOpacityStore &globalOpacities)
