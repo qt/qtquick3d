@@ -8,8 +8,33 @@
 
 \section1 Introduction
 
-\note As of Qt 6.4, lightmap baking is in an early technology preview state.
-Changes to features, quality, and API are likely to happen in future releases.
+Global illumination (GI) is the indirect light that reaches a surface after
+bouncing off other surfaces in a scene. Simulating GI produces effects such
+as color bleeding between nearby surfaces and softer ambient shading.
+
+\section1 Approaches to Global Illumination
+
+Qt Quick 3D offers two approaches to global illumination (GI):
+
+\list
+\li \b{Screen-Space Global Illumination (SSGI):} A dynamic
+indirect lighting method that uses screen-space buffers to approximate global
+illumination. You can enable SSGI through
+the \l{QtQuick3D.Helpers::ExtendedSceneEnvironment} type by setting the
+\l{QtQuick3D.Helpers::ExtendedSceneEnvironment::}{ssgiEnabled} property to
+\c true. SSGI is suitable for animated content where lights and geometry
+change at runtime, though screen-space approximations reduce accuracy.
+
+\li \b{Baked lightmaps:} A lighting method that uses raytraced lighting
+baked into textures and sampled at runtime. Baked lightmaps provide
+global illumination at lower runtime cost, which benefits static
+models, materials, and lights.
+\endlist
+
+For a side-by-side visual and behavioral comparison of the two
+techniques, see \l{Qt Quick 3D - SSGI Lightmap Example}.
+
+\section1 Baked Lightmaps
 
 Baked lightmaps allow pre-generating the \b{direct lighting} from lights such
 as \l DirectionalLight, \l PointLight, and \l SpotLight, including the shadows
