@@ -209,6 +209,7 @@ private:
     friend class QQuick3DXrManager;
     friend class QQuick3DXrManagerPrivate;
     friend class QQuick3DRenderLayerHelpers;
+    friend class QQuick3DSceneRenderer;
 
     Q_DISABLE_COPY(QQuick3DViewport)
     struct SubsceneInfo {
@@ -265,6 +266,7 @@ private:
     QList<QQuick3DObject *> m_extensions;
     bool m_extensionListDirty = false;
     bool m_isXrViewInstance = false;
+    bool m_visibilityChanged = false;
 
     struct TouchState {
         QQuickItem *target = nullptr;

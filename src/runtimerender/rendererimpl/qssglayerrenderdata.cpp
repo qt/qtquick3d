@@ -2574,6 +2574,15 @@ void QSSGLayerRenderData::prepareForRender()
         wasDataDirty |= transformAndOpacityDirty;
     }
 
+    // If the viewport visibility changed, we mark the data as dirty to ensure a proper update
+    // happens. This is important because if there are shared imported nodes between layers,
+    // they might have been updated by one of the other layers and therefore considered "clean", causing
+    // things like progressiveAA to not work correctly when toggling the visibility of a layer.
+    const bool viewportVisibilityDirty = layer.isDirty(QSSGRenderLayer::DirtyFlag::VisibilityDirty);
+    layer.clearDirty(QSSGRenderLayer::DirtyFlag::VisibilityDirty);
+    if (viewportVisibilityDirty)
+        wasDataDirty = true;
+
     // Check if we have an explicit camera!
     // NOTE: We only do layering if we have an explicit camera!!!
 

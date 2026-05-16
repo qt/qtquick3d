@@ -718,6 +718,7 @@ void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickIte
             m_renderStats->setWindow(value.window);
         }
     } else if (change == ItemVisibleHasChanged && isVisible()) {
+        m_visibilityChanged = true;
         update();
     }
 }
