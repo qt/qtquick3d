@@ -765,6 +765,15 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     m_layer->viewCount = rhiCtx->mainPassViewCount();
     updateLayerNode(*m_layer, *view3D, resourceLoaders.values());
 
+    // If the viewport visibility has changed, we need to mark the layer as dirty to ensure it gets re-rendered.
+    // NOTE: This is needed when there are multiple viewports using a shared scene since the viewport that becomes
+    // visible might wake-up to a scene where all the data is up-to-date, but we still need to render the scene and
+    // not skip it, which would be the case if we see there's no dirty data and therefore skip rendering the frame.
+    if (view3D->m_visibilityChanged) {
+        view3D->m_visibilityChanged = false;
+        m_layer->markDirty(QSSGRenderLayer::DirtyFlag::VisibilityDirty);
+    }
+
     // Request extra frames for antialiasing (ProgressiveAA/TemporalAA)
 
     m_requestedFramesCount = 0;
