@@ -24,6 +24,7 @@ private slots:
     void testIndexingWithImportScene();
     void testVersionWrapAround();
     void testActiveStateSuppressesReindex();
+    void testRemoveFromGraphClearsRootNodeRefOnChildren();
 
 private:
     static void removeFromLayer(QSSGRenderLayer &layer, std::vector<QSSGRenderNode *> &nodes);
@@ -350,6 +351,82 @@ void tst_NodeIndexing::buildBasicNodeHierarchy(QSSGRenderNode *parent, std::vect
             node->addChild(*childNode);
         }
     }
+}
+
+void tst_NodeIndexing::testRemoveFromGraphClearsRootNodeRefOnChildren()
+{
+    // When removeFromGraph() orphans its direct children it must also clear
+    // their rootNodeRef, just as removeChild() does for the removed node
+    // itself. Without the fix, an orphaned node P retains a live
+    // rootNodeRef. If the root is then destroyed and a grandchild C calls
+    // removeFromGraph() it will execute P->removeChild(C), which accesses
+    // P->rootNodeRef via QSSGRenderRoot::get() — a use-after-free crash.
+    //
+    // Hierarchy under test:
+    //   Root -> Layer -> sceneRoot -> GP -> P -> C
+    //
+    // sceneRoot is a plain node added directly to the layer. GP, P, and C
+    // form a chain beneath it. We remove GP from the graph and assert that
+    // P's rootNodeRef is null afterwards.  We also exercise
+    // C->removeFromGraph() to verify it is safe when P->rootNodeRef is null
+    // (get() returns nullptr so markDirty is not called).
+    //
+    // Note: layers do not set the parent pointer on their direct children
+    // (see the Layer / ImportScene special case in addChild), so sceneRoot
+    // is needed to give GP a non-null parent that removeFromGraph() can
+    // walk up through.
+
+    QSSGRenderLayer layer;
+    layer.ref(&rootNode);
+    rootNode.addChild(layer);
+
+    auto *sceneRoot = new QSSGRenderNode;
+    auto *gp = new QSSGRenderNode;
+    auto *p = new QSSGRenderNode;
+    auto *c = new QSSGRenderNode;
+
+    layer.addChild(*sceneRoot);
+    sceneRoot->addChild(*gp);
+    gp->addChild(*p);
+    p->addChild(*c);
+
+    rootNode.reindex();
+
+    // Pre-condition: all nodes must have a rootNodeRef pointing to the root.
+    QVERIFY(sceneRoot->rootNodeRef != nullptr);
+    QVERIFY(gp->rootNodeRef != nullptr);
+    QVERIFY(p->rootNodeRef != nullptr);
+    QVERIFY(c->rootNodeRef != nullptr);
+
+    // Remove GP — this calls sceneRoot->removeChild(GP) which clears
+    // GP->rootNodeRef, then orphans P: P->parent = nullptr.
+    // The fix requires that P->rootNodeRef is also cleared here.
+    gp->removeFromGraph();
+
+    // GP itself must be fully detached by sceneRoot->removeChild(GP).
+    QCOMPARE(gp->parent, nullptr);
+    QCOMPARE(gp->rootNodeRef, nullptr);
+
+    // P was orphaned by the loop inside GP->removeFromGraph().
+    // Its rootNodeRef must be null — this is what the fix ensures.
+    QCOMPARE(p->parent, nullptr);
+    QCOMPARE(p->rootNodeRef, nullptr);
+
+    // C is still a child of P at this point (P->removeFromGraph not called).
+    // Calling C->removeFromGraph() will invoke P->removeChild(C).
+    // With P->rootNodeRef == nullptr, get() returns null and markDirty is
+    // skipped — this must not crash.
+    c->removeFromGraph();
+
+    QCOMPARE(c->parent, nullptr);
+    QCOMPARE(c->rootNodeRef, nullptr);
+
+    delete c;
+    delete p;
+    delete gp;
+    layer.removeChild(*sceneRoot);
+    delete sceneRoot;
+    rootNode.removeChild(layer);
 }
 
 QTEST_APPLESS_MAIN(tst_NodeIndexing)
