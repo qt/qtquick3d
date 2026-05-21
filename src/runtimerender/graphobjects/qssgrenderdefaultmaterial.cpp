@@ -10,7 +10,7 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderDefaultMaterial::QSSGRenderDefaultMaterial(QSSGRenderGraphObject::Type type)
-    : QSSGRenderGraphObject(type)
+    : QSSGRenderGraphObject(type, FlagT(Flags::HasGraphicsResources))
 {
     Q_ASSERT(type == QSSGRenderGraphObject::Type::DefaultMaterial ||
              type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
@@ -35,7 +35,7 @@ void QSSGRenderDefaultMaterial::clearDirty()
 }
 
 QSSGRenderCustomMaterial::QSSGRenderCustomMaterial()
-    : QSSGRenderGraphObject(Type::CustomMaterial)
+    : QSSGRenderGraphObject(Type::CustomMaterial, FlagT(QSSGRenderGraphObject::Flags::HasGraphicsResources))
 {
     adapter = QSSGShaderMaterialAdapter::create(*this);
 }
