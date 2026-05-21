@@ -155,6 +155,7 @@ void QSSGRenderNode::removeFromGraph()
         auto &removedChild = *it++;
         children.remove(removedChild);
         removedChild.parent = nullptr;
+        removedChild.rootNodeRef = nullptr;
     }
 }
 
