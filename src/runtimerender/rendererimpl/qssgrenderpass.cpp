@@ -1586,7 +1586,7 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             if (rhiABufferImage->texture) {
                 const auto s = rhiAuxiliaryImage->texture->pixelSize();
                 if (s.width() * s.height() < dim.width() * dim.height())
-                    extraNodeCount = ensureFreeNodes(s.width() * s.height() - dim.width() * dim.height(), 32u * 1024u);
+                    extraNodeCount = ensureFreeNodes(dim.width() * dim.height() - s.width() * s.height(), 32u * 1024u);
                 rhiABufferImage->texture->destroy();
                 rhiAuxiliaryImage->texture->destroy();
             }
