@@ -45,7 +45,7 @@ Q_SIGNALS:
     void loadPrefixChanged();
 
 private:
-    bool m_enabled = false;
+    bool m_enabled = true;
     QString m_key;
     QString m_loadPrefix;
 };
