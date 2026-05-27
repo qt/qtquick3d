@@ -107,7 +107,7 @@ void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
 
     // Adding children to a layer does not reset parent
     // because layers can share children over with other layers
-    if (type != QSSGRenderNode::Type::Layer && type != QSSGRenderNode::Type::ImportScene) {
+    if (type != QSSGRenderNode::Type::Layer) {
         if (inChild.parent && inChild.parent != this)
             inChild.parent->removeChild(inChild);
         inChild.parent = this;
@@ -119,7 +119,14 @@ void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
     if (inChild.type != QSSGRenderNode::Type::Root)
         inChild.rootNodeRef = rootNodeRef;
 
-    children.push_back(inChild);
+    // NOTE: We push importScene nodes to the front because this way we'll always index
+    // the imported scene first. This keeps their global index low and stable across
+    // views, so a shared imported scene can be placed at the start of a shared data store.
+    if (inChild.type != QSSGRenderNode::Type::ImportScene)
+        children.push_back(inChild);
+    else
+        children.push_front(inChild);
+
     // Don't mark dirty if this is a layer, because layers won't have any global values
     // calculated and therefore will not have the dirty flag cleared!
     if (inChild.type != QSSGRenderNode::Type::Layer)

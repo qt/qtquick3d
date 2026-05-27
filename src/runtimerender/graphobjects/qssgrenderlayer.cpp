@@ -89,21 +89,22 @@ void QSSGRenderLayer::setImportScene(QSSGRenderNode &importedNode)
     // do absolutely not want to change the node links in that tree!
     if (importSceneNode == nullptr) {
         importSceneNode = new QSSGRenderNode(QSSGRenderGraphObject::Type::ImportScene);
-        // Now we can add the dummy node to the layers child list
-        // NOTE: We push front because this way we'll always index the imported scene first...
-        children.push_front(*importSceneNode);
+        addChild(*importSceneNode);
     } else {
         importSceneNode->children.clear(); // Clear the list (or the list will modify the rootNode)
     }
 
-    // The imported scene root node is now a child of the dummy node
-    auto &importChildren = importSceneNode->children;
-    Q_ASSERT(importChildren.isEmpty());
-    // We don't want the list to modify our node, so we set the tail and head manually.
-    importChildren.m_head = importChildren.m_tail = &importedNode;
-
     // Mark all nodes as imported, this allows us to detect imported nodes later on.
     importedNode.setState(QSSGRenderNode::LocalState::Imported);
+
+    auto &importChildren = importSceneNode->children;
+    Q_ASSERT(importChildren.isEmpty());
+    // We don't want the list to modify the imported node, so we set the tail and head manually.
+    importChildren.m_head = importChildren.m_tail = &importedNode;
+
+    // The import injects the node into the tree manually, so trigger a reindex.
+    if (rootNode != nullptr)
+        rootNode->markDirty(QSSGRenderRoot::DirtyFlag::TreeDirty);
 
     // Now try to detect if the imported scene is used in a different window. This is not
     // supported and might not function correctly, so we warn the user and try to be nice.
@@ -117,12 +118,21 @@ void QSSGRenderLayer::setImportScene(QSSGRenderNode &importedNode)
     }
 }
 
-void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)
+void QSSGRenderLayer::removeImportScene(QSSGRenderNode &importedNode)
 {
-    if (importSceneNode && !importSceneNode->children.isEmpty()) {
-        if (&importSceneNode->children.back() == &rootNode)
-            importSceneNode->children.clear();
+    if (importSceneNode && !importSceneNode->children.isEmpty()
+        && &importSceneNode->children.back() == &importedNode) {
+        // The imported node may be shared by more than one view, so only reset state
+        // that the reindex triggered by the TreeDirty mark below will restore: that's
+        // the handle 'h' (see reindexChildNodes()). Do NOT clear LocalState::Imported
+        // or rootNodeRef here, neither is re-set by the update. The rootNodeRef will
+        // stay valid for the lifetime of the window.
+        importedNode.h = {};
+        importSceneNode->children.clear();
     }
+
+    if (rootNode != nullptr)
+        rootNode->markDirty(QSSGRenderRoot::DirtyFlag::TreeDirty);
 }
 
 QT_END_NAMESPACE
