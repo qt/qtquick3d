@@ -307,7 +307,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     // Special function(s) for importScene
     void setImportScene(QSSGRenderNode &rootNode);
-    void removeImportScene(QSSGRenderNode &rootNode);
+    void removeImportScene(QSSGRenderNode &importedNode);
 
     [[nodiscard]] bool isMsaaEnabled() const { return antialiasingMode == AAMode::MSAA; }
     [[nodiscard]] bool isSsaaEnabled() const { return antialiasingMode == AAMode::SSAA; }
