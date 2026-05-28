@@ -224,3 +224,10 @@ precedence = "override"
 comment = "Can't be read in file"
 SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
 SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"
+
+[[annotations]]
+path = "tests/auto/quick3d_visual/runtimeloader/data/torus_and_cone.glb"
+precedence = "override"
+comment = "Can't be read in file"
+SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
+SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"

@@ -27,6 +27,7 @@
 #if QT_CONFIG(mimetype)
 #include <QtCore/qmimetype.h>
 #endif
+#include <QtCore/qhash.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,6 +51,17 @@ class Q_QUICK3DASSETUTILS_EXPORT QQuick3DRuntimeLoader : public QQuick3DNode
 public:
     explicit QQuick3DRuntimeLoader(QQuick3DNode *parent = nullptr);
 
+    enum class QueryFilter
+    {
+        Textures,
+        Materials,
+        Nodes,
+        Cameras,
+        Lights,
+        Models,
+    };
+    Q_ENUM(QueryFilter)
+
     QUrl source() const;
     void setSource(const QUrl &newSource);
     void componentComplete() override;
@@ -67,6 +79,9 @@ public:
     QQuick3DInstancing *instancing() const;
     void setInstancing(QQuick3DInstancing *newInstancing);
 
+    Q_REVISION(6, 12) Q_INVOKABLE QQuick3DObject *query(const QString &name) const;
+    Q_REVISION(6, 12) Q_INVOKABLE QList<QQuick3DObject *> queryAll(QueryFilter filter) const;
+
 Q_SIGNALS:
     void sourceChanged();
     void statusChanged();
@@ -81,6 +96,9 @@ private:
     void calculateBounds();
     void loadSource();
     void updateModels();
+
+    QSSGRuntimeObjectNameMap m_objects;
+    QSSGRuntimeObjectTypeMap m_objectsByType;
 
     QPointer<QQuick3DNode> m_root;
     QPointer<QQuick3DNode> m_imported;

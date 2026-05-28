@@ -193,7 +193,8 @@ static void applyToModels(QQuick3DObject *obj, Func &&lambda)
 void QQuick3DRuntimeLoader::loadSource()
 {
     delete m_root;
-    m_root.clear();
+    m_objects.clear();
+    m_objectsByType.clear();
     QSSGBufferManager::unregisterMeshData(m_assetId);
 
     m_status = Status::Empty;
@@ -229,7 +230,8 @@ void QQuick3DRuntimeLoader::loadSource()
         // and resources. If we use 'this' those first-level nodes/resources won't be deleted
         // when a new scene is loaded.
         m_root = new QQuick3DNode(this);
-        m_imported = QSSGRuntimeUtils::createScene(*m_root, scene);
+        m_root->setObjectName("RuntimeLoaderRoot");
+        m_imported = QSSGRuntimeUtils::createScene(*m_root, scene, &m_objects, &m_objectsByType);
         m_assetId = scene.id;
         m_boundsDirty = true;
         m_instancingChanged = m_instancing != nullptr;
@@ -313,6 +315,97 @@ void QQuick3DRuntimeLoader::setInstancing(QQuick3DInstancing *newInstancing)
     m_instancingChanged = true;
     updateModels();
     emit instancingChanged();
+}
+
+/*!
+    \qmlmethod Object3D RuntimeLoader::query(string arg)
+    \since 6.12
+
+    Returns the object with the given name, or \c null if no object with that name exists.
+
+    The \a arg parameter is the name of the object to query or a query string.
+    For example, to query the object named "PaintMaterialX", use the following code:
+
+    \badcode
+    var object = runtimeLoader.query("PaintMaterial")
+    \endcode
+
+    The above code works as expected assuming the objects are sensibly named in the source asset file.
+    However, if there are multiple objects with the same name, the query will return the first object
+    found matching the given name. To query a specific object, and avoid ambiguity, use the full object path.
+
+    \badcode
+    var object = runtimeLoader.query("/House2/Wall001/Mirror/Material")
+    \endcode
+
+    \note Even with paths it's possible for a improperly structured asset file to have multiple objects with the same path,
+    as the paths are built up from the object names in the source asset file.
+
+    \note The object names are defined as in the source asset file.
+*/
+
+QQuick3DObject *QQuick3DRuntimeLoader::query(const QString &name) const
+{
+    const auto index = name.lastIndexOf(QChar(u'/'));
+
+    if (index != -1) {
+        const QString shortName = name.mid(index + 1);
+        const auto range = m_objects.equal_range({shortName, QString()});
+        for (auto it = range.first; it != range.second; ++it) {
+            if (it.key().path == name)
+                return it.value();
+        }
+    }
+
+    return m_objects.value(QSSGRuntimeObjectNameKey{name, QString()});
+}
+
+static inline QSSGRenderGraphObject::BaseType queryFilterToBaseType(QQuick3DRuntimeLoader::QueryFilter filter)
+{
+    using Type = QSSGRenderGraphObject::Type;
+    switch (filter) {
+    case QQuick3DRuntimeLoader::QueryFilter::Textures:
+        return QSSGRenderGraphObjectUtils::getBaseType(Type::Image2D);
+    case QQuick3DRuntimeLoader::QueryFilter::Materials:
+        return QSSGRenderGraphObjectUtils::getBaseType(Type::PrincipledMaterial);
+    case QQuick3DRuntimeLoader::QueryFilter::Nodes:
+        return QSSGRenderGraphObjectUtils::getBaseType(Type::Node);
+    case QQuick3DRuntimeLoader::QueryFilter::Cameras:
+        return QSSGRenderGraphObjectUtils::getBaseType(Type::OrthographicCamera);
+    case QQuick3DRuntimeLoader::QueryFilter::Lights:
+        return QSSGRenderGraphObjectUtils::getBaseType(Type::DirectionalLight);
+    case QQuick3DRuntimeLoader::QueryFilter::Models:
+        return QSSGRenderGraphObjectUtils::getBaseType(Type::Model);
+    }
+
+    Q_UNREACHABLE_RETURN(QSSGRenderGraphObject::BaseType(0));
+}
+
+/*!
+    \qmlmethod List<Object3D> RuntimeLoader::queryAll(QueryFilter filter)
+    \since 6.12
+
+    Returns a list of all objects matching the given filter.
+
+    The \a filter parameter specifies the type of objects to query for.
+    For example, to query for all materials, use the following code:
+
+    \badcode
+    var materials = runtimeLoader.queryAll(RuntimeLoader.Materials)
+    \endcode
+
+    The above code returns a list of all materials in the source asset file.
+*/
+
+QList<QQuick3DObject *> QQuick3DRuntimeLoader::queryAll(QueryFilter filter) const
+{
+    QList<QQuick3DObject *> results;
+    const auto range = m_objectsByType.equal_range(queryFilterToBaseType(filter));
+    for (auto it = range.first; it != range.second; ++it) {
+        if (auto *obj = it.value().data())
+            results << obj;
+    }
+    return results;
 }
 
 QT_END_NAMESPACE

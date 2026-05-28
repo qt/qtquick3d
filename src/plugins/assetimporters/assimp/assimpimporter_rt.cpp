@@ -16,6 +16,7 @@
 #include <QtQuick3DAssetImport/private/qssgassetimporter_p.h>
 #include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
 #include <QtQuick3DAssetUtils/private/qssgsceneedit_p.h>
+#include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
@@ -290,8 +291,12 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
                               aiMatrix4x4 *transformCorrection)
 {
     // objectName
-    if (target.name.isNull())
-        target.name = fromAiString(source.mName);
+    if (target.name.isNull()) {
+        if (source.mName.length > 0)
+            target.name = fromAiString(source.mName);
+        else
+            target.name = QSSGQmlUtilities::getQmlElementName(target);
+    }
 
     // Apply correction if necessary
     aiMatrix4x4 transformMatrix;
@@ -449,7 +454,10 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
 {
     if (target.name.isNull()) {
         aiString materialName = source.GetName();
-        target.name = fromAiString(materialName);
+        if (materialName.length > 0)
+            target.name = fromAiString(materialName);
+        else
+            target.name = QSSGQmlUtilities::getQmlElementName(target);
     }
 
     const auto createTextureNode = [&sceneInfo, &target](const aiMaterial &material, aiTextureType textureType, unsigned int index) {
@@ -1844,7 +1852,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
     SceneInfo::TextureMap textureMap;
 
     if (!targetScene.root) {
-        auto root = new QSSGSceneDesc::Node(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
+        auto root = new QSSGSceneDesc::Node(QByteArrayLiteral("Root"), QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(targetScene, *root);
     }
 

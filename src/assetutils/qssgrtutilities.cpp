@@ -186,6 +186,10 @@ GraphObjectType *createRuntimeObject(NodeType &node, QQuick3DObject &parent)
     GraphObjectType *obj = qobject_cast<GraphObjectType *>(node.obj);
     if (!obj) {
         node.obj = qobject_cast<QQuick3DObject *>(obj = new GraphObjectType);
+        QString name = QString::fromUtf8(node.name);
+        if (name.isEmpty())
+            name = QString::fromUtf8(QSSGQmlUtilities::getQmlElementName(node));
+        obj->setObjectName(name);
         obj->setParent(&parent);
         obj->setParentItem(&parent);
     }
@@ -200,6 +204,7 @@ QQuick3DTextureData *createRuntimeObject<QQuick3DTextureData>(QSSGSceneDesc::Tex
     QQuick3DTextureData *obj = qobject_cast<QQuick3DTextureData *>(node.obj);
     if (!obj) {
         node.obj = qobject_cast<QQuick3DObject *>(obj = new QQuick3DTextureData);
+        obj->setObjectName(node.name);
         obj->setParent(&parent);
         obj->setParentItem(&parent);
 
@@ -255,7 +260,11 @@ QQuick3DTextureData *createRuntimeObject<QQuick3DTextureData>(QSSGSceneDesc::Tex
 // TODO: split this into different functions
 
 void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
-                                         QQuick3DObject &parent, bool traverseChildrenAndSetProperties)
+                                         QQuick3DObject &parent,
+                                         QString path,
+                                         QSSGRuntimeObjectNameMap *objectMap,
+                                         QSSGRuntimeObjectTypeMap *typeMap,
+                                         bool traverseChildrenAndSetProperties)
 {
     using namespace QSSGSceneDesc;
 
@@ -344,14 +353,48 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
         break;
     }
 
+    if (obj) {
+        const QString keyName = obj->objectName().isEmpty()
+            ? QString::fromUtf8(QSSGQmlUtilities::getQmlElementName(node))
+            : obj->objectName();
+        path += QStringLiteral("/") + keyName;
+        if (objectMap)
+            objectMap->insert({ keyName, path }, obj);
+        if (typeMap)
+            typeMap->insert(QSSGRenderGraphObjectUtils::getBaseType(node.runtimeType), obj);
+    }
+
     if (obj && traverseChildrenAndSetProperties) {
         setProperties(*obj, node);
         for (auto &chld : node.children)
-            createGraphObject(*chld, *obj);
+            createGraphObject(*chld, *obj, path, objectMap, typeMap);
     }
 }
 
-QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene)
+/*
+
+Node {
+    name: "root"
+    children: [
+        Node {
+            name: "child1"
+            children: [
+                Node {
+                    name: "grandchild1"
+                }
+            ]
+        }
+    ]
+}
+
+We'll create a map of all nodes using the path as key, so we can easily get any node by providing the path.
+Since the node names aren't unique, we'll insert each node both by name and by path. If there are multiple
+nodes with the same name, we'll just overwrite the previous one.
+
+
+*/
+
+QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene, QSSGRuntimeObjectNameMap *objectMap, QSSGRuntimeObjectTypeMap *typeMap)
 {
     if (!scene.root) {
         qWarning("Incomplete scene description (missing plugin?)");
@@ -363,10 +406,11 @@ QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGScen
     QSSGBufferManager::registerMeshData(scene.id, scene.meshStorage);
 
     auto root = scene.root;
-    for (const auto &resource : scene.resources)
-        createGraphObject(*resource, parent, false);
 
-    createGraphObject(*root, parent);
+    for (const auto &resource : scene.resources)
+        createGraphObject(*resource, parent, {}, objectMap, typeMap, false);
+
+    createGraphObject(*root, parent, {}, objectMap, typeMap);
 
     // Some resources such as Skin have properties related with the node
     // hierarchy. Therefore, resources are handled after nodes.

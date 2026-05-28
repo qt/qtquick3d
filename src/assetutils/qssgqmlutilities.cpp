@@ -421,7 +421,7 @@ template<> const char *qmlElementName<QSSGSceneDesc::Skeleton::RuntimeType::Skel
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Skin>() { return "Skin"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::MorphTarget>() { return "MorphTarget"; }
 
-static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
+const char *getQmlElementName(const QSSGSceneDesc::Node &node)
 {
     using RuntimeType = QSSGSceneDesc::Node::RuntimeType;
     switch (node.runtimeType) {

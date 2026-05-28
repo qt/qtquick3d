@@ -1,0 +1,67 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example simpleruntimeloader
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Simple RuntimeLoader Example
+    \examplecategory {3D}
+    \brief Demonstrates loading a 3D asset at runtime and querying its scene objects.
+    \image simpleruntimeloader.jpg
+           {Side panel listing materials, cameras, and lights alongside a 3D scene}
+
+    This example shows how to use \l RuntimeLoader to load a 3D asset at runtime and
+    how to use \l {RuntimeLoader::queryAll}{query} functions to discover the materials,
+    cameras, and lights contained in the loaded scene.
+
+    \section1 Loading the Asset
+
+    The \l RuntimeLoader item loads a glTF 2.0 asset and creates the corresponding
+    Qt Quick 3D objects as its children. The \l {RuntimeLoader::source}{source} property
+    points at the asset file:
+
+    \snippet simpleruntimeloader/main.qml runtime-loader
+
+    Once the \l {RuntimeLoader::status}{status} changes to \c RuntimeLoader.Success the
+    scene is ready and the query functions can be called.
+
+    \section1 Querying Scene Objects
+
+    After a successful load, \l {RuntimeLoader::queryAll}{queryAll()} returns a list of
+    all scene objects that match a given \l {RuntimeLoader::QueryFilter}{QueryFilter}.
+    The example retrieves materials, cameras, and lights in one go:
+
+    \snippet simpleruntimeloader/main.qml queryAll
+
+    The returned lists are plain JavaScript arrays of \l QQuick3DObject references. They
+    can be assigned directly to a \l {ListView::model}{ListView model} or used to set
+    active scene properties such as \l {View3D::camera}{View3D.camera}.
+
+    \section1 Interacting with Scene Objects
+
+    \section2 Materials
+
+    Each entry in the material list can be selected to apply one of the colour swatches
+    to it. The helper function casts the returned object to the correct material type
+    before writing to the colour property:
+
+    \snippet simpleruntimeloader/main.qml query-function
+
+    \section2 Cameras
+
+    Clicking a camera entry in the side panel assigns it to \l {View3D::camera}{View3D.camera},
+    switching the active viewpoint immediately.
+
+    \section2 Lights
+
+    Each light in the side panel has a toggle that sets the light's
+    \l {Node::visible}{visible} property, enabling or disabling it without removing it
+    from the scene:
+
+    \badcode
+    Switch {
+        checked: modelData.visible
+        onToggled: modelData.visible = checked
+    }
+    \endcode
+*/
