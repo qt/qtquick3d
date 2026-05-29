@@ -38,6 +38,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrenderreflectionprobe.cpp graphobjects/qssgrenderreflectionprobe_p.h
         graphobjects/qssgrenderroot_p.h graphobjects/qssgrenderroot.cpp
         graphobjects/qssgrenderuserpass_p.h graphobjects/qssgrenderuserpass.cpp
+        graphobjects/qssgrenderskymaterial_p.h graphobjects/qssgrenderskymaterial.cpp
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
@@ -56,6 +57,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
         qssgrenderreflectionmap.cpp qssgrenderreflectionmap_p.h
         qssgrendermotionvectormap.cpp qssgrendermotionvectormap_p.h
+        qssgrenderskymaterialmanager.cpp qssgrenderskymaterialmanager_p.h
         qssgrenderpickresult_p.h qssgrenderpickresult.h
         qssgrhiparticles.cpp qssgrhiparticles_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h qssgrhicontext.h
@@ -379,6 +381,10 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
         res/rhishaders/environmentmapprefilter.frag
         res/rhishaders/reflectionprobeprefilter.vert
         res/rhishaders/reflectionprobeprefilter.frag
+        res/rhishaders/skyiblprefilter.vert
+        res/rhishaders/skyiblprefilter.frag
+        res/rhishaders/skyiblprefilternormalize.vert
+        res/rhishaders/skyiblprefilternormalize.frag
         res/rhishaders/skyboxcube.vert
         res/rhishaders/skyboxcube.frag
         res/rhishaders/grid.frag

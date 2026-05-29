@@ -15,6 +15,7 @@
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
 #include "qquick3ddebugsettings_p.h"
+#include "qquick3dskymaterial_p.h"
 #include "extensions/qquick3drenderextensions.h"
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
@@ -34,6 +35,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgcputonemapper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderskymaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -368,9 +370,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         QColor clearColor = Qt::transparent;
         if (m_backgroundMode == QSSGRenderLayer::Background::Color
-                || (m_backgroundMode == QSSGRenderLayer::Background::SkyBoxCubeMap && !m_layer->skyBoxCubeMap)
-                || (m_backgroundMode == QSSGRenderLayer::Background::SkyBox && !m_layer->lightProbe))
-        {
+            || (m_backgroundMode == QSSGRenderLayer::Background::SkyBoxCubeMap && !m_layer->skyBoxCubeMap)
+            || (m_backgroundMode == QSSGRenderLayer::Background::SkyBox && !m_layer->lightProbe)
+            || (m_backgroundMode == QSSGRenderLayer::Background::SkyMaterial && !m_layer->skyMaterial)) {
             // Same logic as with the main render pass and skybox: tonemap
             // based on tonemapMode (unless it is None), unless there are effects.
             clearColor = m_layer->firstEffect ? m_linearBackgroundColor : m_tonemappedBackgroundColor;
@@ -559,6 +561,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             m_renderStats->endRender(dumpRenderTimes());
         Q_TRACE(QSSG_renderFrame_exit);
     }
+
+    if (m_layer && m_layer->skyMaterial && m_layer->skyMaterial->wantsMoreFrames)
+        ++m_requestedFramesCount;
 
     return currentTexture;
 }
@@ -1413,14 +1418,23 @@ void QQuick3DSceneRenderer::updateLayerNode(QSSGRenderLayer &layerNode,
     layerNode.aoDither = environment->aoDither();
 
     // ### These images will not be registered anywhere
-    if (environment->lightProbe())
+    if (environment->lightProbe()) {
         layerNode.lightProbe = environment->lightProbe()->getRenderImage();
-    else
+        // FIXME: Band-aid. Need a proper solution where textureData is setting the format of the render node.
+        if (auto texData = environment->lightProbe()->textureData();
+            texData && texData->format() == QQuick3DTextureData::Format::RGBE8) {
+            layerNode.lightProbe->m_format = QSSGRenderTextureFormat::Format::RGBE8;
+        }
+    } else
         layerNode.lightProbe = nullptr;
     if (view3D.environment()->skyBoxCubeMap())
         layerNode.skyBoxCubeMap = view3D.environment()->skyBoxCubeMap()->getRenderImage();
     else
         layerNode.skyBoxCubeMap = nullptr;
+
+    layerNode.skyMaterial = nullptr;
+    if (auto skyMaterial = environment->skyMaterial())
+        layerNode.skyMaterial = static_cast<QSSGRenderSkyMaterial *>(QQuick3DObjectPrivate::get(skyMaterial)->spatialNode);
 
     layerNode.lightProbeSettings.probeExposure = environment->probeExposure();
     // Remap the probeHorizon to the expected Range

@@ -48,7 +48,7 @@ void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                         const QSSGBounds3 &castingObjectsBox,
                         const QSSGBounds3 &receivingObjectsBox);
 
-void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
+void rhiRenderReflectionMap(const QSSGRenderContextInterface &context,
                             QSSGPassKey passKey,
                             const QSSGLayerRenderData &inData,
                             QSSGRhiGraphicsPipelineState *ps,
@@ -113,14 +113,14 @@ void rhiPrepareGrid(QSSGRhiContext *rhiCtx,
                     QSSGRenderCameraList &cameras,
                     QSSGRenderer &renderer);
 
-void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
+void rhiPrepareSkyBox(const QSSGRenderContextInterface &context,
                       QSSGPassKey passKey,
                       QSSGRenderLayer &layer,
                       QSSGRenderCameraList &cameras,
                       QSSGRenderer &renderer,
                       uint tonemapMode = 0);
 
-void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
+void rhiPrepareSkyBoxForReflectionMap(const QSSGRenderContextInterface &context,
                                       QSSGPassKey passKey,
                                       QSSGRenderLayer &layer,
                                       QSSGRenderCamera &inCamera,

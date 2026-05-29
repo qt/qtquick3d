@@ -31,6 +31,7 @@
 #include <QtQuick3D/private/qquick3ddebugsettings_p.h>
 #include <QtQuick3D/private/qquick3dfog_p.h>
 #include <QtQuick3D/private/qquick3drenderpass_p.h>
+#include <QtQuick3D/private/qquick3dskymaterial_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,6 +60,7 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(bool aoEnabled READ aoEnabled WRITE setAoEnabled NOTIFY aoEnabledChanged REVISION(6, 5))
 
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
+    Q_PROPERTY(QQuick3DSkyMaterial *skyMaterial READ skyMaterial WRITE setSkyMaterial NOTIFY skyMaterialChanged REVISION(6, 12))
     Q_PROPERTY(float probeExposure READ probeExposure WRITE setProbeExposure NOTIFY probeExposureChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
     Q_PROPERTY(QVector3D probeOrientation READ probeOrientation WRITE setProbeOrientation NOTIFY probeOrientationChanged)
@@ -105,7 +107,8 @@ public:
         Unspecified,
         Color,
         SkyBox,
-        SkyBoxCubeMap
+        SkyBoxCubeMap,
+        SkyMaterial
     };
     Q_ENUM(QQuick3DEnvironmentBackgroundTypes)
 
@@ -155,6 +158,7 @@ public:
     Q_REVISION(6, 5) void setAoEnabled(bool newAoEnabled);
 
     QQuick3DTexture *lightProbe() const;
+    Q_REVISION(6, 12) QQuick3DSkyMaterial *skyMaterial() const;
     float probeExposure() const;
     float probeHorizon() const;
     QVector3D probeOrientation() const;
@@ -205,6 +209,7 @@ public Q_SLOTS:
     void setAoBias(float aoBias);
 
     void setLightProbe(QQuick3DTexture *lightProbe);
+    Q_REVISION(6, 12) void setSkyMaterial(QQuick3DSkyMaterial *skyMaterial);
     void setProbeExposure(float probeExposure);
     void setProbeHorizon(float probeHorizon);
     void setProbeOrientation(const QVector3D &orientation);
@@ -246,6 +251,7 @@ Q_SIGNALS:
     Q_REVISION(6, 5) void aoEnabledChanged();
 
     void lightProbeChanged();
+    Q_REVISION(6, 12) void skyMaterialChanged();
     void probeExposureChanged();
     void probeHorizonChanged();
     void probeOrientationChanged();
@@ -311,6 +317,7 @@ private:
     bool m_aoDither = false;
     bool m_aoEnabled = false;
     QQuick3DTexture *m_lightProbe = nullptr;
+    QQuick3DSkyMaterial *m_skyMaterial = nullptr;
     float m_probeExposure = 1.0f;
     float m_probeHorizon = 0.0f;
     QVector3D m_probeOrientation;

@@ -371,17 +371,24 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
                 samplerBindingsSpecified.setBit(reflectionSampler);
             }
-        } else if (shaderPipeline->lightProbeTexture()) {
-            int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
-            if (binding >= 0) {
-                samplerBindingsSpecified.setBit(binding);
-                QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
-                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
-                                                         QSSGRhiHelpers::toRhi(tiling.first), QSSGRhiHelpers::toRhi(tiling.second), QRhiSampler::Repeat });
-                bindings.addTexture(binding,
-                                    QRhiShaderResourceBinding::FragmentStage,
-                                    shaderPipeline->lightProbeTexture(), sampler);
-            } // else ignore, not an error (for example, an unshaded material's fragment shader will not have this sampler)
+        }
+
+        if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
+            binding >= 0) {
+            auto texture = shaderPipeline->lightProbeTexture();
+            if (!texture)
+                texture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+            Q_ASSERT(texture);
+
+            samplerBindingsSpecified.setBit(binding);
+            QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                     QRhiSampler::Linear,
+                                                     QRhiSampler::Linear, // enables mipmapping
+                                                     QSSGRhiHelpers::toRhi(tiling.first),
+                                                     QSSGRhiHelpers::toRhi(tiling.second),
+                                                     QRhiSampler::Repeat });
+            bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
         }
 
         if (shaderPipeline->screenTexture()) {

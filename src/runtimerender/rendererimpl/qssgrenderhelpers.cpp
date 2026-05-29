@@ -8,6 +8,7 @@
 
 #include "qssgrenderer_p.h"
 #include "qssglayerrenderdata_p.h"
+#include <QtQuick3DRuntimeRender/private/qssgrenderskymaterial_p.h>
 #include "qssgrhiparticles_p.h"
 #include "qssgrhiquadrenderer_p.h"
 #include "../qssgrendercontextcore.h"
@@ -576,7 +577,7 @@ static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipe
     return instanceBufferBinding;
 }
 
-static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
+static void rhiPrepareResourcesForReflectionMap(const QSSGRenderContextInterface &context,
                                                 QSSGPassKey passKey,
                                                 const QSSGLayerRenderData &inData,
                                                 QSSGReflectionMapEntry *pEntry,
@@ -588,9 +589,11 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
 {
     using namespace RenderHelpers;
 
-    if ((inData.layer.background == QSSGRenderLayer::Background::SkyBox && inData.layer.lightProbe) ||
-         inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap)
-        rhiPrepareSkyBoxForReflectionMap(rhiCtx, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
+    QSSGRhiContext *rhiCtx = context.rhiContext().get();
+
+    if ((inData.layer.background == QSSGRenderLayer::Background::SkyBox && (inData.layer.lightProbe || inData.layer.skyMaterial))
+        || inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap)
+        rhiPrepareSkyBoxForReflectionMap(context, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
 
     QSSGShaderFeatures features = inData.getShaderFeatures();
     // because of alteredCamera/alteredMvp below
@@ -1146,15 +1149,26 @@ void rhiPrepareRenderableImp(QSSGRhiContext *rhiCtx,
                                                              QRhiSampler::Repeat });
                     if (reflectionSampler >= 0 && reflectionTexture)
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
-                } else if (shaderPipeline->lightProbeTexture()) {
-                    int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
-                    if (binding >= 0) {
-                        auto tiling = shaderPipeline->lightProbeTiling();
-                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
-                                                                 QSSGRhiHelpers::toRhi(tiling.first), QSSGRhiHelpers::toRhi(tiling.second), QRhiSampler::Repeat });
-                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage,
-                                            shaderPipeline->lightProbeTexture(), sampler);
-                    } // else ignore, not an error (since non-lighting passes wont need it)
+                }
+
+                if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
+                    binding >= 0) {
+                    auto texture = shaderPipeline->lightProbeTexture();
+                    if (!texture) {
+                        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                        texture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+                        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                    }
+                    Q_ASSERT(texture);
+
+                    QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             QRhiSampler::Linear, // enables mipmapping
+                                                             QSSGRhiHelpers::toRhi(tiling.first),
+                                                             QSSGRhiHelpers::toRhi(tiling.second),
+                                                             QRhiSampler::Repeat });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
                 }
 
                 // Screen Texture
@@ -1847,7 +1861,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     }
 }
 
-void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
+void RenderHelpers::rhiRenderReflectionMap(const QSSGRenderContextInterface &context,
                                            QSSGPassKey passKey,
                                            const QSSGLayerRenderData &inData,
                                            QSSGRhiGraphicsPipelineState *ps,
@@ -1856,6 +1870,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                                            const QSSGRenderableObjectList &reflectionPassObjects,
                                            QSSGRenderer &renderer)
 {
+    QSSGRhiContext *rhiCtx = context.rhiContext().get();
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
@@ -1897,8 +1912,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             cameraGlobalTransform = inData.getGlobalTransform(theCameras[cubeFaceIdx]);
             theCameras[cubeFaceIdx].calculateViewProjectionMatrix(cameraGlobalTransform, pEntry->m_viewProjection);
 
-            rhiPrepareResourcesForReflectionMap(rhiCtx, passKey, inData, pEntry, ps,
-                                                reflectionPassObjects, theCameras[cubeFaceIdx], renderer, face);
+            rhiPrepareResourcesForReflectionMap(context, passKey, inData, pEntry, ps, reflectionPassObjects, theCameras[cubeFaceIdx], renderer, face);
         }
         QRhiRenderPassDescriptor *renderPassDesc = nullptr;
         for (auto face : QSSGRenderTextureCubeFaces) {
@@ -2225,7 +2239,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
     cb->debugMarkEnd();
 }
 
-static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
+static void rhiPrepareSkyBox_helper(const QSSGRenderContextInterface &context,
                                     QSSGPassKey passKey,
                                     QSSGRenderLayer &layer,
                                     QSSGRenderCameraList &cameras,
@@ -2238,13 +2252,32 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
 
     const auto *renderData = layer.renderData;
 
+    auto rhiCtx = context.rhiContext().get();
+
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-    const bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
-    const QSSGRenderImageTexture lightProbeTexture =
-            cubeMapMode ? renderer.contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap, QSSGBufferManager::MipModeDisable)
-                        : renderer.contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
-    const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
-    if (hasValidTexture) {
+
+    QSSGRenderImageTexture lightProbeTexture;
+    switch (layer.background) {
+    case QSSGRenderLayer::Background::SkyBox:
+        lightProbeTexture = renderer.contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe,
+                                                                                          QSSGBufferManager::MipModeBsdf);
+        break;
+    case QSSGRenderLayer::Background::SkyBoxCubeMap:
+        lightProbeTexture = renderer.contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap,
+                                                                                          QSSGBufferManager::MipModeDisable);
+        break;
+    case QSSGRenderLayer::Background::SkyMaterial:
+        lightProbeTexture = renderData->skyMaterialTexture;
+        break;
+    default:
+        Q_UNREACHABLE_RETURN();
+    }
+
+    const bool hasValidInput = (lightProbeTexture.m_texture != nullptr);
+
+    if (hasValidInput) {
+        const bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
+
         if (cubeFace == QSSGRenderTextureCubeFaceNone)
             layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
         if (cubeMapMode)
@@ -2258,19 +2291,18 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                                                  QRhiSampler::Repeat,
                                                  QRhiSampler::ClampToEdge,
                                                  QRhiSampler::Repeat });
-        int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
-        const quint32 ubufSize = cameras.count() >= 2 ? 416 : 240; // same ubuf layout for both skybox and skyboxcube
-        bindings.addTexture(samplerBinding,
-                            QRhiShaderResourceBinding::FragmentStage,
-                            lightProbeTexture.m_texture, sampler);
+        int samplerBinding = 1; // the shader code is hand-written, so we don't need to look that up
+        bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, lightProbeTexture.m_texture, sampler);
 
         const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
         const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * cubeFaceIdx;
         QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, nullptr, entry, entryIdx });
 
         QRhi *rhi = rhiCtx->rhi();
-        if (!dcd.ubuf) {
-            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+        const quint32 ubufSize = cameras.count() >= 2 ? 416 : 240; // same ubuf layout for both skybox and skyboxcube
+        if (!dcd.ubuf || dcd.ubuf->size() != ubufSize) {
+            delete dcd.ubuf;
+            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, int(ubufSize));
             dcd.ubuf->create();
         }
 
@@ -2334,22 +2366,23 @@ static void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
     }
 }
 
-void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
+void RenderHelpers::rhiPrepareSkyBox(const QSSGRenderContextInterface &context,
                                      QSSGPassKey passKey,
                                      QSSGRenderLayer &layer,
                                      QSSGRenderCameraList &cameras,
                                      QSSGRenderer &renderer,
                                      uint tonemapMode)
 {
+    auto rhiCtx = context.rhiContext().get();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
-    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, cameras, renderer, nullptr, QSSGRenderTextureCubeFaceNone, tonemapMode);
+    rhiPrepareSkyBox_helper(context, passKey, layer, cameras, renderer, nullptr, QSSGRenderTextureCubeFaceNone, tonemapMode);
 
     cb->debugMarkEnd();
 }
 
-void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
+void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(const QSSGRenderContextInterface &context,
                                                      QSSGPassKey passKey,
                                                      QSSGRenderLayer &layer,
                                                      QSSGRenderCamera &inCamera,
@@ -2357,11 +2390,13 @@ void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
                                                      QSSGReflectionMapEntry *entry,
                                                      QSSGRenderTextureCubeFace cubeFace)
 {
+    QSSGRhiContext *rhiCtx = context.rhiContext().get();
+
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox for reflection cube map"));
 
     QSSGRenderCameraList cameras({ &inCamera });
-    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, cameras, renderer, entry, cubeFace);
+    rhiPrepareSkyBox_helper(context, passKey, layer, cameras, renderer, entry, cubeFace);
 
     cb->debugMarkEnd();
 }
@@ -3115,15 +3150,24 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
             }
 
             // Light probe
-            if (shaderPipeline->lightProbeTexture()) {
-                int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
-                if (binding >= 0) {
-                    auto tiling = shaderPipeline->lightProbeTiling();
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
-                                                             QSSGRhiHelpers::toRhi(tiling.first), QSSGRhiHelpers::toRhi(tiling.second), QRhiSampler::Repeat });
-                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage,
-                                        shaderPipeline->lightProbeTexture(), sampler);
+            if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
+                binding >= 0) {
+                auto texture = shaderPipeline->lightProbeTexture();
+                if (!texture) {
+                    QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                    texture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+                    rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                 }
+                Q_ASSERT(texture);
+
+                QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                         QRhiSampler::Linear,
+                                                         QRhiSampler::Linear, // enables mipmapping
+                                                         QSSGRhiHelpers::toRhi(tiling.first),
+                                                         QSSGRhiHelpers::toRhi(tiling.second),
+                                                         QRhiSampler::Repeat });
+                bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
             }
         }
 
@@ -3362,15 +3406,26 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
                                                              QRhiSampler::Repeat });
                     if (reflectionSampler >= 0 && reflectionTexture)
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
-                } else if (shaderPipeline->lightProbeTexture()) {
-                    int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
-                    if (binding >= 0) {
-                        auto tiling = shaderPipeline->lightProbeTiling();
-                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
-                                                                 QSSGRhiHelpers::toRhi(tiling.first), QSSGRhiHelpers::toRhi(tiling.second), QRhiSampler::Repeat });
-                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage,
-                                            shaderPipeline->lightProbeTexture(), sampler);
+                }
+
+                if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
+                    binding >= 0) {
+                    auto texture = shaderPipeline->lightProbeTexture();
+                    if (!texture) {
+                        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                        texture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+                        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                     }
+                    Q_ASSERT(texture);
+
+                    QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             QRhiSampler::Linear, // enables mipmapping
+                                                             QSSGRhiHelpers::toRhi(tiling.first),
+                                                             QSSGRhiHelpers::toRhi(tiling.second),
+                                                             QRhiSampler::Repeat });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
                 }
 
                 // Screen Texture
@@ -3698,15 +3753,25 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
                                                              QRhiSampler::Repeat });
                     if (reflectionSampler >= 0 && reflectionTexture)
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
-                } else if (shaderPipeline->lightProbeTexture()) {
-                    int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
-                    if (binding >= 0) {
-                        auto tiling = shaderPipeline->lightProbeTiling();
-                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
-                                                                 QSSGRhiHelpers::toRhi(tiling.first), QSSGRhiHelpers::toRhi(tiling.second), QRhiSampler::Repeat });
-                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage,
-                                            shaderPipeline->lightProbeTexture(), sampler);
-                    } // else ignore, not an error (since non-lighting passes wont need it)
+                }
+                if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
+                    binding >= 0) {
+                    auto texture = shaderPipeline->lightProbeTexture();
+                    if (!texture) {
+                        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                        texture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+                        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                    }
+                    Q_ASSERT(texture);
+
+                    QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                             QRhiSampler::Linear,
+                                                             QRhiSampler::Linear, // enables mipmapping
+                                                             QSSGRhiHelpers::toRhi(tiling.first),
+                                                             QSSGRhiHelpers::toRhi(tiling.second),
+                                                             QRhiSampler::Repeat });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
                 }
 
                 // Screen Texture

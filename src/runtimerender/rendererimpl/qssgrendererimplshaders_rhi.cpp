@@ -181,6 +181,16 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiReflectionprobePreFilt
     return getBuiltinRhiShader(QByteArrayLiteral("reflectionprobeprefilter"), m_cache.reflectionprobePreFilterShader);
 }
 
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyIblPreFilterShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("skyiblprefilter"), m_cache.skyIblPreFilterShader);
+}
+
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiSkyIblPreFilterNormalizeShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("skyiblprefilternormalize"), m_cache.skyIblPreFilterNormalizeShader);
+}
+
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhienvironmentmapPreFilterShader(bool isRGBE)
 {
     static constexpr char variant[][29] { "environmentmapprefilter", "environmentmapprefilter_rgbe" };

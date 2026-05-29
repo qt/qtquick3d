@@ -116,6 +116,15 @@ public:
     bool m_includeSTO = false; // Compatibility flag to include STO objects in reflection map rendering.
 };
 
+class SkyMaterialPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Standalone; }
+    void resetForFrame() final;
+};
+
 class ZPrePassPass : public QSSGRenderPass
 {
 public:

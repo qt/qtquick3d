@@ -52,6 +52,7 @@ qt_internal_add_module(Quick3D
         qquick3dmorphtarget.cpp qquick3dmorphtarget_p.h
         qquick3dtexture.cpp qquick3dtexture_p.h
         qquick3dtexturedata.cpp qquick3dtexturedata.h qquick3dtexturedata_p.h
+        qquick3dskymaterial_p.h qquick3dskymaterial.cpp
         qquick3dskin.cpp qquick3dskin_p.h
         qquick3dutils_p.h
         qquick3dviewport.cpp qquick3dviewport_p.h

@@ -27,6 +27,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderreflectionmap_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderskymaterialmanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
@@ -125,7 +126,9 @@ enum class QSSGLayerRenderPreparationResultFlag
 
     RequiresNormalTexture = 1 << 9,
 
-    RequiresMotionVectorPass = 1 << 10
+    RequiresMotionVectorPass = 1 << 10,
+
+    RequiresSkyMaterialPass = 1 << 11
 };
 
 struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPreparationResultFlag>
@@ -218,6 +221,15 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     void setRequiresMotionVectorPass(bool inValue)
     {
         setFlag(QSSGLayerRenderPreparationResultFlag::RequiresMotionVectorPass, inValue);
+    }
+
+    bool requiresSkyMaterialPass() const
+    {
+        return this->operator&(QSSGLayerRenderPreparationResultFlag::RequiresSkyMaterialPass);
+    }
+    void setRequiresSkyMaterialPass(bool inValue)
+    {
+        setFlag(QSSGLayerRenderPreparationResultFlag::RequiresSkyMaterialPass, inValue);
     }
 };
 
@@ -391,6 +403,7 @@ public:
     SSAOMapPass ssaoMapPass;
     DepthMapPass depthMapPass;
     DepthMapPass depthMapPassMS;
+    SkyMaterialPass skyMaterialPass;
     ScreenMapPass screenMapPass;
     ScreenReflectionPass reflectionPass;
     Item2DPass item2DPass;
@@ -522,10 +535,12 @@ public:
     // but we follow the existing pattern for now.
     const QSSGRenderShadowMapPtr &requestShadowMapManager();
     const QSSGRenderReflectionMapPtr &requestReflectionMapManager();
+    const QSSGRenderSkyMaterialManagerPtr &requestSkyMaterialManager();
     const QSSGUserRenderPassManagerPtr &requestUserRenderPassManager();
     const QSSGRenderMotionVectorMapPtr &requestMotionVectorMapManager();
     const QSSGRenderShadowMapPtr &getShadowMapManager() const { return shadowMapManager; }
     const QSSGRenderReflectionMapPtr &getReflectionMapManager() const { return reflectionMapManager; }
+    const QSSGRenderSkyMaterialManagerPtr &getSkyMaterialManager() const { return skyMaterialManager; }
     const QSSGUserRenderPassManagerPtr &getUserRenderPassManager() const { return userRenderPassManager; }
     const QSSGRenderMotionVectorMapPtr &getMotionvectorMapManager() const { return motionVectorMapManager; }
 
@@ -541,6 +556,10 @@ public:
 
     [[nodiscard]] QSSGRhiRenderableTexture *getRenderResult(QSSGRenderResult::Key id) { return &renderResults[size_t(id)]; }
     [[nodiscard]] const QSSGRhiRenderableTexture *getRenderResult(QSSGRenderResult::Key id) const { return &renderResults[size_t(id)]; }
+
+    QSSGRenderImageTexture skyMaterialTexture; // Always a cubemap, might be IBL
+    void resolveLayerIblTexture();
+
     [[nodiscard]] static inline const std::unique_ptr<QSSGPerFrameAllocator> &perFrameAllocator(QSSGRenderContextInterface &ctx);
     [[nodiscard]] static inline QSSGLayerRenderData *getCurrent(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }
     void saveRenderState(const QSSGRenderer &renderer);
@@ -790,6 +809,7 @@ private:
     DepthPrepassObjectStateT depthPrepassObjectsState { DepthPrepassObjectStateT(DepthPrepassObject::None) };
     QSSGRenderShadowMapPtr shadowMapManager;
     QSSGRenderReflectionMapPtr reflectionMapManager;
+    QSSGRenderSkyMaterialManagerPtr skyMaterialManager;
     QSSGUserRenderPassManagerPtr userRenderPassManager;
     QSSGRenderMotionVectorMapPtr motionVectorMapManager;
     QHash<const QSSGModelContext *, QRhiTexture *> lightmapTextures;

@@ -24,6 +24,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
 
 #include <QtCore/QByteArray>
@@ -2386,20 +2387,33 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders.setUniform(ubufData, "qt_samples", &samples, sizeof(int), &cui.samples);
     }
 
+    QSSGRenderImageTexture resolvedLayerIbl;
+    QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge;
+    QSSGRenderTextureCoordOp vTile = QSSGRenderTextureCoordOp::ClampToEdge;
     const QSSGRenderLayer &layer = QSSGLayerRenderData::getCurrent(*renderContext.renderer())->layer;
-    QSSGRenderImage *theLightProbe = layer.lightProbe;
+    if (layer.lightProbe) {
+        resolvedLayerIbl = renderContext.bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
+        hTile = layer.lightProbe->m_horizontalTilingMode;
+        vTile = layer.lightProbe->m_verticalTilingMode;
+    } else if (layer.skyMaterial && layer.skyMaterial->enableIBL) {
+        resolvedLayerIbl = inRenderProperties.skyMaterialTexture;
+    }
+
     const auto &lightProbeData = layer.lightProbeSettings;
 
     // If the material has its own IBL Override, we should use that image instead.
     QSSGRenderImage *materialIblProbe = materialAdapter->iblProbe();
-    if (materialIblProbe)
-        theLightProbe = materialIblProbe;
+
     QSSGRenderImageTexture lightProbeTexture;
-    if (theLightProbe)
-        lightProbeTexture = renderContext.bufferManager()->loadRenderImage(theLightProbe, QSSGBufferManager::MipModeBsdf);
-    if (theLightProbe && lightProbeTexture.m_texture) {
-        QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode;
-        QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
+    if (materialIblProbe) {
+        lightProbeTexture = renderContext.bufferManager()->loadRenderImage(materialIblProbe, QSSGBufferManager::MipModeBsdf);
+        hTile = materialIblProbe->m_horizontalTilingMode;
+        vTile = materialIblProbe->m_verticalTilingMode;
+    } else if (resolvedLayerIbl.m_texture) {
+        lightProbeTexture = resolvedLayerIbl;
+    }
+
+    if (lightProbeTexture.m_texture) {
         const int maxMipLevel = lightProbeTexture.m_mipmapCount - 1;
 
         if (!materialIblProbe && !lightProbeData.probeOrientation.isIdentity()) {
@@ -2412,7 +2426,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         const float props[4] = { 0.0f, float(maxMipLevel), lightProbeData.probeHorizon, lightProbeData.probeExposure };
         shaders.setUniform(ubufData, "qt_lightProbeProperties", props, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
 
-        shaders.setLightProbeTexture(lightProbeTexture.m_texture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
+        shaders.setLightProbeTexture(lightProbeTexture.m_texture, hTile, vTile);
     } else {
         // no lightprobe
         const float emptyProps[4] = { 0.0f, 0.0f, -1.0f, 0.0f };

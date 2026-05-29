@@ -1182,7 +1182,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     if (lighting) {
         defaultMaterialShaderKeyProperties.m_hasPunctualLights.setValue(theGeneratedKey, hasAnyLights);
         defaultMaterialShaderKeyProperties.m_hasShadows.setValue(theGeneratedKey, anyLightHasShadows);
-        defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
+        const bool validSky = layer.skyMaterial != nullptr && layer.skyMaterial->enableIBL;
+        defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr || validSky);
     }
 
     defaultMaterialShaderKeyProperties.m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
@@ -1403,7 +1404,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     defaultMaterialShaderKeyProperties.m_hasLighting.setValue(theGeneratedKey, true);
     defaultMaterialShaderKeyProperties.m_hasPunctualLights.setValue(theGeneratedKey, hasAnyLights);
     defaultMaterialShaderKeyProperties.m_hasShadows.setValue(theGeneratedKey, anyLightHasShadows);
-    defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
+    defaultMaterialShaderKeyProperties.m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr || layer.skyMaterial != nullptr);
     defaultMaterialShaderKeyProperties.m_specularEnabled.setValue(theGeneratedKey, true);
 
     defaultMaterialShaderKeyProperties.m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
@@ -2503,10 +2504,9 @@ void QSSGLayerRenderData::prepareForRender()
         }
     }
 
-    // IBL Lightprobe Image
-    QSSGRenderImageTexture lightProbeTexture;
+    // IBL source configuration
+    const auto &lightProbeSettings = layer.lightProbeSettings;
     if (layer.lightProbe) {
-        const auto &lightProbeSettings = layer.lightProbeSettings;
         if (layer.lightProbe->m_format == QSSGRenderTextureFormat::Unknown) {
             // Choose on a format that makes sense for a light probe
             // At this point it's just a suggestion
@@ -2519,24 +2519,22 @@ void QSSGLayerRenderData::prepareForRender()
         if (layer.lightProbe->clearDirty())
             wasDataDirty = true;
 
-        // NOTE: This call can lead to rendering (of envmap) and a texture upload
-        lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
-        if (lightProbeTexture.m_texture) {
+        features.set(QSSGShaderFeatures::Feature::LightProbe, true);
+        features.set(QSSGShaderFeatures::Feature::IblOrientation, !lightProbeSettings.probeOrientation.isIdentity());
+        if (layer.lightProbe->m_format.format == QSSGRenderTextureFormat::Format::RGBE8)
+            features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
 
+    } else if (layer.skyMaterial) {
+        if (layer.skyMaterial->enableIBL) {
             features.set(QSSGShaderFeatures::Feature::LightProbe, true);
             features.set(QSSGShaderFeatures::Feature::IblOrientation, !lightProbeSettings.probeOrientation.isIdentity());
-
-            // By this point we will know what the actual texture format of the light probe is
-            // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
-            if (lightProbeTexture.m_flags.isRgbe8())
-                features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
-        } else {
-            layer.lightProbe = nullptr;
         }
-
-        const bool forceIblExposureValues = (features.isSet(QSSGShaderFeatures::Feature::LightProbe) && layer.tonemapMode == QSSGRenderLayer::TonemapMode::Custom);
-        features.set(QSSGShaderFeatures::Feature::ForceIblExposure, forceIblExposureValues);
+        layerPrepResult.flags.setRequiresSkyMaterialPass(true);
     }
+
+    const bool forceIblExposureValues = (features.isSet(QSSGShaderFeatures::Feature::LightProbe)
+                                         && layer.tonemapMode == QSSGRenderLayer::TonemapMode::Custom);
+    features.set(QSSGShaderFeatures::Feature::ForceIblExposure, forceIblExposureValues);
 
     frameData.m_ctx->bufferManager()->setLightmapSource(layer.lightmapSource);
 
@@ -2952,6 +2950,10 @@ void QSSGLayerRenderData::prepareForRender()
     if (userRenderPasses.hasData())
         activePasses.push_back(&userRenderPasses);
 
+    // Layer has SkyMaterial
+    if (layerPrepResult.flags.requiresSkyMaterialPass())
+        activePasses.push_back(&skyMaterialPass);
+
     const bool hasOpaqueObjects = (opaqueObjects.size() > 0);
 
     if (hasOpaqueObjects && !disableMainPasses)
@@ -2967,6 +2969,8 @@ void QSSGLayerRenderData::prepareForRender()
         if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap && !disableMainPasses)
             activePasses.push_back(&skyboxCubeMapPass);
         else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe && !disableMainPasses)
+            activePasses.push_back(&skyboxPass);
+        else if (layer.background == QSSGRenderLayer::Background::SkyMaterial && layer.skyMaterial && !disableMainPasses)
             activePasses.push_back(&skyboxPass);
     }
 
@@ -3006,6 +3010,13 @@ static void clearTable(std::vector<T> &entry)
         e.clear();
 }
 
+void QSSGLayerRenderData::resolveLayerIblTexture()
+{
+    if (layer.skyMaterial) {
+        skyMaterialTexture = requestSkyMaterialManager()->resolve(layer.skyMaterial);
+    }
+}
+
 void QSSGLayerRenderData::resetForFrame()
 {
     for (const auto &pass : activePasses)
@@ -3021,6 +3032,7 @@ void QSSGLayerRenderData::resetForFrame()
     globalLights.clear();
     modelContexts.clear();
     features = QSSGShaderFeatures();
+    skyMaterialTexture = { };
     hasDepthWriteObjects = false;
     depthPrepassObjectsState = { DepthPrepassObjectStateT(DepthPrepassObject::None) };
     zPrePassActive = false;
@@ -3340,6 +3352,12 @@ const QSSGRenderReflectionMapPtr &QSSGLayerRenderData::requestReflectionMapManag
     return reflectionMapManager;
 }
 
+const QSSGRenderSkyMaterialManagerPtr &QSSGLayerRenderData::requestSkyMaterialManager()
+{
+    if (!skyMaterialManager && QSSG_GUARD(renderer && renderer->contextInterface()))
+        skyMaterialManager.reset(new QSSGRenderSkyMaterialManager(*renderer->contextInterface()));
+    return skyMaterialManager;
+}
 
 const QSSGUserRenderPassManagerPtr &QSSGLayerRenderData::requestUserRenderPassManager()
 {

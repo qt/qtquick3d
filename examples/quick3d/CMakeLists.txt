@@ -38,6 +38,7 @@ qt_internal_add_example(cascadedshadowmaps)
 qt_internal_add_example(orderindependenttransparency)
 qt_internal_add_example(layers)
 qt_internal_add_example(userpasses)
+qt_internal_add_example(skymaterial)
 
 if(QT_ALLOW_DOWNLOAD)
     qt_internal_add_example(ssgilightmap)

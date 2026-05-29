@@ -1,0 +1,109 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example skymaterial
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Sky Material Example
+    \examplecategory {3D}
+    \brief Demonstrates procedural sky rendering and image-based lighting with SkyMaterial.
+    \image skymaterial-example.webp
+           {Procedural atmospheric sky with PBR spheres reflecting the environment}
+
+    This example shows how to use \l SkyMaterial to render a procedural sky
+    directly from a fragment shader and use the same procedural cubemap as the
+    light probe for image-based lighting (IBL) on the scene's PBR materials.
+
+    Two SkyMaterial subclasses are provided side by side:
+
+    \list
+        \li \c BasicSky — a small shader that produces a gradient sky with a
+            sun disk, suitable as a starting point for stylized or game-style
+            skies.
+        \li \c AdvancedSky — a physically-based atmospheric scattering model
+            following Hillaire's "A Scalable and Production Ready Sky and
+            Atmosphere Rendering Technique" (2020), with configurable aerosols,
+            ozone, and eye altitude.
+    \endlist
+
+    \section1 Setting Up the Scene
+
+    The application is a standard \l Window with a \l View3D. The relevant
+    QtQuick3D imports are:
+
+    \snippet skymaterial/main.qml import
+
+    \section1 Defining the Sky Materials
+
+    Both sky variants are declared inside the View3D so they share the same
+    skyLight \l Node (the sun). The active material is selected by a
+    property that the UI swaps between the two:
+
+    \snippet skymaterial/main.qml sky-materials
+
+    Each helper file is a \l SkyMaterial subclass with its own fragment shader
+    and an exported set of QML properties; the properties are automatically
+    forwarded as uniforms to the shader. See \c BasicSky.qml and
+    \c AdvancedSky.qml.
+
+    \section1 Image-Based Lighting
+
+    Assigning the active SkyMaterial to \l SceneEnvironment::skyMaterial uses
+    the procedurally rendered cubemap both as the visible background and as
+    the source for image-based lighting on the PBR materials in the scene:
+
+    \snippet skymaterial/main.qml environment
+
+    The smoothest sphere in the demo mirrors the procedural sky almost
+    perfectly; the rougher spheres show progressively blurred reflections,
+    produced by SkyMaterial's GGX prefilter chain over the procedural cubemap.
+
+    \section1 Time-Sliced IBL Convergence
+
+    Generating the prefiltered IBL cubemap is the most expensive part of a
+    procedural sky. SkyMaterial exposes \l {SkyMaterial::}{iblRenderFrames}
+    so that the cost can be spread across several frames: the same total
+    \l {SkyMaterial::}{iblSampleCount} is integrated incrementally, with the
+    accumulator advancing each frame until convergence.
+
+    With the default value of \c 1 the prefilter runs in a single frame.
+    Setting it higher amortizes the cost, which is useful when the
+    sky changes infrequently relative to the frame rate, e.g. an animated
+    sun-sweep that should not stall the main thread on every step.
+
+    \section1 Animating the Sun
+
+    A \l FrameAnimation drives the sun back and forth across the horizon when
+    the "Animate sun" toggle is on. Time-slicing pairs naturally with this
+    kind of slow drift: every sun position invalidates the accumulator, but
+    the convergence catches up over the next few frames without any single
+    frame paying the full prefilter cost.
+
+    \snippet skymaterial/main.qml sun-animation
+
+    \section1 Controls
+
+    \list
+        \li \b{Sky variant} — selects which SkyMaterial subclass is active.
+        \li \b{Animate sun} — runs the sun sweep across the horizon.
+        \li \b{Sun elevation} — manual sun position; enabled when the sweep
+            animation is off.
+        \li \b{IBL Render frames} — how many frames the prefilter takes to
+            converge. \c 1 means single-frame (no time-slicing); higher values
+            spread the cost.
+        \li \b{IBL sample count} — number of GGX importance samples integrated
+            per output texel of the prefiltered radiance map. Higher values
+            reduce shimmering on high-frequency features (e.g. the sun disk)
+            at the cost of more work per cycle.
+        \li \b{Radiance map size} — resolution of the procedural environment
+            cubemap. Higher values sharpen reflections on glossy materials but
+            increase memory and rendering cost. Internally clamped to the
+            nearest power-of-two.
+    \endlist
+
+    The camera responds to standard \l WasdController navigation — W/A/S/D
+    plus mouse drag to look around.
+
+    \sa {SkyMaterial}
+    \sa {SceneEnvironment}
+*/

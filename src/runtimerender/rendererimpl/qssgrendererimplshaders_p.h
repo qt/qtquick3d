@@ -56,6 +56,8 @@ public:
     QSSGRhiShaderPipelinePtr getRhiLightmapDilateShader();
     QSSGRhiShaderPipelinePtr getRhiDebugObjectShader(int viewCount);
     QSSGRhiShaderPipelinePtr getRhiReflectionprobePreFilterShader();
+    QSSGRhiShaderPipelinePtr getRhiSkyIblPreFilterShader();
+    QSSGRhiShaderPipelinePtr getRhiSkyIblPreFilterNormalizeShader();
     QSSGRhiShaderPipelinePtr getRhienvironmentmapPreFilterShader(bool isRGBE);
     QSSGRhiShaderPipelinePtr getRhiEnvironmentmapShader();
     QSSGRhiShaderPipelinePtr getRhiClearMRTShader();
@@ -98,6 +100,8 @@ private:
         BuiltinShader debugObjectShader;
 
         BuiltinShader reflectionprobePreFilterShader;
+        BuiltinShader skyIblPreFilterShader;
+        BuiltinShader skyIblPreFilterNormalizeShader;
         BuiltinShader environmentmapPreFilterShader[2];
         BuiltinShader environmentmapShader;
 

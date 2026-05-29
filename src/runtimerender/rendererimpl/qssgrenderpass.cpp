@@ -313,14 +313,7 @@ void ReflectionMapPass::renderPass(QSSGRenderer &renderer)
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D reflection map"));
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D reflection map"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        rhiRenderReflectionMap(rhiCtx.get(),
-                               this,
-                               *layerData,
-                               &ps,
-                               *reflectionMapManager,
-                               reflectionProbes,
-                               reflectionPassObjects,
-                               renderer);
+        rhiRenderReflectionMap(*renderer.contextInterface(), this, *layerData, &ps, *reflectionMapManager, reflectionProbes, reflectionPassObjects, renderer);
 
         cb->debugMarkEnd();
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("reflection_map"));
@@ -333,6 +326,35 @@ void ReflectionMapPass::resetForFrame()
     reflectionProbes.clear();
     reflectionPassObjects.clear();
 }
+
+// SKY MATERIAL PASS
+
+void SkyMaterialPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    Q_UNUSED(renderer);
+    Q_UNUSED(data);
+}
+
+void SkyMaterialPass::renderPass(QSSGRenderer &renderer)
+{
+    auto layerData = QSSGLayerRenderData::getCurrent(renderer);
+    QSSG_ASSERT(layerData, return);
+
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D Sky Material"));
+    Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D Sky Material"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+
+    layerData->resolveLayerIblTexture();
+
+    cb->debugMarkEnd();
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("sky_material"));
+}
+
+void SkyMaterialPass::resetForFrame() { }
 
 // ZPrePass
 void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
@@ -732,7 +754,8 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             skyboxCubeMapPass->ps.samples = ps.samples;
 
             skyboxPass = std::nullopt;
-        } else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) {
+        } else if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
+                   || (layer.background == QSSGRenderLayer::Background::SkyMaterial && layer.skyMaterial)) {
             if (!skyboxPass)
                 skyboxPass = SkyboxPass();
 
@@ -1090,7 +1113,7 @@ void SkyboxPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
         // main render pass should alter the colors then.
         skipTonemapping = layer->firstEffect != nullptr;
 
-        RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, data.renderedCameras, renderer);
+        RenderHelpers::rhiPrepareSkyBox(*renderer.contextInterface(), this, *layer, data.renderedCameras, renderer);
         skipPrep = true;
     }
 }
@@ -1102,7 +1125,8 @@ void SkyboxPass::renderPass(QSSGRenderer &renderer)
     QSSG_ASSERT(layer, return);
 
     QRhiShaderResourceBindings *srb = layer->skyBoxSrb;
-    QSSG_ASSERT(srb, return);
+    if (!srb)
+        return;
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D render skybox"));
@@ -1146,7 +1170,7 @@ void SkyboxCubeMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     const auto &shaderCache = renderer.contextInterface()->shaderCache();
     skyBoxCubeShader = shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(tonemapMode, !data.layer.skyBoxIsSrgb, data.layer.viewCount);
 
-    RenderHelpers::rhiPrepareSkyBox(rhiCtx.get(), this, *layer, data.renderedCameras, renderer, uint(tonemapMode));
+    RenderHelpers::rhiPrepareSkyBox(*renderer.contextInterface(), this, *layer, data.renderedCameras, renderer, uint(tonemapMode));
 }
 
 void SkyboxCubeMapPass::renderPass(QSSGRenderer &renderer)
@@ -2369,7 +2393,8 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
                     currentPassData.skyboxCubeMapPass->rpDesc = renderTarget->getRenderPassDescriptor().get();
 
                     currentPassData.skyboxPass = std::nullopt;
-                } else if (data.layer.background == QSSGRenderLayer::Background::SkyBox && data.layer.lightProbe) {
+                } else if ((data.layer.background == QSSGRenderLayer::Background::SkyBox && data.layer.lightProbe)
+                           || (data.layer.background == QSSGRenderLayer::Background::SkyMaterial && data.layer.skyMaterial)) {
                     if (!currentPassData.skyboxPass)
                         currentPassData.skyboxPass = SkyboxPass();
 

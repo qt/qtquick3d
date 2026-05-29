@@ -28,6 +28,7 @@ QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;
 struct QSSGRenderPresentation;
 struct QSSGRenderEffect;
+struct QSSGRenderSkyMaterial;
 struct QSSGRenderImage;
 class QSSGLayerRenderData;
 struct QSSGRenderResourceLoader;
@@ -91,7 +92,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         Unspecified,
         Color,
         SkyBox,
-        SkyBoxCubeMap
+        SkyBoxCubeMap,
+        SkyMaterial
     };
 
     enum class TonemapMode : quint8
@@ -205,6 +207,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         QMatrix3x3 probeOrientation;
         QVector3D probeOrientationAngles;
     } lightProbeSettings;
+
+    QSSGRenderSkyMaterial *skyMaterial = nullptr;
 
     QSSGRenderImage *skyBoxCubeMap = nullptr;
 

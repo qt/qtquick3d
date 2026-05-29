@@ -90,6 +90,7 @@ public:
         ModelBlendParticle, // Resource
         ResourceLoader, // Resource [meta]
         RenderPass, // Resource
+        SkyMaterial, // Resource
         // Materials
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource
