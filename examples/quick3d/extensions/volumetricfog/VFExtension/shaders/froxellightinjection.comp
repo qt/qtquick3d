@@ -1,0 +1,366 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+#version 430 core
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(std140, binding = 0) uniform FroxelUniforms {
+    mat4 invViewProjection;
+    mat4 viewMatrix;
+    vec4 gridDimensions;
+    vec4 depthParams;
+    vec4 cameraPos;
+    vec4 qt_rhi_properties;
+} ubuf;
+
+layout(std140, binding = 1) uniform LightData {
+    mat4 matrices[4];
+    vec4 lightPos[8];
+    vec4 lightColor[8];
+    vec4 lightDir[8];
+    vec4 coneAngles[8];
+    vec4 dirLightColor;
+    vec4 csmSplits;
+    vec4 csmActive;
+    vec4 atlasLocations[4];
+    vec4 dimensionsInverted[4];
+    vec4 shadowBiasFactor;
+    uvec4 numLightsCsmNumSplits;
+    mat4 lightShadowMat[8];
+    vec4 lightShadowAtlas[8];
+    vec4 lightShadowAtlas2[8];
+    vec4 iesParams;
+    vec4 iesIndices[2];
+} lights;
+
+layout(std140, binding = 2) uniform VolumeData {
+    mat4 matrices[32];
+    vec4 extents[32];
+    vec4 color[32];
+    vec4 heightParams[32];
+    vec4 noiseOffsetScale[32];
+    uint numVolumes;
+} volumes;
+
+layout(rgba16f, binding = 3) uniform writeonly image3D froxelTexture;
+
+layout (binding = 4) uniform sampler2DArray shadowAtlas;
+layout (binding = 5) uniform sampler2D blueNoise;
+layout (binding = 6) uniform sampler2D iesAtlas;
+
+const float IES_OCT_U_SCALE  = 254.0 / 256.0;
+const float IES_OCT_U_OFFSET = 1.0   / 256.0;
+const float IES_OCT_V_SCALE  = 254.0 / 256.0;
+const float IES_OCT_V_OFFSET = 1.0   / 256.0;
+
+void iesOrthonormalBasis(in vec3 fwd, out vec3 right, out vec3 up) {
+    vec3 worldUp = (abs(fwd.y) < 0.99) ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    right = normalize(cross(fwd, worldUp));
+    up = cross(right, fwd);
+}
+
+float sampleIESMask(in vec3 dir, in vec3 fwd, in float iesIndex, in float iesInvCount) {
+    vec3 right, up;
+    iesOrthonormalBasis(fwd, right, up);
+
+    vec3  local = vec3(dot(dir, right), dot(dir, up), dot(dir, fwd));
+    float absSum = abs(local.x) + abs(local.y) + abs(local.z) + 0.0001;
+    vec2  oct = local.xy / absSum;
+    if (local.z < 0.0) oct = (1.0 - abs(oct.yx)) * sign(oct);
+    oct = oct * 0.5 + 0.5;
+
+    float uvXBase = (IES_OCT_U_OFFSET + iesIndex) * iesInvCount;
+    float invScale = IES_OCT_U_SCALE * iesInvCount;
+    vec2  uv = vec2(oct.x * invScale + uvXBase,
+                    oct.y * IES_OCT_V_SCALE + IES_OCT_V_OFFSET);
+
+    return textureLod(iesAtlas, uv, 0.0).r;
+}
+
+float getIESIndex(in int i) {
+    return (i < 4) ? lights.iesIndices[0][i] : lights.iesIndices[1][i - 4];
+}
+
+bool isInsideFroxel(ivec3 coord) {
+    return coord.x < int(ubuf.gridDimensions.x) &&
+           coord.y < int(ubuf.gridDimensions.y);
+}
+
+vec3 froxelToWorld(ivec3 froxelCoord, float zJitter) {
+    float u = (float(froxelCoord.x) + 0.5) / ubuf.gridDimensions.x;
+    float v = (float(froxelCoord.y) + 0.5) / ubuf.gridDimensions.y;
+    float t = (float(froxelCoord.z) + 0.5 + zJitter) / ubuf.gridDimensions.z;
+
+    float nearPlane = ubuf.depthParams.x;
+    float farPlane = ubuf.depthParams.y;
+
+    float viewDepth = mix(nearPlane, farPlane, t);
+    float flipy = step(0.0, ubuf.qt_rhi_properties.x);
+    vec2 ndc = vec2(u, mix(1.0 - v, v, flipy)) * 2.0 - 1.0;
+
+    vec4 farWorld = ubuf.invViewProjection * vec4(ndc, 1.0, 1.0);
+    farWorld /= farWorld.w;
+
+    vec3 camPos = ubuf.cameraPos.xyz;
+    vec3 rayDir = normalize(farWorld.xyz - camPos);
+    return camPos + rayDir * viewDepth;
+}
+
+// Directional
+int findSplitIndex(in float depth, in vec4 splits, in vec4 splitActive) {
+    vec4 lessThan = step(depth, splits);
+
+    vec4 valid = lessThan * splitActive;
+    float result = -1.0;
+
+    float notFoundYet = 1.0;
+
+    result = mix(result, 0.0, valid.x * notFoundYet);
+    notFoundYet *= (1.0 - valid.x);
+
+    result = mix(result, 1.0, valid.y * notFoundYet);
+    notFoundYet *= (1.0 - valid.y);
+
+    result = mix(result, 2.0, valid.z * notFoundYet);
+    notFoundYet *= (1.0 - valid.z);
+
+    result = mix(result, 3.0, valid.w * notFoundYet);
+
+    return int(result);
+}
+
+float normalizedShadowResult(in float illumination, in float factor)
+{
+    return clamp(1.0 - factor * (1.0 - illumination), 0.0, 1.0);
+}
+
+float sampleSpotShadow(in int i, in vec3 worldPos, in float dist, in float farZ)
+{
+    vec4 projCoord = lights.lightShadowMat[i] * vec4(worldPos, 1.0);
+    vec3 smpCoord  = projCoord.xyz / projCoord.w;
+
+    float flipY = step(ubuf.qt_rhi_properties.x, -0.5);
+    smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, flipY);
+
+    float inBounds = step(0.0, smpCoord.x) * step(smpCoord.x, 1.0)
+                   * step(0.0, smpCoord.y) * step(smpCoord.y, 1.0)
+                   * step(0.0, smpCoord.z);
+
+    vec2  sbf = lights.shadowBiasFactor.xy;
+    float invMapRange = 1.0 / max(farZ - 1.0, 1e-6);
+    float currentDepth = clamp((dist - 1.0) * invMapRange, 0.0, 1.0);
+    float bias = sbf.x * invMapRange;
+
+    vec4  atlasInfo = lights.lightShadowAtlas[i];
+    vec2  atlasUV = smpCoord.xy * atlasInfo.z + atlasInfo.xy;
+    float storedDepth = textureLod(shadowAtlas, vec3(atlasUV, atlasInfo.w), 0.0).x + bias;
+    float illumination = mix(1.0, step(currentDepth, storedDepth), inBounds);
+    return normalizedShadowResult(illumination, sbf.y);
+}
+
+float samplePointShadow(in int i, in vec3 worldPos, in float dist, in float shadowFar, in vec3 lightPosition)
+{
+    vec3  toPoint = worldPos - lightPosition;
+    vec3  d = toPoint / max(dist, 1e-6);
+    float forward = step(0.0, d.z);
+    float invDenom = 1.0 / mix(1.0 - d.z, 1.0 + d.z, forward);
+    float u = 0.5 * (d.x * invDenom + 1.0);
+    float v = 0.5 * (d.y * invDenom + 1.0);
+
+    float flipY = step(ubuf.qt_rhi_properties.y, 0.5);
+    v = mix(v, 1.0 - v, flipY);
+
+    vec4 atlasInfo = mix(lights.lightShadowAtlas2[i], lights.lightShadowAtlas[i], forward);
+    vec2 atlasUV = vec2(u, v) * atlasInfo.z + atlasInfo.xy;
+
+    vec2  sbf = lights.shadowBiasFactor.xy;
+    float invMapRange = 1.0 / max(shadowFar - 1.0, 1e-6);
+    float shadowDepth = clamp((dist - 1.0) * invMapRange, 0.0, 1.0);
+    float bias = sbf.x * invMapRange;
+    float atlasDepth = textureLod(shadowAtlas, vec3(atlasUV, atlasInfo.w), 0.0).x + bias;
+    float illumination = step(shadowDepth, atlasDepth);
+    return normalizedShadowResult(illumination, sbf.y);
+}
+
+float sampleDirShadow(in vec3 worldPos)
+{
+    float viewz = -(ubuf.viewMatrix * vec4(worldPos, 1.0)).z;
+
+    int splitIndex = findSplitIndex(viewz, lights.csmSplits, lights.csmActive);
+
+    float shouldCompute = step(0.0, float(splitIndex));
+    int splitIdx = max(splitIndex, 0);
+
+    vec4 projCoord = lights.matrices[splitIdx] * vec4(worldPos, 1.0);
+    vec3 smpCoord = projCoord.xyz / projCoord.w;
+
+    float flipY = step(ubuf.qt_rhi_properties.x, -0.5);
+    smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, flipY);
+
+    vec2  sbf = lights.shadowBiasFactor.xy;
+    vec4  shadowAtlasInfo = lights.atlasLocations[splitIdx];
+    float depth = textureLod(shadowAtlas, vec3(smpCoord.xy * shadowAtlasInfo.z + shadowAtlasInfo.xy, shadowAtlasInfo.w), 0.0).x +
+                          sbf.x * lights.dimensionsInverted[splitIdx].z;
+
+    float illumination = step(smpCoord.z, depth);
+    illumination = mix(1.0, illumination, shouldCompute);
+
+    return normalizedShadowResult(illumination, sbf.y);
+}
+
+vec3 calculateLighting(vec3 worldPos) {
+    vec3 totalLight = vec3(0.0);
+
+    float iesInvCount = lights.iesParams.x;
+
+    int numLights = int(lights.numLightsCsmNumSplits.x);
+    for (int i = 0; i < numLights; i++) {
+        vec4  lc = lights.lightColor[i];
+        vec4  ld = lights.lightDir[i];
+        vec4  ca = lights.coneAngles[i];
+        vec3  lightPosition = lights.lightPos[i].xyz;
+        vec3  lightColor = lc.rgb;
+        float lightIntensity = lc.a;
+        float spotLight = ld.w;
+        float attenuation;
+        float dist;
+
+        if (spotLight > 0.0) {
+            vec3  sdir = ld.xyz;
+            vec3  toLight = lightPosition - worldPos;
+            dist = length(toLight);
+            vec3  ldir = -toLight / dist;
+            attenuation = lightIntensity / (1.0 + 0.01 * dist);
+            float cone = smoothstep(ca.x, ca.y, dot(ldir, sdir));
+            attenuation *= cone;
+        } else {
+            dist = length(lightPosition - worldPos);
+            attenuation = lightIntensity / (1.0 + 0.001 * dist * dist);
+        }
+
+        if (iesInvCount > 0.0) {
+            float iesIdx = getIESIndex(i);
+            if (iesIdx >= 0.0) {
+                vec3 dirFromLight = normalize(worldPos - lightPosition);
+                attenuation *= sampleIESMask(dirFromLight, ld.xyz, iesIdx, iesInvCount);
+            }
+        }
+
+        float shadowMult = 1.0;
+        float shadowType = ca.z;
+        if (shadowType > 1.5 && ca.w >= 0.001)
+            shadowMult = samplePointShadow(i, worldPos, dist, ca.w, lightPosition);
+        else if (shadowType > 0.5)
+            shadowMult = sampleSpotShadow(i, worldPos, dist, ca.w);
+
+        shadowMult = shadowMult * shadowMult;
+        totalLight += lightColor * attenuation * shadowMult;
+    }
+
+    vec4 dlc = lights.dirLightColor;
+    if (dlc.a > 0.0) {
+        float shadowMult = sampleDirShadow(worldPos);
+        shadowMult = shadowMult * shadowMult;
+        totalLight += dlc.rgb * dlc.a * 0.01 * shadowMult;
+    }
+
+    return totalLight;
+}
+
+float hash(ivec3 c) {
+    uint x = uint(c.x) * 1664525u ^ uint(c.y) * 1013904223u ^ uint(c.z) * 22695477u;
+    x = (x ^ (x >> 16u)) * 0x45d9f3bu;
+    x =  x ^ (x >> 16u);
+    return float(x) / float(0xFFFFFFFFu);
+}
+
+float valueNoise(vec3 p) {
+    ivec3 i = ivec3(floor(p));
+    vec3  f = fract(p);
+    vec3  u = f * f * (3.0 - 2.0 * f);
+
+    float v000 = hash(i);
+    float v100 = hash(i + ivec3(1,0,0));
+    float v010 = hash(i + ivec3(0,1,0));
+    float v110 = hash(i + ivec3(1,1,0));
+    float v001 = hash(i + ivec3(0,0,1));
+    float v101 = hash(i + ivec3(1,0,1));
+    float v011 = hash(i + ivec3(0,1,1));
+    float v111 = hash(i + ivec3(1,1,1));
+
+    return mix(mix(mix(v000,v100,u.x), mix(v010,v110,u.x), u.y),
+               mix(mix(v001,v101,u.x), mix(v011,v111,u.x), u.y), u.z);
+}
+
+int findFogVolume(in vec3 worldPos)
+{
+    for (uint i = 0; i < volumes.numVolumes; i++) {
+        vec4 volPos = volumes.matrices[i] * vec4(worldPos, 1.0);
+        vec4 ext = volumes.extents[i];
+        if (ext.w < 0.5) {
+            vec3 test = abs(volPos.xyz) - ext.xyz;
+            if (test.x < 0.0 && test.y < 0.0 && test.z < 0.0)
+                return int(i);
+        } else {
+            vec3 test = volPos.xyz / ext.xyz;
+            if (dot(test, test) < 1.0)
+                return int(i);
+        }
+    }
+    return -1;
+}
+
+float fbm(vec3 p) {
+    float v  = 0.5 * valueNoise(p); p = p * 2.1 + vec3(1.7, 9.2, 3.4);
+          v += 0.25 * valueNoise(p); p = p * 2.1 + vec3(1.7, 9.2, 3.4);
+          v += 0.125 * valueNoise(p);
+    return v;
+}
+
+vec4 applyScattering(vec3 lighting, vec3 worldPos, int volIdx) {
+    float volDensity = 1.0;
+    vec3  volColor = vec3(1.0);
+    vec3  noiseOffset = vec3(0.0);
+    float noiseScale = 0.5;
+    float heightFactor = 1.0;
+
+    if (volIdx >= 0) {
+        vec4 col = volumes.color[volIdx];
+        vec4 noise = volumes.noiseOffsetScale[volIdx];
+        vec4 hp = volumes.heightParams[volIdx];
+
+        volDensity = col.a;
+        volColor = col.rgb;
+        noiseOffset = noise.xyz;
+        noiseScale = noise.w;
+
+        if (hp.w > 0.5) {
+            float range = hp.x - hp.y;
+            float t = (abs(range) > 0.001) ? clamp((worldPos.y - hp.y) / range, 0.0, 1.0) : 0.0;
+            heightFactor = 1.0 - pow(t, max(hp.z, 0.001));
+        }
+    }
+
+    vec3 p = (worldPos * noiseScale + noiseOffset) * 0.02;
+    float n = fbm(p);
+    float density = mix(0.001, 0.005, n) * volDensity * heightFactor;
+    return vec4(lighting * volColor, density);
+}
+
+void main() {
+    ivec3 froxelCoord = ivec3(gl_GlobalInvocationID.xyz);
+    if (!isInsideFroxel(froxelCoord))
+        return;
+
+    vec2 noiseSize = vec2(textureSize(blueNoise, 0));
+    vec2 noiseUV = vec2(froxelCoord.xy) / noiseSize * (vec2(ubuf.gridDimensions.xy) / noiseSize);
+    float jitter = texture(blueNoise, noiseUV).r - 0.5;
+
+    vec3 worldPos = froxelToWorld(froxelCoord, jitter);
+    int  volIdx = findFogVolume(worldPos);
+    bool inFog = (volIdx >= 0) || (volumes.numVolumes == 0u);
+    vec4 result = vec4(0.0);
+    if (inFog)
+        result = applyScattering(calculateLighting(worldPos), worldPos, volIdx);
+    imageStore(froxelTexture, froxelCoord, result);
+}
