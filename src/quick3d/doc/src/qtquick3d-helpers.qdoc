@@ -1462,7 +1462,9 @@
    \li SSR enabled
    \row
    \li \image extendedsceneenvironment_ssr_without.webp
+              {Green Qt logo and red cube on a floor without reflections}
    \li \image extendedsceneenvironment_ssr_with.webp
+              {Green Qt logo and red cube mirrored on a reflective floor}
    \endtable
 */
 

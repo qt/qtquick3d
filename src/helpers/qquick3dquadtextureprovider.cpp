@@ -138,6 +138,8 @@
 
     The result is the following:
     \image quadtextureprovider_checkers.webp
+           {2x2 grid of gradient-filled cells in teal, white, blue, and
+           magenta}
 
     \note Providing a vertex shader is not supported, only a fragment shader.
 
