@@ -405,6 +405,7 @@ public:
     Type passType() const final;
     void resetForFrame() final;
     void setMethod(QSSGRenderLayer::OITMethod m) { method = m; }
+    bool linkedListRequiresResize(QSize dim);
 
     QSSGRenderLayer::OITMethod method;
 
