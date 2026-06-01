@@ -1444,6 +1444,24 @@ static quint32 ensureFreeNodes(quint32 value, quint32 multiple)
     return multipleOf;
 }
 
+bool OITRenderPass::linkedListRequiresResize(QSize dim)
+{
+    quint32 reported = reportedNodeCount;
+    quint32 current = currentNodeCount;
+    quint32 fullCount = dim.width() * dim.height();
+
+    // resize if reported is greater than current or if there are less than 50% of screen size nodes free
+    if (reported > current)
+        return true;
+    quint32 freeCount = current - reported;
+    if (freeCount < fullCount / 2)
+        return true;
+    // resize if we have more than 100% screen size free nodes
+    if (freeCount > fullCount)
+        return true;
+    return false;
+}
+
 void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     auto *ctx = renderer.contextInterface();
@@ -1575,9 +1593,9 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         dim.setWidth(dim.width() * ps.samples);
         dim.setHeight(dim.height() * ps.viewCount);
 #ifdef QSSG_OIT_USE_BUFFERS
-        if (!rhiAuxBuffer || rhiAuxBuffer->size() != (dim.width() * dim.height() * 4u) || currentNodeCount == 0 || currentNodeCount != reportedNodeCount)
+        if (!rhiAuxBuffer || rhiAuxBuffer->size() != (dim.width() * dim.height() * 4u) || currentNodeCount == 0 || linkedListRequiresResize(dim))
 #else
-        if (!rhiAuxiliaryImage->texture || rhiAuxiliaryImage->texture->pixelSize() != dim || currentNodeCount == 0 || currentNodeCount != reportedNodeCount)
+        if (!rhiAuxiliaryImage->texture || rhiAuxiliaryImage->texture->pixelSize() != dim || currentNodeCount == 0 || linkedListRequiresResize(dim))
 #endif
         {
             quint32 extraNodeCount = 0;
@@ -1599,7 +1617,8 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 #endif
 
             if (reportedNodeCount) {
-                currentNodeCount = reportedNodeCount + extraNodeCount;
+                // ensure there are at least 50% of the screen size nodes available
+                currentNodeCount = ensureFreeNodes(reportedNodeCount + extraNodeCount, dim.width() * dim.height() / 2);
             } else {
                 quint32 size = RenderHelpers::rhiCalculateABufferSize(data.layerPrepResult.textureDimensions(), 4 * ps.samples * ps.viewCount);
                 currentNodeCount = ensureFreeNodes(size * size, 32u * 1024u);
