@@ -839,9 +839,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
         switch (stage) {
         case QSSGRenderExtension::RenderStage::PreColor:
-            return size_t(QSSGRenderLayer::RenderExtensionStage::Overlay);
-        case QSSGRenderExtension::RenderStage::PostColor:
             return size_t(QSSGRenderLayer::RenderExtensionStage::Underlay);
+        case QSSGRenderExtension::RenderStage::PostColor:
+            return size_t(QSSGRenderLayer::RenderExtensionStage::Overlay);
         }
 
         Q_UNREACHABLE_RETURN(size_t(QSSGRenderLayer::RenderExtensionStage::Underlay));
