@@ -2202,6 +2202,13 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
 
         // Even if the render target is valid we need to check if the textures are still compatible.
         if (!needsBuild) {
+            // Render target flags (e.g. PreserveColorContents) change the Metal load/store actions
+            // baked into the QRhiRenderPassDescriptor, so a flag change requires a full rebuild.
+            if (renderTarget->getRenderTarget() && renderTarget->getRenderTarget()->flags() != passNode->renderTargetFlags)
+                needsBuild = true;
+        }
+
+        if (!needsBuild) {
             // Color attachments
             for (int i = 0; i != oldAttachmentCount; ++i) {
                 const auto &colorAttachment = colorAttachments.at(i);
