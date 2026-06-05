@@ -100,6 +100,18 @@ public:
     RenderTargetFlags renderTargetFlags() const;
     void setRenderTargetFlags(RenderTargetFlags newRenderTargetFlags);
 
+    enum class AugmentSplitResult {
+        Ok,
+        FunctionNotFound,
+        OpeningBraceNotFound,
+        ClosingBraceNotFound
+    };
+
+    // Splits a "void MAIN_FRAGMENT_AUGMENT() { ... }" augment shader into the body (the code
+    // inside the function's braces) and the preamble (everything outside it). On anything other
+    // than Ok the outputs are left untouched. Exposed for testing.
+    static AugmentSplitResult splitAugmentShader(const QByteArray &augment, QByteArray &preamble, QByteArray &body);
+
 Q_SIGNALS:
     void outputChanged();
     void materialModeChanged();

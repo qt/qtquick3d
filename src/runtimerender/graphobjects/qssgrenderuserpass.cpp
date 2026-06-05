@@ -5,17 +5,73 @@
 
 #include "qssgrenderuserpass_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
-
-#include <QtCore/qregularexpression.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadertokenizer_p.h>
 #include <QtCore/qcryptographichash.h>
 
 #include <ssg/qssgrendercontextcore.h>
+
+#include <iterator>
 
 QT_BEGIN_NAMESPACE
 
 Q_STATIC_LOGGING_CATEGORY(lcRenderUserPass, "qt.quick3d.runtimerender.renderuserpass")
 
-static const QHash<const char*, const char*> AugmentMacros = {
+namespace
+{
+
+enum class AugmentMacro : size_t {
+    BASE_COLOR,
+    ROUGHNESS,
+    METALNESS,
+    DIFFUSE_LIGHT,
+    SPECULAR_LIGHT,
+    EMISSIVE_LIGHT,
+    WORLD_NORMAL,
+    WORLD_TANGENT,
+    WORLD_BINORMAL,
+    F0,
+    F90
+};
+
+static constexpr QSSGUserShaderAugmentation::FeatureFlags featureForMacro(AugmentMacro macro)
+{
+    switch (macro) {
+    case AugmentMacro::BASE_COLOR:
+        return QSSGUserShaderAugmentation::FeatureFlags::BaseColor;
+    case AugmentMacro::ROUGHNESS:
+        return QSSGUserShaderAugmentation::FeatureFlags::Roughness;
+    case AugmentMacro::METALNESS:
+        return QSSGUserShaderAugmentation::FeatureFlags::Metalness;
+    case AugmentMacro::DIFFUSE_LIGHT:
+        return QSSGUserShaderAugmentation::FeatureFlags::DiffuseLight;
+    case AugmentMacro::SPECULAR_LIGHT:
+        return QSSGUserShaderAugmentation::FeatureFlags::SpecularLight;
+    case AugmentMacro::EMISSIVE_LIGHT:
+        return QSSGUserShaderAugmentation::FeatureFlags::EmissiveLight;
+    case AugmentMacro::WORLD_NORMAL:
+        return QSSGUserShaderAugmentation::FeatureFlags::WorldNormal;
+    case AugmentMacro::WORLD_TANGENT:
+        return QSSGUserShaderAugmentation::FeatureFlags::WorldTangent;
+    case AugmentMacro::WORLD_BINORMAL:
+        return QSSGUserShaderAugmentation::FeatureFlags::WorldBinormal;
+    case AugmentMacro::F0:
+        return QSSGUserShaderAugmentation::FeatureFlags::F0;
+    case AugmentMacro::F90:
+        return QSSGUserShaderAugmentation::FeatureFlags::F90;
+    }
+
+    Q_UNREACHABLE_RETURN(QSSGUserShaderAugmentation::FeatureFlags::None);
+}
+
+constexpr size_t QSSGMaxMacroLength = 16;
+constexpr size_t QSSGMaxReplacementLength = 32;
+
+struct MacroPair {
+    const char macroName[QSSGMaxMacroLength];
+    const char replacement[QSSGMaxReplacementLength];
+};
+
+static constexpr MacroPair augmentMacroPairs[] = {
     { "BASE_COLOR", "qt_diffuseColor" },
     { "ROUGHNESS", "qt_roughnessAmount" },
     { "METALNESS", "qt_metalnessAmount" },
@@ -28,6 +84,18 @@ static const QHash<const char*, const char*> AugmentMacros = {
     { "F0", "qt_f0" },
     { "F90", "qt_f90" }
 };
+
+constexpr QByteArrayView augmentMacroName(AugmentMacro macro)
+{
+    return QByteArrayView(augmentMacroPairs[static_cast<size_t>(macro)].macroName);
+}
+
+constexpr QByteArrayView augmentMacroReplacement(AugmentMacro macro)
+{
+    return QByteArrayView(augmentMacroPairs[static_cast<size_t>(macro)].replacement);
+}
+
+}
 
 // NOTE: While this class doesn't have graphics resources itself, it manages commands that do!
 QSSGRenderUserPass::QSSGRenderUserPass()
@@ -56,15 +124,51 @@ void QSSGRenderUserPass::clearDirty(DirtyFlag flag)
     m_dirtyFlags &= ~FlagT(flag);
 }
 
-QByteArray replaceAugmentMacros(const QByteArray &shaderCode)
+void QSSGRenderUserPass::replaceAugmentMacros(QByteArray &shaderCode, QSSGUserShaderAugmentation &augmentation)
 {
-    QString modifiedCode = QString::fromUtf8(shaderCode);
-    for (auto it = AugmentMacros.constBegin(); it != AugmentMacros.constEnd(); ++it) {
-        QString pattern = QStringLiteral("\\b%1\\b").arg(QRegularExpression::escape(QString::fromUtf8(it.key())));
-        QRegularExpression regex(pattern);
-        modifiedCode.replace(regex, QString::fromUtf8(it.value()));
+    // Tokenize the shader code and replace any identifier that matches one of the augment
+    // macros (e.g. BASE_COLOR) with the corresponding built-in variable name. Using the
+    // tokenizer means we only ever match whole identifiers - never a substring of a larger
+    // identifier - and macros inside comments are skipped, all without re-implementing that
+    // logic here.
+    QSSGShaderTokenizer tok;
+    tok.initialize(shaderCode.constData());
+
+    const char *const begin = shaderCode.constData();
+    const char *const end = begin + shaderCode.size();
+    const char *lastPos = begin; // Start of the region not yet copied to the result.
+
+    QByteArray result;
+    result.reserve(shaderCode.size());
+
+    for (QSSGShaderTokenizer::Token t = tok.next(); t != QSSGShaderTokenizer::Token_EOF; t = tok.next()) {
+        if (t != QSSGShaderTokenizer::Token_Identifier)
+            continue;
+
+        const QByteArrayView id(tok.identifier, tok.pos - tok.identifier);
+        for (size_t i = 0, n = std::size(augmentMacroPairs); i < n; ++i) {
+            const AugmentMacro macro = static_cast<AugmentMacro>(i);
+            if (id != augmentMacroName(macro))
+                continue;
+
+            // Copy everything up to the macro verbatim (preserving comments, whitespace and
+            // any non-matching code), then append the replacement in its place.
+            const QByteArrayView replacement = augmentMacroReplacement(macro);
+            result.append(lastPos, tok.identifier - lastPos);
+            result.append(replacement.data(), replacement.size());
+            lastPos = tok.pos;
+            augmentation.setFeatureFlag(featureForMacro(macro));
+            break;
+        }
     }
-    return modifiedCode.toUtf8();
+
+    // No macros were found, leave the shader code untouched.
+    if (lastPos == begin)
+        return;
+
+    // Copy the trailing remainder after the last replacement.
+    result.append(lastPos, end - lastPos);
+    shaderCode = std::move(result);
 }
 
 void QSSGRenderUserPass::finalizeShaders(const QSSGRenderContextInterface &ctx)
@@ -79,14 +183,17 @@ void QSSGRenderUserPass::finalizeShaders(const QSSGRenderContextInterface &ctx)
 
     clearDirty(DirtyFlag::ShaderDirty);
 
+    shaderAugmentation.featureFlags = 0;
+    shaderAugmentation.hash.clear();
+
     const bool hasShaderCode = (shaderAugmentation.hasUserAugmentation());
 
     if (hasShaderCode) {
         qCDebug(lcRenderUserPass) << "Finalizing shaders for user pass with augment shader code.";
 
         // Replace any instances of the AugmentMacros with the appropriate built-in variable names
-        shaderAugmentation.preamble = replaceAugmentMacros(shaderAugmentation.preamble);
-        shaderAugmentation.body = replaceAugmentMacros(shaderAugmentation.body);
+        replaceAugmentMacros(shaderAugmentation.preamble, shaderAugmentation);
+        replaceAugmentMacros(shaderAugmentation.body, shaderAugmentation);
         // Used to build the unique shader cache key. The shader key goes in the generated
         // shader as a one line comment so it can't be multiline. Generate hash from the
         // augmented shader preamble and body instead, which gets combined with the material key.
@@ -94,21 +201,7 @@ void QSSGRenderUserPass::finalizeShaders(const QSSGRenderContextInterface &ctx)
         shaderAugmentation.hash = QCryptographicHash::hash(QByteArrayView(fullAugmentation),
                                                            QCryptographicHash::Algorithm::Sha1).toHex();
 
-        // Check if body needs certain features
-        shaderAugmentation.needsBaseColor = shaderAugmentation.body.contains(AugmentMacros["BASE_COLOR"]);
-        shaderAugmentation.needsRoughness = shaderAugmentation.body.contains(AugmentMacros["ROUGHNESS"]);
-        shaderAugmentation.needsMetalness = shaderAugmentation.body.contains(AugmentMacros["METALNESS"]);
-        shaderAugmentation.needsDiffuseLight = shaderAugmentation.body.contains(AugmentMacros["DIFFUSE_LIGHT"]);
-        shaderAugmentation.needsSpecularLight = shaderAugmentation.body.contains(AugmentMacros["SPECULAR_LIGHT"]);
-        shaderAugmentation.needsEmissiveLight = shaderAugmentation.body.contains(AugmentMacros["EMISSIVE_LIGHT"]);
-        shaderAugmentation.needsWorldNormal = shaderAugmentation.body.contains(AugmentMacros["WORLD_NORMAL"]);
-        shaderAugmentation.needsWorldTangent = shaderAugmentation.body.contains(AugmentMacros["WORLD_TANGENT"]);
-        shaderAugmentation.needsWorldBinormal = shaderAugmentation.body.contains(AugmentMacros["WORLD_BINORMAL"]);
-        shaderAugmentation.needsF0 = shaderAugmentation.body.contains(AugmentMacros["F0"]);
-        shaderAugmentation.needsF90 = shaderAugmentation.body.contains(AugmentMacros["F90"]);
-
         m_state = State::Ready;
-
     } else {
         m_state = State::Error;
 

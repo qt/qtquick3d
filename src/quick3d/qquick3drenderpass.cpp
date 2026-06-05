@@ -9,6 +9,7 @@
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadertokenizer_p.h>
 
 #include <QtCore/QLoggingCategory>
 
@@ -87,6 +88,86 @@ QQuick3DRenderPass::QQuick3DRenderPass(QQuick3DObject *parent)
     : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::RenderPass, QQuick3DObjectPrivate::Flags::RequiresSecondaryUpdate)), parent)
     , QQuick3DPropertyChangedTracker(this, QQuick3DSuperClassInfo<QQuick3DRenderPass>())
 {
+}
+
+QQuick3DRenderPass::AugmentSplitResult QQuick3DRenderPass::splitAugmentShader(const QByteArray &augment,
+                                                                              QByteArray &preamble,
+                                                                              QByteArray &body)
+{
+    // We have to pick apart the shader string such that the contents of the
+    // "void MAIN_FRAGMENT_AUGMENT() { }" function are taken out, and get added to the end of
+    // the shader generation to overwrite the "output" of the shader. Everything outside the
+    // function ends up as preamble code that is pasted in before the real main() (helper
+    // functions, resolvable #includes etc.).
+    //
+    // Tokenize the augment shader rather than doing a plain string search plus raw brace
+    // counting: the keyword is then ignored if it only appears in a comment, and braces inside
+    // comments don't throw off the matching.
+    QSSGShaderTokenizer tok;
+    tok.initialize(augment.constData());
+
+    const char *const begin = augment.constData();
+    const char *const end = begin + augment.size();
+
+    const char *funcStart = nullptr; // Start of the return type ("void") of the augment function.
+    const char *bodyStart = nullptr; // First character inside the function's outer braces.
+    const char *bodyEnd = nullptr;   // The matching closing brace of the function body.
+    const char *afterFunc = nullptr; // First character after the closing brace.
+
+    const char *prevIdentStart = nullptr;
+    QByteArrayView prevIdent;
+
+    for (QSSGShaderTokenizer::Token t = tok.next(); t != QSSGShaderTokenizer::Token_EOF; t = tok.next()) {
+        if (t != QSSGShaderTokenizer::Token_Identifier)
+            continue;
+
+        const QByteArrayView id(tok.identifier, tok.pos - tok.identifier);
+        // The augment entry point is declared as "void MAIN_FRAGMENT_AUGMENT()"; requiring the
+        // preceding "void" avoids matching a call site or other mention of the name.
+        if (id == QByteArrayLiteral("MAIN_FRAGMENT_AUGMENT") && prevIdent == QByteArrayLiteral("void")) {
+            funcStart = prevIdentStart;
+            // Scan forward to the opening brace (skipping the parameter list); stop early on a
+            // semicolon, which would indicate a declaration without a body.
+            QSSGShaderTokenizer::Token n = tok.next();
+            while (n != QSSGShaderTokenizer::Token_EOF
+                   && n != QSSGShaderTokenizer::Token_OpenBrace
+                   && n != QSSGShaderTokenizer::Token_SemiColon) {
+                n = tok.next();
+            }
+            if (n == QSSGShaderTokenizer::Token_OpenBrace) {
+                bodyStart = tok.pos; // tok.pos is one past the '{'.
+                // Track brace depth to find the matching closing brace.
+                int depth = 1;
+                for (QSSGShaderTokenizer::Token b = tok.next(); b != QSSGShaderTokenizer::Token_EOF; b = tok.next()) {
+                    if (b == QSSGShaderTokenizer::Token_OpenBrace) {
+                        ++depth;
+                    } else if (b == QSSGShaderTokenizer::Token_CloseBrace) {
+                        if (--depth == 0) {
+                            bodyEnd = tok.pos - 1; // tok.pos is one past the '}'.
+                            afterFunc = tok.pos;
+                            break;
+                        }
+                    }
+                }
+            }
+            break;
+        }
+
+        prevIdentStart = tok.identifier;
+        prevIdent = id;
+    }
+
+    if (!funcStart)
+        return AugmentSplitResult::FunctionNotFound;
+    if (!bodyStart)
+        return AugmentSplitResult::OpeningBraceNotFound;
+    if (!bodyEnd)
+        return AugmentSplitResult::ClosingBraceNotFound;
+
+    body = QByteArray(bodyStart, bodyEnd - bodyStart);
+    preamble = QByteArray(begin, funcStart - begin);
+    preamble += QByteArray(afterFunc, end - afterFunc);
+    return AugmentSplitResult::Ok;
 }
 
 QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -208,58 +289,31 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
     } else if (renderPassNode->materialMode == QSSGRenderUserPass::AugmentMaterial) {
         // Augment Shaders
         if (m_dirtyAttributes & AugmentShaderDirty) {
+            QByteArray augmentSnippet;
+            QByteArray augmentPreamble;
             if (!m_augmentShader.isEmpty()) {
                 const QQmlContext *context = qmlContext(this);
                 QByteArray shaderPathKey("augment material --");
                 QByteArray augment = QSSGShaderUtils::resolveShader(m_augmentShader, context, shaderPathKey);
-                QByteArray augmentSnippet;
-                QByteArray augmentPreamble;
 
-                // We have to pick apart the shader string such that the contents of the:
-                // void MAIN_FRAGMENT_AUGMENT() { }
-                // function are taken out, and will get added to the end of the shader generation
-                // and the goal is to overwrite the "output" of the shader
-
-                // We also need to scan the who shader code for certain "keywords" so that we know
-                // what features to enable in the original material.
-
-                // Everything else outsode of MAIN_FRAGMENT_AUGMENT function ends up being preamble code
-                // that will get pasted in before the real main().  So that will include helper functions and
-                // resolvable #includes etc.
-
-                static const char *mainFuncStart = "void MAIN_FRAGMENT_AUGMENT()";
-                qsizetype mainFuncIdx = augment.indexOf(mainFuncStart);
-                if (mainFuncIdx != -1) {
-                    qsizetype braceOpenIdx = augment.indexOf('{', mainFuncIdx + int(strlen(mainFuncStart)));
-                    if (braceOpenIdx != -1) {
-                        qsizetype braceCloseIdx = braceOpenIdx;
-                        qsizetype openBraces = 1;
-                        while (openBraces > 0 && braceCloseIdx + 1 < augment.size()) {
-                            braceCloseIdx++;
-                            if (augment[braceCloseIdx] == '{')
-                                openBraces++;
-                            else if (augment[braceCloseIdx] == '}')
-                                openBraces--;
-                        }
-                        if (openBraces == 0) {
-                            // We found the closing brace
-                            augmentSnippet = augment.mid(braceOpenIdx + 1, braceCloseIdx - braceOpenIdx - 1);
-                            augmentPreamble = augment.left(mainFuncIdx);
-                            augmentPreamble += augment.mid(braceCloseIdx + 1);
-                        } else {
-                            qWarning("QQuick3DRenderPass: Could not find the closing brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
-                        }
-                    } else {
-                        qWarning("QQuick3DRenderPass: Could not find the opening brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
-                    }
-                } else {
+                switch (QQuick3DRenderPass::splitAugmentShader(augment, augmentPreamble, augmentSnippet)) {
+                case AugmentSplitResult::Ok:
+                    break;
+                case AugmentSplitResult::FunctionNotFound:
                     qWarning("QQuick3DRenderPass: Could not find MAIN_FRAGMENT_AUGMENT() function in shader %s", qPrintable(m_augmentShader.toString()));
+                    break;
+                case AugmentSplitResult::OpeningBraceNotFound:
+                    qWarning("QQuick3DRenderPass: Could not find the opening brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
+                    break;
+                case AugmentSplitResult::ClosingBraceNotFound:
+                    qWarning("QQuick3DRenderPass: Could not find the closing brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
+                    break;
                 }
-
-                renderPassNode->shaderAugmentation.body = augmentSnippet;
-                renderPassNode->shaderAugmentation.preamble = augmentPreamble;
-                renderPassNode->markDirty(QSSGRenderUserPass::DirtyFlag::ShaderDirty);
             }
+
+            renderPassNode->shaderAugmentation.body = augmentSnippet;
+            renderPassNode->shaderAugmentation.preamble = augmentPreamble;
+            renderPassNode->markDirty(QSSGRenderUserPass::DirtyFlag::ShaderDirty);
         }
         clearDirty(Dirty::AugmentShaderDirty);
     }

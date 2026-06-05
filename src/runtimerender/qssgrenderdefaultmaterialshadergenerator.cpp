@@ -570,7 +570,6 @@ struct PassRequirmentsState {
     bool needsF90 = false;           // qt_f90
     bool needsAmbientOcclusion = false; // qt_ao_factor
 
-
     // Available Information
     bool hasVertexColors = false;
     bool hasLighting = false;
@@ -676,20 +675,20 @@ struct PassRequirmentsState {
         } else if (isUserPass) {
             passType = User;
             // Use shaderAugmentation to figure out what features are needed
-            needsBaseColor = shaderAugmentation.needsBaseColor;
-            needsRoughness = shaderAugmentation.needsRoughness;
-            needsMetalness = shaderAugmentation.needsMetalness;
-            needsEmission = shaderAugmentation.needsEmissiveLight;
-            needsWorldNormal = shaderAugmentation.needsWorldNormal;
+            needsBaseColor = shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::BaseColor);
+            needsRoughness = shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::Roughness);
+            needsMetalness = shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::Metalness);
+            needsEmission = shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::EmissiveLight);
+            needsWorldNormal = shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::WorldNormal);
             // WORLD_NORMAL for a normal-mapped material requires tangent space to be set up.
             // Ensure tangent/binormal are generated whenever the world normal is requested.
-            needsWorldTangent = shaderAugmentation.needsWorldTangent || shaderAugmentation.needsWorldNormal;
-            needsWorldBinormal = shaderAugmentation.needsWorldBinormal || shaderAugmentation.needsWorldNormal;
+            needsWorldTangent = needsWorldNormal || shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::WorldTangent);
+            needsWorldBinormal = needsWorldNormal || shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::WorldBinormal);
 
-            if (shaderAugmentation.needsDiffuseLight ||
-                shaderAugmentation.needsSpecularLight ||
-                shaderAugmentation.needsF0 ||
-                shaderAugmentation.needsF90) {
+            if (shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::DiffuseLight) ||
+                shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::SpecularLight) ||
+                shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::F0) ||
+                shaderAugmentation.isFeatureFlagSet(QSSGUserShaderAugmentation::FeatureFlags::F90)) {
                 // Turn everything on for now
                 needsBaseColor = true;
                 needsRoughness = true;
