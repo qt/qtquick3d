@@ -73,6 +73,11 @@ public:
 
     void finalizeShaders(const QSSGRenderContextInterface &ctx);
 
+    // Replaces the augment macros (e.g. BASE_COLOR) in \a shaderCode in-place with their
+    // built-in variable names, setting the corresponding feature flags on \a augmentation.
+    // Exposed for testing; normally called via finalizeShaders().
+    static void replaceAugmentMacros(QByteArray &shaderCode, QSSGUserShaderAugmentation &augmentation);
+
     QVector<QSSGCommand *> commands;
 
     QString key;

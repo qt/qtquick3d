@@ -63,6 +63,8 @@ private slots:
     void testBlendOverrideOriginalMaterial();
     void noColorAttachmentDoesNotCrash();
     void testAugmentShaderWithCustomMaterial();
+    void testAugmentFeatureFlagsFollowShader();
+    void testAugmentShaderRemovedClearsState();
 
 private:
     // Helper function to check if an image contains a specific color (with lighting effects)
@@ -1714,6 +1716,78 @@ void tst_UserPasses::testAugmentShaderWithCustomMaterial()
 
     QVERIFY2(imageContainsDominantColor(result, Qt::green),
              "The augment shader should have overridden the custom material's own output");
+}
+
+void tst_UserPasses::testAugmentFeatureFlagsFollowShader()
+{
+    // Switching to an augment shader that no longer uses WORLD_NORMAL must
+    // also clear the feature flag it enabled.
+    using Feature = QSSGUserShaderAugmentation::FeatureFlags;
+
+    QScopedPointer<QQuickView> view(createView(QLatin1String("augment_feature_flags.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *pass = view->rootObject()->findChild<QQuick3DRenderPass *>(QLatin1String("augmentPass"));
+    QVERIFY(pass);
+
+    QVERIFY(!grab(view.data()).isNull());
+    auto *node = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+    QVERIFY(node);
+    QVERIFY(node->shaderAugmentation.isFeatureFlagSet(Feature::WorldNormal));
+
+    view->rootObject()->setProperty("augmentFile", "augment_feature_flags_plain_augment.glsl");
+
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+    QVERIFY2(imageContainsDominantColor(result, Qt::green), "The plain augment shader should be in use");
+    QCOMPARE(node->shaderAugmentation.featureFlags, QSSGUserShaderAugmentation::FeatureFlagsType(0));
+}
+
+void tst_UserPasses::testAugmentShaderRemovedClearsState()
+{
+    // An augment shader that cannot be used, or no augment shader at all, must
+    // not leave the previous augmentation's state behind on the backend node.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("augment_feature_flags.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *pass = view->rootObject()->findChild<QQuick3DRenderPass *>(QLatin1String("augmentPass"));
+    QVERIFY(pass);
+
+    QVERIFY(!grab(view.data()).isNull());
+    auto *node = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+    QVERIFY(node);
+    QVERIFY(node->shaderAugmentation.featureFlags != 0);
+    QVERIFY(!node->shaderAugmentation.hash.isEmpty());
+
+    const auto useShader = [&](const char *file) {
+        if (qstrcmp(file, "augment_feature_flags_broken_augment.glsl") == 0) {
+            QTest::ignoreMessage(QtWarningMsg,
+                                 "QQuick3DRenderPass: Could not find MAIN_FRAGMENT_AUGMENT() "
+                                 "function in shader augment_feature_flags_broken_augment.glsl");
+        }
+        if (qstrcmp(file, "augment_feature_flags_plain_augment.glsl") != 0)
+            QTest::ignoreMessage(QtWarningMsg, "No augment shader code provided for user pass.");
+        view->rootObject()->setProperty("augmentFile", QString::fromLatin1(file));
+        return grab(view.data());
+    };
+
+    // No MAIN_FRAGMENT_AUGMENT() in the shader
+    QVERIFY(!useShader("augment_feature_flags_broken_augment.glsl").isNull());
+    QCOMPARE(node->shaderAugmentation.featureFlags, QSSGUserShaderAugmentation::FeatureFlagsType(0));
+    QVERIFY(node->shaderAugmentation.hash.isEmpty());
+
+    QVERIFY(imageContainsDominantColor(useShader("augment_feature_flags_plain_augment.glsl"), Qt::green));
+    QVERIFY2(!imageContainsDominantColor(useShader("augment_feature_flags_broken_augment.glsl"), Qt::green),
+             "The previous augment shader is still applied");
+
+    QVERIFY(imageContainsDominantColor(useShader("augment_feature_flags_plain_augment.glsl"), Qt::green));
+    QVERIFY2(!imageContainsDominantColor(useShader(""), Qt::green),
+             "The previous augment shader is still applied after clearing augmentShader");
+    QVERIFY(node->shaderAugmentation.body.isEmpty());
+    QVERIFY(node->shaderAugmentation.preamble.isEmpty());
+    QVERIFY(node->shaderAugmentation.hash.isEmpty());
 }
 
 QTEST_MAIN(tst_UserPasses)

@@ -55,17 +55,37 @@ public:
     QByteArray body;
     QByteArray hash;
 
-    bool needsBaseColor = false;
-    bool needsRoughness = false;
-    bool needsMetalness = false;
-    bool needsDiffuseLight = false;
-    bool needsSpecularLight = false;
-    bool needsEmissiveLight = false;
-    bool needsWorldNormal = false;
-    bool needsWorldTangent = false;
-    bool needsWorldBinormal = false;
-    bool needsF0 = false;
-    bool needsF90 = false;
+    enum class FeatureFlags : quint32
+    {
+        None = 0,
+        BaseColor = (1 << 0),
+        Roughness = (1 << 1),
+        Metalness = (1 << 2),
+        DiffuseLight = (1 << 3),
+        SpecularLight = (1 << 4),
+        EmissiveLight = (1 << 5),
+        WorldNormal = (1 << 6),
+        WorldTangent = (1 << 7),
+        WorldBinormal = (1 << 8),
+        F0 = (1 << 9),
+        F90 = (1 << 10)
+    };
+
+    using FeatureFlagsType = std::underlying_type_t<FeatureFlags>;
+    FeatureFlagsType featureFlags = 0;
+
+    void setFeatureFlag(FeatureFlags flag, bool enabled = true)
+    {
+        if (enabled)
+            featureFlags |= static_cast<FeatureFlagsType>(flag);
+        else
+            featureFlags &= ~static_cast<FeatureFlagsType>(flag);
+    }
+
+    bool isFeatureFlagSet(FeatureFlags flag) const
+    {
+        return (featureFlags & static_cast<FeatureFlagsType>(flag)) != 0;
+    }
 
     QSSGUserShaderFragmentOutputs outputs;
 
