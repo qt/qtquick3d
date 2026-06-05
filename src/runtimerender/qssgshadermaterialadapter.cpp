@@ -9,6 +9,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include "qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadertokenizer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -917,89 +918,6 @@ static const QByteArrayView qssg_func_injectarg_tab[] = {
     "IBL_PROBE"
 };
 
-// This is based on the Qt Quick shader rewriter (with fixes)
-struct Tokenizer {
-    enum Token {
-        Token_Comment,
-        Token_OpenBrace,
-        Token_CloseBrace,
-        Token_OpenParen,
-        Token_CloseParen,
-        Token_SemiColon,
-        Token_Identifier,
-        Token_OpenBraket,
-        Token_CloseBraket,
-        Token_Unspecified,
-
-        Token_EOF
-    };
-
-    void initialize(const QByteArray &input);
-    Token next();
-
-    const char *stream;
-    const char *pos;
-    const char *identifier;
-};
-
-void Tokenizer::initialize(const QByteArray &input)
-{
-    stream = input.constData();
-    pos = input;
-    identifier = input;
-}
-
-Tokenizer::Token Tokenizer::next()
-{
-    while (*pos) {
-        char c = *pos++;
-        switch (c) {
-        case '/':
-            if (*pos == '/') {
-                // '//' comment
-                ++pos;
-                while (*pos && *pos != '\n') ++pos;
-                return Token_Comment;
-            } else if (*pos == '*') {
-                // /* */ comment
-                ++pos;
-                while (*pos && (*pos != '*' || pos[1] != '/')) ++pos;
-                if (*pos) pos += 2;
-                return Token_Comment;
-            }
-            return Token_Unspecified;
-
-        case ';': return Token_SemiColon;
-        case '\0': return Token_EOF;
-        case '{': return Token_OpenBrace;
-        case '}': return Token_CloseBrace;
-        case '(': return Token_OpenParen;
-        case ')': return Token_CloseParen;
-        case '[': return Token_OpenBraket;
-        case ']': return Token_CloseBraket;
-
-        case ' ':
-        case '\n':
-        case '\r': break;
-        default:
-            // Identifier...
-            if ((c >= 'a' && c <= 'z' ) || (c >= 'A' && c <= 'Z' ) || c == '_') {
-                identifier = pos - 1;
-                while (*pos && ((*pos >= 'a' && *pos <= 'z')
-                                     || (*pos >= 'A' && *pos <= 'Z')
-                                     || *pos == '_'
-                                     || (*pos >= '0' && *pos <= '9'))) {
-                    ++pos;
-                }
-                return Token_Identifier;
-            } else {
-                return Token_Unspecified;
-            }
-        }
-    }
-
-    return Token_EOF;
-}
 } // namespace
 
 void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
@@ -1012,6 +930,7 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
     QByteArrayList inputs;
     QByteArrayList outputs;
 
+    using Tokenizer = QSSGShaderTokenizer;
     Tokenizer tok;
     tok.initialize(shaderCode);
 
