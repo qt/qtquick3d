@@ -152,33 +152,33 @@ QT_BEGIN_NAMESPACE
 
     Values are clamped to the range [1, 1024].
 
-    \sa iblRenderFrames
+    \note This property has no effect when \l enableIBL is \c false.
+
+    \sa iblRenderFrames, enableIBL
 */
 
 /*!
     \qmlproperty int SkyMaterial::iblRenderFrames
     \since 6.12
-    \default 2
+    \default 0
 
-    The number of frames over which the IBL prefilter integrates \l iblSampleCount
-    samples before reaching full convergence. Higher values spread the prefilter
-    cost across more frames, so no single frame pays the full cost; lower values
-    converge faster but make each frame more expensive.
+    Controls how the IBL prefilter work is spread across frames.
 
-    When this value is \c 1 (or less), the prefilter is evaluated in a single
-    frame (no time-slicing).
+    \list
+    \li \b 0 — Everything in one frame: sample accumulation, normalization, and
+        irradiance are all evaluated in the same frame.
+    \li \b {N ≥ 1} — The \l iblSampleCount samples are divided across N slice
+        frames (\c ceil(iblSampleCount / N) samples per frame), followed by a
+        dedicated normalization and irradiance frame.
+    \endlist
 
-    Values greater than \l iblSampleCount have no further effect: the prefilter
-    cannot spread N samples across more than N frames, so the effective
-    convergence period is capped at \l iblSampleCount frames.
+    Higher values amortize the GGX prefilter cost across more frames, which is
+    useful when the sky changes infrequently and a high \l iblSampleCount is
+    required for quality.
 
-    Spreading the work across frames is useful when the procedural sky changes
-    infrequently relative to the frame rate: a high \l iblSampleCount can be
-    amortized over many frames. Whenever the sky content changes (a tracked
-    property updates, the fragment shader changes, or \l radianceMapSize
-    changes), accumulation restarts from scratch.
+    \note This property has no effect when \l enableIBL is \c false.
 
-    \sa iblSampleCount
+    \sa iblSampleCount, enableIBL
 */
 
 QQuick3DSkyMaterial::QQuick3DSkyMaterial(QQuick3DObject *parent)
@@ -213,6 +213,7 @@ QSSGRenderGraphObject *QQuick3DSkyMaterial::updateSpatialNode(QSSGRenderGraphObj
     // Otherwise ceil(sampleCount/frameCount) so accumulation always finishes within the
     // requested frame budget, even when the division isn't exact.
     material->iblSamplesPerFrame = (m_iblRenderFrames <= 1) ? 0 : (m_iblSampleCount + m_iblRenderFrames - 1) / m_iblRenderFrames;
+    material->iblRenderFrames = m_iblRenderFrames;
 
     if (m_dirtyFlag & Dirty::FragmentShader) {
         const QQmlContext *context = qmlContext(this);
@@ -325,7 +326,7 @@ int QQuick3DSkyMaterial::iblRenderFrames() const
 
 void QQuick3DSkyMaterial::setIblRenderFrames(int newIblRenderFrames)
 {
-    const int clamped = qMax(1, newIblRenderFrames);
+    const int clamped = qMax(0, newIblRenderFrames);
     if (m_iblRenderFrames == clamped)
         return;
     m_iblRenderFrames = clamped;

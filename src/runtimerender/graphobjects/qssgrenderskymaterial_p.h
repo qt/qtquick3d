@@ -28,6 +28,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkyMaterial : public QSSGRenderGr
     int radianceMapSize = 512;
     int iblSampleCount = 16;
     int iblSamplesPerFrame = 0;
+    int iblRenderFrames = 0;
     bool wantsMoreFrames = false;
     bool enableIBL = false;
 
