@@ -471,6 +471,7 @@ void QSSGRenderSkyMaterialManager::releaseCachedResources()
     m_haveConvergedResult = false;
     m_envTailMipsInitialized = false;
     m_prefilteredTailMipsInitialized = false;
+    m_finalizeIblPending = false;
 }
 
 QSSGRenderImageTexture QSSGRenderSkyMaterialManager::resolve(QSSGRenderSkyMaterial *settings)
@@ -484,7 +485,7 @@ QSSGRenderImageTexture QSSGRenderSkyMaterialManager::resolve(QSSGRenderSkyMateri
     }
 
     const bool pendingAccumulation = settings->enableIBL && m_accumulatedSamples < settings->iblSampleCount;
-    settings->wantsMoreFrames = pendingAccumulation || settings->isDirty;
+    settings->wantsMoreFrames = pendingAccumulation || settings->isDirty || m_finalizeIblPending;
 
     return m_skyIblTexture;
 }
@@ -594,7 +595,7 @@ bool QSSGRenderSkyMaterialManager::computeFrameState(QSSGRenderSkyMaterial *inSk
 
     fs.inProgressTimeSlice = fs.enableIBL && m_accumulatedSamples > 0 && m_accumulatedSamples < m_accumIblSampleCount;
     fs.envContentDirty = inSky->isDirty && !fs.needCreateEnv;
-    fs.deferEnvRefresh = fs.envContentDirty && fs.inProgressTimeSlice;
+    fs.deferEnvRefresh = fs.envContentDirty && (fs.inProgressTimeSlice || m_finalizeIblPending);
     fs.needRenderEnv = fs.needCreateEnv || (fs.envContentDirty && !fs.deferEnvRefresh);
     return true;
 }
@@ -709,14 +710,35 @@ bool QSSGRenderSkyMaterialManager::ensureTextures(FrameState &fs)
 
 void QSSGRenderSkyMaterialManager::deriveCycleState(QSSGRenderSkyMaterial *inSky, FrameState &fs)
 {
+    // Finalize frame: all slicing is complete, run normalize + irradiance now.
+    if (m_finalizeIblPending && !fs.needRenderEnv && !fs.prefilteredJustCreated && m_accumIblSampleCount == fs.totalSamples) {
+        m_finalizeIblPending = false;
+        m_haveConvergedResult = true;
+        fs.runPrefilterSlice = false;
+        fs.writePrefilteredCubeThisFrame = true;
+        fs.runIrradiancePass = fs.enableIBL;
+        fs.sliceSamplesThisFrame = 0;
+        fs.sliceSampleStart = m_accumulatedSamples;
+        fs.sliceSampleEnd = m_accumulatedSamples;
+        fs.isFirstSlice = false;
+        fs.sliceCompletesCycle = false;
+        fs.haveConvergedResultEntering = false; // was not converged before this frame
+        fs.multiFrame = false;
+        return;
+    }
+
     fs.multiFrame = fs.enableIBL && inSky->iblSamplesPerFrame > 0 && inSky->iblSamplesPerFrame < fs.totalSamples;
 
     // Restart the accumulator if anything stale: env content changed, prefiltered cube was
     // re-created, or the sample-count target changed.
     if (!m_prefilterAccumulators.isEmpty()) {
         const bool resetAccumulation = fs.needRenderEnv || fs.prefilteredJustCreated || m_accumIblSampleCount != fs.totalSamples;
-        if (resetAccumulation)
+        if (resetAccumulation) {
             m_accumulatedSamples = 0;
+            // Any finalize pending from the previous cycle is now stale — the accumulators
+            // have been reset so running normalize would write garbage to the prefiltered cube.
+            m_finalizeIblPending = false;
+        }
         m_accumIblSampleCount = fs.totalSamples;
     }
 
@@ -736,10 +758,21 @@ void QSSGRenderSkyMaterialManager::deriveCycleState(QSSGRenderSkyMaterial *inSky
     fs.isFirstSlice = m_accumulatedSamples == 0;
     fs.haveConvergedResultEntering = m_haveConvergedResult;
 
-    // Seed cycle (no converged result yet) publishes to the cube every frame so the user
-    // sees progressive convergence. Established cycles only publish on cycle completion.
-    fs.writePrefilteredCubeThisFrame = fs.runPrefilterSlice && (fs.sliceCompletesCycle || !m_haveConvergedResult);
-    fs.runIrradiancePass = fs.enableIBL && fs.writePrefilteredCubeThisFrame;
+    if (inSky->iblRenderFrames >= 1) {
+        // iblRenderFrames >= 1: normalize and irradiance are deferred to a dedicated frame
+        // after all slicing completes, so the last slice frame never pays both costs.
+        // m_finalizeIblPending is set in runPrefilterCycle (not here) so it only fires
+        // once the accumulators actually contain data. Setting it here would trigger a
+        // spurious finalize when the prefilter was blocked by canPrefilter==false (e.g.
+        // skyRenderFrames >= 1 on the env-render frame), normalising empty accumulators.
+        fs.writePrefilteredCubeThisFrame = false;
+        fs.runIrradiancePass = false;
+    } else {
+        // iblRenderFrames == 0: normalize runs every frame so the user sees progressive
+        // convergence while slicing, then fully on the cycle-completion frame.
+        fs.writePrefilteredCubeThisFrame = fs.runPrefilterSlice && (fs.sliceCompletesCycle || !m_haveConvergedResult);
+        fs.runIrradiancePass = fs.enableIBL && fs.writePrefilteredCubeThisFrame;
+    }
 }
 
 void QSSGRenderSkyMaterialManager::validateAndUpdateCacheKey(const FrameState &fs, QSSGRhiShaderPipeline *envShaderPipelineKey)
@@ -901,7 +934,7 @@ bool QSSGRenderSkyMaterialManager::runPrefilterCycle(QSSGRenderSkyMaterial *inSk
                                                      QRhiResourceUpdateBatch *&rub)
 {
     Q_UNUSED(inSky);
-    if (!fs.runPrefilterSlice) {
+    if (!fs.runPrefilterSlice && !fs.writePrefilteredCubeThisFrame) {
         cb->resourceUpdate(rub);
         rub = nullptr;
         return true;
@@ -1089,29 +1122,47 @@ bool QSSGRenderSkyMaterialManager::runPrefilterCycle(QSSGRenderSkyMaterial *inSk
     //
     // On subsequent slices we use the preserve-variant targets so the additive blend
     // accumulates on top of the existing content.
-    for (int mipLevel = 0; mipLevel < fs.prefilterSpecularMipCount; ++mipLevel) {
-        QSSGSkyIblFaceTargets &sliceTargets = fs.isFirstSlice ? m_cache.accumClearFaceTargets[mipLevel]
-                                                              : m_cache.accumPreserveFaceTargets[mipLevel];
-        const QSize mipSize(qMax(1, fs.environmentMapSize.width() >> mipLevel), qMax(1, fs.environmentMapSize.height() >> mipLevel));
+    if (fs.runPrefilterSlice) {
+        for (int mipLevel = 0; mipLevel < fs.prefilterSpecularMipCount; ++mipLevel) {
+            QSSGSkyIblFaceTargets &sliceTargets = fs.isFirstSlice ? m_cache.accumClearFaceTargets[mipLevel]
+                                                                  : m_cache.accumPreserveFaceTargets[mipLevel];
+            const QSize mipSize(qMax(1, fs.environmentMapSize.width() >> mipLevel),
+                                qMax(1, fs.environmentMapSize.height() >> mipLevel));
 
-        for (const auto face : QSSGRenderTextureCubeFaces) {
-            const QVector<QPair<int, quint32>> offsets = { { 0, quint32(fs.ubufElementSize * quint8(face)) },
-                                                           { 2, quint32(uBufSliceElementSize * mipLevel) } };
-            drawCubeFace(cb,
-                         context.get(),
-                         sliceTargets.renderTargets[quint8(face)],
-                         mipSize,
-                         m_cache.slicePipeline,
-                         m_cache.sliceSrb,
-                         fs.vbufBinding,
-                         offsets,
-                         QByteArrayLiteral("sky_ibl_prefilter_slice"),
-                         QSSG_RENDERPASS_NAME("sky_ibl_prefilter_slice", mipLevel, face),
-                         QColor(0, 0, 0, 0));
+            for (const auto face : QSSGRenderTextureCubeFaces) {
+                const QVector<QPair<int, quint32>> offsets = { { 0, quint32(fs.ubufElementSize * quint8(face)) },
+                                                               { 2, quint32(uBufSliceElementSize * mipLevel) } };
+                drawCubeFace(cb,
+                             context.get(),
+                             sliceTargets.renderTargets[quint8(face)],
+                             mipSize,
+                             m_cache.slicePipeline,
+                             m_cache.sliceSrb,
+                             fs.vbufBinding,
+                             offsets,
+                             QByteArrayLiteral("sky_ibl_prefilter_slice"),
+                             QSSG_RENDERPASS_NAME("sky_ibl_prefilter_slice", mipLevel, face),
+                             QColor(0, 0, 0, 0));
+            }
+        }
+        m_accumulatedSamples = fs.sliceSampleEnd;
+        if (fs.sliceCompletesCycle) {
+            if (inSky->iblRenderFrames >= 1) {
+                // Defer normalize+irradiance to a dedicated finalize frame.
+                // Set the flag here (after the slice actually ran) so the accumulators
+                // are guaranteed to contain data when the finalize fires.
+                m_finalizeIblPending = true;
+            } else {
+                // iblRenderFrames==0: normalize runs inline, mark converged now.
+                m_haveConvergedResult = true;
+            }
         }
     }
 
-    if (fs.sliceCompletesCycle || !fs.haveConvergedResultEntering) {
+    // Normalize accumulated samples into the prefiltered cube.
+    // For iblRenderFrames==0: runs every frame until convergence (progressive).
+    // For iblRenderFrames>=1: only runs in the dedicated finalize frame.
+    if (fs.writePrefilteredCubeThisFrame) {
         for (int mipLevel = 0; mipLevel < fs.prefilterSpecularMipCount; ++mipLevel) {
             for (const auto face : QSSGRenderTextureCubeFaces) {
                 const int normalizeEntryIndex = mipLevel * 6 + quint8(face);
@@ -1131,7 +1182,7 @@ bool QSSGRenderSkyMaterialManager::runPrefilterCycle(QSSGRenderSkyMaterial *inSk
         }
     }
 
-    if (fs.enableIBL && (fs.sliceCompletesCycle || !fs.haveConvergedResultEntering)) {
+    if (fs.runIrradiancePass) {
         const int irradianceMip = prefilterTargets.mipmapCount - 1;
         for (const auto face : QSSGRenderTextureCubeFaces) {
             const QVector<QPair<int, quint32>> offsets = { { 0, quint32(fs.ubufElementSize * quint8(face)) }, { 2, 0u } };
@@ -1147,10 +1198,6 @@ bool QSSGRenderSkyMaterialManager::runPrefilterCycle(QSSGRenderSkyMaterial *inSk
                          QSSG_RENDERPASS_NAME("sky_ibl_irradiance", irradianceMip, face));
         }
     }
-
-    m_accumulatedSamples = fs.sliceSampleEnd;
-    if (fs.sliceCompletesCycle)
-        m_haveConvergedResult = true;
 
     return true;
 }

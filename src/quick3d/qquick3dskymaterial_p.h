@@ -80,7 +80,7 @@ private:
     DirtyT m_dirtyFlag { Dirty::FragmentShader | Dirty::TrackedProperty };
     bool m_enableIBL = true;
     int m_iblSampleCount = 32;
-    int m_iblRenderFrames = 2;
+    int m_iblRenderFrames = 0;
     QString m_fragmentShaderCode;
 };
 

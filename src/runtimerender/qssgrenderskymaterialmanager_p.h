@@ -100,6 +100,10 @@ private:
     // exactly one mip level and is always attached at level 0.
     QList<QRhiTexture *> m_prefilterAccumulators;
 
+    // Set when all slice accumulation is complete (iblRenderFrames >= 1) to trigger a
+    // dedicated normalize + irradiance frame rather than running it in the last slice frame.
+    bool m_finalizeIblPending = false;
+
     int m_accumulatedSamples = 0;
     int m_accumIblSampleCount = 0;
     bool m_haveConvergedResult = false;
