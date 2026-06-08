@@ -26,6 +26,10 @@
 
     RuntimeLoader supports .obj and glTF version 2.0 files in both in text (.gltf) and binary
     (.glb) formats.
+
+    \warning RuntimeLoader does not sandbox or validate asset contents. Loading
+    malformed or untrusted assets may have security implications. See \l source
+    for details.
 */
 
 /*!
@@ -36,6 +40,11 @@
     the given URL.
 
     The success or failure of the load operation is indicated by \l status.
+
+    \warning RuntimeLoader does not sandbox or validate asset contents. Loading
+    malformed or untrusted assets may have security implications. Application
+    developers should carefully consider these before allowing the loading of
+    user-provided content that is not part of the application.
 */
 
 /*!
