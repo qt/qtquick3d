@@ -32,6 +32,21 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \enum QQuick3DTextureProviderExtension::SamplerHint
+
+    Specifies a hint about the type of texture that will be
+    provided by the extension.
+
+    \value Sampler2D A 2D texture
+    \value Sampler2DArray An array texture
+    \value Sampler3D A 3D texture
+    \value SamplerCube A cube map texture
+    \value SamplerCubeArray An array of cube map textures
+    \value SamplerBuffer A buffer texture
+
+*/
+
+/*!
     \qmltype TextureProviderExtension
     \nativetype QQuick3DTextureProviderExtension
     \inqmlmodule QtQuick3D
@@ -63,20 +78,23 @@ QT_BEGIN_NAMESPACE
 
     \sa SamplerHint
 */
+
 /*!
-    \qmlproperty enumeration TextureProviderExtension::samplerHint
+    \qmlenum TextureProviderExtension::SamplerHint
+    \qmlenumeratorsfrom QQuick3DTextureProviderExtension::SamplerHint
+    \since 6.11
+
+Specifies a hint about the type of texture the extension provides.
+
+*/
+
+/*!
+    \qmlproperty SamplerHint TextureProviderExtension::samplerHint
+    \since 6.11
 
     This property contains a hint about the type of texture that will be provided by the extension.
     This is necessary because the texture data will not be provided until it is necessary, but materials
-    that use the Texture component need to know what type of sampler to provide. This property should
-    be set to one of the following values:
-
-    \value TextureProviderExtension.Sampler2D The texture will be a 2D texture.
-    \value TextureProviderExtension.Sampler2DArray The texture will be an array texture.
-    \value TextureProviderExtension.Sampler3D The texture will be a 3D texture.
-    \value TextureProviderExtension.SamplerCube The texture will be a cube map texture.
-    \value TextureProviderExtension.SamplerCubeArray The texture will be an array of cube map textures.
-    \value TextureProviderExtension.SamplerBuffer The texture will be a buffer texture.
+    that use the Texture component need to know what type of sampler to provide.
 
     The default value is \c TextureProviderExtension.Sampler2D.
 

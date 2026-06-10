@@ -1658,13 +1658,13 @@ QQuick3DShaderUtilsRenderPassTexture::TextureFormat QQuick3DShaderUtilsRenderPas
     \qmltype ColorAttachment
     \inherits Command
     \inqmlmodule QtQuick3D
-    \brief Defines a color attachment for a \l {RenderPass}{pass}.
+    \brief Defines a color attachment for a render pass.
     \since 6.11
 
     The ColorAttachment type is used to specify a color attachment for a \l RenderPass.
     The \l name property is used to identify the attachment within the render pass.
-    If the \l {RenderPass.AugmentMaterial}{AugmentMaterial} mode is used, the name will be
-    exposed as an output with \c name in the fragment shader.
+    If the \l {RenderPass::materialMode}{RenderPass.AugmentMaterial} mode is used,
+    the name will be exposed as an output with \c name in the fragment shader.
 
     \sa RenderPassTexture
 

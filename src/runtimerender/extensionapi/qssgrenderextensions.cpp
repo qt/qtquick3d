@@ -47,7 +47,7 @@ QSSGFrameData::Result QSSGFrameData::getRenderResult(RenderResult id) const
     them or if the layer does not contain any data that would make it necessary to produce the
     requested results, in which case \l getRenderResult() will return a empty result.
 
-    \sa QSSGRenderExtension::getRenderResult()
+    \sa getRenderResult()
 */
 
 void QSSGFrameData::scheduleRenderResults(RenderResults results) const
@@ -90,8 +90,6 @@ qsizetype QSSGFrameData::getAttachmentCount(QSSGResourceId userPassId) const
 }
 
 /*!
-    \fn QSSGFrameData::Result QSSGFrameData::getRenderResult(QSSGResourceId userPassId, AttachmentSelector attachment) const
-
     \return The renderable texture result from a user defined render pass with the given \a userPassId.
     If no matching user pass could be found, or if the user pass did not produce any renderable textures,
     an invalid Result is returned.

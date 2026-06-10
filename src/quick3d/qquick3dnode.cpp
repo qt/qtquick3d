@@ -1034,7 +1034,8 @@ void QQuick3DNode::itemChange(ItemChange change, const ItemChangeData &)
     only render nodes that belong to the specified layers.
     The value is a bitmask, where each bit represents a layer.
 
-    By default nodes are assigned to the \c main layer, which is \l {ContentLayer.Layer0}{Layer0}.
+    By default nodes are assigned to the \c main layer, which is
+    \l {ContentLayer}{ContentLayer.Layer0}.
 
     \sa ContentLayer
 */
