@@ -114,8 +114,6 @@ QSSGExtensionId QQuick3DExtensionHelpers::getExtensionId(const QQuick3DObject &e
     \return the type of the node with the given \a nodeId.
 
     This function is useful to determine the type of a \a nodeId.
-
-    \sa QSSGRenderGraphObject::Type
 */
 QSSGRenderGraphObject::Type QQuick3DExtensionHelpers::getNodeIdType(QSSGNodeId nodeId)
 {

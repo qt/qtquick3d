@@ -64,7 +64,7 @@
 
     \snippet userpasses/Main.qml GBufferPass usage
 
-    Three \l {QtQuick3D::RenderOutputProvider}{RenderOutputProvider} instances are created to provide
+    Three \l {QtQuick3D.Helpers::}{RenderOutputProvider} instances are created to provide
     references to the rendered G-buffer textures, which will be used in the subsequent lighting pass.
 
     The \c layerMask property of the G-buffer pass is set to only render objects
@@ -154,9 +154,9 @@
 
     \snippet userpasses/Main.qml main texture
 
-    The \l {QtQuick3D::SimpleQuadRenderer}{SimpleQuadRenderer} is used to blit the
+    The \l {QtQuick3D.Helpers::}{SimpleQuadRenderer} is used to blit the
     main color texture produced by the \c mainColorPass to the View3D's framebuffer.
-    The \l {QtQuick3D::RenderOutputProvider}{RenderOutputProvider} exposes the first
+    The \l {QtQuick3D.Helpers::}{RenderOutputProvider} exposes the first
     color attachment of \c mainColorPass as a texture the SimpleQuadRenderer can
     sample.
 */

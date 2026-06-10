@@ -67,9 +67,6 @@ examples.fileextensions += "*.frag *.geom *.vert *.tesc *.tese *.comp"
 
 imagedirs   += images
 
-# Exclude private header files from the documentation build
-excludefiles += "*_p.h"
-
 manifestmeta.highlighted.names = \
     "QtQuick3D/Qt Quick 3D - Particles 3D Testbed Example" \
     "QtQuick3D/Qt Quick 3D - View 3D Example" \

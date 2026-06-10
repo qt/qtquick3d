@@ -33,6 +33,22 @@
 */
 
 /*!
+    \qmlenum RuntimeLoader::QueryFilter
+
+    Specifies the type of objects to query for.
+
+    \value Textures Query for texture objects
+    \value Materials Query for material objects
+    \value Nodes Query for node objects
+    \value Cameras Query for camera objects
+    \value Lights Query for light objects
+    \value Models Query for model objects
+
+
+    \sa queryAll()
+*/
+
+/*!
     \qmlproperty url RuntimeLoader::source
 
     This property holds the location of the source file containing the 3D asset.
