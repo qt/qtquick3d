@@ -68,6 +68,7 @@ enum class Key : quint32
     AuxiliaryImage = RevealageTexture,
     DepthTextureMS,
     CounterImage,
+    SkyMaterialBackgroundTexture,
     RenderResultCount,
 };
 
@@ -408,6 +409,7 @@ public:
     ScreenReflectionPass reflectionPass;
     Item2DPass item2DPass;
     SkyboxPass skyboxPass;
+    SkyMaterialBackgroundPass skyMaterialBackgroundPass;
     SkyboxCubeMapPass skyboxCubeMapPass;
     UserRenderPass userRenderPasses;
     static constexpr size_t USERPASSES = 3; // See QSSGRenderLayer::RenderExtensionMode::Count

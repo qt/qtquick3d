@@ -34,11 +34,15 @@ class Q_QUICK3D_EXPORT QQuick3DSkyMaterial : public QQuick3DObject, public QQuic
     Q_PROPERTY(bool enableIBL READ enableIBL WRITE setEnableIBL NOTIFY enableIBLChanged FINAL REVISION(6, 12))
     Q_PROPERTY(int iblSampleCount READ iblSampleCount WRITE setIblSampleCount NOTIFY iblSampleCountChanged FINAL REVISION(6, 12))
     Q_PROPERTY(int iblRenderFrames READ iblRenderFrames WRITE setIblRenderFrames NOTIFY iblRenderFramesChanged FINAL REVISION(6, 12))
+    Q_PROPERTY(SkyboxMode skyboxMode READ skyboxMode WRITE setSkyboxMode NOTIFY skyboxModeChanged FINAL REVISION(6, 12))
 
     QML_NAMED_ELEMENT(SkyMaterial)
     QML_ADDED_IN_VERSION(6, 12)
 public:
     explicit QQuick3DSkyMaterial(QQuick3DObject *parent = nullptr);
+
+    enum class SkyboxMode { Cubemap, ScreenSpaceFull, ScreenSpaceHalf, ScreenSpaceQuarter };
+    Q_ENUM(SkyboxMode)
 
     Q_REVISION(6, 12) int radianceMapSize() const;
     Q_REVISION(6, 12) QUrl fragmentShader() const;
@@ -46,6 +50,7 @@ public:
     Q_REVISION(6, 12) QString fragmentShaderCode() const;
     Q_REVISION(6, 12) int iblSampleCount() const;
     Q_REVISION(6, 12) int iblRenderFrames() const;
+    Q_REVISION(6, 12) SkyboxMode skyboxMode() const;
 
 public Q_SLOTS:
     Q_REVISION(6, 12) void setRadianceMapSize(int radianceMapSize);
@@ -54,6 +59,7 @@ public Q_SLOTS:
     Q_REVISION(6, 12) void setEnableIBL(bool newEnableIBL);
     Q_REVISION(6, 12) void setIblSampleCount(int newIblSampleCount);
     Q_REVISION(6, 12) void setIblRenderFrames(int newIblRenderFrames);
+    Q_REVISION(6, 12) void setSkyboxMode(SkyboxMode skyboxMode);
 
 Q_SIGNALS:
     Q_REVISION(6, 12) void radianceMapSizeChanged();
@@ -62,6 +68,7 @@ Q_SIGNALS:
     Q_REVISION(6, 12) void enableIBLChanged();
     Q_REVISION(6, 12) void iblSampleCountChanged();
     Q_REVISION(6, 12) void iblRenderFramesChanged();
+    Q_REVISION(6, 12) void skyboxModeChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -81,6 +88,7 @@ private:
     bool m_enableIBL = true;
     int m_iblSampleCount = 32;
     int m_iblRenderFrames = 0;
+    SkyboxMode m_skyboxMode = SkyboxMode::Cubemap;
     QString m_fragmentShaderCode;
 };
 

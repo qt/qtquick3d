@@ -2944,6 +2944,10 @@ void QSSGLayerRenderData::prepareForRender()
     if (layerPrepResult.flags.requiresScreenTexture())
         activePasses.push_back(&screenMapPass);
 
+    // Layer has SkyMaterial.
+    if (layerPrepResult.flags.requiresSkyMaterialPass())
+        activePasses.push_back(&skyMaterialPass);
+
     // Reflection pass
     if (reflectionProbesView.size() != 0)
         activePasses.push_back(&reflectionMapPass);
@@ -2959,10 +2963,6 @@ void QSSGLayerRenderData::prepareForRender()
     // Generated User render passes (QML)
     if (userRenderPasses.hasData())
         activePasses.push_back(&userRenderPasses);
-
-    // Layer has SkyMaterial
-    if (layerPrepResult.flags.requiresSkyMaterialPass())
-        activePasses.push_back(&skyMaterialPass);
 
     const bool hasOpaqueObjects = (opaqueObjects.size() > 0);
 
@@ -2980,8 +2980,12 @@ void QSSGLayerRenderData::prepareForRender()
             activePasses.push_back(&skyboxCubeMapPass);
         else if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe && !disableMainPasses)
             activePasses.push_back(&skyboxPass);
-        else if (layer.background == QSSGRenderLayer::Background::SkyMaterial && layer.skyMaterial && !disableMainPasses)
-            activePasses.push_back(&skyboxPass);
+        else if (layer.background == QSSGRenderLayer::Background::SkyMaterial && layer.skyMaterial && !disableMainPasses) {
+            if (layer.skyMaterial->skyboxMode != QSSGRenderSkyMaterial::SkyboxMode::Cubemap)
+                activePasses.push_back(&skyMaterialBackgroundPass);
+            else
+                activePasses.push_back(&skyboxPass);
+        }
     }
 
     if (hasItem2Ds && !disableMainPasses)
@@ -3019,11 +3023,21 @@ static void clearTable(std::vector<T> &entry)
     for (auto &e : entry)
         e.clear();
 }
-
 void QSSGLayerRenderData::resolveLayerIblTexture()
 {
     if (layer.skyMaterial) {
-        skyMaterialTexture = requestSkyMaterialManager()->resolve(layer.skyMaterial);
+        // In the ScreenSpace skybox modes the visible background is evaluated directly on
+        // screen (SkyMaterialBackgroundPass), so the cube is only produced when something
+        // actually consumes it: image-based lighting, reflection probes, the cube-sampling
+        // background (Cubemap mode), or a screen-read texture (SkyboxPass draws the cube
+        // into it for e.g. refraction).
+        const bool needCube = layer.skyMaterial->enableIBL
+                || layer.skyMaterial->skyboxMode == QSSGRenderSkyMaterial::SkyboxMode::Cubemap
+                || reflectionProbesView.size() != 0 || layerPrepResult.flags.requiresScreenTexture();
+        if (needCube)
+            skyMaterialTexture = requestSkyMaterialManager()->resolve(layer.skyMaterial);
+        else
+            skyMaterialTexture = {};
     }
 }
 

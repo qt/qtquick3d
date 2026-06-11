@@ -83,7 +83,8 @@ QT_BEGIN_NAMESPACE
     \since 6.12
     \default 512
 
-    Specifies the resolution of the generated environment cubemap.
+    Specifies the resolution of the generated environment cubemap used for
+    image-based lighting and reflection probes.
 
     Higher values improve reflection sharpness and lighting quality,
     especially for glossy materials, but increase memory usage and
@@ -91,6 +92,15 @@ QT_BEGIN_NAMESPACE
 
     Values are snapped to the nearest power of two and clamped to the
     range [8, 2048].
+
+    \note With \l skyboxMode set to a \c ScreenSpace value, the visible sky is
+    evaluated directly on screen and this property only affects the IBL/reflection
+    cubemap. With \c SkyMaterial.Cubemap it also determines the sharpness of the
+    visible background. When \l enableIBL is \c false, \l skyboxMode is a
+    \c ScreenSpace value, and no reflection probes are present, no cubemap is
+    generated at all.
+
+    \sa skyboxMode, enableIBL
 */
 
 /*!
@@ -181,6 +191,33 @@ QT_BEGIN_NAMESPACE
     \sa iblSampleCount, enableIBL
 */
 
+/*!
+    \qmlproperty enumeration SkyMaterial::skyboxMode
+    \since 6.12
+    \default SkyMaterial.Cubemap
+
+    Selects what the SkyMaterial produces for the visible background.
+
+    \value SkyMaterial.Cubemap          The background samples the radiance
+        cubemap (the same cube used for image-based lighting), whose resolution
+        follows \l radianceMapSize. For a static sky the cube is rendered once and
+        then sampled cheaply every frame, so this is the lowest per-frame cost when
+        nothing but the camera is moving. Sharpness is capped at \l radianceMapSize.
+    \value SkyMaterial.ScreenSpaceFull    The sky shader is evaluated directly on
+        screen at full viewport resolution every frame (sharpest, most costly).
+    \value SkyMaterial.ScreenSpaceHalf    Direct screen-space evaluation at half
+        resolution per axis (quarter the pixels), upscaled to the viewport.
+    \value SkyMaterial.ScreenSpaceQuarter Direct screen-space evaluation at quarter
+        resolution per axis (one sixteenth the pixels), upscaled to the viewport.
+
+    The \c ScreenSpace modes decouple the visible background from the IBL cube and
+    are best for dynamic skies (e.g. moving sun, animated volumetric clouds);
+    \c Cubemap is best for static skies. \c Cubemap forces the cubemap to be
+    generated even when \l enableIBL is \c false.
+
+    \sa radianceMapSize, enableIBL
+*/
+
 QQuick3DSkyMaterial::QQuick3DSkyMaterial(QQuick3DObject *parent)
     : QQuick3DObject(parent), QQuick3DPropertyChangedTracker(this, QQuick3DSuperClassInfo<QQuick3DSkyMaterial>())
 {
@@ -214,6 +251,7 @@ QSSGRenderGraphObject *QQuick3DSkyMaterial::updateSpatialNode(QSSGRenderGraphObj
     // requested frame budget, even when the division isn't exact.
     material->iblSamplesPerFrame = (m_iblRenderFrames <= 1) ? 0 : (m_iblSampleCount + m_iblRenderFrames - 1) / m_iblRenderFrames;
     material->iblRenderFrames = m_iblRenderFrames;
+    material->skyboxMode = static_cast<QSSGRenderSkyMaterial::SkyboxMode>(m_skyboxMode);
 
     if (m_dirtyFlag & Dirty::FragmentShader) {
         const QQmlContext *context = qmlContext(this);
@@ -221,6 +259,7 @@ QSSGRenderGraphObject *QQuick3DSkyMaterial::updateSpatialNode(QSSGRenderGraphObj
                 : !m_fragmentShader.isEmpty() ? QSSGShaderUtils::resolveShader(m_fragmentShader, context, material->shaderPathKey)
                                               : QByteArray();
         material->isFragmentShaderDirty = true;
+        material->isBackgroundShaderDirty = true;
     }
 
     if (m_dirtyFlag & Dirty::TrackedProperty) {
@@ -331,6 +370,20 @@ void QQuick3DSkyMaterial::setIblRenderFrames(int newIblRenderFrames)
         return;
     m_iblRenderFrames = clamped;
     emit iblRenderFramesChanged();
+    update();
+}
+
+QQuick3DSkyMaterial::SkyboxMode QQuick3DSkyMaterial::skyboxMode() const
+{
+    return m_skyboxMode;
+}
+
+void QQuick3DSkyMaterial::setSkyboxMode(SkyboxMode skyboxMode)
+{
+    if (m_skyboxMode == skyboxMode)
+        return;
+    m_skyboxMode = skyboxMode;
+    emit skyboxModeChanged();
     update();
 }
 
