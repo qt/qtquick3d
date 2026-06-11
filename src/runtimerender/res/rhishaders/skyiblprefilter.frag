@@ -35,19 +35,9 @@ float radicalInverseVdC(uint bits)
     return float(bits) * 2.3283064365386963e-10;
 }
 
-// Returns a Hammersley point with the dimensions swapped relative to the standard
-// form. The standard Hammersley uses (i/N, vdc(i)); the first component is linear
-// in i, which maps to phi in importanceSampleGGX. Partial sums [0, K) of that
-// sequence cover only phi in [0, 2π·K/N) — a single sector around the reflection
-// direction — producing visible directional streaks during accumulation. Swapping
-// to (vdc(i), i/N) makes phi follow the low-discrepancy radical-inverse sequence
-// so each new sample lands in a different azimuth, smoothing the partial-sum
-// appearance. The full N-sample point set is identical (the swap is a bijection
-// when N is a power of two, and a valid 2D low-discrepancy sequence otherwise),
-// so the converged integral matches.
 vec2 hammersley(uint i, uint N)
 {
-    return vec2(radicalInverseVdC(i), float(i) / float(N));
+    return vec2(float(i) / float(N), radicalInverseVdC(i));
 }
 
 vec3 importanceSampleGGX(vec2 xi, float a)
