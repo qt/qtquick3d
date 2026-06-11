@@ -6,10 +6,12 @@ project(skymaterial LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D Concurrent)
 
 qt_add_executable(skymaterial
     main.cpp
+    cloudnoisetexturedata.cpp
+    cloudnoisetexturedata.h
 )
 
 set_target_properties(skymaterial PROPERTIES
@@ -22,6 +24,7 @@ target_link_libraries(skymaterial PUBLIC
     Qt::Gui
     Qt::Quick
     Qt::Quick3D
+    Qt::Concurrent
 )
 
 qt_add_qml_module(skymaterial
@@ -29,11 +32,11 @@ qt_add_qml_module(skymaterial
     VERSION 1.0
     QML_FILES
         main.qml
-        BasicSky.qml
         AdvancedSky.qml
+        SettingsPane.qml
     RESOURCES
-        basicsky.frag
         advancedsky.frag
+        sliders.svg
         skytexture.frag
         transmittance.frag
     NO_RESOURCE_TARGET_PATH

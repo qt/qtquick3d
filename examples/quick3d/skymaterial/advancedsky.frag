@@ -6,7 +6,7 @@
 
 // Ray marching steps. More steps mean better accuracy but worse performance
 const int TRANSMITTANCE_STEPS     = 32;
-const int IN_SCATTERING_STEPS     = 32;
+const int IN_SCATTERING_STEPS     = 16;
 
 // Debug
 #define ENABLE_SPECTRAL 1
@@ -98,6 +98,158 @@ float raySphereIntersection(vec3 ro, vec3 rd, float radius)
     if (d < 0.0) return -1.0;
     if (d > b*b) return (-b+sqrt(d));
     return (-b-sqrt(d));
+}
+
+//-----------------------------------------------------------------------------
+// Volumetric clouds
+// Density model: Schneider, "Real-time Volumetric Cloudscapes of Horizon
+// Zero Dawn", GPU Pro 7 (2015).
+// Lighting model: Wrenninge & Zafar, "Oz: The Great and Volumetric"
+// (SIGGRAPH 2013 course on Production Volume Rendering).
+
+float remap01(float v, float lo, float hi)
+{
+    return clamp((v - lo) / max(hi - lo, 1e-5), 0.0, 1.0);
+}
+
+float cloudDensityAt(vec3 pos, float heightFraction)
+{
+    // pos is in earth-centered coordinates (km).
+    // Detail UVW — one full tile of the noise volume = cloudScale km. The XZ
+    // offset shifts the camera column off (0,0,0) in noise space so a noise
+    // valley at the origin doesn't empty the zenith view. cloudTimeOffset
+    // animates the noise slowly through its 3D volume so clouds evolve.
+    vec3 local = vec3(pos.x, pos.y - EARTH_RADIUS, pos.z);
+    vec3 baseUvw = (local + vec3(cloudWindOffset.x + 73.5, 0.0, cloudWindOffset.y + 41.2))
+                   / max(cloudScale, 1e-3);
+    baseUvw.y += cloudTimeOffset;
+
+    // Domain warp breaks the periodic repetition of the noise tile.
+    vec3 warpSample = textureLod(noiseVolume, baseUvw * 0.35 + vec3(7.2, 1.1, 13.5), 0.0).gba;
+    vec3 uvw = baseUvw + (warpSample - 0.5) * 0.35;
+
+    // Coverage UVW at 5× larger period with independent offset.
+    vec3 covUvw = uvw * 0.2 + vec3(1.7, 0.31, 2.3);
+    float coverageR = textureLod(noiseVolume, covUvw, 0.0).r;
+
+    float threshold = mix(0.85, 0.0, cloudCoverage);
+    float baseShape = remap01(coverageR, threshold, threshold + 0.10);
+    if (baseShape < 0.001)
+        return 0.0;
+
+    float bottomShape = smoothstep(0.0, 0.05, heightFraction);
+    float topShape    = smoothstep(1.0, 0.4, heightFraction);
+    float vshape = bottomShape * topShape;
+
+    // Worley FBM channels carve cauliflower edges into the base shape.
+    vec4 nDetail = textureLod(noiseVolume, uvw, 0.0);
+    float erosion = nDetail.g * 0.5 + nDetail.b * 0.3 + nDetail.a * 0.2;
+    float erodeStrength = mix(0.1, 0.5, smoothstep(1.0, 0.0, heightFraction));
+
+    float density = baseShape * vshape - erosion * erodeStrength;
+    density = clamp(density, 0.0, 1.0);
+
+    return density * cloudDensityScale * 1.6;
+}
+
+vec3 raymarchClouds(vec3 ro, vec3 rd, vec3 sunDirWorld, vec3 sunRadiance,
+                    vec3 skyZenithRGB, vec3 skyGroundRGB, vec3 skySunSideRGB,
+                    out float transmittance)
+{
+    transmittance = 1.0;
+    if (cloudCoverage <= 0.0 || cloudDensityScale <= 0.0)
+        return vec3(0.0);
+    if (rd.y <= 0.0)
+        return vec3(0.0);
+
+    float cloudBottomR = EARTH_RADIUS + cloudBottomKm;
+    float cloudTopR = EARTH_RADIUS + cloudTopKm;
+    float tStart = raySphereIntersection(ro, rd, cloudBottomR);
+    float tEnd = raySphereIntersection(ro, rd, cloudTopR);
+    if (tStart < 0.0 || tEnd < 0.0 || tEnd <= tStart)
+        return vec3(0.0);
+    tEnd = min(tEnd, tStart + cloudMaxDistanceKm);
+
+    int steps = max(cloudPrimarySteps, 1);
+    int lightSteps = max(cloudLightSteps, 1);
+    float stepLen = (tEnd - tStart) / float(steps);
+    float lStepLen = (cloudTopKm - cloudBottomKm) / float(lightSteps);
+
+    // Two-octave Wrenninge multi-scattering approximation (see paper above).
+    const int   MS_COUNT = 2;
+    const float MS_A = 0.1;
+    const float MS_B = 1.0;
+    const float MS_C = 0.4;
+
+    // Dual-lobe Henyey-Greenstein — backward lobe brightens front-lit clouds.
+    const float gBack = -0.3;
+    const float backLobeBlend = 0.2;
+
+    float cosThetaView = dot(rd, sunDirWorld);
+    vec3 scattering = vec3(0.0);
+
+    for (int i = 0; i < steps; ++i) {
+        float t = tStart + (float(i) + 0.5) * stepLen;
+        vec3 pos = ro + rd * t;
+        float h = length(pos) - EARTH_RADIUS;
+        float hf = (h - cloudBottomKm) / max(cloudTopKm - cloudBottomKm, 1e-3);
+
+        float distanceFade = 1.0 - smoothstep(0.5 * cloudMaxDistanceKm, cloudMaxDistanceKm, t);
+        float density = cloudDensityAt(pos, hf) * distanceFade;
+
+        if (density > 1e-4) {
+            float ext = density * cloudExtinction;
+            float stepT = exp(-ext * stepLen);
+
+            float odSun = 0.0;
+            for (int j = 0; j < lightSteps; ++j) {
+                vec3 lpos = pos + sunDirWorld * lStepLen * (float(j) + 0.5);
+                float lh = length(lpos) - EARTH_RADIUS;
+                float lhf = (lh - cloudBottomKm) / max(cloudTopKm - cloudBottomKm, 1e-3);
+                odSun += cloudDensityAt(lpos, lhf) * cloudExtinction * lStepLen;
+            }
+
+            vec3 msLight = vec3(0.0);
+            float a = 1.0, b = 1.0, c = 1.0;
+            for (int n = 0; n < MS_COUNT; ++n) {
+                float gFwd = c * cloudPhaseG;
+                float gBk  = c * gBack;
+                float ggF = gFwd * gFwd;
+                float ggB = gBk * gBk;
+                float denF = 1.0 + ggF - 2.0 * gFwd * cosThetaView;
+                float denB = 1.0 + ggB - 2.0 * gBk * cosThetaView;
+                float pFwd = INV_4PI * (1.0 - ggF) / (denF * sqrt(denF));
+                float pBk  = INV_4PI * (1.0 - ggB) / (denB * sqrt(denB));
+                float phaseN = mix(pFwd, pBk, backLobeBlend);
+                float sunTN = exp(-odSun * a);
+                msLight += b * phaseN * sunTN * sunRadiance;
+                a *= MS_A; b *= MS_B; c *= MS_C;
+            }
+
+            // Powder brightening for dense interiors.
+            float powderBoost = max(1.0, pow(density * 20.0, 0.5));
+            msLight *= powderBoost;
+
+            // Additive silver lining toward the sun.
+            float silver = pow(clamp(cosThetaView, 0.0, 1.0), 4.0) * (1.0 - exp(-odSun * 2.0));
+            msLight += silver * sunRadiance;
+
+            vec3 ambient = mix(skyGroundRGB, skyZenithRGB, clamp(hf, 0.0, 1.0)) * 0.6;
+            float sunFacing = clamp(cosThetaView * 0.5 + 0.5, 0.0, 1.0);
+            ambient += skySunSideRGB * sunFacing * 0.6;
+
+            vec3 stepScatter = (msLight + ambient) * (1.0 - stepT);
+            scattering += stepScatter * transmittance;
+            transmittance *= stepT;
+
+            if (transmittance < 0.01) {
+                transmittance = 0.0;
+                break;
+            }
+        }
+    }
+
+    return scattering;
 }
 
 /*
@@ -310,26 +462,62 @@ void MAIN()
 
     vec3 col = texture(skytextureBuffer, uv).rgb;
 
+    vec3 sunDirWorld = normalize(vec3(-sunDirection.x, sunDirection.z, -sunDirection.y));
+    vec3 sunTint = sunColor.rgb * sunEnergy;
+
     vec3 sunCol = vec3(0.0);
     if (direction.y > 0.0) {
-        vec3 sunDirWorld = vec3(-sunDirection.x, sunDirection.z, -sunDirection.y);
-        float sunDot = clamp(dot(normalize(sunDirWorld), direction), -1.0, 1.0);
+        float sunDot = clamp(dot(sunDirWorld, direction), -1.0, 1.0);
         float sunAngle = degrees(acos(sunDot));
-        vec3 sunLinear = sunColor.rgb * sunEnergy;
 
         if (sunAngle < sunDiskInnerAngle) {
-            sunCol = sunLinear * sunAlpha;
+            sunCol = sunTint * sunAlpha;
         } else if (sunAngle < sunDiskOuterAngle) {
             float t = (sunAngle - sunDiskInnerAngle) / (sunDiskOuterAngle - sunDiskInnerAngle);
             t = ease(t, sunDiskFalloff);
-            sunCol = sunLinear * sunAlpha * (1.0 - t);
+            sunCol = sunTint * sunAlpha * (1.0 - t);
         }
     }
 
-    col += sunCol;
+    // Volumetric clouds: raymarch a cumulus layer that attenuates the sky and
+    // adds its own scattered light. See cloudDensityAt / raymarchClouds above.
+    float cloudT = 1.0;
+    vec3 cloudScatter = vec3(0.0);
+    if (cloudsEnabled) {
+        // Sun radiance feeding the cloud raymarch. Kept modest because the
+        // example has no DirectionalLight — all PBR shading on the scene
+        // comes from the SkyMaterial's IBL cubemap, and very bright cloud
+        // HDR there blows out the metallic spheres' reflections. Paired
+        // with the SceneEnvironment's probeExposure < 1 to keep the IBL
+        // energy comparable to a directional-light-anchored scene. (The
+        // linear-clamp tonemap means the visible sky still saturates to
+        // white at this scale, so this knob is effectively an IBL-only
+        // brightness control.)
+        const float SUN_RADIANCE_SCALE = 100.0;
+
+        // Cheap analytical atmospheric reddening for low sun.
+        float sunCosZenith = max(sunDirWorld.y, 0.0);
+        float slant = 1.0 / max(sunCosZenith + 0.025, 0.025);
+        vec3 sunAtten = exp(-slant * vec3(0.05, 0.15, 0.40));
+        vec3 sunRadianceLinear = sunTint * sunAtten * SUN_RADIANCE_SCALE;
+
+        // Ambient sky samples used for cloud underside / top / sun-side fill.
+        vec3 skyZenithRGB = texture(skytextureBuffer, sampleSphericalMap(vec3(0.0, 1.0, 0.0))).rgb;
+        vec3 skyGroundRGB = texture(skytextureBuffer, sampleSphericalMap(normalize(vec3(0.0, -0.25, 0.0)))).rgb;
+        vec3 sunSideDir = normalize(sunDirWorld + vec3(0.0, 0.1, 0.0));
+        vec3 skySunSideRGB = texture(skytextureBuffer, sampleSphericalMap(sunSideDir)).rgb;
+
+        vec3 ro = vec3(0.0, EARTH_RADIUS + eyeAltitude, 0.0);
+        cloudScatter = raymarchClouds(ro, direction, sunDirWorld, sunRadianceLinear,
+                                      skyZenithRGB, skyGroundRGB, skySunSideRGB, cloudT);
+    }
+
+    col = col * cloudT + sunCol * cloudT + cloudScatter;
     col = max(col, vec3(0.0));
 
     // Output linear HDR values — skybox.frag applies exposure + tonemapping.
-    // The 0.05 factor normalizes physical radiance (W/m²/sr) to display units.
-    FRAGCOLOR = vec4(col * 0.05, 1.0);
+    // The 0.1 factor normalizes physical radiance (W/m²/sr) to display units.
+    // Matches the manual test's calibration so cloud lighting math produces
+    // the same visual result.
+    FRAGCOLOR = vec4(col * 0.1, 1.0);
 }

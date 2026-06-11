@@ -6,7 +6,7 @@
 
 // Ray marching steps. More steps mean better accuracy but worse performance
 const int TRANSMITTANCE_STEPS     = 32;
-const int IN_SCATTERING_STEPS     = 32;
+const int IN_SCATTERING_STEPS     = 16;
 
 // Debug
 #define ENABLE_SPECTRAL 1
