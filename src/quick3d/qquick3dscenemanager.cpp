@@ -571,8 +571,8 @@ QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
             connect(rc, &QSGRenderContext::invalidated, this, &QQuick3DWindowAttachment::onInvalidated, Qt::DirectConnection);
         }
 
-        // We put this in the back of the queue to allow any clean-up of resources to happen first.
-        connect(window, &QQuickWindow::destroyed, this, &QObject::deleteLater);
+        // Do a final lifetime eval when the window is destroyed.
+        connect(window, &QQuickWindow::destroyed, this, &QQuick3DWindowAttachment::evaluateEol);
         // afterAnimating is emitted on the main thread.
         connect(window, &QQuickWindow::afterAnimating, this, &QQuick3DWindowAttachment::preSync);
         // afterFrameEnd is emitted on render thread.
@@ -754,7 +754,14 @@ void QQuick3DWindowAttachment::evaluateEol()
     for (QQuick3DSceneManager *manager : std::as_const(sceneManagerCleanupQueue))
         sceneManagers.removeOne(manager);
 
-    if (sceneManagers.isEmpty())
+    // Keep the attachment, and the QSSGRenderRoot it owns, alive for as long as the window is,
+    // even when no scene managers remain. Nodes reference the root via rootNodeRef (e.g. imported
+    // scenes shared across views), and those references must stay valid across View3D create and
+    // destroy cycles within the same window; deleting the root here would leave them dangling.
+    // When the window goes away the attachment is deleted through the QQuickWindow::destroyed ->
+    // evaluateEol connection set up in the constructor
+    // (NOTE: QPointers are cleared out before the destroyed signal is sent).
+    if (sceneManagers.isEmpty() && m_window.isNull())
         delete this;
 }
 
