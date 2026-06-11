@@ -4,14 +4,16 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
+import Example
 
 SkyMaterial {
     id: skyMaterial
     required property Node skyLight
     fragmentShader: "advancedsky.frag"
+    iblSampleCount: 128
 
-    property int lutSize: 256
-    property int lutSizeTransmit: 256
+    property int lutSize: 128
+    property int lutSizeTransmit: 128
 
     property real aerosolBaseDensity: 1.3681e20
     property real aerosolBackgroundDensity: 2e6
@@ -35,6 +37,30 @@ SkyMaterial {
     property real sunDiskOuterAngle: 10.0
     property real sunDiskFalloff: 0.05
     property real sunAlpha: 1.0
+
+    // Volumetric clouds
+    property bool cloudsEnabled: false
+    property real cloudCoverage: 0.4
+    property real cloudDensityScale: 1.6
+    property real cloudBottomKm: 3.3
+    property real cloudTopKm: 4.9
+    property real cloudScale: 6.0
+    property vector2d cloudWindOffset: Qt.vector2d(0.0, 0.0)
+    property real cloudTimeOffset: 0.0
+    property real cloudExtinction: 0.7
+    property real cloudPhaseG: 0.45
+    property int cloudPrimarySteps: 64
+    property int cloudLightSteps: 4
+    property real cloudMaxDistanceKm: 80.0
+
+    // Pre-baked 3D Worley/Perlin noise volume used by the cloud raymarch
+    property Texture noiseVolume: Texture {
+        tilingModeHorizontal: Texture.Repeat
+        tilingModeVertical: Texture.Repeat
+        magFilter: Texture.Linear
+        minFilter: Texture.Linear
+        textureData: CloudNoiseTextureData {}
+    }
 
     property Texture skytextureBuffer: Texture {
         tilingModeVertical: Texture.ClampToEdge
