@@ -885,12 +885,22 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
 
     Q_Q(QQuick3DObject);
 
-    // Handle the case where the view has been deleted while the object lives on.
-    if (sceneManager.isNull() && sceneRefCount == 1)
-        sceneRefCount = 0;
+    // Known limitation: an object can be referenced by several views, but we only track a
+    // single scene manager here. When the view owning the tracked manager is destroyed, that
+    // manager is queued for cleanup and deleted on the next render sync; our QPointer then
+    // auto-clears to null, but sceneRefCount is not decremented. If refSceneManager() is then
+    // called again with a new manager (e.g. via updateSceneManagerForImportScene() reacting to
+    // the old manager's destroyed() signal) we simply re-adopt the new, valid manager below
+    // instead of dereferencing the dead one. The downside is that sceneRefCount over-counts by
+    // the number of released views, so derefSceneManager() won't reach its cleanup branch while
+    // the object is alive; the backend node is still released when the object itself is
+    // destroyed (~QQuick3DObject() clamps sceneRefCount to 1 first), so cleanup is delayed, not
+    // skipped. The proper fix is per-manager tracking that auto-dereferences on manager deletion.
 
-    Q_ASSERT((sceneManager != nullptr) == (sceneRefCount > 0));
-    if (++sceneRefCount > 1) {
+    // A live scene manager always implies at least one reference; the converse no longer holds,
+    // because a released view's reference is not decremented (see above).
+    Q_ASSERT(sceneManager == nullptr || sceneRefCount > 0);
+    if (++sceneRefCount > 1 && sceneManager != nullptr) {
         // Sanity check. Even if there's a different scene manager the window should be the same.
         if (c.window() != sceneManager->window()) {
             qWarning("QSSGObject: Cannot use same item on different windows at the same time.");
