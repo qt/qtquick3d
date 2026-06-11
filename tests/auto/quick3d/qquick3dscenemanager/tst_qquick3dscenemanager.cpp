@@ -12,9 +12,46 @@ class tst_QQuick3DSceneManager : public QObject
     Q_OBJECT
 
 private slots:
+    void refSceneManagerSurvivesManagerDeletion();
     void dirtyObjectSurvivesManagerDeletion();
     void detachLeavesObjectReQueueable();
 };
+
+// An object can be referenced by more than one view. When the view owning the tracked scene
+// manager is destroyed, the manager is deleted and the object's QPointer auto-clears, but the
+// reference count is not decremented. A subsequent refSceneManager() with a new manager used to
+// dereference the dead manager (sceneManager->window()) and crash when the count was already > 1.
+// This verifies that the new manager is re-adopted instead, and that the object can still be
+// torn down cleanly afterwards. See QTBUG-144962 and QTBUG-88320.
+void tst_QQuick3DSceneManager::refSceneManagerSurvivesManagerDeletion()
+{
+    auto *object = new QQuick3DNode;
+    auto *priv = QQuick3DObjectPrivate::get(object);
+
+    auto *managerA = new QQuick3DSceneManager;
+
+    // Reference the object twice from the same manager, This leaves sceneRefCount at 2.
+    QQuick3DObjectPrivate::refSceneManager(object, *managerA);
+    QQuick3DObjectPrivate::refSceneManager(object, *managerA);
+    QCOMPARE(priv->sceneManager.data(), managerA);
+    QCOMPARE(priv->sceneRefCount, 2);
+
+    // The owning view is destroyed: its scene manager is deleted, the QPointer auto-clears to
+    // null, but sceneRefCount stays at 2 (Expected).
+    delete managerA;
+    QVERIFY(priv->sceneManager.isNull());
+    QCOMPARE(priv->sceneRefCount, 2);
+
+    // A new view references the same object. It must now re-adopt the new, valid manager.
+    auto *managerB = new QQuick3DSceneManager;
+    QQuick3DObjectPrivate::refSceneManager(object, *managerB); // must not crash
+    QCOMPARE(priv->sceneManager.data(), managerB);
+
+    // Destroy the object while the manager is still alive. This exercises the destructor's
+    // sceneRefCount clamp and the final derefSceneManager() cleanup path; it must not crash.
+    delete object;
+    delete managerB;
+}
 
 // An object on a scene manager's dirty list keeps a prevDirtyItem pointer into the manager's
 // dirty-list arrays. Deleting the manager must detach such objects, otherwise that pointer
