@@ -913,9 +913,6 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
     Q_ASSERT(sceneManager == nullptr);
     sceneManager = &c;
 
-    //    if (polishScheduled)
-    //        QSSGWindowPrivate::get(window)->itemsToPolish.append(q);
-
     if (!parentItem)
         sceneManager->parentlessItems.insert(q);
     else
