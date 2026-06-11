@@ -33,6 +33,7 @@ class QSSGRenderShadowMap;
 class QSSGRenderReflectionMap;
 class QSSGLayerRenderData;
 class QSSGRenderCamera;
+struct QSSGRenderSkyMaterial;
 class QSGRenderer;
 class QSSGRenderExtension;
 class QSSGRenderUserPass;
@@ -199,6 +200,26 @@ public:
     QSSGRhiGraphicsPipelineState ps;
     bool skipTonemapping = false;
     bool skipPrep = false;
+};
+
+class SkyMaterialBackgroundPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Main; }
+    void resetForFrame() final;
+
+    QSSGRenderLayer *layer = nullptr;
+    QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QSSGRhiGraphicsPipelineState ps;
+    bool skipTonemapping = false;
+    bool ready = false;
+    int scaleDivisor = 1; // 1=Full, 2=Half, 4=Quarter
+    QSSGRhiShaderPipelinePtr pipeline;
+    QRhiShaderResourceBindings *backgroundSrb = nullptr;
+    // Offscreen target (owned by the layer render data) used for reduced-scale rendering.
+    QSSGRhiRenderableTexture *offscreenTexture = nullptr;
 };
 
 class SkyboxCubeMapPass : public QSSGRenderPass

@@ -593,7 +593,8 @@ static void rhiPrepareResourcesForReflectionMap(const QSSGRenderContextInterface
     QSSGRhiContext *rhiCtx = context.rhiContext().get();
 
     if ((inData.layer.background == QSSGRenderLayer::Background::SkyBox && (inData.layer.lightProbe || inData.layer.skyMaterial))
-        || inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap)
+        || inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
+        || (inData.layer.background == QSSGRenderLayer::Background::SkyMaterial && inData.layer.skyMaterial))
         rhiPrepareSkyBoxForReflectionMap(context, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
 
     QSSGShaderFeatures features = inData.getShaderFeatures();
@@ -1875,8 +1876,9 @@ void RenderHelpers::rhiRenderReflectionMap(const QSSGRenderContextInterface &con
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-    const bool renderSkybox = (inData.layer.background == QSSGRenderLayer::Background::SkyBox ||
-                               inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap)
+    const bool renderSkybox = (inData.layer.background == QSSGRenderLayer::Background::SkyBox
+                               || inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
+                               || inData.layer.background == QSSGRenderLayer::Background::SkyMaterial)
             && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch);
 
     for (int i = 0, ie = reflectionProbes.size(); i != ie; ++i) {
@@ -1936,17 +1938,23 @@ void RenderHelpers::rhiRenderReflectionMap(const QSSGRenderContextInterface &con
 
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
                 const auto &shaderCache = renderer.contextInterface()->shaderCache();
-                const bool isSkyBox = inData.layer.background == QSSGRenderLayer::Background::SkyBox;
-                const auto &shaderPipeline = isSkyBox ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8, 1)
-                                                      : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(QSSGRenderLayer::TonemapMode::None, !inData.layer.skyBoxIsSrgb, 1);
+                const bool useSkyBoxQuad = inData.layer.background == QSSGRenderLayer::Background::SkyBox
+                        || inData.layer.background == QSSGRenderLayer::Background::SkyMaterial;
+                const auto &shaderPipeline = useSkyBoxQuad
+                        ? shaderCache->getBuiltInRhiShaders().getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None,
+                                                                                 inData.layer.skyBoxIsRgbe8,
+                                                                                 1)
+                        : shaderCache->getBuiltInRhiShaders().getRhiSkyBoxCubeShader(QSSGRenderLayer::TonemapMode::None,
+                                                                                     !inData.layer.skyBoxIsSrgb,
+                                                                                     1);
                 Q_ASSERT(shaderPipeline);
                 QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(*ps, shaderPipeline.get());
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
                 if (!renderPassDesc)
                     renderPassDesc = rt->newCompatibleRenderPassDescriptor();
                 rt->setRenderPassDescriptor(renderPassDesc);
-                isSkyBox ? renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, renderPassDesc, {})
-                         : renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx, ps, srb, renderPassDesc, {});
+                useSkyBoxQuad ? renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, renderPassDesc, {})
+                              : renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx, ps, srb, renderPassDesc, {});
             }
 
             bool needsSetViewport = true;

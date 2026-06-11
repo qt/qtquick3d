@@ -251,6 +251,27 @@ Window {
                     onToggled: view3D.activeSkyMaterial.enableIBL = checked
                 }
 
+                // What the SkyMaterial outputs for the background: the IBL/radiance cube
+                // (cheapest for a static sky — rendered once) or a per-frame screen-space
+                // render at one of three scales. Watch the DebugView frame time change.
+                Label {
+                    Layout.fillWidth: true
+                    text: "Skybox mode"
+                }
+                ComboBox {
+                    Layout.fillWidth: true
+                    model: [
+                        { value: SkyMaterial.Cubemap, text: "Cubemap (IBL size)" },
+                        { value: SkyMaterial.ScreenSpaceFull, text: "Screen space — Full" },
+                        { value: SkyMaterial.ScreenSpaceHalf, text: "Screen space — Half" },
+                        { value: SkyMaterial.ScreenSpaceQuarter, text: "Screen space — Quarter" },
+                    ]
+                    textRole: "text"
+                    valueRole: "value"
+                    currentIndex: view3D.activeSkyMaterial.skyboxMode
+                    onActivated: view3D.activeSkyMaterial.skyboxMode = currentValue
+                }
+
                 Label {
                     Layout.fillWidth: true
                     text: "Sun X rot: " + mySkyLight.eulerRotation.x.toFixed(1)

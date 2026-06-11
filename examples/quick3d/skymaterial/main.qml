@@ -151,6 +151,14 @@ ApplicationWindow {
         }
     }
 
+    DebugView {
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: 10
+        source: view3D
+        visible: settingsPane.showDebugView
+    }
+
     SettingsPane {
         id: settingsPane
         height: parent.height

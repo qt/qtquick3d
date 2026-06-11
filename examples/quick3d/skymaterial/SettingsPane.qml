@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick3D
 
 Page {
     id: root
@@ -14,6 +15,7 @@ Page {
 
     property bool animateSun: true
     property real sunSweepSpeed: 0.4
+    property bool showDebugView: false
 
     header: ToolBar {
         Label {
@@ -142,6 +144,31 @@ Page {
                     width: parent.width
                     spacing: 5
 
+                    Switch {
+                        Layout.fillWidth: true
+                        text: "Show debug view (FPS)"
+                        checked: root.showDebugView
+                        onToggled: root.showDebugView = checked
+                    }
+
+                    // What the SkyMaterial outputs for the background: the IBL/radiance cube
+                    // (cheapest for a static sky) or a per-frame screen-space render at one
+                    // of three scales (lower = cheaper, softer).
+                    Label { text: "Skybox mode" }
+                    ComboBox {
+                        Layout.fillWidth: true
+                        model: [
+                            { value: SkyMaterial.Cubemap, text: "Cubemap (IBL size)" },
+                            { value: SkyMaterial.ScreenSpaceFull, text: "Screen space — Full" },
+                            { value: SkyMaterial.ScreenSpaceHalf, text: "Screen space — Half" },
+                            { value: SkyMaterial.ScreenSpaceQuarter, text: "Screen space — Quarter" },
+                        ]
+                        textRole: "text"
+                        valueRole: "value"
+                        currentIndex: root.advancedSky.skyboxMode
+                        onActivated: root.advancedSky.skyboxMode = currentValue
+                    }
+
                     Label {
                         text: "IBL render frames"
                         enabled: root.advancedSky.enableIBL
@@ -171,10 +198,18 @@ Page {
                         onMoved: (v) => root.advancedSky.iblSampleCount = Math.round(v)
                     }
 
-                    Label { text: "Radiance map size" }
+                    Label {
+                        text: "Radiance map size (IBL)"
+                        enabled: root.advancedSky.enableIBL
+                    }
                     ComboBox {
                         Layout.fillWidth: true
+                        enabled: root.advancedSky.enableIBL
                         model: [
+                            { value: 16, text: "16" },
+                            { value: 32, text: "32" },
+                            { value: 64, text: "64" },
+                            { value: 128, text: "128" },
                             { value: 256, text: "256" },
                             { value: 512, text: "512" },
                             { value: 1024, text: "1024" },

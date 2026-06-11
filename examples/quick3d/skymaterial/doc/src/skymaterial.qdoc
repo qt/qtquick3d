@@ -51,6 +51,29 @@
     perfectly; the rougher spheres show progressively blurred reflections,
     produced by SkyMaterial's GGX prefilter chain over the procedural cubemap.
 
+    \section1 Choosing How the Sky Is Drawn
+
+    \l{SkyMaterial::}{skyboxMode} selects what SkyMaterial produces for the
+    visible background, independently of the IBL cube used for reflections:
+
+    \list
+        \li \c SkyMaterial.Cubemap samples the radiance cubemap (the same cube
+            used for image-based lighting), so for a static sky the cube is
+            rendered once and then sampled cheaply every frame. Background
+            sharpness is capped at \l{SkyMaterial::}{radianceMapSize}. This is
+            the lowest per-frame cost when only the camera moves.
+        \li The \c ScreenSpace modes evaluate the sky shader directly on screen
+            every frame — at full, half, or quarter resolution per axis. They
+            decouple the visible background from the IBL cube, giving a crisp
+            sky for dynamic conditions (a moving sun, animated volumetric
+            clouds) at the cost of a per-frame render. Lower scales trade
+            sharpness for speed.
+    \endlist
+
+    Switch the "Skybox mode" combo box in the settings panel to compare the
+    options live: the cubemap modes stay cheap but soften as the sun and clouds
+    move, while the screen-space modes track every change sharply.
+
     \section1 Managing Frame Budget
 
     \l{SkyMaterial::}{iblRenderFrames} spreads the IBL prefilter across several
@@ -98,6 +121,7 @@
     Controls that map directly to \l SkyMaterial base-class properties.
 
     \list
+        \li \b{Skybox mode} — see \l{SkyMaterial::}{skyboxMode}.
         \li \b{IBL render frames} — see \l{SkyMaterial::}{iblRenderFrames}.
         \li \b{Enable IBL} — see \l{SkyMaterial::}{enableIBL}.
         \li \b{IBL sample count} — see \l{SkyMaterial::}{iblSampleCount}.
