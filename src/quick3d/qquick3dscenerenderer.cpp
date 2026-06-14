@@ -210,15 +210,14 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
     m_sgContext->bufferManager()->releaseResourcesForLayer(m_layer);
 
     if (m_layer) {
-        // The scene root is created by the scene manager and realeased by the
-        // the normal cleanup of scene nodes, since we're deleting the layer
-        // at a later point, we need to remove the scene root node from the layer now.
-
-        // If the scene is destroyed outside of the normal destroy sequence(like fom a timer),
-        // the scene root node might already have been deallocated and pointing
-        // to an invalid memory in which case the winAttacment is also not valid anymore.
-        if (m_sceneRootNode && winAttacment)
+        // The scene root is created by the scene manager and released by the normal cleanup of
+        // scene nodes. Since we delete the layer at a later point, detach the scene root from the
+        // layer now. QSSGRenderNode::removeChild() ignores a node that is no longer a child of
+        // the layer, so this is safe even if the scene manager has already cleaned up (and
+        // unlinked) the scene root.
+        if (m_sceneRootNode)
             removeNodeFromLayer(m_sceneRootNode);
+        m_sceneRootNode = nullptr;
 
         // There might be nodes queued for cleanup that still reference the layer,
         // so we schedule the layer for cleanup so that it is deleted after the nodes

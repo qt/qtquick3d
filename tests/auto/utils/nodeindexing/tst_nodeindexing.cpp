@@ -28,6 +28,7 @@ private slots:
     void testRemoveFromGraphClearsRootNodeRefOnChildren();
     void testImportSceneStateAfterAddRemove();
     void testImportSceneRemovePreservesSharedState();
+    void testRemoveChildIgnoresForeignNodeOnLayer();
 
 private:
     static void removeFromLayer(QSSGRenderLayer &layer, std::vector<QSSGRenderNode *> &nodes);
@@ -575,6 +576,49 @@ void tst_NodeIndexing::testImportSceneRemovePreservesSharedState()
     rootNode.removeChild(importerC);
     delete sceneRoot;
     delete container;
+}
+
+void tst_NodeIndexing::testRemoveChildIgnoresForeignNodeOnLayer()
+{
+    // A layer does not set parent on its direct children (it does not own them), so removeChild()
+    // validates relationship by scanning its own child list rather than using inChild.parent. This
+    // verifies that scan correctly ignores a node that is not actually the layer's child.
+    // If not we could end-up corrupting the sibling list!
+
+    QSSGRenderLayer ownerLayer;
+    QSSGRenderLayer otherLayer;
+
+    QSSGRenderNode a;
+    QSSGRenderNode foreign;
+    QSSGRenderNode b;
+    ownerLayer.addChild(a);
+    ownerLayer.addChild(foreign);
+    ownerLayer.addChild(b);
+
+    // 'foreign' is a child of ownerLayer (and carries sibling links into it), but it is not a
+    // child of otherLayer. Removing it from otherLayer must be a no-op and must not disturb
+    // ownerLayer's list.
+    otherLayer.removeChild(foreign);
+
+    std::vector<QSSGRenderNode *> seen;
+    for (auto &child : ownerLayer.children)
+        seen.push_back(&child);
+    QCOMPARE(seen.size(), size_t(3));
+    QCOMPARE(seen[0], &a);
+    QCOMPARE(seen[1], &foreign);
+    QCOMPARE(seen[2], &b);
+
+    // Removing a genuine child still works.
+    ownerLayer.removeChild(foreign);
+    seen.clear();
+    for (auto &child : ownerLayer.children)
+        seen.push_back(&child);
+    QCOMPARE(seen.size(), size_t(2));
+    QCOMPARE(seen[0], &a);
+    QCOMPARE(seen[1], &b);
+
+    ownerLayer.removeChild(a);
+    ownerLayer.removeChild(b);
 }
 
 QTEST_APPLESS_MAIN(tst_NodeIndexing)
