@@ -105,8 +105,12 @@ void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
 {
     QSSG_ASSERT_X(inChild.parent != this, "Already a child of this node!", return);
 
-    // Adding children to a layer does not reset parent
-    // because layers can share children over with other layers
+    // NOTE: A layer does not set a parent reference on its direct children.
+    // Those children (the View3D scene root, the ImportScene dummy, explicit cameras)
+    // are owned and kept alive by other subsystems, e.g. the scene root by the scene manager,
+    // so leaving their parent unset keeps the layer's lifetime decoupled from theirs (They can outlive the layer).
+    // Sharing of imported scenes is handled by the ImportScene dummy injected in
+    // QSSGRenderLayer::setImportScene().
     if (type != QSSGRenderNode::Type::Layer) {
         if (inChild.parent && inChild.parent != this)
             inChild.parent->removeChild(inChild);
@@ -135,9 +139,26 @@ void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
         rootNode->markDirty(QSSGRenderRoot::DirtyFlag::TreeDirty);
 }
 
+static inline bool isChildOfLayer(const QSSGRenderLayer &layer, const QSSGRenderNode &node)
+{
+    // A layer does not set parent on its direct children (see addChild()), so the nodes parent
+    // cannot be used to validate relationship between the layer and the node.
+    // Instead we scan the children list to check if node is actually a child of this layer.
+    // We CANNOT dereference node at all! The renderer caches a raw pointer to the
+    // scene-manager-owned scene root and can call this during teardown after that node has been freed.
+    for (const auto &child : layer.children) {
+        if (&child == &node)
+            return true;
+    }
+    return false;
+}
+
 void QSSGRenderNode::removeChild(QSSGRenderNode &inChild)
 {
-    if (Q_UNLIKELY(type != QSSGRenderNode::Type::Layer && inChild.parent != this)) {
+    if (type == QSSGRenderNode::Type::Layer) {
+        if (!isChildOfLayer(static_cast<const QSSGRenderLayer &>(*this), inChild))
+            return;
+    } else if (Q_UNLIKELY(inChild.parent != this)) {
         Q_ASSERT(inChild.parent == this);
         return;
     }
