@@ -56,6 +56,21 @@ void QSSGCleanupObject::cleanupResources()
 
 static constexpr char qtQQ3DWAPropName[] { "_qtquick3dWindowAttachment" };
 
+static void detachDirtyList(QQuick3DObject **head, size_t count)
+{
+    for (size_t i = 0; i < count; ++i) {
+        QQuick3DObject *item = head[i];
+        while (item) {
+            QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(item);
+            QQuick3DObject *next = p->nextDirtyItem;
+            p->prevDirtyItem = nullptr;
+            p->nextDirtyItem = nullptr;
+            item = next;
+        }
+        head[i] = nullptr;
+    }
+}
+
 QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
     : QObject(parent)
 {
@@ -68,6 +83,23 @@ QQuick3DSceneManager::~QQuick3DSceneManager()
     cleanupNodes();
     if (wattached)
         wattached->unregisterSceneManager(*this);
+
+    // Objects still on one of our dirty lists hold a 'prevDirtyItem' pointer into the arrays
+    // below, which are freed together with this manager. Detach them now so a later
+    // removeFromDirtyList(), e.g. when the front-end object is itself destroyed, is a safe
+    // no-op instead of writing through a stale pointer. The normal per-frame drain only
+    // happens for active managers in synchronize(), not for one that was queued for cleanup.
+    //
+    // NOTE!!!: If these dirty objects are shared they will be re-queued by the surviving manager,
+    // but if they are not shared they will be dropped on the floor, which is fine, because they're not
+    // active and will either be destroyed or added to a new scene.
+    // The re-adoption happens because the destroyed() signal of this manager is connected to
+    // QQuick3DViewport::updateSceneManagerForImportScene(), which calls refSceneManager() on any
+    // surviving view, which in turn calls dirty() on any shared objects, which adds them to the
+    // dirty list if they're not already in one.
+    detachDirtyList(dirtyResources, std::size(dirtyResources));
+    detachDirtyList(dirtyNodes, std::size(dirtyNodes));
+    detachDirtyList(dirtyExtensions, std::size(dirtyExtensions));
 }
 
 void QQuick3DSceneManager::setWindow(QQuickWindow *window)

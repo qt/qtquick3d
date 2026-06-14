@@ -6,6 +6,7 @@
 #include <QQuickItem>
 
 #include <private/qquick3dscenemanager_p.h>
+#include <private/qquick3dobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 
 #include "../shared/util.h"
@@ -17,6 +18,7 @@ class tst_ImportSceneLifetime : public QQuick3DDataTest
 private slots:
     void initTestCase() override;
     void sharedSceneSurvivesViewRecreation();
+    void sharedSceneReQueuedAfterHomeViewDestroyed();
 };
 
 void tst_ImportSceneLifetime::initTestCase()
@@ -75,6 +77,60 @@ void tst_ImportSceneLifetime::sharedSceneSurvivesViewRecreation()
     QVERIFY(root->setProperty("loadView", true));
     QVERIFY(waitForFrames(view.data(), 2));
     QCOMPARE(QQuick3DSceneManager::getOrSetWindowAttachment(*view)->rootNode(), rootBefore);
+}
+
+
+// Test and verify the re-scheduling contract that keeps a shared imported scene alive when the transient view is destroyed.
+// If that contract breaks, the shared scene is orphaned (sceneManager == null) and this will fail.
+// See comments in the test body for details.
+void tst_ImportSceneLifetime::sharedSceneReQueuedAfterHomeViewDestroyed()
+{
+    QScopedPointer<QQuickView> view(createView(QStringLiteral("sharedimportreadopt.qml"), QSize(400, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QObject *root = view->rootObject();
+    QVERIFY(root);
+    QVERIFY(waitForFrames(view.data(), 2));
+
+    auto *sharedModel = root->findChild<QQuick3DObject *>(QStringLiteral("sharedModel"));
+    QVERIFY(sharedModel);
+    auto *transientViewCamera = root->findChild<QQuick3DObject *>(QStringLiteral("transientViewCamera"));
+    QVERIFY(transientViewCamera);
+    auto *staticViewCamera = root->findChild<QQuick3DObject *>(QStringLiteral("staticViewCamera"));
+    QVERIFY(staticViewCamera);
+
+    auto *modelPriv = QQuick3DObjectPrivate::get(sharedModel);
+    // A camera's scene manager is its View3D's scene manager.
+    QQuick3DSceneManager *transientSM = QQuick3DObjectPrivate::get(transientViewCamera)->sceneManager;
+    QQuick3DSceneManager *staticSM = QQuick3DObjectPrivate::get(staticViewCamera)->sceneManager;
+    QVERIFY(transientSM);
+    QVERIFY(staticSM);
+    QVERIFY(transientSM != staticSM);
+
+    // Only the transient view imports the shared scene so far, so its objects are adopted by it.
+    QVERIFY(modelPriv->sceneManager);
+    QCOMPARE(static_cast<const void *>(modelPriv->sceneManager.data()),
+             static_cast<const void *>(transientSM));
+
+    // The static view now imports it too. The transient stays as the main caretaker.
+    QVERIFY(root->setProperty("staticViewImports", true));
+    QVERIFY(waitForFrames(view.data(), 2));
+    QCOMPARE(static_cast<const void *>(modelPriv->sceneManager.data()),
+             static_cast<const void *>(transientSM));
+
+    // Destroy the transient view. Its scene manager's destroyed() must drive
+    // updateSceneManagerForImportScene() on the surviving view and re-adopt the shared scene.
+    QVERIFY(root->setProperty("loadTransientView", false));
+    QVERIFY(waitForFrames(view.data(), 3));
+    QCoreApplication::processEvents();
+    QVERIFY(waitForFrames(view.data(), 1));
+
+    // The shared scene must be re-homed on the surviving view rather than left orphaned. If the
+    // destroyed()->updateSceneManagerForImportScene contract breaks, sceneManager stays null here.
+    // (void* comparison so a failure does not dereference a possibly-freed manager when formatting).
+    QVERIFY(modelPriv->sceneManager);
+    QCOMPARE(static_cast<const void *>(modelPriv->sceneManager.data()),
+             static_cast<const void *>(staticSM));
 }
 
 QTEST_MAIN(tst_ImportSceneLifetime)
