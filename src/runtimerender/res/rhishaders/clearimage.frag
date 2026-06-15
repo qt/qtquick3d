@@ -13,12 +13,12 @@ layout(std140, binding = 0) uniform buf {
 } ubuf;
 
 #if QSSG_CLEAR_BUFFER == 1
-layout(std430, binding = 1) buffer qt_imgAux
+layout(std430, binding = 1) buffer restrict coherent writeonly qt_imgAux
 {
     uint auxData[];
 };
 #else
-layout(binding = 1, rgba32ui) uniform restrict writeonly uimage2D qt_imgAux;
+layout(binding = 1, rgba32ui) uniform restrict coherent writeonly uimage2D qt_imgAux;
 #endif
 
 void main()
