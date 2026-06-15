@@ -117,17 +117,17 @@ bool compareNodes(const uvec2 a, const uvec2 b)
 #include "../effectlib/sorting.glsllib"
 
 #if QSSG_USE_BUFFER == 1
-layout(std430, binding = 1) buffer restrict readonly qt_imgAbuffer
+layout(std430, binding = 1) buffer restrict coherent readonly qt_imgAbuffer
 {
     uvec4 abufData[];
 };
-layout(std430, binding = 2) buffer restrict readonly qt_imgAux
+layout(std430, binding = 2) buffer restrict coherent readonly qt_imgAux
 {
     uint auxData[];
 };
 #else
-layout(binding = 1, rgba32ui) uniform restrict readonly uimage2D qt_imgAbuffer;
-layout(binding = 2, r32ui) uniform restrict readonly uimage2D qt_imgAux;
+layout(binding = 1, rgba32ui) uniform restrict coherent readonly uimage2D qt_imgAbuffer;
+layout(binding = 2, r32ui) uniform restrict coherent readonly uimage2D qt_imgAux;
 #endif
 
 void main()

@@ -5,7 +5,7 @@
 
 #if QSSG_OIT_METHOD == QSSG_OIT_LINKED_LIST
 
-layout(std430, binding = 3) restrict coherent buffer qt_imgABuffer
+layout(std430, binding = 3) restrict coherent writeonly buffer qt_imgABuffer
 {
     uvec4 abufData[];
 };
