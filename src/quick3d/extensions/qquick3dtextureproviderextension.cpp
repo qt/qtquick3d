@@ -122,6 +122,14 @@ QQuick3DTextureProviderExtension::~QQuick3DTextureProviderExtension()
     \sa QSSGRenderTextureProviderExtension
 */
 
+/*!
+    \fn void QQuick3DTextureProviderExtension::surfaceChanged()
+    \since 6.12
+
+    This signal is emitted when the underlying rendering surface has changed
+    and textures need to be recreated.
+*/
+
 QSSGRenderGraphObject *QQuick3DTextureProviderExtension::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     return QQuick3DRenderExtension::updateSpatialNode(node);
