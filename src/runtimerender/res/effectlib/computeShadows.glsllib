@@ -1,0 +1,30 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#ifndef COMPUTE_SHADOWS_GLSLLIB
+#define COMPUTE_SHADOWS_GLSLLIB
+
+#include "shadowMapping.glsllib"
+
+float qt_dirLightShadowCompute(in uint idx, in float zDepthViewSpace, in vec3 worldPos)
+{
+    if (qt_directionalLightData[idx].enableShadows <= 0.0)
+        return 1.0;
+    return qt_sampleDirectionalShadowMap(int(idx), zDepthViewSpace, worldPos).illumination;
+}
+
+float qt_spotLightShadowCompute(in uint idx, in vec3 worldPos)
+{
+    if (qt_positionalLightData[idx + qt_pointLightCount].enableShadows <= 0.0)
+        return 1.0;
+    return qt_sampleLightShadowMap(int(idx + qt_pointLightCount), worldPos).illumination;
+}
+
+float qt_pointLightShadowCompute(in uint idx, in vec3 worldPos)
+{
+    if (qt_positionalLightData[idx].enableShadows <= 0.0)
+        return 1.0;
+    return qt_sampleLightShadowMap(int(idx), worldPos).illumination;
+}
+
+#endif

@@ -4,6 +4,7 @@
 
 
 #include "qquick3dcustommaterial_p.h"
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <ssg/qssgrendercontextcore.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
@@ -1542,7 +1543,7 @@ static inline QRhiGraphicsPipeline::BlendFactor toRhiBlendFactor(QQuick3DCustomM
 }
 
 QQuick3DCustomMaterial::QQuick3DCustomMaterial(QQuick3DObject *parent)
-    : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::CustomMaterial)), parent)
+    : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::CustomMaterial, QQuick3DObjectPrivate::Flags::RequiresSecondaryUpdate)), parent)
 {
 }
 
@@ -1798,15 +1799,17 @@ static QByteArray prepareCustomShader(QSSGRenderCustomMaterial *customMaterial,
 
     QByteArray sourceCode = snippet;
     QByteArray buf;
+    const auto imgBufs = meta.imageBufferMetadata;
 
     QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
     QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
     QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(&scratch, &result, sourceCode, shaderType, multiViewCompatible);
-    QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(&buf, scratch, result, shaderType, multiViewCompatible, uniforms, {}, {}, {}, {});
+    QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(&buf, scratch, result, shaderType, multiViewCompatible, uniforms, imgBufs, {}, {}, {}, {});
 
     sourceCode = result.first;
     sourceCode.append(buf);
     meta = result.second;
+    meta.imageBufferMetadata = imgBufs;
     setCustomMaterialFlagsFromShader(customMaterial, meta);
     return sourceCode;
 }
@@ -1825,6 +1828,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     QSSGRenderCustomMaterial *customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
     bool newBackendNode = false;
     bool shadersMayChange = false;
+    bool needsSecondaryUpdate = false;
     if (!customMaterial) {
         customMaterial = new QSSGRenderCustomMaterial;
         newBackendNode = true;
@@ -1844,6 +1848,10 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
         if (idx != -1)
             propertyDirtyMethod = metaObject()->method(idx);
+        QMetaMethod shaderResourceDirtyMethod;
+        const int resourceIdx = metaObject()->indexOfSlot("onShaderResourceDirty()");
+        if (resourceIdx != -1)
+            shaderResourceDirtyMethod = metaObject()->method(resourceIdx);
 
         const int propCount = metaObject()->propertyCount();
         int propOffset = metaObject()->propertyOffset();
@@ -1858,6 +1866,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         using TextureInputProperty = QPair<QQuick3DShaderUtilsTextureInput *, const char *>;
         QVector<TextureInputProperty> textureProperties; // We'll deal with these later
 
+        QByteArrayList metadata;
+        QHash<int, QQuick3DObject *> shaderResources;
+
         for (int i = propOffset; i != propCount; ++i) {
             const auto property = metaObject()->property(i);
             if (Q_UNLIKELY(!property.isValid()))
@@ -1869,14 +1880,32 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             if (propType == QMetaType(QMetaType::QVariant))
                 propType = propValue.metaType();
 
+            bool isShaderResource = false;
+            QQuick3DObject *shaderResource = QQuick3DShaderResourceTracker::resourceForProperty(this, property, &isShaderResource);
+            if (isShaderResource) {
+                shaderResources.insert(i, shaderResource);
+                if (property.hasNotifySignal() && shaderResourceDirtyMethod.isValid())
+                    connect(this, property.notifySignal(), this, shaderResourceDirtyMethod, Qt::UniqueConnection);
+            }
+
             if (propType.id() >= QMetaType::User) {
                 if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) {
                     if (QQuick3DShaderUtilsTextureInput *texture = property.read(this).value<QQuick3DShaderUtilsTextureInput *>())
                         textureProperties.push_back({texture, name});
+                } else if (propType.id() == qMetaTypeId<QQuick3DShaderStorageBuffer *>()) {
+                    if (QQuick3DShaderStorageBuffer *buffer = property.read(this).value<QQuick3DShaderStorageBuffer *>())
+                        needsSecondaryUpdate |= !handleBufferProperty(buffer, name, i, metadata, customMaterial->m_properties);
+                } else if (propType.id() == qMetaTypeId<QQuick3DShaderImage *>()) {
+                    if (QQuick3DShaderImage *image = property.read(this).value<QQuick3DShaderImage *>())
+                        needsSecondaryUpdate |= !handleImageProperty(image, name, i, metadata, customMaterial->m_properties);
                 }
             } else if (propType == QMetaType(QMetaType::QObjectStar)) {
                 if (QQuick3DShaderUtilsTextureInput *texture = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
                     textureProperties.push_back({texture, name});
+                else if (QQuick3DShaderStorageBuffer *buffer = qobject_cast<QQuick3DShaderStorageBuffer *>(propValue.value<QObject *>()))
+                    needsSecondaryUpdate |= !handleBufferProperty(buffer, name, i, metadata, customMaterial->m_properties);
+                else if (QQuick3DShaderImage *image = qobject_cast<QQuick3DShaderImage *>(propValue.value<QObject *>()))
+                    needsSecondaryUpdate |= !handleImageProperty(image, name, i, metadata, customMaterial->m_properties);
             } else {
                 const auto type = uniformType(propType);
                 if (type != QSSGRenderShaderValue::Unknown) {
@@ -1894,6 +1923,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 }
             }
         }
+        m_shaderResources.setResources(shaderResources);
 
         const auto processTextureProperty = [&](QQuick3DShaderUtilsTextureInput &texture, const QByteArray &name) {
             texture.name = name;
@@ -2001,6 +2031,23 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         else if (!m_fragmentShaderCode.isEmpty())
             fragment = m_fragmentShaderCode.toLatin1();
 
+        if (!vertex.isEmpty()) {
+            if (!processMetadata(customMaterial->m_properties, metadata, vertexMeta.imageBufferMetadata, vertex)) {
+                qWarning("CustomMaterial: Shader Image and/or Buffer processing failed in vertex shader.");
+                // Leave nothing pending, so that the next change triggers an update again.
+                m_dirtyAttributes = 0;
+                return customMaterial;
+            }
+        }
+        if (!fragment.isEmpty()) {
+            if (!processMetadata(customMaterial->m_properties, metadata, fragmentMeta.imageBufferMetadata, fragment)) {
+                qWarning("CustomMaterial: Shader Image and/or Buffer processing failed in fragment shader.");
+                // Leave nothing pending, so that the next change triggers an update again.
+                m_dirtyAttributes = 0;
+                return customMaterial;
+            }
+        }
+
         // Multiview is a problem, because we will get a dedicated snippet after
         // preparation (the one that has [qt_viewIndex] added where it matters).
         // But at least the view count plays no role here on this level. So one
@@ -2063,9 +2110,41 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     if (m_dirtyAttributes & Dirty::PropertyDirty) {
         for (auto &prop : customMaterial->m_properties) {
             auto p = metaObject()->property(prop.pid);
-            if (Q_LIKELY(p.isValid()))
-                prop.value = p.read(this);
+            if (Q_LIKELY(p.isValid())) {
+                if (prop.shaderDataType == QSSGRenderShaderValue::StorageBuffer
+                    || prop.shaderDataType == QSSGRenderShaderValue::Image) {
+                    if (newBackendNode || shadersMayChange) {
+                        // no update after initial creation
+                    } else {
+                        QMetaType propType = p.metaType();
+                        QVariant propValue = p.read(this);
+                        if (propType == QMetaType(QMetaType::QVariant))
+                            propType = propValue.metaType();
+
+                        if (prop.shaderDataType == QSSGRenderShaderValue::StorageBuffer) {
+                            QQuick3DShaderStorageBuffer *buffer = nullptr;
+                            if (propType == QMetaType(QMetaType::QObjectStar))
+                                buffer = qobject_cast<QQuick3DShaderStorageBuffer *>(propValue.value<QObject *>());
+                            else
+                                buffer = p.read(this).value<QQuick3DShaderStorageBuffer *>();
+                            updateBufferProperty(buffer, prop);
+                        } else {
+                            QQuick3DShaderImage *image = nullptr;
+                            if (propType == QMetaType(QMetaType::QObjectStar))
+                                image = qobject_cast<QQuick3DShaderImage *>(propValue.value<QObject *>());
+                            else
+                                image = p.read(this).value<QQuick3DShaderImage *>();
+                            updateImageProperty(image, prop);
+                        }
+                    }
+                } else {
+                    prop.value = p.read(this);
+                }
+            }
         }
+        // A swapped-in object may not have been referenced into the scene yet.
+        if (!newBackendNode && !shadersMayChange)
+            needsSecondaryUpdate |= !m_shaderResources.updateResources();
     }
 
     if (m_dirtyAttributes & Dirty::TextureDirty) {
@@ -2117,6 +2196,10 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     }
 
     m_dirtyAttributes = 0;
+    if (needsSecondaryUpdate) {
+        markDirty(*this, Dirty::ShaderSettingsDirty);
+        QQuick3DObjectPrivate::get(this)->requestSecondaryUpdate();
+    }
 
     return customMaterial;
 }
@@ -2136,6 +2219,7 @@ void QQuick3DCustomMaterial::itemChange(QQuick3DObject::ItemChange change, const
                     QQuick3DObjectPrivate::derefSceneManager(tex);
             }
         }
+        m_shaderResources.updateSceneManager(value.sceneManager);
     }
 }
 
@@ -2149,6 +2233,14 @@ void QQuick3DCustomMaterial::onTextureDirty()
 {
     markDirty(*this, Dirty::TextureDirty);
     update();
+}
+
+void QQuick3DCustomMaterial::onShaderResourceDirty()
+{
+    // Swapping one object for another only changes the binding, but a property
+    // gaining or losing its object, or an image of another format, changes the
+    // generated shader.
+    markDirty(*this, m_shaderResources.hasResourceLayoutChanged() ? Dirty::ShaderSettingsDirty : Dirty::PropertyDirty);
 }
 
 void QQuick3DCustomMaterial::setDynamicTextureMap(QQuick3DShaderUtilsTextureInput *textureMap)

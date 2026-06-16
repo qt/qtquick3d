@@ -1,0 +1,67 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#ifndef COMPUTE_LIGHTS_GLSLLIB
+#define COMPUTE_LIGHTS_GLSLLIB
+
+#include "lightStructs.glsllib"
+
+layout (std430, binding = 1) readonly buffer cbLights
+{
+    LightData lights[QSSG_MAX_POSITIONAL_LIGHTS];
+} ubLights;
+
+layout (std430, binding = 2) readonly buffer cbDirectionalLights
+{
+    DirectionalLightData directionalLights[QSSG_MAX_DIRECTIONAL_LIGHTS];
+} ubDirectionalLights;
+
+// Macros for shadowMapping.glsllib so that graphics and compute can share
+// the sources while using ubo/ssbo respectively
+#define qt_directionalLightData ubDirectionalLights.directionalLights
+#define qt_positionalLightData ubLights.lights
+
+vec3 qt_directionalLightDiffuse(in uint idx)
+{
+    return qt_directionalLightData[idx].diffuseColor;
+}
+vec3 qt_directionalLightDirection(in uint idx)
+{
+    return qt_directionalLightData[idx].direction;
+}
+vec3 qt_pointLightDiffuse(in uint idx)
+{
+    return qt_positionalLightData[idx].diffuseColor;
+}
+vec3 qt_pointLightPosition(in uint idx)
+{
+    return qt_positionalLightData[idx].position;
+}
+vec3 qt_pointLightAttenuation(in uint idx)
+{
+    return vec3(qt_positionalLightData[idx].constantAttenuation, qt_positionalLightData[idx].linearAttenuation, qt_positionalLightData[idx].quadraticAttenuation);
+}
+vec3 qt_spotLightDirection(in uint idx)
+{
+    return qt_positionalLightData[idx + qt_pointLightCount].direction;
+}
+vec3 qt_spotLightDiffuse(in uint idx)
+{
+    return qt_positionalLightData[idx + qt_pointLightCount].diffuseColor;
+}
+vec3 qt_spotLightPosition(in uint idx)
+{
+    return qt_positionalLightData[idx + qt_pointLightCount].position;
+}
+vec3 qt_spotLightAttenuation(in uint idx)
+{
+    return vec3(qt_positionalLightData[idx + qt_pointLightCount].constantAttenuation,
+                qt_positionalLightData[idx + qt_pointLightCount].linearAttenuation,
+                qt_positionalLightData[idx + qt_pointLightCount].quadraticAttenuation);
+}
+vec2 qt_spotLightCones(in uint idx)
+{
+    return vec2(qt_positionalLightData[idx + qt_pointLightCount].innerConeAngle, qt_positionalLightData[idx + qt_pointLightCount].coneAngle);
+}
+
+#endif

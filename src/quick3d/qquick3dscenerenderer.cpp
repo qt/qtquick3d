@@ -3,6 +3,7 @@
 // Qt-Security score:significant reason:default
 
 
+#include "qquick3dcomputepass_p.h"
 #include "qquick3dcubemaptexture_p.h"
 #include "qquick3dscenerenderer_p.h"
 #include "qquick3dsceneenvironment_p.h"
@@ -38,6 +39,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderskymaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercomputepass_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
@@ -831,9 +834,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             // A sub-pass renders into its parent's render target, so any attachment
             // commands it declares are ignored. Warn so the mistake is not silent;
             // this block only runs when the classification changes.
-            for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
-                if (userPass->role != QSSGRenderUserPass::Role::SubPass)
+            for (QSSGRenderUserPassBase *userPassBase : std::as_const(sm->userRenderPasses)) {
+                if (!userPassBase->isSubPass())
                     continue;
+                const QSSGRenderUserPass *userPass = static_cast<const QSSGRenderUserPass *>(userPassBase);
                 for (const QSSGCommand *cmd : std::as_const(userPass->commands)) {
                     if (cmd->m_type == CommandType::ColorAttachment
                         || cmd->m_type == CommandType::DepthStencilAttachment
@@ -851,9 +855,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             // grouping, for example) are transparent and do not affect the
             // order. RenderPass ancestors count regardless of their role, so
             // the order is stable when a pass's role flips at runtime.
-            for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
+            for (QSSGRenderUserPassBase *userPass : std::as_const(sm->userRenderPasses)) {
                 userPass->m_nestingDepth = 0;
-                if (userPass->role != QSSGRenderUserPass::Role::TopLevel)
+                if (userPass->isSubPass())
                     continue;
                 const QQuick3DObject *fo = sm->lookUpNode(userPass);
                 if (!fo)
@@ -866,8 +870,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 userPass->m_nestingDepth = depth;
             }
             quint32 declarationOrder = 0;
-            for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
-                if (userPass->role == QSSGRenderUserPass::Role::TopLevel)
+            for (QSSGRenderUserPassBase *userPass : std::as_const(sm->userRenderPasses)) {
+                if (!userPass->isSubPass())
                     userPass->m_declarationOrder = declarationOrder++;
             }
             sm->userRenderPassesDirty = false;
@@ -875,9 +879,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
         QSSGUserRenderPassManager::UserPassSet topLevelPasses;
         topLevelPasses.reserve(sm->userRenderPasses.size());
-        for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
+        for (QSSGRenderUserPassBase *userPass : std::as_const(sm->userRenderPasses)) {
             userPass->finalizeShaders(*m_sgContext);
-            if (userPass->role == QSSGRenderUserPass::Role::TopLevel)
+            if (!userPass->isSubPass())
                 topLevelPasses.push_back(userPass);
         }
 

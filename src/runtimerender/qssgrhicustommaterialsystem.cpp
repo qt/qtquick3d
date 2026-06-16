@@ -21,6 +21,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 #include <qtquick3d_tracepoints_p.h>
 
 #include <QtCore/qbitarray.h>
@@ -618,6 +619,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 }
             }
         }
+        shaderPipeline->applyAndClearStorageBindings(CUSTOM_MATERIAL_VISIBILITY_ALL, bindings);
 
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
 
@@ -701,6 +703,9 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                 shaderPipeline.addExtraTexture(t);
             }
         }
+    } else if (inPropertyType == QSSGRenderShaderValue::StorageBuffer
+               || inPropertyType == QSSGRenderShaderValue::Image) {
+        shaderPipeline.setShaderResources(ubufData, *context->bufferManager(), inPropertyName, propertyValue, inPropertyType);
     } else {
         shaderPipeline.setUniformValue(ubufData, inPropertyName, propertyValue, inPropertyType);
     }

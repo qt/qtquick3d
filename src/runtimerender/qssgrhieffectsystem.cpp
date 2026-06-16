@@ -9,6 +9,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 
 #include "qssgrendercontextcore.h"
 #include "qssgrendershadercodegenerator_p.h"
@@ -369,7 +371,13 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
     const bool setAll = inCmd->m_propertyName.isEmpty();
     for (const QSSGRenderEffect::Property &property : std::as_const(inEffect->properties)) {
         if (setAll || property.name == inCmd->m_propertyName) {
-            m_currentShaderPipeline->setUniformValue(m_currentUBufData, property.name, property.value, property.shaderDataType);
+            if (property.shaderDataType == QSSGRenderShaderValue::StorageBuffer
+                || property.shaderDataType == QSSGRenderShaderValue::Image) {
+                m_currentShaderPipeline->setShaderResources(m_currentUBufData, *m_sgContext->bufferManager(),
+                                                            property.name, property.value, property.shaderDataType);
+            } else {
+                m_currentShaderPipeline->setUniformValue(m_currentUBufData, property.name, property.value, property.shaderDataType);
+            }
             //qCDebug(lcEffectSystem) << "setUniformValue" << property.name << toString(property.shaderDataType) << "to" << property.value;
         }
     }
@@ -581,6 +589,7 @@ void QSSGRhiEffectSystem::renderCmd(const QSSGRenderEffect *inEffect, QSSGRhiEff
 
     const auto &rhiContext = m_sgContext->rhiContext();
     const auto &renderer = m_sgContext->renderer();
+    m_sgContext->bufferManager()->commitBufferResourceUpdates();
 
     QRhiCommandBuffer *cb = rhiContext->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
@@ -633,6 +642,7 @@ void QSSGRhiEffectSystem::renderCmd(const QSSGRenderEffect *inEffect, QSSGRhiEff
                             rhiContext->sampler(rhiTex.samplerDesc));
     }
     bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
+    m_currentShaderPipeline->applyAndClearStorageBindings(VISIBILITY_ALL, bindings);
 
     QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
 

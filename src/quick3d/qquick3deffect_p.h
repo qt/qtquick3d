@@ -60,6 +60,7 @@ private Q_SLOTS:
     void onPropertyDirty();
     void onTextureDirty();
     void onPassDirty();
+    void onShaderResourceDirty();
 
 private:
     friend class QQuick3DShaderUtilsTextureInput;
@@ -80,6 +81,8 @@ private:
 
     QVector<QQuick3DShaderUtilsRenderPass *> m_passes;
     QSet<QQuick3DShaderUtilsTextureInput *> m_dynamicTextureMaps;
+    // TextureDirty is what makes an Effect regenerate its shaders
+    QQuick3DShaderResourceTracker m_shaderResources { this, [this]() { markDirty(Dirty::TextureDirty); } };
 };
 
 QT_END_NAMESPACE

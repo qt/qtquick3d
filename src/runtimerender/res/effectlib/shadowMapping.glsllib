@@ -201,7 +201,11 @@ ShadowResult qt_sampleDirectionalLight_splitIndex(
     float illumination = 0.0;
     vec2 radiusUV = pcfFactor * dimensionsInverted.xy;
     float bias = shadowBias * dimensionsInverted.z;
+#ifdef QSSG_COMPUTE
+    mat2 randomRotation = randomRotation2D(gl_GlobalInvocationID.xy);
+#else
     mat2 randomRotation = randomRotation2D(gl_FragCoord.xy);
+#endif
 
     // Unified loop for both PCF and hard shadows
     // For hard shadows, numSamples should be 1 and radiusUV should be 0
@@ -224,30 +228,30 @@ ShadowResult qt_sampleDirectionalLight_splitIndex(
 // Main PCF sampling function with cascade blending
 ShadowResult qt_sampleDirectionalLight_pcf(in int lightIndex, in float zDepthViewSpace, in vec3 worldPos)
 {
-    const uint numSamples = ubDirectionalLights.directionalLights[lightIndex].pcfSamples;
+    const uint numSamples = qt_directionalLightData[lightIndex].pcfSamples;
 
     int splitIndex = findSplitIndex(zDepthViewSpace,
-                                    ubDirectionalLights.directionalLights[lightIndex].csmSplits,
-                                    ubDirectionalLights.directionalLights[lightIndex].csmActive,
-                                    ubDirectionalLights.directionalLights[lightIndex].csmNumSplits);
+                                    qt_directionalLightData[lightIndex].csmSplits,
+                                    qt_directionalLightData[lightIndex].csmActive,
+                                    qt_directionalLightData[lightIndex].csmNumSplits);
 
     // If no valid split found, return fully visible
     // Using a mask instead of early return
     float validSplit = step(0.0, float(splitIndex)); // 1.0 if splitIndex >= 0, 0.0 otherwise
 
     // Get current split shadow data
-    vec4 projCoord = ubDirectionalLights.directionalLights[lightIndex].matrices[splitIndex] * vec4(worldPos, 1.0);
-    vec3 dimensions = ubDirectionalLights.directionalLights[lightIndex].dimensionsInverted[splitIndex].xyz;
-    vec4 shadowAtlasInfo = ubDirectionalLights.directionalLights[lightIndex].atlasLocations[splitIndex];
+    vec4 projCoord = qt_directionalLightData[lightIndex].matrices[max(splitIndex, 0)] * vec4(worldPos, 1.0);
+    vec3 dimensions = qt_directionalLightData[lightIndex].dimensionsInverted[max(splitIndex, 0)].xyz;
+    vec4 shadowAtlasInfo = qt_directionalLightData[lightIndex].atlasLocations[max(splitIndex, 0)];
     float layerIndex = shadowAtlasInfo.w;
     vec2 uvAtlasOffset = shadowAtlasInfo.xy;
     float uvAtlasScale = shadowAtlasInfo.z;
 
-    ShadowResult shadow = qt_sampleDirectionalLight_splitIndex(splitIndex,
-                                                               ubDirectionalLights.directionalLights[lightIndex].shadowBias,
-                                                               ubDirectionalLights.directionalLights[lightIndex].shadowFactor,
+    ShadowResult shadow = qt_sampleDirectionalLight_splitIndex(max(splitIndex, 0),
+                                                               qt_directionalLightData[lightIndex].shadowBias,
+                                                               qt_directionalLightData[lightIndex].shadowFactor,
                                                                dimensions,
-                                                               ubDirectionalLights.directionalLights[lightIndex].pcfFactor,
+                                                               qt_directionalLightData[lightIndex].pcfFactor,
                                                                numSamples,
                                                                projCoord,
                                                                worldPos,
@@ -259,31 +263,31 @@ ShadowResult qt_sampleDirectionalLight_pcf(in int lightIndex, in float zDepthVie
     // Only blend if we're in split 1, 2, or 3 (not split 0)
     float shouldBlend = step(1.0, float(splitIndex)); // 1.0 if splitIndex >= 1
 
-    float splitPrev = ubDirectionalLights.directionalLights[lightIndex].csmSplits[max(splitIndex - 1, 0)];
-    float bandLength = ubDirectionalLights.directionalLights[lightIndex].shadowMapFar *
-            ubDirectionalLights.directionalLights[lightIndex].csmBlendRatio;
+    float splitPrev = qt_directionalLightData[lightIndex].csmSplits[max(splitIndex - 1, 0)];
+    float bandLength = qt_directionalLightData[lightIndex].shadowMapFar *
+            qt_directionalLightData[lightIndex].csmBlendRatio;
 
     // Check if we're in the blend region
     float inBlendRegion = step(zDepthViewSpace, splitPrev + bandLength);
-    float prevSplitActive = ubDirectionalLights.directionalLights[lightIndex].csmActive[max(splitIndex - 1, 0)];
+    float prevSplitActive = qt_directionalLightData[lightIndex].csmActive[max(splitIndex - 1, 0)];
 
     // Combined blend condition: should blend AND in blend region AND previous split is active
     float doBlend = shouldBlend * inBlendRegion * prevSplitActive;
 
     // Compute previous split shadow (will be ignored if doBlend is 0.0)
-    vec4 shadowAtlasInfoPrev = ubDirectionalLights.directionalLights[lightIndex].atlasLocations[max(splitIndex - 1, 0)];
+    vec4 shadowAtlasInfoPrev = qt_directionalLightData[lightIndex].atlasLocations[max(splitIndex - 1, 0)];
     float layerIndexPrev = shadowAtlasInfoPrev.w;
     vec2 uvAtlasOffsetPrev = shadowAtlasInfoPrev.xy;
     float uvAtlasScalePrev = shadowAtlasInfoPrev.z;
 
-    vec4 projCoordPrev = ubDirectionalLights.directionalLights[lightIndex].matrices[max(splitIndex - 1, 0)] * vec4(worldPos, 1.0);
-    vec3 dimensionsPrev = ubDirectionalLights.directionalLights[lightIndex].dimensionsInverted[max(splitIndex - 1, 0)].xyz;
+    vec4 projCoordPrev = qt_directionalLightData[lightIndex].matrices[max(splitIndex - 1, 0)] * vec4(worldPos, 1.0);
+    vec3 dimensionsPrev = qt_directionalLightData[lightIndex].dimensionsInverted[max(splitIndex - 1, 0)].xyz;
 
     ShadowResult shadowPrev = qt_sampleDirectionalLight_splitIndex(max(splitIndex - 1, 0),
-                                                                   ubDirectionalLights.directionalLights[lightIndex].shadowBias,
-                                                                   ubDirectionalLights.directionalLights[lightIndex].shadowFactor,
+                                                                   qt_directionalLightData[lightIndex].shadowBias,
+                                                                   qt_directionalLightData[lightIndex].shadowFactor,
                                                                    dimensionsPrev,
-                                                                   ubDirectionalLights.directionalLights[lightIndex].pcfFactor,
+                                                                   qt_directionalLightData[lightIndex].pcfFactor,
                                                                    numSamples,
                                                                    projCoordPrev,
                                                                    worldPos,
@@ -312,37 +316,37 @@ ShadowResult qt_sampleDirectionalLight_pcf(in int lightIndex, in float zDepthVie
 ShadowResult qt_sampleDirectionalLight_hard(in int lightIndex, in float zDepthViewSpace, in vec3 worldPos)
 {
     // Check if beyond last split
-    float beyondLastSplit = step(ubDirectionalLights.directionalLights[lightIndex].csmSplits[3], zDepthViewSpace);
+    float beyondLastSplit = step(qt_directionalLightData[lightIndex].csmSplits[3], zDepthViewSpace);
 
     int splitIndex = findSplitIndex(zDepthViewSpace,
-                                    ubDirectionalLights.directionalLights[lightIndex].csmSplits,
-                                    ubDirectionalLights.directionalLights[lightIndex].csmActive,
-                                    ubDirectionalLights.directionalLights[lightIndex].csmNumSplits);
+                                    qt_directionalLightData[lightIndex].csmSplits,
+                                    qt_directionalLightData[lightIndex].csmActive,
+                                    qt_directionalLightData[lightIndex].csmNumSplits);
 
     float validSplit = step(0.0, float(splitIndex)); // 1.0 if splitIndex >= 0
     float shouldCompute = validSplit * (1.0 - beyondLastSplit);
 
-    vec4 projCoord = ubDirectionalLights.directionalLights[lightIndex].matrices[max(splitIndex, 0)] * vec4(worldPos, 1.0);
+    vec4 projCoord = qt_directionalLightData[lightIndex].matrices[max(splitIndex, 0)] * vec4(worldPos, 1.0);
     vec3 smpCoord = projCoord.xyz / projCoord.w;
 
     float flipY = step(qt_rhi_properties.x, -0.5);
     smpCoord.y = mix(smpCoord.y, 1.0 - smpCoord.y, flipY);
 
-    vec4 shadowAtlasInfo = ubDirectionalLights.directionalLights[lightIndex].atlasLocations[max(splitIndex, 0)];
+    vec4 shadowAtlasInfo = qt_directionalLightData[lightIndex].atlasLocations[max(splitIndex, 0)];
     float layerIndex = shadowAtlasInfo.w;
     vec2 uvAtlasOffset = shadowAtlasInfo.xy;
     float uvAtlasScale = shadowAtlasInfo.z;
 
     float depth = texture(qt_shadowmap_texture, vec3(smpCoord.xy * uvAtlasScale + uvAtlasOffset, layerIndex)).x +
-                          ubDirectionalLights.directionalLights[lightIndex].shadowBias *
-                          ubDirectionalLights.directionalLights[lightIndex].dimensionsInverted[max(splitIndex, 0)].z;
+                          qt_directionalLightData[lightIndex].shadowBias *
+                          qt_directionalLightData[lightIndex].dimensionsInverted[max(splitIndex, 0)].z;
 
     float illumination = step(smpCoord.z, depth);
 
     // If not valid split or beyond last split, return fully visible
     illumination = mix(1.0, illumination, shouldCompute);
 
-    return normalizedShadowResult(illumination, ubDirectionalLights.directionalLights[lightIndex].shadowFactor);
+    return normalizedShadowResult(illumination, qt_directionalLightData[lightIndex].shadowFactor);
 }
 #endif //#if QSSG_SHADOW_SOFTNESS > 0
 
@@ -358,17 +362,17 @@ ShadowResult qt_sampleDirectionalShadowMap(in int lightIndex, in float zDepthVie
 
 // Point Lights
 ShadowResult qt_samplePointLight(in int lightIndex, in vec3 worldPos) {
-    const vec3 lightPosition = ubLights.lights[lightIndex].position;
+    const vec3 lightPosition = qt_positionalLightData[lightIndex].position;
     const vec3 L = worldPos - lightPosition;
     const float dist = length(L);
 
-    const float nearZ = ubLights.lights[lightIndex].clipNear;
-    const float farZ = ubLights.lights[lightIndex].shadowMapFar;
+    const float nearZ = qt_positionalLightData[lightIndex].clipNear;
+    const float farZ = qt_positionalLightData[lightIndex].shadowMapFar;
     const float mapSizeInv = 1.0 / (farZ - nearZ);
-    const float bias = ubLights.lights[lightIndex].shadowBias * mapSizeInv;
+    const float bias = qt_positionalLightData[lightIndex].shadowBias * mapSizeInv;
 
-    const uint numSamples = ubLights.lights[lightIndex].pcfSamples;
-    const float uvAtlasScale = ubLights.lights[lightIndex].shadowTextureSize;
+    const uint numSamples = qt_positionalLightData[lightIndex].pcfSamples;
+    const float uvAtlasScale = qt_positionalLightData[lightIndex].shadowTextureSize;
 
     // Center direction and hemisphere selection (needed for both modes)
     vec3 d = (dist > 0.0) ? (L / dist) : vec3(0.0, 0.0, 1.0);
@@ -383,11 +387,11 @@ ShadowResult qt_samplePointLight(in int lightIndex, in vec3 worldPos) {
     float flipY = step(qt_rhi_properties.y, 0.5);
     v = mix(v, 1.0 - v, flipY);
 
-    float layer = mix(ubLights.lights[lightIndex].shadowAtlasLayer1,
-                      ubLights.lights[lightIndex].shadowAtlasLayer0,
+    float layer = mix(qt_positionalLightData[lightIndex].shadowAtlasLayer1,
+                      qt_positionalLightData[lightIndex].shadowAtlasLayer0,
                       forward);
-    vec2 uvAtlasOffset = mix(ubLights.lights[lightIndex].shadowAtlasUV1,
-                             ubLights.lights[lightIndex].shadowAtlasUV0,
+    vec2 uvAtlasOffset = mix(qt_positionalLightData[lightIndex].shadowAtlasUV1,
+                             qt_positionalLightData[lightIndex].shadowAtlasUV0,
                              forward);
 
     float illumination;
@@ -395,9 +399,13 @@ ShadowResult qt_samplePointLight(in int lightIndex, in vec3 worldPos) {
 #if QSSG_SHADOW_SOFTNESS > 0
     // PCF mode: multiple samples with bias subtracted from current depth
     float currentDepth = clamp((dist - nearZ) / (farZ - nearZ), 0.0, 1.0) - bias;
-    const float pcfRadius = ubLights.lights[lightIndex].pcfFactor;
+    const float pcfRadius = qt_positionalLightData[lightIndex].pcfFactor;
     float shadowAccumulator = 0.0;
+#ifdef QSSG_COMPUTE
+    mat3 randomRotation = randomRotation3D(gl_GlobalInvocationID.xy);
+#else
     mat3 randomRotation = randomRotation3D(gl_FragCoord.xy);
+#endif
 
     for (uint i = 0u; i < QSSG_SHADOW_SOFTNESS; ++i) {
         vec3 offsetDir = randomRotation * CUBEMAP_SAMPLE_DIRECTIONS[i] * pcfRadius;
@@ -408,11 +416,11 @@ ShadowResult qt_samplePointLight(in int lightIndex, in vec3 worldPos) {
         vec3 dPCF = (distPCF > 0.0) ? (Lpcf / distPCF) : vec3(0.0, 0.0, 1.0);
 
         float forwardPCF = step(0.0, dPCF.z);
-        float layerPCF = mix(ubLights.lights[lightIndex].shadowAtlasLayer1,
-                             ubLights.lights[lightIndex].shadowAtlasLayer0,
+        float layerPCF = mix(qt_positionalLightData[lightIndex].shadowAtlasLayer1,
+                             qt_positionalLightData[lightIndex].shadowAtlasLayer0,
                              forwardPCF);
-        vec2 uvOffPCF = mix(ubLights.lights[lightIndex].shadowAtlasUV1,
-                            ubLights.lights[lightIndex].shadowAtlasUV0,
+        vec2 uvOffPCF = mix(qt_positionalLightData[lightIndex].shadowAtlasUV1,
+                            qt_positionalLightData[lightIndex].shadowAtlasUV0,
                             forwardPCF);
 
         float denomPCF = mix(1.0 - dPCF.z, 1.0 + dPCF.z, forwardPCF);
@@ -438,36 +446,36 @@ ShadowResult qt_samplePointLight(in int lightIndex, in vec3 worldPos) {
     illumination = step(currentDepth, storedDepth + bias);
 #endif
 
-    return normalizedShadowResult(illumination, ubLights.lights[lightIndex].shadowFactor);
+    return normalizedShadowResult(illumination, qt_positionalLightData[lightIndex].shadowFactor);
 }
 
 // Spot Lights
 ShadowResult qt_sampleSpotLight(in int lightIndex, in vec3 worldPos)
 {
     // Early cone test - this is often coherent so the branch is beneficial
-    vec3 dir = worldPos - ubLights.lights[lightIndex].position;
+    vec3 dir = worldPos - qt_positionalLightData[lightIndex].position;
     vec3 Ldir = normalize(dir);
-    float lightAngle = dot(Ldir, normalize(ubLights.lights[lightIndex].direction));
+    float lightAngle = dot(Ldir, normalize(qt_positionalLightData[lightIndex].direction));
 
-    if (lightAngle < ubLights.lights[lightIndex].coneAngle)
+    if (lightAngle < qt_positionalLightData[lightIndex].coneAngle)
         return fullyVisible();
 
     // Depth setup
     float dist = length(dir);
-    float nearZ = ubLights.lights[lightIndex].clipNear;
-    float farZ = ubLights.lights[lightIndex].shadowMapFar;
+    float nearZ = qt_positionalLightData[lightIndex].clipNear;
+    float farZ = qt_positionalLightData[lightIndex].shadowMapFar;
     float mapSizeInv = 1.0 / (farZ - nearZ);
-    float bias = ubLights.lights[lightIndex].shadowBias * mapSizeInv;
+    float bias = qt_positionalLightData[lightIndex].shadowBias * mapSizeInv;
 
     // Shadow atlas params
-    float layerIndex = ubLights.lights[lightIndex].shadowAtlasLayer0;
-    vec2 uvAtlasOffset = ubLights.lights[lightIndex].shadowAtlasUV0;
-    float uvAtlasScale = ubLights.lights[lightIndex].shadowTextureSize;
+    float layerIndex = qt_positionalLightData[lightIndex].shadowAtlasLayer0;
+    vec2 uvAtlasOffset = qt_positionalLightData[lightIndex].shadowAtlasUV0;
+    float uvAtlasScale = qt_positionalLightData[lightIndex].shadowTextureSize;
 
-    uint numSamples = ubLights.lights[lightIndex].pcfSamples;
+    uint numSamples = qt_positionalLightData[lightIndex].pcfSamples;
 
     // Center projection (needed for both modes)
-    vec4 projCoord = ubLights.lights[lightIndex].shadowMatrix * vec4(worldPos, 1.0);
+    vec4 projCoord = qt_positionalLightData[lightIndex].shadowMatrix * vec4(worldPos, 1.0);
     vec3 smpCoord = projCoord.xyz / projCoord.w;
 
     float flipY = step(qt_rhi_properties.x, -0.5);
@@ -478,15 +486,19 @@ ShadowResult qt_sampleSpotLight(in int lightIndex, in vec3 worldPos)
 #if QSSG_SHADOW_SOFTNESS > 0
     // PCF mode: multiple samples
     float currentDepth = clamp((dist - nearZ) / (farZ - nearZ), 0.0, 1.0) - bias;
-    float pcfRadius = ubLights.lights[lightIndex].pcfFactor;
+    float pcfRadius = qt_positionalLightData[lightIndex].pcfFactor;
     float accum = 0.0;
+#ifdef QSSG_COMPUTE
+    mat3 randomRotation = randomRotation3D(gl_GlobalInvocationID.xy);
+#else
     mat3 randomRotation = randomRotation3D(gl_FragCoord.xy);
+#endif
 
     for (uint i = 0u; i < QSSG_SHADOW_SOFTNESS; ++i) {
         vec3 offsetDir = randomRotation * CUBEMAP_SAMPLE_DIRECTIONS[i] * pcfRadius;
         vec3 worldPosPCF = worldPos + offsetDir;
 
-        vec4 projPCF = ubLights.lights[lightIndex].shadowMatrix * vec4(worldPosPCF, 1.0);
+        vec4 projPCF = qt_positionalLightData[lightIndex].shadowMatrix * vec4(worldPosPCF, 1.0);
         vec3 smpPCF = projPCF.xyz / projPCF.w;
         smpPCF.y = mix(smpPCF.y, 1.0 - smpPCF.y, flipY);
 
@@ -506,12 +518,12 @@ ShadowResult qt_sampleSpotLight(in int lightIndex, in vec3 worldPos)
     illumination = step(currentDepth, storedDepth + bias);
 #endif
 
-    return normalizedShadowResult(illumination, ubLights.lights[lightIndex].shadowFactor);
+    return normalizedShadowResult(illumination, qt_positionalLightData[lightIndex].shadowFactor);
 }
 
 ShadowResult qt_sampleLightShadowMap(in int lightIndex, in vec3 worldPos)
 {
-    if (ubLights.lights[lightIndex].coneAngle > 180.0) {
+    if (qt_positionalLightData[lightIndex].coneAngle > 180.0) {
         // Point
         return qt_samplePointLight(lightIndex, worldPos);
     } else {

@@ -5,6 +5,8 @@
 
 #include "qssgrenderuserpass_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadertokenizer_p.h>
 #include <QtCore/qcryptographichash.h>
 
@@ -98,8 +100,10 @@ constexpr QByteArrayView augmentMacroReplacement(AugmentMacro macro)
 }
 
 // NOTE: While this class doesn't have graphics resources itself, it manages commands that do!
+QSSGRenderUserPassBase::~QSSGRenderUserPassBase() = default;
+
 QSSGRenderUserPass::QSSGRenderUserPass()
-    : QSSGRenderGraphObject(Type::RenderPass, FlagT(Flags::HasGraphicsResources))
+    : QSSGRenderUserPassBase(Type::RenderPass)
 {
 
 }
@@ -107,21 +111,6 @@ QSSGRenderUserPass::QSSGRenderUserPass()
 QSSGRenderUserPass::~QSSGRenderUserPass()
 {
     resetCommands();
-}
-
-bool QSSGRenderUserPass::isDirty(DirtyFlag flag) const
-{
-    return (m_dirtyFlags & FlagT(flag)) != 0;
-}
-
-void QSSGRenderUserPass::markDirty(DirtyFlag flag)
-{
-    m_dirtyFlags |= FlagT(flag);
-}
-
-void QSSGRenderUserPass::clearDirty(DirtyFlag flag)
-{
-    m_dirtyFlags &= ~FlagT(flag);
 }
 
 void QSSGRenderUserPass::replaceAugmentMacros(QByteArray &shaderCode, QSSGUserShaderAugmentation &augmentation)
@@ -197,9 +186,25 @@ void QSSGRenderUserPass::finalizeShaders(const QSSGRenderContextInterface &ctx)
         // Used to build the unique shader cache key. The shader key goes in the generated
         // shader as a one line comment so it can't be multiline. Generate hash from the
         // augmented shader preamble and body instead, which gets combined with the material key.
-        const QByteArray fullAugmentation = shaderAugmentation.preamble + shaderAugmentation.body;
-        shaderAugmentation.hash = QCryptographicHash::hash(QByteArrayView(fullAugmentation),
-                                                           QCryptographicHash::Algorithm::Sha1).toHex();
+        QCryptographicHash hashData(QCryptographicHash::Algorithm::Sha1);
+        hashData.addData(shaderAugmentation.preamble);
+        hashData.addData(shaderAugmentation.body);
+        // The uniform, image and buffer declarations are generated from the
+        // properties, not taken from the preamble (processMetadata() leaves only
+        // a marker for images and buffers there), so they are part of the key too.
+        for (const auto &prop : std::as_const(shaderAugmentation.propertyUniforms)) {
+            QByteArray u(prop.name + ':' + prop.typeName);
+            if (prop.shaderDataType == QSSGRenderShaderValue::StorageBuffer) {
+                const QSSGShaderBuffer buffer(prop.value.value<QSSGShaderBuffer>());
+                u += ':' + buffer.dataType + ':' + QSSGBaseTypeHelpers::toString(buffer.qualifiers);
+            } else if (prop.shaderDataType == QSSGRenderShaderValue::Image) {
+                const QSSGShaderImage image(prop.value.value<QSSGShaderImage>());
+                u += ':' + image.imageType + ':' + image.format + ':' + QSSGBaseTypeHelpers::toString(image.qualifiers);
+            }
+            u += ';';
+            hashData.addData(u);
+        }
+        shaderAugmentation.hash = hashData.result().toHex();
 
         m_state = State::Ready;
     } else {
@@ -212,7 +217,7 @@ void QSSGRenderUserPass::finalizeShaders(const QSSGRenderContextInterface &ctx)
     qCDebug(lcRenderUserPass) << "Finalizing shaders for user pass commands";
 }
 
-void QSSGRenderUserPass::resetCommands()
+void QSSGRenderUserPassBase::resetCommands()
 {
     qDeleteAll(commands);
     commands.clear();

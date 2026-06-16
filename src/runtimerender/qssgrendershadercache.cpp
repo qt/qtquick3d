@@ -191,6 +191,30 @@ QList<QShaderVersion> QSSGShaderCache::glslTargetsForContext(const QSurfaceForma
     return versions;
 }
 
+static QSurfaceFormat glContextFormat(QRhi *rhi, bool *isGLESModule)
+{
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    *isGLESModule = false;
+#if QT_CONFIG(opengl)
+    auto h = static_cast<const QRhiGles2NativeHandles *>(rhi->nativeHandles());
+    if (h && h->context)
+        format = h->context->format();
+    *isGLESModule = QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES;
+#else
+    Q_UNUSED(rhi);
+#endif
+    return format;
+}
+
+bool QSSGShaderCache::isGlslEsTarget(QRhi *rhi)
+{
+    if (!rhi || rhi->backend() != QRhi::OpenGLES2)
+        return false;
+    bool isGLESModule = false;
+    const QSurfaceFormat format = glContextFormat(rhi, &isGLESModule);
+    return format.renderableType() == QSurfaceFormat::OpenGLES || isGLESModule;
+}
+
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
 static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
 {
@@ -211,14 +235,8 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
         break;
     case QRhi::OpenGLES2:
     {
-        QSurfaceFormat format = QSurfaceFormat::defaultFormat();
         bool isGLESModule = false;
-#if QT_CONFIG(opengl)
-        auto h = static_cast<const QRhiGles2NativeHandles *>(rhi->nativeHandles());
-        if (h && h->context)
-            format = h->context->format();
-        isGLESModule = QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES;
-#endif
+        const QSurfaceFormat format = glContextFormat(rhi, &isGLESModule);
         const QList<QShaderVersion> versions = QSSGShaderCache::glslTargetsForContext(format, isGLESModule);
         outputs.reserve(outputs.size() + versions.size());
         for (const QShaderVersion &version : versions)
@@ -402,6 +420,17 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryGetRhiShaderPipeline(const QByteArr
     if (theIter != m_rhiShaders.cend())
         return theIter.value();
     return nullptr;
+}
+
+// True also when the shaders failed to compile and the cache holds a null
+// pipeline for the key, which tryGetRhiShaderPipeline() cannot tell apart
+// from a key that was never compiled.
+bool QSSGShaderCache::hasRhiShaderPipeline(const QByteArray &inKey, const QSSGShaderFeatures &inFeatures) const
+{
+    QSSGShaderCacheKey cacheKey(inKey);
+    cacheKey.m_features = inFeatures;
+    cacheKey.updateHashCode();
+    return m_rhiShaders.contains(cacheKey);
 }
 
 
@@ -639,7 +668,6 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileComputePipeline(
         computeCode += inKey;
         computeCode += "\n";
     }
-
     // match Qt Quick and QSGMaterial(Shader)
     computeCode += "#define QSHADER_VIEW_COUNT ";
     computeCode += QByteArray::number(viewCount);

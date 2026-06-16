@@ -423,4 +423,34 @@ void QSSGRenderExtensionHelpers::registerRenderResult(const QSSGFrameData &frame
     }
 }
 
+/*!
+    Register a render result, in form of a buffer, for this \a extension. Once a buffer is
+    registered, the extension can be used as a
+    \l {QtQuick3D::ShaderStorageBuffer::bufferProvider}{buffer provider} in QML.
+
+    To ensure that the \a buffer is available for renderables, for example, to be used by a
+    \l {QtQuick3D::ShaderStorageBuffer}{ShaderStorageBuffer} item, buffers must be registered
+    during the \l QSSGRenderExtension::prepareData call of the extension.
+
+    Calling this function with a new buffer unregisters any previously registered buffer.
+    To unregister a buffer, call this function with a \c nullptr buffer. A
+    ShaderStorageBuffer that uses the extension as its buffer provider then
+    falls back to a buffer of its own, holding its bufferData, or empty if it
+    has none.
+
+    \a frameData
+
+    \since 6.13
+    \sa {QtQuick3D::ShaderStorageBuffer::bufferProvider}{bufferProvider}
+*/
+void QSSGRenderExtensionHelpers::registerRenderResultBuffer(const QSSGFrameData &frameData,
+                                                            QSSGExtensionId extension,
+                                                            QRhiBuffer *buffer)
+{
+    if (auto *ext = QSSGRenderGraphObjectUtils::getExtension<QSSGRenderExtension>(extension)) {
+        const QSSGRenderContextInterface *ctx = frameData.contextInterface();
+        ctx->bufferManager()->registerExtensionResult(*ext, buffer);
+    }
+}
+
 QT_END_NAMESPACE

@@ -16,6 +16,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssguserrenderpassmanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <qtquick3d_tracepoints_p.h>
@@ -1066,6 +1068,11 @@ void QSSGRhiShaderPipeline::ensureUniformBuffer(QRhiBuffer **ubuf)
         *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, m_ub0Size);
         (*ubuf)->create();
     }
+    // The buffer might have been used by other pipeline. Check the size too.
+    if ((*ubuf)->size() < quint32(m_ub0Size)) {
+        (*ubuf)->setSize(m_ub0Size);
+        (*ubuf)->create();
+    }
 }
 
 int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
@@ -1124,6 +1131,42 @@ void QSSGRhiShaderPipeline::setShaderResources(char *ubufData,
                     }
                 };
                 addExtraTexture(t);
+            }
+        }
+    } else if (inPropertyType == QSSGRenderShaderValue::StorageBuffer) {
+        int binding = bindingForStorageBuffer(inPropertyName);
+        if (binding >= 0) {
+            const QSSGShaderBuffer buffer(propertyValue.value<QSSGShaderBuffer>());
+            QRhiBuffer *rhiBuf = buffer.buffer ? theBufferManager.loadBuffer(*buffer.buffer) : nullptr;
+            if (rhiBuf) {
+                if (buffer.qualifiers.testFlag(QSSGMemoryQualifier::Readonly))
+                    addStorageBufferBinding(inPropertyName, QRhiShaderResourceBinding::BufferLoad, rhiBuf, binding);
+                else if (buffer.qualifiers.testFlag(QSSGMemoryQualifier::Writeonly))
+                    addStorageBufferBinding(inPropertyName, QRhiShaderResourceBinding::BufferStore, rhiBuf, binding);
+                else
+                    addStorageBufferBinding(inPropertyName, QRhiShaderResourceBinding::BufferLoadStore, rhiBuf, binding);
+            } else {
+                qWarning() << "Buffer binding failed: " << inPropertyName;
+            }
+        }
+    } else if (inPropertyType == QSSGRenderShaderValue::Image) {
+        int binding = bindingForStorageImage(inPropertyName);
+        if (binding >= 0) {
+            const QSSGShaderImage image(propertyValue.value<QSSGShaderImage>());
+            const QSSGRenderImageTexture texture = image.image ? theBufferManager.loadRenderImage(image.image) : QSSGRenderImageTexture();
+            if (texture.m_texture) {
+                if (image.imageType.contains("Cube") && !(texture.m_texture->flags() & QRhiTexture::CubeMap)) {
+                    qWarning() << "Image type is not CubeMap: " << inPropertyName;
+                    return;
+                }
+                if (image.qualifiers.testFlag(QSSGMemoryQualifier::Readonly))
+                    addStorageImageBinding(inPropertyName, QRhiShaderResourceBinding::ImageLoad, texture.m_texture, binding);
+                else if (image.qualifiers.testFlag(QSSGMemoryQualifier::Writeonly))
+                    addStorageImageBinding(inPropertyName, QRhiShaderResourceBinding::ImageStore, texture.m_texture, binding);
+                else
+                    addStorageImageBinding(inPropertyName, QRhiShaderResourceBinding::ImageLoadStore, texture.m_texture, binding);
+            } else {
+                qWarning() << "Image binding failed: " << inPropertyName;
             }
         }
     } else {
@@ -1519,6 +1562,22 @@ void QSSGRhiContextPrivate::cleanupDrawCallDataForSkyMaterial(QSSGRenderSkyMater
     releaseCachedSrb(skyMaterial->bindings);
     releaseCachedSrb(skyMaterial->backgroundBindings);
     cleanupDrawCallDataForResource(skyMaterial);
+}
+
+void QSSGRhiContextPrivate::cleanupDrawCallDataForUserPass(const QSSGRenderUserPassBase *userPass)
+{
+    // Releases compute passes, which use the model field.
+    // Render user passes put the model node in it, but they also don't have pass specific
+    // draw call data so they don't need to be cleared here.
+    auto it = m_drawCallData.begin();
+    while (it != m_drawCallData.end()) {
+        if (it.key().model == userPass) {
+            releaseDrawCallData(*it);
+            it = m_drawCallData.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 /*!

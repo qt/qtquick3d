@@ -638,7 +638,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DEffect::QQuick3DEffect(QQuick3DObject *parent)
-    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Effect)), parent)
+    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Effect, QQuick3DObjectPrivate::Flags::RequiresSecondaryUpdate)), parent)
 {
 }
 
@@ -727,6 +727,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     if (m_dirtyAttributes & Dirty::EffectChainDirty)
         shadersOrBuffersMayChange = true;
 
+    bool needsSecondaryUpdate = false;
+
     const bool fullUpdate = newBackendNode || effectNode->incompleteBuildTimeObject || (m_dirtyAttributes & Dirty::TextureDirty);
 
     if (fullUpdate || shadersOrBuffersMayChange) {
@@ -740,12 +742,17 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
         if (idx != -1)
             propertyDirtyMethod = metaObject()->method(idx);
+        QMetaMethod shaderResourceDirtyMethod;
+        const int resourceIdx = metaObject()->indexOfSlot("onShaderResourceDirty()");
+        if (resourceIdx != -1)
+            shaderResourceDirtyMethod = metaObject()->method(resourceIdx);
 
         // Properties -> uniforms
         QSSGShaderCustomMaterialAdapter::StringPairList uniforms;
         QSSGShaderCustomMaterialAdapter::StringPairList multiViewDependentSamplers;
         const int propCount = metaObject()->propertyCount();
         int propOffset = metaObject()->propertyOffset();
+        QByteArrayList metadata;
 
         // Effect can have multilayered inheritance structure, so find the actual propOffset
         const QMetaObject *superClass = metaObject()->superClass();
@@ -757,6 +764,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         using TextureInputProperty = QPair<QQuick3DShaderUtilsTextureInput *, const char *>;
 
         QVector<TextureInputProperty> textureProperties; // We'll deal with these later
+        QHash<int, QQuick3DObject *> shaderResources;
         for (int i = propOffset; i != propCount; ++i) {
             const QMetaProperty property = metaObject()->property(i);
             if (Q_UNLIKELY(!property.isValid()))
@@ -768,20 +776,37 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             if (propType == QMetaType(QMetaType::QVariant))
                 propType = propValue.metaType();
 
+            bool isShaderResource = false;
+            QQuick3DObject *shaderResource = QQuick3DShaderResourceTracker::resourceForProperty(this, property, &isShaderResource);
+            if (isShaderResource) {
+                shaderResources.insert(i, shaderResource);
+                if (property.hasNotifySignal() && shaderResourceDirtyMethod.isValid())
+                    connect(this, property.notifySignal(), this, shaderResourceDirtyMethod, Qt::UniqueConnection);
+            }
+
             if (propType.id() >= QMetaType::User) {
                 if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) {
                     if (QQuick3DShaderUtilsTextureInput *texture = property.read(this).value<QQuick3DShaderUtilsTextureInput *>())
                         textureProperties.push_back({texture, name});
+                } else if (propType.id() == qMetaTypeId<QQuick3DShaderStorageBuffer *>()) {
+                    if (QQuick3DShaderStorageBuffer *buffer = property.read(this).value<QQuick3DShaderStorageBuffer *>())
+                        needsSecondaryUpdate |= !handleBufferProperty(buffer, name, i, metadata, effectNode->properties);
+                } else if (propType.id() == qMetaTypeId<QQuick3DShaderImage *>()) {
+                    if (QQuick3DShaderImage *image = property.read(this).value<QQuick3DShaderImage *>())
+                        needsSecondaryUpdate |= !handleImageProperty(image, name, i, metadata, effectNode->properties);
                 }
             } else if (propType == QMetaType(QMetaType::QObjectStar)) {
                 if (QQuick3DShaderUtilsTextureInput *texture = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
                     textureProperties.push_back({texture, name});
+                else if (QQuick3DShaderStorageBuffer *buffer = qobject_cast<QQuick3DShaderStorageBuffer *>(propValue.value<QObject *>()))
+                    needsSecondaryUpdate |= !handleBufferProperty(buffer, name, i, metadata, effectNode->properties);
+                else if (QQuick3DShaderImage *image = qobject_cast<QQuick3DShaderImage *>(propValue.value<QObject *>()))
+                    needsSecondaryUpdate |= !handleImageProperty(image, name, i, metadata, effectNode->properties);
             } else {
                 const auto type = uniformType(propType);
                 if (type != QSSGRenderShaderValue::Unknown) {
                     uniforms.append({ uniformTypeName(propType), name });
-                    effectNode->properties.push_back({ name, uniformTypeName(propType),
-                                                       propValue, uniformType(propType), i});
+                    effectNode->properties.push_back({ name, uniformTypeName(propType), propValue, uniformType(propType), i});
                     // Track the property changes
                     if (fullUpdate) {
                         if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
@@ -794,6 +819,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 }
             }
         }
+        m_shaderResources.setResources(shaderResources);
 
         const auto processTextureProperty = [&](QQuick3DShaderUtilsTextureInput &texture, const QByteArray &name) {
             QSSGRenderEffect::TextureProperty texProp;
@@ -992,6 +1018,25 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                             code = default_effect_fragment_shader;
                     }
 
+                    QByteArrayList imgBufs;
+                    if (type == QSSGShaderCache::ShaderType::Vertex) {
+                        if (!processMetadata(effectNode->properties, metadata, passData.vertexMetaData[0].imageBufferMetadata, code)) {
+                            qWarning("Effect: Shader Image and/or Buffer processing failed in vertex shader.");
+                            // Leave nothing pending, so that the next change triggers an update again.
+                            m_dirtyAttributes = 0;
+                            return effectNode;
+                        }
+                        imgBufs = passData.vertexMetaData[0].imageBufferMetadata;
+                    } else {
+                        if (!processMetadata(effectNode->properties, metadata, passData.fragmentMetaData[0].imageBufferMetadata, code)) {
+                            qWarning("Effect: Shader Image and/or Buffer processing failed in fragment shader.");
+                            // Leave nothing pending, so that the next change triggers an update again.
+                            m_dirtyAttributes = 0;
+                            return effectNode;
+                        }
+                        imgBufs = passData.fragmentMetaData[0].imageBufferMetadata;
+                    }
+
                     for (auto pathKeyIndex : { QSSGRenderCustomMaterial::RegularShaderPathKeyIndex, QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex }) {
                         QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
                         QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
@@ -1022,6 +1067,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                             type,
                             pathKeyIndex == QSSGRenderCustomMaterial::RegularShaderPathKeyIndex ? false : true,
                             uniforms,
+                            imgBufs,
                             type == QSSGShaderCache::ShaderType::Vertex ? builtinVertexInputs : builtinVertexOutputs,
                             type == QSSGShaderCache::ShaderType::Vertex ? builtinVertexOutputs : QSSGShaderCustomMaterialAdapter::StringPairList(),
                             multiViewDependentSamplers,
@@ -1032,9 +1078,11 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                             insertVertexMainArgs(result.first);
                             passData.vertexShaderCode[pathKeyIndex] = result.first;
                             passData.vertexMetaData[pathKeyIndex] = result.second;
+                            passData.vertexMetaData[pathKeyIndex].imageBufferMetadata = imgBufs;
                         } else {
                             passData.fragmentShaderCode[pathKeyIndex] = result.first;
                             passData.fragmentMetaData[pathKeyIndex] = result.second;
+                            passData.fragmentMetaData[pathKeyIndex].imageBufferMetadata = imgBufs;
                         }
                     }
                 }
@@ -1088,14 +1136,50 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     }
 
     if (m_dirtyAttributes & Dirty::PropertyDirty) {
-        for (const auto &prop : std::as_const(effectNode->properties)) {
+        for (auto &prop : effectNode->properties) {
             auto p = metaObject()->property(prop.pid);
-            if (Q_LIKELY(p.isValid()))
-                prop.value = p.read(this);
+            if (Q_LIKELY(p.isValid())) {
+                if (prop.shaderDataType == QSSGRenderShaderValue::StorageBuffer
+                    || prop.shaderDataType == QSSGRenderShaderValue::Image) {
+                    if (newBackendNode || shadersOrBuffersMayChange) {
+                        // no update after initial creation
+                    } else {
+                        QMetaType propType = p.metaType();
+                        QVariant propValue = p.read(this);
+                        if (propType == QMetaType(QMetaType::QVariant))
+                            propType = propValue.metaType();
+
+                        if (prop.shaderDataType == QSSGRenderShaderValue::StorageBuffer) {
+                            QQuick3DShaderStorageBuffer *buffer = nullptr;
+                            if (propType == QMetaType(QMetaType::QObjectStar))
+                                buffer = qobject_cast<QQuick3DShaderStorageBuffer *>(propValue.value<QObject *>());
+                            else
+                                buffer = p.read(this).value<QQuick3DShaderStorageBuffer *>();
+                            updateBufferProperty(buffer, prop);
+                        } else {
+                            QQuick3DShaderImage *image = nullptr;
+                            if (propType == QMetaType(QMetaType::QObjectStar))
+                                image = qobject_cast<QQuick3DShaderImage *>(propValue.value<QObject *>());
+                            else
+                                image = p.read(this).value<QQuick3DShaderImage *>();
+                            updateImageProperty(image, prop);
+                        }
+                    }
+                } else {
+                    prop.value = p.read(this);
+                }
+            }
         }
+        // A swapped-in object may not have been referenced into the scene yet.
+        if (!fullUpdate && !shadersOrBuffersMayChange)
+            needsSecondaryUpdate |= !m_shaderResources.updateResources();
     }
 
     m_dirtyAttributes = 0;
+    if (needsSecondaryUpdate) {
+        markDirty(Dirty::TextureDirty);
+        QQuick3DObjectPrivate::get(this)->requestSecondaryUpdate();
+    }
 
     DebugViewHelpers::ensureDebugObjectName(effectNode, this);
 
@@ -1110,6 +1194,14 @@ void QQuick3DEffect::onPropertyDirty()
 void QQuick3DEffect::onTextureDirty()
 {
     markDirty(Dirty::TextureDirty);
+}
+
+void QQuick3DEffect::onShaderResourceDirty()
+{
+    // Swapping one object for another only changes the binding, but a property
+    // gaining or losing its object, or an image of another format, changes the
+    // generated shader.
+    markDirty(m_shaderResources.hasResourceLayoutChanged() ? Dirty::TextureDirty : Dirty::PropertyDirty);
 }
 
 void QQuick3DEffect::onPassDirty()
@@ -1145,6 +1237,7 @@ void QQuick3DEffect::updateSceneManager(QQuick3DSceneManager *sceneManager)
                 QQuick3DObjectPrivate::derefSceneManager(tex);
         }
     }
+    m_shaderResources.updateSceneManager(sceneManager);
 }
 
 void QQuick3DEffect::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)

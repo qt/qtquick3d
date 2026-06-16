@@ -34,6 +34,7 @@ struct QSSGRenderMesh;
 class QSSGRenderGraphObject;
 class QSSGBufferManager;
 class QSSGUserRenderPassManager;
+class QSSGRenderUserPassBase;
 
 struct QSSGRhiInputAssemblerStatePrivate
 {
@@ -1150,6 +1151,7 @@ public:
     void cleanupDrawCallDataForResource(const void *resource);
     void cleanupDrawCallDataForCid(const void *cid);
     void cleanupDrawCallDataForSkyMaterial(QSSGRenderSkyMaterial *skyMaterial);
+    void cleanupDrawCallDataForUserPass(const QSSGRenderUserPassBase *userPass);
 
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable);
     void releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable);

@@ -131,6 +131,7 @@ protected:
 private Q_SLOTS:
     void onMaterialDestroyed(QObject *object);
     void onCommandChanged();
+    void onShaderResourceDirty();
 
 private:
     friend void QQuick3DRenderPassPrivateHelper::subPassRef(QQuick3DRenderPass *);
@@ -156,6 +157,7 @@ private:
     static constexpr DirtyT AllDirty { std::numeric_limits<DirtyT>::max() };
 
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
+    void markResourcesDirty();
     void markDirty(QQuick3DRenderPass::Dirty type, bool requestSecondaryUpdate = false);
     void clearDirty(QQuick3DRenderPass::Dirty type);
 
@@ -173,6 +175,7 @@ private:
     // greater than 0 the pass is a sub-pass, otherwise it is a top-level pass.
     quint32 m_subRenderPassRef = 0;
     RenderTargetFlags m_renderTargetFlags = RenderTargetFlag::None;
+    QQuick3DShaderResourceTracker m_shaderResources { this, [this]() { markResourcesDirty(); } };
 };
 
 QT_END_NAMESPACE

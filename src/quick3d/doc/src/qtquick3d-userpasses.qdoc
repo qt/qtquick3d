@@ -138,6 +138,14 @@ shallower depths, so its output is available to every consumer that frame, not
 only its parent. The relative render order of passes at the same nesting
 depth is not defined; use nesting to express an ordering requirement.
 
+All user passes, \l RenderPass and \l ComputePass alike, run after the scene's
+internal preparation passes (depth, normal, and ambient occlusion textures,
+shadow maps, the screen texture, reflection probes, and texture provider
+extensions) and before the main opaque and transparent rendering. Their output
+is available to the main rendering of the same frame, but when the preparation
+passes use it, for example through a material that also renders into the shadow
+maps, they see the output of the previous frame.
+
 Nesting affects ordering only; a nested pass still renders into its own render
 target, and its output is consumed through a \l RenderOutputProvider. To render
 into the parent pass's render target instead, reference the pass from a

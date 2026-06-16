@@ -306,6 +306,7 @@ QByteArray generateFinalVertexShaderCode(QRhi *rhi,
     const bool doFlip = rhi->isYUpInNDC() && !rhi->isYUpInFramebuffer();
     QByteArray vertexShader = doFlip ? mainVertexSnippetFlipped : mainVertexSnippet;
 
+    QByteArrayList metadata;
     QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
     QByteArray buf;
     QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
@@ -316,6 +317,7 @@ QByteArray generateFinalVertexShaderCode(QRhi *rhi,
                                                                QSSGShaderCache::ShaderType::Vertex,
                                                                false,
                                                                uniforms,
+                                                               metadata,
                                                                { },
                                                                varyings,
                                                                { },
@@ -330,6 +332,7 @@ QByteArray generateFinalFragmentShaderCode(const QByteArray &baseFragmentShaderC
 {
     QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
     QByteArray buf;
+    QByteArrayList metadata;
     QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
     QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(&scratch, &result, baseFragmentShaderCode, QSSGShaderCache::ShaderType::Fragment, false);
     QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(&buf,
@@ -338,6 +341,7 @@ QByteArray generateFinalFragmentShaderCode(const QByteArray &baseFragmentShaderC
                                                                QSSGShaderCache::ShaderType::Fragment,
                                                                false,
                                                                uniforms,
+                                                               metadata,
                                                                varyings,
                                                                { },
                                                                { },

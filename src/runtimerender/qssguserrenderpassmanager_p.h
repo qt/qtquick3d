@@ -26,13 +26,14 @@
 QT_BEGIN_NAMESPACE
 
 class QSSGRenderUserPass;
+class QSSGRenderUserPassBase;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGUserRenderPassManager : public std::enable_shared_from_this<QSSGUserRenderPassManager>
 {
     enum class Private { Initialize };
 public:
     // A set of user passes (no duplicates)
-    using UserPassSet = QList<QSSGRenderUserPass *>;
+    using UserPassSet = QList<QSSGRenderUserPassBase *>;
 
     explicit QSSGUserRenderPassManager(Private);
     ~QSSGUserRenderPassManager();
@@ -51,8 +52,8 @@ public:
     // rejected; a top-level pass is added if not already scheduled. This backs up
     // setScheduledPasses on the first frame, before the layer render data (and
     // thus the manager) exists at sync time.
-    void scheduleUserPass(QSSGRenderUserPass *userPasses);
-    void unscheduleUserPass(const QSSGRenderUserPass *userPasses);
+    void scheduleUserPass(QSSGRenderUserPassBase *userPasses);
+    void unscheduleUserPass(const QSSGRenderUserPassBase *userPasses);
 
     QSSGRhiRenderableTextureV2Ptr getOrCreateRenderableTexture(const QSSGRenderUserPass &userPass);
     QSSGRhiRenderableTextureV2Ptr getUserPassTexureResult(const QSSGRenderUserPass &userPass) const;
@@ -71,6 +72,8 @@ public:
     qsizetype acquireUserPassSlot();
 
     void resetForFrame();
+    // Releases what the manager holds for a pass that is going away.
+    void releaseUserPass(const QSSGRenderUserPassBase *pass);
 
 private:
     Q_DISABLE_COPY_MOVE(QSSGUserRenderPassManager)
@@ -92,7 +95,7 @@ private:
 
     // Sub-passes we have already warned about when a schedule request was
     // rejected; keeps the per-frame provider path from spamming the warning.
-    QSet<const QSSGRenderUserPass *> m_subPassScheduleWarned;
+    QSet<const QSSGRenderUserPassBase *> m_subPassScheduleWarned;
 
     QHash<QRhiTexture *, size_t> m_trackedTextures;
 

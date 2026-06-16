@@ -53,6 +53,9 @@ static const char *asString(QSSGRenderGraphObject::Type type)
         RETURN_AS_STRING(Type::ImageCube)
         RETURN_AS_STRING(Type::RenderExtension)
         RETURN_AS_STRING(Type::TextureProvider)
+        RETURN_AS_STRING(Type::ShaderStorageBuffer)
+        RETURN_AS_STRING(Type::ShaderStorageImage)
+        RETURN_AS_STRING(Type::ComputePass)
     }
 #undef RETURN_AS_STRING
     return nullptr;

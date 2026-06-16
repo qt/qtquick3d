@@ -19,6 +19,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderroot_p.h>
 #include <QtQuick3DRuntimeRender/ssg/qssgrenderextensions.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercomputepass_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -276,7 +277,7 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
         } else if (itemPriv->spatialNode->type == QQuick3DObjectPrivate::Type::Image2D && backendNodeChanged) {
             ++inputHandlingEnabled;
         } else if (QSSGRenderGraphObjectUtils::isUserRenderPass(itemPriv->type) && itemPriv->spatialNode) {
-            auto *userRenderPass = static_cast<QSSGRenderUserPass *>(itemPriv->spatialNode);
+            auto *userRenderPass = static_cast<QSSGRenderUserPassBase *>(itemPriv->spatialNode);
             if (const auto idx = userRenderPasses.indexOf(userRenderPass); idx == -1) {
                 userRenderPasses.push_back(userRenderPass);
                 userRenderPassesDirty = true;
@@ -425,7 +426,7 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::cleanupNodes()
         }
 
         if (QSSGRenderGraphObjectUtils::isUserRenderPass(node->type)) {
-            auto *userRenderPass = static_cast<QSSGRenderUserPass *>(node);
+            auto *userRenderPass = static_cast<QSSGRenderUserPassBase *>(node);
             if (qsizetype idx = userRenderPasses.indexOf(userRenderPass); idx != -1) {
                 userRenderPasses.remove(idx);
                 userRenderPassesDirty = true;

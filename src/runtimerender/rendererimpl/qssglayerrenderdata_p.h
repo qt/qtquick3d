@@ -328,6 +328,31 @@ struct QSSGOITRenderContext
     }
 };
 
+struct QSSGComputeLightContext
+{
+    QRhiBuffer *lightBuffer = nullptr;
+    QRhiBuffer *dirLightBuffer = nullptr;
+    QByteArray lightData;
+    QByteArray dirLightData;
+    // Current frame
+    int dirLights = 0;
+    int spotLights = 0;
+    int pointLights = 0;
+    QSSGRenderLight::SoftShadowQuality maxSoftShadowQuality = QSSGRenderLight::SoftShadowQuality::Hard;
+    void reset()
+    {
+        delete lightBuffer;
+        delete dirLightBuffer;
+        lightBuffer = nullptr;
+        dirLightBuffer = nullptr;
+        dirLights = 0;
+        spotLights = 0;
+        pointLights = 0;
+        lightData.clear();
+        dirLightData.clear();
+    }
+};
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData
 {
 public:
@@ -426,7 +451,7 @@ public:
     SkyboxPass skyboxPass;
     SkyMaterialBackgroundPass skyMaterialBackgroundPass;
     SkyboxCubeMapPass skyboxCubeMapPass;
-    UserRenderPass userRenderPasses;
+    UserPassBase userRenderPasses;
     static constexpr size_t USERPASSES = 3; // See QSSGRenderLayer::RenderExtensionMode::Count
     UserExtensionPass userPasses[USERPASSES];
     OpaquePass opaquePass;
@@ -501,8 +526,10 @@ public:
     bool tooManyDirectionalLightsWarningShown = false;
     bool oitWarningUnsupportedShown = false;
     bool oitWarningInvalidBlendModeShown = false;
+    bool computeUnsupportedWarningShown = false;
     bool orderIndependentTransparencyEnabled = false;
     bool disableMainPasses = true;
+    bool computeLightsUpdated = false;
 
     std::unique_ptr<QSSGLightmapBaker> lightmapBaker = nullptr;
 
@@ -563,6 +590,8 @@ public:
 
     QSSGOITRenderContext &getOitRenderContext() { return oitRenderContext; }
     const QSSGOITRenderContext &getOitRenderContextConst() const { return oitRenderContext; }
+    QSSGComputeLightContext &getComputeLightContext() { return computeLightContext; }
+    const QSSGComputeLightContext &getComputeLightContextConst() const { return computeLightContext; }
 
     static bool prepareInstancing(QSSGRhiContext *rhiCtx,
                                   QSSGSubsetRenderable *renderable,
@@ -844,6 +873,7 @@ private:
     QHash<const QSSGModelContext *, QRhiTexture *> bonemapTextures;
     QSSGRhiRenderableTexture renderResults[size_t(QSSGRenderResult::Key::RenderResultCount)] {};
     QSSGOITRenderContext oitRenderContext;
+    QSSGComputeLightContext computeLightContext;
 };
 
 QT_END_NAMESPACE

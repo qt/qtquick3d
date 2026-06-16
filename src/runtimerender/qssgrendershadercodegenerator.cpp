@@ -605,6 +605,26 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
     }
 }
 
+// SPIRV-Cross refuses some of these formats for ES and lets others through to
+// fail in the driver; either way the shader only breaks on GLES, so say why.
+static void warnUnsupportedGlslEsImages(const QSSGShaderResourceMergeContext &mergeContext)
+{
+    static const QByteArrayList esFormats = { "rgba8",   "rgba16f", "rgba32f", "r32f",
+                                              "r32i",    "rgba32i", "r32ui",   "rgba32ui" };
+    static const QByteArrayList readWriteFormats = { "r32f", "r32i", "r32ui" };
+    constexpr QSSGMemoryQualifiers accessQualifiers = QSSGMemoryQualifier::Readonly | QSSGMemoryQualifier::Writeonly;
+
+    for (const auto &image : mergeContext.m_images) {
+        if (!esFormats.contains(image.imgType)) {
+            qWarning("Image %s uses format %s, which OpenGL ES does not support for images.",
+                     image.name.constData(), image.imgType.constData());
+        } else if (!readWriteFormats.contains(image.imgType) && !(image.qualifiers & accessQualifiers)) {
+            qWarning("Image %s with format %s must be readonly or writeonly on OpenGL ES.",
+                     image.name.constData(), image.imgType.constData());
+        }
+    }
+}
+
 QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
                                                                          const QSSGShaderFeatures &inFeatureSet,
                                                                          QSSGShaderLibraryManager &shaderLibraryManager,
@@ -640,6 +660,9 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
             registerShaderMetaDataFromSource(&mergeContext, theStage.m_finalBuilder, stageName);
         }
     }
+
+    if (!mergeContext.m_images.isEmpty() && QSSGShaderCache::isGlslEsTarget(theCache.rhiContext().rhi()))
+        warnUnsupportedGlslEsImages(mergeContext);
 
     for (quint32 stageIdx = 0; stageIdx < static_cast<quint32>(QSSGShaderGeneratorStage::StageCount); ++stageIdx) {
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);

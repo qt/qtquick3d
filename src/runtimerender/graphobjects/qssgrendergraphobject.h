@@ -92,6 +92,9 @@ public:
         RenderPass, // Resource
         SkyMaterial, // Resource
         Skin, // Resource
+        ShaderStorageBuffer, // Resource
+        ShaderStorageImage, // Resource, used only in the frontend object, backends are Image2D/ImageCube
+        ComputePass, // Resource
         // Materials
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource

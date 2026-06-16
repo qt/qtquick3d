@@ -12,10 +12,12 @@
 #include "qquick3dviewport_p.h"
 #include "qquick3dcustommaterial_p.h"
 #include "qquick3deffect_p.h"
+#include "qquick3dcomputepass_p.h"
 #include "qquick3dtextureproviderextension.h"
 #include <ssg/qssgrenderextensions.h>
 #include <ssg/qquick3dextensionhelpers.h>
 
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
 
 #include <QtCore/QLoggingCategory>
@@ -678,6 +680,404 @@ MetaTypeList supportedMetatypes()
     return {std::begin(qssg_metatype_list), std::end(qssg_metatype_list)};
 }
 
+QByteArray toShaderFormat(QQuick3DShaderImage::ImageFormat imageFormat)
+{
+    switch (imageFormat) {
+    case QQuick3DShaderImage::RGBA8: return "rgba8";
+    case QQuick3DShaderImage::R8:  return "r8";
+    case QQuick3DShaderImage::RG8: return "rg8";
+    case QQuick3DShaderImage::R16: return "r16";
+    case QQuick3DShaderImage::RG16: return "rg16";
+    case QQuick3DShaderImage::RGBA16F: return "rgba16f";
+    case QQuick3DShaderImage::RGBA32F: return "rgba32f";
+    case QQuick3DShaderImage::R16F: return "r16f";
+    case QQuick3DShaderImage::R32F: return "r32f";
+    case QQuick3DShaderImage::RGB10A2: return "rgb10_a2";
+    case QQuick3DShaderImage::R8SI: return "r8i";
+    case QQuick3DShaderImage::R32SI: return "r32i";
+    case QQuick3DShaderImage::RG32SI: return "rg32i";
+    case QQuick3DShaderImage::RGBA32SI: return "rgba32i";
+    case QQuick3DShaderImage::R8UI: return "r8ui";
+    case QQuick3DShaderImage::R32UI: return "r32ui";
+    case QQuick3DShaderImage::RG32UI: return "rg32ui";
+    case QQuick3DShaderImage::RGBA32UI: return "rgba32ui";
+    default: break;
+    }
+    return {};
+}
+
+// The GLSL image type of a shader image with the given shape and format.
+QByteArray toShaderImageType(QQuick3DShaderImage::ImageShape shape, QQuick3DShaderImage::ImageFormat imageFormat)
+{
+    QByteArray prefix;
+    switch (imageFormat) {
+    case QQuick3DShaderImage::R8SI:
+    case QQuick3DShaderImage::R32SI:
+    case QQuick3DShaderImage::RG32SI:
+    case QQuick3DShaderImage::RGBA32SI:
+        prefix = "i";
+        break;
+    case QQuick3DShaderImage::R8UI:
+    case QQuick3DShaderImage::R32UI:
+    case QQuick3DShaderImage::RG32UI:
+    case QQuick3DShaderImage::RGBA32UI:
+        prefix = "u";
+        break;
+    default:
+        break;
+    }
+    switch (shape) {
+    case QQuick3DShaderImage::Image1D: return prefix + "image1D";
+    case QQuick3DShaderImage::Image2D: return prefix + "image2D";
+    case QQuick3DShaderImage::Image3D: return prefix + "image3D";
+    case QQuick3DShaderImage::Image2DArray: return prefix + "image2DArray";
+    case QQuick3DShaderImage::ImageCube: return prefix + "imageCube";
+    }
+    return {};
+}
+
+bool handleBufferProperty(QQuick3DShaderStorageBuffer *buffer, const QByteArray &name, int i,
+                          QByteArrayList &metadata, QList<QSSGBaseTypeProperty> &properties)
+{
+    QSSGRenderBuffer *rbuf = buffer ? (QSSGRenderBuffer*)QQuick3DObjectPrivate::get(buffer)->spatialNode : nullptr;
+    metadata.push_back(QByteArrayLiteral("buffer"));
+    metadata.push_back({});
+    metadata.push_back(name);
+    metadata.push_back({});
+    QSSGShaderBuffer sbuf(rbuf, {}, {});
+    properties.push_back({ name, {}, QVariant::fromValue(sbuf), QSSGRenderShaderValue::StorageBuffer, i});
+    return rbuf != nullptr;
+}
+
+void updateBufferProperty(QQuick3DShaderStorageBuffer *buffer, const QSSGBaseTypeProperty &property)
+{
+    QSSGRenderBuffer *rbuf = buffer ? (QSSGRenderBuffer*)QQuick3DObjectPrivate::get(buffer)->spatialNode : nullptr;
+    QSSGShaderBuffer sbuf = property.value.value<QSSGShaderBuffer>();
+    sbuf.buffer = rbuf;
+    property.value = QVariant::fromValue(sbuf);
+}
+
+bool handleImageProperty(QQuick3DShaderImage *image, const QByteArray &name, int i,
+                         QByteArrayList &metadata, QList<QSSGBaseTypeProperty> &properties) {
+    QByteArray fullType = image ? toShaderFormat(image->format()) : QByteArrayLiteral("");
+    QSSGRenderImage *rimg = image ? (QSSGRenderImage*)QQuick3DObjectPrivate::get(image)->spatialNode : nullptr;
+    metadata.push_back(QByteArrayLiteral("image"));
+    metadata.push_back(fullType);
+    metadata.push_back(name);
+    metadata.push_back(image ? toShaderImageType(image->shape(), image->format()) : QByteArray());
+    QSSGShaderImage simg(rimg, {}, fullType, {});
+    properties.push_back({ name, {}, QVariant::fromValue(simg), QSSGRenderShaderValue::Image, i});
+    return rimg != nullptr;
+}
+
+void updateImageProperty(QQuick3DShaderImage *image, const QSSGBaseTypeProperty &property)
+{
+    QSSGRenderImage *rimg = image ? (QSSGRenderImage*)QQuick3DObjectPrivate::get(image)->spatialNode : nullptr;
+    QSSGShaderImage simg = property.value.value<QSSGShaderImage>();
+    simg.image = rimg;
+    if (image && (toShaderFormat(image->format()) != simg.format
+                  || (!simg.imageType.isEmpty() && toShaderImageType(image->shape(), image->format()) != simg.imageType))) {
+        qWarning() << "Invalid shader image format or shape.";
+        simg.image = nullptr;
+    }
+    property.value = QVariant::fromValue(simg);
+}
+
+/*
+    Sets the values of \a properties from the current values of the \a owner's
+    properties, and appends the metadata of the images and buffers among them
+    to \a metadata, in the form processMetadata() expects.
+
+    Returns false if an image or buffer has no backend node yet.
+*/
+bool resolveResourceProperties(const QObject *owner, const QList<QSSGBaseTypeProperty> &properties,
+                               QByteArrayList &metadata)
+{
+    bool allHaveNodes = true;
+    for (const auto &prop : properties) {
+        const QMetaProperty p = owner->metaObject()->property(prop.pid);
+        if (Q_UNLIKELY(!p.isValid()))
+            continue;
+        const QVariant v = p.read(owner);
+        if (!v.isValid())
+            continue;
+        if (v.metaType().id() == qMetaTypeId<QQuick3DTexture *>()) {
+            QQuick3DTexture *tex = v.value<QQuick3DTexture *>();
+            QSSGRenderImage *ri = tex ? static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(tex)->spatialNode) : nullptr;
+            prop.value = QVariant::fromValue(ri);
+        } else if (v.metaType().id() == qMetaTypeId<QQuick3DShaderStorageBuffer *>()) {
+            QQuick3DShaderStorageBuffer *buffer = v.value<QQuick3DShaderStorageBuffer *>();
+            if (!buffer) {
+                prop.value = QVariant::fromValue(QSSGShaderBuffer());
+                continue;
+            }
+            QSSGRenderBuffer *ri = static_cast<QSSGRenderBuffer *>(QQuick3DObjectPrivate::get(buffer)->spatialNode);
+            metadata.append("buffer");
+            metadata.append("");
+            metadata.append(prop.name);
+            metadata.append("");
+            prop.value = QVariant::fromValue(QSSGShaderBuffer(ri, {}, {}));
+            allHaveNodes &= (ri != nullptr);
+        } else if (v.metaType().id() == qMetaTypeId<QQuick3DShaderImage *>()) {
+            QQuick3DShaderImage *image = v.value<QQuick3DShaderImage *>();
+            if (!image) {
+                prop.value = QVariant::fromValue(QSSGShaderImage());
+                continue;
+            }
+            QSSGRenderImage *ri = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(image)->spatialNode);
+            QSSGShaderImage simg(ri, {}, toShaderFormat(image->format()), {});
+            metadata.append("image");
+            // The format and the image type are checked against the shader in processMetadata().
+            metadata.append(simg.format);
+            metadata.append(prop.name);
+            metadata.append(toShaderImageType(image->shape(), image->format()));
+            prop.value = QVariant::fromValue(simg);
+            allHaveNodes &= (ri != nullptr);
+        } else {
+            prop.value = v;
+        }
+    }
+    return allHaveNodes;
+}
+
+/*
+    Updates the values of \a properties from the current values of the
+    \a owner's properties, when only the values have changed since
+    resolveResourceProperties() and the shader does not need to be processed
+    again.
+*/
+void updateResourceProperties(const QObject *owner, const QList<QSSGBaseTypeProperty> &properties)
+{
+    for (const auto &prop : properties) {
+        const QMetaProperty p = owner->metaObject()->property(prop.pid);
+        if (Q_UNLIKELY(!p.isValid()))
+            continue;
+        const QVariant v = p.read(owner);
+        if (!v.isValid())
+            continue;
+        if (v.metaType().id() == qMetaTypeId<QQuick3DTexture *>()) {
+            QQuick3DTexture *tex = v.value<QQuick3DTexture *>();
+            QSSGRenderImage *ri = tex ? static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(tex)->spatialNode) : nullptr;
+            prop.value = QVariant::fromValue(ri);
+        } else if (v.metaType().id() == qMetaTypeId<QQuick3DShaderStorageBuffer *>()) {
+            updateBufferProperty(v.value<QQuick3DShaderStorageBuffer *>(), prop);
+        } else if (v.metaType().id() == qMetaTypeId<QQuick3DShaderImage *>()) {
+            updateImageProperty(v.value<QQuick3DShaderImage *>(), prop);
+        } else {
+            prop.value = v;
+        }
+    }
+}
+
+} // QSSGShaderUtils
+
+/*
+    Tracks the ShaderImage and ShaderStorageBuffer objects that the properties of
+    a CustomMaterial, an Effect, a RenderPass or a ComputePass refer to. The
+    objects are referenced into the owner's scene, so they get a backend node
+    even when they are declared outside the View3D, and onResourceChanged is
+    called when an image's format changes or an object is destroyed, as both
+    require the owner to regenerate its shaders.
+*/
+QQuick3DShaderResourceTracker::QQuick3DShaderResourceTracker(QQuick3DObject *owner, std::function<void()> onResourceChanged)
+    : m_owner(owner)
+    , m_onResourceChanged(std::move(onResourceChanged))
+{
+    Q_ASSERT(m_owner != nullptr);
+}
+
+QQuick3DShaderResourceTracker::~QQuick3DShaderResourceTracker()
+{
+    for (auto it = m_references.begin(), end = m_references.end(); it != end; ++it) {
+        QObject::disconnect(it->destroyedConnection);
+        QObject::disconnect(it->formatConnection);
+        QObject::disconnect(it->shapeConnection);
+        if (it->sceneManager)
+            QQuick3DObjectPrivate::get(it.key())->derefSceneManager();
+    }
+}
+
+/*
+    Returns the ShaderImage or ShaderStorageBuffer the property refers to.
+    isResourceProperty is set when the property is of one of those types,
+    even if it is null.
+*/
+QQuick3DObject *QQuick3DShaderResourceTracker::resourceForProperty(const QObject *owner, const QMetaProperty &property,
+                                                                   bool *isResourceProperty)
+{
+    const QVariant value = property.read(owner);
+    QMetaType type = property.metaType();
+    if (type == QMetaType::fromType<QVariant>())
+        type = value.metaType();
+
+    QQuick3DObject *resource = nullptr;
+    bool isResource = false;
+    if (type == QMetaType::fromType<QQuick3DShaderStorageBuffer *>()) {
+        resource = value.value<QQuick3DShaderStorageBuffer *>();
+        isResource = true;
+    } else if (type == QMetaType::fromType<QQuick3DShaderImage *>()) {
+        resource = value.value<QQuick3DShaderImage *>();
+        isResource = true;
+    } else if (type == QMetaType::fromType<QObject *>()) {
+        // An untyped property is only known to be a resource while it holds one.
+        QObject *object = value.value<QObject *>();
+        if (auto *buffer = qobject_cast<QQuick3DShaderStorageBuffer *>(object))
+            resource = buffer;
+        else if (auto *image = qobject_cast<QQuick3DShaderImage *>(object))
+            resource = image;
+        isResource = (resource != nullptr);
+    }
+
+    if (isResourceProperty)
+        *isResourceProperty = isResource;
+    return resource;
+}
+
+/*
+    Replaces the tracked properties, mapping each property index to the
+    object it refers to (or nullptr).
+*/
+void QQuick3DShaderResourceTracker::setResources(const QHash<int, QQuick3DObject *> &resources)
+{
+    // Reference the new objects before releasing the old ones, so that an
+    // object that stays in use does not leave the scene in between.
+    for (QQuick3DObject *object : resources) {
+        if (object)
+            addReference(object);
+    }
+    for (QQuick3DObject *object : std::as_const(m_resources)) {
+        if (object)
+            removeReference(object);
+    }
+
+    m_resources = resources;
+    m_boundLayouts.clear();
+    for (auto it = resources.cbegin(), end = resources.cend(); it != end; ++it)
+        m_boundLayouts.insert(it.key(), layoutKey(it.value()));
+}
+
+/*
+    Tracks the ShaderImage and ShaderStorageBuffer properties of the owner
+    from \a firstPropertyIndex on, including null ones, and connects their
+    notify signals to \a onPropertyChanged. For owners that do not otherwise
+    go through their properties when they regenerate the shader.
+*/
+void QQuick3DShaderResourceTracker::trackProperties(int firstPropertyIndex, const QMetaMethod &onPropertyChanged)
+{
+    const QMetaObject *metaObject = m_owner->metaObject();
+    QHash<int, QQuick3DObject *> resources;
+    for (int i = firstPropertyIndex; i < metaObject->propertyCount(); ++i) {
+        const QMetaProperty property = metaObject->property(i);
+        bool isResource = false;
+        QQuick3DObject *resource = resourceForProperty(m_owner, property, &isResource);
+        if (!isResource)
+            continue;
+        resources.insert(i, resource);
+        if (property.hasNotifySignal() && onPropertyChanged.isValid())
+            QObject::connect(m_owner, property.notifySignal(), m_owner, onPropertyChanged, Qt::UniqueConnection);
+    }
+    setResources(resources);
+}
+
+/*
+    Re-reads the tracked properties after one of them has been assigned
+    another object. Returns false if an object has no backend node yet.
+ */
+bool QQuick3DShaderResourceTracker::updateResources()
+{
+    QHash<int, QQuick3DObject *> resources;
+    bool allHaveNodes = true;
+    for (auto it = m_resources.cbegin(), end = m_resources.cend(); it != end; ++it) {
+        QQuick3DObject *object = resourceForProperty(m_owner, m_owner->metaObject()->property(it.key()));
+        resources.insert(it.key(), object);
+        if (object && !QQuick3DObjectPrivate::get(object)->spatialNode)
+            allHaveNodes = false;
+    }
+    setResources(resources);
+    return allHaveNodes;
+}
+
+/*
+    True when a tracked property has gained or lost its object, or now refers
+    to an image of another format, since the last setResources(). Swapping
+    one object for another of the same kind does not count, as that only
+    changes the binding, not the generated shader.
+*/
+bool QQuick3DShaderResourceTracker::hasResourceLayoutChanged() const
+{
+    for (auto it = m_boundLayouts.cbegin(), end = m_boundLayouts.cend(); it != end; ++it) {
+        const QMetaProperty property = m_owner->metaObject()->property(it.key());
+        if (layoutKey(resourceForProperty(m_owner, property)) != it.value())
+            return true;
+    }
+    return false;
+}
+
+/*
+    The part of an object that ends up in the generated shader: whether
+    there is one, and for an image, its format and shape.
+*/
+QByteArray QQuick3DShaderResourceTracker::layoutKey(QQuick3DObject *object)
+{
+    if (!object)
+        return {};
+    if (auto *image = qobject_cast<QQuick3DShaderImage *>(object))
+        return QByteArrayLiteral("image:") + QSSGShaderUtils::toShaderFormat(image->format()) + ':'
+                + QSSGShaderUtils::toShaderImageType(image->shape(), image->format());
+    return QByteArrayLiteral("buffer");
+}
+
+void QQuick3DShaderResourceTracker::updateSceneManager(QQuick3DSceneManager *sceneManager)
+{
+    for (auto it = m_references.begin(), end = m_references.end(); it != end; ++it) {
+        if (it->sceneManager)
+            QQuick3DObjectPrivate::get(it.key())->derefSceneManager();
+        it->sceneManager = sceneManager;
+        if (sceneManager)
+            QQuick3DObjectPrivate::get(it.key())->refSceneManager(*sceneManager);
+    }
+}
+
+void QQuick3DShaderResourceTracker::addReference(QQuick3DObject *object)
+{
+    auto it = m_references.find(object);
+    if (it == m_references.end()) {
+        it = m_references.insert(object, {});
+        if (QQuick3DSceneManager *sceneManager = QQuick3DObjectPrivate::get(m_owner)->sceneManager) {
+            QQuick3DObjectPrivate::get(object)->refSceneManager(*sceneManager);
+            it->sceneManager = sceneManager;
+        }
+        // The object is already being torn down when destroyed() is emitted,
+        // so only forget it here, without releasing its scene reference.
+        it->destroyedConnection = QObject::connect(object, &QObject::destroyed, m_owner, [this, object]() {
+            m_references.remove(object);
+            for (QQuick3DObject *&resource : m_resources) {
+                if (resource == object)
+                    resource = nullptr;
+            }
+            m_onResourceChanged();
+        });
+        // The format and the shape are part of the generated image declaration.
+        if (auto *image = qobject_cast<QQuick3DShaderImage *>(object)) {
+            it->formatConnection = QObject::connect(image, &QQuick3DShaderImage::formatChanged, m_owner, [this]() { m_onResourceChanged(); });
+            it->shapeConnection = QObject::connect(image, &QQuick3DShaderImage::shapeChanged, m_owner, [this]() { m_onResourceChanged(); });
+        }
+    }
+    ++it->useCount;
+}
+
+void QQuick3DShaderResourceTracker::removeReference(QQuick3DObject *object)
+{
+    auto it = m_references.find(object);
+    if (it == m_references.end() || --it->useCount > 0)
+        return;
+
+    QObject::disconnect(it->destroyedConnection);
+    QObject::disconnect(it->formatConnection);
+    QObject::disconnect(it->shapeConnection);
+    if (it->sceneManager)
+        QQuick3DObjectPrivate::get(object)->derefSceneManager();
+    m_references.erase(it);
 }
 
 QQuick3DShaderUtilsBuffer::TextureFormat QQuick3DShaderUtilsBuffer::mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt)
@@ -1824,14 +2224,23 @@ std::optional<QQuick3DPropertyChangedTracker::UniformProperty> QQuick3DPropertyC
                         addPropertyWatcher(property, DirtyPropertyHint::Reference, texture);
                 }
             } else if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) { // For compatibility, also check for texture input types
-                if (QQuick3DShaderUtilsTextureInput *textureInput = property.read(m_owner).value<QQuick3DShaderUtilsTextureInput *>();
-                    textureInput && textureInput->texture()) {
-                    result = addTextureToUniforms(property.name(), textureInput->texture(), propertyIndex);
-                    if (addWatchers) {
-                        addTextureInputWatchers(property, textureInput);
-                        addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
+                if (QQuick3DShaderUtilsTextureInput *textureInput = property.read(m_owner).value<QQuick3DShaderUtilsTextureInput *>()) {
+                    if (textureInput->texture()) {
+                        result = addTextureToUniforms(property.name(), textureInput->texture(), propertyIndex);
+                        if (addWatchers) {
+                            addTextureInputWatchers(property, textureInput);
+                            addPropertyWatcher(property, DirtyPropertyHint::Reference, textureInput);
+                        }
                     }
                 }
+            } else if (propType.id() == qMetaTypeId<QQuick3DShaderStorageBuffer *>()) {
+                // Watched by the owner's QQuick3DShaderResourceTracker, which also
+                // notices when a null property gets assigned.
+                if (property.read(m_owner).value<QQuick3DShaderStorageBuffer *>())
+                    result = UniformProperty(property.name(), {}, propValue, QSSGRenderShaderValue::StorageBuffer, propertyIndex);
+            } else if (propType.id() == qMetaTypeId<QQuick3DShaderImage *>()) {
+                if (property.read(m_owner).value<QQuick3DShaderImage *>())
+                    result = UniformProperty(property.name(), {}, propValue, QSSGRenderShaderValue::Image, propertyIndex);
             }
         } else if (propType == QMetaType(QMetaType::QObjectStar)) {
             if (QQuick3DTexture *texture = qobject_cast<QQuick3DTexture *>(propValue.value<QObject *>())) {
@@ -2324,6 +2733,101 @@ QSSGCommand *QQuick3DShaderUtilsRenderPassDepthStencilAttachment::cloneCommand()
 {
     QSSGDepthStencilAttachment *cmd = new QSSGDepthStencilAttachment;
     return cmd;
+}
+
+
+/*!
+    \qmltype Dispatch
+    \inherits Command
+    \inqmlmodule QtQuick3D
+    \brief Dispatches a compute shader.
+    \since 6.13
+
+    A Dispatch command specifies how many work groups a \l ComputePass
+    dispatches its compute shader with, along the X, Y, and Z dimensions.
+    A ComputePass without a Dispatch command in its
+    \l{ComputePass::commands}{commands} list does not execute its shader.
+
+    The total number of shader invocations is the group count multiplied by
+    the shader's local work group size (declared with
+    \c{layout(local_size_x = ..., local_size_y = ..., local_size_z = ...) in;}
+    in the shader
+    itself). For example, to run one invocation per texel of a
+    \l ShaderImage when the shader declares a local size of 8x8x1:
+
+    \qml
+    Dispatch {
+        groupCountX: (myImage.width + 7) / 8
+        groupCountY: (myImage.height + 7) / 8
+    }
+    \endqml
+
+    The group count dimensions are clamped to the maximum supported amount:
+    \c QRhi::MaxThreadGroupsPerDimension, with a warning.
+
+    Setting any of the group counts to \c 0 disables the ComputePass: its
+    shader is not executed until all group counts are non-zero again. This
+    is useful for toggling a pass on and off without editing its
+    \l{ComputePass::commands}{commands} list, for example:
+
+    \qml
+    Dispatch {
+        groupCountX: computeEnabled ? (myImage.width + 7) / 8 : 0
+        groupCountY: (myImage.height + 7) / 8
+    }
+    \endqml
+
+    \sa ComputePass
+*/
+
+/*!
+    \qmlproperty int Dispatch::groupCountX
+    This property holds the number of work groups to dispatch along the X
+    dimension. The default value is \c 1. A value of \c 0 disables the
+    \l ComputePass. Negative values are ignored.
+*/
+void QQuick3DShaderUtilsCommandDispatch::setGroupCountX(int groupCountX)
+{
+    if (m_groupCount.x == groupCountX || groupCountX < 0)
+        return;
+    m_groupCount.x = groupCountX;
+    emit groupCountXChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty int Dispatch::groupCountY
+    This property holds the number of work groups to dispatch along the Y
+    dimension. The default value is \c 1. A value of \c 0 disables the
+    \l ComputePass. Negative values are ignored.
+*/
+void QQuick3DShaderUtilsCommandDispatch::setGroupCountY(int groupCountY)
+{
+    if (m_groupCount.y == groupCountY || groupCountY < 0)
+        return;
+    m_groupCount.y = groupCountY;
+    emit groupCountYChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty int Dispatch::groupCountZ
+    This property holds the number of work groups to dispatch along the Z
+    dimension. The default value is \c 1. A value of \c 0 disables the
+    \l ComputePass. Negative values are ignored.
+*/
+void QQuick3DShaderUtilsCommandDispatch::setGroupCountZ(int groupCountZ)
+{
+    if (m_groupCount.z == groupCountZ || groupCountZ < 0)
+        return;
+    m_groupCount.z = groupCountZ;
+    emit groupCountZChanged();
+    emit changed();
+}
+
+QSSGCommand *QQuick3DShaderUtilsCommandDispatch::cloneCommand()
+{
+    return new QSSGDispatch(m_groupCount);
 }
 
 QT_END_NAMESPACE

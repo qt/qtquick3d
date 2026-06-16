@@ -27,6 +27,7 @@ class QSSGRenderContextInterface;
 class QSSGLayerRenderData;
 class QRhiTexture;
 class QRhiRenderBuffer;
+class QRhiBuffer;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGFrameData
 {
@@ -62,6 +63,8 @@ public:
 
     Result getRenderResult(RenderResult id) const;
     Result getRenderResult(QSSGResourceId userPassId, AttachmentSelector attachment) const;
+    QRhiTexture *getShaderImageTexture(QSSGResourceId shaderImageId) const;
+    QRhiBuffer *getShaderStorageBuffer(QSSGResourceId storageBufferId) const;
 
     qsizetype getAttachmentCount(QSSGResourceId userPassId) const;
 

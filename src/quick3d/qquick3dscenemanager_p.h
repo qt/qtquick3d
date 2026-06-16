@@ -37,7 +37,7 @@ class QSSGRenderContextInterface;
 class QSSGRenderRoot;
 struct QSSGRenderLayer;
 class QSSGRenderExtension;
-class QSSGRenderUserPass;
+class QSSGRenderUserPassBase;
 
 class Q_QUICK3D_EXPORT QQuick3DWindowAttachment : public QObject
 {
@@ -93,6 +93,7 @@ private:
     QList<QSSGRenderLayer *> pendingLayerCleanupQueue;
 };
 
+class QQuick3DRenderExtension;
 class Q_QUICK3D_EXPORT QQuick3DSceneManager : public QObject
 {
     Q_OBJECT
@@ -140,8 +141,11 @@ public:
     {
         Q_ASSERT(!QSSGRenderGraphObject::isNodeType(type));
 
-        if (QSSGRenderGraphObject::isTexture(type))
+        if (QSSGRenderGraphObject::isTexture(type)
+            || type == QSSGRenderGraphObject::Type::ShaderStorageBuffer
+            || type == QSSGRenderGraphObject::Type::ShaderStorageImage) {
             return size_t(ResourcePriority::Texture);
+        }
 
         if (type == QSSGRenderGraphObject::Type::TextureData)
             return size_t(ResourcePriority::TextureData);
@@ -190,7 +194,7 @@ public:
     QHash<QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
     QSet<QSSGRenderGraphObject *> resourceLoaders;
     QList<QSSGRenderExtension *> autoRegisteredExtensions;
-    QList<QSSGRenderUserPass *> userRenderPasses;
+    QList<QSSGRenderUserPassBase *> userRenderPasses;
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;
     int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.

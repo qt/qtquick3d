@@ -28,6 +28,7 @@ QT_BEGIN_NAMESPACE
 class QSSGFrameData;
 class QRhiRenderPassDescriptor;
 class QRhiTexture;
+class QRhiBuffer;
 class QSSGRhiGraphicsPipelineState;
 class QSSGRenderContextInterface;
 class QSSGRenderExtension;
@@ -149,6 +150,9 @@ public:
     static void registerRenderResult(const QSSGFrameData &frameData,
                                      QSSGExtensionId extension,
                                      QRhiTexture *texture);
+    static void registerRenderResultBuffer(const QSSGFrameData &frameData,
+                                           QSSGExtensionId extension,
+                                           QRhiBuffer *buffer);
 
 private:
     QSSGRenderExtensionHelpers();

@@ -18,6 +18,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderjoint_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermorphtarget_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercomputepass_p.h>
 #include "../graphobjects/qssgrenderroot_p.h"
 #include "../qssgrendercontextcore.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
@@ -2895,6 +2896,32 @@ void QSSGLayerRenderData::prepareForRender()
         userRenderPasses.userPasses = userRenderPassManager->scheduledUserPasses();
     }
 
+    // Set required texture flags if a compute pass that will run is using them,
+    // so that the passes producing the textures do not run for nothing.
+    const bool computeSupported = rhiCtx->rhi()->isFeatureSupported(QRhi::Compute);
+    for (const auto *userPass : std::as_const(userRenderPasses.userPasses)) {
+        if (!computeSupported || userPass->type != QSSGRenderGraphObject::Type::ComputePass)
+            continue;
+        const auto *computePass = static_cast<const QSSGRenderComputePass *>(userPass);
+        if (!computePass->willDispatch())
+            continue;
+        const QByteArray &body = computePass->computeShader.body;
+        if (body.contains("SCREEN_TEXTURE"))
+            layerPrepResult.flags.setRequiresScreenTexture(true);
+        if (body.contains("SCREEN_MIP_TEXTURE")) {
+            layerPrepResult.flags.setRequiresScreenTexture(true);
+            layerPrepResult.flags.setRequiresMipmapsForScreenTexture(true);
+        }
+        if (body.contains("DEPTH_TEXTURE"))
+            layerPrepResult.flags.setRequiresDepthTexture(true);
+        if (body.contains("AO_TEXTURE")) {
+            layerPrepResult.flags.setRequiresDepthTexture(true);
+            layerPrepResult.flags.setRequiresSsaoPass(true);
+        }
+        if (computePass->computeShader.needsNormalTexture)
+            layerPrepResult.flags.setRequiresNormalTexture(true);
+    }
+
     auto &opaqueObjects = opaqueObjectStore[0];
     auto &transparentObjects = transparentObjectStore[0];
     auto &screenTextureObjects = screenTextureObjectStore[0];
@@ -3146,6 +3173,7 @@ void QSSGLayerRenderData::resetForFrame()
     depthPrepassObjectsState = { DepthPrepassObjectStateT(DepthPrepassObject::None) };
     zPrePassActive = false;
     savedRenderState.reset();
+    computeLightsUpdated = false;
 
     clearTable(renderableModelStore);
     clearTable(modelContextStore);
@@ -3217,6 +3245,7 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     for (auto &renderResult : renderResults)
         renderResult.reset();
     oitRenderContext.reset();
+    computeLightContext.reset();
 
     if (userRenderPassManager)
         userRenderPassManager->releaseAll();

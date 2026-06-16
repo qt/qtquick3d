@@ -47,6 +47,7 @@ struct QSSGRenderImage;
 struct QSSGRenderResourceLoader;
 struct QSSGRenderLayer;
 struct QSSGRenderSkin;
+class QSSGRenderBuffer;
 
 // There is one QSSGBufferManager per QSSGRenderContextInterface, and so per
 // QQuickWindow, and by extension, per scenegraph render thread. This is
@@ -127,12 +128,19 @@ public:
     // called on the destuction of a layer to release its referenced resources
     void releaseResourcesForLayer(QSSGRenderLayer *layer);
 
-    QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
+    QSSGRenderImageTexture loadRenderImage(QSSGRenderImage *image,
                                            MipMode inMipMode = MipModeFollowRenderImage,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
     QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
     QSSGRenderImageTexture loadLightmap(const QSSGRenderModel &model);
     QSSGRenderImageTexture loadSkinmap(QSSGRenderTextureData *skin);
+    QRhiBuffer *loadBuffer(QSSGRenderBuffer &buffer);
+
+    // Non-creating lookups of what loadRenderImage() and loadBuffer() resolve a
+    // shader image or storage buffer to. These return nullptr until the
+    // resource has been loaded by one of its users.
+    QRhiTexture *shaderImageTexture(const QSSGRenderImage &image) const;
+    QRhiBuffer *storageBuffer(const QSSGRenderBuffer &buffer) const;
 
     QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model, const QString &lightmap) const;
     QSSGBounds3 getModelBounds(const QSSGRenderModel *model);
@@ -148,7 +156,9 @@ public:
     void releaseTextureData(const QSSGRenderTextureData *data);
     void releaseTextureData(const CustomImageCacheKey &key);
     void releaseExtensionResult(const QSSGRenderExtension &rext);
-    void releaseUserRenderPass(const QSSGRenderUserPass &upass);
+    void releaseUserRenderPass(const QSSGRenderUserPassBase &upass);
+    void releaseBuffer(const QSSGRenderBuffer &buffer);
+    void releaseRenderImage(const QSSGRenderImage &image);
 
     void commitBufferResourceUpdates();
 
@@ -162,6 +172,7 @@ public:
     QSSGMesh::Mesh loadMeshData(const QSSGRenderGeometry *geometry);
 
     void registerExtensionResult(const QSSGRenderExtension &extensions, QRhiTexture *texture);
+    void registerExtensionResult(const QSSGRenderExtension &extensions, QRhiBuffer *buffer);
 
     static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
 
@@ -191,7 +202,7 @@ public:
 
 private:
     void clear();
-    QRhiResourceUpdateBatch *meshBufferUpdateBatch();
+    QRhiResourceUpdateBatch *bufferUpdateBatch();
 
     static QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath);
     enum CreateRhiTextureFlag {
@@ -223,13 +234,16 @@ private:
     QHash<CustomImageCacheKey, ImageData> customTextureMap;     // Textures (QQuick3DTextureData)
     QHash<QSGTexture *, ImageData> qsgImageMap;                 // Textures (from Qt Quick)
     QHash<const QSSGRenderExtension *, ImageData> renderExtensionTexture; // Textures (from QQuick3DRenderExtension)
+    QHash<const QSSGRenderExtension *, QRhiBuffer*> renderExtensionBuffer; // Buffers (from QQuick3DRenderExtension)
     QHash<std::pair<QSSGRenderPath, QString>, MeshData> meshMap; // Meshes (specififed by path)
     QHash<std::pair<QSSGRenderGeometry *, QString>, MeshData> customMeshMap; // Meshes (QQuick3DGeometry)
+    QHash<const QSSGRenderBuffer*, QRhiBuffer *> renderBuffers;
+    QHash<const QSSGRenderImage*, QRhiTexture *> renderImages;
 
     using QSSGUserRenderPassManagerWeakPtr = std::weak_ptr<QSSGUserRenderPassManager>;
     std::vector<QSSGUserRenderPassManagerWeakPtr> userRenderPassManagers;
 
-    QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
+    QRhiResourceUpdateBatch *bufferUpdates = nullptr;
     QMutex meshBufferMutex;
 
     quint32 frameCleanupIndex = 0;

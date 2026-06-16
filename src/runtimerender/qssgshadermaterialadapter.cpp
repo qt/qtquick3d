@@ -8,8 +8,11 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include "qssgrendercontextcore.h"
+#include "private/qssgrenderbuffer_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadertokenizer_p.h>
+
+#include <QRegularExpression>
 
 QT_BEGIN_NAMESPACE
 
@@ -1177,6 +1180,33 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
     *codeAndMetaData = { result, md };
 }
 
+// The metadata JSON sits in a /* */ comment, and the metadata parser ends it at
+// the first #endif, so besides the JSON escapes, '/' and '#' are escaped too,
+// which keeps both "*/" and "#endif" out of the string.
+static QByteArray toJsonStringContent(const QByteArray &text)
+{
+    QByteArray result;
+    result.reserve(text.size());
+    for (const char c : text) {
+        switch (c) {
+        case '"': result.append("\\\""); break;
+        case '\\': result.append("\\\\"); break;
+        case '/': result.append("\\/"); break;
+        case '#': result.append("\\u0023"); break;
+        case '\n': result.append("\\n"); break;
+        case '\r': result.append("\\r"); break;
+        case '\t': result.append("\\t"); break;
+        default:
+            if (uchar(c) < 0x20)
+                result.append("\\u00").append(QByteArray::number(uchar(c), 16).rightJustified(2, '0'));
+            else
+                result.append(c);
+            break;
+        }
+    }
+    return result;
+}
+
 void QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
     QByteArray *dst,
     const CustomShaderPrepWorkData &workData,
@@ -1184,6 +1214,7 @@ void QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
     QSSGShaderCache::ShaderType type,
     bool multiViewCompatible,
     const StringPairList &baseUniforms,
+    const QByteArrayList &metadata,
     const StringPairList &baseInputs,
     const StringPairList &baseOutputs,
     const StringPairList &multiViewDependentSamplers,
@@ -1252,7 +1283,7 @@ void QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
     for (int i = 0, count = allUniforms.size(); i < count; ++i) {
         const auto &typeAndName(allUniforms[i]);
         dst->append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
-        if (i < count - 1 || !multiViewDependentUniforms.isEmpty())
+        if (i < count - 1 || !multiViewDependentUniforms.isEmpty() || metadata.size() > 0)
             dst->append(",");
         dst->append("\n");
     }
@@ -1262,9 +1293,31 @@ void QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(
     for (int i = 0, count = multiViewDependentUniforms.size(); i < count; ++i) {
         const auto &typeAndName(multiViewDependentUniforms[i]);
         dst->append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\", \"multiview_dependent\": true }");
-        if (i < count - 1)
+        if (i < count - 1 || metadata.size() > 0)
             dst->append(",");
         dst->append("\n");
+    }
+    if (metadata.size()) {
+        int i = 0;
+        QSSG_ASSERT((metadata.size() % 4) == 0, return);
+        while (i < metadata.size()) {
+            if (metadata[i] == "buffer") {
+                dst->append("    { \"type\": \"buffer\", \"name\": \"" + metadata[i+2] + "\", \"qualifiers\": \"" + metadata[i+3] + "\", \"contentType\": \"" + toJsonStringContent(metadata[i+1]) + "\" }");
+                i += 4;
+                if (i < metadata.size() - 1)
+                    dst->append(",");
+                dst->append("\n");
+            } else if (metadata[i].contains("image")) {
+                dst->append("    { \"type\": \"" + metadata[i] + "\", \"name\": \"" + metadata[i+2] + "\", \"qualifiers\": \"" + metadata[i+3] + "\", \"imgtype\": \"" + metadata[i+1] + "\" }");
+                i += 4;
+                if (i < metadata.size() - 1)
+                    dst->append(",");
+                dst->append("\n");
+            } else {
+                QSSG_ASSERT_X(false, "Invalid or unhandled metadata.", return);
+                return;
+            }
+        }
     }
 
     dst->append(metaEnd);
@@ -1336,6 +1389,217 @@ QList<QByteArrayView> QtQuick3DEditorHelpers::CustomMaterial::preprocessorVars()
     for (const auto &v : qssg_var_subst_tab)
         k.push_back(v.builtin);
     return k;
+}
+
+static qsizetype findMetadata(const QByteArray &type, const QByteArrayList &metadata, const QByteArray &name)
+{
+    for (qsizetype i = 0; i < metadata.size() / 4; i++) {
+        if (metadata[4 * i] == type && metadata[4 * i + 2] == name)
+            return i;
+    }
+    return -1;
+}
+
+static qsizetype findProperty(const QList<QSSGBaseTypeProperty> &props, const QByteArray &name)
+{
+    for (qsizetype i = 0; i < props.size(); i++) {
+        if (props[i].name == name)
+            return i;
+    }
+    return -1;
+}
+
+bool processMetadata(QList<QSSGBaseTypeProperty> &props,
+                     const QByteArrayList &metadata,
+                     QByteArrayList &stageMetadata,
+                     QByteArray &shaderData)
+{
+    static const QRegularExpression storageBufferRe(
+        QStringLiteral(
+            R"(\bSTORAGE_BUFFER\s*\(\s*(?<name>\w+)\s*,\s*"(?<qualifier>[^"]*)\"\s*\)\s*\{)"
+        )
+    );
+    static const QRegularExpression shaderImageRe(
+        QStringLiteral(
+            R"(\bSHADER_IMAGE\s*\(\s*)"
+            R"("(?<format>\w+)\"\s*,\s*)"
+            R"((?<name>\w+)\s*,\s*)"
+            R"((?<type>[iu]?image(?:1D|2D|3D|Cube|2DRect|1DArray|2DArray|CubeArray|Buffer|2DMS|2DMSArray))\s*,\s*)"
+            R"("(?<qualifier>[^"]*)\"\s*)"
+            R"(\)\s*;)"
+        )
+    );
+    // Blanks out comments, keeping the length and the line breaks, so that the
+    // declarations are looked up in the code only, at the same offsets.
+    const auto withoutComments = [](const QString &str) -> QString {
+        QString result = str;
+        for (qsizetype i = 0, size = result.size(); i < size; ++i) {
+            if (result[i] == u'"') {
+                for (++i; i < size && result[i] != u'"' && result[i] != u'\n'; ++i) {
+                    if (result[i] == u'\\')
+                        ++i;
+                }
+            } else if (result[i] == u'/' && i + 1 < size && result[i + 1] == u'/') {
+                for (; i < size && result[i] != u'\n'; ++i)
+                    result[i] = u' ';
+            } else if (result[i] == u'/' && i + 1 < size && result[i + 1] == u'*') {
+                const qsizetype commentEnd = result.indexOf(u"*/", i + 2);
+                const qsizetype end = commentEnd < 0 ? size : commentEnd + 2;
+                for (; i < end; ++i) {
+                    if (result[i] != u'\n')
+                        result[i] = u' ';
+                }
+                --i;
+            }
+        }
+        return result;
+    };
+
+    QString temp = QString::fromUtf8(shaderData);
+    QString code = withoutComments(temp);
+    QRegularExpressionMatchIterator mit = storageBufferRe.globalMatch(code);
+    QList<int> replacements;
+    QStringList repStrs;
+    QStringList nameList;
+
+    const auto findEndBrace = [](const QString &str, int pos) -> int {
+        auto iter = str.cbegin() + pos;
+        int nestingCount = 0;
+        while (iter != str.cend()) {
+            if (*iter == u'{') {
+                ++nestingCount;
+            } else if (*iter == u'}') {
+                if (nestingCount == 0) {
+                    return iter - str.begin() + 1;
+                } else {
+                    --nestingCount;
+                }
+            }
+            ++iter;
+        }
+        return -1;
+    };
+    // These images and buffers need to be replaced to where the declaration
+    // is located so that the user defined types are declared before buffer.
+    // Images are replaced in place as well, so that the declaration keeps its
+    // original position in the shader source.
+    // Note that the expressions above are matched against the raw shader
+    // source, before any preprocessing takes place: the format and the memory
+    // qualifiers must be written as literal strings and the name as a plain
+    // identifier, e.g.
+    //     SHADER_IMAGE("rgba8", imageName, image2D, "readonly");
+    // A #define'd format is therefore not recognized, and could not be
+    // supported anyway, since the format is compared for equality against the
+    // one the frontend property provides (see below).
+    while (mit.hasNext()) {
+        QRegularExpressionMatch mm = mit.next();
+        QString name  = mm.captured("name");
+        QString qualifiers = mm.captured("qualifier").trimmed();
+        if (nameList.contains(name)) {
+            qWarning() << "Duplicate name found: " << name;
+            return false;
+        }
+        nameList.append(name);
+        int begin = mm.capturedStart(0);
+        int end = mm.capturedEnd(0);
+        int braceBegin = end;
+        end = findEndBrace(code, end);
+        if (end == -1) {
+            qWarning() << "Unable to find end brace for " << name;
+            return false;
+        }
+        QString body = temp.mid(braceBegin, end - braceBegin - 1).trimmed();
+        // Like any other interface block, the declaration may end with a ';'.
+        int afterBlock = end;
+        while (afterBlock < code.size() && code[afterBlock].isSpace())
+            ++afterBlock;
+        if (afterBlock < code.size() && code[afterBlock] == u';')
+            end = afterBlock + 1;
+        replacements.append(begin);
+        replacements.append(end);
+        repStrs.append("@" + name + "@"); // mark where the image needs to be replaced
+        auto n = name.toUtf8();
+        const qsizetype mtIndex = findMetadata("buffer", metadata, n);
+        const qsizetype propIndex = findProperty(props, n);
+        if (mtIndex >= 0 && propIndex >= 0) {
+            QSSGShaderBuffer sbuf(props[propIndex].value.value<QSSGShaderBuffer>());
+            if (!QSSGBaseTypeHelpers::parseMemoryQualifiers(qualifiers.toUtf8(), sbuf.qualifiers)) {
+                qWarning() << "Invalid qualifiers for " << name;
+                return false;
+            }
+            sbuf.dataType = body.toUtf8();
+            stageMetadata.append("buffer");
+            stageMetadata.append(sbuf.dataType);
+            stageMetadata.append(props[propIndex].name);
+            stageMetadata.append(QSSGBaseTypeHelpers::toString(sbuf.qualifiers));
+            props[propIndex].value = QVariant::fromValue(sbuf);
+        } else {
+            qWarning() << "Unable to find matching buffer or property for " << name;
+            return false;
+        }
+    }
+    for (int i = 0; i < replacements.size() / 2; i++) {
+        int idx = (replacements.size() / 2) - i - 1;
+        temp.replace(replacements[2*idx], replacements[2*idx+1] - replacements[2*idx], repStrs[idx]);
+    }
+    replacements.clear();
+    repStrs.clear();
+    code = withoutComments(temp);
+    mit = shaderImageRe.globalMatch(code);
+    while (mit.hasNext()) {
+        QRegularExpressionMatch mm = mit.next();
+        QString format  = mm.captured("format");
+        QString name = mm.captured("name");
+        QString type  = mm.captured("type");
+        QString qualifiers = mm.captured("qualifier").trimmed();
+        if (nameList.contains(name)) {
+            qWarning() << "Duplicate name found: " << name;
+            return false;
+        }
+        nameList.append(name);
+        int begin = mm.capturedStart(0);
+        int end = mm.capturedEnd(0);
+        replacements.append(begin);
+        replacements.append(end);
+        repStrs.append("@" + name + "@"); // mark where the image needs to be replaced
+        auto n = name.toUtf8();
+        const qsizetype mtIndex = findMetadata("image", metadata, n);
+        const qsizetype propIndex = findProperty(props, n);
+        if (mtIndex >= 0 && propIndex >= 0) {
+            QSSGShaderImage simg(props[propIndex].value.value<QSSGShaderImage>());
+            if (!QSSGBaseTypeHelpers::parseMemoryQualifiers(qualifiers.toUtf8(), simg.qualifiers)) {
+                qWarning() << "Invalid qualifiers for " << name;
+                return false;
+            }
+            simg.format = format.toUtf8();
+            simg.imageType = type.toUtf8();
+            props[propIndex].value = QVariant::fromValue(simg);
+            if (metadata[4*mtIndex+1] != simg.format) {
+                qWarning() << "Shader image format doesn't match format in shader: " << simg.format;
+                return false;
+            }
+            // The image type the frontend expects from the image's shape and format.
+            const QByteArray &expectedType = metadata[4*mtIndex+3];
+            if (!expectedType.isEmpty() && expectedType != simg.imageType) {
+                qWarning() << "Shader image type doesn't match type in shader: " << simg.imageType
+                           << ", expected " << expectedType;
+                return false;
+            }
+            stageMetadata.append(simg.imageType);
+            stageMetadata.append(simg.format);
+            stageMetadata.append(props[propIndex].name);
+            stageMetadata.append(QSSGBaseTypeHelpers::toString(simg.qualifiers));
+        } else {
+            qWarning() << "Unable to find matching image or property for " << name;
+            return false;
+        }
+    }
+    for (int i = 0; i < replacements.size() / 2; i++) {
+        int idx = (replacements.size() / 2) - i - 1;
+        temp.replace(replacements[2*idx], replacements[2*idx+1] - replacements[2*idx], repStrs[idx]);
+    }
+    shaderData = temp.toUtf8();
+    return true;
 }
 
 QT_END_NAMESPACE

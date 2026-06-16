@@ -909,7 +909,9 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 }
             }
 
+            shaderPipeline->applyAndClearStorageBindings(RENDERER_VISIBILITY_ALL, bindings);
             QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
+
             subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtxD->pipeline(*ps, pEntry->m_rhiRenderPassDesc[cascadeIndex], srb);
             subsetRenderable.rhiRenderData.shadowPass.srb[cubeFaceIdx] = srb;
         }
@@ -2591,6 +2593,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                     bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, subsetRenderable.subset.rhi.targetsTexture, targetsSampler);
                 }
             }
+            shaderPipeline->applyAndClearStorageBindings(RENDERER_VISIBILITY_ALL, bindings);
 
             QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
 
@@ -2895,6 +2898,7 @@ bool RenderHelpers::rhiPrepareNormalPass(QSSGRhiContext *rhiCtx,
                 }
             }
 
+            shaderPipeline->applyAndClearStorageBindings(RENDERER_VISIBILITY_ALL, bindings);
             QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
 
             subsetRenderable.rhiRenderData.normalPass.pipeline = rhiCtxD->pipeline(ps,
@@ -3225,6 +3229,7 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
                 bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
             }
         }
+        shaderPipeline->applyAndClearStorageBindings(QRhiShaderResourceBinding::FragmentStage | QRhiShaderResourceBinding::VertexStage, bindings);
 
         QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
 
@@ -3552,6 +3557,7 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
                         }
                     }
                 }
+                shaderPipeline->applyAndClearStorageBindings(QRhiShaderResourceBinding::FragmentStage | QRhiShaderResourceBinding::VertexStage, bindings);
             }
 
             QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
@@ -3942,6 +3948,7 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
                         bindings.addTexture(var.binding, RENDERER_VISIBILITY_ALL, t, dummySampler);
                     }
                 }
+                shaderPipeline->applyAndClearStorageBindings(QRhiShaderResourceBinding::FragmentStage | QRhiShaderResourceBinding::VertexStage, bindings);
             }
 
             QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);

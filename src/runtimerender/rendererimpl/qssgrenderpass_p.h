@@ -25,6 +25,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermotionvectormap_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgcomputemanager_p.h>
 #include "qssgrenderer_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -37,6 +38,7 @@ struct QSSGRenderSkyMaterial;
 class QSGRenderer;
 class QSSGRenderExtension;
 class QSSGRenderUserPass;
+class QSSGRenderComputePass;
 
 class QRhiTexture;
 
@@ -372,21 +374,17 @@ public:
     QList<QSSGRenderExtension *> extensions;
 };
 
-class UserRenderPass : public QSSGRenderPass
+class UserRenderPass
 {
 public:
-    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::Standalone; }
-    void resetForFrame() final;
-
-    bool hasData() const { return (userPasses.size() != 0); }
-
-    QList<QSSGRenderUserPass *> userPasses;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGRenderUserPass *pass, QSSGPassKey key);
+    void renderPass(QSSGRenderer &renderer, QSSGRenderUserPass *pass);
+    void resetForFrame();
 
 protected:
     struct UserPassData
     {
+        QSSGRenderUserPass *passNode;
         QSSGRhiGraphicsPipelineState ps;
         QSSGRenderableObjectList renderables;
         QSSGRhiRenderableTextureV2Ptr renderableTexture;
@@ -401,30 +399,57 @@ protected:
         std::vector<UserPassData> subPassData;
     };
 
-    void prepareTopLevelPass(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGRenderUserPass *passNode)
+    void prepareTopLevelPass(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGRenderUserPass *passNode, QSSGPassKey key)
     {
         visitedPasses.clear(); // clear visited passes for each top-level pass
-        preparePassImpl(renderer, data, passNode, userPassData, {/* null */});
+        preparePassImpl(renderer, data, passNode, {/* null */}, nullptr, key);
     }
 
     void prepareSubPass(QSSGRenderer &renderer,
                         QSSGLayerRenderData &data,
                         QSSGRenderUserPass *subPassNode,
-                        std::vector<UserPassData> &subPassData,
-                        const QSSGRhiRenderableTextureV2Ptr &renderableTexture)
+                        const QSSGRhiRenderableTextureV2Ptr &renderableTexture,
+                        UserPassData *parentUserPassData,
+                        QSSGPassKey key)
     {
         Q_ASSERT(renderableTexture != nullptr);
-        preparePassImpl(renderer, data, subPassNode, subPassData, renderableTexture);
+        preparePassImpl(renderer, data, subPassNode, renderableTexture, parentUserPassData, key);
     }
 
     void preparePassImpl(QSSGRenderer &renderer,
                          QSSGLayerRenderData &data,
                          QSSGRenderUserPass *passNode,
-                         std::vector<UserPassData> &outData,
-                         QSSGRhiRenderableTextureV2Ptr renderableTexture);
+                         QSSGRhiRenderableTextureV2Ptr renderableTexture,
+                         UserPassData *parentUserPassData,
+                         QSSGPassKey key);
     std::vector<UserPassData> userPassData;
     std::set<QSSGResourceId> visitedPasses; // For circular dependency detection
     static constexpr size_t MAX_SUBPASS_DEPTH = 16;
+};
+
+class UserComputePass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGRenderComputePass *pass, QSSGPassKey key);
+    void renderPass(QSSGRenderer &renderer, QSSGRenderComputePass *pass);
+    void resetForFrame();
+private:
+    std::unordered_map<QSSGRenderComputePass *, ComputeUserPassData> userPassData;
+};
+
+class UserPassBase : public QSSGRenderPass
+{
+    UserRenderPass userRenderPass;
+    UserComputePass userComputePass;
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Standalone; }
+    void resetForFrame() final;
+
+    bool hasData() const { return (userPasses.size() != 0); }
+
+    QList<QSSGRenderUserPassBase *> userPasses;
 };
 
 struct QSSGOITRenderContext;

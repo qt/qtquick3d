@@ -6,6 +6,9 @@
 #include "qssgrenderextensions.h"
 #include "private/qssgassert_p.h"
 #include "private/qssglayerrenderdata_p.h"
+#include "private/qssgrenderimage_p.h"
+#include "private/qssgrenderbuffer_p.h"
+#include "private/qssgrenderbuffermanager_p.h"
 #include "qssgrendercontextcore.h"
 
 QT_BEGIN_NAMESPACE
@@ -127,12 +130,88 @@ QSSGFrameData::Result QSSGFrameData::getRenderResult(QSSGResourceId userPassId, 
 }
 
 /*!
+    \return The texture backing the \l {QtQuick3D::ShaderImage}{ShaderImage} with the given
+    \a shaderImageId, or \nullptr if there is none.
+
+    Use \l QQuick3DExtensionHelpers::getResourceId() to get the id of a
+    ShaderImage.
+
+    The texture is created the first time the image is used in a window, for
+    example by a \l {QtQuick3D::ComputePass}{ComputePass}, \l {QtQuick3D::RenderPass}{RenderPass},
+    \l {QtQuick3D::CustomMaterial}{CustomMaterial} or \l {QtQuick3D::Effect}{Effect},
+    so this function returns \nullptr until then. The texture is shared by
+    every View3D in the window, independent of which one uses it, and it is
+    recreated when the size or format of the image changes. The returned
+    texture is therefore only valid within the current frame and should be
+    queried again on each new frame.
+
+    \note Even if the function returns a texture, its content is only what
+    the passes using it have written so far. To see what a ComputePass in the
+    same View3D wrote this frame, read the texture from an extension that runs
+    after the user passes, such as one with the \c Main
+    \l {QSSGRenderExtension::RenderMode}{render mode} and the \c PostColor
+    \l {QSSGRenderExtension::RenderStage}{render stage}. The order in which
+    different View3Ds are rendered is not defined.
+
+    \since 6.13
+    \sa getShaderStorageBuffer()
+*/
+QRhiTexture *QSSGFrameData::getShaderImageTexture(QSSGResourceId shaderImageId) const
+{
+    if (shaderImageId == QSSGResourceId::Invalid)
+        return nullptr;
+
+    const auto *image = QSSGRenderGraphObjectUtils::getResource<QSSGRenderImage>(shaderImageId);
+    QSSG_ASSERT_X(image && (image->type == QSSGRenderGraphObject::Type::Image2D
+                            || image->type == QSSGRenderGraphObject::Type::ImageCube),
+                  "Resource is not a ShaderImage", return nullptr);
+
+    return m_ctx->bufferManager()->shaderImageTexture(*image);
+}
+
+/*!
+    \return The buffer backing the
+    \l {QtQuick3D::ShaderStorageBuffer}{ShaderStorageBuffer} with the given
+    \a storageBufferId, or \nullptr if there is none.
+
+    Use \l QQuick3DExtensionHelpers::getResourceId() to get the id of a
+    ShaderStorageBuffer.
+
+    If the ShaderStorageBuffer has a
+    \l {QtQuick3D::ShaderStorageBuffer::bufferProvider}{buffer provider} that
+    has registered a buffer with
+    \l QSSGRenderExtensionHelpers::registerRenderResultBuffer(), that buffer
+    is returned. Otherwise the buffer is the one the engine creates the first
+    time the ShaderStorageBuffer is used in a window, and this function returns
+    \nullptr until then.
+
+    The same rules as for \l getShaderImageTexture() apply: the buffer is
+    shared by every View3D in the window, it can be recreated when the
+    ShaderStorageBuffer changes, and it should be queried again on each new
+    frame.
+
+    \since 6.13
+    \sa getShaderImageTexture()
+*/
+QRhiBuffer *QSSGFrameData::getShaderStorageBuffer(QSSGResourceId storageBufferId) const
+{
+    if (storageBufferId == QSSGResourceId::Invalid)
+        return nullptr;
+
+    const auto *buffer = QSSGRenderGraphObjectUtils::getResource<QSSGRenderBuffer>(storageBufferId);
+    QSSG_ASSERT_X(buffer && buffer->type == QSSGRenderGraphObject::Type::ShaderStorageBuffer,
+                  "Resource is not a ShaderStorageBuffer", return nullptr);
+
+    return m_ctx->bufferManager()->storageBuffer(*buffer);
+}
+
+/*!
   \internal
 */
 void QSSGFrameData::scheduleRenderResults(QSSGResourceId userPassId) const
 {
-    QSSGRenderUserPass *userPassNode = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPass>(userPassId);
-    QSSG_ASSERT(userPassNode && userPassNode->type == QSSGRenderGraphObject::Type::RenderPass, return);
+    QSSGRenderUserPassBase *userPassNode = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPassBase>(userPassId);
+    QSSG_ASSERT(userPassNode && QSSGRenderGraphObjectUtils::isUserRenderPass(userPassNode->type), return);
 
     QSSGLayerRenderData *data = QSSGLayerRenderData::getCurrent(*m_ctx->renderer());
     if (QSSG_GUARD(data))

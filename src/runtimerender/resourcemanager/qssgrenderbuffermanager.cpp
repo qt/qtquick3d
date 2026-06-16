@@ -32,6 +32,7 @@
 #include <qtquick3d_tracepoints_p.h>
 #include "../extensionapi/qssgrenderextensions.h"
 #include "qssglightmapio_p.h"
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -190,7 +191,7 @@ void QSSGBufferManager::releaseResourcesForLayer(QSSGRenderLayer *layer)
     cleanupUnreferencedBuffers(frameResetIndex + 1, layer);
 }
 
-QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
+QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(QSSGRenderImage *image,
                                                           MipMode inMipMode,
                                                           LoadRenderImageFlags flags)
 {
@@ -199,7 +200,66 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 
     const auto &context = m_contextInterface->rhiContext();
     QSSGRenderImageTexture result;
-    if (image->m_qsgTexture) {
+    if (image->m_shaderImage) {
+        QRhi *rhi = context->rhi();
+        QRhiTexture *rhiTex = renderImages.value(image);
+
+        if (rhiTex && image->m_flags.testFlag(QSSGRenderImage::Flag::ShaderImageDirty)) {
+            rhiTex->deleteLater();
+            rhiTex = nullptr;
+        }
+
+        if (rhiTex == nullptr) {
+            using Shape = QSSGRenderImage::ShaderImageShape;
+            const Shape shape = image->m_shaderImageShape;
+            const auto &size = image->m_shaderImageSize;
+            const QRhiTexture::Flags flags = QRhiTexture::UsedWithLoadStore;
+            const auto unsupported = [&](const char *what) {
+                qWarning() << what << "are not supported, failed to create shader image.";
+                renderImages.remove(image);
+            };
+            // QRhi's Direct3D backends cannot create load/store views of 1D textures.
+            const bool d3d = rhi->backend() == QRhi::D3D11 || rhi->backend() == QRhi::D3D12;
+            if (shape == Shape::Image1D && (d3d || !rhi->isFeatureSupported(QRhi::OneDimensionalTextures))) {
+                unsupported("One-dimensional textures");
+                return result;
+            }
+            if (shape == Shape::Image3D && !rhi->isFeatureSupported(QRhi::ThreeDimensionalTextures)) {
+                unsupported("Three-dimensional textures");
+                return result;
+            }
+            if (shape == Shape::Image2DArray && !rhi->isFeatureSupported(QRhi::TextureArrays)) {
+                unsupported("Texture arrays");
+                return result;
+            }
+            switch (shape) {
+            case Shape::Image1D:
+                rhiTex = rhi->newTexture(image->m_shaderFormat, size.x, 0, 0, 1, flags);
+                break;
+            case Shape::Image2D:
+                rhiTex = rhi->newTexture(image->m_shaderFormat, QSize(size.x, size.y), 1, flags);
+                break;
+            case Shape::Image3D:
+                rhiTex = rhi->newTexture(image->m_shaderFormat, size.x, size.y, size.z, 1, flags);
+                break;
+            case Shape::Image2DArray:
+                rhiTex = rhi->newTextureArray(image->m_shaderFormat, image->m_arraySize, QSize(size.x, size.y), 1, flags);
+                break;
+            case Shape::ImageCube:
+                rhiTex = rhi->newTexture(image->m_shaderFormat, QSize(size.x, size.y), 1, flags | QRhiTexture::CubeMap);
+                break;
+            }
+            if (!rhiTex->create()) {
+                qWarning() << "Failed to create shader image.";
+                delete rhiTex;
+                renderImages.remove(image);
+                return result;
+            }
+            renderImages.insert(image, rhiTex);
+        }
+        image->m_flags.setFlag(QSSGRenderImage::Flag::ShaderImageDirty, false);
+        result = {rhiTex, 1, {}};
+    } else if (image->m_qsgTexture) {
         QRhi *rhi = context->rhi();
         QSGTexture *qsgTexture = image->m_qsgTexture;
         QRhiTexture *rhiTex = qsgTexture->rhiTexture(); // this may not be valid until commit and that's ok
@@ -378,6 +438,68 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
 QSSGRenderImageTexture QSSGBufferManager::loadSkinmap(QSSGRenderTextureData *skin)
 {
     return loadTextureData(skin, MipModeDisable);
+}
+
+QRhiBuffer *QSSGBufferManager::loadBuffer(QSSGRenderBuffer &buffer)
+{
+    const auto ext = renderExtensionBuffer.constFind(buffer.m_extensionsSource);
+    if (ext != renderExtensionBuffer.cend())
+        return *ext;
+
+    QRhiBuffer *rhiBuf = renderBuffers.value(&buffer);
+    const bool dirty = buffer.m_flags.testFlag(QSSGRenderBuffer::Flag::Dirty)
+                        || buffer.m_flags.testFlag(QSSGRenderBuffer::Flag::DataDirty);
+    const quint32 bufferDataSize = quint32(buffer.m_data.size());
+    // Sized exactly, as length() of a runtime-sized array is derived from the
+    // buffer size. Only an empty buffer gets a minimal one, since a buffer
+    // cannot have a zero size.
+    const quint32 requiredSize = qMax(qMax(buffer.m_size, bufferDataSize), 4u);
+    // Recreate on shrinking too: the binding covers the whole buffer, so a
+    // runtime-sized array's length() would otherwise still count the old size.
+    if (rhiBuf && dirty && rhiBuf->size() != requiredSize) {
+        rhiBuf->deleteLater();
+        rhiBuf = nullptr;
+    }
+
+    const bool create = (rhiBuf == nullptr);
+    if (create) {
+        auto *rhi = m_contextInterface->rhiContext()->rhi();
+        rhiBuf = rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, requiredSize);
+        if (!rhiBuf->create()) {
+            qWarning() << "Failed to create a buffer.";
+            delete rhiBuf;
+            renderBuffers.remove(&buffer);
+            return nullptr;
+        }
+        renderBuffers.insert(&buffer, rhiBuf);
+    }
+
+    if ((create || dirty) && bufferDataSize > 0) {
+        if (buffer.m_size != bufferDataSize)
+            qWarning() << "Buffer size mismatch with QQuick3DShaderStorageBufferData size.";
+        bufferUpdateBatch()->uploadStaticBuffer(rhiBuf, 0, buffer.m_data);
+    }
+
+    buffer.m_flags.setFlag(QSSGRenderBuffer::Flag::DataDirty, false);
+    buffer.m_flags.setFlag(QSSGRenderBuffer::Flag::Dirty, false);
+
+    return rhiBuf;
+}
+
+QRhiTexture *QSSGBufferManager::shaderImageTexture(const QSSGRenderImage &image) const
+{
+    return image.m_shaderImage ? renderImages.value(&image) : nullptr;
+}
+
+QRhiBuffer *QSSGBufferManager::storageBuffer(const QSSGRenderBuffer &buffer) const
+{
+    // Same precedence as loadBuffer(): an extension provided buffer wins.
+    if (buffer.m_extensionsSource) {
+        const auto ext = renderExtensionBuffer.constFind(buffer.m_extensionsSource);
+        if (ext != renderExtensionBuffer.cend())
+            return *ext;
+    }
+    return renderBuffers.value(&buffer);
 }
 
 QSSGRenderMesh *QSSGBufferManager::getMeshForPicking(const QSSGRenderModel &model, const QString &lightmap) const
@@ -1363,7 +1485,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         QRhiTexture *targetsTexture = nullptr;
     } rhi;
 
-    QRhiResourceUpdateBatch *rub = meshBufferUpdateBatch();
+    QRhiResourceUpdateBatch *rub = bufferUpdateBatch();
     const auto &context = m_contextInterface->rhiContext();
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(context.get());
     rhi.vertexBuffer = std::make_shared<QSSGRhiBuffer>(*context.get(),
@@ -1565,19 +1687,42 @@ void QSSGBufferManager::releaseTextureData(const CustomImageCacheKey &key)
     }
 }
 
+void QSSGBufferManager::releaseBuffer(const QSSGRenderBuffer &buffer)
+{
+    if (renderBuffers.contains(&buffer)) {
+        renderBuffers[&buffer]->deleteLater();
+        renderBuffers.remove(&buffer);
+    }
+}
+void QSSGBufferManager::releaseRenderImage(const QSSGRenderImage &image)
+{
+    if (renderImages.contains(&image)) {
+        renderImages[&image]->deleteLater();
+        renderImages.remove(&image);
+    }
+}
+
 void QSSGBufferManager::releaseExtensionResult(const QSSGRenderExtension &rext)
 {
     renderExtensionTexture.remove(&rext);
+    renderExtensionBuffer.remove(&rext);
 }
 
-void QSSGBufferManager::releaseUserRenderPass(const QSSGRenderUserPass &upass)
+void QSSGBufferManager::releaseUserRenderPass(const QSSGRenderUserPassBase &upass)
 {
+    // A pass can own draw call data keyed to itself as the second parameter, as a compute pass does for
+    // its uniform buffer and shader resource bindings, so release that here
+    // rather than leaving it for the graphics context teardown.
+    if (const auto &context = m_contextInterface->rhiContext(); context && context->isValid())
+        QSSGRhiContextPrivate::get(context.get())->cleanupDrawCallDataForUserPass(&upass);
+
     // Go through the user pass managers and tell them to unschedule this pass
     std::vector<QSSGUserRenderPassManagerWeakPtr> activeManagers;
     activeManagers.reserve(userRenderPassManagers.size());
     for (const auto &wmptr : std::as_const(userRenderPassManagers)) {
         if (const auto &mng = wmptr.lock()) {
             mng->unscheduleUserPass(&upass);
+            mng->releaseUserPass(&upass);
             activeManagers.push_back(wmptr);
         }
     }
@@ -2054,14 +2199,23 @@ void QSSGBufferManager::registerExtensionResult(const QSSGRenderExtension &exten
         renderExtensionTexture.insert(&extensions, {});
     }
 }
+void QSSGBufferManager::registerExtensionResult(const QSSGRenderExtension &extensions, QRhiBuffer *buffer)
+{
+    // Unlike textures, a buffer whose extension has no result falls back to
+    // the node's own buffer in loadBuffer(), so drop the entry.
+    if (buffer)
+        renderExtensionBuffer.insert(&extensions, buffer);
+    else
+        renderExtensionBuffer.remove(&extensions);
+}
 
 void QSSGBufferManager::clear()
 {
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(m_contextInterface->rhiContext().get());
 
-    if (meshBufferUpdates) {
-        meshBufferUpdates->release();
-        meshBufferUpdates = nullptr;
+    if (bufferUpdates) {
+        bufferUpdates->release();
+        bufferUpdates = nullptr;
     }
 
     {
@@ -2117,20 +2271,27 @@ void QSSGBufferManager::clear()
 
     // To allow trying to read the lightmap file again
     lightmapSourceDirty = true;
+
+    for (auto *buffer : std::as_const(renderBuffers))
+        delete buffer;
+    for (auto *image : std::as_const(renderImages))
+        delete image;
+    renderImages.clear();
+    renderBuffers.clear();
 }
 
-QRhiResourceUpdateBatch *QSSGBufferManager::meshBufferUpdateBatch()
+QRhiResourceUpdateBatch *QSSGBufferManager::bufferUpdateBatch()
 {
-    if (!meshBufferUpdates)
-        meshBufferUpdates = m_contextInterface->rhiContext()->rhi()->nextResourceUpdateBatch();
-    return meshBufferUpdates;
+    if (!bufferUpdates)
+        bufferUpdates = m_contextInterface->rhiContext()->rhi()->nextResourceUpdateBatch();
+    return bufferUpdates;
 }
 
 void QSSGBufferManager::commitBufferResourceUpdates()
 {
-    if (meshBufferUpdates) {
-        m_contextInterface->rhiContext()->commandBuffer()->resourceUpdate(meshBufferUpdates);
-        meshBufferUpdates = nullptr;
+    if (bufferUpdates) {
+        m_contextInterface->rhiContext()->commandBuffer()->resourceUpdate(bufferUpdates);
+        bufferUpdates = nullptr;
     }
 }
 

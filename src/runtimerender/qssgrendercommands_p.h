@@ -47,7 +47,8 @@ enum class CommandType
     DepthStencilAttachment,
     DepthTextureAttachment,
     AddShaderDefine,
-    SubRenderPass
+    SubRenderPass,
+    Dispatch
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCommand
@@ -400,6 +401,25 @@ public:
 
     QByteArray m_name;
     int m_value;
+};
+
+class QSSGDispatch : public QSSGCommand
+{
+public:
+    QSSGDispatch()
+        : QSSGCommand(CommandType::Dispatch)
+        , m_groupCount{0,0,0}
+    {
+    }
+    QSSGDispatch(QSSGRenderShaderValue::ivec3 groupCount)
+        : QSSGCommand(CommandType::Dispatch), m_groupCount(groupCount)
+    {
+    }
+    void addDebug(QDebug &stream) const {
+        stream << "dispatch: (" << m_groupCount.x << " " << m_groupCount.y << " " << m_groupCount.z << ")";
+    }
+
+    QSSGRenderShaderValue::ivec3 m_groupCount;
 };
 
 class QSSGSubRenderPass : public QSSGCommand

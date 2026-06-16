@@ -12,6 +12,9 @@
 #include "qssgrenderhelpers_p.h"
 #include "qssgrendercommands_p.h"
 #include "graphobjects/qssgrenderskymaterial_p.h"
+#include "private/qssgrendercomputepass_p.h"
+#include "qssgrendershadercodegenerator_p.h"
+#include "private/qssgrenderbuffer_p.h"
 
 #include "../utils/qssgassert_p.h"
 
@@ -2176,27 +2179,56 @@ void OITCompositePass::resetForFrame()
 
 Q_STATIC_LOGGING_CATEGORY(lcUserRenderPass, "qt.quick3d.rhi.userrenderpass")
 
-void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+void UserPassBase::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    for (auto *pass : std::as_const(userPasses)) {
+        if (!pass) continue;
+        // The key must be this, because the layerrenderdata calls cleanupDrawCallDataForCid with it.
+        if (pass->type == QSSGRenderGraphObject::Type::RenderPass)
+            userRenderPass.renderPrep(renderer, data, static_cast<QSSGRenderUserPass*>(pass), this);
+        else if (pass->type == QSSGRenderGraphObject::Type::ComputePass)
+            userComputePass.renderPrep(renderer, data, static_cast<QSSGRenderComputePass*>(pass), this);
+    }
+}
+
+void UserPassBase::renderPass(QSSGRenderer &renderer)
+{
+    for (auto *pass : std::as_const(userPasses)) {
+        if (!pass) continue;
+        if (pass->type == QSSGRenderGraphObject::Type::RenderPass)
+            userRenderPass.renderPass(renderer, static_cast<QSSGRenderUserPass*>(pass));
+        else if (pass->type == QSSGRenderGraphObject::Type::ComputePass)
+            userComputePass.renderPass(renderer, static_cast<QSSGRenderComputePass*>(pass));
+    }
+}
+
+void UserPassBase::resetForFrame()
+{
+    userPasses.clear();
+    userRenderPass.resetForFrame();
+    userComputePass.resetForFrame();
+}
+
+void UserRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGRenderUserPass *pass, QSSGPassKey key)
 {
     QSSG_ASSERT(!data.renderedCameras.isEmpty(), return);
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-
-    for (auto *passNode : std::as_const(userPasses)) {
-        QSSG_ASSERT(passNode != nullptr, continue);
-        prepareTopLevelPass(renderer, data, passNode);
-    }
+    prepareTopLevelPass(renderer, data, pass, key);
 }
 
-void UserRenderPass::renderPass(QSSGRenderer &renderer)
+void UserRenderPass::renderPass(QSSGRenderer &renderer, QSSGRenderUserPass *pass)
 {
-
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    auto iter = std::find_if(userPassData.begin(), userPassData.end(),
+                          [&pass](const UserPassData &p){ return p.passNode == pass; });
+    if (iter == userPassData.end())
+        return;
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-    for (UserPassData &passData : userPassData) {
-
+    UserPassData &passData = *iter;
+    {
         const auto &ps = passData.ps;
         const auto &renderables = passData.renderables;
         const auto &clearColor = passData.clearColor;
@@ -2253,20 +2285,17 @@ void UserRenderPass::renderPass(QSSGRenderer &renderer)
 void UserRenderPass::resetForFrame()
 {
     qCDebug(lcUserRenderPass) << "resetForFrame in UserRenderPass";
-    userPasses.clear();
-
     userPassData.clear();
 }
 
 void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
                                      QSSGLayerRenderData &data,
                                      QSSGRenderUserPass *passNode,
-                                     std::vector<UserPassData> &outData,
-                                     QSSGRhiRenderableTextureV2Ptr renderableTexture)
+                                     QSSGRhiRenderableTextureV2Ptr renderableTexture,
+                                     UserPassData *parentUserPassData,
+                                     QSSGPassKey key)
 {
-    // NOTE: Only top-level passes should create their own renderable texture by passing in a null renderable texture.
-    // Ideally we this should be more explict...
-    const bool isTopLevelPass = (renderableTexture == nullptr);
+    const bool isTopLevelPass = (parentUserPassData == nullptr);
 
     QSSGRenderCamera *camera = data.renderedCameras[0];
     const auto &rhiCtx = renderer.contextInterface()->rhiContext();
@@ -2294,6 +2323,7 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
     visitedPasses.insert(currentPassId);
 
     UserPassData currentPassData;
+    currentPassData.passNode = passNode;
     currentPassData.clearColor = passNode->clearColor;
     currentPassData.depthStencilClearValue = passNode->depthStencilClearValue;
     if (isTopLevelPass)
@@ -2597,7 +2627,7 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
     for (const auto &subPassId : std::as_const(subPassIds)) {
         QSSGRenderUserPass *userPassNode = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPass>(subPassId);
         QSSG_ASSERT(userPassNode && userPassNode->type == QSSGRenderGraphObject::Type::RenderPass, continue);
-        prepareSubPass(renderer, data, userPassNode, currentPassData.subPassData, currentPassData.renderableTexture);
+        prepareSubPass(renderer, data, userPassNode, currentPassData.renderableTexture, &currentPassData, key);
     }
 
     if (passNode->passMode == QSSGRenderUserPass::PassModes::UserPass) {
@@ -2624,21 +2654,24 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
             QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
             shaderFeatures.disableTonemapping();
 
-            currentPassData.index = RenderHelpers::rhiPrepareAugmentedUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), shaderAugmentation, data, renderables, shaderFeatures);
+            currentPassData.index = RenderHelpers::rhiPrepareAugmentedUserPass(&(*rhiCtx), key, ps, renderTarget->getRenderPassDescriptor().get(), shaderAugmentation, data, renderables, shaderFeatures);
         } else if (passNode->materialMode == QSSGRenderUserPass::MaterialModes::OverrideMaterial) {
             // Every renderable will use the override material
             QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
             shaderFeatures.disableTonemapping();
 
-            currentPassData.index = RenderHelpers::rhiPrepareOverrideMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), passNode->overrideMaterial, data, renderables, shaderFeatures);
+            currentPassData.index = RenderHelpers::rhiPrepareOverrideMaterialUserPass(&(*rhiCtx), key, ps, renderTarget->getRenderPassDescriptor().get(), passNode->overrideMaterial, data, renderables, shaderFeatures);
 
         } else {
             // Use original material of the renderables
             QSSGShaderFeatures shaderFeatures = data.getShaderFeatures();
             shaderFeatures.disableTonemapping();
-            currentPassData.index = RenderHelpers::rhiPrepareOriginalMaterialUserPass(&(*rhiCtx), this, ps, renderTarget->getRenderPassDescriptor().get(), data, renderables, shaderFeatures);
+            currentPassData.index = RenderHelpers::rhiPrepareOriginalMaterialUserPass(&(*rhiCtx), key, ps, renderTarget->getRenderPassDescriptor().get(), data, renderables, shaderFeatures);
         }
-        outData.push_back(currentPassData);
+        if (isTopLevelPass)
+            userPassData.push_back(currentPassData);
+        else
+            parentUserPassData->subPassData.push_back(currentPassData);
     } else {
         // Wrapped Built-in Passes
         if (passNode->passMode == QSSGRenderUserPass::PassModes::SkyboxPass) {
@@ -2665,7 +2698,10 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
 
                     currentPassData.skyboxCubeMapPass = std::nullopt;
                 }
-                outData.push_back(currentPassData);
+                if (isTopLevelPass)
+                    userPassData.push_back(currentPassData);
+                else
+                    parentUserPassData->subPassData.push_back(currentPassData);
             }
         } else if (passNode->passMode == QSSGRenderUserPass::PassModes::Item2DPass) {
             if (!currentPassData.item2DPass)
@@ -2679,10 +2715,58 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
                 currentPassData.item2DPass->renderPrep(renderer, data);
                 //restore render target
                 rhiCtxD->setRenderTarget(prevRenderTarget);
-                outData.push_back(currentPassData);
+                if (isTopLevelPass)
+                    userPassData.push_back(currentPassData);
+                else
+                    parentUserPassData->subPassData.push_back(currentPassData);
             }
         }
     }
+}
+
+void UserComputePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGRenderComputePass *passNode, QSSGPassKey key)
+{
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
+    ComputeUserPassData passData;
+    prepareComputePass(renderer, data, passNode, passData, key);
+    userPassData[passNode] = passData;
+}
+
+void UserComputePass::renderPass(QSSGRenderer &renderer, QSSGRenderComputePass *passNode)
+{
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    if (!rhiCtx->rhi()->isRecordingFrame())
+        return;
+
+    QSSG_ASSERT(userPassData.find(passNode) != userPassData.end(), return);
+
+    QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    const auto &pass = userPassData[passNode];
+    {
+        if (!pass.m_computeBindings || !pass.m_computePipeline)
+            return;
+        QRhiComputePipeline *pipeline = nullptr;
+        for (auto iter = pass.m_computePipeline->cbeginStages(); iter != pass.m_computePipeline->cendStages(); iter++) {
+            if (iter->type() == QRhiShaderStage::Compute) {
+                pipeline = rhiCtxD->computePipeline(iter->shader(), pass.m_computeBindings);
+                break;
+            }
+        }
+        if (pipeline) {
+            cb->beginComputePass();
+            cb->setComputePipeline(pipeline);
+            cb->setShaderResources(pass.m_computeBindings);
+            cb->dispatch(pass.m_groupCount.x, pass.m_groupCount.y, pass.m_groupCount.z);
+            cb->endComputePass();
+        }
+    }
+}
+
+void UserComputePass::resetForFrame()
+{
+    userPassData.clear();
 }
 
 QT_END_NAMESPACE

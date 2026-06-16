@@ -25,6 +25,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 #include "../qssgshadermapkey_p.h"
 #include "../qssgrenderpickresult_p.h"
 #include "../graphobjects/qssgrenderroot_p.h"
@@ -231,9 +232,17 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
         } else if (resource->type == QSSGRenderGraphObject::Type::Item2D) {
             auto *item2D = static_cast<QSSGRenderItem2D *>(resource);
             rci.renderer()->releaseItem2DData(*item2D);
-        } else if (resource->type == QSSGRenderGraphObject::Type::RenderPass) {
-            auto *userPass = static_cast<QSSGRenderUserPass *>(resource);
-            bufferManager->releaseUserRenderPass(*userPass);
+        } else if (QSSGRenderGraphObjectUtils::isUserRenderPass(resource->type)) {
+            auto *userPassBase = static_cast<QSSGRenderUserPassBase *>(resource);
+            bufferManager->releaseUserRenderPass(*userPassBase);
+        } else if (resource->type == QSSGRenderGraphObject::Type::ShaderStorageBuffer) {
+            auto *buffer = static_cast<QSSGRenderBuffer *>(resource);
+            bufferManager->releaseBuffer(*buffer);
+        } else if (resource->type == QSSGRenderGraphObject::Type::Image2D
+                   || resource->type == QSSGRenderGraphObject::Type::ImageCube) {
+            auto *image = static_cast<QSSGRenderImage *>(resource);
+            if (image->m_shaderImage)
+                bufferManager->releaseRenderImage(*image);
         }
 
         // ### There might be more types that need to be supported
@@ -288,11 +297,13 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSG
     // cheaper-to-lookup cache in getShaderPipelineForDefaultMaterial().
     theKey.toString(shaderString, shaderKeyProperties);
 
-    // Include augment defines, preamble and body in the cache key.
+    // Include augment defines, preamble and body in the cache key, and the hash,
+    // which also covers the declarations generated from the pass' properties.
     for (const auto &def : shaderAugmentation.defines)
         shaderString.append(def.name).append(';').append(def.value).append(';');
     shaderString.append(shaderAugmentation.preamble).append(';');
     shaderString.append(shaderAugmentation.body).append(';');
+    shaderString.append(shaderAugmentation.hash).append(';');
 
     // Check the in-memory, per-QSSGShaderCache (and so per-QQuickWindow)
     // runtime cache. That may get cleared upon an explicit call to

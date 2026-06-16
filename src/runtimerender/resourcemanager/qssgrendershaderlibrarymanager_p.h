@@ -69,6 +69,7 @@ struct QSSGCustomShaderMetaData
     Flags flags;
     QSet<QByteArray> customFunctions;
     QSSGShaderFeatures features;
+    QByteArrayList imageBufferMetadata;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGCustomShaderMetaData::Flags)

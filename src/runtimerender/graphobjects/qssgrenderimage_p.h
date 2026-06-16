@@ -34,10 +34,19 @@ class QSSGRenderTextureData;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObject
 {
+    enum class ShaderImageShape : quint8 {
+        Image1D,
+        Image2D,
+        Image3D,
+        Image2DArray,
+        ImageCube,
+    };
+
     enum class Flag
     {
         Dirty = 1 << 0,
         TransformDirty = 1 << 1,
+        ShaderImageDirty = 1 << 2,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -80,6 +89,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
     bool m_generateMipmaps = false;
 
+    // Overrides others that should be empty or null
+    bool m_shaderImage = false;
+    ShaderImageShape m_shaderImageShape = ShaderImageShape::Image2D;
+    QSSGRenderShaderValue::ivec3 m_shaderImageSize = {0, 0, 0};
+    QRhiTexture::Format m_shaderFormat = QRhiTexture::UnknownFormat;
+    int m_arraySize = 1;
+
     // Changing any of the above variables is covered by the Dirty flag, while
     // the texture transform is covered by TransformDirty.
     QMatrix4x4 m_textureTransform;
@@ -90,6 +106,18 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     bool clearDirty();
     void calculateTextureTransform();
     bool isImageTransformIdentity() const;
+};
+
+class QSSGShaderImage
+{
+public:
+    QSSGRenderImage *image = nullptr;
+    QByteArray imageType;
+    QByteArray format;
+    QSSGMemoryQualifiers qualifiers;
+    QSSGShaderImage() = default;
+    QSSGShaderImage(QSSGRenderImage *image, const QByteArray &imageType, const QByteArray &format, QSSGMemoryQualifiers qualifiers)
+        : image(image), imageType(imageType), format(format), qualifiers(qualifiers) {}
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderImage::Flags)

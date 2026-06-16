@@ -39,6 +39,8 @@ const char *QSSGCommand::typeAsString() const
         return "ApplyBufferValue";
     case CommandType::Render:
         return "Render";
+    case CommandType::Dispatch:
+        return "Dispatch";
     case CommandType::ApplyValue:
         return "ApplyValue";
     case CommandType::PipelineStateOverride:
@@ -84,6 +86,9 @@ QString QSSGCommand::debugString() const
         break;
     case CommandType::ApplyValue:
         static_cast<const QSSGApplyValue*>(this)->addDebug(stream);
+        break;
+    case CommandType::Dispatch:
+        static_cast<const QSSGDispatch*>(this)->addDebug(stream);
         break;
     case CommandType::Unknown:
     default:

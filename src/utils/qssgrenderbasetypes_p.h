@@ -316,6 +316,8 @@ namespace QSSGRenderShaderValue
         RectF, // QRectF
         Quaternion, // QQuaternion
         Texture,
+        StorageBuffer,
+        Image,
     };
 
     using vec2 = QVector2D;

@@ -21,10 +21,16 @@
 #include <QtQuick3D/private/qquick3dobject_p.h>
 #include <QtQuick3D/private/qquick3dtexture_p.h>
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
+#include <QtQuick3D/private/qquick3dshaderimage_p.h>
+#include <QtQuick3D/private/qquick3dshaderstoragebuffer_p.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
+
+#include <QtCore/qpointer.h>
+
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
@@ -685,7 +691,7 @@ private:
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPass : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> commands READ commands)
+    Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> commands READ commands FINAL)
     Q_PROPERTY(QQuick3DShaderUtilsBuffer *output MEMBER outputBuffer)
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsShader> shaders READ shaders)
     QML_NAMED_ELEMENT(Pass)
@@ -797,6 +803,7 @@ protected:
     QList<UniformProperty> extractProperties();
 
     void addPropertyWatcher(QMetaProperty property, DirtyPropertyHint hint, QQuick3DObject *object = nullptr);
+    void addDirtyProperty(int pid);
 
     virtual void markTrackedPropertyDirty(QMetaProperty property, DirtyPropertyHint hint) = 0;
 
@@ -814,9 +821,94 @@ protected:
 
 private:
     std::optional<UniformProperty> createOrUpdateTrackedProperty(const QMetaProperty property, bool addWatchers);
-    void addDirtyProperty(int pid);
     std::vector<int> m_dirtyProperties;
     bool m_extracted = false;
+};
+
+class Q_QUICK3D_EXPORT QQuick3DShaderUtilsCommandDispatch : public QQuick3DShaderUtilsRenderCommand
+{
+    Q_OBJECT
+    Q_PROPERTY(int groupCountX READ groupCountX WRITE setGroupCountX NOTIFY groupCountXChanged FINAL)
+    Q_PROPERTY(int groupCountY READ groupCountY WRITE setGroupCountY NOTIFY groupCountYChanged FINAL)
+    Q_PROPERTY(int groupCountZ READ groupCountZ WRITE setGroupCountZ NOTIFY groupCountZChanged FINAL)
+    QML_NAMED_ELEMENT(Dispatch)
+    QML_ADDED_IN_VERSION(6, 13)
+
+public:
+    QQuick3DShaderUtilsCommandDispatch() = default;
+    ~QQuick3DShaderUtilsCommandDispatch() override = default;
+    int groupCountX() const { return m_groupCount.x; };
+    int groupCountY() const { return m_groupCount.y; };
+    int groupCountZ() const { return m_groupCount.z; };
+    QSSGCommand *cloneCommand() override;
+public Q_SLOTS:
+    void setGroupCountX(int groupCountX);
+    void setGroupCountY(int groupCountY);
+    void setGroupCountZ(int groupCountZ);
+Q_SIGNALS:
+    void groupCountXChanged();
+    void groupCountYChanged();
+    void groupCountZChanged();
+private:
+    using ivec3 = QSSGRenderShaderValue::ivec3;
+    ivec3 m_groupCount = {1, 1, 1};
+};
+
+namespace QSSGShaderUtils {
+
+bool Q_QUICK3D_EXPORT handleBufferProperty(QQuick3DShaderStorageBuffer *buffer, const QByteArray &name, int i,
+                          QByteArrayList &metadata, QList<QSSGBaseTypeProperty> &properties);
+void Q_QUICK3D_EXPORT updateBufferProperty(QQuick3DShaderStorageBuffer *buffer, const QSSGBaseTypeProperty &property);
+
+bool Q_QUICK3D_EXPORT handleImageProperty(QQuick3DShaderImage *image, const QByteArray &name, int i,
+                         QByteArrayList &metadata, QList<QSSGBaseTypeProperty> &properties);
+void Q_QUICK3D_EXPORT updateImageProperty(QQuick3DShaderImage *image, const QSSGBaseTypeProperty &property);
+
+QByteArray Q_QUICK3D_EXPORT toShaderFormat(QQuick3DShaderImage::ImageFormat imageFormat);
+QByteArray Q_QUICK3D_EXPORT toShaderImageType(QQuick3DShaderImage::ImageShape shape,
+                                              QQuick3DShaderImage::ImageFormat imageFormat);
+
+bool Q_QUICK3D_EXPORT resolveResourceProperties(const QObject *owner, const QList<QSSGBaseTypeProperty> &properties,
+                                                QByteArrayList &metadata);
+void Q_QUICK3D_EXPORT updateResourceProperties(const QObject *owner, const QList<QSSGBaseTypeProperty> &properties);
+}
+
+class Q_QUICK3D_EXPORT QQuick3DShaderResourceTracker
+{
+public:
+    QQuick3DShaderResourceTracker(QQuick3DObject *owner, std::function<void()> onResourceChanged);
+    ~QQuick3DShaderResourceTracker();
+    Q_DISABLE_COPY_MOVE(QQuick3DShaderResourceTracker)
+
+    static QQuick3DObject *resourceForProperty(const QObject *owner, const QMetaProperty &property,
+                                               bool *isResourceProperty = nullptr);
+
+    void setResources(const QHash<int, QQuick3DObject *> &resources);
+    void trackProperties(int firstPropertyIndex, const QMetaMethod &onPropertyChanged);
+    QList<int> resourceProperties() const { return m_resources.keys(); }
+    bool updateResources();
+    bool hasResourceLayoutChanged() const;
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
+
+private:
+    struct Reference
+    {
+        int useCount = 0;
+        QPointer<QQuick3DSceneManager> sceneManager;
+        QMetaObject::Connection destroyedConnection;
+        QMetaObject::Connection formatConnection;
+        QMetaObject::Connection shapeConnection;
+    };
+
+    void addReference(QQuick3DObject *object);
+    void removeReference(QQuick3DObject *object);
+    static QByteArray layoutKey(QQuick3DObject *object);
+
+    QQuick3DObject *m_owner = nullptr;
+    std::function<void()> m_onResourceChanged;
+    QHash<int, QQuick3DObject *> m_resources;
+    QHash<int, QByteArray> m_boundLayouts;
+    QHash<QQuick3DObject *, Reference> m_references;
 };
 
 QT_END_NAMESPACE

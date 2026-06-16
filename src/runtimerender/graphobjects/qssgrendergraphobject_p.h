@@ -103,7 +103,7 @@ constexpr bool isNull(QSSGTypeId id) { return (id == QSSGTypeId::Invalid); }
 
 [[nodiscard]] static constexpr bool isUserRenderPass(QSSGRenderGraphObject::Type type) noexcept
 {
-    return (type == QSSGRenderGraphObject::Type::RenderPass);
+    return (type == QSSGRenderGraphObject::Type::RenderPass || type == QSSGRenderGraphObject::Type::ComputePass);
 }
 
 [[nodiscard]] static constexpr bool hasInternalFlags(const QSSGRenderGraphObject &obj)

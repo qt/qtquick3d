@@ -298,6 +298,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
                                           QSSGShaderCache::ShaderType type,
                                           bool multiViewCompatible,
                                           const StringPairList &baseUniforms,
+                                          const QByteArrayList &metadata,
                                           const StringPairList &baseInputs,
                                           const StringPairList &baseOutputs,
                                           const StringPairList &multiViewDependentSamplers,
@@ -313,6 +314,12 @@ struct QSSGCustomMaterialVariableSubstitution
     QByteArrayView actualName;
     bool multiViewDependent;
 };
+
+
+bool Q_QUICK3DRUNTIMERENDER_EXPORT processMetadata(QList<QSSGBaseTypeProperty> &props,
+                                                   const QByteArrayList &metadata,
+                                                   QByteArrayList &stageMetadata,
+                                                   QByteArray &shaderData);
 
 namespace QtQuick3DEditorHelpers {
 // NOTE: Returns a copy of the actual list, cache as needed!

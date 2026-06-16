@@ -26,6 +26,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderhelpers_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshaderresourcemergecontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
 
 #include <QtCore/QByteArray>
 
@@ -980,8 +981,17 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << shaderAugmentation.preamble;
     }
 
-    for (const auto &u : shaderAugmentation.propertyUniforms)
-        fragmentShader.addUniform(u.name, u.typeName);
+    for (const auto &u : shaderAugmentation.propertyUniforms) {
+        if (u.shaderDataType == QSSGRenderShaderValue::StorageBuffer) {
+            const QSSGShaderBuffer buffer(u.value.value<QSSGShaderBuffer>());
+            fragmentShader.addBuffer(u.name, buffer.dataType, buffer.qualifiers);
+        } else if (u.shaderDataType == QSSGRenderShaderValue::Image) {
+            const QSSGShaderImage image(u.value.value<QSSGShaderImage>());
+            fragmentShader.addImage(u.name, image.imageType, image.format, image.qualifiers);
+        } else {
+            fragmentShader.addUniform(u.name, u.typeName);
+        }
+    }
 
     // Unshaded custom materials need no code in main (apart from calling qt_customMain)
     const bool hasCustomFrag = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
@@ -2302,6 +2312,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders.commonUniformIndices;
 
     materialAdapter->setCustomPropertyUniforms(ubufData, shaders, renderContext);
+    renderContext.bufferManager()->commitBufferResourceUpdates();
 
     const QVector2D camProperties(inCameras[0]->clipPlanes);
     shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);

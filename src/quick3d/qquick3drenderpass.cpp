@@ -10,6 +10,9 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadertokenizer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffer_p.h>
+#include <QtQuick3D/private/qquick3dshaderutils_p.h>
 
 #include <QtCore/QLoggingCategory>
 
@@ -106,7 +109,6 @@ QQuick3DRenderPass::QQuick3DRenderPass(QQuick3DObject *parent)
     , QQuick3DPropertyChangedTracker(this, QQuick3DSuperClassInfo<QQuick3DRenderPass>())
 {
 }
-
 QQuick3DRenderPass::AugmentSplitResult QQuick3DRenderPass::splitAugmentShader(const QByteArray &augment,
                                                                               QByteArray &preamble,
                                                                               QByteArray &body)
@@ -191,34 +193,35 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
 {
     QSSGRenderUserPass *renderPassNode = static_cast<QSSGRenderUserPass *>(node);
 
-    bool newBackendNode = false;
     if (!renderPassNode) {
         renderPassNode = new QSSGRenderUserPass;
-        newBackendNode = true;
+        markAllDirty();
     }
 
     // The role follows the SubRenderPass reference count maintained by the
-    // commands referencing this pass. A role change forces a full update, which
-    // rebuilds the command list and thereby marks the scene manager's pass set
-    // dirty, so synchronize() re-derives the classification-dependent state
-    // (nesting depth, declaration order) for the new role.
+    // commands referencing this pass. A role change rebuilds the command list,
+    // which marks the scene manager's pass set dirty, so synchronize()
+    // re-derives the classification-dependent state (nesting depth,
+    // declaration order) for the new role.
     const bool isSubPass = (m_subRenderPassRef > 0);
-    const bool subPassChanged = (renderPassNode->role == QSSGRenderUserPass::Role::SubPass) != isSubPass;
+    if ((renderPassNode->role == QSSGRenderUserPass::Role::SubPass) != isSubPass)
+        m_dirtyAttributes |= Dirty::CommandsDirty;
 
     renderPassNode->role = isSubPass ? QSSGRenderUserPass::Role::SubPass : QSSGRenderUserPass::Role::TopLevel;
 
-    const bool fullUpdate = newBackendNode || subPassChanged || (m_dirtyAttributes & Dirty::TextureDirty) || (m_dirtyAttributes & CommandsDirty);
+    auto &uniformProps = renderPassNode->shaderAugmentation.propertyUniforms;
 
-    auto &shaderAugmentation = renderPassNode->shaderAugmentation;
-    auto &uniformProps = shaderAugmentation.propertyUniforms;
-
-    if (fullUpdate) {
-        markAllDirty();
-
+    if (m_dirtyAttributes & Dirty::TextureDirty) {
         // Properties -> uniforms.
         uniformProps = extractProperties();
+        static const QMetaMethod onResourceDirty = staticMetaObject.method(staticMetaObject.indexOfSlot("onShaderResourceDirty()"));
+        m_shaderResources.trackProperties(staticMetaObject.propertyCount(), onResourceDirty);
+        clearDirty(Dirty::TextureDirty);
+        // The images and buffers declared in the shader depend on the properties.
+        m_dirtyAttributes |= Dirty::AugmentShaderDirty;
+    }
 
-        // Commands
+    if (m_dirtyAttributes & Dirty::CommandsDirty) {
         renderPassNode->resetCommands();
         clearDirty(Dirty::CommandsDirty);
         for (QQuick3DShaderUtilsRenderCommand *command : std::as_const(m_commands)) {
@@ -235,26 +238,20 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
             sceneManager->userRenderPassesDirty = true;
     }
 
-    // Update the property values
-    if (m_dirtyAttributes & Dirty::PropertyDirty) {
-        for (const auto &prop : std::as_const(uniformProps)) {
-            auto p = metaObject()->property(prop.pid);
-            if (Q_LIKELY(p.isValid())) {
-                QVariant v = p.read(this);
-                if (v.isValid()) {
-                    if (v.metaType().id() == qMetaTypeId<QQuick3DTexture *>()) {
-                        QQuick3DTexture *tex = v.value<QQuick3DTexture *>();
-                        auto *po = QQuick3DObjectPrivate::get(tex);
-                        QSSGRenderImage *ri = static_cast<QSSGRenderImage *>(po->spatialNode);
-                        prop.value = QVariant::fromValue(ri);
-                    } else {
-                        prop.value = v;
-                    }
-                }
-            }
-        }
-
-        clearDirty(Dirty(Dirty::PropertyDirty | Dirty::TextureDirty));
+    // processMetadata() writes the shader's image and buffer declarations into
+    // the property values, so these are resolved again every time the shader
+    // is processed.
+    QByteArrayList metadata;
+    if (m_dirtyAttributes & Dirty::AugmentShaderDirty) {
+        clearDirty(Dirty::PropertyDirty);
+        const bool allHaveNodes = QSSGShaderUtils::resolveResourceProperties(this, uniformProps, metadata);
+        if (!allHaveNodes)
+            markDirty(Dirty::PropertyDirty, true); // Try again next time
+    } else if (m_dirtyAttributes & Dirty::PropertyDirty) {
+        clearDirty(Dirty::PropertyDirty);
+        if (!m_shaderResources.updateResources())
+            markDirty(Dirty::PropertyDirty, true); // Try again next time
+        QSSGShaderUtils::updateResourceProperties(this, uniformProps);
     }
 
     // Clear Dirty
@@ -313,6 +310,12 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
                 const QQmlContext *context = qmlContext(this);
                 QByteArray shaderPathKey("augment material --");
                 QByteArray augment = QSSGShaderUtils::resolveShader(m_augmentShader, context, shaderPathKey);
+                QByteArrayList stageMetadata;
+                if (!processMetadata(uniformProps, metadata, stageMetadata, augment)) {
+                    qWarning("RenderPass: Shader Image and/or Buffer processing failed.");
+                    clearDirty(Dirty::AugmentShaderDirty);
+                    return renderPassNode;
+                }
 
                 switch (QQuick3DRenderPass::splitAugmentShader(augment, augmentPreamble, augmentSnippet)) {
                 case AugmentSplitResult::Ok:
@@ -421,6 +424,7 @@ void QQuick3DRenderPass::qmlCommandClear(QQmlListProperty<QQuick3DShaderUtilsRen
 
 void QQuick3DRenderPass::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
+    m_shaderResources.updateSceneManager(sceneManager);
     if (sceneManager) {
         // Handle inline override material that may not have had a scene manager when it was set
         if (m_overrideMaterial && !m_overrideMaterial->parentItem() && !QQuick3DObjectPrivate::get(m_overrideMaterial)->sceneManager) {
@@ -436,6 +440,26 @@ void QQuick3DRenderPass::updateSceneManager(QQuick3DSceneManager *sceneManager)
             m_overrideMaterialRefed = false;
         }
     }
+}
+
+void QQuick3DRenderPass::onShaderResourceDirty()
+{
+    // Swapping one object for another only changes the binding, but a property
+    // gaining or losing its object, or an image of another format, changes the
+    // generated shader.
+    if (m_shaderResources.hasResourceLayoutChanged())
+        markResourcesDirty();
+    else
+        markDirty(Dirty::PropertyDirty);
+}
+
+void QQuick3DRenderPass::markResourcesDirty()
+{
+    // extractProperties() only re-reads dirty properties, and one that was
+    // null at the first extraction has no watcher of its own.
+    for (int pid : m_shaderResources.resourceProperties())
+        addDirtyProperty(pid);
+    markDirty(Dirty::TextureDirty);
 }
 
 void QQuick3DRenderPass::markDirty(Dirty type,  bool requestSecondaryUpdate)

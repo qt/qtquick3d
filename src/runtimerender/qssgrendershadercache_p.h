@@ -28,6 +28,7 @@
 #include <QtCore/QString>
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/QSharedPointer>
+#include <QtCore/qset.h>
 #include <QtCore/QVector>
 
 QT_BEGIN_NAMESPACE
@@ -100,6 +101,37 @@ public:
     {
         return (body.size() > 0);
     }
+
+    bool hasPropertyUniforms() const
+    {
+        return propertyUniforms.size() > 0;
+    }
+
+};
+
+class QSSGUserComputeShader
+{
+public:
+    QByteArray body;
+    QByteArray hash;
+    QByteArrayList metadata;
+    QSet<QByteArray> identifiers; // Used in the body, outside comments
+
+    bool needsLights = false;
+    bool needsShadowsPositional = false;
+    bool needsShadowsDirectional = false;
+    bool needsCamera = false;
+    bool needsRhiProperties = false;
+    bool needsScreenTextures = false;
+    bool needsNormalTexture = false;
+    bool needsFrameIndex = false;
+    bool supportsMultiview = false; // Multiview is relevant when the compute shader uses screen textures or camera
+
+    using Property = QSSGBaseTypeProperty;
+    using PropertyUniformsList = QList<Property>;
+    PropertyUniformsList propertyUniforms;
+
+    QSSGShaderDefineList defines;
 
     bool hasPropertyUniforms() const
     {
@@ -285,6 +317,7 @@ public:
 
     QSSGRhiShaderPipelinePtr tryGetRhiShaderPipeline(const QByteArray &inKey,
                                                      const QSSGShaderFeatures &inFeatures);
+    bool hasRhiShaderPipeline(const QByteArray &inKey, const QSSGShaderFeatures &inFeatures) const;
 
     QSSGRhiShaderPipelinePtr tryNewPipelineFromPersistentCache(const QByteArray &qsbcKey,
                                                                const QByteArray &inKey,
@@ -320,6 +353,7 @@ public:
     static QByteArray particleShaderCollectionFile();
     static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *rhi);
     static QList<QShaderVersion> glslTargetsForContext(const QSurfaceFormat &format, bool isGLESModule);
+    static bool isGlslEsTarget(QRhi *rhi);
 };
 
 namespace QtQuick3DEditorHelpers {

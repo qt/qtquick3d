@@ -35,7 +35,7 @@ void QSSGUserRenderPassManager::setScheduledPasses(const UserPassSet &topLevelPa
     m_passlistDirty = true;
 }
 
-void QSSGUserRenderPassManager::scheduleUserPass(QSSGRenderUserPass *userPasses)
+void QSSGUserRenderPassManager::scheduleUserPass(QSSGRenderUserPassBase *userPasses)
 {
     if (userPasses == nullptr)
         return;
@@ -46,7 +46,7 @@ void QSSGUserRenderPassManager::scheduleUserPass(QSSGRenderUserPass *userPasses)
     // typically comes from a RenderOutputProvider; since a sub-pass produces no
     // output of its own, the provider will never get a texture, so warn (once
     // per pass; the provider path requests every frame).
-    if (userPasses->role != QSSGRenderUserPass::Role::TopLevel) {
+    if (userPasses->isSubPass()) {
         if (!m_subPassScheduleWarned.contains(userPasses)) {
             m_subPassScheduleWarned.insert(userPasses);
             qWarning() << "Ignoring request to schedule sub-pass" << userPasses
@@ -65,7 +65,7 @@ void QSSGUserRenderPassManager::scheduleUserPass(QSSGRenderUserPass *userPasses)
     }
 }
 
-void QSSGUserRenderPassManager::unscheduleUserPass(const QSSGRenderUserPass *userPasses)
+void QSSGUserRenderPassManager::unscheduleUserPass(const QSSGRenderUserPassBase *userPasses)
 {
     if (userPasses != nullptr) {
         auto it = std::find(m_scheduledUserPasses.cbegin(), m_scheduledUserPasses.cend(), userPasses);
@@ -102,7 +102,7 @@ void QSSGUserRenderPassManager::updateUserPassOrder(bool forceUpdate)
         // pass declared inside its consumer renders before it. Passes at equal
         // depth render in declaration order, independent of the order a
         // provider scheduled them.
-        std::sort(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), [](const QSSGRenderUserPass *a, const QSSGRenderUserPass *b) {
+        std::sort(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), [](const QSSGRenderUserPassBase *a, const QSSGRenderUserPassBase *b) {
             if (a->m_nestingDepth != b->m_nestingDepth)
                 return a->m_nestingDepth > b->m_nestingDepth;
             return a->m_declarationOrder < b->m_declarationOrder;
@@ -223,6 +223,16 @@ void QSSGUserRenderPassManager::releaseAll()
         for (auto it = m_trackedTextures.constBegin(); it != m_trackedTextures.constEnd(); ++it)
             qCDebug(QSSGUserRenderPassManagerLog) << "Texture: " << it.key()->name() << ", has ref count: " << it.value();
     }
+}
+
+void QSSGUserRenderPassManager::releaseUserPass(const QSSGRenderUserPassBase *pass)
+{
+    if (pass->type == QSSGRenderGraphObject::Type::RenderPass) {
+        auto upass = static_cast<const QSSGRenderUserPass*>(pass);
+        if (auto rt = m_renderPassRenderTargets.take(upass))
+            rt->invalidate();
+    }
+    m_subPassScheduleWarned.remove(pass);
 }
 
 QT_END_NAMESPACE

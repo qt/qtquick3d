@@ -130,6 +130,7 @@ protected:
 private Q_SLOTS:
     void onPropertyDirty();
     void onTextureDirty();
+    void onShaderResourceDirty();
 
 private:
     friend class QQuick3DShaderUtilsTextureInput;
@@ -138,6 +139,7 @@ private:
     void setDynamicTextureMap(QQuick3DShaderUtilsTextureInput *textureMap);
 
     QSet<QQuick3DShaderUtilsTextureInput *> m_dynamicTextureMaps;
+    QQuick3DShaderResourceTracker m_shaderResources { this, [this]() { markDirty(*this, Dirty::ShaderSettingsDirty); } };
     quint32 m_dirtyAttributes = Dirty::AllDirty;
     BlendMode m_srcBlend = BlendMode::NoBlend;
     BlendMode m_dstBlend = BlendMode::NoBlend;

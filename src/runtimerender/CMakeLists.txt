@@ -9,8 +9,10 @@
 
 qt_internal_add_module(Quick3DRuntimeRender
     SOURCES
+        graphobjects/qssgrenderbuffer.cpp graphobjects/qssgrenderbuffer_p.h
         graphobjects/qssgrendercamera.cpp graphobjects/qssgrendercamera_p.h
         graphobjects/qssgrendercustommaterial_p.h
+        graphobjects/qssgrendercomputepass_p.h graphobjects/qssgrendercomputepass.cpp
         graphobjects/qssgrenderdefaultmaterial.cpp graphobjects/qssgrenderdefaultmaterial_p.h
         graphobjects/qssgrendereffect.cpp graphobjects/qssgrendereffect_p.h
         graphobjects/qssgrendergeometry.cpp graphobjects/qssgrendergeometry_p.h
@@ -85,6 +87,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         extensionapi/qssgrenderhelpers.h extensionapi/qssgrenderhelpers.cpp
         qssgdebugdrawsystem_p.h qssgdebugdrawsystem.cpp
         qssguserrenderpassmanager.cpp qssguserrenderpassmanager_p.h
+        qssgcomputemanager.cpp qssgcomputemanager_p.h
         qssgrenderparticleshaderkeys_p.h
     NO_UNITY_BUILD_SOURCES
         resourcemanager/qssgrenderbuffermanager.cpp # redefinition of 'cube' (from qssgrenderreflectionmap.cpp)
@@ -170,6 +173,9 @@ set(res_resource_files
     "res/effectlib/oitlinkedlist.glsllib"
     "res/effectlib/oitlinkedlist_buf.glsllib"
     "res/effectlib/lightsData.glsllib"
+    "res/effectlib/lightStructs.glsllib"
+    "res/effectlib/computeLights.glsllib"
+    "res/effectlib/computeShadows.glsllib"
     "res/effectlib/funcprocessPunctualLighting.glsllib"
     "res/effectlib/custommaterialforwarddeclarations.glsllib"
     "res/effectlib/particleLighting.glsllib"

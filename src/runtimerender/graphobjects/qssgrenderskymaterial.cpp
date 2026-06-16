@@ -248,6 +248,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderSkyMaterial::buildPipeline(const QSSGRenderCo
 
         QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
         QByteArray buf;
+        QByteArrayList metadata;
         QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
         QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(&scratch, &result, vertexShader, QSSGShaderCache::ShaderType::Vertex, multiViewCompatible);
         QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(&buf,
@@ -256,6 +257,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderSkyMaterial::buildPipeline(const QSSGRenderCo
                                                                    QSSGShaderCache::ShaderType::Vertex,
                                                                    multiViewCompatible,
                                                                    vertexBaseUniforms,
+                                                                   metadata,
                                                                    { },
                                                                    inputOutputs,
                                                                    { },
@@ -271,6 +273,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderSkyMaterial::buildPipeline(const QSSGRenderCo
 
         QSSGShaderCustomMaterialAdapter::ShaderCodeAndMetaData result;
         QByteArray buf;
+        QByteArrayList metadata;
         QSSGShaderCustomMaterialAdapter::CustomShaderPrepWorkData scratch;
         QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(&scratch, &result, fragmentShader, QSSGShaderCache::ShaderType::Fragment, multiViewCompatible);
         QSSGShaderCustomMaterialAdapter::finishPrepareCustomShader(&buf,
@@ -279,6 +282,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderSkyMaterial::buildPipeline(const QSSGRenderCo
                                                                    QSSGShaderCache::ShaderType::Fragment,
                                                                    multiViewCompatible,
                                                                    fragmentBaseUniforms,
+                                                                   metadata,
                                                                    inputOutputs,
                                                                    { },
                                                                    { },

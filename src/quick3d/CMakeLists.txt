@@ -11,9 +11,13 @@ qt_internal_add_module(Quick3D
     SOURCES
         qquick3d.cpp qquick3d.h
         qquick3dabstractlight.cpp qquick3dabstractlight_p.h
+        qquick3dshaderimage.cpp qquick3dshaderimage_p.h
+        qquick3dshaderstoragebuffer.cpp qquick3dshaderstoragebuffer_p.h
+        qquick3dshaderstoragebufferdata.cpp qquick3dshaderstoragebufferdata.h qquick3dshaderstoragebufferdata_p.h
         qquick3dcamera.cpp qquick3dcamera_p.h
         qquick3dcustomcamera.cpp qquick3dcustomcamera_p.h
         qquick3dcustommaterial.cpp qquick3dcustommaterial_p.h
+        qquick3dcomputepass.cpp qquick3dcomputepass_p.h
         qquick3ddebugsettings_p.h qquick3ddebugsettings.cpp
         qquick3ddefaultmaterial.cpp qquick3ddefaultmaterial_p.h
         qquick3ddirectionallight.cpp qquick3ddirectionallight_p.h
