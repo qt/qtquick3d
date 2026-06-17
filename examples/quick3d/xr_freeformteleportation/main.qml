@@ -6,8 +6,6 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import QtQuick3D.Xr
 
-import xr_shared
-
 XrView {
     id: xrView
     XrErrorDialog { id: err }

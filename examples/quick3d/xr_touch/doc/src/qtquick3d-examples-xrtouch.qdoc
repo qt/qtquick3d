@@ -16,9 +16,8 @@
     the \l{Qt Quick 3D - XR Simple Example}{xr_simple} example.
 
     We start by creating a reusable component \c TouchHand that encapsulates all the logic that we need for each hand.
-    This is located in the separate sub-project \c xr_shared, so you can easily re-use it in other projects.
 
-    \quotefile xr_shared/TouchHand.qml
+    \quotefile xr_touch/TouchHand.qml
 
     The component contains an XrController, giving us the 3D position of the index finger, and an
     XrHandModel to show where the hand is. The \c onTouchPositionChanged handler is where the magic happens.

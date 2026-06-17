@@ -22,7 +22,7 @@
 
     \c AimController defines signals that allows us to implement custom interactions:
 
-    \snippet xr_shared/AimController.qml signals
+    \snippet xr_interaction/AimController.qml signals
 
     \section1 Gadgets
 
@@ -32,13 +32,7 @@
 
     For example, \c TranslateGadget moves the controlled object along the gadget's axis based on the \c onMoved signal:
 
-    \snippet xr_shared/TranslateGadget.qml onMoved
-
-    \section1 Reusable components
-
-    We put the \c AimController and the gadgets in the separate sub-project \c xr_shared, so we can
-    reuse them in future examples. (\c xr_shared also includes the \c FreeformTeleporter component from the
-    \l{Qt Quick 3D - XR Freeform Teleportation Example}{Freeform Teleportation Example}.)
+    \snippet xr_interaction/TranslateGadget.qml onMoved
 
     \section1 Tying it all together
 
