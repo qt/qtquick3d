@@ -9,8 +9,6 @@ find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
 qt_standard_project_setup(REQUIRES 6.8)
 qt6_policy(SET QTP0002 NEW)
 
-add_subdirectory("../xr_shared" "xr_shared")
-
 qt_add_executable(${CMAKE_PROJECT_NAME}
     MANUAL_FINALIZATION
     main.cpp
@@ -25,6 +23,8 @@ qt_add_qml_module(${CMAKE_PROJECT_NAME}
         Main.qml
         Scene.qml
         CurvedMesh.qml
+        TouchHand.qml
+        XrGadget.qml
 )
 
 if (APPLE AND CMAKE_SYSTEM_NAME STREQUAL "visionOS")

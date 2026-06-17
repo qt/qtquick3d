@@ -204,13 +204,6 @@ SPDX-FileCopyrightText = "Unknown"
 SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
-path = "examples/quick3d/xr_shared/assets/arrows.gltf"
-precedence = "override"
-comment = "can't be read in file"
-SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
-SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR BSD-3-Clause"
-
-[[annotations]]
 path = "tests/baseline/data/shared/obj/plane_prb_opacity.mtl"
 precedence = "override"
 comment = "Can't be read in file"

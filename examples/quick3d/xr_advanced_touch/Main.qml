@@ -8,8 +8,6 @@ import QtQuick3D.Xr
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import xr_shared
-
 XrView {
     id: xrView
 

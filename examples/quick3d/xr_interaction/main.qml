@@ -8,8 +8,6 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import QtQuick3D.Xr
 
-import xr_shared
-
 pragma ComponentBehavior: Bound
 
 XrView {

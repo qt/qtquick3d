@@ -27,8 +27,7 @@
 
     \section1 Implementation
 
-    The teleportation logic is implemented in the  \c FreeformTeleporter component. This is located in the separate
-    sub-project \c xr_shared, so you can easily re-use it in other projects.
+    The teleportation logic is implemented in the  \c FreeformTeleporter component.
 
     \snippet xr_freeformteleportation/main.qml FreeformTeleporter component
 

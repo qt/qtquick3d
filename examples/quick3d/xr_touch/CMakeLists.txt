@@ -10,8 +10,6 @@ find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
 
 qt6_policy(SET QTP0002 NEW)
 
-add_subdirectory("../xr_shared" "xr_shared")
-
 qt_add_executable(xr_touch
     MANUAL_FINALIZATION
     main.cpp
@@ -39,6 +37,8 @@ qt_add_qml_module(xr_touch
         ExampleButton.qml
         Monitor.qml
         ScreenContent.qml
+        TouchHand.qml
+        XrGadget.qml
     RESOURCES
         meshes/monitor_mesh.mesh
     NO_RESOURCE_TARGET_PATH
