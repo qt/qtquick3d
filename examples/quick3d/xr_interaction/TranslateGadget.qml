@@ -6,7 +6,7 @@ import QtQuick
 pragma ComponentBehavior: Bound
 
 AxisGadget {
-    source: "qrc:/qt/qml/xr_shared/meshes/arrow_mesh.mesh"
+    source: "meshes/arrow_mesh.mesh"
     //! [onMoved]
     onMoved: (pos, dir) => {
         let moveDirection = delta.normalized()

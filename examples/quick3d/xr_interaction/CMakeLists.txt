@@ -10,9 +10,6 @@ find_package(Qt6 COMPONENTS Core Gui Quick Quick3D Quick3DXr)
 
 qt6_policy(SET QTP0002 NEW)
 
-add_subdirectory("../xr_shared" "xr_shared")
-
-
 qt_add_executable(xr_interaction
     MANUAL_FINALIZATION
     main.cpp
@@ -39,6 +36,21 @@ qt_add_qml_module(xr_interaction
         main.qml
         Scene.qml
         GadgetBox.qml
+        AimController.qml
+        AxisGadget.qml
+        PickRay.qml
+        ResizeGadget.qml
+        RotateGadget.qml
+        TranslateGadget.qml
+        XrCursor.qml
+        XrGadget.qml
+        XrItemHandle.qml
+    RESOURCES
+        shaders/cursor.frag
+        shaders/cursor.vert
+        meshes/arrow_mesh.mesh
+        meshes/rotate_mesh.mesh
+        meshes/resize_mesh.mesh
     NO_RESOURCE_TARGET_PATH
 )
 

@@ -9,8 +9,6 @@ import QtQuick3D.Xr
 import QtQuick3D.Helpers
 import Example
 
-import xr_shared
-
 pragma ComponentBehavior: Bound
 
 Node {
