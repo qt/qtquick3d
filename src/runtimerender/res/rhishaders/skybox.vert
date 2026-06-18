@@ -33,11 +33,11 @@ void main()
     gl_Position = vec4(attr_pos, 1.0);
 #if QSHADER_VIEW_COUNT >= 2
     vec3 unprojected = (ubuf.inverseProjection[gl_ViewIndex] * gl_Position).xyz;
-    eye_direction = normalize(ubuf.viewMatrix[gl_ViewIndex] * unprojected);
+    eye_direction = ubuf.viewMatrix[gl_ViewIndex] * unprojected;
 #else
     vec3 unprojected = (ubuf.inverseProjection * gl_Position).xyz;
-    eye_direction = normalize(ubuf.viewMatrix * unprojected);
+    eye_direction = ubuf.viewMatrix * unprojected;
 #endif
-    eye_direction = normalize(ubuf.orientation * eye_direction);
+    eye_direction = ubuf.orientation * eye_direction;
     gl_Position.y *= ubuf.skyboxProperties.x;
 }
