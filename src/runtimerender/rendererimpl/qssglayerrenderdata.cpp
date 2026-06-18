@@ -2960,6 +2960,11 @@ void QSSGLayerRenderData::prepareForRender()
     if (underlayPass.hasData())
         activePasses.push_back(&underlayPass);
 
+    // SkyMaterial must run before user render passes so skyMaterialTexture
+    // is populated when a user SkyboxPass sub-pass renders the background.
+    if (layerPrepResult.flags.requiresSkyMaterialPass())
+        activePasses.push_back(&skyMaterialPass);
+
     // Generated User render passes (QML)
     if (userRenderPasses.hasData())
         activePasses.push_back(&userRenderPasses);
