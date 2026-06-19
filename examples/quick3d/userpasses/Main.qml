@@ -21,11 +21,8 @@ ApplicationWindow {
         anchors.fill: parent
         renderOverrides: View3D.DisableInternalPasses
         environment: ExtendedSceneEnvironment {
-            lightProbe: Texture {
-                textureData: ProceduralSkyTextureData {
-                }
-            }
-            backgroundMode: SceneEnvironment.SkyBox
+            backgroundMode: SceneEnvironment.SkyMaterial
+            skyMaterial: ProceduralSkyMaterial {}
         }
     // ![disable internal passes]
 

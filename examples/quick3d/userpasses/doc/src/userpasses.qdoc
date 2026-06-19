@@ -108,7 +108,7 @@
 
     The second sub-pass renders the scene environment skybox using the special
     \c RenderPass.SkyboxPass pass mode. Qt Quick 3D takes care of drawing the
-    skybox geometry using the \l {QtQuick3D::SceneEnvironment::lightProbe}{lightProbe}
+    skybox geometry using the \l {QtQuick3D::SceneEnvironment::skyMaterial}{skyMaterial}
     and \l {QtQuick3D::SceneEnvironment::backgroundMode}{backgroundMode} settings from
     the \l {QtQuick3D::SceneEnvironment}{SceneEnvironment}.
 

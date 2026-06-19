@@ -18,9 +18,7 @@ XrView {
         backgroundMode: SceneEnvironment.Color
         antialiasingMode: SceneEnvironment.MSAA
         antialiasingQuality: SceneEnvironment.High
-        lightProbe: Texture {
-            textureData: ProceduralSkyTextureData {}
-        }
+        skyMaterial: ProceduralSkyMaterial {}
         exposure: teleporter.screenVisibility
         specularAAEnabled: true
     }

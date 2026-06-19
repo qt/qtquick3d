@@ -19,10 +19,8 @@ Item {
             clearColor: "#000000"
             antialiasingMode: AppSettings.antialiasingMode
             antialiasingQuality: AppSettings.antialiasingQuality
-            backgroundMode: SceneEnvironment.SkyBox
-            lightProbe: Texture {
-                textureData: ProceduralSkyTextureData{}
-            }
+            backgroundMode: SceneEnvironment.SkyMaterial
+            skyMaterial: ProceduralSkyMaterial {}
             oitMethod: SceneEnvironment.OITWeightedBlended
         }
 

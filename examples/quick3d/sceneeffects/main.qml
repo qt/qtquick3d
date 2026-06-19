@@ -126,10 +126,8 @@ ApplicationWindow {
             SplitView.fillHeight: true
             environment: ExtendedSceneEnvironment {
                 id: env
-                backgroundMode: SceneEnvironment.SkyBox
-                lightProbe: Texture {
-                    textureData: ProceduralSkyTextureData{}
-                }
+                backgroundMode: SceneEnvironment.SkyMaterial
+                skyMaterial: ProceduralSkyMaterial {}
                 InfiniteGrid {
                     visible: helper.gridEnabled
                     gridInterval: helper.gridInterval

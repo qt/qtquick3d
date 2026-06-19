@@ -15,10 +15,7 @@ XrView {
 
     environment: SceneEnvironment {
         id: sceneEnvironment
-        lightProbe: Texture {
-            textureData: ProceduralSkyTextureData {
-            }
-        }
+        skyMaterial: ProceduralSkyMaterial {}
         antialiasingMode: SceneEnvironment.MSAA
         antialiasingQuality: SceneEnvironment.High
         backgroundMode: SceneEnvironment.Color

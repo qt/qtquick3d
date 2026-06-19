@@ -44,8 +44,10 @@ qt_internal_add_qml_module(Quick3DHelpers
         OrbitCameraController.qml
         LodManager.qml
         ExtendedSceneEnvironment.qml
+        ProceduralSkyMaterial.qml
     RESOURCES
         meshes/axisGrid.mesh
+        proceduralsky.frag
     DEFINES
         QT_BUILD_QUICK3DHELPERS_LIB
     LIBRARIES

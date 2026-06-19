@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
     \image sceneenvironment_lightprobe_proceduralsky.jpg {Architectural scene lit by procedural sky visible in background}
 
-    \sa SceneEnvironment
+    \sa SceneEnvironment, ProceduralSkyMaterial
 */
 
 /*! \qmlproperty color ProceduralSkyTextureData::skyTopColor
