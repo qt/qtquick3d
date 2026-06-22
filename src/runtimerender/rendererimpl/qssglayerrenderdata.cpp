@@ -2463,14 +2463,15 @@ void QSSGLayerRenderData::prepareForRender()
     if (layer.oitMethod == QSSGRenderLayer::OITMethod::WeightedBlended) {
         orderIndependentTransparencyEnabled = rhiCtx->rhi()->isFeatureSupported(QRhi::PerRenderTargetBlending);
         if (rhiCtx->mainPassSampleCount() > 1)
-            orderIndependentTransparencyEnabled |= rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
+            orderIndependentTransparencyEnabled &= rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
         if (!orderIndependentTransparencyEnabled && !oitWarningUnsupportedShown) {
             qCWarning(lcQuick3DRender) << "WeightedBlended OIT is requested, but it is not supported.";
             oitWarningUnsupportedShown = true;
         }
     } else if (layer.oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
+        orderIndependentTransparencyEnabled = rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32UI, QRhiTexture::UsedWithLoadStore);
         if (rhiCtx->mainPassSampleCount() > 1)
-            orderIndependentTransparencyEnabled |= rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
+            orderIndependentTransparencyEnabled &= rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
         if (!orderIndependentTransparencyEnabled && !oitWarningUnsupportedShown) {
             qCWarning(lcQuick3DRender) << "LinkedList OIT is requested, but it is not supported.";
             oitWarningUnsupportedShown = true;
