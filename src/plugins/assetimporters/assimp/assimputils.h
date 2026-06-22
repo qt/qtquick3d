@@ -34,11 +34,4 @@ QSSGMesh::Mesh generateMeshData(const aiScene &scene,
                                 QString &errorString);
 }
 
-#ifndef QVECTORND_IS_HASHABLE
-inline size_t qHash(QVector3D vector, size_t seed = 0) noexcept
-{
-    return qHashMulti(seed, vector.x(), vector.y(), vector.z());
-}
-#endif
-
 QT_END_NAMESPACE
