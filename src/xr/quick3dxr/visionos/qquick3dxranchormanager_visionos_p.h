@@ -18,6 +18,7 @@
 //
 
 #include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
+#include <QtQuick3DXr/private/qquick3dxrspatialanchor_p.h>
 
 #include <QtCore/quuid.h>
 
@@ -33,8 +34,6 @@ QT_BEGIN_NAMESPACE
 
 class QVector2D;
 class QVector3D;
-
-class QQuick3DXrSpatialAnchor;
 
 class QQuick3DXrAnchorManager : public QObject
 {
