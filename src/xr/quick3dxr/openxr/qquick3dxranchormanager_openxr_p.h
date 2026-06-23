@@ -42,10 +42,9 @@
 #include <QObject>
 
 #include <QtQuick3DXr/private/qtquick3dxrglobal_p.h>
+#include <QtQuick3DXr/private/qquick3dxrspatialanchor_p.h>
 
 QT_BEGIN_NAMESPACE
-
-class QQuick3DXrSpatialAnchor;
 
 class QQuick3DXrAnchorManager : public QObject
 {
