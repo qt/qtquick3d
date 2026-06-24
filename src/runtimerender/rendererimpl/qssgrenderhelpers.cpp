@@ -1881,8 +1881,8 @@ void RenderHelpers::rhiRenderReflectionMap(const QSSGRenderContextInterface &con
                                || inData.layer.background == QSSGRenderLayer::Background::SkyMaterial)
             && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch);
 
-    for (int i = 0, ie = reflectionProbes.size(); i != ie; ++i) {
-        QSSGReflectionMapEntry *pEntry = reflectionMapManager.reflectionMapEntry(i);
+    for (size_t i = 0, ie = reflectionProbes.size(); i != ie; ++i) {
+        QSSGReflectionMapEntry *pEntry = reflectionMapManager.reflectionMapEntry(int(i));
         if (!pEntry)
             continue;
 
