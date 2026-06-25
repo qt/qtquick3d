@@ -75,7 +75,11 @@ vec4 SSILVB()
     const float sampleOffset = 0.01;
 
     // https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/
-    const float jitter = mod(52.9829189 * mod(0.06711056 * FRAGCOORD.x + 0.00583715 * FRAGCOORD.y, 1.0), 1.0) - 0.5;
+    // Use TEXTURE_UV-based pixel coordinates: FRAGCOORD.y is bottom-up on OpenGL
+    // but top-down on Vulkan/D3D/Metal, which would produce different jitter for the
+    // same visual pixel. TEXTURE_UV.y is always bottom-up on all backends.
+    const vec2 jitterCoord = TEXTURE_UV * INPUT_SIZE;
+    const float jitter = mod(52.9829189 * mod(0.06711056 * jitterCoord.x + 0.00583715 * jitterCoord.y, 1.0), 1.0) - 0.5;
 
     for (float slice = 0.0; slice < sliceCount + 0.5; slice += 1.0) {
         const float phi = sliceRotation * (slice + jitter) + pi;
@@ -94,8 +98,10 @@ vec4 SSILVB()
 
         for (float currentSample = 0.0; currentSample < sampleCount + 0.5; currentSample += 1.0) {
             const float sampleStep = (currentSample + jitter) / sampleCount + sampleOffset;
-            // GL: - others: +
-            const vec2 sampleUV = INPUT_UV - qt_normalAdjustViewportFactor * (sampleStep * sampleScale * omega * aspect);
+            // Convert omega (view-space direction, +y=up) to INPUT_UV offset.
+            // X is consistent across backends; Y must be flipped by qt_normalAdjustViewportFactor
+            // since INPUT_UV.y increases upward on OpenGL but downward on Vulkan/D3D/Metal.
+            const vec2 sampleUV = INPUT_UV + sampleStep * sampleScale * omega * vec2(aspect.x, qt_normalAdjustViewportFactor);
             const vec3 sampleDistance = getNdcPos(sampleUV) - position;
             const vec3 sampleHorizon = sampleDistance / length(sampleDistance);
             vec2 minMaxHorizon = acos(vec2(dot(sampleHorizon, camera), dot(normalize(sampleDistance - camera * hitThickness), camera)));
