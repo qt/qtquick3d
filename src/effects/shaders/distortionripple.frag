@@ -8,9 +8,10 @@ void MAIN()
     if (dist_to_center > 1.0) {
         texc = INPUT_UV;
     } else {
+        vec2 center_adj = vec2(center.x, 0.5 + (center.y - 0.5) * (-FRAMEBUFFER_Y_UP));
         float r = radians(360.0) * (1.0 - dist_to_center);
         float distortion = sin(r * (100.0 - distortionWidth) + radians(distortionPhase));
-        texc = INPUT_UV - (INPUT_UV - center) * distortion * distortionHeight / 800.0;
+        texc = INPUT_UV - (INPUT_UV - center_adj) * distortion * distortionHeight / 800.0;
     }
 
     if (texc.x < 0.0 || texc.x > 1.0 || texc.y < 0.0 || texc.y > 1.0)

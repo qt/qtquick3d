@@ -1758,7 +1758,7 @@ void MAIN()
     vec2 texcoord = INPUT_UV;
     if (dist_to_center <= 1.0) {
         float rotation_amount = (1.0 - dist_to_center) * (1.0 - dist_to_center);
-        float r = radians(360.0) * rotation_amount / 4.0;
+        float r = radians(360.0) * rotation_amount / 4.0 * FRAMEBUFFER_Y_UP;
         float cos_r = cos(r);
         float sin_r = sin(r);
         mat2 rotation = mat2(cos_r, sin_r, -sin_r, cos_r);

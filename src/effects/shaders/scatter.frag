@@ -3,7 +3,7 @@ void MAIN()
     float size = 15.0;
     float strength = amount / 127.0 * 0.4;
 
-    vec2 uv = INPUT_UV * size;
+    vec2 uv = TEXTURE_UV * size;
     if (randomize)
         uv = fract(uv + 0.031 * FRAME);
 
@@ -16,6 +16,7 @@ void MAIN()
     else
         uv *= (vec2(0.0, 0.29) * strength);
 
+    uv.y *= FRAMEBUFFER_Y_UP;
     uv += INPUT_UV;
 
     vec2 halfPixelSize = 0.5 / INPUT_SIZE;

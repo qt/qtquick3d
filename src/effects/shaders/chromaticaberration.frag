@@ -27,7 +27,7 @@ void MAIN()
     float depthScale = abs(CAMERA_PROPERTIES.y - CAMERA_PROPERTIES.x);
     float depthDisp = abs(rawDepth - focusDepth) / depthScale;
     float finalDisperse = aberrationAmount * depthDisp;
-    float effectAmt = texture(maskTexture, INPUT_UV).x;
+    float effectAmt = texture(maskTexture, TEXTURE_UV).x;
 
     FRAGCOLOR = texture(INPUT, INPUT_UV);
 

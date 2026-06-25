@@ -17,11 +17,12 @@ void setupPoissonBlurCoords(float inBlurAmount, vec2 inTexInfo )
 {
     float incX = inBlurAmount / inTexInfo.x;
     float incY = inBlurAmount / inTexInfo.y;
-    TexCoord0 = vec2( INPUT_UV.x + poisson0.x * incX, INPUT_UV.y + poisson0.y * incY );
-    TexCoord1 = vec2( INPUT_UV.x + poisson1.x * incX, INPUT_UV.y + poisson1.y * incY );
-    TexCoord2 = vec2( INPUT_UV.x + poisson2.x * incX, INPUT_UV.y + poisson2.y * incY );
-    TexCoord3 = vec2( INPUT_UV.x + poisson3.x * incX, INPUT_UV.y + poisson3.y * incY );
-    TexCoord4 = vec2( INPUT_UV.x + poisson4.x * incX, INPUT_UV.y + poisson4.y * incY );
+    float yFlip = -FRAMEBUFFER_Y_UP;
+    TexCoord0 = vec2( INPUT_UV.x + poisson0.x * incX, INPUT_UV.y + poisson0.y * incY * yFlip );
+    TexCoord1 = vec2( INPUT_UV.x + poisson1.x * incX, INPUT_UV.y + poisson1.y * incY * yFlip );
+    TexCoord2 = vec2( INPUT_UV.x + poisson2.x * incX, INPUT_UV.y + poisson2.y * incY * yFlip );
+    TexCoord3 = vec2( INPUT_UV.x + poisson3.x * incX, INPUT_UV.y + poisson3.y * incY * yFlip );
+    TexCoord4 = vec2( INPUT_UV.x + poisson4.x * incX, INPUT_UV.y + poisson4.y * incY * yFlip );
 }
 
 void MAIN()
