@@ -183,7 +183,7 @@
                 "file type": "3rd party",
                 "spdx": ["CC0-1.0"]
             },
-            "tests/baseline/data/shared/maps/((o1|t2)_bc(1|2)|miptester_etc2).ktx": {
+            "tests/baseline/data/shared/maps/((o1|t2)_bc(1|2)|miptester_(etc2|bc3)).ktx": {
                 "comment": "",
                 "file type": "3rd party",
                 "spdx": ["CC0-1.0"]
