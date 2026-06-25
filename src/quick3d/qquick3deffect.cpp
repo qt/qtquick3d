@@ -295,7 +295,7 @@ QT_BEGIN_NAMESPACE
         vec2 texcoord = INPUT_UV;
         if (dist_to_center <= 1.0) {
             float rotation_amount = (1.0 - dist_to_center) * (1.0 - dist_to_center);
-            float r = radians(360.0) * rotation_amount / 4.0;
+            float r = radians(360.0) * rotation_amount / 4.0 * FRAMEBUFFER_Y_UP;
             mat2 rotation = mat2(cos(r), sin(r), -sin(r), cos(r));
             texcoord = vec2(0.5, 0.5) + rotation * (INPUT_UV - vec2(0.5, 0.5));
         }

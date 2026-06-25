@@ -10,8 +10,9 @@ void MAIN()
 {
     float xIncrement = .5 / INPUT_SIZE.x;
     float yIncrement = .5 / INPUT_SIZE.y;
-    TexCoord0 = vec2( INPUT_UV.x + xIncrement, INPUT_UV.y + yIncrement );
-    TexCoord1 = vec2( INPUT_UV.x - xIncrement, INPUT_UV.y - yIncrement );
-    TexCoord2 = vec2( INPUT_UV.x - xIncrement, INPUT_UV.y + yIncrement );
-    TexCoord3 = vec2( INPUT_UV.x + xIncrement, INPUT_UV.y - yIncrement );
+    float yFlip = -FRAMEBUFFER_Y_UP;
+    TexCoord0 = vec2( INPUT_UV.x + xIncrement, INPUT_UV.y + yIncrement * yFlip );
+    TexCoord1 = vec2( INPUT_UV.x - xIncrement, INPUT_UV.y - yIncrement * yFlip );
+    TexCoord2 = vec2( INPUT_UV.x - xIncrement, INPUT_UV.y + yIncrement * yFlip );
+    TexCoord3 = vec2( INPUT_UV.x + xIncrement, INPUT_UV.y - yIncrement * yFlip );
 }

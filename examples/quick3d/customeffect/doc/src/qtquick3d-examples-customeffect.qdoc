@@ -38,9 +38,10 @@
     \snippet customeffect/main.qml eff2
 
     The fragment shader for this effect creates a distortion by modifying the sampling
-    coordinates. The calculation uses \c center_vec, which comes from the fragment shader.
-    Finally, the shader adjusts the color using the \c uRed and \c uGreen uniforms. Note
-    that these uniforms do not have to be declared in the shader:
+    coordinates. The calculation uses \c center_vec, a VARYING set by the vertex shader
+    that holds the aspect-ratio-corrected vector from the screen center to the current
+    fragment. Finally, the shader adjusts the color using the \c uRed and \c uGreen
+    uniforms. Note that these uniforms do not have to be declared in the shader:
 
     \quotefile customeffect/effect2.frag
 */
