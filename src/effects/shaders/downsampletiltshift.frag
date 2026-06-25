@@ -6,7 +6,7 @@ VARYING vec2 TexCoord3;
 float advancedGetTiltShiftMultiplier(vec2 inTexCoord, float inFocusBarHeight, float inFocusWidth,
                                      bool inVertical, bool inInvert)
 {
-    float texPos = inVertical ? inTexCoord.x : inTexCoord.y;
+    float texPos = inVertical ? inTexCoord.x : 0.5 + (inTexCoord.y - 0.5) * (-FRAMEBUFFER_Y_UP);
     float focusDiff = max(0.0, abs(texPos - inFocusBarHeight) - (inFocusWidth / 2.0))
             / inFocusWidth;
     float retval = clamp(focusDiff, 0.0, 1.0);

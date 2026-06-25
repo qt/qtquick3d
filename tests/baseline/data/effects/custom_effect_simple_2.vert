@@ -4,6 +4,6 @@
 void MAIN()
 {
     VERTEX.x += 0.5;
-    VERTEX.y -= 0.7;
+    VERTEX.y -= 0.7 * FRAMEBUFFER_Y_UP;
     POSITION = MODELVIEWPROJECTION_MATRIX * vec4(VERTEX, 1.0);
 }
