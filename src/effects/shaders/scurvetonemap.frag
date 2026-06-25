@@ -105,8 +105,12 @@ void MAIN()
     float lum1 = 0.5 * curveCompute( param1, m, n ) + 0.5;
     sourceSep.r = (lum > 0.5) ? lum1 : lum0;
 
-    // Convert back to RGB and gamma correct
-    vec3 finalColor = YPbPrToRGB( sourceSep );
+    // Convert back to RGB. Clamp negative values that arise when luma is
+    // compressed heavily while chroma stays fixed, pushing colours outside
+    // the RGB cube. Negative values here would cause undefined behaviour in
+    // pow() inside gammaCorrect, with different GPU drivers returning
+    // different results.
+    vec3 finalColor = max(vec3(0.0), YPbPrToRGB( sourceSep ));
     finalColor = gammaCorrect( adjSaturation( finalColor, saturationLevel ), gammaValue );
     FRAGCOLOR = vec4( finalColor, sourceColor.a );
 }
