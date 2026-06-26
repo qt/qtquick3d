@@ -252,10 +252,9 @@ vec3 sampleGlowBuffer(sampler2D glowBuffer, int level)
 }
 
 float fixY(float y) {
-    if (qt_normalAdjustViewportFactor > 0.0)
-        return y;
-    const float lut_div = lutSize - 1.0;
-    return lut_div - y;
+    // The LUT texture is uploaded with LoadWithFlippedY, so texelFetch y=k maps
+    // to original image row (lutSize-1-k) on all backends. Un-flip unconditionally.
+    return lutSize - 1.0 - y;
 }
 
 // Gets interpolation percentage for color  channel using floor and diff values.
