@@ -27,8 +27,16 @@ void tst_SourceItem::initTestCase()
 
 const int FUZZ = 5;
 
+static bool isPlatformWayland()
+{
+    return QGuiApplication::platformName().startsWith(QLatin1String("wayland"), Qt::CaseInsensitive);
+}
+
 void tst_SourceItem::sourceItem()
 {
+    if (isPlatformWayland())
+        QSKIP("Wayland: eglSwapBuffers failure leads to no frame being presented."); // QTBUG-147818
+
     std::unique_ptr<QQuickWindow> window(createWindow(QLatin1String("SourceItem.qml"), QSize(640, 480)));
 
     QVERIFY(QTest::qWaitForWindowExposed(window.get()));
