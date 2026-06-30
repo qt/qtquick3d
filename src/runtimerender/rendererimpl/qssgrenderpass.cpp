@@ -716,6 +716,8 @@ void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     ps = data.getPipelineState();
     ps.samples = 1; // screen texture is always non-MSAA
     ps.viewCount = data.layer.viewCount; // but is a 2D texture array when multiview
+    if (ps.flags.testFlag(QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled))
+        ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled, true);
 
     if (layer.background == QSSGRenderLayer::Background::Color)
         clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
