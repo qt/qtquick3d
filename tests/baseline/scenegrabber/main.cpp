@@ -29,6 +29,9 @@
 // Give up after SCENE_TIMEOUT ms
 #define SCENE_TIMEOUT     6000
 
+// Number of consecutive identical grabs required to declare the scene stable
+#define SCENE_STABLE_COUNT 3
+
 //#define GRABBERDEBUG
 
 static const QSize DefaultGrabSize(400, 400);
@@ -76,9 +79,13 @@ private slots:
 #endif
         QImage img = grabWindow();
         if (!img.isNull() && img == lastGrab) {
-            sceneStabilized();
+            if (++consecutiveSameGrabs >= SCENE_STABLE_COUNT)
+                sceneStabilized();
+            else
+                QTimer::singleShot(0, this, SLOT(grab()));
         } else {
             lastGrab = img;
+            consecutiveSameGrabs = 0;
             grabTimer->start();
         }
 
@@ -130,6 +137,7 @@ private:
     QTimer *grabTimer = nullptr;
     QString ofile;
     int grabNo;
+    int consecutiveSameGrabs = 0;
     bool isGrabbing;
     bool initDone;
     bool justShow;
