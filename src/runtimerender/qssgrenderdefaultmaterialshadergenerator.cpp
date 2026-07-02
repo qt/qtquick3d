@@ -1364,7 +1364,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     // Special case for depth pre-pass
     if (passRequirmentState.shouldDiscardNonOpaque()) {
-        fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";
+        // Epsilon guards against rasterizer precision causing opaque fragments to be discarded (QTBUG-140392).
+        fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < (1.0 - 1e-6))\n";
         fragmentShader << "        discard;\n";
     }
 
