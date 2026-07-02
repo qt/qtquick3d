@@ -177,14 +177,14 @@ Manually running balsam on assets is not always ideal. Therefore, applications
 are recommended to rely on CMake to automatically perform the same task at
 application build time.
 
-This is done by using the qt6_add_lightprobe_images CMake function provided by
+This is done by using the \l qt_add_lightprobe_images() CMake function provided by
 the Quick3D component of the Qt6 package:
 
 \badcode
     ...
     find_package(Qt6 COMPONENTS Quick3D)
     ...
-    qt6_add_lightprobe_images(application_target "ibl_assets"
+    qt_add_lightprobe_images(application_target "ibl_assets"
         PREFIX
             "/ibl"
         FILES
@@ -210,11 +210,11 @@ matching the .qml file's location allows using a relative source path instead of
 having to provide an absolute path with the qrc scheme.
 
 In addition to PREFIX, the keyword BASE is also available. The behavior follows
-that of qt6_add_resources. For example, the following leads to generating
+that of \l qt_add_resources(). For example, the following leads to generating
 \c{:/ibl/maps/environment.ktx}:
 
 \badcode
-    qt6_add_lightprobe_images(application_target "ibl_assets"
+    qt_add_lightprobe_images(application_target "ibl_assets"
         PREFIX
             "/ibl"
         BASE
@@ -224,12 +224,12 @@ that of qt6_add_resources. For example, the following leads to generating
     )
 \endcode
 
-Like in qt6_add_shaders, the OUTPUTS keyword is available to allow specifying a
+Like in \l qt_add_shaders(), the OUTPUTS keyword is available to allow specifying a
 completely custom name for the file in the resource system. For example, the
 following also generates \c{:/ibl/maps/environment.ktx}:
 
 \badcode
-    qt6_add_lightprobe_images(application_target "ibl_assets"
+    qt_add_lightprobe_images(application_target "ibl_assets"
         PREFIX
             "/ibl"
         FILES
