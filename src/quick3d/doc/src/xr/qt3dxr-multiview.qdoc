@@ -88,7 +88,7 @@
 
     Writing multiview-aware shaders is enabled by Qt's shader conditioning
     pipeline. See the Multiview sections in \l{QSB Manual} and
-    \l{qt_add_shaders}() for details.
+    \l qt_add_shaders() for details.
 
     \section2 Multiview support in Qt Quick 3D
 

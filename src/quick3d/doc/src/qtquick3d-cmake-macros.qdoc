@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtquick3d
 
 \title qt_add_materials
-\keyword qt6_add_materials
+\keyword qt_add_materials()
 \deprecated
 
 \summary {Generates shaders from files, adding them as Qt resources.}
@@ -79,7 +79,7 @@ target.
 \ingroup cmake-commands-qtquick3d
 
 \title qt_add_lightprobe_images
-\keyword qt6_add_lightprobe_images
+\keyword qt_add_lightprobe_images()
 
 \summary {Bakes HDRI map files to KTX files, adding them as Qt resouces.}
 
