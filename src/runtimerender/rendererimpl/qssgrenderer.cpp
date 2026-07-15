@@ -26,6 +26,9 @@
 #include "../qssgshadermapkey_p.h"
 #include "../qssgrenderpickresult_p.h"
 #include "../graphobjects/qssgrenderroot_p.h"
+#include "../graphobjects/qssgrendermodel_p.h"
+#include "../graphobjects/qssgrenderdefaultmaterial_p.h"
+#include "../graphobjects/qssgrendercustommaterial_p.h"
 
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
@@ -962,6 +965,45 @@ QSSGRendererPrivate::closestPointOnSubsetRenderable(const QSSGRenderLayer& layer
     return std::nullopt;
 }
 
+// Subsets past the end of the material list use the last material, as in the renderer.
+// Uses the model's own materials, so extension API overrides are not taken into account.
+static QSSGCullFaceMode cullModeForSubset(const QSSGRenderModel &model, int subset)
+{
+    if (model.materials.isEmpty())
+        return QSSGCullFaceMode::Back;
+    const int idx = qMin(subset, int(model.materials.size()) - 1);
+    const QSSGRenderGraphObject *material = model.materials.at(idx);
+    if (!material)
+        return QSSGCullFaceMode::Back;
+    switch (material->type) {
+    case QSSGRenderGraphObject::Type::DefaultMaterial:
+    case QSSGRenderGraphObject::Type::PrincipledMaterial:
+    case QSSGRenderGraphObject::Type::SpecularGlossyMaterial:
+        return static_cast<const QSSGRenderDefaultMaterial *>(material)->cullMode;
+    case QSSGRenderGraphObject::Type::CustomMaterial:
+        return static_cast<const QSSGRenderCustomMaterial *>(material)->m_cullMode;
+    default:
+        return QSSGCullFaceMode::Back;
+    }
+}
+
+// A mirroring transform flips the winding the renderer sees, but not the local-space
+// winding the ray is tested against.
+static QSSGCullFaceMode mirroredCullMode(QSSGCullFaceMode cullMode)
+{
+    switch (cullMode) {
+    case QSSGCullFaceMode::Unknown:
+    case QSSGCullFaceMode::Back:
+        return QSSGCullFaceMode::Front;
+    case QSSGCullFaceMode::Front:
+        return QSSGCullFaceMode::Back;
+    case QSSGCullFaceMode::Disabled:
+    case QSSGCullFaceMode::FrontAndBack:
+        break;
+    }
+    return cullMode;
+}
+
 void QSSGRendererPrivate::intersectRayWithSubsetRenderable(const QSSGRenderLayer &layer,
                                                            QSSGBufferManager &bufferManager,
                                                            const QSSGRenderRay &inRay,
@@ -1024,6 +1066,8 @@ void QSSGRendererPrivate::intersectRayWithSubsetRenderable(const QSSGRenderLayer
         if (!hit.intersects())
             continue;
 
+        const bool mirrored = modelTransform.determinant() < 0.0f;
+
         // Check each submesh to find the closest intersection point
         float minRayLength = std::numeric_limits<float>::max();
         QSSGRenderRay::IntersectionResult intersectionResult;
@@ -1037,7 +1081,10 @@ void QSSGRendererPrivate::intersectRayWithSubsetRenderable(const QSSGRenderLayer
                 hit = QSSGRenderRay::intersectWithAABBv2(rayData, subMesh.bvhRoot->boundingData);
                 if (hit.intersects()) {
                     results.clear();
-                    inRay.intersectWithBVH(rayData, static_cast<const QSSGMeshBVHNode *>(subMesh.bvhRoot), mesh, results);
+                    QSSGCullFaceMode cullMode = cullModeForSubset(model, subset);
+                    if (mirrored)
+                        cullMode = mirroredCullMode(cullMode);
+                    inRay.intersectWithBVH(rayData, static_cast<const QSSGMeshBVHNode *>(subMesh.bvhRoot), mesh, results, cullMode);
                     float subMeshMinRayLength = std::numeric_limits<float>::max();
                     for (const auto &subMeshResult : std::as_const(results)) {
                         if (subMeshResult.rayLengthSquared < subMeshMinRayLength) {

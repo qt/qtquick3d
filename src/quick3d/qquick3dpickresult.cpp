@@ -142,6 +142,11 @@ QVector3D QQuick3DPickResult::position() const
     This property holds the normal of the face that was hit in local coordinate
     space.
 
+    \note This is the geometric normal of the face, which for a face that was
+    hit on its back side points away from the ray. Back sides are only picked
+    when the material's \l {Material::cullMode}{cull mode} does not discard
+    them.
+
     \note for 2D Items this will always be (0, 0, 1).
 */
 QVector3D QQuick3DPickResult::normal() const
