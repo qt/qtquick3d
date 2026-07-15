@@ -1013,6 +1013,10 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 
     This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
 
+    Triangles that the material's \l {Material::cullMode}{cull mode} discards
+    when rendering are not picked either, so only geometry that is actually
+    visible along the ray is reported.
+
     \sa pickAll(), pickSubset(), pickInRect()
 */
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
@@ -1196,6 +1200,10 @@ QList<QQuick3DPickResult> QQuick3DViewport::pickAll(float x, float y) const
     This can, for instance, be called with the position and forward vector of
     any object in a scene to see what object is in front of an item. This
     makes it possible to do picking from any point in the scene.
+
+    Triangles that the material's \l {Material::cullMode}{cull mode} discards
+    when rendering are not picked either, so only geometry that is actually
+    visible along the ray is reported.
 
     \since 6.2
 */

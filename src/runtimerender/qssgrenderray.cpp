@@ -120,7 +120,8 @@ bool QSSGRenderRay::triangleIntersect(const QSSGRenderRay &ray,
                                       const QVector3D &v2,
                                       float &u,
                                       float &v,
-                                      QVector3D &normal)
+                                      QVector3D &normal,
+                                      QSSGCullFaceMode cullMode)
 {
     const float epsilon = std::numeric_limits<float>::epsilon();
 
@@ -134,55 +135,51 @@ bool QSSGRenderRay::triangleIntersect(const QSSGRenderRay &ray,
     // Compute the determinant
     const float determinant = QVector3D::dotProduct(edge1, P);
 
-    QVector3D Q;
-
-    // If determinant is near zero, the ray lies in the plane of the triangle
-    if (determinant > epsilon) {
-        // Compute the vector T from the ray origin to the first vertex of the triangle
-        const QVector3D T = ray.origin - v0;
-
-        // Calculate coordinate u and test bounds
-        u = QVector3D::dotProduct(T, P);
-        if (u < 0.0f || u > determinant)
-            return false;
-
-        // Compute the vector Q as the cross product of vector T and edge1
-        Q = QVector3D::crossProduct(T, edge1);
-
-        // Calculate coordinate v and test bounds
-        v = QVector3D::dotProduct(ray.direction, Q);
-        if (v < 0.0f || ((u + v) > determinant))
-            return false;
-    } /*else if (determinant < -epsilon) { // This would be if we cared about backfaces
-        // Compute the vector T from the ray origin to the first vertex of the triangle
-        const QVector3D T = ray.origin - v0;
-
-        // Calculate coordinate u and test bounds
-        u = QVector3D::dotProduct(T, P);
-        if (u > 0.0f || u < determinant)
-            return false;
-
-        // Compute the vector Q as the cross product of vector T and edge1
-        Q = QVector3D::crossProduct(T, edge1);
-
-        // Calculate coordinate v and test bounds
-        v = QVector3D::dotProduct(ray.direction, Q);
-        if (v > 0.0f || ((u + v) < determinant))
-            return false;
-    } */else {
-        // Ray is parallel to the plane of the triangle
+    // If the determinant is near zero the ray lies in the plane of the triangle.
+    if (std::abs(determinant) < epsilon)
         return false;
+
+    // A positive determinant means the ray hit the front face
+    const bool frontFacing = determinant > 0.0f;
+    switch (cullMode) {
+    case QSSGCullFaceMode::Unknown:
+    case QSSGCullFaceMode::Back:
+        if (!frontFacing)
+            return false;
+        break;
+    case QSSGCullFaceMode::Front:
+        if (frontFacing)
+            return false;
+        break;
+    case QSSGCullFaceMode::FrontAndBack:
+        return false;
+    case QSSGCullFaceMode::Disabled:
+        break;
     }
 
     const float invDeterminant = 1.0f / determinant;
+
+    // Compute the vector T from the ray origin to the first vertex of the triangle
+    const QVector3D T = ray.origin - v0;
+
+    // Calculate coordinate u and test bounds
+    u = QVector3D::dotProduct(T, P) * invDeterminant;
+    if (u < 0.0f || u > 1.0f)
+        return false;
+
+    // Compute the vector Q as the cross product of vector T and edge1
+    const QVector3D Q = QVector3D::crossProduct(T, edge1);
+
+    // Calculate coordinate v and test bounds
+    v = QVector3D::dotProduct(ray.direction, Q) * invDeterminant;
+    if (v < 0.0f || ((u + v) > 1.0f))
+        return false;
 
     // Calculate the value of t, the parameter of the intersection point along the ray
     const float t = QVector3D::dotProduct(edge2, Q) * invDeterminant;
 
     if (t > epsilon) {
         normal = QVector3D::crossProduct(edge1, edge2).normalized();
-        u *= invDeterminant;
-        v *= invDeterminant;
         return true;
     }
 
@@ -194,6 +191,7 @@ void QSSGRenderRay::intersectWithBVH(const RayData &data,
                                      const QSSGMeshBVHNode *bvh,
                                      const QSSGRenderMesh *mesh,
                                      QVector<IntersectionResult> &intersections,
+                                     QSSGCullFaceMode cullMode,
                                      int depth)
 {
     if (!bvh || !mesh || !mesh->bvh)
@@ -202,7 +200,7 @@ void QSSGRenderRay::intersectWithBVH(const RayData &data,
     // If this is a leaf node, process it's triangles
     if (bvh->count != 0) {
         // If there is an intersection on a leaf node, then test against geometry
-        auto results = intersectWithBVHTriangles(data, mesh->bvh->triangles(), bvh->offset, bvh->count);
+        auto results = intersectWithBVHTriangles(data, mesh->bvh->triangles(), bvh->offset, bvh->count, cullMode);
         if (!results.isEmpty())
             intersections.append(results);
         return;
@@ -210,11 +208,11 @@ void QSSGRenderRay::intersectWithBVH(const RayData &data,
 
     auto hit = QSSGRenderRay::intersectWithAABBv2(data, bvh->left->boundingData);
     if (hit.intersects())
-        intersectWithBVH(data, static_cast<const QSSGMeshBVHNode *>(bvh->left), mesh, intersections, depth + 1);
+        intersectWithBVH(data, static_cast<const QSSGMeshBVHNode *>(bvh->left), mesh, intersections, cullMode, depth + 1);
 
     hit = QSSGRenderRay::intersectWithAABBv2(data, bvh->right->boundingData);
     if (hit.intersects())
-        intersectWithBVH(data, static_cast<const QSSGMeshBVHNode *>(bvh->right), mesh, intersections, depth + 1);
+        intersectWithBVH(data, static_cast<const QSSGMeshBVHNode *>(bvh->right), mesh, intersections, cullMode, depth + 1);
 }
 
 
@@ -222,7 +220,8 @@ void QSSGRenderRay::intersectWithBVH(const RayData &data,
 QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriangles(const RayData &data,
                                                                                     const QSSGMeshBVHTriangles &bvhTriangles,
                                                                                     int triangleOffset,
-                                                                                    int triangleCount)
+                                                                                    int triangleCount,
+                                                                                    QSSGCullFaceMode cullMode)
 {
     Q_ASSERT(bvhTriangles.size() >= size_t(triangleOffset + triangleCount));
 
@@ -243,7 +242,8 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
                                                   triangle.vertex3,
                                                   u,
                                                   v,
-                                                  normal);
+                                                  normal,
+                                                  cullMode);
         if (intersects) {
             const float w = 1.0f - u - v;
             const QVector3D localIntersectionPoint = w * triangle.vertex1 +

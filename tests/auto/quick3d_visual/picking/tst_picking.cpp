@@ -13,6 +13,8 @@
 
 #include "../shared/util.h"
 
+Q_DECLARE_METATYPE(QSSGCullFaceMode)
+
 class CustomGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
@@ -132,6 +134,9 @@ private Q_SLOTS:
     void test_triangleIntersect();
     void test_sphere_geometry();
     void test_closest_point_picking();
+    void test_triangleIntersect_cullMode_data();
+    void test_triangleIntersect_cullMode();
+    void test_picking_cull_mode();
 
 private:
     QQuickItem *find2DChildIn3DNode(QQuickView *view, const QString &objectName, const QString &itemName);
@@ -1215,6 +1220,105 @@ void tst_Picking::test_closest_point_picking()
     QCOMPARE(result.normal(), QVector3D(-1.0f, 0.0f, 0.0f));
     QCOMPARE(result.instanceIndex(), 2);
     QCOMPARE(result.itemHit(), nullptr);
+}
+
+void tst_Picking::test_triangleIntersect_cullMode_data()
+{
+    QTest::addColumn<QVector3D>("origin");
+    QTest::addColumn<QVector3D>("direction");
+    QTest::addColumn<QSSGCullFaceMode>("cullMode");
+    QTest::addColumn<bool>("expectedIntersects");
+
+    // The triangle below faces +Z
+    const QVector3D frontOrigin(0.0f, -0.5f, 2.0f);
+    const QVector3D frontDirection(0.0f, 0.0f, -1.0f);
+    const QVector3D backOrigin(0.0f, -0.5f, -2.0f);
+    const QVector3D backDirection(0.0f, 0.0f, 1.0f);
+
+    QTest::newRow("front_backFaceCulling") << frontOrigin << frontDirection << QSSGCullFaceMode::Back << true;
+    QTest::newRow("front_frontFaceCulling") << frontOrigin << frontDirection << QSSGCullFaceMode::Front << false;
+    QTest::newRow("front_noCulling") << frontOrigin << frontDirection << QSSGCullFaceMode::Disabled << true;
+    QTest::newRow("front_frontAndBackCulling") << frontOrigin << frontDirection << QSSGCullFaceMode::FrontAndBack << false;
+
+    QTest::newRow("back_backFaceCulling") << backOrigin << backDirection << QSSGCullFaceMode::Back << false;
+    QTest::newRow("back_frontFaceCulling") << backOrigin << backDirection << QSSGCullFaceMode::Front << true;
+    QTest::newRow("back_noCulling") << backOrigin << backDirection << QSSGCullFaceMode::Disabled << true;
+    QTest::newRow("back_frontAndBackCulling") << backOrigin << backDirection << QSSGCullFaceMode::FrontAndBack << false;
+}
+
+void tst_Picking::test_triangleIntersect_cullMode()
+{
+    QFETCH(QVector3D, origin);
+    QFETCH(QVector3D, direction);
+    QFETCH(QSSGCullFaceMode, cullMode);
+    QFETCH(bool, expectedIntersects);
+
+    const QVector3D vert0(0, 0, 0);
+    const QVector3D vert1(-1, -1, 0);
+    const QVector3D vert2(1, -1, 0);
+
+    QVector3D normal;
+    float u = 0.0f;
+    float v = 0.0f;
+
+    const QSSGRenderRay ray(origin, direction);
+    const bool intersects = QSSGRenderRay::triangleIntersect(ray, vert0, vert1, vert2, u, v, normal, cullMode);
+    QCOMPARE(intersects, expectedIntersects);
+
+    if (!intersects)
+        return;
+
+    QVERIFY(u >= 0.0f && u <= 1.0f);
+    QVERIFY(v >= 0.0f && v <= 1.0f);
+    QVERIFY(u + v <= 1.0f);
+    QCOMPARE(normal, QVector3D(0.0f, 0.0f, 1.0f));
+}
+
+void tst_Picking::test_picking_cull_mode()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("cull_mode.qml"), QSize(600, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+
+    const QImage rendered = grab(view.data());
+    if (rendered.isNull())
+        return; // was QFAIL'ed already
+
+    const qreal dpr = view->devicePixelRatio();
+
+    struct CullModeCase
+    {
+        const char *objectName;
+        QPoint viewportPos;
+        QColor renderedColor; // The clear color when the visible side is culled away
+        bool pickable;
+    };
+
+    // Whatever is culled away when rendering must not be pickable, and whatever is
+    // rendered must be.
+    static const CullModeCase cases[] = {
+        { "backCull", QPoint(100, 100), QColor(Qt::black), false },
+        { "frontCull", QPoint(300, 100), QColor(0, 255, 0), true },
+        { "noCull", QPoint(500, 100), QColor(0, 0, 255), true },
+        { "mirrorBackCull", QPoint(100, 300), QColor(Qt::black), false },
+        { "mirrorFrontCull", QPoint(300, 300), QColor(0, 255, 255), true },
+        { "mirrorNoCull", QPoint(500, 300), QColor(255, 0, 255), true },
+    };
+
+    for (const CullModeCase &c : cases) {
+        QQuick3DModel *model = view3d->findChild<QQuick3DModel *>(QLatin1String(c.objectName));
+        QVERIFY2(model, c.objectName);
+        QVERIFY2(comparePixel(rendered, c.viewportPos, dpr, c.renderedColor, 5), c.objectName);
+
+        const QQuick3DPickResult result = view3d->pick(c.viewportPos.x(), c.viewportPos.y());
+        if (c.pickable)
+            QVERIFY2(result.objectHit() == model, c.objectName);
+        else
+            QVERIFY2(result.objectHit() == nullptr, c.objectName);
+    }
 }
 
 QTEST_MAIN(tst_Picking)

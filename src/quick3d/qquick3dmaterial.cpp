@@ -51,6 +51,12 @@ QT_BEGIN_NAMESPACE
     \value Material.BackFaceCulling Back-facing triangles are discarded.
     \value Material.FrontFaceCulling Front-facing triangles are discarded.
     \value Material.NoCulling No triangles are discarded.
+
+    \note Since Qt 6.12 this property also affects picking: a triangle that is
+    discarded when rendering cannot be picked either. With Material.NoCulling
+    both sides of a triangle are pickable.
+
+    \sa {View3D::pick()}{View3D.pick()}
 */
 
 /*!
