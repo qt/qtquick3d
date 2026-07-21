@@ -33,5 +33,5 @@ void main()
 #endif
 #endif
 
-    fragOutput = vec4(qt_tonemap(qt_exposure(color.rgb, 1.0)), 1.0);
+    fragOutput = vec4(qt_tonemap(qt_exposure(color.rgb, 1.0)), color.a);
 }
