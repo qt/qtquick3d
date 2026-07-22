@@ -3,6 +3,8 @@
 
 set(QT_ANDROID_DEPLOYMENT_TYPE Debug) # no release package signing, no matter what the build type is
 
+qt_policy(SET QTP0001 NEW)
+
 qt_internal_add_executable(qquick3d_qmlscenegrabber_xr
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
