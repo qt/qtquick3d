@@ -1,0 +1,7 @@
+{
+    "asset": { "version": "2.0" },
+    "extensionsUsed": [ "KHR_draco_mesh_compression" ],
+    "extensionsRequired": [ "KHR_draco_mesh_compression" ],
+    "scene": 0,
+    "scenes": [ { "nodes": [] } ]
+}

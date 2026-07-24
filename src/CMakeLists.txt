@@ -11,6 +11,7 @@ set(QT_SBOM_DEFAULT_QT_LICENSE_ID_LIBRARIES "QT_COMMERCIAL_OR_GPL3")
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)
+add_subdirectory(gltf)
 add_subdirectory(assetimport)
 add_subdirectory(runtimerender)
 add_subdirectory(quick3d)

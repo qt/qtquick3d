@@ -26,7 +26,7 @@ SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"
 path = ["tests/**.png", "tests/**.jpg", "tests/**.mesh", "tests/**.frag",
         "tests/**.vert", "tests/**.qml", "tests/**.xml",
         "tests/auto/assetimport/**", "tests/**.cpp", "tests/**.qsb",
-        "tests/**.bin",
+        "tests/**.bin", "tests/**.gltf",
         "tests/baseline/data/lighting/lightmaps/qlm_box.exr",
         "tests/baseline/data/particles3d/qt_logo_in_4096.cbor",
         "tests/baseline/scenegrabber_xr/testscenes/maps/oulu_2.jpeg",
