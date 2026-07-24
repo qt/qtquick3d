@@ -26,14 +26,32 @@ QSSGUserRenderPassManager::~QSSGUserRenderPassManager()
     qDeleteAll(textures);
 }
 
+void QSSGUserRenderPassManager::setScheduledPasses(const UserPassSet &topLevelPasses)
+{
+    // The scene sync establishes the full set of top-level passes each frame.
+    // The manager keeps this set ordered by dependency index and declaration
+    // order in updateUserPassOrder(), so the caller need not pre-sort it.
+    m_scheduledUserPasses = topLevelPasses;
+    m_passlistDirty = true;
+}
+
 void QSSGUserRenderPassManager::scheduleUserPass(QSSGRenderUserPass *userPasses)
 {
-    if (userPasses != nullptr) {
-        auto it = std::find(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), userPasses);
-        if (it == m_scheduledUserPasses.end()) {
-            m_scheduledUserPasses.push_back(userPasses);
-            m_passlistDirty = true;
-        }
+    if (userPasses == nullptr)
+        return;
+
+    // Only top-level passes are scheduled. A sub-pass is invoked by its parent
+    // and renders into the parent's target, so it must never enter the scheduled
+    // list even if a provider requests its result (QTBUG-148554).
+    if (userPasses->role != QSSGRenderUserPass::Role::TopLevel) {
+        qCDebug(QSSGUserRenderPassManagerLog) << "Ignoring schedule of a sub-pass:" << userPasses;
+        return;
+    }
+
+    auto it = std::find(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), userPasses);
+    if (it == m_scheduledUserPasses.end()) {
+        m_scheduledUserPasses.push_back(userPasses);
+        m_passlistDirty = true;
     }
 }
 
@@ -70,10 +88,13 @@ QSSGRhiRenderableTextureV2Ptr QSSGUserRenderPassManager::getUserPassTexureResult
 void QSSGUserRenderPassManager::updateUserPassOrder(bool forceUpdate)
 {
     if (m_passlistDirty || forceUpdate) {
-        // stable_sort preserves the existing scheduled order for passes with
-        // equal dependency indices.
-        std::stable_sort(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), [](const QSSGRenderUserPass *a, const QSSGRenderUserPass *b) {
-            return a->m_dependencyIndex > b->m_dependencyIndex;
+        // Order by dependency index (higher renders first), then by declaration
+        // order so passes with an equal dependency index render in the order they
+        // were declared, independent of the order a provider scheduled them.
+        std::sort(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), [](const QSSGRenderUserPass *a, const QSSGRenderUserPass *b) {
+            if (a->m_dependencyIndex != b->m_dependencyIndex)
+                return a->m_dependencyIndex > b->m_dependencyIndex;
+            return a->m_declarationOrder < b->m_declarationOrder;
         });
     }
 

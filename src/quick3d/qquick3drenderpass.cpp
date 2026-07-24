@@ -5,6 +5,8 @@
 
 #include "qquick3drenderpass_p.h"
 
+#include <QtQuick3D/private/qquick3dscenemanager_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 
@@ -97,7 +99,16 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
         newBackendNode = true;
     }
 
-    const bool fullUpdate = newBackendNode  || (m_dirtyAttributes & Dirty::TextureDirty) || (m_dirtyAttributes & CommandsDirty);
+    // The role follows the SubRenderPass reference count maintained by the
+    // commands referencing this pass. A role change forces a full update, which
+    // rebuilds the command list and thereby marks the scene manager's pass set
+    // dirty, so synchronize() re-derives the declaration order for the new role.
+    const bool isSubPass = (m_subRenderPassRef > 0);
+    const bool subPassChanged = (renderPassNode->role == QSSGRenderUserPass::Role::SubPass) != isSubPass;
+
+    renderPassNode->role = isSubPass ? QSSGRenderUserPass::Role::SubPass : QSSGRenderUserPass::Role::TopLevel;
+
+    const bool fullUpdate = newBackendNode || subPassChanged || (m_dirtyAttributes & Dirty::TextureDirty) || (m_dirtyAttributes & CommandsDirty);
 
     auto &shaderAugmentation = renderPassNode->shaderAugmentation;
     auto &uniformProps = shaderAugmentation.propertyUniforms;
@@ -117,6 +128,12 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
             else
                 markDirty(CommandsDirty, true); // Try again next time
         }
+
+        // The command list drives the top-level/sub-pass classification (a pass
+        // referenced by a SubRenderPass command is a sub-pass). Rebuilding it may
+        // have changed that, so ask synchronize() to re-derive the classification.
+        if (QQuick3DSceneManager *sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager)
+            sceneManager->userRenderPassesDirty = true;
     }
 
     // Update the property values
@@ -623,6 +640,33 @@ void QQuick3DRenderPass::setRenderTargetFlags(RenderTargetFlags newRenderTargetF
     m_renderTargetFlags = newRenderTargetFlags;
     emit renderTargetFlagsChanged();
     markDirty(ClearDirty);
+}
+
+// A reference change can flip the pass's role, so the pass is updated to
+// mirror the new role to its backend node, and the scene manager's pass set is
+// marked dirty so the classification-dependent state (declaration order) is
+// re-derived. The scene manager may be null when the pass has not entered a
+// scene yet; registration sets the flag then.
+static void notifySubPassRefChange(QQuick3DRenderPass *pass)
+{
+    pass->update();
+    if (QQuick3DSceneManager *sceneManager = QQuick3DObjectPrivate::get(pass)->sceneManager)
+        sceneManager->userRenderPassesDirty = true;
+}
+
+void QQuick3DRenderPassPrivateHelper::subPassRef(QQuick3DRenderPass *pass)
+{
+    Q_ASSERT(pass);
+    ++pass->m_subRenderPassRef;
+    notifySubPassRefChange(pass);
+}
+
+void QQuick3DRenderPassPrivateHelper::subPassDeref(QQuick3DRenderPass *pass)
+{
+    Q_ASSERT(pass);
+    if (QSSG_GUARD(pass->m_subRenderPassRef > 0))
+        --pass->m_subRenderPassRef;
+    notifySubPassRefChange(pass);
 }
 
 QT_END_NAMESPACE

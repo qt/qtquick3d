@@ -42,6 +42,15 @@ public:
         return std::make_shared<QSSGUserRenderPassManager>(Private::Initialize);
     }
 
+    // Establishes the complete set of scheduled (top-level) passes for the frame
+    // in one operation. Replacing the set wholesale each sync implicitly drops
+    // passes that were removed or that flipped to being a sub-pass.
+    void setScheduledPasses(const UserPassSet &topLevelPasses);
+
+    // On-demand scheduling used by the extension/provider path. A sub-pass is
+    // rejected; a top-level pass is added if not already scheduled. This backs up
+    // setScheduledPasses on the first frame, before the layer render data (and
+    // thus the manager) exists at sync time.
     void scheduleUserPass(QSSGRenderUserPass *userPasses);
     void unscheduleUserPass(const QSSGRenderUserPass *userPasses);
 
