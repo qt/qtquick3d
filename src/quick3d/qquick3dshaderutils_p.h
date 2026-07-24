@@ -678,7 +678,7 @@ protected:
 private:
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
 
-    QQuick3DRenderPass *m_renderPass = nullptr;
+    QPointer<QQuick3DRenderPass> m_renderPass;
     mutable bool m_hasWarnedAboutInvalidId = false;
 };
 

@@ -2171,7 +2171,8 @@ QSSGCommand *QQuick3DShaderUtilsRenderPassAddDefine::cloneCommand() {
 
 QQuick3DShaderUtilsSubRenderPass::~QQuick3DShaderUtilsSubRenderPass()
 {
-
+    if (m_renderPass)
+        QQuick3DRenderPassPrivateHelper::subPassDeref(m_renderPass);
 }
 
 QSSGCommand *QQuick3DShaderUtilsSubRenderPass::cloneCommand()
@@ -2231,10 +2232,15 @@ void QQuick3DShaderUtilsSubRenderPass::setRenderPass(QQuick3DRenderPass *newRend
     if (m_renderPass == newRenderPass)
         return;
 
-    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DShaderUtilsSubRenderPass::setRenderPass, newRenderPass, m_renderPass);
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DShaderUtilsSubRenderPass::setRenderPass, newRenderPass, m_renderPass.data());
 
     if (newRenderPass)
-        newRenderPass->update();
+        QQuick3DRenderPassPrivateHelper::subPassRef(newRenderPass);
+
+    // NOTE: When the watcher calls us because the referenced pass is being
+    // destroyed, the QPointer is already null, so a dying pass is never deref'd.
+    if (m_renderPass)
+        QQuick3DRenderPassPrivateHelper::subPassDeref(m_renderPass);
 
     m_renderPass = newRenderPass;
     m_hasWarnedAboutInvalidId = false; // Reset warning flag when property changes

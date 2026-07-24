@@ -23,6 +23,15 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuick3DRenderPass;
+
+namespace QQuick3DRenderPassPrivateHelper {
+// Reference counting used by SubRenderPass commands to classify a pass: a pass
+// referenced by at least one SubRenderPass command is a sub-pass.
+void subPassRef(QQuick3DRenderPass *pass);
+void subPassDeref(QQuick3DRenderPass *pass);
+}
+
 class Q_QUICK3D_EXPORT QQuick3DRenderPass : public QQuick3DObject, public QQuick3DPropertyChangedTracker
 {
     Q_OBJECT
@@ -112,6 +121,9 @@ private Q_SLOTS:
     void onCommandChanged();
 
 private:
+    friend void QQuick3DRenderPassPrivateHelper::subPassRef(QQuick3DRenderPass *);
+    friend void QQuick3DRenderPassPrivateHelper::subPassDeref(QQuick3DRenderPass *);
+
     static void qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, QQuick3DShaderUtilsRenderCommand *command);
     static QQuick3DShaderUtilsRenderCommand *qmlCommandAt(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, qsizetype index);
     static qsizetype qmlCommandCount(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list);
@@ -145,6 +157,9 @@ private:
     PassMode m_passMode = UserPass;
     float m_depthClearValue = 1.0f;
     quint32 m_stencilClearValue = 0;
+    // Number of SubRenderPass commands currently referencing this pass. When
+    // greater than 0 the pass is a sub-pass, otherwise it is a top-level pass.
+    quint32 m_subRenderPassRef = 0;
     RenderTargetFlags m_renderTargetFlags = RenderTargetFlag::None;
 };
 

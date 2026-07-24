@@ -277,8 +277,10 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
             ++inputHandlingEnabled;
         } else if (QSSGRenderGraphObjectUtils::isUserRenderPass(itemPriv->type) && itemPriv->spatialNode) {
             auto *userRenderPass = static_cast<QSSGRenderUserPass *>(itemPriv->spatialNode);
-            if (const auto idx = userRenderPasses.indexOf(userRenderPass); idx == -1)
+            if (const auto idx = userRenderPasses.indexOf(userRenderPass); idx == -1) {
                 userRenderPasses.push_back(userRenderPass);
+                userRenderPassesDirty = true;
+            }
         }
     }
 
@@ -424,8 +426,10 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::cleanupNodes()
 
         if (QSSGRenderGraphObjectUtils::isUserRenderPass(node->type)) {
             auto *userRenderPass = static_cast<QSSGRenderUserPass *>(node);
-            if (qsizetype idx = userRenderPasses.indexOf(userRenderPass); idx != -1)
+            if (qsizetype idx = userRenderPasses.indexOf(userRenderPass); idx != -1) {
                 userRenderPasses.remove(idx);
+                userRenderPassesDirty = true;
+            }
         }
 
         // Some nodes will trigger resource cleanups that need to

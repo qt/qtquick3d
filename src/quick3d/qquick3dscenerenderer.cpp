@@ -803,40 +803,43 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     for (QSSGRenderEffect *effectNode = m_layer->firstEffect; effectNode; effectNode = effectNode->m_nextEffect)
         effectNode->finalizeShaders(*m_layer, m_sgContext.get());
 
-    // Re-schedule top-level user passes in the order they appear in the scene
-    // manager's userRenderPasses list so a RenderOutputProvider that scheduled
-    // a later pass first cannot reorder them. That list order follows the order
-    // in which the passes were first synced, not a guaranteed QML declaration
-    // order. A pass referenced by a SubRenderPass command is tagged SubPass and
-    // invoked by its parent, so it is never scheduled here.
+    // Schedule the top-level user passes. A pass is a sub-pass iff another pass
+    // references it through a SubRenderPass command; a sub-pass is invoked by its
+    // parent and renders into the parent's target, so it is never scheduled. Its
+    // order is its command index, established by the parent. A top-level pass
+    // records its declaration order, which the manager uses as the tiebreak when
+    // ordering passes with an equal dependency index, so the render order is
+    // deterministic regardless of the order a RenderOutputProvider scheduled it.
+    //
+    // The role itself is not derived here: each pass mirrors it to its backend
+    // node in updateSpatialNode() from the reference count the SubRenderPass
+    // commands maintain, and the node updates have already been flushed above.
     if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
-        for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses))
-            userPass->role = QSSGRenderUserPass::Role::TopLevel;
-        for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
-            for (const QSSGCommand *cmd : std::as_const(userPass->commands)) {
-                if (cmd->m_type != CommandType::SubRenderPass)
-                    continue;
-                const auto *subCmd = static_cast<const QSSGSubRenderPass *>(cmd);
-                if (subCmd->m_userPassId == QSSGResourceId::Invalid)
-                    continue;
-                if (auto *subPass = QSSGRenderGraphObjectUtils::getResource<QSSGRenderUserPass>(subCmd->m_userPassId))
-                    subPass->role = QSSGRenderUserPass::Role::SubPass;
-            }
-        }
-
-        QSSGUserRenderPassManagerPtr upm;
-        if (m_layer->renderData)
-            upm = m_layer->renderData->requestUserRenderPassManager();
-        if (upm) {
+        // The declaration order only changes when a pass is added or removed, a
+        // command list is rebuilt, or a pass's role flips, so re-derive it only
+        // then.
+        if (sm->userRenderPassesDirty) {
+            quint32 declarationOrder = 0;
             for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
                 if (userPass->role == QSSGRenderUserPass::Role::TopLevel)
-                    upm->unscheduleUserPass(userPass);
+                    userPass->m_declarationOrder = declarationOrder++;
             }
+            sm->userRenderPassesDirty = false;
         }
+
+        QSSGUserRenderPassManager::UserPassSet topLevelPasses;
+        topLevelPasses.reserve(sm->userRenderPasses.size());
         for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
             userPass->finalizeShaders(*m_sgContext);
-            if (upm && userPass->role == QSSGRenderUserPass::Role::TopLevel)
-                upm->scheduleUserPass(userPass);
+            if (userPass->role == QSSGRenderUserPass::Role::TopLevel)
+                topLevelPasses.push_back(userPass);
+        }
+
+        // The layer render data (and thus the manager) may not exist yet on the
+        // first frame; the provider path schedules on demand until it does.
+        if (m_layer->renderData) {
+            if (const QSSGUserRenderPassManagerPtr &upm = m_layer->renderData->requestUserRenderPassManager())
+                upm->setScheduledPasses(topLevelPasses);
         }
     }
 
@@ -1020,10 +1023,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             // for user passes by using the parent node's index.
             if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
                 for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
-                    // Only top-level passes participate in dependency ordering; a
-                    // sub-pass is invoked by its parent, so a node-derived index on
-                    // it would corrupt the scheduled-pass ordering if it is also
-                    // scheduled directly (e.g. its output consumed via a provider).
+                    // Only top-level passes participate in dependency ordering. The
+                    // manager already rejects sub-passes from the scheduled list, so
+                    // this keeps the persistent dependency index consistent (0) for
+                    // a pass that is currently a sub-pass.
                     if (userPass->role != QSSGRenderUserPass::Role::TopLevel) {
                         userPass->setDependencyIndex(0);
                     } else if (const auto *fo = sm->lookUpNode(userPass); fo && fo->parentItem()) {

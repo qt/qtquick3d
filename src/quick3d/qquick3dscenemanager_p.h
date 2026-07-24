@@ -196,6 +196,7 @@ public:
     int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.
     bool sharedResourceRemoved = false;
     bool autoRegisteredExtensionsDirty = false;
+    bool userRenderPassesDirty = true;
     friend QQuick3DObject;
     struct LightmapSourceTracker
     {

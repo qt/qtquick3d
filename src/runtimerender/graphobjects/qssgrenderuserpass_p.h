@@ -91,6 +91,10 @@ public:
     FlagT m_dirtyFlags = 0;
     State m_state = State::None;
     quint32 m_dependencyIndex = 0;
+    // Registration order in the scene manager's userRenderPasses list. Used as a
+    // stable tiebreak when ordering scheduled passes with equal dependency index,
+    // so the render order does not depend on when a provider scheduled a pass.
+    quint32 m_declarationOrder = 0;
 
     void resetCommands();
 };

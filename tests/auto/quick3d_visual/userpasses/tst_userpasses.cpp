@@ -5,11 +5,13 @@
 #include <QSignalSpy>
 #include <QDir>
 #include <QFile>
+#include <QtQml/QQmlComponent>
 #include <QtQuick/QQuickView>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3drenderpass_p.h>
 #include <QtQuick3D/private/qquick3dobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
+#include <QtQuick3DRuntimeRender/private/qssguserrenderpassmanager_p.h>
 #include "../shared/util.h"
 
 class tst_UserPasses : public QQuick3DDataTest
@@ -33,6 +35,11 @@ private slots:
     void subPassOverrideMaterial();
     void multipleSubPasses();
     void subPassDependencyIndex();
+    void userPassManagerScheduling();
+    void subPassRoleTransition();
+    void subPassRefCounting();
+    void subPassCommandDestroyed();
+    void referencedPassDestroyed();
     void slotLimitDoesNotCrash();
     void depthLimitDoesNotCrash();
     void testAddDefine();
@@ -808,6 +815,220 @@ void tst_UserPasses::subPassDependencyIndex()
 
     // The invariant under test: a sub-pass carries no dependency index.
     QCOMPARE(subNode->m_dependencyIndex, 0u);
+}
+
+void tst_UserPasses::userPassManagerScheduling()
+{
+    // Unit test of the manager's scheduling contract, which the scene sync and
+    // the RenderOutputProvider path both depend on.
+    auto manager = QSSGUserRenderPassManager::create();
+
+    QSSGRenderUserPass topA;
+    QSSGRenderUserPass topB;
+    QSSGRenderUserPass topC;
+    QSSGRenderUserPass sub;
+    topA.role = QSSGRenderUserPass::Role::TopLevel;
+    topB.role = QSSGRenderUserPass::Role::TopLevel;
+    topC.role = QSSGRenderUserPass::Role::TopLevel;
+    sub.role = QSSGRenderUserPass::Role::SubPass;
+
+    // Sync establishes the top-level set wholesale.
+    manager->setScheduledPasses({ &topA, &topB });
+    QCOMPARE(manager->scheduledUserPasses().size(), 2);
+
+    // Provider path: confirming an already-scheduled pass is a no-op.
+    manager->scheduleUserPass(&topA);
+    QCOMPARE(manager->scheduledUserPasses().size(), 2);
+
+    // A top-level pass not yet scheduled is added (first-frame fallback).
+    manager->scheduleUserPass(&topC);
+    QCOMPARE(manager->scheduledUserPasses().size(), 3);
+
+    // A sub-pass is rejected, even via the provider path (QTBUG-148554).
+    manager->scheduleUserPass(&sub);
+    QCOMPARE(manager->scheduledUserPasses().size(), 3);
+    QVERIFY(!manager->scheduledUserPasses().contains(&sub));
+
+    // Ordering: higher dependency index first, then lower declaration order.
+    topA.m_dependencyIndex = 1; topA.m_declarationOrder = 0;
+    topB.m_dependencyIndex = 3; topB.m_declarationOrder = 1;
+    topC.m_dependencyIndex = 1; topC.m_declarationOrder = 2;
+    manager->setScheduledPasses({ &topA, &topB, &topC });
+    manager->updateUserPassOrder(true);
+    const auto &ordered = manager->scheduledUserPasses();
+    QCOMPARE(ordered.size(), 3);
+    QCOMPARE(ordered.at(0), &topB); // highest dependency index
+    QCOMPARE(ordered.at(1), &topA); // equal index, lower declaration order first
+    QCOMPARE(ordered.at(2), &topC);
+}
+
+void tst_UserPasses::subPassRoleTransition()
+{
+    // The classification is only re-derived when the flag on the scene manager is
+    // set (pass add/remove or command-list rebuild). Flipping which leaf pass the
+    // container references at runtime must re-derive the roles accordingly.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_role_transition.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *leafA = view->rootObject()->findChild<QQuick3DRenderPass *>("leafA");
+    auto *leafB = view->rootObject()->findChild<QQuick3DRenderPass *>("leafB");
+    QVERIFY(leafA);
+    QVERIFY(leafB);
+
+    const auto roleOf = [](QQuick3DRenderPass *pass) {
+        auto *node = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+        return node ? node->role : QSSGRenderUserPass::Role::TopLevel;
+    };
+
+    // Initially the container references leafB as its sub-pass.
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(leafB), QSSGRenderUserPass::Role::SubPass);
+    QCOMPARE(roleOf(leafA), QSSGRenderUserPass::Role::TopLevel);
+
+    // Flip the reference: leafA becomes the sub-pass, leafB returns to top-level.
+    view->rootObject()->setProperty("useLeafAAsSubPass", true);
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(leafA), QSSGRenderUserPass::Role::SubPass);
+    QCOMPARE(roleOf(leafB), QSSGRenderUserPass::Role::TopLevel);
+
+    // And back again.
+    view->rootObject()->setProperty("useLeafAAsSubPass", false);
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(leafB), QSSGRenderUserPass::Role::SubPass);
+    QCOMPARE(roleOf(leafA), QSSGRenderUserPass::Role::TopLevel);
+}
+
+void tst_UserPasses::subPassRefCounting()
+{
+    // Two containers reference the SAME leaf pass. The classification counts
+    // references, so the leaf stays a sub-pass until the LAST reference is
+    // dropped.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_refcount.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *sharedLeaf = view->rootObject()->findChild<QQuick3DRenderPass *>("sharedLeaf");
+    QVERIFY(sharedLeaf);
+
+    const auto roleOf = [](QQuick3DRenderPass *pass) {
+        auto *node = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+        return node ? node->role : QSSGRenderUserPass::Role::TopLevel;
+    };
+
+    // Both references active.
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(sharedLeaf), QSSGRenderUserPass::Role::SubPass);
+
+    // Dropping one of two references keeps the leaf a sub-pass.
+    view->rootObject()->setProperty("refA", false);
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(sharedLeaf), QSSGRenderUserPass::Role::SubPass);
+
+    // Dropping the last reference makes it top-level again.
+    view->rootObject()->setProperty("refB", false);
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(sharedLeaf), QSSGRenderUserPass::Role::TopLevel);
+
+    // And re-referencing flips it back.
+    view->rootObject()->setProperty("refA", true);
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(sharedLeaf), QSSGRenderUserPass::Role::SubPass);
+}
+
+void tst_UserPasses::subPassCommandDestroyed()
+{
+    // Destroying the referencing SubRenderPass command (with its container
+    // pass) releases the reference: the leaf returns to top-level.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_dynamic_ref.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *viewport = view->rootObject()->findChild<QQuick3DViewport *>("view");
+    auto *staticLeaf = view->rootObject()->findChild<QQuick3DRenderPass *>("staticLeaf");
+    QVERIFY(viewport);
+    QVERIFY(staticLeaf);
+
+    const auto roleOf = [](QQuick3DRenderPass *pass) {
+        auto *node = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+        return node ? node->role : QSSGRenderUserPass::Role::TopLevel;
+    };
+
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(staticLeaf), QSSGRenderUserPass::Role::TopLevel);
+
+    // Create a container pass at runtime that references the static leaf.
+    QQmlComponent component(view->engine());
+    component.setData(QByteArrayLiteral(
+                          "import QtQuick3D\n"
+                          "RenderPass {\n"
+                          "    commands: [ SubRenderPass { objectName: \"dynSubCmd\" } ]\n"
+                          "}\n"),
+                      QUrl(QStringLiteral("dyncontainer.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    auto *dynContainer = qobject_cast<QQuick3DRenderPass *>(component.create());
+    QVERIFY(dynContainer);
+    dynContainer->setParentItem(viewport->scene());
+    auto *dynSubCmd = dynContainer->findChild<QObject *>("dynSubCmd");
+    QVERIFY(dynSubCmd);
+    QVERIFY(dynSubCmd->setProperty("renderPass", QVariant::fromValue(staticLeaf)));
+
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(staticLeaf), QSSGRenderUserPass::Role::SubPass);
+
+    // Destroying the container destroys the command, releasing the reference.
+    delete dynContainer;
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(staticLeaf), QSSGRenderUserPass::Role::TopLevel);
+}
+
+void tst_UserPasses::referencedPassDestroyed()
+{
+    // Destroying the referenced pass while the SubRenderPass command is alive
+    // must not crash: the watcher resets the command's renderPass and the
+    // dying pass is never dereferenced.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_dynamic_ref.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *viewport = view->rootObject()->findChild<QQuick3DViewport *>("view");
+    auto *staticContainer = view->rootObject()->findChild<QQuick3DRenderPass *>("staticContainer");
+    auto *staticSubCmd = view->rootObject()->findChild<QObject *>("staticSubCmd");
+    QVERIFY(viewport);
+    QVERIFY(staticContainer);
+    QVERIFY(staticSubCmd);
+
+    const auto roleOf = [](QQuick3DRenderPass *pass) {
+        auto *node = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+        return node ? node->role : QSSGRenderUserPass::Role::TopLevel;
+    };
+
+    // Create a leaf pass at runtime and reference it from the static command.
+    QQmlComponent component(view->engine());
+    component.setData(QByteArrayLiteral(
+                          "import QtQuick3D\n"
+                          "RenderPass {\n"
+                          "    commands: [ RenderablesFilter { renderableTypes: RenderablesFilter.None } ]\n"
+                          "}\n"),
+                      QUrl(QStringLiteral("dynleaf.qml")));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    auto *dynLeaf = qobject_cast<QQuick3DRenderPass *>(component.create());
+    QVERIFY(dynLeaf);
+    dynLeaf->setParentItem(viewport->scene());
+    QVERIFY(staticSubCmd->setProperty("renderPass", QVariant::fromValue(dynLeaf)));
+
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(roleOf(dynLeaf), QSSGRenderUserPass::Role::SubPass);
+
+    // Destroy the referenced pass; the watcher clears the command's property.
+    delete dynLeaf;
+    QCOMPARE(staticSubCmd->property("renderPass").value<QQuick3DRenderPass *>(), nullptr);
+
+    // The scene keeps rendering and the container is unaffected.
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+    QCOMPARE(roleOf(staticContainer), QSSGRenderUserPass::Role::TopLevel);
+    QVERIFY(imageContainsDominantColor(result, Qt::red));
 }
 
 void tst_UserPasses::slotLimitDoesNotCrash()
