@@ -15,6 +15,8 @@
 #include <QtCore/QList>
 #include <QtCore/QString>
 
+#include <QtQml/QQmlFile>
+
 QT_BEGIN_NAMESPACE
 
 QSSGAssetImportManager::QSSGAssetImportManager(QObject *parent) : QObject(parent)
@@ -25,10 +27,16 @@ QSSGAssetImportManager::QSSGAssetImportManager(QObject *parent) : QObject(parent
         auto importer = QSSGAssetImporterFactory::create(key, QStringList());
         if (importer) {
             m_assetImporters.append(importer);
-            // Add to extension map
+            // Add to extension map; when several importers claim the same
+            // extension the one with the highest priority() wins, and equal
+            // priorities keep the first importer registered. Keys are
+            // normalized to lower case, because every lookup is.
             const auto extensions = importer->inputExtensions();
             for (const auto &extension : extensions) {
-                m_extensionsMap.insert(extension, importer);
+                const QString extensionKey = extension.toLower();
+                const auto existing = m_extensionsMap.constFind(extensionKey);
+                if (existing == m_extensionsMap.cend() || (*existing)->priority() < importer->priority())
+                    m_extensionsMap.insert(extensionKey, importer);
             }
         } else {
             qWarning() << "Failed to load asset import plugin with key: " << key;
@@ -103,27 +111,27 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QUr
                                                                        const QJsonObject &options,
                                                                        QString *error)
 {
-    auto importState = ImportState::Unsupported;
-    auto it = m_assetImporters.cbegin();
-    const auto end = m_assetImporters.cend();
-    for (; it != end; ++it) {
-        if ((*it)->name() == QLatin1String("assimp"))
-            break;
+    // Anything that is not a local file or a resource has to have its
+    // extension taken from the path rather than from the serialized URL, or a
+    // query string or fragment ends up being read as the suffix instead.
+    const QString filePath = QQmlFile::isLocalFile(url) ? QQmlFile::urlToLocalFileOrQrc(url) : url.path();
+
+    const auto extension = QFileInfo(filePath).suffix().toLower();
+    auto importer = m_extensionsMap.value(extension, nullptr);
+    if (!importer) {
+        if (error)
+            *error = QStringLiteral("unsupported file extension %1").arg(extension);
+        return ImportState::Unsupported;
     }
 
-    if (it != end) {
-        const auto &importer = *it;
-        const auto ret = importer->import(url, options, scene);
-        if (!ret.isEmpty()) {
-            if (error)
-                *error = ret;
-            importState = ImportState::IoError;
-        } else {
-            importState = ImportState::Success;
-        }
+    const auto ret = importer->import(url, options, scene);
+    if (!ret.isEmpty()) {
+        if (error)
+            *error = ret;
+        return ImportState::IoError;
     }
 
-    return importState;
+    return ImportState::Success;
 }
 
 QJsonObject QSSGAssetImportManager::getOptionsForFile(const QString &filename)

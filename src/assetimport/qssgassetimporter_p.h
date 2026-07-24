@@ -40,6 +40,9 @@ public:
     virtual QString name() const = 0;
     virtual QStringList inputExtensions() const = 0;
     virtual QString outputExtension() const = 0;
+    // Decides which importer owns an input extension that several importers
+    // claim: the highest priority wins, and 0 is the default.
+    virtual int priority() const { return 0; }
     virtual QString type() const = 0;
     virtual QJsonObject importOptions() const = 0;
     virtual QString typeDescription() const = 0;

@@ -53,9 +53,13 @@ void QSSGSceneDesc::Scene::cleanup()
     id.clear();
     nodeId = 0;
 
-    root->cleanupChildren();
-    delete root;
-    root = nullptr;
+    // An import that failed before building anything leaves no root, and
+    // releasing such a scene has to be allowed
+    if (root) {
+        root->cleanupChildren();
+        delete root;
+        root = nullptr;
+    }
 
     qDeleteAll(resources);
     resources.clear();

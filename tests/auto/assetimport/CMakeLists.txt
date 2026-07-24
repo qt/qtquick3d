@@ -24,8 +24,18 @@ qt_internal_add_test(tst_qquick3dassetimport
     LIBRARIES
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
+        Qt::Quick3DAssetUtilsPrivate
         Qt::Quick3DUtilsPrivate
     TESTDATA ${test_data}
+)
+
+# An embedded copy of one asset, so that importing from a qrc URL is covered
+# as well as importing from the filesystem.
+qt_internal_add_resource(tst_qquick3dassetimport "assets"
+    PREFIX
+        "/"
+    FILES
+        resources/cube_scene.glb
 )
 
 #### Keys ignored in scope 1:.:.:assetimport.pro:<TRUE>:

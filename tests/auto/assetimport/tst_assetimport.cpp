@@ -5,11 +5,13 @@
 #include <QtTest>
 #include <QDebug>
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
+#include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 #include <QDir>
 #include <QByteArray>
 #include <QJsonObject>
 #include <QTemporaryDir>
+#include <QUrl>
 
 // add necessary includes here
 
@@ -29,7 +31,8 @@ private slots:
     void meshLevelsOfDetailForUnweldedMesh_data();
     void meshLevelsOfDetailForUnweldedMesh();
     void idsDoNotLeakBetweenAssets();
-
+    void importUrl_data();
+    void importUrl();
 };
 
 tst_assetimport::tst_assetimport()
@@ -228,6 +231,43 @@ void tst_assetimport::idsDoNotLeakBetweenAssets()
     // The same input converted twice has to produce the same component
     QCOMPARE(second, first);
     QVERIFY2(first.contains(QStringLiteral("id: root")), qPrintable(first));
+}
+
+// The runtime overload picks the importer from the URL rather than from a
+// filename, so it has its own path from URL to extension to importer.
+void tst_assetimport::importUrl_data()
+{
+    QTest::addColumn<QUrl>("url");
+    QTest::addColumn<QSSGAssetImportManager::ImportState>("result");
+
+    QTest::newRow("local file") << QUrl::fromLocalFile(QFINDTESTDATA("resources/cube_scene.gltf"))
+                                << QSSGAssetImportManager::ImportState::Success;
+    QTest::newRow("qrc") << QUrl("qrc:/resources/cube_scene.glb") << QSSGAssetImportManager::ImportState::Success;
+    QTest::newRow("unsupported extension") << QUrl::fromLocalFile(QFINDTESTDATA("resources/cube_scene.mtl"))
+                                           << QSSGAssetImportManager::ImportState::Unsupported;
+    // A remote URL cannot be loaded from here, so IoError is the expected
+    // outcome. What matters is that it is not Unsupported: the extension has to
+    // be read from the path, because the suffix of the whole serialized URL
+    // would be "abc" and no importer would ever be found.
+    QTest::newRow("query string") << QUrl("http://localhost/cube_scene.gltf?token=abc")
+                                  << QSSGAssetImportManager::ImportState::IoError;
+}
+
+void tst_assetimport::importUrl()
+{
+    QFETCH(QUrl, url);
+    QFETCH(QSSGAssetImportManager::ImportState, result);
+
+    QSSGAssetImportManager importManager;
+    QSSGSceneDesc::Scene scene;
+    QString error;
+
+    const auto importState = importManager.importFile(url, scene, &error);
+    if (importState != result)
+        qDebug() << "Error message:" << error;
+    QCOMPARE(importState, result);
+
+    scene.cleanup();
 }
 
 QTEST_APPLESS_MAIN(tst_assetimport)
