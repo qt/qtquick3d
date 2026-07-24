@@ -26,7 +26,10 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qbytearray.h>
 #include <QtCore/qiodevice.h>
+#include <QtCore/qlist.h>
 #include <QtCore/qmap.h>
+
+#include <QtGui/qvectornd.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -463,6 +466,40 @@ void Q_QUICK3DUTILS_EXPORT remapIndexBuffer(unsigned int *destination,
                                             const unsigned int *indices,
                                             size_t indexCount,
                                             const unsigned int *remap);
+
+struct MeshLevelOfDetail
+{
+    float distance = 0.0f;
+    QVector<quint32> indexes;
+};
+
+struct MeshVertexSplit
+{
+    quint32 sourceIndex = 0;
+    QVector3D normal;
+};
+
+// Generates simplified index buffers (levels of detail) for a triangle mesh,
+// returned from smallest to largest index count. When normals are
+// recalculated, vertices whose new normal deviates more than
+// normalSplitAngle from the original are split: the returned LOD indexes
+// reference new vertices starting at positions.size(), and the caller must
+// append a copy of each reported source vertex with the given normal, in
+// order. splitVertices is cleared on entry, so it always describes only the
+// call that produced it.
+//
+// Passing 0.0 for both angles disables normal recalculation, which is also
+// what happens when normals is empty. Otherwise normals must be the same
+// length as positions. Note that preserving the normals this way also keeps
+// vertices that only differ in their normal from being welded together, so a
+// mesh with hard edges yields fewer levels, or none at all.
+QVector<MeshLevelOfDetail> Q_QUICK3DUTILS_EXPORT generateMeshLevelsOfDetail(
+        const QVector<QVector3D> &positions,
+        const QVector<QVector3D> &normals,
+        const QVector<quint32> &indexes,
+        QVector<MeshVertexSplit> &splitVertices,
+        float normalMergeAngle = 60.0f,
+        float normalSplitAngle = 25.0f);
 
 } // namespace QSSGMesh
 

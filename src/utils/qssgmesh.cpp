@@ -6,8 +6,12 @@
 #include "qssgmesh_p.h"
 
 #include <QtCore/QVector>
+#include <QtCore/qhash.h>
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qmath.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssglightmapuvgenerator_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include "meshoptimizer.h"
 
@@ -1301,6 +1305,207 @@ void remapIndexBuffer(unsigned int *destination,
                       const unsigned int *remap)
 {
     meshopt_remapIndexBuffer(destination, indices, indexCount, remap);
+}
+
+QVector<MeshLevelOfDetail> generateMeshLevelsOfDetail(const QVector<QVector3D> &positions,
+                                                      const QVector<QVector3D> &normals,
+                                                      const QVector<quint32> &indexes,
+                                                      QVector<MeshVertexSplit> &splitVertices,
+                                                      float normalMergeAngle,
+                                                      float normalSplitAngle)
+{
+    // The split vertices are reported positionally, starting at
+    // positions.size(), so stale entries would make the caller's append loop
+    // line up with the wrong vertices
+    splitVertices.clear();
+
+    if (positions.isEmpty() || indexes.isEmpty())
+        return {};
+
+    // Correcting normals needs one per position. Both angles being 0.0 also
+    // means the caller does not want them recalculated at all.
+    const bool recalculateNormals = normals.size() == positions.size()
+            && !(qFuzzyIsNull(normalMergeAngle) && qFuzzyIsNull(normalSplitAngle));
+    const float normalMergeThreshold = qCos(qDegreesToRadians(normalMergeAngle));
+    const float normalSplitThreshold = qCos(qDegreesToRadians(normalSplitAngle));
+
+    quint32 splitVertexCount = positions.size();
+
+    // An edge can only be collapsed when its vertices are shared by the faces
+    // around it, so a vertex that appears more than once in the vertex buffer
+    // pins every edge that touches it. Assets are very commonly authored with
+    // one vertex per triangle corner - faceted normals and UV chart borders
+    // both force a split, and some exporters simply never weld - and such a
+    // mesh has no collapsible edge anywhere, so simplification returns the
+    // input unchanged and not a single level is produced. Weld by position to
+    // recover the real topology, simplify that, and translate the result back
+    // to the caller's vertex numbering afterwards, so the vertex buffer they
+    // hold is still the one the returned indexes refer to.
+    //
+    // Only the normals are rewritten below, so a position split to carry
+    // different normals can be welded, but one split to carry a different
+    // normal that has to be *kept* cannot: every face around it would be left
+    // reading whichever of them the weld happened to pick. So when the caller
+    // asked for the stored normals to be preserved, they join the weld key and
+    // a hard edge stays pinned, at the cost of fewer levels for such a mesh.
+    QVector<quint32> weldRemap(positions.size());
+    QVarLengthArray<MeshVertexStream, 2> streams;
+    streams.append({ positions.constData(), sizeof(QVector3D), sizeof(QVector3D) });
+    if (!recalculateNormals && normals.size() == positions.size())
+        streams.append({ normals.constData(), sizeof(QVector3D), sizeof(QVector3D) });
+    const quint32 weldedVertexCount = generateVertexRemap(weldRemap.data(), indexes.constData(), indexes.size(),
+                                                          positions.size(), streams.constData(),
+                                                          size_t(streams.size()));
+    QVector<quint32> weldedIndexes(indexes.size());
+    remapIndexBuffer(weldedIndexes.data(), indexes.constData(), indexes.size(), weldRemap.constData());
+    QVector<QVector3D> weldedPositions(weldedVertexCount);
+    remapVertexBuffer(weldedPositions.data(), positions.constData(), positions.size(), sizeof(QVector3D),
+                      weldRemap.constData());
+
+    // Pick one original vertex to stand for each welded one, so the simplified
+    // indexes can be mapped back. Every vertex welded together agrees on the
+    // attributes the weld key covers, so the choice only matters for the rest:
+    // where a position was split across a UV chart border the LOD has to settle
+    // on one of the charts either way.
+    constexpr quint32 unusedVertex = std::numeric_limits<quint32>::max();
+    QVector<quint32> weldedToOriginal(weldedVertexCount, unusedVertex);
+    for (quint32 i = 0, end = quint32(positions.size()); i < end; ++i) {
+        const quint32 welded = weldRemap.at(i);
+        // Vertices the index buffer never references are left unmapped
+        if (welded != unusedVertex && weldedToOriginal.at(welded) == unusedVertex)
+            weldedToOriginal[welded] = i;
+    }
+
+    const float targetError = std::numeric_limits<float>::max(); // error doesn't matter, index count is more important
+    const float *vertexData = reinterpret_cast<const float *>(weldedPositions.constData());
+    const float scaleFactor = simplifyScale(vertexData, weldedVertexCount, sizeof(QVector3D));
+    const quint32 indexCount = indexes.size();
+    quint32 indexTarget = 12;
+    quint32 lastIndexCount = 0;
+    QVector<MeshLevelOfDetail> lods;
+
+    while (indexTarget < indexCount) {
+        float error;
+        QVector<quint32> newIndexes;
+        newIndexes.resize(indexCount); // Must be the same size as the original indexes to pass to simplifyMesh
+        size_t newLength = simplifyMesh(newIndexes.data(), weldedIndexes.constData(), weldedIndexes.size(),
+                                        vertexData, weldedVertexCount, sizeof(QVector3D), indexTarget,
+                                        targetError, 0, &error);
+
+        // Not good enough, try again
+        if (newLength < lastIndexCount * 1.5f) {
+            indexTarget = indexTarget * 1.5f;
+            continue;
+        }
+
+        // We are done
+        if (newLength == 0 || (newLength >= (indexCount * 0.75f)))
+            break;
+
+        newIndexes.resize(newLength);
+
+        // Back to the caller's vertex numbering, which everything below - and
+        // the returned levels - is expressed in
+        for (quint32 &index : newIndexes)
+            index = weldedToOriginal.at(index);
+
+        // LOD Normal Correction
+        if (recalculateNormals) {
+            // Cull any new degenerate triangles and get the new face normals
+            QVector<QVector3D> faceNormals;
+            {
+                QVector<quint32> culledIndexes;
+                for (quint32 j = 0; j < quint32(newIndexes.size()); j += 3) {
+                    const QVector3D &v0 = positions[newIndexes[j]];
+                    const QVector3D &v1 = positions[newIndexes[j + 1]];
+                    const QVector3D &v2 = positions[newIndexes[j + 2]];
+
+                    QVector3D faceNormal = QVector3D::crossProduct(v1 - v0, v2 - v0);
+                    // This normalizes the vector in place and returns the magnitude
+                    const float faceArea = QSSGUtils::vec3::normalize(faceNormal);
+                    // It is possible that the simplifyMesh process gave us a degenerate triangle
+                    // (all three at the same point, or on the same line) or such a small triangle
+                    // that a float value doesn't have enough resolution. In that case cull the
+                    // "face" since it would not get rendered in a meaningful way anyway
+                    if (faceArea != 0.0f) {
+                        faceNormals.append(faceNormal);
+                        faceNormals.append(faceNormal);
+                        faceNormals.append(faceNormal);
+                        culledIndexes.append({newIndexes[j], newIndexes[j + 1], newIndexes[j + 2]});
+                    }
+                }
+
+                if (newIndexes.size() != culledIndexes.size())
+                    newIndexes = culledIndexes;
+            }
+
+            // Group all shared vertices together by position. We need to know adjacent faces
+            // to do vertex normal remapping in the next step.
+            const quint32 newIndexCount = quint32(newIndexes.size());
+            QHash<QVector3D, QVector<quint32>> positionHash;
+            for (quint32 i = 0; i < newIndexCount; ++i) {
+                const quint32 index = newIndexes[i];
+                const QVector3D position = positions[index];
+                positionHash[position].append(i);
+            }
+
+            // Go through each vertex and calculate the normals by checking each
+            // adjacent face that share the same vertex position, and create a smoothed
+            // normal if the angle between thew face normals is less than the the
+            // normalMergeAngle passed to this function (>= since this is cos(radian(angle)) )
+            QVector<QPair<quint32, quint32>> remapIndexes;
+            for (quint32 positionIndex = 0; positionIndex < newIndexCount; ++positionIndex) {
+                const quint32 index = newIndexes[positionIndex];
+                const QVector3D &position = positions[index];
+                const QVector3D &faceNormal = faceNormals[positionIndex];
+                QVector3D newNormal;
+                // Find all vertices that share the same position
+                const auto &sharedPositions = positionHash.value(position);
+                for (const auto positionIndex2 : sharedPositions) {
+                    if (positionIndex == positionIndex2) {
+                        // Don't test against the current face under test
+                        newNormal += faceNormal;
+                    } else {
+                        const QVector3D &faceNormal2 = faceNormals[positionIndex2];
+                        if (QVector3D::dotProduct(faceNormal2, faceNormal) >= normalMergeThreshold)
+                            newNormal += faceNormal2;
+                    }
+                }
+
+                // By normalizing here we get an averaged value of all smoothed normals
+                QSSGUtils::vec3::normalize(newNormal);
+
+                // Now that we know what the smoothed normal would be, check how differnt
+                // that normal is from the normal that is already stored in the current
+                // index. If the angle delta is greater than normalSplitAngle then we need
+                // to create a new vertex entry (making a copy of the current one) and set
+                // the new normal value, and reassign the current index to point to that new
+                // vertex. Generally the LOD simplification process is such that the existing
+                // normal will already be ideal until we start getting to the very low lod levels
+                // which changes the topology in such a way that the original normal doesn't
+                // make sense anymore, thus the need to provide a more reasonable value.
+                const QVector3D &originalNormal = normals[index];
+                const float theta = QVector3D::dotProduct(originalNormal, newNormal);
+                if (theta < normalSplitThreshold) {
+                    splitVertices.append({ index, newNormal.normalized() });
+                    remapIndexes.append({positionIndex, splitVertexCount++});
+                }
+            }
+
+            // Do index remap now that all new normals have been calculated
+            for (const auto &pair : std::as_const(remapIndexes))
+                newIndexes[pair.first] = pair.second;
+        }
+
+        lods.append({error * scaleFactor, newIndexes});
+        indexTarget = qMax(newLength, indexTarget) * 2;
+        lastIndexCount = newLength;
+
+        if (error == 0.0f)
+            break;
+    }
+
+    return lods;
 }
 
 } // namespace QSSGMesh
