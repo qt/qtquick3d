@@ -447,9 +447,20 @@ bool loadPrimitive(const QSSGGltfDocument &document, const MeshPrimitive &source
     if (primitive.normals.isEmpty())
         generateNormals(primitive, options.generateSmoothNormals);
 
+    // Switchable variants need tangents if any of their materials does
+    const auto anyVariantNeedsTangents = [&] {
+        if (!options.materialVariant.isEmpty() || document.materialVariants.isEmpty())
+            return false;
+        for (const MeshPrimitive::VariantMapping &mapping : source.variantMappings) {
+            if (materialNeedsTangents(document, mapping.material))
+                return true;
+        }
+        return false;
+    };
     if (primitive.tangents.isEmpty()
         && (options.forceTangentGeneration
-            || materialNeedsTangents(document, source.effectiveMaterial(options.materialVariantIndex)))) {
+            || materialNeedsTangents(document, source.effectiveMaterial(options.materialVariantIndex))
+            || anyVariantNeedsTangents())) {
         generateTangents(primitive);
     }
 

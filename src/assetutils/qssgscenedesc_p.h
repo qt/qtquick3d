@@ -82,6 +82,7 @@ struct Q_QUICK3DASSETUTILS_EXPORT Scene
     MeshStorage meshStorage;
     Animations animations;
     QString sourceDir;
+    QStringList materialVariants; // names of the asset's material variants, if any
     mutable quint16 nodeId = 0;
 
     void reset();
@@ -239,6 +240,9 @@ struct Q_QUICK3DASSETUTILS_EXPORT Model : Node
 {
     using type = QQuick3DModel;
     Model();
+    // One list per Scene::materialVariants entry, empty if not switchable
+    QList<QList<Node *>> variantMaterials;
+    QList<Node *> defaultMaterials;
 };
 QSSG_DECLARE_NODE(Model)
 

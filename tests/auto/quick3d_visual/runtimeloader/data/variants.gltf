@@ -1,0 +1,16 @@
+{ "asset": { "version": "2.0" },
+  "extensionsUsed": [ "KHR_materials_variants" ],
+  "extensions": { "KHR_materials_variants": {
+      "variants": [ { "name": "Red" }, { "name": "Blue" } ] } },
+  "materials": [
+    { "name": "gray", "pbrMetallicRoughness": { "baseColorFactor": [0.5, 0.5, 0.5, 1.0] } },
+    { "name": "red", "pbrMetallicRoughness": { "baseColorFactor": [1.0, 0.0, 0.0, 1.0] } },
+    { "name": "blue", "pbrMetallicRoughness": { "baseColorFactor": [0.0, 0.0, 1.0, 1.0] } } ],
+  "accessors": [ { "componentType": 5126, "count": 3, "type": "VEC3" } ],
+  "meshes": [ { "primitives": [ {
+      "attributes": { "POSITION": 0 }, "material": 0,
+      "extensions": { "KHR_materials_variants": { "mappings": [
+          { "material": 1, "variants": [0] },
+          { "material": 2, "variants": [1] } ] } } } ] } ],
+  "nodes": [ { "name": "Thing", "mesh": 0 } ],
+  "scenes": [ { "nodes": [0] } ], "scene": 0 }

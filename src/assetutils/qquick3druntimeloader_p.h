@@ -44,6 +44,9 @@ class Q_QUICK3DASSETUTILS_EXPORT QQuick3DRuntimeLoader : public QQuick3DNode
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged)
     Q_PROPERTY(QQuick3DInstancing *instancing READ instancing WRITE setInstancing NOTIFY instancingChanged)
     Q_PROPERTY(QStringList supportedExtensions READ supportedExtensions CONSTANT REVISION(6, 7))
+    Q_PROPERTY(QStringList materialVariants READ materialVariants NOTIFY materialVariantsChanged REVISION(6, 13))
+    Q_PROPERTY(QString materialVariant READ materialVariant WRITE setMaterialVariant NOTIFY materialVariantChanged
+                       REVISION(6, 13))
 #if QT_CONFIG(mimetype)
     Q_PROPERTY(QList<QMimeType> supportedMimeTypes READ supportedMimeTypes CONSTANT REVISION(6, 7))
 #endif
@@ -79,6 +82,10 @@ public:
     QQuick3DInstancing *instancing() const;
     void setInstancing(QQuick3DInstancing *newInstancing);
 
+    Q_REVISION(6, 13) QStringList materialVariants() const;
+    Q_REVISION(6, 13) QString materialVariant() const;
+    Q_REVISION(6, 13) void setMaterialVariant(const QString &variant);
+
     Q_REVISION(6, 12) Q_INVOKABLE QQuick3DObject *query(const QString &name) const;
     Q_REVISION(6, 12) Q_INVOKABLE QList<QQuick3DObject *> queryAll(QueryFilter filter) const;
 
@@ -88,6 +95,8 @@ Q_SIGNALS:
     void errorStringChanged();
     void boundsChanged();
     void instancingChanged();
+    Q_REVISION(6, 13) void materialVariantsChanged();
+    Q_REVISION(6, 13) void materialVariantChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -110,6 +119,17 @@ private:
     QQuick3DBounds3 m_bounds;
     QQuick3DInstancing *m_instancing = nullptr;
     bool m_instancingChanged = false;
+
+    void applyMaterialVariant();
+    struct ModelVariantMaterials
+    {
+        QPointer<QQuick3DModel> model;
+        QList<QList<QQuick3DMaterial *>> perVariant;
+        QList<QQuick3DMaterial *> defaults;
+    };
+    QList<ModelVariantMaterials> m_variantModels;
+    QStringList m_materialVariants;
+    QString m_materialVariant;
 };
 
 QT_END_NAMESPACE

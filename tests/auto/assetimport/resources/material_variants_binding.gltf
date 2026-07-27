@@ -1,0 +1,53 @@
+{
+    "asset": { "version": "2.0" },
+    "extensionsUsed": [ "KHR_materials_variants" ],
+    "extensions": {
+        "KHR_materials_variants": {
+            "variants": [ { "name": "Red" }, { "name": "Blue" } ]
+        }
+    },
+    "scene": 0,
+    "scenes": [ { "nodes": [ 0, 1 ] } ],
+    "nodes": [
+        { "mesh": 0, "name": "Varying" },
+        { "mesh": 1, "name": "Plain" }
+    ],
+    "meshes": [
+        {
+            "name": "Varying",
+            "primitives": [
+                {
+                    "attributes": { "POSITION": 0 },
+                    "material": 0,
+                    "extensions": {
+                        "KHR_materials_variants": {
+                            "mappings": [
+                                { "material": 1, "variants": [ 0 ] },
+                                { "material": 2, "variants": [ 1 ] }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Plain",
+            "primitives": [ { "attributes": { "POSITION": 0 }, "material": 0 } ]
+        }
+    ],
+    "materials": [
+        { "name": "Default", "pbrMetallicRoughness": { "baseColorFactor": [ 1, 1, 1, 1 ] } },
+        { "name": "RedMat", "pbrMetallicRoughness": { "baseColorFactor": [ 1, 0, 0, 1 ] } },
+        { "name": "BlueMat", "pbrMetallicRoughness": { "baseColorFactor": [ 0, 0, 1, 1 ] } }
+    ],
+    "buffers": [
+        { "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAA", "byteLength": 36 }
+    ],
+    "bufferViews": [ { "buffer": 0, "byteOffset": 0, "byteLength": 36 } ],
+    "accessors": [
+        {
+            "bufferView": 0, "componentType": 5126, "count": 3, "type": "VEC3",
+            "min": [ 0, 0, 0 ], "max": [ 1, 1, 0 ]
+        }
+    ]
+}

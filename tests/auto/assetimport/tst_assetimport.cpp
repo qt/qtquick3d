@@ -13,6 +13,7 @@
 #include <QTemporaryDir>
 #include <QUrl>
 #include <QImageReader>
+#include <QRegularExpression>
 
 // add necessary includes here
 
@@ -38,6 +39,7 @@ private slots:
     void gltfNodeVisibilityAndWebp();
     void gltfMaterialVariant_data();
     void gltfMaterialVariant();
+    void generatedVariantBinding();
 };
 
 tst_assetimport::tst_assetimport()
@@ -393,20 +395,23 @@ void tst_assetimport::gltfNodeVisibilityAndWebp()
 void tst_assetimport::gltfMaterialVariant_data()
 {
     QTest::addColumn<QString>("variant");
-    QTest::addColumn<QByteArray>("material");
+    QTest::addColumn<QByteArrayList>("materials");
     QTest::addColumn<bool>("tangents");
-    QTest::newRow("default") << QString() << QByteArrayLiteral("defaultMaterial") << false;
-    QTest::newRow("Red") << QStringLiteral("Red") << QByteArrayLiteral("redMaterial") << false;
-    QTest::newRow("Blue") << QStringLiteral("Blue") << QByteArrayLiteral("blueMaterial") << true;
-    QTest::newRow("unknown") << QStringLiteral("Green") << QByteArrayLiteral("defaultMaterial") << false;
+    // Without the option every variant stays switchable, so all materials
+    // are kept and tangents follow the one variant that needs them
+    QTest::newRow("all variants") << QString()
+                                  << QByteArrayList { "defaultMaterial", "redMaterial", "blueMaterial" } << true;
+    QTest::newRow("Red") << QStringLiteral("Red") << QByteArrayList { "redMaterial" } << false;
+    QTest::newRow("Blue") << QStringLiteral("Blue") << QByteArrayList { "blueMaterial" } << true;
+    QTest::newRow("unknown") << QStringLiteral("Green") << QByteArrayList { "defaultMaterial" } << false;
 }
 
-// The selected KHR_materials_variants variant decides both the material and,
+// The baked KHR_materials_variants variant decides both the materials and,
 // as only blueMaterial has a normal map, whether tangents are generated
 void tst_assetimport::gltfMaterialVariant()
 {
     QFETCH(QString, variant);
-    QFETCH(QByteArray, material);
+    QFETCH(QByteArrayList, materials);
     QFETCH(bool, tangents);
 
     const QString file = QFINDTESTDATA(QStringLiteral("resources/material_variants.gltf"));
@@ -432,18 +437,74 @@ void tst_assetimport::gltfMaterialVariant()
     QCOMPARE(manager.importFile(QUrl::fromLocalFile(file), scene, options, &error),
              QSSGAssetImportManager::ImportState::Success);
 
-    QByteArrayList materials;
+    QByteArrayList imported;
     for (const QSSGSceneDesc::Node *node : scene.resources) {
         if (node->nodeType == QSSGSceneDesc::Node::Type::Material)
-            materials.append(node->name);
+            imported.append(node->name);
     }
-    QCOMPARE(materials, QByteArrayList { material });
+    QCOMPARE(imported, materials);
 
     QCOMPARE(scene.meshStorage.size(), 1);
     bool hasTangents = false;
     for (const auto &entry : scene.meshStorage.first().vertexBuffer().entries)
         hasTangents |= entry.name == QSSGMesh::MeshInternal::getTexTanAttrName();
     QCOMPARE(hasTangents, tangents);
+}
+
+// The generated component binds each varying model's material list to the
+// root's materialVariant property. balsam converts several assets in one
+// process and the id allocator is process-wide, so the second root is not
+// called "root" - the binding has to use whatever id the root actually got.
+void tst_assetimport::generatedVariantBinding()
+{
+    const QString file = QFINDTESTDATA(QStringLiteral("resources/material_variants_binding.gltf"));
+    QVERIFY(!file.isEmpty());
+
+    const auto convertAndRead = [&file](const QDir &outdir) {
+        QSSGAssetImportManager manager;
+        QString error;
+        const auto state = manager.importFile(file, outdir, &error);
+        if (state != QSSGAssetImportManager::ImportState::Success)
+            return QString();
+        const QStringList generated = outdir.entryList({ QStringLiteral("*.qml") }, QDir::Files);
+        if (generated.size() != 1)
+            return QString();
+        QFile qml(outdir.filePath(generated.first()));
+        if (!qml.open(QIODevice::ReadOnly))
+            return QString();
+        return QString::fromUtf8(qml.readAll());
+    };
+
+    QTemporaryDir first;
+    QVERIFY(first.isValid());
+    QTemporaryDir second;
+    QVERIFY(second.isValid());
+
+    // Both conversions happen in this one process, as they do in balsam
+    const QString firstQml = convertAndRead(QDir(first.path()));
+    if (firstQml.isEmpty())
+        QSKIP("glTF asset could not be converted");
+    const QString secondQml = convertAndRead(QDir(second.path()));
+    QVERIFY(!secondQml.isEmpty());
+
+    const QRegularExpression rootIdRe(QStringLiteral("\\bid: (root[0-9]*)\\b"));
+    for (const QString &qml : { firstQml, secondQml }) {
+        // The variant list is exposed as a typed list, matching RuntimeLoader
+        QVERIFY2(qml.contains(QStringLiteral("readonly property list<string> materialVariants: [\"Red\", \"Blue\"]")),
+                 qPrintable(qml));
+        QVERIFY(qml.contains(QStringLiteral("property string materialVariant:")));
+
+        // Whatever id the root got, the binding must reference that id
+        const auto match = rootIdRe.match(qml);
+        QVERIFY2(match.hasMatch(), qPrintable(qml));
+        const QString rootId = match.captured(1);
+        QVERIFY(!rootId.isEmpty());
+        QVERIFY2(qml.contains(rootId + QStringLiteral(".materialVariant === \"Red\"")), qPrintable(qml));
+
+        // Only the model with variant mappings gets a ternary chain; the plain
+        // one keeps a static material list
+        QCOMPARE(qml.count(QStringLiteral(".materialVariant === ")), 2);
+    }
 }
 
 QTEST_APPLESS_MAIN(tst_assetimport)

@@ -149,6 +149,9 @@ QString GltfSceneConverter::convert(const QSSGGltfDocument &document, const QJso
                                      << "- available variants:" << document.materialVariants;
         }
     }
+    // Baking one variant leaves nothing to switch between
+    if (m_options.materialVariant.isEmpty())
+        targetScene.materialVariants = document.materialVariants;
     m_nodeMap.clear();
     m_meshMap.clear();
     m_materialMap.clear();
@@ -710,6 +713,24 @@ void GltfSceneConverter::setModelProperties(QSSGSceneDesc::Model &target, const 
     for (const int primitiveIndex : std::as_const(usedPrimitives)) {
         materials.push_back(ensureMaterial(
                 mesh.primitives.at(primitiveIndex).effectiveMaterial(m_options.materialVariantIndex), target));
+    }
+
+    // Record every variant's materials for models that vary, unless one
+    // variant is baked
+    const bool modelVaries = std::any_of(usedPrimitives.cbegin(), usedPrimitives.cend(),
+                                         [&mesh](int primitiveIndex) {
+                                             return !mesh.primitives.at(primitiveIndex).variantMappings.isEmpty();
+                                         });
+    if (modelVaries && m_options.materialVariant.isEmpty()) {
+        for (QSSGSceneDesc::Material *material : std::as_const(materials))
+            target.defaultMaterials.append(material);
+        for (int variant = 0; variant < m_document->materialVariants.size(); ++variant) {
+            QList<QSSGSceneDesc::Node *> variantList;
+            variantList.reserve(usedPrimitives.size());
+            for (const int primitiveIndex : std::as_const(usedPrimitives))
+                variantList.append(ensureMaterial(mesh.primitives.at(primitiveIndex).effectiveMaterial(variant), target));
+            target.variantMaterials.append(variantList);
+        }
     }
 
     if (!materials.isEmpty())

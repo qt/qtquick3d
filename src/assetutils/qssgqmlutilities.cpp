@@ -1135,7 +1135,8 @@ static ValueToQmlResult valueToQml(const QSSGSceneDesc::Node &target, const QSSG
     return result;
 }
 
-static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output)
+static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output,
+                                const char *skipProperty = nullptr)
 {
     QSSGQmlScopedIndent scopedIndent(output);
 
@@ -1153,6 +1154,8 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     const auto end = properties.end();
     for (; it != end; ++it) {
         const auto &property = *it;
+        if (skipProperty && qstrcmp(property->name, skipProperty) == 0)
+            continue;
 
         const ValueToQmlResult result = valueToQml(node, *property, output);
         if (result.ok) {
@@ -1203,12 +1206,43 @@ void writeQml(const QSSGSceneDesc::Material &material, OutputContext &output)
     writeNodeProperties(material, output);
 }
 
+static QString toQmlStringLiteral(const QString &value)
+{
+    QString escaped = value;
+    escaped.replace(u'\\', u"\\\\"_s);
+    escaped.replace(u'"', u"\\\""_s);
+    escaped.replace(u'\n', u"\\n"_s);
+    escaped.replace(u'\r', u"\\r"_s);
+    return u'"' + escaped + u'"';
+}
+
 static void writeQml(const QSSGSceneDesc::Model &model, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(model.nodeType == Node::Type::Model);
     indent(output) << qmlElementName<QSSGSceneDesc::Node::RuntimeType::Model>() << blockBegin(output);
-    writeNodeProperties(model, output);
+    const bool hasVariants = !model.variantMaterials.isEmpty() && model.scene
+            && !model.scene->materialVariants.isEmpty();
+    writeNodeProperties(model, output, hasVariants ? "materials" : nullptr);
+    if (hasVariants) {
+        // Unknown variant names select the default materials
+        const auto materialListString = [](const QList<Node *> &materials) {
+            QStringList ids;
+            for (const Node *material : materials)
+                ids.append(getIdForNode(*material));
+            return u'[' + ids.join(u", "_s) + u']';
+        };
+        QString expression;
+        const QStringList &names = model.scene->materialVariants;
+        const QString rootId = getIdForNode(*model.scene->root);
+        for (qsizetype variant = 0; variant < model.variantMaterials.size() && variant < names.size(); ++variant) {
+            expression += rootId + u".materialVariant === "_s + toQmlStringLiteral(names.at(variant)) + u" ? "_s
+                    + materialListString(model.variantMaterials.at(variant)) + u" : "_s;
+        }
+        expression += materialListString(model.defaultMaterials);
+        QSSGQmlScopedIndent scopedIndent(output);
+        indent(output) << u"materials: "_s << expression << u'\n';
+    }
 }
 
 static void writeQml(const QSSGSceneDesc::Camera &camera, OutputContext &output)
@@ -1671,6 +1705,18 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
 
     output.type = OutputContext::RootNode;
     writeQml(*root, output); // Block scope will be left open!
+
+    if (!scene.materialVariants.isEmpty()) {
+        // Models with variant materials bind to these
+        QSSGQmlScopedIndent scopedIndent(output);
+        QStringList variantNames;
+        for (const QString &name : scene.materialVariants)
+            variantNames.append(toQmlStringLiteral(name));
+        indent(output) << u"property string materialVariant: \"\"\n"_s;
+        indent(output) << u"readonly property list<string> materialVariants: ["_s << variantNames.join(u", "_s)
+                       << u"]\n"_s;
+    }
+
     stream << "\n";
     stream << indent() << "// Resources\n";
     output.type = OutputContext::Resource;

@@ -106,8 +106,12 @@ as well as the following extensions:
   \li EXT_mesh_gpu_instancing
 \endlist
 
-Assets using KHR_materials_variants import with the default materials
-unless the \c{--materialVariant} option names the variant to import.
+For assets using KHR_materials_variants the generated component contains
+all variant materials, a \c materialVariant property for selecting the
+active variant by name, and a read-only \c materialVariants property
+listing the available names. Passing the \c{--materialVariant} option
+instead bakes the named variant, so only its materials are part of the
+output.
 Assets using KHR_xmp_json_ld are accepted, but the metadata is not
 imported. Assets requiring KHR_draco_mesh_compression or
 KHR_texture_basisu are not supported and are rejected with an error

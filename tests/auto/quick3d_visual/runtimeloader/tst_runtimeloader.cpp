@@ -13,6 +13,7 @@ private slots:
     void queryAll_data();
     void queryAll();
     void nativeGltfFeatures();
+    void materialVariantSwitching();
 };
 
 void tst_RuntimeLoader::initTestCase()
@@ -76,6 +77,31 @@ void tst_RuntimeLoader::nativeGltfFeatures()
     QCOMPARE(errors, QString());
     QCOMPARE(view->rootObject()->property("loadedCount").toInt(),
              view->rootObject()->property("totalCount").toInt());
+}
+
+// Switches between the material variants of a KHR_materials_variants asset
+void tst_RuntimeLoader::materialVariantSwitching()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("variants.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    const QImage frame = grab(view.data());
+    if (frame.isNull())
+        return;
+
+    QTRY_VERIFY_WITH_TIMEOUT(view->rootObject()->property("loaded").toBool()
+                             || view->rootObject()->property("loadError").toBool(),
+                             10000);
+    if (view->rootObject()->property("loadError").toBool())
+        QSKIP("Asset failed to load — importer plugin likely not available on this platform");
+
+    QCOMPARE(view->rootObject()->property("variants").toStringList(),
+             (QStringList { QStringLiteral("Red"), QStringLiteral("Blue") }));
+    QCOMPARE(view->rootObject()->property("defaultMaterial").toString(), QStringLiteral("gray"));
+    QCOMPARE(view->rootObject()->property("blueMaterial").toString(), QStringLiteral("blue"));
+    QCOMPARE(view->rootObject()->property("redMaterial").toString(), QStringLiteral("red"));
+    QCOMPARE(view->rootObject()->property("restoredMaterial").toString(), QStringLiteral("gray"));
 }
 
 QTEST_MAIN(tst_RuntimeLoader)

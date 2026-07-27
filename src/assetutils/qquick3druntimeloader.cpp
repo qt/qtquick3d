@@ -229,6 +229,11 @@ void QQuick3DRuntimeLoader::loadSource()
     delete m_root;
     m_objects.clear();
     m_objectsByType.clear();
+    const bool hadVariants = !m_materialVariants.isEmpty();
+    m_materialVariants.clear();
+    m_variantModels.clear();
+    if (hadVariants)
+        emit materialVariantsChanged();
     QSSGBufferManager::unregisterMeshData(m_assetId);
 
     m_status = Status::Empty;
@@ -269,6 +274,37 @@ void QQuick3DRuntimeLoader::loadSource()
         m_assetId = scene.id;
         m_boundsDirty = true;
         m_instancingChanged = m_instancing != nullptr;
+
+        // Material variant tables have to be collected before cleanup()
+        m_materialVariants = scene.materialVariants;
+        m_variantModels.clear();
+        if (!m_materialVariants.isEmpty()) {
+            const auto materialObjects = [](const QList<QSSGSceneDesc::Node *> &materials) {
+                QList<QQuick3DMaterial *> result;
+                result.reserve(materials.size());
+                for (const QSSGSceneDesc::Node *material : materials)
+                    result.append(qobject_cast<QQuick3DMaterial *>(material->obj));
+                return result;
+            };
+            QList<QSSGSceneDesc::Node *> pending { scene.root };
+            while (!pending.isEmpty()) {
+                QSSGSceneDesc::Node *node = pending.takeLast();
+                pending.append(node->children);
+                if (node->nodeType != QSSGSceneDesc::Node::Type::Model)
+                    continue;
+                const auto &model = static_cast<const QSSGSceneDesc::Model &>(*node);
+                if (model.variantMaterials.isEmpty())
+                    continue;
+                ModelVariantMaterials entry;
+                entry.model = qobject_cast<QQuick3DModel *>(model.obj);
+                entry.defaults = materialObjects(model.defaultMaterials);
+                for (const auto &variantList : model.variantMaterials)
+                    entry.perVariant.append(materialObjects(variantList));
+                m_variantModels.append(entry);
+            }
+        }
+        emit materialVariantsChanged();
+
         updateModels();
         // Cleanup scene before deleting.
         scene.cleanup();
@@ -291,6 +327,69 @@ void QQuick3DRuntimeLoader::updateModels()
         });
         m_instancingChanged = false;
     }
+    if (!m_variantModels.isEmpty())
+        applyMaterialVariant();
+}
+
+void QQuick3DRuntimeLoader::applyMaterialVariant()
+{
+    const qsizetype variantIndex = m_materialVariants.indexOf(m_materialVariant);
+    if (!m_materialVariant.isEmpty() && variantIndex < 0 && !m_materialVariants.isEmpty()) {
+        qWarning() << "Asset has no material variant" << m_materialVariant
+                   << "- available variants:" << m_materialVariants;
+    }
+    for (const ModelVariantMaterials &entry : std::as_const(m_variantModels)) {
+        if (!entry.model)
+            continue;
+        const QList<QQuick3DMaterial *> &materials = (variantIndex >= 0 && variantIndex < entry.perVariant.size())
+                ? entry.perVariant.at(variantIndex)
+                : entry.defaults;
+        QQmlListProperty<QQuick3DMaterial> list = entry.model->materials();
+        list.clear(&list);
+        for (QQuick3DMaterial *material : materials)
+            list.append(&list, material);
+    }
+}
+
+/*!
+    \qmlproperty list<string> RuntimeLoader::materialVariants
+    \readonly
+    \since 6.13
+
+    This property holds the names of the material variants defined by the
+    loaded asset (for example glTF assets using the KHR_materials_variants
+    extension). The list is empty when the asset defines no variants.
+
+    \sa materialVariant
+*/
+QStringList QQuick3DRuntimeLoader::materialVariants() const
+{
+    return m_materialVariants;
+}
+
+/*!
+    \qmlproperty string RuntimeLoader::materialVariant
+    \since 6.13
+
+    This property selects which of the loaded asset's material variants is
+    applied to its models. Setting an empty string, or a name not present in
+    \l materialVariants, applies the asset's default materials.
+
+    \sa materialVariants
+*/
+QString QQuick3DRuntimeLoader::materialVariant() const
+{
+    return m_materialVariant;
+}
+
+void QQuick3DRuntimeLoader::setMaterialVariant(const QString &variant)
+{
+    if (m_materialVariant == variant)
+        return;
+    m_materialVariant = variant;
+    if (!m_variantModels.isEmpty())
+        applyMaterialVariant();
+    emit materialVariantChanged();
 }
 
 QQuick3DRuntimeLoader::Status QQuick3DRuntimeLoader::status() const

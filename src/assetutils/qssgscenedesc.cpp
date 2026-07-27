@@ -46,6 +46,7 @@ void QSSGSceneDesc::Scene::reset()
     root = nullptr;
     resources.clear();
     meshStorage.clear();
+    materialVariants.clear();
 }
 
 void QSSGSceneDesc::Scene::cleanup()
