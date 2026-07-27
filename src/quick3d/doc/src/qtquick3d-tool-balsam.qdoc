@@ -100,10 +100,14 @@ as well as the following extensions:
   \li KHR_texture_transform
   \li KHR_lights_punctual
   \li KHR_mesh_quantization
+  \li KHR_node_visibility
+  \li EXT_texture_webp
 \endlist
 
-Assets requiring KHR_draco_mesh_compression or KHR_texture_basisu are not
-supported and are rejected with an error naming the extension.
+Assets using KHR_xmp_json_ld are accepted, but the metadata is not
+imported. Assets requiring KHR_draco_mesh_compression or
+KHR_texture_basisu are not supported and are rejected with an error
+naming the extension.
 
 An asset that lists an extension balsam does not convert still loads: the
 extension is ignored and a warning is logged. Accepting an asset is

@@ -28,6 +28,7 @@ private slots:
     void sparseAccessorStructure();
     void structuralValidation();
     void hostileInputValidation();
+    void nodeVisibilityAndWebp();
     void readAccessorData();
     void readSparseAccessor();
     void readInterleavedAccessor();
@@ -578,6 +579,40 @@ void tst_qssggltfparser::hostileInputValidation()
     QVERIFY2(parser.parse(chainOfNodes(512), QString(), &document), qPrintable(parser.errorMessage()));
     QVERIFY(!parser.parse(chainOfNodes(100000), QString(), &document));
     QVERIFY2(parser.errorMessage().contains(QStringLiteral("deeper")), qPrintable(parser.errorMessage()));
+}
+
+void tst_qssggltfparser::nodeVisibilityAndWebp()
+{
+    QSSGGltfParser parser;
+    QSSGGltfDocument document;
+
+    // KHR_node_visibility: visible false parsed, absence defaults to true.
+    // KHR_xmp_json_ld: accepted even when required; metadata stays raw.
+    // EXT_texture_webp: alternate image source preferred over the fallback.
+    QVERIFY2(parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"extensionsUsed\": [ \"KHR_node_visibility\", \"EXT_texture_webp\", \"KHR_xmp_json_ld\" ],"
+            "  \"extensionsRequired\": [ \"KHR_node_visibility\", \"KHR_xmp_json_ld\" ],"
+            "  \"nodes\": [ { \"extensions\": { \"KHR_node_visibility\": { \"visible\": false } } }, { } ],"
+            "  \"images\": [ { \"uri\": \"fallback.png\" }, { \"uri\": \"image.webp\" } ],"
+            "  \"textures\": [ { \"source\": 0, \"extensions\": { \"EXT_texture_webp\": { \"source\": 1 } } },"
+            "                  { \"source\": 0 } ] }"),
+            QString(), &document),
+             qPrintable(parser.errorMessage()));
+    QCOMPARE(document.nodes.size(), 2);
+    QCOMPARE(document.nodes.at(0).visible, false);
+    QCOMPARE(document.nodes.at(1).visible, true);
+    QCOMPARE(document.textures.at(0).webpSource, 1);
+    QCOMPARE(document.textures.at(0).source, 0);
+    QCOMPARE(document.textures.at(1).webpSource, -1);
+
+    // An out-of-range EXT_texture_webp source is structurally invalid
+    QVERIFY(!parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"images\": [ { \"uri\": \"fallback.png\" } ],"
+            "  \"textures\": [ { \"source\": 0, \"extensions\": { \"EXT_texture_webp\": { \"source\": 7 } } } ] }"),
+            QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("invalid image")), qPrintable(parser.errorMessage()));
 }
 
 void tst_qssggltfparser::readAccessorData()

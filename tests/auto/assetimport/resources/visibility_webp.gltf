@@ -1,0 +1,121 @@
+{
+    "asset": {
+        "version": "2.0"
+    },
+    "extensionsUsed": [
+        "KHR_node_visibility",
+        "EXT_texture_webp"
+    ],
+    "scene": 0,
+    "scenes": [
+        {
+            "nodes": [
+                0,
+                1
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "name": "shown",
+            "mesh": 0
+        },
+        {
+            "name": "hidden",
+            "children": [
+                2
+            ],
+            "extensions": {
+                "KHR_node_visibility": {
+                    "visible": false
+                }
+            }
+        },
+        {
+            "name": "hiddenChild",
+            "mesh": 0
+        }
+    ],
+    "meshes": [
+        {
+            "primitives": [
+                {
+                    "attributes": {
+                        "POSITION": 0,
+                        "TEXCOORD_0": 1
+                    },
+                    "material": 0
+                }
+            ]
+        }
+    ],
+    "materials": [
+        {
+            "pbrMetallicRoughness": {
+                "baseColorTexture": {
+                    "index": 0
+                }
+            }
+        }
+    ],
+    "textures": [
+        {
+            "source": 0,
+            "extensions": {
+                "EXT_texture_webp": {
+                    "source": 1
+                }
+            }
+        }
+    ],
+    "images": [
+        {
+            "uri": "fallback.png"
+        },
+        {
+            "uri": "preferred.webp"
+        }
+    ],
+    "buffers": [
+        {
+            "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/",
+            "byteLength": 60
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 36
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 36,
+            "byteLength": 24
+        }
+    ],
+    "accessors": [
+        {
+            "bufferView": 0,
+            "componentType": 5126,
+            "count": 3,
+            "type": "VEC3",
+            "min": [
+                0,
+                0,
+                0
+            ],
+            "max": [
+                1,
+                1,
+                0
+            ]
+        },
+        {
+            "bufferView": 1,
+            "componentType": 5126,
+            "count": 3,
+            "type": "VEC2"
+        }
+    ]
+}

@@ -12,6 +12,7 @@
 #include <QJsonObject>
 #include <QTemporaryDir>
 #include <QUrl>
+#include <QImageReader>
 
 // add necessary includes here
 
@@ -34,6 +35,7 @@ private slots:
     void importUrl_data();
     void importUrl();
     void nativeGltfRouting();
+    void gltfNodeVisibilityAndWebp();
 };
 
 tst_assetimport::tst_assetimport()
@@ -316,6 +318,74 @@ void tst_assetimport::nativeGltfRouting()
         const auto state = manager.importFile(file, QDir(QStringLiteral("./")), &error);
         QVERIFY2(state == QSSGAssetImportManager::ImportState::Success, qPrintable(error));
     }
+}
+
+static QSSGSceneDesc::Node *findNode(QSSGSceneDesc::Node *node, const QByteArray &name)
+{
+    if (node->name == name)
+        return node;
+    for (QSSGSceneDesc::Node *child : std::as_const(node->children)) {
+        if (auto *found = findNode(child, name))
+            return found;
+    }
+    return nullptr;
+}
+
+static const QSSGSceneDesc::Property *findProperty(const QSSGSceneDesc::Node *node, const QByteArray &name)
+{
+    for (const QSSGSceneDesc::Property *property : node->properties) {
+        if (property->name == name)
+            return property;
+    }
+    return nullptr;
+}
+
+// KHR_node_visibility hides a node, and its children through it, and
+// EXT_texture_webp takes the WebP image whenever it can be decoded, keeping
+// the regular image as the fallback otherwise.
+void tst_assetimport::gltfNodeVisibilityAndWebp()
+{
+    const QString file = QFINDTESTDATA(QStringLiteral("resources/visibility_webp.gltf"));
+    QVERIFY(!file.isEmpty());
+
+    QSSGAssetImportManager manager;
+    bool nativePresent = false;
+    for (const auto &importer : manager.getImporterPluginInfos())
+        nativePresent |= importer.name == QStringLiteral("gltf");
+    if (!nativePresent)
+        QSKIP("Native glTF importer plugin not available");
+
+    QSSGSceneDesc::Scene scene;
+    const auto cleanup = qScopeGuard([&scene] { scene.cleanup(); });
+    QString error;
+    QCOMPARE(manager.importFile(QUrl::fromLocalFile(file), scene, &error),
+             QSSGAssetImportManager::ImportState::Success);
+
+    QSSGSceneDesc::Node *hidden = findNode(scene.root, "hidden");
+    QVERIFY(hidden);
+    const QSSGSceneDesc::Property *visible = findProperty(hidden, "visible");
+    QVERIFY(visible);
+    QCOMPARE(visible->value.toBool(), false);
+
+    // Visibility cascades through Node.visible, so it is only set where the
+    // extension says so
+    for (const QByteArray &name : { QByteArrayLiteral("shown"), QByteArrayLiteral("hiddenChild") }) {
+        QSSGSceneDesc::Node *node = findNode(scene.root, name);
+        QVERIFY2(node, name.constData());
+        QVERIFY2(!findProperty(node, "visible"), name.constData());
+    }
+
+    // Textures are resources rather than part of the node tree
+    const auto it = std::find_if(scene.resources.cbegin(), scene.resources.cend(), [](const QSSGSceneDesc::Node *node) {
+        return node->runtimeType == QSSGSceneDesc::Node::RuntimeType::Image2D;
+    });
+    QVERIFY(it != scene.resources.cend());
+    const QSSGSceneDesc::Node *texture = *it;
+    const QSSGSceneDesc::Property *source = findProperty(texture, "source");
+    QVERIFY(source);
+    const bool webpSupported = QImageReader::supportedImageFormats().contains("webp");
+    QCOMPARE(source->value.toUrl().fileName(),
+             webpSupported ? QStringLiteral("preferred.webp") : QStringLiteral("fallback.png"));
 }
 
 QTEST_APPLESS_MAIN(tst_assetimport)

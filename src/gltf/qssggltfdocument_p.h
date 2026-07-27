@@ -181,6 +181,7 @@ struct Texture
 {
     int sampler = -1;
     int source = -1;
+    int webpSource = -1; // EXT_texture_webp; preferred over source when set
     QString name;
     QJsonObject extensions;
 };
@@ -324,6 +325,7 @@ struct Node
     QQuaternion rotation;
     QVector3D scale { 1.0f, 1.0f, 1.0f };
     QList<float> weights; // overrides mesh.weights
+    bool visible = true; // KHR_node_visibility; applies to the node's subtree
     QString name;
     QJsonObject extensions;
 };

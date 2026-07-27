@@ -27,6 +27,7 @@
 #endif
 #include <QtCore/qdir.h>
 #include <QtCore/qmath.h>
+#include <QtGui/qimagereader.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,6 +78,13 @@ void decomposeMatrix(const QMatrix4x4 &matrix, QVector3D &translation, QQuaterni
         columns[0].z(), columns[1].z(), columns[2].z()
     };
     rotation = QQuaternion::fromRotationMatrix(QMatrix3x3(rotationValues)).normalized();
+}
+
+// The WebP plugin is in qtimageformats, which is not necessarily deployed
+bool isWebpSupported()
+{
+    static const bool supported = QImageReader::supportedImageFormats().contains(QByteArrayLiteral("webp"));
+    return supported;
 }
 
 } // namespace
@@ -158,6 +166,9 @@ QString GltfSceneConverter::convert(const QSSGGltfDocument &document, const QJso
     }
     if (sceneIndex < 0)
         return QStringLiteral("Document contains no scene");
+
+    if (document.extensionsRequired.contains(QLatin1String("EXT_texture_webp")) && !isWebpSupported())
+        return QStringLiteral("Asset requires EXT_texture_webp, but no WebP image plugin is available");
 
     // Mesh building only reads the document, so it runs in parallel
     {
@@ -497,6 +508,10 @@ void GltfSceneConverter::setNodeProperties(QSSGSceneDesc::Node &target, const QS
 
     QSSGSceneDesc::setProperty(target, "rotation", &QQuick3DNode::setRotation, rotation);
     QSSGSceneDesc::setProperty(target, "scale", &QQuick3DNode::setScale, scale);
+
+    // KHR_node_visibility
+    if (!source.visible)
+        QSSGSceneDesc::setProperty(target, "visible", &QQuick3DNode::setVisible, false);
 }
 
 void GltfSceneConverter::setModelProperties(QSSGSceneDesc::Model &target, const QSSGGltf::Node &source, int nodeIndex)
@@ -837,7 +852,16 @@ QSSGSceneDesc::Texture *GltfSceneConverter::ensureTexture(const QSSGGltf::Textur
         return nullptr;
 
     const QSSGGltf::Texture &texture = m_document->textures.at(textureInfo.index);
-    if (texture.source < 0 || texture.source >= m_document->images.size()) {
+    // EXT_texture_webp, keeping the regular source as the fallback
+    const bool webpSupported = isWebpSupported();
+    const int sourceImage = (texture.webpSource >= 0 && (webpSupported || texture.source < 0))
+            ? texture.webpSource
+            : texture.source;
+    if (sourceImage >= 0 && sourceImage == texture.webpSource && !webpSupported) {
+        qCWarning(lcQuick3DGltf) << "Texture" << textureInfo.index
+                                 << "has only a WebP image, but no WebP image plugin is available";
+    }
+    if (sourceImage < 0 || sourceImage >= m_document->images.size()) {
         qCWarning(lcQuick3DGltf) << "Texture" << textureInfo.index << "has no image source";
         return nullptr;
     }
@@ -859,7 +883,7 @@ QSSGSceneDesc::Texture *GltfSceneConverter::ensureTexture(const QSSGGltf::Textur
     if (auto *cached = m_textureMap.value(key, nullptr))
         return cached;
 
-    const QSSGGltf::Image &image = m_document->images.at(texture.source);
+    const QSSGGltf::Image &image = m_document->images.at(sourceImage);
 
     // A data: URI would put the whole payload into the name
     QByteArray textureName;
@@ -959,7 +983,7 @@ QSSGSceneDesc::Texture *GltfSceneConverter::ensureTexture(const QSSGGltf::Textur
         return sceneTexture;
     }
 
-    QSSGSceneDesc::TextureData *textureData = m_textureDataMap.value(texture.source, nullptr);
+    QSSGSceneDesc::TextureData *textureData = m_textureDataMap.value(sourceImage, nullptr);
     if (!textureData) {
         QByteArray imageData;
         QString mimeType = image.mimeType;
@@ -976,7 +1000,7 @@ QSSGSceneDesc::Texture *GltfSceneConverter::ensureTexture(const QSSGGltf::Textur
             }
         }
         if (imageData.isEmpty()) {
-            qCWarning(lcQuick3DGltf) << "Failed to load embedded image" << texture.source;
+            qCWarning(lcQuick3DGltf) << "Failed to load embedded image" << sourceImage;
             return sceneTexture;
         }
 
@@ -989,7 +1013,7 @@ QSSGSceneDesc::Texture *GltfSceneConverter::ensureTexture(const QSSGGltf::Textur
         textureData = new QSSGSceneDesc::TextureData(imageData, QSize(), format,
                                                      quint8(QSSGSceneDesc::TextureData::Flags::Compressed));
         QSSGSceneDesc::addNode(*sceneTexture, *textureData);
-        m_textureDataMap.insert(texture.source, textureData);
+        m_textureDataMap.insert(sourceImage, textureData);
     }
     setProperty(*sceneTexture, "textureData", &QQuick3DTexture::setTextureData, textureData);
 

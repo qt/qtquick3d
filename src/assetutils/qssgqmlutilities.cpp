@@ -1252,8 +1252,9 @@ QString getTextureSourceName(const QString &name, const QString &fmt)
     const auto textureFolder = getTextureFolder();
 
     const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
-    const auto ext = (fmt.length() != 3) ? u".png"_s
-                                         : u"."_s + fmt;
+    // Raw pixel data has no fmt and is written as PNG
+    const auto ext = (fmt.isEmpty() || fmt.length() > 4) ? u".png"_s
+                                                         : u"."_s + fmt;
 
     return QString(textureFolder + sanitizedName + ext);
 }
@@ -1265,9 +1266,9 @@ static QString outputTextureAsset(const QSSGSceneDesc::TextureData &textureData,
 
     const auto mapsFolder = getTextureFolder();
     const auto id = getIdForNode(textureData);
-    const QString textureSourceName = getTextureSourceName(id, QString::fromUtf8(textureData.fmt));
-
     const bool isCompressed = ((textureData.flgs & quint8(QSSGSceneDesc::TextureData::Flags::Compressed)) != 0);
+    const QString textureSourceName = getTextureSourceName(id, isCompressed ? QString::fromUtf8(textureData.fmt)
+                                                                            : QString());
 
     // If a maps folder does not exist, then create one
     if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))

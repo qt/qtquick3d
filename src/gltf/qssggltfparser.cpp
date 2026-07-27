@@ -141,8 +141,10 @@ QStringList QSSGGltfParser::supportedExtensions()
     // needing a decoder we do not ship (KHR_draco_mesh_compression,
     // KHR_texture_basisu) are intentionally absent and get a clear error
     // when required by an asset.
+    // KHR_xmp_json_ld is accepted, but left in the raw extension objects.
     return {
         QStringLiteral("EXT_mesh_gpu_instancing"),
+        QStringLiteral("EXT_texture_webp"),
         QStringLiteral("KHR_lights_punctual"),
         QStringLiteral("KHR_materials_clearcoat"),
         QStringLiteral("KHR_materials_emissive_strength"),
@@ -154,7 +156,9 @@ QStringList QSSGGltfParser::supportedExtensions()
         QStringLiteral("KHR_materials_variants"),
         QStringLiteral("KHR_materials_volume"),
         QStringLiteral("KHR_mesh_quantization"),
+        QStringLiteral("KHR_node_visibility"),
         QStringLiteral("KHR_texture_transform"),
+        QStringLiteral("KHR_xmp_json_ld"),
     };
 }
 
@@ -504,12 +508,18 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         texture.source = object.value(QLatin1String("source")).toInt(-1);
         texture.name = object.value(QLatin1String("name")).toString();
         texture.extensions = object.value(QLatin1String("extensions")).toObject();
+
+        const QJsonValue webpExt = texture.extensions.value(QLatin1String("EXT_texture_webp"));
+        if (webpExt.isObject())
+            texture.webpSource = webpExt.toObject().value(QLatin1String("source")).toInt(-1);
+
         if (texture.sampler >= document->samplers.size())
             return setError(QStringLiteral("Texture %1 references invalid sampler %2")
                             .arg(document->textures.size()).arg(texture.sampler));
-        if (texture.source >= document->images.size())
+        if (texture.source >= document->images.size() || texture.webpSource >= document->images.size())
             return setError(QStringLiteral("Texture %1 references invalid image %2")
-                            .arg(document->textures.size()).arg(texture.source));
+                                    .arg(document->textures.size())
+                                    .arg(qMax(texture.source, texture.webpSource)));
         document->textures.append(texture);
     }
 
@@ -789,6 +799,10 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         const QJsonValue lightExt = node.extensions.value(QLatin1String("KHR_lights_punctual"));
         if (lightExt.isObject())
             node.light = lightExt.toObject().value(QLatin1String("light")).toInt(-1);
+
+        const QJsonValue visibilityExt = node.extensions.value(QLatin1String("KHR_node_visibility"));
+        if (visibilityExt.isObject())
+            node.visible = visibilityExt.toObject().value(QLatin1String("visible")).toBool(true);
 
         if (node.mesh >= document->meshes.size())
             return setError(QStringLiteral("Node %1 references invalid mesh %2")
