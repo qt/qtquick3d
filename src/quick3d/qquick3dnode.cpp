@@ -1037,6 +1037,10 @@ void QQuick3DNode::itemChange(ItemChange change, const ItemChangeData &)
     By default nodes are assigned to the \c main layer, which is
     \l {ContentLayer}{ContentLayer.Layer0}.
 
+    \note The layers property is not inherited; setting it on a node does not
+    propagate the value from parent to child. Each node keeps its own layer
+    assignment and must be set individually.
+
     \sa ContentLayer
 */
 
