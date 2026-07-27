@@ -53,6 +53,7 @@ private:
     void setLightProperties(QSSGSceneDesc::Light &target, const QSSGGltf::Light &source);
     void convertAnimations();
     void convertSkins();
+    QSSGSceneDesc::Instancing *convertInstancing(const QSSGGltf::Node &source, QSSGSceneDesc::Node &owner);
     void setModelProperties(QSSGSceneDesc::Model &target, const QSSGGltf::Node &source, int nodeIndex);
     void setMaterialProperties(QSSGSceneDesc::Material &target, const QSSGGltf::Material &source);
     void setSpecularGlossyProperties(QSSGSceneDesc::Material &target, const QSSGGltf::Material &source);

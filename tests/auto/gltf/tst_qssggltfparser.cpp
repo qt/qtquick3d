@@ -30,6 +30,7 @@ private slots:
     void hostileInputValidation();
     void nodeVisibilityAndWebp();
     void meshoptCompression();
+    void meshGpuInstancing();
     void readAccessorData();
     void readSparseAccessor();
     void readInterleavedAccessor();
@@ -779,6 +780,38 @@ void tst_qssggltfparser::meshoptCompression()
     glbSwapped.replace("\"buffer\": 0, \"byteLength\": 44", "\"buffer\": 1, \"byteLength\": 44");
     QVERIFY(!parser.parse(makeGlb(glbSwapped, compressed), QString(), &document));
     QVERIFY2(parser.errorMessage().contains(QStringLiteral("first buffer")), qPrintable(parser.errorMessage()));
+}
+
+void tst_qssggltfparser::meshGpuInstancing()
+{
+    QSSGGltfParser parser;
+    QSSGGltfDocument document;
+
+    QVERIFY2(parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"extensionsUsed\": [ \"EXT_mesh_gpu_instancing\" ],"
+            "  \"accessors\": ["
+            "    { \"componentType\": 5126, \"count\": 3, \"type\": \"VEC3\" },"
+            "    { \"componentType\": 5126, \"count\": 3, \"type\": \"VEC4\" } ],"
+            "  \"nodes\": [ { \"extensions\": { \"EXT_mesh_gpu_instancing\": {"
+            "                   \"attributes\": { \"TRANSLATION\": 0, \"ROTATION\": 1, \"SCALE\": 0 } } } },"
+            "               { } ] }"),
+            QString(), &document),
+             qPrintable(parser.errorMessage()));
+    QCOMPARE(document.nodes.at(0).hasInstancing, true);
+    QCOMPARE(document.nodes.at(0).instanceTranslation, 0);
+    QCOMPARE(document.nodes.at(0).instanceRotation, 1);
+    QCOMPARE(document.nodes.at(0).instanceScale, 0);
+    QCOMPARE(document.nodes.at(1).hasInstancing, false);
+
+    // Instance attributes referencing an invalid accessor are structural
+    QVERIFY(!parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"nodes\": [ { \"extensions\": { \"EXT_mesh_gpu_instancing\": {"
+            "                   \"attributes\": { \"TRANSLATION\": 9 } } } } ] }"),
+            QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("instance attribute")),
+             qPrintable(parser.errorMessage()));
 }
 
 void tst_qssggltfparser::readAccessorData()

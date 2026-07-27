@@ -327,6 +327,11 @@ struct Node
     QVector3D scale { 1.0f, 1.0f, 1.0f };
     QList<float> weights; // overrides mesh.weights
     bool visible = true; // KHR_node_visibility; applies to the node's subtree
+    // EXT_mesh_gpu_instancing accessors
+    bool hasInstancing = false;
+    int instanceTranslation = -1;
+    int instanceRotation = -1;
+    int instanceScale = -1;
     QString name;
     QJsonObject extensions;
 };

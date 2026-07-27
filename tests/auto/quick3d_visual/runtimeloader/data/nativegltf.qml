@@ -15,7 +15,8 @@ Item {
         "extmats.gltf", // material extensions incl. specular glossy and unlit
         "simpleskin.gltf", // skinning and skeletal animation
         "morphquad.gltf", // morph targets and weight animation
-        "animquad.gltf" // node TRS animation with LINEAR and STEP sampling
+        "animquad.gltf", // node TRS animation with LINEAR and STEP sampling
+        "instquad.gltf" // EXT_mesh_gpu_instancing
     ]
     readonly property int totalCount: sources.length
     property int loadedCount: 0

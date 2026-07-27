@@ -420,6 +420,7 @@ template<> const char *qmlElementName<QSSGSceneDesc::Joint::RuntimeType::Joint>(
 template<> const char *qmlElementName<QSSGSceneDesc::Skeleton::RuntimeType::Skeleton>() { return "Skeleton"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Skin>() { return "Skin"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::MorphTarget>() { return "MorphTarget"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::ModelInstance>() { return "FileInstancing"; }
 
 const char *getQmlElementName(const QSSGSceneDesc::Node &node)
 {
@@ -459,6 +460,8 @@ const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::Skin>();
     case RuntimeType::MorphTarget:
         return qmlElementName<RuntimeType::MorphTarget>();
+    case RuntimeType::ModelInstance:
+        return qmlElementName<RuntimeType::ModelInstance>();
     default:
         return "UNKNOWN_TYPE";
     }
@@ -613,6 +616,7 @@ static QString getIdForNode(const QSSGSceneDesc::Node &node)
         "_skeleton",
         "_joint",
         "_morphtarget",
+        "_instancing",
         "_unknown"
     };
     constexpr uint nameCount = sizeof(typeNames)/sizeof(const char*);
@@ -1317,6 +1321,42 @@ static void writeQml(const QSSGSceneDesc::TextureData &textureData, OutputContex
     }
 }
 
+static inline QString getInstancesFolder() { return QStringLiteral("instances/"); }
+
+static QString outputInstanceTableAsset(const QSSGSceneDesc::Instancing &instancing, const QDir &outdir)
+{
+    const QString folder = getInstancesFolder();
+    if (!outdir.exists(folder) && !outdir.mkdir(folder)) {
+        qWarning() << "Failed to create instances folder at" << outdir;
+        return {};
+    }
+    const QString sourceName = folder + getIdForNode(instancing) + QStringLiteral(".bin");
+    QFile file(outdir.path() + QDir::separator() + sourceName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning("Failed to open file %s: %s", qPrintable(file.fileName()), qPrintable(file.errorString()));
+        return {};
+    }
+    if (!QQuick3DFileInstancing::writeInstanceTable(&file, instancing.instanceData, int(instancing.instanceCount)))
+        return {};
+    return sourceName;
+}
+
+static void writeQml(const QSSGSceneDesc::Instancing &instancing, OutputContext &output)
+{
+    using namespace QSSGSceneDesc;
+    Q_ASSERT(instancing.nodeType == Node::Type::Instancing
+             && instancing.runtimeType == Node::RuntimeType::ModelInstance);
+
+    const QString instanceSourcePath = outputInstanceTableAsset(instancing, output.outdir);
+
+    indent(output) << qmlElementName<Node::RuntimeType::ModelInstance>() << blockBegin(output);
+    writeNodeProperties(instancing, output);
+    if (!instanceSourcePath.isEmpty()) {
+        QSSGQmlScopedIndent scopedIndent(output);
+        indent(output) << u"source: "_s << toQuotedString(instanceSourcePath) << u'\n';
+    }
+}
+
 static void writeQml(const QSSGSceneDesc::Light &light, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
@@ -1363,6 +1403,9 @@ static void writeQmlForResourceNode(const QSSGSceneDesc::Node &node, OutputConte
             break;
         case Node::Type::MorphTarget:
             writeQml(static_cast<const MorphTarget &>(node), output);
+            break;
+        case Node::Type::Instancing:
+            writeQml(static_cast<const Instancing &>(node), output);
             break;
         case Node::Type::Skeleton:
             writeQml(static_cast<const Skeleton &>(node), output);

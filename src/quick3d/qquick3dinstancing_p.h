@@ -174,6 +174,7 @@ public:
     bool loadFromBinaryFile(const QString &filename);
     bool loadFromXmlFile(const QString &filename);
     int writeToBinaryFile(QIODevice *out);
+    static bool writeInstanceTable(QIODevice *out, const QByteArray &instanceData, int instanceCount);
 
     int instanceCount() const;
 

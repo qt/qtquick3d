@@ -376,6 +376,12 @@ void QQuick3DRuntimeLoader::setInstancing(QQuick3DInstancing *newInstancing)
     as the paths are built up from the object names in the source asset file.
 
     \note The object names are defined as in the source asset file.
+
+    \note A glTF node using \c EXT_mesh_gpu_instancing is imported as a Node
+    carrying the node's transform, with the instanced Model as its child. The
+    asset's name belongs to that Node, so querying such a node returns a Node
+    rather than a Model. Use queryAll() with the \c Models filter to reach the
+    Model itself.
 */
 
 QQuick3DObject *QQuick3DRuntimeLoader::query(const QString &name) const

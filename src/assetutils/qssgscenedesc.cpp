@@ -144,6 +144,7 @@ QSSGSceneDesc::Skeleton::Skeleton() : Node(Node::Type::Skeleton, Node::RuntimeTy
 QSSGSceneDesc::Joint::Joint() : Node(Node::Type::Joint, Node::RuntimeType::Joint) {}
 
 QSSGSceneDesc::MorphTarget::MorphTarget() : Node(Node::Type::MorphTarget, Node::RuntimeType::MorphTarget) {}
+QSSGSceneDesc::Instancing::Instancing() : Node(Node::Type::Instancing, Node::RuntimeType::ModelInstance) {}
 
 QSSGSceneDesc::Material::Material(RuntimeType rt) : Node(Node::Type::Material, rt) {}
 

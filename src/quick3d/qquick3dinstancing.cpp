@@ -921,7 +921,13 @@ struct QQuick3DInstancingBinaryFileHeader
     quint32 count;
 };
 
-static bool writeInstanceTable(QIODevice *out, const QByteArray &instanceData, int instanceCount)
+/*!
+    \internal
+    Writes \a instanceData, an array of \a instanceCount InstanceTableEntry
+    elements, to \a out in the binary instance table format that
+    FileInstancing reads.
+*/
+bool QQuick3DFileInstancing::writeInstanceTable(QIODevice *out, const QByteArray &instanceData, int instanceCount)
 {
     QQuick3DInstancingBinaryFileHeader header;
 

@@ -967,6 +967,29 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         if (visibilityExt.isObject())
             node.visible = visibilityExt.toObject().value(QLatin1String("visible")).toBool(true);
 
+        const QJsonValue instancingExt = node.extensions.value(QLatin1String("EXT_mesh_gpu_instancing"));
+        if (instancingExt.isObject()) {
+            const QJsonObject instanceAttributes =
+                    instancingExt.toObject().value(QLatin1String("attributes")).toObject();
+            for (auto it = instanceAttributes.constBegin(); it != instanceAttributes.constEnd(); ++it) {
+                const int accessor = it.value().toInt(-1);
+                if (accessor < 0 || accessor >= document->accessors.size()) {
+                    return setError(QStringLiteral("Node %1 instance attribute %2 references invalid accessor %3")
+                                            .arg(document->nodes.size()).arg(it.key()).arg(accessor));
+                }
+                if (it.key() == QLatin1String("TRANSLATION"))
+                    node.instanceTranslation = accessor;
+                else if (it.key() == QLatin1String("ROTATION"))
+                    node.instanceRotation = accessor;
+                else if (it.key() == QLatin1String("SCALE"))
+                    node.instanceScale = accessor;
+                else
+                    qCWarning(lcQuick3DGltf) << "Ignoring unsupported instance attribute" << it.key();
+            }
+            node.hasInstancing = node.instanceTranslation >= 0 || node.instanceRotation >= 0
+                    || node.instanceScale >= 0;
+        }
+
         if (node.mesh >= document->meshes.size())
             return setError(QStringLiteral("Node %1 references invalid mesh %2")
                             .arg(document->nodes.size()).arg(node.mesh));

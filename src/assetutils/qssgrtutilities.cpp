@@ -20,6 +20,32 @@
 
 QT_BEGIN_NAMESPACE
 
+// Serves an instance table calculated at import time
+class QSSGRuntimeInstancing : public QQuick3DInstancing
+{
+    Q_OBJECT
+public:
+    explicit QSSGRuntimeInstancing(QQuick3DObject *parent = nullptr) : QQuick3DInstancing(parent) {}
+
+    void setTable(const QByteArray &data, int count)
+    {
+        m_data = data;
+        m_count = count;
+        markDirty();
+    }
+
+protected:
+    QByteArray getInstanceBuffer(int *instanceCount) override
+    {
+        if (instanceCount)
+            *instanceCount = m_count;
+        return m_data;
+    }
+
+private:
+    QByteArray m_data;
+    int m_count = 0;
+};
 
 // Actually set the property on node->obj, using QMetaProperty::write()
 void QSSGRuntimeUtils::applyPropertyValue(const QSSGSceneDesc::Node *node, QObject *o, QSSGSceneDesc::Property *property)
@@ -293,6 +319,15 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
     case Node::Type::MorphTarget:
         obj = createRuntimeObject<QQuick3DMorphTarget>(static_cast<MorphTarget &>(node), parent);
         break;
+    case Node::Type::Instancing:
+    {
+        auto &instancing = static_cast<Instancing &>(node);
+        auto *table = createRuntimeObject<QSSGRuntimeInstancing>(instancing, parent);
+        if (table)
+            table->setTable(instancing.instanceData, int(instancing.instanceCount));
+        obj = table;
+        break;
+    }
     case Node::Type::Light:
     {
         auto &light = static_cast<Light &>(node);
@@ -432,3 +467,5 @@ QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGScen
 }
 
 QT_END_NAMESPACE
+
+#include "qssgrtutilities.moc"

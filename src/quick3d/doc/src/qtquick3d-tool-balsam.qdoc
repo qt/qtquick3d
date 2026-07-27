@@ -103,6 +103,7 @@ as well as the following extensions:
   \li KHR_node_visibility
   \li EXT_texture_webp
   \li EXT_meshopt_compression
+  \li EXT_mesh_gpu_instancing
 \endlist
 
 Assets using KHR_xmp_json_ld are accepted, but the metadata is not

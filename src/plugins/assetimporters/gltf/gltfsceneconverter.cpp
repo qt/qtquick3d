@@ -430,6 +430,78 @@ void GltfSceneConverter::convertAnimations()
     }
 }
 
+// Only exposes the protected calculateTableEntryFromQuaternion()
+struct InstanceTableEntryBuilder : QQuick3DInstancing
+{
+    using QQuick3DInstancing::calculateTableEntryFromQuaternion;
+};
+
+// Returns null when there are no usable transform attributes
+QSSGSceneDesc::Instancing *GltfSceneConverter::convertInstancing(const QSSGGltf::Node &source,
+                                                                 QSSGSceneDesc::Node &owner)
+{
+    const QList<float> translations = QSSGGltfAccessorReader::readAsFloats(*m_document, source.instanceTranslation);
+    const QList<float> rotations = QSSGGltfAccessorReader::readAsFloats(*m_document, source.instanceRotation);
+    const QList<float> scales = QSSGGltfAccessorReader::readAsFloats(*m_document, source.instanceScale);
+
+    const auto typeMatches = [this](int accessor, QSSGGltf::Accessor::Type expected, const char *what) {
+        if (accessor < 0)
+            return true;
+        const QSSGGltf::Accessor::Type actual = m_document->accessors.at(accessor).type;
+        if (actual == expected)
+            return true;
+        qCWarning(lcQuick3DGltf) << "Ignoring instancing attribute" << what << "with unexpected accessor type";
+        return false;
+    };
+    const bool haveTranslation = typeMatches(source.instanceTranslation, QSSGGltf::Accessor::Type::Vec3,
+                                             "TRANSLATION");
+    const bool haveRotation = typeMatches(source.instanceRotation, QSSGGltf::Accessor::Type::Vec4, "ROTATION");
+    const bool haveScale = typeMatches(source.instanceScale, QSSGGltf::Accessor::Type::Vec3, "SCALE");
+
+    // Counts must match; use the smallest
+    qsizetype count = -1;
+    const auto considerCount = [&count](qsizetype attributeCount) {
+        if (attributeCount >= 0)
+            count = count < 0 ? attributeCount : qMin(count, attributeCount);
+    };
+    if (source.instanceTranslation >= 0 && haveTranslation)
+        considerCount(translations.size() / 3);
+    if (source.instanceRotation >= 0 && haveRotation)
+        considerCount(rotations.size() / 4);
+    if (source.instanceScale >= 0 && haveScale)
+        considerCount(scales.size() / 3);
+    if (count < 0)
+        return nullptr;
+
+    QByteArray table;
+    table.reserve(count * qsizetype(sizeof(QQuick3DInstancing::InstanceTableEntry)));
+    for (qsizetype i = 0; i < count; ++i) {
+        QVector3D position;
+        QVector3D scale { 1.0f, 1.0f, 1.0f };
+        QQuaternion rotation;
+        if (source.instanceTranslation >= 0 && haveTranslation)
+            position = QVector3D(translations.at(i * 3), translations.at(i * 3 + 1), translations.at(i * 3 + 2));
+        if (source.instanceRotation >= 0 && haveRotation) {
+            // glTF quaternions are (x, y, z, w)
+            rotation = QQuaternion(rotations.at(i * 4 + 3), rotations.at(i * 4), rotations.at(i * 4 + 1),
+                                   rotations.at(i * 4 + 2));
+        }
+        if (source.instanceScale >= 0 && haveScale)
+            scale = QVector3D(scales.at(i * 3), scales.at(i * 3 + 1), scales.at(i * 3 + 2));
+        const auto entry = InstanceTableEntryBuilder::calculateTableEntryFromQuaternion(position, scale, rotation,
+                                                                                        QColor(Qt::white), {});
+        table.append(reinterpret_cast<const char *>(&entry), sizeof(entry));
+    }
+
+    auto *instancing = new QSSGSceneDesc::Instancing;
+    if (!source.name.isEmpty())
+        instancing->name = source.name.toUtf8();
+    QSSGSceneDesc::addNode(owner, *instancing);
+    instancing->instanceData = table;
+    instancing->instanceCount = count;
+    return instancing;
+}
+
 void GltfSceneConverter::processNode(int nodeIndex, QSSGSceneDesc::Node &parent)
 {
     const Node &source = m_document->nodes.at(nodeIndex);
@@ -440,8 +512,37 @@ void GltfSceneConverter::processNode(int nodeIndex, QSSGSceneDesc::Node &parent)
     }
 
     QSSGSceneDesc::Node *target = createSceneNode(source);
+
+    // The node's transform goes on a parent, so that the model as its own
+    // instance root applies the instance transforms before it
+    QSSGSceneDesc::Node *instancedModel = nullptr;
+    if (source.hasInstancing) {
+        if (target->nodeType == QSSGSceneDesc::Node::Type::Model) {
+            instancedModel = target;
+            target = new QSSGSceneDesc::Node(QSSGSceneDesc::Node::Type::Transform,
+                                             QSSGSceneDesc::Node::RuntimeType::Node);
+        } else {
+            qCWarning(lcQuick3DGltf) << "Ignoring instancing on node" << nodeIndex << "without a mesh";
+        }
+    }
+
     QSSGSceneDesc::addNode(parent, *target);
     m_nodeMap.insert(nodeIndex, target);
+
+    if (instancedModel) {
+        QSSGSceneDesc::addNode(*target, *instancedModel);
+        setModelProperties(static_cast<QSSGSceneDesc::Model &>(*instancedModel), source, nodeIndex);
+        if (QSSGSceneDesc::Instancing *instancing = convertInstancing(source, *instancedModel)) {
+            QSSGSceneDesc::setProperty(*instancedModel, "instancing", &QQuick3DModel::setInstancing, instancing);
+            QSSGSceneDesc::setProperty(*instancedModel, "instanceRoot", &QQuick3DModel::setInstanceRoot,
+                                       instancedModel);
+        }
+        // The name goes on the parent, which the node's children attach to
+        setNodeProperties(*target, source);
+        for (const int child : source.children)
+            processNode(child, *target);
+        return;
+    }
 
     // Properties can only be recorded once the node is part of the scene
     if (source.camera >= 0 && target->nodeType == QSSGSceneDesc::Node::Type::Camera)

@@ -40,6 +40,7 @@
 //
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
 #include <QtQuick3D/private/qquick3djoint_p.h>
+#include <QtQuick3D/private/qquick3dinstancing_p.h>
 
 #include <qmetatype.h>
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
@@ -150,7 +151,8 @@ struct Q_QUICK3DASSETUTILS_EXPORT Node
         Skin,
         Skeleton,
         Joint,
-        MorphTarget
+        MorphTarget,
+        Instancing
     };
 
     using type = QQuick3DNode;
@@ -287,6 +289,15 @@ struct Q_QUICK3DASSETUTILS_EXPORT MorphTarget : Node
     MorphTarget();
 };
 QSSG_DECLARE_NODE(MorphTarget)
+
+struct Q_QUICK3DASSETUTILS_EXPORT Instancing : Node
+{
+    using type = QQuick3DInstancing;
+    Instancing();
+    QByteArray instanceData; // QQuick3DInstancing::InstanceTableEntry array
+    qsizetype instanceCount = 0;
+};
+QSSG_DECLARE_NODE(Instancing)
 
 // We keep our own list data structure, since Qt does not have a variant list where all the
 // elements have the same type, and using a list of QVariant is very inefficient
