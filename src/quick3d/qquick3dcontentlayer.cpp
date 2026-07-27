@@ -55,6 +55,10 @@
 
     \note Layers are bit flags and can be combined with the \c | operator.
 
+    \note Layer assignment is not inherited; setting \l {Node::layers}{Node.layers}
+    on a node does not propagate the value from parent to child. Each node keeps its
+    own layer assignment and must be set individually.
+
     \note ContentLayer is a singleton and is not intended to be instantiated directly.
 */
 
