@@ -55,6 +55,7 @@ struct Buffer
     QString uri;
     qint64 byteLength = 0;
     QByteArray data; // resolved contents (GLB BIN chunk, data: URI, or external file)
+    bool meshoptFallback = false; // EXT_meshopt_compression fallback, never loaded
 };
 
 struct BufferView

@@ -102,6 +102,7 @@ as well as the following extensions:
   \li KHR_mesh_quantization
   \li KHR_node_visibility
   \li EXT_texture_webp
+  \li EXT_meshopt_compression
 \endlist
 
 Assets using KHR_xmp_json_ld are accepted, but the metadata is not

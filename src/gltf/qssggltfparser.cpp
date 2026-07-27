@@ -8,10 +8,13 @@
 #include <QtCore/qendian.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qhash.h>
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qset.h>
 #include <QtCore/qvarlengtharray.h>
+
+#include "meshoptimizer.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -104,6 +107,142 @@ bool isValidComponentType(int value)
     return false;
 }
 
+// Views can alias the same compressed bytes, so the budget is per document
+struct MeshoptDecodeState
+{
+    qint64 remainingBytes = qint64(1024) * 1024 * 1024;
+    QHash<QString, int> decodedBuffers; // decode parameters -> synthetic buffer index
+};
+
+// Returns -1 for anything but a non-negative integer below 2^53
+qint64 toByteCount(const QJsonValue &value, double defaultValue)
+{
+    const double d = value.toDouble(defaultValue);
+    return d >= 0.0 && d <= 9007199254740992.0 ? qint64(d) : -1;
+}
+
+// Decodes into a synthetic buffer and points the view at it
+bool decodeMeshoptBufferView(const QJsonObject &ext, QSSGGltfDocument &document, BufferView &view,
+                             MeshoptDecodeState &state, QString *errorMessage)
+{
+    const auto fail = [errorMessage](const QString &message) {
+        *errorMessage = message;
+        return false;
+    };
+
+    const int sourceBuffer = ext.value(QLatin1String("buffer")).toInt(-1);
+    const qint64 byteOffset = toByteCount(ext.value(QLatin1String("byteOffset")), 0.0);
+    const qint64 byteLength = toByteCount(ext.value(QLatin1String("byteLength")), -1.0);
+    const qint64 byteStride = toByteCount(ext.value(QLatin1String("byteStride")), -1.0);
+
+    // Checked as double, since the qint64 product can wrap
+    constexpr qint64 maxDecodedBytes = qint64(1024) * 1024 * 1024;
+    const double rawCount = ext.value(QLatin1String("count")).toDouble();
+    if (!(byteStride > 0 && rawCount > 0.0 && rawCount * double(byteStride) <= double(maxDecodedBytes)))
+        return fail(QStringLiteral("unreasonable decoded data size"));
+    const qint64 count = qint64(rawCount);
+
+    const QString mode = ext.value(QLatin1String("mode")).toString();
+    const QString filter = ext.value(QLatin1String("filter")).toString(QStringLiteral("NONE"));
+
+    if (sourceBuffer < 0 || sourceBuffer >= document.buffers.size()
+        || document.buffers.at(sourceBuffer).meshoptFallback) {
+        return fail(QStringLiteral("compressed data references invalid buffer %1").arg(sourceBuffer));
+    }
+    const Buffer &compressed = document.buffers.at(sourceBuffer);
+    // Not summed, since offset + length can wrap
+    if (byteOffset < 0 || byteLength <= 0 || byteLength > compressed.byteLength
+        || byteOffset > compressed.byteLength - byteLength) {
+        return fail(QStringLiteral("compressed data is outside buffer %1").arg(sourceBuffer));
+    }
+
+    enum class Mode { Attributes, Triangles, Indices };
+    Mode decodeMode;
+    if (mode == QLatin1String("ATTRIBUTES"))
+        decodeMode = Mode::Attributes;
+    else if (mode == QLatin1String("TRIANGLES"))
+        decodeMode = Mode::Triangles;
+    else if (mode == QLatin1String("INDICES"))
+        decodeMode = Mode::Indices;
+    else
+        return fail(QStringLiteral("unsupported compression mode '%1'").arg(mode));
+
+    // Stride limits required by the decoders
+    if (decodeMode == Mode::Attributes) {
+        if (byteStride < 4 || byteStride > 256 || byteStride % 4)
+            return fail(QStringLiteral("invalid byte stride %1 for ATTRIBUTES mode").arg(byteStride));
+    } else {
+        if (byteStride != 2 && byteStride != 4)
+            return fail(QStringLiteral("invalid byte stride %1 for index data").arg(byteStride));
+        if (decodeMode == Mode::Triangles && count % 3)
+            return fail(QStringLiteral("TRIANGLES element count %1 is not divisible by 3").arg(count));
+        if (filter != QLatin1String("NONE"))
+            return fail(QStringLiteral("filters do not apply to index data"));
+    }
+
+    if (decodeMode == Mode::Attributes && filter != QLatin1String("NONE") && filter != QLatin1String("OCTAHEDRAL")
+        && filter != QLatin1String("QUATERNION") && filter != QLatin1String("EXPONENTIAL")) {
+        return fail(QStringLiteral("unsupported filter '%1'").arg(filter));
+    }
+    if ((filter == QLatin1String("OCTAHEDRAL") && byteStride != 4 && byteStride != 8)
+        || (filter == QLatin1String("QUATERNION") && byteStride != 8)) {
+        return fail(QStringLiteral("invalid byte stride %1 for filter %2").arg(byteStride).arg(filter));
+    }
+
+    const QString key = QStringLiteral("%1:%2:%3:%4:%5:%6:%7")
+                                .arg(sourceBuffer).arg(byteOffset).arg(byteLength).arg(count)
+                                .arg(byteStride).arg(mode, filter);
+    const auto rewriteView = [&view, decodeMode, byteStride](int buffer, qint64 length) {
+        view.buffer = buffer;
+        view.byteOffset = 0;
+        view.byteLength = length;
+        view.byteStride = decodeMode == Mode::Attributes ? int(byteStride) : 0;
+    };
+    if (const auto it = state.decodedBuffers.constFind(key); it != state.decodedBuffers.constEnd()) {
+        rewriteView(*it, document.buffers.at(*it).byteLength);
+        return true;
+    }
+    if (count * byteStride > state.remainingBytes)
+        return fail(QStringLiteral("decoded data exceeds the limit for the document"));
+
+    QByteArray decoded(count * byteStride, Qt::Uninitialized);
+    const auto *source = reinterpret_cast<const unsigned char *>(compressed.data.constData()) + byteOffset;
+    int result = -1;
+    switch (decodeMode) {
+    case Mode::Attributes:
+        result = meshopt_decodeVertexBuffer(decoded.data(), size_t(count), size_t(byteStride), source,
+                                            size_t(byteLength));
+        break;
+    case Mode::Triangles:
+        result = meshopt_decodeIndexBuffer(decoded.data(), size_t(count), size_t(byteStride), source,
+                                           size_t(byteLength));
+        break;
+    case Mode::Indices:
+        result = meshopt_decodeIndexSequence(decoded.data(), size_t(count), size_t(byteStride), source,
+                                             size_t(byteLength));
+        break;
+    }
+    if (result != 0)
+        return fail(QStringLiteral("corrupt compressed data"));
+
+    if (filter == QLatin1String("OCTAHEDRAL"))
+        meshopt_decodeFilterOct(decoded.data(), size_t(count), size_t(byteStride));
+    else if (filter == QLatin1String("QUATERNION"))
+        meshopt_decodeFilterQuat(decoded.data(), size_t(count), size_t(byteStride));
+    else if (filter == QLatin1String("EXPONENTIAL"))
+        meshopt_decodeFilterExp(decoded.data(), size_t(count), size_t(byteStride));
+
+    state.remainingBytes -= decoded.size();
+    Buffer decodedBuffer;
+    decodedBuffer.byteLength = decoded.size();
+    decodedBuffer.data = std::move(decoded);
+    document.buffers.append(decodedBuffer);
+    const int bufferIndex = int(document.buffers.size() - 1);
+    state.decodedBuffers.insert(key, bufferIndex);
+    rewriteView(bufferIndex, decodedBuffer.byteLength);
+    return true;
+}
+
 } // namespace
 
 /*!
@@ -144,6 +283,7 @@ QStringList QSSGGltfParser::supportedExtensions()
     // KHR_xmp_json_ld is accepted, but left in the raw extension objects.
     return {
         QStringLiteral("EXT_mesh_gpu_instancing"),
+        QStringLiteral("EXT_meshopt_compression"),
         QStringLiteral("EXT_texture_webp"),
         QStringLiteral("KHR_lights_punctual"),
         QStringLiteral("KHR_materials_clearcoat"),
@@ -296,6 +436,13 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         buffer.byteLength = qint64(object.value(QLatin1String("byteLength")).toDouble());
         if (buffer.byteLength < 0)
             return setError(QStringLiteral("Buffer %1 has negative byte length").arg(document->buffers.size()));
+        buffer.meshoptFallback = object.value(QLatin1String("extensions")).toObject()
+                                         .value(QLatin1String("EXT_meshopt_compression")).toObject()
+                                         .value(QLatin1String("fallback")).toBool(false);
+        if (buffer.meshoptFallback) {
+            document->buffers.append(buffer);
+            continue;
+        }
         if (buffer.uri.isEmpty()) {
             // GLB BIN chunk; only valid for the first buffer
             if (document->buffers.isEmpty() && !binChunk.isEmpty())
@@ -323,6 +470,7 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // bufferViews
+    MeshoptDecodeState meshoptState;
     for (const auto &value : root.value(QLatin1String("bufferViews")).toArray()) {
         const QJsonObject object = value.toObject();
         BufferView view;
@@ -333,10 +481,25 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         view.target = object.value(QLatin1String("target")).toInt(0);
         view.name = object.value(QLatin1String("name")).toString();
 
+        const QJsonValue meshoptValue = object.value(QLatin1String("extensions")).toObject()
+                                                .value(QLatin1String("EXT_meshopt_compression"));
+        if (meshoptValue.isObject()) {
+            QString decodeError;
+            if (!decodeMeshoptBufferView(meshoptValue.toObject(), *document, view, meshoptState, &decodeError)) {
+                return setError(QStringLiteral("Buffer view %1: EXT_meshopt_compression: %2")
+                                        .arg(document->bufferViews.size()).arg(decodeError));
+            }
+            document->bufferViews.append(view);
+            continue;
+        }
+
         if (view.buffer < 0 || view.buffer >= document->buffers.size())
             return setError(
                     QStringLiteral("Buffer view %1 references invalid buffer %2")
                             .arg(document->bufferViews.size()).arg(view.buffer));
+        if (document->buffers.at(view.buffer).meshoptFallback)
+            return setError(QStringLiteral("Buffer view %1 references unloaded fallback buffer %2")
+                                    .arg(document->bufferViews.size()).arg(view.buffer));
         // The stride bound is from the specification; together with
         // non-negative offsets and lengths it also keeps all later offset
         // arithmetic far away from overflowing 64 bits.

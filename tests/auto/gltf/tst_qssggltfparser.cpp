@@ -29,6 +29,7 @@ private slots:
     void structuralValidation();
     void hostileInputValidation();
     void nodeVisibilityAndWebp();
+    void meshoptCompression();
     void readAccessorData();
     void readSparseAccessor();
     void readInterleavedAccessor();
@@ -613,6 +614,171 @@ void tst_qssggltfparser::nodeVisibilityAndWebp()
             "  \"textures\": [ { \"source\": 0, \"extensions\": { \"EXT_texture_webp\": { \"source\": 7 } } } ] }"),
             QString(), &document));
     QVERIFY2(parser.errorMessage().contains(QStringLiteral("invalid image")), qPrintable(parser.errorMessage()));
+}
+
+void tst_qssggltfparser::meshoptCompression()
+{
+    QSSGGltfParser parser;
+    QSSGGltfDocument document;
+
+    // Payloads created with meshopt_encodeVertexBuffer/encodeIndexBuffer
+    // (and meshopt_encodeFilterExp with 15-bit shared-vector mode for the
+    // filtered variant) from 4 vec3 positions and 6 quad indices
+    const QByteArray json = QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"extensionsUsed\": [ \"EXT_meshopt_compression\" ],"
+            "  \"extensionsRequired\": [ \"EXT_meshopt_compression\" ],"
+            "  \"buffers\": ["
+            "    { \"uri\": \"data:application/octet-stream;base64,ofrq6gAAAP8AfwB+AAB/AAAAAH4AAAAAAAAAAAAAAAAA"
+            "AAAAAAAAAAABAQA=\", \"byteLength\": 44 },"
+            "    { \"uri\": \"data:application/octet-stream;base64,4fAAAHaHVmd4qYZliWiYAWkAAA==\","
+            "      \"byteLength\": 19 },"
+            "    { \"byteLength\": 48, \"extensions\": { \"EXT_meshopt_compression\": { \"fallback\": true } } },"
+            "    { \"uri\": \"data:application/octet-stream;base64,oe7u7gBAAD8AAgAAAABAAAACAAAAAAAgAAIAAAAAAAAA"
+            "AAAAAAAAAPIAAADyAAAA8gAAAA==\", \"byteLength\": 52 } ],"
+            "  \"bufferViews\": ["
+            "    { \"buffer\": 2, \"byteLength\": 48, \"byteStride\": 12, \"extensions\": {"
+            "        \"EXT_meshopt_compression\": { \"buffer\": 0, \"byteLength\": 44, \"byteStride\": 12,"
+            "                                       \"count\": 4, \"mode\": \"ATTRIBUTES\" } } },"
+            "    { \"buffer\": 2, \"byteLength\": 24, \"extensions\": {"
+            "        \"EXT_meshopt_compression\": { \"buffer\": 1, \"byteLength\": 19, \"byteStride\": 4,"
+            "                                       \"count\": 6, \"mode\": \"TRIANGLES\" } } },"
+            "    { \"buffer\": 2, \"byteLength\": 48, \"byteStride\": 12, \"extensions\": {"
+            "        \"EXT_meshopt_compression\": { \"buffer\": 3, \"byteLength\": 52, \"byteStride\": 12,"
+            "                                       \"count\": 4, \"mode\": \"ATTRIBUTES\","
+            "                                       \"filter\": \"EXPONENTIAL\" } } } ],"
+            "  \"accessors\": ["
+            "    { \"bufferView\": 0, \"componentType\": 5126, \"count\": 4, \"type\": \"VEC3\" },"
+            "    { \"bufferView\": 1, \"componentType\": 5125, \"count\": 6, \"type\": \"SCALAR\" },"
+            "    { \"bufferView\": 2, \"componentType\": 5126, \"count\": 4, \"type\": \"VEC3\" } ] }");
+
+    QVERIFY2(parser.parse(json, QString(), &document), qPrintable(parser.errorMessage()));
+
+    const QList<float> expected = { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f };
+    QCOMPARE(QSSGGltfAccessorReader::readAsFloats(document, 0), expected);
+    // The index codec preserves triangles and winding but may rotate the
+    // vertex order within a triangle: the source was 0,1,2 / 2,3,0
+    QCOMPARE(QSSGGltfAccessorReader::readIndices(document, 1), (QList<quint32> { 0, 1, 2, 0, 2, 3 }));
+    // 0.0, 1.0, and 0.5 survive the exponential filter exactly
+    QCOMPARE(QSSGGltfAccessorReader::readAsFloats(document, 2), expected);
+
+    // Corrupt compressed payload (truncated to 10 bytes)
+    QByteArray corrupt = json;
+    corrupt.replace("\"byteLength\": 44, \"byteStride\": 12", "\"byteLength\": 10, \"byteStride\": 12");
+    QVERIFY(!parser.parse(corrupt, QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("corrupt")), qPrintable(parser.errorMessage()));
+
+    // A regular buffer view cannot read from an unloaded fallback buffer
+    QVERIFY(!parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"buffers\": [ { \"byteLength\": 48,"
+            "                   \"extensions\": { \"EXT_meshopt_compression\": { \"fallback\": true } } } ],"
+            "  \"bufferViews\": [ { \"buffer\": 0, \"byteLength\": 48 } ] }"),
+            QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("fallback")), qPrintable(parser.errorMessage()));
+
+    // Hostile decoded sizes and invalid mode/stride combinations
+    QByteArray bomb = json;
+    bomb.replace("\"count\": 4, \"mode\": \"ATTRIBUTES\" }", "\"count\": 400000000, \"mode\": \"ATTRIBUTES\" }");
+    QVERIFY(!parser.parse(bomb, QString(), &document));
+
+    // A count of 2^62 is exactly representable as a double, so it survives JSON
+    // parsing; multiplied by a valid stride of 12 the qint64 product wraps, and
+    // an unbounded check would read as satisfied and leave the decoder writing
+    // into a destination allocated from the wrapped size.
+    QByteArray wrap = json;
+    wrap.replace("\"count\": 4, \"mode\": \"ATTRIBUTES\" }",
+                 "\"count\": 4611686018427387904, \"mode\": \"ATTRIBUTES\" }");
+    QVERIFY(!parser.parse(wrap, QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("unreasonable")), qPrintable(parser.errorMessage()));
+
+    // Compressed byte offset and length that are each positive but whose sum
+    // wraps negative, which would otherwise read as inside the source buffer
+    QByteArray offsetWrap = json;
+    offsetWrap.replace("\"buffer\": 0, \"byteLength\": 44",
+                       "\"buffer\": 0, \"byteOffset\": 5000000000000000000, \"byteLength\": 5000000000000000000");
+    QVERIFY(!parser.parse(offsetWrap, QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("outside buffer")), qPrintable(parser.errorMessage()));
+
+    // Without a valid stride the size check must still reject a count that
+    // cannot be converted to a 64-bit integer
+    QByteArray hugeCountNoStride = json;
+    hugeCountNoStride.replace("\"byteLength\": 44, \"byteStride\": 12,", "\"byteLength\": 44,");
+    hugeCountNoStride.replace("\"count\": 4, \"mode\": \"ATTRIBUTES\" }", "\"count\": 1e300, \"mode\": \"ATTRIBUTES\" }");
+    QVERIFY(!parser.parse(hugeCountNoStride, QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("unreasonable")), qPrintable(parser.errorMessage()));
+
+    // A byte offset too large for a 64-bit integer must be rejected rather
+    // than converted, which would be undefined
+    QByteArray hugeOffset = json;
+    hugeOffset.replace("\"buffer\": 0, \"byteLength\": 44", "\"buffer\": 0, \"byteOffset\": 1e30, \"byteLength\": 44");
+    QVERIFY(!parser.parse(hugeOffset, QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("outside buffer")), qPrintable(parser.errorMessage()));
+
+    // Views decoding the same compressed range share one decoded buffer, so
+    // aliasing cannot multiply the memory a small file demands
+    QByteArray aliased = json;
+    aliased.replace("\"filter\": \"EXPONENTIAL\" } } } ],",
+                    "\"filter\": \"EXPONENTIAL\" } } },"
+                    "    { \"buffer\": 2, \"byteLength\": 48, \"byteStride\": 12, \"extensions\": {"
+                    "        \"EXT_meshopt_compression\": { \"buffer\": 0, \"byteLength\": 44, \"byteStride\": 12,"
+                    "                                       \"count\": 4, \"mode\": \"ATTRIBUTES\" } } } ],");
+    aliased.replace("\"count\": 4, \"type\": \"VEC3\" } ] }",
+                    "\"count\": 4, \"type\": \"VEC3\" },"
+                    "    { \"bufferView\": 3, \"componentType\": 5126, \"count\": 4, \"type\": \"VEC3\" } ] }");
+    QVERIFY2(parser.parse(aliased, QString(), &document), qPrintable(parser.errorMessage()));
+    QCOMPARE(document.bufferViews.size(), 4);
+    QCOMPARE(document.bufferViews.at(3).buffer, document.bufferViews.at(0).buffer);
+    QCOMPARE(document.buffers.size(), 4 + 3);
+    QCOMPARE(QSSGGltfAccessorReader::readAsFloats(document, 3), expected);
+
+    QByteArray badMode = json;
+    badMode.replace("\"mode\": \"TRIANGLES\"", "\"mode\": \"LINES\"");
+    QVERIFY(!parser.parse(badMode, QString(), &document));
+    QByteArray badStride = json;
+    badStride.replace("\"byteLength\": 19, \"byteStride\": 4", "\"byteLength\": 19, \"byteStride\": 8");
+    QVERIFY(!parser.parse(badStride, QString(), &document));
+
+    // In a GLB the compressed data goes in the BIN chunk, and the extension
+    // requires the fallback placeholder to sit at index 1 or above "to avoid
+    // conflicts with GLB binary buffer". Check that layout end to end, since
+    // only the first buffer may claim the BIN chunk.
+    const QByteArray compressed = QByteArray::fromBase64(
+            "ofrq6gAAAP8AfwB+AAB/AAAAAH4AAAAAAAAAAAAAAAAAAAAAAAAAAAABAQA=");
+    QCOMPARE(compressed.size(), 44);
+    const QByteArray glbJson = QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"extensionsUsed\": [ \"EXT_meshopt_compression\" ],"
+            "  \"extensionsRequired\": [ \"EXT_meshopt_compression\" ],"
+            "  \"buffers\": ["
+            "    { \"byteLength\": 44 },"
+            "    { \"byteLength\": 48, \"extensions\": { \"EXT_meshopt_compression\": { \"fallback\": true } } } ],"
+            "  \"bufferViews\": ["
+            "    { \"buffer\": 1, \"byteLength\": 48, \"byteStride\": 12, \"extensions\": {"
+            "        \"EXT_meshopt_compression\": { \"buffer\": 0, \"byteLength\": 44, \"byteStride\": 12,"
+            "                                       \"count\": 4, \"mode\": \"ATTRIBUTES\" } } } ],"
+            "  \"accessors\": ["
+            "    { \"bufferView\": 0, \"componentType\": 5126, \"count\": 4, \"type\": \"VEC3\" } ] }");
+    QVERIFY2(parser.parse(makeGlb(glbJson, compressed), QString(), &document),
+             qPrintable(parser.errorMessage()));
+    QCOMPARE(QSSGGltfAccessorReader::readAsFloats(document, 0), expected);
+
+    // The reverse layout puts the uri-less fallback first, which leaves the
+    // compressed buffer wanting the BIN chunk from index 1. That is what the
+    // extension's index requirement exists to prevent, so it is rejected with a
+    // clear message rather than silently mis-read.
+    QByteArray glbSwapped = glbJson;
+    glbSwapped.replace("{ \"byteLength\": 44 },"
+                       "    { \"byteLength\": 48, \"extensions\": { \"EXT_meshopt_compression\": "
+                       "{ \"fallback\": true } } } ]",
+                       "{ \"byteLength\": 48, \"extensions\": { \"EXT_meshopt_compression\": "
+                       "{ \"fallback\": true } } },"
+                       "    { \"byteLength\": 44 } ]");
+    glbSwapped.replace("\"buffer\": 1, \"byteLength\": 48, \"byteStride\": 12",
+                       "\"buffer\": 0, \"byteLength\": 48, \"byteStride\": 12");
+    glbSwapped.replace("\"buffer\": 0, \"byteLength\": 44", "\"buffer\": 1, \"byteLength\": 44");
+    QVERIFY(!parser.parse(makeGlb(glbSwapped, compressed), QString(), &document));
+    QVERIFY2(parser.errorMessage().contains(QStringLiteral("first buffer")), qPrintable(parser.errorMessage()));
 }
 
 void tst_qssggltfparser::readAccessorData()
