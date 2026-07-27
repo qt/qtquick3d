@@ -39,6 +39,8 @@ public:
         float lodNormalSplitAngle = 25.0f;
         float globalScaleValue = 1.0f;
         float animationSampleRate = 30.0f;
+        QString materialVariant; // KHR_materials_variants variant name to import
+        int materialVariantIndex = -1; // resolved from materialVariant per document
     };
 
     // Returns an empty string on success, the error message otherwise.

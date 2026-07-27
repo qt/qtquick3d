@@ -448,7 +448,8 @@ bool loadPrimitive(const QSSGGltfDocument &document, const MeshPrimitive &source
         generateNormals(primitive, options.generateSmoothNormals);
 
     if (primitive.tangents.isEmpty()
-        && (options.forceTangentGeneration || materialNeedsTangents(document, source.material))) {
+        && (options.forceTangentGeneration
+            || materialNeedsTangents(document, source.effectiveMaterial(options.materialVariantIndex)))) {
         generateTangents(primitive);
     }
 
@@ -465,8 +466,8 @@ bool loadPrimitive(const QSSGGltfDocument &document, const MeshPrimitive &source
     if (options.joinIdenticalVertices)
         weldVertices(primitive);
 
-    if (source.material >= 0)
-        primitive.materialName = document.materials.at(source.material).name;
+    if (const int materialIndex = source.effectiveMaterial(options.materialVariantIndex); materialIndex >= 0)
+        primitive.materialName = document.materials.at(materialIndex).name;
 
     QSSGMesh::optimizeVertexCache(primitive.indexes.data(), primitive.indexes.data(),
                                   primitive.indexes.size(), primitive.positions.size());

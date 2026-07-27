@@ -48,6 +48,10 @@ public:
                     QString defaultValue = QString::number(option.value("value").toDouble());
                     QCommandLineOption *valueOption = new QCommandLineOption(optionsKey, description, optionsKey, defaultValue);
                     m_optionsMap.insert(optionsKey, valueOption);
+                } else if (optionType == QStringLiteral("String")) {
+                    QString defaultValue = option.value("value").toString();
+                    QCommandLineOption *valueOption = new QCommandLineOption(optionsKey, description, optionsKey, defaultValue);
+                    m_optionsMap.insert(optionsKey, valueOption);
                 }
             }
         }
@@ -75,6 +79,11 @@ public:
             } else if (optionType == QStringLiteral("Real")) {
                 if (cmdLineParser.isSet(optionsKey))
                     option["value"] = cmdLineParser.value(optionsKey).toDouble();
+                else if (auto loadedValue = loadedOptionsObject.value(optionsKey); !loadedValue.isUndefined())
+                    option.insert("value", loadedValue);
+            } else if (optionType == QStringLiteral("String")) {
+                if (cmdLineParser.isSet(optionsKey))
+                    option["value"] = cmdLineParser.value(optionsKey);
                 else if (auto loadedValue = loadedOptionsObject.value(optionsKey); !loadedValue.isUndefined())
                     option.insert("value", loadedValue);
             }

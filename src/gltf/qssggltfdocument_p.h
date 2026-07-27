@@ -298,12 +298,31 @@ struct MeshPrimitive
         TriangleFan = 6
     };
 
+    struct VariantMapping // KHR_materials_variants
+    {
+        int material = -1;
+        QList<int> variants; // indices into QSSGGltfDocument::materialVariants
+    };
+
     QHash<QByteArray, int> attributes; // semantic (POSITION, NORMAL, ...) -> accessor
     int indices = -1;
     int material = -1;
     int mode = Triangles;
     QList<QHash<QByteArray, int>> targets; // morph targets
+    QList<VariantMapping> variantMappings; // KHR_materials_variants
     QJsonObject extensions;
+
+    // -1 or an unmapped variant selects the default; the first match wins
+    int effectiveMaterial(int variantIndex) const
+    {
+        if (variantIndex >= 0) {
+            for (const VariantMapping &mapping : variantMappings) {
+                if (mapping.variants.contains(variantIndex))
+                    return mapping.material;
+            }
+        }
+        return material;
+    }
 };
 
 struct Mesh
@@ -446,6 +465,7 @@ public:
 
     QStringList extensionsUsed;
     QStringList extensionsRequired;
+    QStringList materialVariants; // KHR_materials_variants variant names
     QJsonObject rootExtensions;
 
     // Directory the document was loaded from, used to resolve relative URIs.

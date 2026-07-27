@@ -418,6 +418,15 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         document->extensionsRequired.append(value.toString());
     document->rootExtensions = root.value(QLatin1String("extensions")).toObject();
 
+    // KHR_materials_variants (document level): the variant names
+    {
+        const QJsonValue variantsExt = document->rootExtensions.value(QLatin1String("KHR_materials_variants"));
+        if (variantsExt.isObject()) {
+            for (const auto &value : variantsExt.toObject().value(QLatin1String("variants")).toArray())
+                document->materialVariants.append(value.toObject().value(QLatin1String("name")).toString());
+        }
+    }
+
     const QStringList supported = supportedExtensions();
     for (const QString &required : std::as_const(document->extensionsRequired)) {
         if (!supported.contains(required))
@@ -843,6 +852,32 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
                 primitive.targets.append(target);
             }
             primitive.extensions = primitiveObject.value(QLatin1String("extensions")).toObject();
+
+            const QJsonValue variantsExt = primitive.extensions.value(QLatin1String("KHR_materials_variants"));
+            if (variantsExt.isObject()) {
+                for (const auto &mappingValue : variantsExt.toObject().value(QLatin1String("mappings")).toArray()) {
+                    const QJsonObject mappingObject = mappingValue.toObject();
+                    MeshPrimitive::VariantMapping mapping;
+                    mapping.material = mappingObject.value(QLatin1String("material")).toInt(-1);
+                    if (mapping.material < 0 || mapping.material >= document->materials.size()) {
+                        return setError(
+                                QStringLiteral("Mesh %1 primitive variant mapping references invalid material %2")
+                                        .arg(document->meshes.size())
+                                        .arg(mapping.material));
+                    }
+                    for (const auto &variantValue : mappingObject.value(QLatin1String("variants")).toArray()) {
+                        const int variant = variantValue.toInt(-1);
+                        if (variant < 0 || variant >= document->materialVariants.size()) {
+                            return setError(
+                                    QStringLiteral("Mesh %1 primitive variant mapping references invalid variant %2")
+                                            .arg(document->meshes.size())
+                                            .arg(variant));
+                        }
+                        mapping.variants.append(variant);
+                    }
+                    primitive.variantMappings.append(mapping);
+                }
+            }
 
             // Structural validation of accessor references. As everywhere in
             // this parser, any negative index means "unset": the glTF defaults

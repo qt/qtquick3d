@@ -53,6 +53,14 @@ float getRealOption(QLatin1StringView optionName, const QJsonObject &options, fl
     return float(value.toDouble(defaultValue));
 }
 
+QString getStringOption(QLatin1StringView optionName, const QJsonObject &options)
+{
+    const auto opt = options.constFind(optionName);
+    if (opt == options.constEnd())
+        return {};
+    return opt->toObject().value(QLatin1String("value")).toString();
+}
+
 void decomposeMatrix(const QMatrix4x4 &matrix, QVector3D &translation, QQuaternion &rotation, QVector3D &scale)
 {
     translation = matrix.column(3).toVector3D();
@@ -104,6 +112,7 @@ GltfSceneConverter::Options GltfSceneConverter::parseOptions(const QJsonObject &
     result.forceTangentGeneration = checkBooleanOption(QLatin1StringView("calculateTangentSpace"), options);
     result.generateMipMaps = checkBooleanOption(QLatin1StringView("generateMipMaps"), options);
     result.animationSampleRate = getRealOption(QLatin1StringView("animationSampleRate"), options, 30.0f);
+    result.materialVariant = getStringOption(QLatin1StringView("materialVariant"), options);
 
     result.generateMeshLODs = checkBooleanOption(QLatin1StringView("generateMeshLevelsOfDetail"), options);
     if (result.generateMeshLODs) {
@@ -132,6 +141,14 @@ QString GltfSceneConverter::convert(const QSSGGltfDocument &document, const QJso
     m_document = &document;
     m_scene = &targetScene;
     m_options = parseOptions(optionsObject);
+    if (!m_options.materialVariant.isEmpty()) {
+        m_options.materialVariantIndex = int(document.materialVariants.indexOf(m_options.materialVariant));
+        if (m_options.materialVariantIndex < 0) {
+            // Not an error, since one option may be applied to a batch of assets
+            qCWarning(lcQuick3DGltf) << "Asset has no material variant" << m_options.materialVariant
+                                     << "- available variants:" << document.materialVariants;
+        }
+    }
     m_nodeMap.clear();
     m_meshMap.clear();
     m_materialMap.clear();
@@ -690,8 +707,10 @@ void GltfSceneConverter::setModelProperties(QSSGSceneDesc::Model &target, const 
     // One material per subset, in subset order
     QVarLengthArray<QSSGSceneDesc::Material *> materials;
     materials.reserve(usedPrimitives.size());
-    for (const int primitiveIndex : std::as_const(usedPrimitives))
-        materials.push_back(ensureMaterial(mesh.primitives.at(primitiveIndex).material, target));
+    for (const int primitiveIndex : std::as_const(usedPrimitives)) {
+        materials.push_back(ensureMaterial(
+                mesh.primitives.at(primitiveIndex).effectiveMaterial(m_options.materialVariantIndex), target));
+    }
 
     if (!materials.isEmpty())
         QSSGSceneDesc::setProperty(target, "materials", &QQuick3DModel::materials, materials);

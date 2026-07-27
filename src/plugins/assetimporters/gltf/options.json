@@ -60,6 +60,12 @@
             "value": 30.0,
             "type": "Real"
         },
+        "materialVariant": {
+            "name": "Material Variant",
+            "description": "Name of the KHR_materials_variants variant to import; the default materials are used when empty",
+            "value": "",
+            "type": "String"
+        },
         "globalScale": {
             "name": "Enable Global Scale",
             "description": "This step will perform a global scale of the model.",

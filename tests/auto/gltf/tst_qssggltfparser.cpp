@@ -31,6 +31,7 @@ private slots:
     void nodeVisibilityAndWebp();
     void meshoptCompression();
     void meshGpuInstancing();
+    void materialVariants();
     void readAccessorData();
     void readSparseAccessor();
     void readInterleavedAccessor();
@@ -812,6 +813,54 @@ void tst_qssggltfparser::meshGpuInstancing()
             QString(), &document));
     QVERIFY2(parser.errorMessage().contains(QStringLiteral("instance attribute")),
              qPrintable(parser.errorMessage()));
+}
+
+void tst_qssggltfparser::materialVariants()
+{
+    QSSGGltfParser parser;
+    QSSGGltfDocument document;
+
+    QVERIFY2(parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"extensionsUsed\": [ \"KHR_materials_variants\" ],"
+            "  \"extensions\": { \"KHR_materials_variants\": {"
+            "      \"variants\": [ { \"name\": \"Red\" }, { \"name\": \"Blue\" } ] } },"
+            "  \"materials\": [ { \"name\": \"default\" }, { \"name\": \"red\" }, { \"name\": \"blue\" } ],"
+            "  \"accessors\": [ { \"componentType\": 5126, \"count\": 3, \"type\": \"VEC3\" } ],"
+            "  \"meshes\": [ { \"primitives\": [ {"
+            "      \"attributes\": { \"POSITION\": 0 }, \"material\": 0,"
+            "      \"extensions\": { \"KHR_materials_variants\": { \"mappings\": ["
+            "          { \"material\": 1, \"variants\": [0] },"
+            "          { \"material\": 2, \"variants\": [1] } ] } } } ] } ] }"),
+            QString(), &document),
+             qPrintable(parser.errorMessage()));
+    QCOMPARE(document.materialVariants, (QStringList { QStringLiteral("Red"), QStringLiteral("Blue") }));
+    const QSSGGltf::MeshPrimitive &primitive = document.meshes.at(0).primitives.at(0);
+    QCOMPARE(primitive.variantMappings.size(), 2);
+    QCOMPARE(primitive.effectiveMaterial(-1), 0); // default
+    QCOMPARE(primitive.effectiveMaterial(0), 1); // Red
+    QCOMPARE(primitive.effectiveMaterial(1), 2); // Blue
+    QCOMPARE(primitive.effectiveMaterial(5), 0); // unmapped variant -> default
+
+    // Mappings referencing invalid materials or variants are structural
+    QVERIFY(!parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"materials\": [ { } ],"
+            "  \"accessors\": [ { \"componentType\": 5126, \"count\": 3, \"type\": \"VEC3\" } ],"
+            "  \"meshes\": [ { \"primitives\": [ {"
+            "      \"attributes\": { \"POSITION\": 0 },"
+            "      \"extensions\": { \"KHR_materials_variants\": { \"mappings\": ["
+            "          { \"material\": 7, \"variants\": [0] } ] } } } ] } ] }"),
+            QString(), &document));
+    QVERIFY(!parser.parse(QByteArrayLiteral(
+            "{ \"asset\": { \"version\": \"2.0\" },"
+            "  \"materials\": [ { } ],"
+            "  \"accessors\": [ { \"componentType\": 5126, \"count\": 3, \"type\": \"VEC3\" } ],"
+            "  \"meshes\": [ { \"primitives\": [ {"
+            "      \"attributes\": { \"POSITION\": 0 },"
+            "      \"extensions\": { \"KHR_materials_variants\": { \"mappings\": ["
+            "          { \"material\": 0, \"variants\": [3] } ] } } } ] } ] }"),
+            QString(), &document));
 }
 
 void tst_qssggltfparser::readAccessorData()

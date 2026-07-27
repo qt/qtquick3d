@@ -36,6 +36,8 @@ private slots:
     void importUrl();
     void nativeGltfRouting();
     void gltfNodeVisibilityAndWebp();
+    void gltfMaterialVariant_data();
+    void gltfMaterialVariant();
 };
 
 tst_assetimport::tst_assetimport()
@@ -386,6 +388,62 @@ void tst_assetimport::gltfNodeVisibilityAndWebp()
     const bool webpSupported = QImageReader::supportedImageFormats().contains("webp");
     QCOMPARE(source->value.toUrl().fileName(),
              webpSupported ? QStringLiteral("preferred.webp") : QStringLiteral("fallback.png"));
+}
+
+void tst_assetimport::gltfMaterialVariant_data()
+{
+    QTest::addColumn<QString>("variant");
+    QTest::addColumn<QByteArray>("material");
+    QTest::addColumn<bool>("tangents");
+    QTest::newRow("default") << QString() << QByteArrayLiteral("defaultMaterial") << false;
+    QTest::newRow("Red") << QStringLiteral("Red") << QByteArrayLiteral("redMaterial") << false;
+    QTest::newRow("Blue") << QStringLiteral("Blue") << QByteArrayLiteral("blueMaterial") << true;
+    QTest::newRow("unknown") << QStringLiteral("Green") << QByteArrayLiteral("defaultMaterial") << false;
+}
+
+// The selected KHR_materials_variants variant decides both the material and,
+// as only blueMaterial has a normal map, whether tangents are generated
+void tst_assetimport::gltfMaterialVariant()
+{
+    QFETCH(QString, variant);
+    QFETCH(QByteArray, material);
+    QFETCH(bool, tangents);
+
+    const QString file = QFINDTESTDATA(QStringLiteral("resources/material_variants.gltf"));
+    QVERIFY(!file.isEmpty());
+
+    QSSGAssetImportManager manager;
+    bool nativePresent = false;
+    for (const auto &importer : manager.getImporterPluginInfos())
+        nativePresent |= importer.name == QStringLiteral("gltf");
+    if (!nativePresent)
+        QSKIP("Native glTF importer plugin not available");
+
+    QJsonObject options;
+    if (!variant.isEmpty())
+        options.insert(QStringLiteral("materialVariant"), QJsonObject { { QStringLiteral("value"), variant } });
+
+    if (QTest::currentDataTag() == QByteArrayLiteral("unknown"))
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(QStringLiteral("no material variant \"Green\"")));
+
+    QSSGSceneDesc::Scene scene;
+    const auto cleanup = qScopeGuard([&scene] { scene.cleanup(); });
+    QString error;
+    QCOMPARE(manager.importFile(QUrl::fromLocalFile(file), scene, options, &error),
+             QSSGAssetImportManager::ImportState::Success);
+
+    QByteArrayList materials;
+    for (const QSSGSceneDesc::Node *node : scene.resources) {
+        if (node->nodeType == QSSGSceneDesc::Node::Type::Material)
+            materials.append(node->name);
+    }
+    QCOMPARE(materials, QByteArrayList { material });
+
+    QCOMPARE(scene.meshStorage.size(), 1);
+    bool hasTangents = false;
+    for (const auto &entry : scene.meshStorage.first().vertexBuffer().entries)
+        hasTangents |= entry.name == QSSGMesh::MeshInternal::getTexTanAttrName();
+    QCOMPARE(hasTangents, tangents);
 }
 
 QTEST_APPLESS_MAIN(tst_assetimport)
