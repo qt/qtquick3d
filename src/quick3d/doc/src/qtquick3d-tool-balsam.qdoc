@@ -97,6 +97,10 @@ as well as the following extensions:
   \li KHR_materials_ior
   \li KHR_materials_emissive_strength
   \li KHR_materials_specular
+  \li KHR_materials_sheen
+  \li KHR_materials_anisotropy
+  \li KHR_materials_iridescence
+  \li KHR_materials_dispersion
   \li KHR_texture_transform
   \li KHR_lights_punctual
   \li KHR_mesh_quantization

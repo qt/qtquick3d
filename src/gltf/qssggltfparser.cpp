@@ -286,10 +286,14 @@ QStringList QSSGGltfParser::supportedExtensions()
         QStringLiteral("EXT_meshopt_compression"),
         QStringLiteral("EXT_texture_webp"),
         QStringLiteral("KHR_lights_punctual"),
+        QStringLiteral("KHR_materials_anisotropy"),
         QStringLiteral("KHR_materials_clearcoat"),
+        QStringLiteral("KHR_materials_dispersion"),
         QStringLiteral("KHR_materials_emissive_strength"),
         QStringLiteral("KHR_materials_ior"),
+        QStringLiteral("KHR_materials_iridescence"),
         QStringLiteral("KHR_materials_pbrSpecularGlossiness"),
+        QStringLiteral("KHR_materials_sheen"),
         QStringLiteral("KHR_materials_specular"),
         QStringLiteral("KHR_materials_transmission"),
         QStringLiteral("KHR_materials_unlit"),
@@ -820,6 +824,45 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
                     parseTexture(sp.value(QLatin1String("specularColorTexture")).toObject());
             material.specular = specular;
         }
+
+        const QJsonValue shValue = ext.value(QLatin1String("KHR_materials_sheen"));
+        if (shValue.isObject()) {
+            const QJsonObject sh = shValue.toObject();
+            Material::Sheen sheen;
+            sheen.sheenColorFactor = toVector3D(sh.value(QLatin1String("sheenColorFactor")).toArray(), sheen.sheenColorFactor);
+            sheen.sheenColorTexture = parseTexture(sh.value(QLatin1String("sheenColorTexture")).toObject());
+            sheen.sheenRoughnessFactor = float(sh.value(QLatin1String("sheenRoughnessFactor")).toDouble(0.0));
+            sheen.sheenRoughnessTexture = parseTexture(sh.value(QLatin1String("sheenRoughnessTexture")).toObject());
+            material.sheen = sheen;
+        }
+
+        const QJsonValue anValue = ext.value(QLatin1String("KHR_materials_anisotropy"));
+        if (anValue.isObject()) {
+            const QJsonObject an = anValue.toObject();
+            Material::Anisotropy anisotropy;
+            anisotropy.anisotropyStrength = float(an.value(QLatin1String("anisotropyStrength")).toDouble(0.0));
+            anisotropy.anisotropyRotation = float(an.value(QLatin1String("anisotropyRotation")).toDouble(0.0));
+            anisotropy.anisotropyTexture = parseTexture(an.value(QLatin1String("anisotropyTexture")).toObject());
+            material.anisotropy = anisotropy;
+        }
+
+        const QJsonValue irValue = ext.value(QLatin1String("KHR_materials_iridescence"));
+        if (irValue.isObject()) {
+            const QJsonObject ir = irValue.toObject();
+            Material::Iridescence iridescence;
+            iridescence.iridescenceFactor = float(ir.value(QLatin1String("iridescenceFactor")).toDouble(0.0));
+            iridescence.iridescenceTexture = parseTexture(ir.value(QLatin1String("iridescenceTexture")).toObject());
+            iridescence.iridescenceIor = float(ir.value(QLatin1String("iridescenceIor")).toDouble(1.3));
+            iridescence.iridescenceThicknessMinimum = float(ir.value(QLatin1String("iridescenceThicknessMinimum")).toDouble(100.0));
+            iridescence.iridescenceThicknessMaximum = float(ir.value(QLatin1String("iridescenceThicknessMaximum")).toDouble(400.0));
+            iridescence.iridescenceThicknessTexture = parseTexture(
+                    ir.value(QLatin1String("iridescenceThicknessTexture")).toObject());
+            material.iridescence = iridescence;
+        }
+
+        const QJsonValue dispValue = ext.value(QLatin1String("KHR_materials_dispersion"));
+        if (dispValue.isObject())
+            material.dispersion = float(dispValue.toObject().value(QLatin1String("dispersion")).toDouble(0.0));
 
         document->materials.append(material);
     }

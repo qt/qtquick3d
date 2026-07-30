@@ -8,6 +8,7 @@
 #include <QtQuick3DGltf/private/qssggltfresourceresolver_p.h>
 
 #include <QtCore/qendian.h>
+#include <QtCore/qmath.h>
 #include <QtCore/qfile.h>
 
 class tst_qssggltfparser : public QObject
@@ -221,6 +222,12 @@ void tst_qssggltfparser::requiredExtensionGate()
     QVERIFY2(parser.parse(json, QString(), &document), qPrintable(parser.errorMessage()));
 }
 
+static bool specGlossOrUnlitHasBrdfExtensions(const QSSGGltf::Material &material)
+{
+    return material.sheen.has_value() || material.anisotropy.has_value() || material.iridescence.has_value()
+            || material.dispersion.has_value();
+}
+
 void tst_qssggltfparser::materials()
 {
     QSSGGltfParser parser;
@@ -262,6 +269,35 @@ void tst_qssggltfparser::materials()
     QVERIFY(full.specular.has_value());
     QCOMPARE(full.specular->specularFactor, 0.5f);
     QCOMPARE(full.specular->specularColorFactor, QVector3D(0.2f, 0.4f, 0.6f));
+
+    QVERIFY(full.sheen.has_value());
+    QCOMPARE(full.sheen->sheenColorFactor, QVector3D(0.3f, 0.5f, 0.7f));
+    QCOMPARE(full.sheen->sheenRoughnessFactor, 0.45f);
+    QCOMPARE(full.sheen->sheenColorTexture.index, 0);
+    QCOMPARE(full.sheen->sheenRoughnessTexture.index, 0);
+
+    QVERIFY(full.anisotropy.has_value());
+    QCOMPARE(full.anisotropy->anisotropyStrength, 0.65f);
+    // The document keeps the extension's radians; the converter is what turns
+    // it into the degrees the QML property uses
+    QCOMPARE(full.anisotropy->anisotropyRotation, qDegreesToRadians(90.0f));
+    QCOMPARE(full.anisotropy->anisotropyTexture.index, 0);
+
+    QVERIFY(full.iridescence.has_value());
+    QCOMPARE(full.iridescence->iridescenceFactor, 0.85f);
+    QCOMPARE(full.iridescence->iridescenceIor, 1.8f);
+    QCOMPARE(full.iridescence->iridescenceThicknessMinimum, 250.0f);
+    QCOMPARE(full.iridescence->iridescenceThicknessMaximum, 900.0f);
+    QCOMPARE(full.iridescence->iridescenceTexture.index, 0);
+    QCOMPARE(full.iridescence->iridescenceThicknessTexture.index, 0);
+
+    QVERIFY(full.dispersion.has_value());
+    QCOMPARE(*full.dispersion, 0.4f);
+
+    // A material without the extensions must leave every optional unset rather
+    // than defaulting the effects on
+    QVERIFY(!specGlossOrUnlitHasBrdfExtensions(document.materials.at(1)));
+    QVERIFY(!specGlossOrUnlitHasBrdfExtensions(document.materials.at(2)));
 
     const QSSGGltf::Material &specGloss = document.materials.at(1);
     QVERIFY(specGloss.specularGlossiness.has_value());

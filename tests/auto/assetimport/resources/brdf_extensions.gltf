@@ -1,0 +1,187 @@
+{
+    "asset": {
+        "version": "2.0"
+    },
+    "extensionsUsed": [
+        "KHR_materials_sheen",
+        "KHR_materials_anisotropy",
+        "KHR_materials_iridescence",
+        "KHR_materials_dispersion",
+        "KHR_materials_transmission",
+        "KHR_materials_volume"
+    ],
+    "scene": 0,
+    "scenes": [
+        {
+            "nodes": [
+                0
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "mesh": 0,
+            "name": "tri"
+        }
+    ],
+    "meshes": [
+        {
+            "primitives": [
+                {
+                    "attributes": {
+                        "POSITION": 0,
+                        "NORMAL": 1,
+                        "TEXCOORD_0": 2,
+                        "TANGENT": 3
+                    },
+                    "indices": 4,
+                    "material": 0
+                }
+            ]
+        }
+    ],
+    "buffers": [
+        {
+            "byteLength": 150,
+            "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAAAAAACAPwAAgD8AAAAAAAAAAAAAgD8AAIA/AAAAAAAAAAAAAIA/AAABAAIA"
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 36
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 36,
+            "byteLength": 36
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 72,
+            "byteLength": 24
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 96,
+            "byteLength": 48
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 144,
+            "byteLength": 6
+        }
+    ],
+    "accessors": [
+        {
+            "bufferView": 0,
+            "componentType": 5126,
+            "count": 3,
+            "type": "VEC3",
+            "min": [
+                0,
+                0,
+                0
+            ],
+            "max": [
+                1,
+                1,
+                0
+            ]
+        },
+        {
+            "bufferView": 1,
+            "componentType": 5126,
+            "count": 3,
+            "type": "VEC3"
+        },
+        {
+            "bufferView": 2,
+            "componentType": 5126,
+            "count": 3,
+            "type": "VEC2"
+        },
+        {
+            "bufferView": 3,
+            "componentType": 5126,
+            "count": 3,
+            "type": "VEC4"
+        },
+        {
+            "bufferView": 4,
+            "componentType": 5123,
+            "count": 3,
+            "type": "SCALAR"
+        }
+    ],
+    "images": [
+        {
+            "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
+        }
+    ],
+    "textures": [
+        {
+            "source": 0
+        }
+    ],
+    "materials": [
+        {
+            "name": "brdfExtensions",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.8,
+                    0.8,
+                    0.8,
+                    1.0
+                ],
+                "metallicFactor": 0.0,
+                "roughnessFactor": 0.2
+            },
+            "extensions": {
+                "KHR_materials_sheen": {
+                    "sheenColorFactor": [
+                        0.25,
+                        0.5,
+                        1.0
+                    ],
+                    "sheenRoughnessFactor": 0.25,
+                    "sheenColorTexture": {
+                        "index": 0
+                    },
+                    "sheenRoughnessTexture": {
+                        "index": 0
+                    }
+                },
+                "KHR_materials_anisotropy": {
+                    "anisotropyStrength": 0.625,
+                    "anisotropyRotation": 0.7853981633974483,
+                    "anisotropyTexture": {
+                        "index": 0
+                    }
+                },
+                "KHR_materials_iridescence": {
+                    "iridescenceFactor": 0.875,
+                    "iridescenceIor": 1.75,
+                    "iridescenceThicknessMinimum": 220.0,
+                    "iridescenceThicknessMaximum": 810.0,
+                    "iridescenceTexture": {
+                        "index": 0
+                    },
+                    "iridescenceThicknessTexture": {
+                        "index": 0
+                    }
+                },
+                "KHR_materials_transmission": {
+                    "transmissionFactor": 0.75
+                },
+                "KHR_materials_volume": {
+                    "thicknessFactor": 2.5
+                },
+                "KHR_materials_dispersion": {
+                    "dispersion": 0.5
+                }
+            }
+        }
+    ]
+}

@@ -254,6 +254,31 @@ struct Material
         TextureInfo specularColorTexture;
     };
 
+    struct Sheen // KHR_materials_sheen
+    {
+        QVector3D sheenColorFactor { 0.0f, 0.0f, 0.0f };
+        TextureInfo sheenColorTexture;
+        float sheenRoughnessFactor = 0.0f;
+        TextureInfo sheenRoughnessTexture;
+    };
+
+    struct Anisotropy // KHR_materials_anisotropy
+    {
+        float anisotropyStrength = 0.0f;
+        float anisotropyRotation = 0.0f; // radians
+        TextureInfo anisotropyTexture;
+    };
+
+    struct Iridescence // KHR_materials_iridescence
+    {
+        float iridescenceFactor = 0.0f;
+        TextureInfo iridescenceTexture;
+        float iridescenceIor = 1.3f;
+        float iridescenceThicknessMinimum = 100.0f; // nanometers
+        float iridescenceThicknessMaximum = 400.0f; // nanometers
+        TextureInfo iridescenceThicknessTexture;
+    };
+
     QString name;
 
     // pbrMetallicRoughness
@@ -281,8 +306,12 @@ struct Material
     std::optional<float> ior; // KHR_materials_ior
     std::optional<float> emissiveStrength; // KHR_materials_emissive_strength
     std::optional<Specular> specular;
+    std::optional<Sheen> sheen;
+    std::optional<Anisotropy> anisotropy;
+    std::optional<Iridescence> iridescence;
+    std::optional<float> dispersion; // KHR_materials_dispersion
 
-    QJsonObject extensions; // raw, incl. unsupported ones (sheen, iridescence, ...)
+    QJsonObject extensions; // raw, including any we do not support
 };
 
 struct MeshPrimitive

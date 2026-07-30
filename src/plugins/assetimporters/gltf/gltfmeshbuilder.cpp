@@ -209,8 +209,10 @@ bool materialNeedsTangents(const QSSGGltfDocument &document, int materialIndex)
     if (materialIndex < 0 || materialIndex >= document.materials.size())
         return false;
     const Material &material = document.materials.at(materialIndex);
+    // Anisotropy needs a tangent frame that follows the UVs
     return material.normalTexture.isSet()
-            || (material.clearcoat && material.clearcoat->clearcoatNormalTexture.isSet());
+            || (material.clearcoat && material.clearcoat->clearcoatNormalTexture.isSet())
+            || (material.anisotropy && material.anisotropy->anisotropyStrength > 0.0f);
 }
 
 // Equivalent of Assimp's joinIdenticalVertices

@@ -40,6 +40,7 @@ private slots:
     void gltfMaterialVariant_data();
     void gltfMaterialVariant();
     void generatedVariantBinding();
+    void materialExtensionMapping();
 };
 
 tst_assetimport::tst_assetimport()
@@ -505,6 +506,64 @@ void tst_assetimport::generatedVariantBinding()
         // one keeps a static material list
         QCOMPARE(qml.count(QStringLiteral(".materialVariant === ")), 2);
     }
+}
+
+void tst_assetimport::materialExtensionMapping()
+{
+    const QString file = QFINDTESTDATA(QStringLiteral("resources/brdf_extensions.gltf"));
+    QVERIFY(!file.isEmpty());
+
+    QSSGAssetImportManager manager;
+    bool nativePresent = false;
+    const auto importers = manager.getImporterPluginInfos();
+    for (const auto &importer : importers) {
+        if (importer.name == QStringLiteral("gltf"))
+            nativePresent = true;
+    }
+    if (!nativePresent)
+        QSKIP("Native glTF importer plugin not available");
+
+    QTemporaryDir outDir;
+    QVERIFY(outDir.isValid());
+
+    QString error;
+    const auto state = manager.importFile(file, QDir(outDir.path()), &error);
+    QVERIFY2(state == QSSGAssetImportManager::ImportState::Success, qPrintable(error));
+
+    const QStringList generated = QDir(outDir.path()).entryList(QStringList { QStringLiteral("*.qml") });
+    QCOMPARE(generated.size(), 1);
+    QFile qml(outDir.filePath(generated.first()));
+    QVERIFY(qml.open(QIODevice::ReadOnly | QIODevice::Text));
+    const QString contents = QString::fromUtf8(qml.readAll());
+
+    // The values are exactly representable as floats, so they are matched whole
+
+    // Sheen. The color factor is linear in the asset and has to come out as an
+    // sRGB color: linear 0.25, 0.5, 1.0 is #89bbff.
+    QVERIFY2(contents.contains(QStringLiteral("sheenColor: \"#ff89bbff\"\n")), qPrintable(contents));
+    QVERIFY(contents.contains(QStringLiteral("sheenRoughness: 0.25\n")));
+    QVERIFY(contents.contains(QStringLiteral("sheenColorMap:")));
+    QVERIFY(contents.contains(QStringLiteral("sheenRoughnessMap:")));
+
+    // Anisotropy. The asset states the rotation in radians, the property is in
+    // degrees, so pi/4 has to arrive as 45.
+    QVERIFY(contents.contains(QStringLiteral("anisotropyStrength: 0.625\n")));
+    QVERIFY2(contents.contains(QStringLiteral("anisotropyRotation: 45\n")), qPrintable(contents));
+    QVERIFY(contents.contains(QStringLiteral("anisotropyMap:")));
+
+    // Iridescence, including the property renamed from the extension's
+    // iridescenceIor, and the thickness range in nanometers
+    QVERIFY(contents.contains(QStringLiteral("iridescenceFactor: 0.875\n")));
+    QVERIFY(contents.contains(QStringLiteral("iridescenceIndexOfRefraction: 1.75\n")));
+    QVERIFY(contents.contains(QStringLiteral("iridescenceThicknessMinimum: 220\n")));
+    QVERIFY(contents.contains(QStringLiteral("iridescenceThicknessMaximum: 810\n")));
+    QVERIFY(contents.contains(QStringLiteral("iridescenceMap:")));
+    QVERIFY(contents.contains(QStringLiteral("iridescenceThicknessMap:")));
+
+    // Dispersion, which needs the transmission and volume the asset also sets
+    QVERIFY(contents.contains(QStringLiteral("dispersion: 0.5\n")));
+    QVERIFY(contents.contains(QStringLiteral("transmissionFactor: 0.75\n")));
+    QVERIFY(contents.contains(QStringLiteral("thicknessFactor: 2.5\n")));
 }
 
 QTEST_APPLESS_MAIN(tst_assetimport)

@@ -908,6 +908,63 @@ void GltfSceneConverter::setMaterialProperties(QSSGSceneDesc::Material &target, 
         if (specular.specularTexture.isSet())
             qCWarning(lcQuick3DGltf) << "KHR_materials_specular specularTexture is not supported";
     }
+
+    // KHR_materials_sheen
+    if (source.sheen) {
+        const QSSGGltf::Material::Sheen &sheen = *source.sheen;
+        setProperty(target,
+                    "sheenColor",
+                    &QQuick3DPrincipledMaterial::setSheenColor,
+                    QSSGUtils::color::linearTosRGB(QVector4D(sheen.sheenColorFactor, 1.0f)));
+        setProperty(target, "sheenRoughness", &QQuick3DPrincipledMaterial::setSheenRoughness, sheen.sheenRoughnessFactor);
+        if (auto *sheenColorTexture = ensureTexture(sheen.sheenColorTexture, target))
+            setProperty(target, "sheenColorMap", &QQuick3DPrincipledMaterial::setSheenColorMap, sheenColorTexture);
+        // Alpha, the default channel
+        if (auto *sheenRoughnessTexture = ensureTexture(sheen.sheenRoughnessTexture, target)) {
+            setProperty(target, "sheenRoughnessMap", &QQuick3DPrincipledMaterial::setSheenRoughnessMap, sheenRoughnessTexture);
+        }
+    }
+
+    // KHR_materials_anisotropy
+    if (source.anisotropy) {
+        const QSSGGltf::Material::Anisotropy &anisotropy = *source.anisotropy;
+        setProperty(target, "anisotropyStrength", &QQuick3DPrincipledMaterial::setAnisotropyStrength, anisotropy.anisotropyStrength);
+        // Radians in glTF, degrees in Qt Quick 3D
+        setProperty(target,
+                    "anisotropyRotation",
+                    &QQuick3DPrincipledMaterial::setAnisotropyRotation,
+                    qRadiansToDegrees(anisotropy.anisotropyRotation));
+        if (auto *anisotropyTexture = ensureTexture(anisotropy.anisotropyTexture, target))
+            setProperty(target, "anisotropyMap", &QQuick3DPrincipledMaterial::setAnisotropyMap, anisotropyTexture);
+    }
+
+    // KHR_materials_iridescence
+    if (source.iridescence) {
+        const QSSGGltf::Material::Iridescence &iridescence = *source.iridescence;
+        setProperty(target, "iridescenceFactor", &QQuick3DPrincipledMaterial::setIridescenceFactor, iridescence.iridescenceFactor);
+        setProperty(target,
+                    "iridescenceIndexOfRefraction",
+                    &QQuick3DPrincipledMaterial::setIridescenceIndexOfRefraction,
+                    iridescence.iridescenceIor);
+        setProperty(target,
+                    "iridescenceThicknessMinimum",
+                    &QQuick3DPrincipledMaterial::setIridescenceThicknessMinimum,
+                    iridescence.iridescenceThicknessMinimum);
+        setProperty(target,
+                    "iridescenceThicknessMaximum",
+                    &QQuick3DPrincipledMaterial::setIridescenceThicknessMaximum,
+                    iridescence.iridescenceThicknessMaximum);
+        // Red and green, the default channels
+        if (auto *iridescenceTexture = ensureTexture(iridescence.iridescenceTexture, target))
+            setProperty(target, "iridescenceMap", &QQuick3DPrincipledMaterial::setIridescenceMap, iridescenceTexture);
+        if (auto *thicknessTexture = ensureTexture(iridescence.iridescenceThicknessTexture, target)) {
+            setProperty(target, "iridescenceThicknessMap", &QQuick3DPrincipledMaterial::setIridescenceThicknessMap, thicknessTexture);
+        }
+    }
+
+    // KHR_materials_dispersion, which requires KHR_materials_volume
+    if (source.dispersion)
+        setProperty(target, "dispersion", &QQuick3DPrincipledMaterial::setDispersion, *source.dispersion);
 }
 
 void GltfSceneConverter::setSpecularGlossyProperties(QSSGSceneDesc::Material &target, const QSSGGltf::Material &source)
