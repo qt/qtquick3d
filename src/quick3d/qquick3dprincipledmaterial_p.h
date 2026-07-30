@@ -103,6 +103,10 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping sheenRoughnessChannel READ sheenRoughnessChannel WRITE
                        setSheenRoughnessChannel NOTIFY sheenRoughnessChannelChanged REVISION(6, 13))
 
+    Q_PROPERTY(float anisotropyStrength READ anisotropyStrength WRITE setAnisotropyStrength NOTIFY anisotropyStrengthChanged REVISION(6, 13))
+    Q_PROPERTY(float anisotropyRotation READ anisotropyRotation WRITE setAnisotropyRotation NOTIFY anisotropyRotationChanged REVISION(6, 13))
+    Q_PROPERTY(QQuick3DTexture *anisotropyMap READ anisotropyMap WRITE setAnisotropyMap NOTIFY anisotropyMapChanged REVISION(6, 13))
+
     Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping transmissionChannel READ transmissionChannel WRITE setTransmissionChannel NOTIFY transmissionChannelChanged)
@@ -235,6 +239,10 @@ public:
     Q_REVISION(6, 13) QQuick3DTexture *sheenRoughnessMap() const;
     Q_REVISION(6, 13) TextureChannelMapping sheenRoughnessChannel() const;
 
+    Q_REVISION(6, 13) float anisotropyStrength() const;
+    Q_REVISION(6, 13) float anisotropyRotation() const;
+    Q_REVISION(6, 13) QQuick3DTexture *anisotropyMap() const;
+
     Q_REVISION(6, 3) float transmissionFactor() const;
     Q_REVISION(6, 3) QQuick3DTexture *transmissionMap() const;
     Q_REVISION(6, 3) TextureChannelMapping transmissionChannel() const;
@@ -322,6 +330,10 @@ public Q_SLOTS:
     Q_REVISION(6, 13) void setSheenRoughnessMap(QQuick3DTexture *newSheenRoughnessMap);
     Q_REVISION(6, 13) void setSheenRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newSheenRoughnessChannel);
 
+    Q_REVISION(6, 13) void setAnisotropyStrength(float newAnisotropyStrength);
+    Q_REVISION(6, 13) void setAnisotropyRotation(float newAnisotropyRotation);
+    Q_REVISION(6, 13) void setAnisotropyMap(QQuick3DTexture *newAnisotropyMap);
+
     Q_REVISION(6, 3) void setTransmissionFactor(float newTransmissionFactor);
     Q_REVISION(6, 3) void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
     Q_REVISION(6, 3) void setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel);
@@ -408,6 +420,10 @@ Q_SIGNALS:
     Q_REVISION(6, 13) void sheenRoughnessMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 13) void sheenRoughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
 
+    Q_REVISION(6, 13) void anisotropyStrengthChanged(float strength);
+    Q_REVISION(6, 13) void anisotropyRotationChanged(float rotation);
+    Q_REVISION(6, 13) void anisotropyMapChanged(QQuick3DTexture *texture);
+
     Q_REVISION(6, 3) void transmissionFactorChanged(float amount);
     Q_REVISION(6, 3) void transmissionMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 3) void transmissionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
@@ -461,7 +477,8 @@ private:
         TransmissionDirty = 0x00008000,
         VolumeDirty = 0x00010000,
         VertexColorsDirty = 0x00020000,
-        SheenDirty = 0x00040000
+        SheenDirty = 0x00040000,
+        AnisotropyDirty = 0x00080000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -526,6 +543,9 @@ private:
     float m_sheenRoughness = 0.0f;
     QQuick3DTexture *m_sheenRoughnessMap = nullptr;
     TextureChannelMapping m_sheenRoughnessChannel = QQuick3DMaterial::A;
+    float m_anisotropyStrength = 0.0f;
+    float m_anisotropyRotation = 0.0f; // degrees
+    QQuick3DTexture *m_anisotropyMap = nullptr;
     float m_transmissionFactor = 0.0f;
     QQuick3DTexture *m_transmissionMap = nullptr;
     TextureChannelMapping m_transmissionChannel = QQuick3DMaterial::R;

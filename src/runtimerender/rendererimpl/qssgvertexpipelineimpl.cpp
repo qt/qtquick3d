@@ -45,6 +45,8 @@ static inline void insertProcessorArgsFragmentMain(QByteArray &snippet, const ch
             }
             if (materialAdapter->isSheenEnabled())
                 flexArgs += QByteArrayLiteral(", inout vec3 SHEEN_COLOR, inout float SHEEN_ROUGHNESS");
+            if (materialAdapter->isAnisotropyEnabled())
+                flexArgs += QByteArrayLiteral(", inout float ANISOTROPY_STRENGTH, inout float ANISOTROPY_ROTATION");
             if (materialAdapter->isFresnelScaleBiasEnabled())
                 flexArgs += QByteArrayLiteral(", inout float FRESNEL_SCALE, inout float FRESNEL_BIAS");
             if (materialAdapter->isTransmissionEnabled())

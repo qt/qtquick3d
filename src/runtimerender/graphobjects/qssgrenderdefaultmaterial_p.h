@@ -107,6 +107,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *clearcoatNormalMap = nullptr;
     QSSGRenderImage *sheenColorMap = nullptr;
     QSSGRenderImage *sheenRoughnessMap = nullptr;
+    QSSGRenderImage *anisotropyMap = nullptr;
     QSSGRenderImage *transmissionMap = nullptr;
     QSSGRenderImage *thicknessMap = nullptr;
 
@@ -146,6 +147,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float clearcoatNormalStrength = 1.0f; // 0 - 1
     QVector3D sheenColor { 0.0f, 0.0f, 0.0f }; // black disables the sheen layer
     float sheenRoughness = 0.0f; // 0 - 1
+    float anisotropyStrength = 0.0f; // 0 - 1, 0 disables anisotropy
+    float anisotropyRotation = 0.0f; // radians
     float transmissionFactor = 0.0f; // 0 - 1
     float thicknessFactor = 0.0f; // 0 - 1
     float attenuationDistance = std::numeric_limits<float>::infinity();
@@ -199,6 +202,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
     bool isClearcoatEnabled() const { return clearcoatAmount > 0.01f; }
     bool isSheenEnabled() const { return sheenColor.x() > 0.01f || sheenColor.y() > 0.01f || sheenColor.z() > 0.01f; }
+    bool isAnisotropyEnabled() const { return anisotropyStrength > 0.01f; }
     bool isTransmissionEnabled() const { return transmissionFactor > 0.01f; }
 
     [[nodiscard]] inline bool isDirty() const { return dirty; }

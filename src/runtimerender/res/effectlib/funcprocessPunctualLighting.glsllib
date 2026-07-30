@@ -37,6 +37,10 @@
 #include "sheen.glsllib"
 #endif
 
+#if QSSG_ENABLE_ANISOTROPY
+#include "anisotropy.glsllib"
+#endif
+
 #if QSSG_CUSTOM_MATERIAL_DIRECTIONAL_LIGHT_PROCESSOR || QSSG_CUSTOM_MATERIAL_POINT_LIGHT_PROCESSOR || QSSG_CUSTOM_MATERIAL_SPOT_LIGHT_PROCESSOR || QSSG_CUSTOM_MATERIAL_SPECULAR_PROCESSOR
 #include "custommaterialforwarddeclarations.glsllib"
 #endif
@@ -58,6 +62,12 @@ void qt_calculateSpecularContribution(inout vec3 global_specular_light,
                                       in float roughnessAmount,
                                       in float metalnessAmount,
                                       in vec3 viewVector,
+#if QSSG_ENABLE_ANISOTROPY
+                                      in vec3 anisotropicT,
+                                      in vec3 anisotropicB,
+                                      in float anisotropyAlphaT,
+                                      in float anisotropyAlphaB,
+#endif // QSSG_ENABLE_ANISOTROPY
 #if QSSG_CUSTOM_MATERIAL_SPECULAR_PROCESSOR
                                       in vec4 qt_customBaseColor,
                                       in float qt_customSpecularAmount,
@@ -91,6 +101,18 @@ void qt_calculateSpecularContribution(inout vec3 global_specular_light,
 # endif // QSSG_CUSTOM_MATERIAL_SHARED_VARIABLES
 #else
 # if QSSG_ENABLE_METALLIC_ROUGHNESS_WORKFLOW || QSSG_ENABLE_SPECULAR_GLOSSY_WORKFLOW || QSSG_ENABLE_SPECULAR_MODEL_SCHLICK_GGX
+#  if QSSG_ENABLE_ANISOTROPY
+    global_specular_light += lightAttenuation * shadow.illumination * specularTint * qt_specularAnisotropicGGXBSDF(worldNormal,
+                                                                                                                  anisotropicT,
+                                                                                                                  anisotropicB,
+                                                                                                                  -specularLightDirection,
+                                                                                                                  viewVector,
+                                                                                                                  lightSpecularColor,
+                                                                                                                  f0,
+                                                                                                                  f90,
+                                                                                                                  anisotropyAlphaT,
+                                                                                                                  anisotropyAlphaB).rgb;
+#  else
     global_specular_light += lightAttenuation * shadow.illumination * specularTint * qt_specularGGXBSDF(worldNormal,
                                                                                                         -specularLightDirection,
                                                                                                         viewVector,
@@ -98,6 +120,7 @@ void qt_calculateSpecularContribution(inout vec3 global_specular_light,
                                                                                                         f0,
                                                                                                         f90,
                                                                                                         roughnessAmount).rgb;
+#  endif // QSSG_ENABLE_ANISOTROPY
 # elif QSSG_ENABLE_SPECULAR_MODEL_BLINN_PHONG
     global_specular_light += lightAttenuation * shadow.illumination * specularAmount * qt_specularBlinnPhong(worldNormal,
                                                                                                              -specularLightDirection,
@@ -171,6 +194,12 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
                                 in vec3 qt_sheenColor,
                                 in float qt_sheenRoughness,
 #endif // QSSG_ENABLE_SHEEN
+#if QSSG_ENABLE_ANISOTROPY
+                                in vec3 qt_anisotropicT,
+                                in vec3 qt_anisotropicB,
+                                in float qt_anisotropyAlphaT,
+                                in float qt_anisotropyAlphaB,
+#endif // QSSG_ENABLE_ANISOTROPY
 #if QSSG_ENABLE_TRANSMISSION
                                 inout vec3 qt_global_transmission,
                                 in float qt_thicknessFactor,
@@ -252,6 +281,12 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
                                          qt_roughnessAmount,
                                          qt_metalnessAmount,
                                          qt_view_vector,
+#if QSSG_ENABLE_ANISOTROPY
+                                         qt_anisotropicT,
+                                         qt_anisotropicB,
+                                         qt_anisotropyAlphaT,
+                                         qt_anisotropyAlphaB,
+#endif // QSSG_ENABLE_ANISOTROPY
 #if QSSG_CUSTOM_MATERIAL_SPECULAR_PROCESSOR
                                          qt_customBaseColor,
                                          qt_customSpecularAmount,
@@ -422,6 +457,12 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
                                          qt_roughnessAmount,
                                          qt_metalnessAmount,
                                          qt_view_vector,
+#if QSSG_ENABLE_ANISOTROPY
+                                         qt_anisotropicT,
+                                         qt_anisotropicB,
+                                         qt_anisotropyAlphaT,
+                                         qt_anisotropyAlphaB,
+#endif // QSSG_ENABLE_ANISOTROPY
 #if QSSG_CUSTOM_MATERIAL_SPECULAR_PROCESSOR
                                          qt_customBaseColor,
                                          qt_customSpecularAmount,

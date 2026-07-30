@@ -118,6 +118,36 @@ vec4 qt_sampleGlossyPrincipled(vec3 normal, vec3 viewDir, vec3 F, float roughnes
     return vec4(qt_exposure(sampleColor, qt_lightProbeProperties.w), 1.0);
 }
 
+#if QSSG_ENABLE_ANISOTROPY
+// The bent normal aims the reflection, the shading normal drives the BRDF
+vec4 qt_sampleGlossyAnisotropic(vec3 normal, vec3 bentNormal, vec3 viewDir, vec3 F, float roughness)
+{
+    if (qt_lightProbeProperties.w < 0.005)
+        return vec4(0.0);
+
+    float levels = qt_lightProbeProperties.y - 1.0;
+
+    float lod = clamp((roughness * 5), 0.0, levels);
+    vec3 smpDir = normalize(reflect(-viewDir, bentNormal));
+#if QSSG_ENABLE_IBL_ORIENTATION
+    smpDir = qt_lightProbeOrientation * smpDir;
+#endif
+
+    vec3 specularSample = qt_textureProbe(qt_lightProbe, smpDir, lod);
+    vec2 brdf = qt_brdfApproximation(normal, viewDir, roughness);
+    if (qt_lightProbeProperties.z > -1.0) {
+        float ctr = 0.5 + 0.5 * qt_lightProbeProperties.z;
+        float vertWt = smoothstep(ctr * 0.25, ctr + 0.25, smpDir.y);
+        float wtScaled = mix(1.0, vertWt, qt_lightProbeProperties.z + 1.0);
+        specularSample *= wtScaled;
+    }
+
+    vec3 sampleColor = (specularSample * (F * brdf.x + brdf.y));
+
+    return vec4(qt_exposure(sampleColor, qt_lightProbeProperties.w), 1.0);
+}
+#endif // QSSG_ENABLE_ANISOTROPY
+
 #if QSSG_ENABLE_SHEEN
 #include "sheen.glsllib"
 

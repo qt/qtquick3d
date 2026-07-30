@@ -51,6 +51,9 @@ Window {
                    text: "Sheen"
                }
                TabButton {
+                   text: "Anisotropy"
+               }
+               TabButton {
                    text: "Refraction"
                }
                TabButton {
@@ -90,6 +93,12 @@ Window {
                 // Sheen is a PrincipledMaterial-only feature, so this pane
                 // always targets the PrincipledMaterial
                 SheenPane {
+                    targetMaterial: basicMaterial
+                    specularGlossyMode: viewport.specularGlossyMode
+                }
+
+                // Anisotropy is likewise PrincipledMaterial only
+                AnisotropyPane {
                     targetMaterial: basicMaterial
                     specularGlossyMode: viewport.specularGlossyMode
                 }

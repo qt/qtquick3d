@@ -1,0 +1,75 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#ifndef ANISOTROPY_GLSLLIB
+#define ANISOTROPY_GLSLLIB 1
+
+#include "bsdf.glsllib"
+#include "principledMaterialFresnel.glsllib" // qt_schlick
+
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
+
+// KHR_materials_anisotropy: replaces the GGX distribution and visibility terms
+
+// Fallback tangent for meshes without one (Duff et al. 2017)
+vec3 qt_orthonormalTangent(in vec3 normal)
+{
+    float s = normal.z >= 0.0 ? 1.0 : -1.0;
+    float a = -1.0 / (s + normal.z);
+    float b = normal.x * normal.y * a;
+    return vec3(1.0 + s * normal.x * normal.x * a, s * b, -s * normal.x);
+}
+
+float qt_D_GGX_anisotropic(in float NdotH, in float TdotH, in float BdotH, in float at, in float ab)
+{
+    float a2 = at * ab;
+    vec3 f = vec3(ab * TdotH, at * BdotH, a2 * NdotH);
+    float w2 = a2 / dot(f, f);
+    return a2 * w2 * w2 / M_PI;
+}
+
+// Includes the 1/(4 NdotL NdotV) term, like qt_V_GGX
+float qt_V_GGX_anisotropic(in float NdotL, in float NdotV, in float BdotV, in float TdotV,
+                           in float TdotL, in float BdotL, in float at, in float ab)
+{
+    float GGXV = NdotL * length(vec3(at * TdotV, ab * BdotV, NdotV));
+    float GGXL = NdotV * length(vec3(at * TdotL, ab * BdotL, NdotL));
+    return clamp(0.5 / (GGXV + GGXL), 0.0, 1.0);
+}
+
+vec4 qt_specularAnisotropicGGXBSDF(in vec3 normal, in vec3 tangent, in vec3 bitangent,
+                                   in vec3 L, in vec3 V, in vec3 lightSpecular,
+                                   in vec3 F0, in vec3 F90, in float at, in float ab)
+{
+    float cNdotL = max(0.0, dot(normal, L));
+    float cNdotV = max(0.0, dot(normal, V));
+    vec3 H = normalize(V + L);
+    float cLdotH = max(0.0, dot(L, H));
+    float cNdotH = max(0.001, dot(normal, H)); // arguments for the distribution must not be 0
+
+    float GGX_D = qt_D_GGX_anisotropic(cNdotH, dot(tangent, H), dot(bitangent, H), at, ab);
+    float GGX_V = qt_V_GGX_anisotropic(cNdotL, cNdotV, dot(bitangent, V), dot(tangent, V),
+                                       dot(tangent, L), dot(bitangent, L), at, ab);
+
+    float cLdotH5 = qt_schlick(cLdotH);
+    vec3 F = mix(vec3(cLdotH5), F90, F0);
+
+    return vec4(cNdotL * GGX_D * F * GGX_V * lightSpecular, 1.0);
+}
+
+// Bent normal for image based lighting, as recommended by the extension
+vec3 qt_anisotropicBentNormal(in vec3 normal, in vec3 viewDir, in vec3 bitangent,
+                              in float strength, in float roughness)
+{
+    vec3 bent = cross(bitangent, viewDir);
+    bent = normalize(cross(bent, bitangent));
+    // pow(1 - strength * (1 - roughness), 4)
+    float a = 1.0 - strength * (1.0 - roughness);
+    a = a * a;
+    a = a * a;
+    return normalize(mix(bent, normal, a));
+}
+
+#endif // ANISOTROPY_GLSLLIB

@@ -452,7 +452,7 @@ QT_BEGIN_NAMESPACE
     of the special writable variables \c BASE_COLOR, \c METALNESS, \c ROUGHNESS, \c
     SPECULAR_AMOUNT, NORMAL, CLEARCOAT_FRESNEL_POWER, CLEARCOAT_FRESNEL_SCALE,
     CLEARCOAT_FRESNEL_BIAS, CLEARCOAT_AMOUNT, CLEARCOAT_ROUGHNESS, CLEARCOAT_NORMAL,
-    SHEEN_COLOR, SHEEN_ROUGHNESS,
+    SHEEN_COLOR, SHEEN_ROUGHNESS, ANISOTROPY_STRENGTH, ANISOTROPY_ROTATION,
     FRESNEL_BIAS, FRESNEL_SCALE, FRESNEL_POWER, IOR, \c TRANSMISSION_FACTOR,
     THICKNESS_FACTOR, ATTENUATION_COLOR, ATTENUATION_DISTANCE and \c OCCLUSION_AMOUNT.
 
@@ -553,6 +553,18 @@ QT_BEGIN_NAMESPACE
     \li float \c SHEEN_ROUGHNESS Specifies the roughness of the sheen layer, where higher
     values spread the highlight further from the silhouette. A typical value, and also the
     default, is \c{0.0} as that is what a PrincipledMaterial would use.
+    \note Available since Qt 6.13.
+
+    \li float \c ANISOTROPY_STRENGTH Specifies how strongly the specular highlight is
+    stretched along the anisotropy direction. A typical value, and also the default, is
+    \c{0.0} as that is what a PrincipledMaterial would use, which leaves the highlight
+    round.
+    \note Available since Qt 6.13.
+
+    \li float \c ANISOTROPY_ROTATION Specifies the rotation of the anisotropy direction
+    within the tangent plane, in radians. Note that unlike the PrincipledMaterial property
+    of the same name this is in radians, since shader code works in radians throughout. The
+    default is \c{0.0}.
     \note Available since Qt 6.13.
 
     \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value,
@@ -1724,6 +1736,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Clearcoat, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesSheen))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Sheen, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesAnisotropy))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Anisotropy, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesFresnelScaleBias))

@@ -749,6 +749,67 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty real PrincipledMaterial::anisotropyStrength
+    \since 6.13
+
+    This property defines how strongly the specular highlight is stretched
+    along one direction of the surface, which is what gives brushed metal,
+    hair and vinyl their characteristic streaked reflections.
+
+    A value of \c 0.0, the default, means the highlight is round and the
+    material behaves exactly as before. Increasing the value stretches the
+    highlight perpendicular to the anisotropy direction, up to \c 1.0.
+
+    For anisotropy to be oriented meaningfully the mesh should provide tangent
+    data, or the material should use a \l normalMap, since both establish a
+    tangent frame. If neither is available a stable tangent frame is derived
+    from the surface normal instead, in which case the highlight still stretches
+    but its direction across the surface is arbitrary.
+
+    \sa anisotropyRotation, anisotropyMap
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::anisotropyRotation
+    \since 6.13
+
+    This property rotates the anisotropy direction within the tangent plane of
+    the surface, in degrees. The default value is \c 0, which aligns the
+    direction with the tangent of the mesh.
+
+    \note The glTF \c KHR_materials_anisotropy extension expresses this angle
+    in radians. This property is in degrees, matching the other angles in the
+    Qt Quick 3D API, and the asset importer converts on import.
+
+    \sa anisotropyStrength, anisotropyMap
+*/
+
+/*!
+    \qmlproperty Texture PrincipledMaterial::anisotropyMap
+    \since 6.13
+
+    This property defines a texture used to vary the anisotropy across the
+    surface. Unlike the other maps this one has a fixed channel layout, so
+    there is no channel property to go with it:
+
+    \list
+    \li The red and green channels hold the anisotropy direction in tangent
+        space, encoded so that \c 0.0 to \c 1.0 maps to \c -1.0 to \c 1.0.
+        The direction is then rotated by \l anisotropyRotation.
+    \li The blue channel is multiplied with \l anisotropyStrength.
+    \endlist
+
+    Since the blue channel scales the strength, this map has no effect while
+    \l anisotropyStrength is \c 0.0.
+
+    \note Texture maps are optional. Materials that use a large number of
+    maps at the same time can exceed the number of texture samplers
+    available to a fragment shader on some graphics APIs.
+
+    \sa anisotropyStrength, anisotropyRotation
+*/
+
+/*!
     \qmlproperty real PrincipledMaterial::transmissionFactor
 
     This property defines the percentage of light that is transmitted through
@@ -1857,6 +1918,16 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->sheenRoughnessChannel = channelMapping(m_sheenRoughnessChannel);
     }
 
+    if (m_dirtyAttributes & AnisotropyDirty) {
+        material->anisotropyStrength = m_anisotropyStrength;
+        // The shader works in radians; degrees is only the QML facing unit
+        material->anisotropyRotation = qDegreesToRadians(m_anisotropyRotation);
+        if (!m_anisotropyMap)
+            material->anisotropyMap = nullptr;
+        else
+            material->anisotropyMap = m_anisotropyMap->getRenderImage();
+    }
+
     if (m_dirtyAttributes & TransmissionDirty) {
         material->transmissionFactor = m_transmissionFactor;
         if (!m_transmissionMap)
@@ -1917,6 +1988,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatNormalMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_sheenColorMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_sheenRoughnessMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_anisotropyMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_transmissionMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_thicknessMap, *sceneManager);
     } else {
@@ -1935,6 +2007,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatNormalMap);
         QQuick3DObjectPrivate::derefSceneManager(m_sheenColorMap);
         QQuick3DObjectPrivate::derefSceneManager(m_sheenRoughnessMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_anisotropyMap);
         QQuick3DObjectPrivate::derefSceneManager(m_transmissionMap);
         QQuick3DObjectPrivate::derefSceneManager(m_thicknessMap);
     }
@@ -2149,6 +2222,55 @@ void QQuick3DPrincipledMaterial::setSheenRoughnessChannel(QQuick3DMaterial::Text
     m_sheenRoughnessChannel = newSheenRoughnessChannel;
     emit sheenRoughnessChannelChanged(m_sheenRoughnessChannel);
     markDirty(SheenDirty);
+}
+
+float QQuick3DPrincipledMaterial::anisotropyStrength() const
+{
+    return m_anisotropyStrength;
+}
+
+void QQuick3DPrincipledMaterial::setAnisotropyStrength(float newAnisotropyStrength)
+{
+    newAnisotropyStrength = ensureNormalized(newAnisotropyStrength);
+    if (qFuzzyCompare(m_anisotropyStrength, newAnisotropyStrength))
+        return;
+
+    m_anisotropyStrength = newAnisotropyStrength;
+    emit anisotropyStrengthChanged(m_anisotropyStrength);
+    markDirty(AnisotropyDirty);
+}
+
+float QQuick3DPrincipledMaterial::anisotropyRotation() const
+{
+    return m_anisotropyRotation;
+}
+
+void QQuick3DPrincipledMaterial::setAnisotropyRotation(float newAnisotropyRotation)
+{
+    if (qFuzzyCompare(m_anisotropyRotation, newAnisotropyRotation))
+        return;
+
+    // Not clamped: the rotation is periodic, so any angle is meaningful
+    m_anisotropyRotation = newAnisotropyRotation;
+    emit anisotropyRotationChanged(m_anisotropyRotation);
+    markDirty(AnisotropyDirty);
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::anisotropyMap() const
+{
+    return m_anisotropyMap;
+}
+
+void QQuick3DPrincipledMaterial::setAnisotropyMap(QQuick3DTexture *newAnisotropyMap)
+{
+    if (m_anisotropyMap == newAnisotropyMap)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DPrincipledMaterial::setAnisotropyMap, newAnisotropyMap, m_anisotropyMap);
+
+    m_anisotropyMap = newAnisotropyMap;
+    emit anisotropyMapChanged(m_anisotropyMap);
+    markDirty(AnisotropyDirty);
 }
 
 float QQuick3DPrincipledMaterial::transmissionFactor() const

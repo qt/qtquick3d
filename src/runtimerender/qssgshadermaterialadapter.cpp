@@ -134,6 +134,11 @@ bool QSSGShaderDefaultMaterialAdapter::isSheenEnabled()
     return m_material.isSheenEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isAnisotropyEnabled()
+{
+    return m_material.isAnisotropyEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::isTransmissionEnabled()
 {
     return m_material.isTransmissionEnabled();
@@ -339,6 +344,16 @@ float QSSGShaderDefaultMaterialAdapter::sheenRoughness()
     return m_material.sheenRoughness;
 }
 
+float QSSGShaderDefaultMaterialAdapter::anisotropyStrength()
+{
+    return m_material.anisotropyStrength;
+}
+
+float QSSGShaderDefaultMaterialAdapter::anisotropyRotation()
+{
+    return m_material.anisotropyRotation;
+}
+
 float QSSGShaderDefaultMaterialAdapter::transmissionFactor()
 {
     return m_material.transmissionFactor;
@@ -426,6 +441,11 @@ bool QSSGShaderCustomMaterialAdapter::isClearcoatEnabled()
 bool QSSGShaderCustomMaterialAdapter::isSheenEnabled()
 {
     return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Sheen);
+}
+
+bool QSSGShaderCustomMaterialAdapter::isAnisotropyEnabled()
+{
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Anisotropy);
 }
 
 bool QSSGShaderCustomMaterialAdapter::isTransmissionEnabled()
@@ -637,6 +657,17 @@ QVector3D QSSGShaderCustomMaterialAdapter::sheenColor()
 }
 
 float QSSGShaderCustomMaterialAdapter::sheenRoughness()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::anisotropyStrength()
+{
+    // Custom materials provide the value through the ANISOTROPY_STRENGTH keyword
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::anisotropyRotation()
 {
     return 0.0f;
 }
@@ -1016,6 +1047,9 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
                 else if (trimmedId == QByteArrayLiteral("SHEEN_COLOR")
                          || trimmedId == QByteArrayLiteral("SHEEN_ROUGHNESS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesSheen;
+                else if (trimmedId == QByteArrayLiteral("ANISOTROPY_STRENGTH")
+                         || trimmedId == QByteArrayLiteral("ANISOTROPY_ROTATION"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesAnisotropy;
                 else if (trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_SCALE") ||
                             trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_BIAS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias;

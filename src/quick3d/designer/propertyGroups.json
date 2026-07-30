@@ -23,6 +23,7 @@
         "Height":         ["heightAmount", "heightMap", "heightChannel", "minHeightMapSamples", "maxHeightMapSamples"],
         "Clearcoat":      ["clearcoatAmount", "clearcoatMap", "clearcoatChannel", "clearcoatRoughnessAmount", "clearcoatRoughnessMap", "clearcoatRoughnessChannel", "clearcoatNormalMap", "clearcoatNormalStrength", "clearcoatFresnelPower", "clearcoatFresnelScaleBiasEnabled", "clearcoatFresnelScale", "clearcoatFresnelBias"],
         "Sheen":          ["sheenColor", "sheenColorMap", "sheenRoughness", "sheenRoughnessMap", "sheenRoughnessChannel"],
+        "Anisotropy":     ["anisotropyStrength", "anisotropyRotation", "anisotropyMap"],
         "Refraction":     ["transmissionFactor", "transmissionMap", "transmissionChannel", "indexOfRefraction", "thicknessFactor", "thicknessMap", "thicknessChannel", "attenuationColor", "attenuationDistance"],
         "Fresnel":        ["fresnelPower", "fresnelScaleBiasEnabled", "fresnelScale", "fresnelBias"],
         "Vertex Color":   ["vertexColorsEnabled", "vertexColorsMaskEnabled", "vertexColorRedMask", "vertexColorGreenMask", "vertexColorBlueMask", "vertexColorAlphaMask"],

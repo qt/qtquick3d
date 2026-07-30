@@ -36,6 +36,7 @@ qt_add_qml_module(principledmaterial
         MarkdownLabel.qml
         ClearcoatPane.qml
         SheenPane.qml
+        AnisotropyPane.qml
         RefractionPane.qml
         SpecialPane.qml
         VertexColorPane.qml

@@ -83,6 +83,24 @@ vec4 qt_sampleGlossyReflectionPrincipled(samplerCube reflectionProbe, vec3 norma
     return vec4(specularSample * (F * brdf.x + brdf.y), 1.0);
 }
 
+#if QSSG_ENABLE_ANISOTROPY
+// Reflection probe counterpart of qt_sampleGlossyAnisotropic()
+vec4 qt_sampleGlossyAnisotropicReflectionProbe(samplerCube reflectionProbe, vec3 normal, vec3 bentNormal,
+                                               vec3 viewDir, vec3 F, float roughness)
+{
+    float levels = 4;
+
+    float lod = clamp((roughness * 5), 0.0, levels);
+    vec3 smpDir = normalize(reflect(-viewDir, bentNormal));
+
+    smpDir = qt_reflectionParallaxCorrection(smpDir);
+    vec3 specularSample = qt_textureReflectionProbe(reflectionProbe, smpDir, lod);
+    vec2 brdf = qt_brdfApproximation(normal, viewDir, roughness);
+
+    return vec4(specularSample * (F * brdf.x + brdf.y), 1.0);
+}
+#endif // QSSG_ENABLE_ANISOTROPY
+
 #if QSSG_ENABLE_SHEEN
 #include "sheen.glsllib"
 

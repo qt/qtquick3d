@@ -156,6 +156,7 @@ set(res_resource_files
     "res/effectlib/funcspecularGGXBSDF.glsllib"
     "res/effectlib/principledMaterialFresnel.glsllib"
     "res/effectlib/sampleProbe.glsllib"
+    "res/effectlib/anisotropy.glsllib"
     "res/effectlib/sheen.glsllib"
     "res/effectlib/sampleReflectionProbe.glsllib"
     "res/effectlib/shadowMapping.glsllib"

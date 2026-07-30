@@ -59,7 +59,8 @@ struct QSSGCustomShaderMetaData
         UsesViewMatrix = 1 << 19,
         UsesNormalTexture = 1 << 20,
         UsesMotionVectorTexture = 1 << 21,
-        UsesSheen = 1 << 22
+        UsesSheen = 1 << 22,
+        UsesAnisotropy = 1 << 23
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

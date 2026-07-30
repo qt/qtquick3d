@@ -999,6 +999,68 @@ Column {
     }
 
     Section {
+        caption: qsTr("Anisotropy")
+        width: parent.width
+
+        SectionLayout {
+            PropertyLabel {
+                text: qsTr("Strength")
+                tooltip: qsTr("Sets how strongly the specular highlight is stretched along the anisotropy direction. Zero, the default, leaves the highlight round.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 1
+                    decimals: 2
+                    stepSize: 0.1
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.anisotropyStrength
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Rotation")
+                tooltip: qsTr("Sets the rotation of the anisotropy direction within the tangent plane of the surface, in degrees.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: -360
+                    maximumValue: 360
+                    decimals: 1
+                    stepSize: 5
+                    backendValue: backendValues.anisotropyRotation
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Map")
+                tooltip: qsTr("Sets a texture holding the anisotropy direction in the red and green channels and a strength multiplier in the blue channel.")
+            }
+
+            SecondColumnLayout {
+                ItemFilterComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.anisotropyMap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+        }
+    }
+
+    Section {
         caption: qsTr("Refraction")
         width: parent.width
 

@@ -668,6 +668,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         NormalMap,
         ClearcoatNormalMap,
         SheenColorMap,
+        AnisotropyMap,
         // single channel images
         OpacityMap,
         RoughnessMap,
@@ -749,6 +750,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_blendParticles;
     QSSGShaderKeyBoolean m_clearcoatEnabled;
     QSSGShaderKeyBoolean m_sheenEnabled;
+    QSSGShaderKeyBoolean m_anisotropyEnabled;
     QSSGShaderKeyBoolean m_transmissionEnabled;
     QSSGShaderKeyBoolean m_specularAAEnabled;
     QSSGShaderKeyBoolean m_lightmapEnabled;
@@ -805,6 +807,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_blendParticles("blendParticles")
         , m_clearcoatEnabled("clearcoatEnabled")
         , m_sheenEnabled("sheenEnabled")
+        , m_anisotropyEnabled("anisotropyEnabled")
         , m_transmissionEnabled("transmissionEnabled")
         , m_specularAAEnabled("specularAAEnabled")
         , m_lightmapEnabled("lightmapEnabled")
@@ -824,6 +827,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[NormalMap].name = "normalMap";
         m_imageMaps[ClearcoatNormalMap].name = "clearcoatNormalMap";
         m_imageMaps[SheenColorMap].name = "sheenColorMap";
+        m_imageMaps[AnisotropyMap].name = "anisotropyMap";
         m_imageMaps[OpacityMap].name = "opacityMap";
         m_imageMaps[RoughnessMap].name = "roughnessMap";
         m_imageMaps[MetalnessMap].name = "metalnessMap";
@@ -909,6 +913,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_blendParticles);
         inVisitor.visit(m_clearcoatEnabled);
         inVisitor.visit(m_sheenEnabled);
+        inVisitor.visit(m_anisotropyEnabled);
         inVisitor.visit(m_transmissionEnabled);
         inVisitor.visit(m_specularAAEnabled);
         inVisitor.visit(m_lightmapEnabled);

@@ -6,6 +6,7 @@
         <file>BasicsPane.qml</file>
         <file>ClearcoatPane.qml</file>
         <file>SheenPane.qml</file>
+        <file>AnisotropyPane.qml</file>
         <file>DemoPane.qml</file>
         <file>DetailsPane.qml</file>
         <file>MarkdownLabel.qml</file>

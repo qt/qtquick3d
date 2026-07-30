@@ -3,6 +3,7 @@
 
 #include <QTest>
 #include <QSignalSpy>
+#include <QtCore/qmath.h>
 
 #include <QtQuick3D/private/qquick3dscenemanager_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
@@ -355,6 +356,26 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(sheenRoughnessSpy.size(), 0);
     material.setSheenRoughness(sheenRoughness);
 
+    QVERIFY(!node->isAnisotropyEnabled());
+    float anisotropyStrength = 0.7f;
+    material.setAnisotropyStrength(anisotropyStrength);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(anisotropyStrength, material.anisotropyStrength());
+    QCOMPARE(anisotropyStrength, node->anisotropyStrength);
+    QVERIFY(node->isAnisotropyEnabled());
+    anisotropyStrength = 0.0f;
+    material.setAnisotropyStrength(anisotropyStrength);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(!node->isAnisotropyEnabled());
+
+    // The property is in degrees to match the rest of the Qt Quick 3D API,
+    // while the render graph works in radians
+    const float anisotropyRotation = 90.0f;
+    material.setAnisotropyRotation(anisotropyRotation);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(anisotropyRotation, material.anisotropyRotation());
+    QCOMPARE(qDegreesToRadians(anisotropyRotation), node->anisotropyRotation);
+
     QVERIFY(material.metalness() == 0.0f);
     QVERIFY(node->metalnessAmount == 0.0f);
     QVERIFY(!node->isTransmissionEnabled());
@@ -536,6 +557,14 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     QCOMPARE(sheenChannel, material.sheenRoughnessChannel());
     QCOMPARE(qToUnderlying(sheenChannel), // QQuick3DMaterial::TextureChannelMapping
              qToUnderlying(node->sheenRoughnessChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
+
+    // AnisotropyMap has a fixed RG=direction, B=strength layout, so unlike the
+    // other maps it has no channel property
+    QVERIFY(!material.anisotropyMap());
+    material.setAnisotropyMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.anisotropyMap());
+    QCOMPARE(texture1.getRenderImage(), node->anisotropyMap);
 
     // ClearcoatNormalMap
     QVERIFY(!material.clearcoatNormalMap());

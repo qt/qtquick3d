@@ -67,6 +67,7 @@ DefineImageStrings(Transmission);
 DefineImageStrings(Thickness);
 DefineImageStrings(SheenColor);
 DefineImageStrings(SheenRoughness);
+DefineImageStrings(Anisotropy);
 
 struct ImageStringSet
 {
@@ -102,7 +103,8 @@ constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(Transmission),
     DefineImageStringTableEntry(Thickness),
     DefineImageStringTableEntry(SheenColor),
-    DefineImageStringTableEntry(SheenRoughness)
+    DefineImageStringTableEntry(SheenRoughness),
+    DefineImageStringTableEntry(Anisotropy)
 };
 
 const int TEXCOORD_VAR_LEN = 16;
@@ -265,6 +267,8 @@ static constexpr QByteArrayView qssg_shader_arg_names[] {
     { "CLEARCOAT_ROUGHNESS" },
     { "SHEEN_COLOR" },
     { "SHEEN_ROUGHNESS" },
+    { "ANISOTROPY_STRENGTH" },
+    { "ANISOTROPY_ROTATION" },
     { "IOR" },
     { "TRANSMISSION_FACTOR" },
     { "THICKNESS_FACTOR" },
@@ -465,6 +469,8 @@ struct SamplerState {
             return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::SheenColorMap;
         case QSSGRenderableImage::Type::SheenRoughness:
             return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::SheenRoughnessMap;
+        case QSSGRenderableImage::Type::Anisotropy:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::AnisotropyMap;
         case QSSGRenderableImage::Type::Unknown:
             break;
         }
@@ -598,6 +604,7 @@ struct PassRequirmentsState {
     bool hasParallaxMapping = false;
     bool hasClearcoat = false;
     bool hasSheen = false;
+    bool hasAnisotropy = false;
     bool hasTransmission = false;
     bool hasFresnelScaleBias = false;
     bool hasClearcoatFresnelScaleBias = false;
@@ -658,6 +665,8 @@ struct PassRequirmentsState {
         hasParallaxMapping = samplerState.hasImage(QSSGRenderableImage::Type::Height);
         hasClearcoat = keyProps.m_clearcoatEnabled.getValue(inKey);
         hasSheen = keyProps.m_sheenEnabled.getValue(inKey);
+        // Anisotropy only modifies the specular lobe
+        hasAnisotropy = keyProps.m_anisotropyEnabled.getValue(inKey) && hasSpecularLight;
         hasTransmission = keyProps.m_transmissionEnabled.getValue(inKey);
         hasFresnelScaleBias = keyProps.m_fresnelScaleBiasEnabled.getValue(inKey);
         hasClearcoatFresnelScaleBias = keyProps.m_clearcoatFresnelScaleBiasEnabled.getValue(inKey);
@@ -822,6 +831,13 @@ struct PassRequirmentsState {
         // to transform the sampled normal to world space. Ensure tangent and binormal
         // are generated whenever a normal map is present and the world normal is needed.
         if (needsWorldNormal && hasBumpNormalMap) {
+            needsWorldTangent = true;
+            needsWorldBinormal = true;
+        }
+
+        // Anisotropy is oriented by the tangent frame
+        if (hasAnisotropy) {
+            needsWorldNormal = true;
             needsWorldTangent = true;
             needsWorldBinormal = true;
         }
@@ -997,6 +1013,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addUniform("qt_material_sheen_color", "vec3");
             fragmentShader.addUniform("qt_material_sheen_roughness", "float");
         }
+        if (passRequirmentState.hasAnisotropy) {
+            // (strength, cos(rotation), sin(rotation))
+            fragmentShader.addUniform("qt_material_anisotropy", "vec3");
+        }
     }
 
     if (passRequirmentState.hasVertexColors) {
@@ -1042,6 +1062,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     // For the corner case that there is only a height map (parallax mapping),
                     // use its UV coordinates to derive tangents analytically.
                     id = QSSGRenderableImage::Type::Height;
+                } else if (samplerState.hasImage(QSSGRenderableImage::Type::Anisotropy)) {
+                    id = QSSGRenderableImage::Type::Anisotropy;
                 }
 
                 if (id > QSSGRenderableImage::Type::Unknown) {
@@ -1051,6 +1073,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader << "    qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
                                    << "    qt_tangent = qt_tangent - dot(qt_world_normal, qt_tangent) * qt_world_normal;\n"
                                    << "    qt_tangent = normalize(qt_tangent);\n";
+                } else if (passRequirmentState.hasAnisotropy) {
+                    // Avoids NaN on meshes without tangents or a normal map
+                    fragmentShader.addInclude("anisotropy.glsllib");
+                    fragmentShader << "    qt_tangent = qt_orthonormalTangent(qt_world_normal);\n";
                 }
             }
             if (!genBinormal)
@@ -1099,6 +1125,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    vec3 qt_customSheenColor = vec3(0.0);\n";
             fragmentShader << "    float qt_customSheenRoughness = 0.0;\n";
         }
+        if (passRequirmentState.hasAnisotropy) {
+            fragmentShader << "    float qt_customAnisotropyStrength = 0.0;\n";
+            fragmentShader << "    float qt_customAnisotropyRotation = 0.0;\n";
+        }
         if (passRequirmentState.hasFresnelScaleBias) {
             fragmentShader << "    float qt_customFresnelScale = 1.0;\n";
             fragmentShader << "    float qt_customFresnelBias = 0.0;\n";
@@ -1144,6 +1174,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (passRequirmentState.hasSheen) {
                 fragmentShader << ",\n                  qt_customSheenColor,\n"
                                << "                  qt_customSheenRoughness";
+            }
+            if (passRequirmentState.hasAnisotropy) {
+                fragmentShader << ",\n                  qt_customAnisotropyStrength,\n"
+                               << "                  qt_customAnisotropyRotation";
             }
             if (passRequirmentState.hasFresnelScaleBias) {
                 fragmentShader << ",\n                  qt_customFresnelScale,\n"
@@ -1615,6 +1649,49 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader.append("    qt_roughnessAmount = max(flGeometricRoughnessFactor, qt_roughnessAmount);\n");
             }
 
+            // Must follow any adjustment of qt_roughnessAmount
+            if (passRequirmentState.hasAnisotropy) {
+                fragmentShader.addDefinition("QSSG_ENABLE_ANISOTROPY", "1");
+                fragmentShader.addInclude("anisotropy.glsllib");
+                addLocalVariable(fragmentShader, "qt_anisotropyStrength", "float");
+                addLocalVariable(fragmentShader, "qt_anisotropicT", "vec3");
+                addLocalVariable(fragmentShader, "qt_anisotropicB", "vec3");
+                addLocalVariable(fragmentShader, "qt_anisotropyAlphaT", "float");
+                addLocalVariable(fragmentShader, "qt_anisotropyAlphaB", "float");
+
+                fragmentShader << "    vec2 qt_anisotropyDirection = vec2(1.0, 0.0);\n";
+                if (hasCustomFrag) {
+                    fragmentShader << "    qt_anisotropyStrength = qt_customAnisotropyStrength;\n";
+                    fragmentShader << "    float qt_anisotropyCos = cos(qt_customAnisotropyRotation);\n";
+                    fragmentShader << "    float qt_anisotropySin = sin(qt_customAnisotropyRotation);\n";
+                } else {
+                    fragmentShader << "    qt_anisotropyStrength = qt_material_anisotropy.x;\n";
+                    fragmentShader << "    float qt_anisotropyCos = qt_material_anisotropy.y;\n";
+                    fragmentShader << "    float qt_anisotropySin = qt_material_anisotropy.z;\n";
+                }
+
+                if (samplerState.hasImage(QSSGRenderableImage::Type::Anisotropy)) {
+                    samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Anisotropy, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                    fragmentShader << "    vec3 qt_anisotropySample = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Anisotropy) << ", "
+                                   << samplerState.fragCoordsName(QSSGRenderableImage::Type::Anisotropy) << ").rgb;\n";
+                    fragmentShader << "    qt_anisotropyDirection = qt_anisotropySample.rg * 2.0 - vec2(1.0);\n";
+                    fragmentShader << "    qt_anisotropyStrength *= qt_anisotropySample.b;\n";
+                }
+
+                fragmentShader << "    qt_anisotropyDirection = vec2(qt_anisotropyCos * qt_anisotropyDirection.x - qt_anisotropySin * qt_anisotropyDirection.y,\n"
+                               << "                                 qt_anisotropySin * qt_anisotropyDirection.x + qt_anisotropyCos * qt_anisotropyDirection.y);\n";
+                fragmentShader << "    qt_anisotropicT = qt_anisotropyDirection.x * qt_tangent + qt_anisotropyDirection.y * qt_binormal;\n";
+                // Normal mapping may have moved the shading normal off the tangent frame
+                fragmentShader << "    qt_anisotropicT -= dot(qt_world_normal, qt_anisotropicT) * qt_world_normal;\n";
+                // A zero direction, e.g. from a map texel of exactly 0.5, would give NaN
+                fragmentShader << "    qt_anisotropicT = dot(qt_anisotropicT, qt_anisotropicT) > 1e-8 ? normalize(qt_anisotropicT)\n"
+                               << "                                                                   : qt_orthonormalTangent(qt_world_normal);\n";
+                fragmentShader << "    qt_anisotropicB = normalize(cross(qt_world_normal, qt_anisotropicT));\n";
+
+                fragmentShader << "    qt_anisotropyAlphaB = clamp(qt_roughnessAmount * qt_roughnessAmount, 0.001, 1.0);\n";
+                fragmentShader << "    qt_anisotropyAlphaT = mix(qt_anisotropyAlphaB, 1.0, qt_anisotropyStrength * qt_anisotropyStrength);\n";
+            }
+
             if (hasCustomFrag)
                 fragmentShader << "    float qt_fresnelPower = qt_customFresnelPower;\n";
             else
@@ -1680,6 +1757,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                            << "                               qt_sheenColor,\n"
                            << "                               qt_sheenRoughness,\n"
                            << "#endif // QSSG_ENABLE_SHEEN\n"
+                           << "#if QSSG_ENABLE_ANISOTROPY\n"
+                           << "                               qt_anisotropicT,\n"
+                           << "                               qt_anisotropicB,\n"
+                           << "                               qt_anisotropyAlphaT,\n"
+                           << "                               qt_anisotropyAlphaB,\n"
+                           << "#endif // QSSG_ENABLE_ANISOTROPY\n"
                            << "#if QSSG_ENABLE_TRANSMISSION\n"
                            << "                               qt_global_transmission,\n"
                            << "                               qt_thicknessFactor,\n"
@@ -1709,8 +1792,17 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
             // Specular
             if (passRequirmentState.hasSpecularLight) {
-                if (passRequirmentState.isPbrMaterial)
-                    fragmentShader << "    global_specular_light += qt_specularTint * qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                if (passRequirmentState.hasAnisotropy) {
+                    fragmentShader << "    vec3 qt_anisotropyIblNormal = qt_anisotropicBentNormal(qt_world_normal, "
+                                   << "qt_view_vector, qt_anisotropicB, qt_anisotropyStrength, qt_roughnessAmount);\n";
+                }
+                if (passRequirmentState.isPbrMaterial && passRequirmentState.hasAnisotropy) {
+                    fragmentShader << "    global_specular_light += qt_specularTint * qt_sampleGlossyAnisotropicReflectionProbe("
+                                   << "qt_reflectionMap, qt_world_normal, qt_anisotropyIblNormal, qt_view_vector, "
+                                   << "qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                } else if (passRequirmentState.isPbrMaterial)
+                    fragmentShader << "    global_specular_light += qt_specularTint * qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, "
+                                   << "qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
                 else
                     fragmentShader << "    global_specular_light += qt_specularAmount * qt_specularTint * qt_sampleGlossyReflection(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
             }
@@ -1750,8 +1842,17 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                 // Specular
                 if (passRequirmentState.hasSpecularLight) {
-                    if (passRequirmentState.isPbrMaterial)
-                        fragmentShader << "    vec3 qt_iblSpecular = qt_specularTint * qt_sampleGlossyPrincipled(qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                    if (passRequirmentState.hasAnisotropy) {
+                        fragmentShader << "    vec3 qt_anisotropyIblNormal = qt_anisotropicBentNormal(qt_world_normal, "
+                                       << "qt_view_vector, qt_anisotropicB, qt_anisotropyStrength, qt_roughnessAmount);\n";
+                    }
+                    if (passRequirmentState.isPbrMaterial && passRequirmentState.hasAnisotropy) {
+                        fragmentShader << "    vec3 qt_iblSpecular = qt_specularTint * qt_sampleGlossyAnisotropic("
+                                       << "qt_world_normal, qt_anisotropyIblNormal, qt_view_vector, "
+                                       << "qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                    } else if (passRequirmentState.isPbrMaterial)
+                        fragmentShader << "    vec3 qt_iblSpecular = qt_specularTint * qt_sampleGlossyPrincipled("
+                                       << "qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
                     else
                         fragmentShader << "    vec3 qt_iblSpecular = qt_specularAmount * qt_specularTint * qt_sampleGlossy(qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
                 }
@@ -2621,6 +2722,12 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             shaders.setUniform(ubufData, "qt_material_sheen_color", &sheenColor, 3 * sizeof(float), &cui.sheenColorIdx);
             const float sheenRoughness = materialAdapter->sheenRoughness();
             shaders.setUniform(ubufData, "qt_material_sheen_roughness", &sheenRoughness, sizeof(float), &cui.sheenRoughnessIdx);
+        }
+
+        if (materialAdapter->isAnisotropyEnabled()) {
+            const float rotation = materialAdapter->anisotropyRotation();
+            const QVector3D anisotropy(materialAdapter->anisotropyStrength(), std::cos(rotation), std::sin(rotation));
+            shaders.setUniform(ubufData, "qt_material_anisotropy", &anisotropy, 3 * sizeof(float), &cui.anisotropyIdx);
         }
 
         const float material_clearcoat_fresnel_power = materialAdapter->clearcoatFresnelPower();
