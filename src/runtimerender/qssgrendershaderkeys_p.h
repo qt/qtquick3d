@@ -813,38 +813,38 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_orderIndependentTransparency("orderIndependentTransparency")
         , m_shadowSoftness("shadowSoftness")
     {
-        m_imageMaps[0].name = "diffuseMap";
-        m_imageMaps[1].name = "emissiveMap";
-        m_imageMaps[2].name = "specularMap";
-        m_imageMaps[3].name = "baseColorMap";
-        m_imageMaps[4].name = "bumpMap";
-        m_imageMaps[5].name = "specularAmountMap";
-        m_imageMaps[6].name = "normalMap";
-        m_imageMaps[7].name = "clearcoatNormalMap";
-        m_imageMaps[8].name = "opacityMap";
-        m_imageMaps[9].name = "roughnessMap";
-        m_imageMaps[10].name = "metalnessMap";
-        m_imageMaps[11].name = "occlusionMap";
-        m_imageMaps[12].name = "translucencyMap";
-        m_imageMaps[13].name = "heightMap";
-        m_imageMaps[14].name = "clearcoatMap";
-        m_imageMaps[15].name = "clearcoatRoughnessMap";
-        m_imageMaps[16].name = "transmissionMap";
-        m_imageMaps[17].name = "thicknessMap";
+        m_imageMaps[DiffuseMap].name = "diffuseMap";
+        m_imageMaps[BumpMap].name = "bumpMap";
+        m_imageMaps[SpecularMap].name = "specularMap";
+        m_imageMaps[NormalMap].name = "normalMap";
+        m_imageMaps[ClearcoatNormalMap].name = "clearcoatNormalMap";
+        m_imageMaps[OpacityMap].name = "opacityMap";
+        m_imageMaps[RoughnessMap].name = "roughnessMap";
+        m_imageMaps[MetalnessMap].name = "metalnessMap";
+        m_imageMaps[OcclusionMap].name = "occlusionMap";
+        m_imageMaps[TranslucencyMap].name = "translucencyMap";
+        m_imageMaps[HeightMap].name = "heightMap";
+        m_imageMaps[ClearcoatMap].name = "clearcoatMap";
+        m_imageMaps[ClearcoatRoughnessMap].name = "clearcoatRoughnessMap";
+        m_imageMaps[TransmissionMap].name = "transmissionMap";
+        m_imageMaps[ThicknessMap].name = "thicknessMap";
+        m_imageMaps[BaseColorMap].name = "baseColorMap";
+        m_imageMaps[SpecularAmountMap].name = "specularAmountMap";
+        m_imageMaps[EmissiveMap].name = "emissiveMap";
 
-        m_textureChannels[0].name = "opacityMap_channel";
-        m_textureChannels[1].name = "roughnessMap_channel";
-        m_textureChannels[2].name = "metalnessMap_channel";
-        m_textureChannels[3].name = "occlusionMap_channel";
-        m_textureChannels[4].name = "translucencyMap_channel";
-        m_textureChannels[5].name = "heightMap_channel";
-        m_textureChannels[6].name = "clearcoatMap_channel";
-        m_textureChannels[7].name = "clearcoatRoughnessMap_channel";
-        m_textureChannels[8].name = "transmissionMap_channel";
-        m_textureChannels[9].name = "thicknessMap_channel";
-        m_textureChannels[10].name = "baseColorMap_channel";
-        m_textureChannels[11].name = "specularAmountMap_channel";
-        m_textureChannels[12].name = "emissiveMap_channel";
+        m_textureChannels[OpacityChannel].name = "opacityMap_channel";
+        m_textureChannels[RoughnessChannel].name = "roughnessMap_channel";
+        m_textureChannels[MetalnessChannel].name = "metalnessMap_channel";
+        m_textureChannels[OcclusionChannel].name = "occlusionMap_channel";
+        m_textureChannels[TranslucencyChannel].name = "translucencyMap_channel";
+        m_textureChannels[HeightChannel].name = "heightMap_channel";
+        m_textureChannels[ClearcoatChannel].name = "clearcoatMap_channel";
+        m_textureChannels[ClearcoatRoughnessChannel].name = "clearcoatRoughnessMap_channel";
+        m_textureChannels[TransmissionChannel].name = "transmissionMap_channel";
+        m_textureChannels[ThicknessChannel].name = "thicknessMap_channel";
+        m_textureChannels[BaseColorChannel].name = "baseColorMap_channel";
+        m_textureChannels[SpecularAmountChannel].name = "specularAmountMap_channel";
+        m_textureChannels[EmissiveChannel].name = "emissiveMap_channel";
 
         init();
     }
