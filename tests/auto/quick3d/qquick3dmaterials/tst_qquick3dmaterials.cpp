@@ -409,6 +409,16 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
 
     QVERIFY(material.metalness() == 0.0f);
     QVERIFY(node->metalnessAmount == 0.0f);
+    // Dispersion only means something when there is transmission to refract,
+    // so the predicate has to account for both
+    QVERIFY(!node->isDispersionEnabled());
+    const float dispersion = 0.4f;
+    material.setDispersion(dispersion);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(dispersion, material.dispersion());
+    QCOMPARE(dispersion, node->dispersion);
+    QVERIFY(!node->isDispersionEnabled()); // no transmission yet
+
     QVERIFY(!node->isTransmissionEnabled());
     const float transmissionFactor = 0.5f;
     material.setTransmissionFactor(transmissionFactor);
@@ -416,6 +426,7 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(transmissionFactor, material.transmissionFactor());
     QCOMPARE(transmissionFactor, node->transmissionFactor);
     QVERIFY(node->isTransmissionEnabled());
+    QVERIFY(node->isDispersionEnabled()); // now both are set
     material.setTransmissionFactor(0.0f);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QVERIFY(!node->isTransmissionEnabled());

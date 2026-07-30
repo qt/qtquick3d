@@ -1288,6 +1288,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
         defaultMaterialShaderKeyProperties.m_sheenEnabled.setValue(theGeneratedKey, theMaterial->isSheenEnabled());
         defaultMaterialShaderKeyProperties.m_anisotropyEnabled.setValue(theGeneratedKey, theMaterial->isAnisotropyEnabled());
         defaultMaterialShaderKeyProperties.m_iridescenceEnabled.setValue(theGeneratedKey, theMaterial->isIridescenceEnabled());
+        defaultMaterialShaderKeyProperties.m_dispersionEnabled.setValue(theGeneratedKey, theMaterial->isDispersionEnabled());
         defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey, theMaterial->isTransmissionEnabled());
 
         // Run through the material's images and prepare them for render.
@@ -1491,6 +1492,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
 
     const bool usesIridescence = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Iridescence);
     defaultMaterialShaderKeyProperties.m_iridescenceEnabled.setValue(theGeneratedKey, usesIridescence);
+
+    const bool usesDispersion = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Dispersion);
+    defaultMaterialShaderKeyProperties.m_dispersionEnabled.setValue(theGeneratedKey, usesDispersion);
 
     const bool usesClearcoatFresnelScaleBias = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias);
     defaultMaterialShaderKeyProperties.m_clearcoatFresnelScaleBiasEnabled.setValue(theGeneratedKey, usesClearcoatFresnelScaleBias);

@@ -276,6 +276,7 @@ static constexpr QByteArrayView qssg_shader_arg_names[] {
     { "IRIDESCENCE_FACTOR" },
     { "IRIDESCENCE_IOR" },
     { "IRIDESCENCE_THICKNESS" },
+    { "DISPERSION" },
     { "IOR" },
     { "TRANSMISSION_FACTOR" },
     { "THICKNESS_FACTOR" },
@@ -377,6 +378,8 @@ static void generateFragmentDefines(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addDefinition("QSSG_ENABLE_SHEEN", "1");
     if (keyProps.m_transmissionEnabled.getValue(inKey))
         fragmentShader.addDefinition("QSSG_ENABLE_TRANSMISSION", "1");
+    if (keyProps.m_dispersionEnabled.getValue(inKey) && keyProps.m_transmissionEnabled.getValue(inKey))
+        fragmentShader.addDefinition("QSSG_ENABLE_DISPERSION", "1");
     if (keyProps.m_metallicRoughnessEnabled.getValue(inKey))
         fragmentShader.addDefinition("QSSG_ENABLE_METALLIC_ROUGHNESS_WORKFLOW", "1");
     if (keyProps.m_specularGlossyEnabled.getValue(inKey))
@@ -617,6 +620,8 @@ struct PassRequirmentsState {
     bool hasSheen = false;
     bool hasAnisotropy = false;
     bool hasIridescence = false;
+    bool hasDispersion = false;
+    bool hasDispersionKeyword = false;
     bool hasTransmission = false;
     bool hasFresnelScaleBias = false;
     bool hasClearcoatFresnelScaleBias = false;
@@ -682,6 +687,9 @@ struct PassRequirmentsState {
         // Iridescence only modifies the specular lobe
         hasIridescence = keyProps.m_iridescenceEnabled.getValue(inKey) && hasSpecularLight;
         hasTransmission = keyProps.m_transmissionEnabled.getValue(inKey);
+        // Declared whenever requested, but only applied with transmission
+        hasDispersionKeyword = keyProps.m_dispersionEnabled.getValue(inKey);
+        hasDispersion = hasDispersionKeyword && hasTransmission;
         hasFresnelScaleBias = keyProps.m_fresnelScaleBiasEnabled.getValue(inKey);
         hasClearcoatFresnelScaleBias = keyProps.m_clearcoatFresnelScaleBiasEnabled.getValue(inKey);
         isMetallicRoughnessWorkflow = keyProps.m_metallicRoughnessEnabled.getValue(inKey);
@@ -1018,6 +1026,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (passRequirmentState.hasTransmission) {
             fragmentShader.addUniform("qt_material_attenuation", "vec4");
             fragmentShader.addUniform("qt_material_thickness", "float");
+            if (passRequirmentState.hasDispersion)
+                fragmentShader.addUniform("qt_material_dispersion", "float");
         }
         if (passRequirmentState.hasFresnelScaleBias || passRequirmentState.hasClearcoatFresnelScaleBias)
             fragmentShader.addUniform("qt_material_properties5", "vec4");
@@ -1157,6 +1167,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    float qt_customFresnelBias = 0.0;\n";
         }
 
+        if (passRequirmentState.hasDispersionKeyword)
+            fragmentShader << "    float qt_customDispersion = 0.0;\n";
+
         if (passRequirmentState.hasTransmission) {
             fragmentShader << "    float qt_customTransmissionFactor = 0.0;\n";
             fragmentShader << "    float qt_customThicknessFactor = 0.0;\n";
@@ -1211,6 +1224,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << ",\n                  qt_customFresnelScale,\n"
                                << "                  qt_customFresnelBias";
             }
+            if (passRequirmentState.hasDispersionKeyword)
+                fragmentShader << ",\n                  qt_customDispersion";
             if (passRequirmentState.hasTransmission) {
                 fragmentShader << ",\n                  qt_customTransmissionFactor,\n"
                                << "                  qt_customThicknessFactor,\n"
@@ -1652,6 +1667,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    << samplerState.fragCoordsName(QSSGRenderableImage::Type::Thickness) << ")" << channelStr(channelProps, inKey) << ";\n";
                 }
             }
+
+            if (passRequirmentState.hasDispersion) {
+                addLocalVariable(fragmentShader, "qt_dispersion", "float");
+                if (hasCustomFrag)
+                    fragmentShader << "    qt_dispersion = qt_customDispersion;\n";
+                else
+                    fragmentShader << "    qt_dispersion = qt_material_dispersion;\n";
+            }
         }
         if (passRequirmentState.hasPunctualLights || passRequirmentState.hasSpecularLight) {
             fragmentShader << "    vec3 qt_f0 = vec3(1.0);\n";
@@ -1953,7 +1976,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // This can run even without a IBL probe
         if (passRequirmentState.hasTransmission) {
             fragmentShader << "    qt_global_transmission += qt_transmissionFactor * qt_getIBLVolumeRefraction(qt_world_normal, qt_view_vector, qt_roughnessAmount, "
-                              "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, qt_iOR, qt_thicknessFactor, qt_attenuationColor, qt_attenuationDistance);\n";
+                              "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, qt_iOR, qt_thicknessFactor, qt_attenuationColor, qt_attenuationDistance"
+                           << "\n#if QSSG_ENABLE_DISPERSION\n"
+                           << "                                 , qt_dispersion\n"
+                           << "#endif // QSSG_ENABLE_DISPERSION\n"
+                           << "                                 );\n";
         }
 
 
@@ -2819,6 +2846,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
             const float thickness = materialAdapter->thicknessFactor();
             shaders.setUniform(ubufData, "qt_material_thickness", &thickness, sizeof(float), &cui.thicknessFactorIdx);
+
+            if (materialAdapter->isDispersionEnabled()) {
+                const float dispersion = materialAdapter->dispersion();
+                shaders.setUniform(ubufData, "qt_material_dispersion", &dispersion, sizeof(float), &cui.dispersionIdx);
+            }
         }
     }
 

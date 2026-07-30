@@ -756,6 +756,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_sheenEnabled;
     QSSGShaderKeyBoolean m_anisotropyEnabled;
     QSSGShaderKeyBoolean m_iridescenceEnabled;
+    QSSGShaderKeyBoolean m_dispersionEnabled;
     QSSGShaderKeyBoolean m_transmissionEnabled;
     QSSGShaderKeyBoolean m_specularAAEnabled;
     QSSGShaderKeyBoolean m_lightmapEnabled;
@@ -814,6 +815,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_sheenEnabled("sheenEnabled")
         , m_anisotropyEnabled("anisotropyEnabled")
         , m_iridescenceEnabled("iridescenceEnabled")
+        , m_dispersionEnabled("dispersionEnabled")
         , m_transmissionEnabled("transmissionEnabled")
         , m_specularAAEnabled("specularAAEnabled")
         , m_lightmapEnabled("lightmapEnabled")
@@ -925,6 +927,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_sheenEnabled);
         inVisitor.visit(m_anisotropyEnabled);
         inVisitor.visit(m_iridescenceEnabled);
+        inVisitor.visit(m_dispersionEnabled);
         inVisitor.visit(m_transmissionEnabled);
         inVisitor.visit(m_specularAAEnabled);
         inVisitor.visit(m_lightmapEnabled);

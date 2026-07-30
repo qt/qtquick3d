@@ -116,6 +116,8 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *iridescenceThicknessMap READ iridescenceThicknessMap WRITE setIridescenceThicknessMap NOTIFY iridescenceThicknessMapChanged REVISION(6, 13))
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping iridescenceThicknessChannel READ iridescenceThicknessChannel WRITE setIridescenceThicknessChannel NOTIFY iridescenceThicknessChannelChanged REVISION(6, 13))
 
+    Q_PROPERTY(float dispersion READ dispersion WRITE setDispersion NOTIFY dispersionChanged REVISION(6, 13))
+
     Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping transmissionChannel READ transmissionChannel WRITE setTransmissionChannel NOTIFY transmissionChannelChanged)
@@ -261,6 +263,8 @@ public:
     Q_REVISION(6, 13) QQuick3DTexture *iridescenceThicknessMap() const;
     Q_REVISION(6, 13) TextureChannelMapping iridescenceThicknessChannel() const;
 
+    Q_REVISION(6, 13) float dispersion() const;
+
     Q_REVISION(6, 3) float transmissionFactor() const;
     Q_REVISION(6, 3) QQuick3DTexture *transmissionMap() const;
     Q_REVISION(6, 3) TextureChannelMapping transmissionChannel() const;
@@ -361,6 +365,8 @@ public Q_SLOTS:
     Q_REVISION(6, 13) void setIridescenceThicknessMap(QQuick3DTexture *newIridescenceThicknessMap);
     Q_REVISION(6, 13) void setIridescenceThicknessChannel(QQuick3DMaterial::TextureChannelMapping newIridescenceThicknessChannel);
 
+    Q_REVISION(6, 13) void setDispersion(float newDispersion);
+
     Q_REVISION(6, 3) void setTransmissionFactor(float newTransmissionFactor);
     Q_REVISION(6, 3) void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
     Q_REVISION(6, 3) void setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel);
@@ -460,6 +466,8 @@ Q_SIGNALS:
     Q_REVISION(6, 13) void iridescenceThicknessMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 13) void iridescenceThicknessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
 
+    Q_REVISION(6, 13) void dispersionChanged(float dispersion);
+
     Q_REVISION(6, 3) void transmissionFactorChanged(float amount);
     Q_REVISION(6, 3) void transmissionMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 3) void transmissionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
@@ -515,7 +523,8 @@ private:
         VertexColorsDirty = 0x00020000,
         SheenDirty = 0x00040000,
         AnisotropyDirty = 0x00080000,
-        IridescenceDirty = 0x00100000
+        IridescenceDirty = 0x00100000,
+        DispersionDirty = 0x00200000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -591,6 +600,7 @@ private:
     float m_iridescenceThicknessMaximum = 400.0f; // nanometers
     QQuick3DTexture *m_iridescenceThicknessMap = nullptr;
     TextureChannelMapping m_iridescenceThicknessChannel = QQuick3DMaterial::G;
+    float m_dispersion = 0.0f;
     float m_transmissionFactor = 0.0f;
     QQuick3DTexture *m_transmissionMap = nullptr;
     TextureChannelMapping m_transmissionChannel = QQuick3DMaterial::R;

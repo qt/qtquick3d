@@ -51,6 +51,8 @@ static inline void insertProcessorArgsFragmentMain(QByteArray &snippet, const ch
                 flexArgs += QByteArrayLiteral(", inout float IRIDESCENCE_FACTOR, inout float IRIDESCENCE_IOR, inout float IRIDESCENCE_THICKNESS");
             if (materialAdapter->isFresnelScaleBiasEnabled())
                 flexArgs += QByteArrayLiteral(", inout float FRESNEL_SCALE, inout float FRESNEL_BIAS");
+            if (materialAdapter->isDispersionEnabled())
+                flexArgs += QByteArrayLiteral(", inout float DISPERSION");
             if (materialAdapter->isTransmissionEnabled())
                 flexArgs += QByteArrayLiteral(", inout float TRANSMISSION_FACTOR, inout float THICKNESS_FACTOR, inout vec3 ATTENUATION_COLOR, inout float ATTENUATION_DISTANCE");
             if (materialAdapter->usesSharedVariables()) {

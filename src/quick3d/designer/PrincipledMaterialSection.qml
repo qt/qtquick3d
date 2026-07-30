@@ -1290,6 +1290,26 @@ Column {
             }
 
             PropertyLabel {
+                text: qsTr("Dispersion")
+                tooltip: qsTr("Sets how much the index of refraction varies across wavelengths, splitting refracted light into color fringes. Requires transmission and thickness.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 2
+                    decimals: 2
+                    stepSize: 0.1
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.dispersion
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
                 text: qsTr("Thickness Factor")
                 tooltip: qsTr("Sets the thickness of the volume beneath the surface in model coordinate space.")
             }

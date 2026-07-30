@@ -934,6 +934,31 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty real PrincipledMaterial::dispersion
+    \since 6.13
+
+    This property defines how much the index of refraction varies across
+    wavelengths, which splits light refracted through the material into color
+    fringes, as a prism does.
+
+    Dispersion only affects light refracted through the volume of the material,
+    so it has no effect unless \l transmissionFactor and \l thicknessFactor
+    are set. It does not affect the reflected specular highlight.
+
+    Following the glTF \c KHR_materials_dispersion extension the value is
+    given as 20 divided by the Abbe number of the material, so \c 1.0
+    corresponds to an Abbe number of 20, about as dispersive as ordinary
+    materials get. Window glass is roughly \c 0.3, and a lead crystal or a
+    diamond closer to \c 1.0. The default value is \c 0.0, which disables
+    dispersion.
+
+    \note Each of the three color channels is refracted separately, so
+    enabling dispersion triples the cost of the refraction lookup.
+
+    \sa transmissionFactor, thicknessFactor, indexOfRefraction
+*/
+
+/*!
     \qmlproperty real PrincipledMaterial::transmissionFactor
 
     This property defines the percentage of light that is transmitted through
@@ -2069,6 +2094,9 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->iridescenceThicknessChannel = channelMapping(m_iridescenceThicknessChannel);
     }
 
+    if (m_dirtyAttributes & DispersionDirty)
+        material->dispersion = m_dispersion;
+
     if (m_dirtyAttributes & TransmissionDirty) {
         material->transmissionFactor = m_transmissionFactor;
         if (!m_transmissionMap)
@@ -2541,6 +2569,23 @@ void QQuick3DPrincipledMaterial::setIridescenceThicknessChannel(QQuick3DMaterial
     m_iridescenceThicknessChannel = newIridescenceThicknessChannel;
     emit iridescenceThicknessChannelChanged(m_iridescenceThicknessChannel);
     markDirty(IridescenceDirty);
+}
+
+float QQuick3DPrincipledMaterial::dispersion() const
+{
+    return m_dispersion;
+}
+
+void QQuick3DPrincipledMaterial::setDispersion(float newDispersion)
+{
+    // 20 / Abbe number, which has no upper bound
+    newDispersion = qMax(0.0f, newDispersion);
+    if (qFuzzyCompare(m_dispersion, newDispersion))
+        return;
+
+    m_dispersion = newDispersion;
+    emit dispersionChanged(m_dispersion);
+    markDirty(DispersionDirty);
 }
 
 float QQuick3DPrincipledMaterial::transmissionFactor() const

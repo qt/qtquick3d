@@ -155,6 +155,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float iridescenceIndexOfRefraction = 1.3f;
     float iridescenceThicknessMinimum = 100.0f; // nanometers
     float iridescenceThicknessMaximum = 400.0f; // nanometers
+    float dispersion = 0.0f; // 20 / Abbe number, 0 disables dispersion
     float transmissionFactor = 0.0f; // 0 - 1
     float thicknessFactor = 0.0f; // 0 - 1
     float attenuationDistance = std::numeric_limits<float>::infinity();
@@ -213,6 +214,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool isAnisotropyEnabled() const { return anisotropyStrength > 0.01f; }
     bool isIridescenceEnabled() const { return iridescenceFactor > 0.01f; }
     bool isTransmissionEnabled() const { return transmissionFactor > 0.01f; }
+    bool isDispersionEnabled() const { return dispersion > 0.01f && isTransmissionEnabled(); }
 
     [[nodiscard]] inline bool isDirty() const { return dirty; }
     void clearDirty();

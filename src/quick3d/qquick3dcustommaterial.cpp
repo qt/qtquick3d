@@ -453,7 +453,7 @@ QT_BEGIN_NAMESPACE
     SPECULAR_AMOUNT, NORMAL, CLEARCOAT_FRESNEL_POWER, CLEARCOAT_FRESNEL_SCALE,
     CLEARCOAT_FRESNEL_BIAS, CLEARCOAT_AMOUNT, CLEARCOAT_ROUGHNESS, CLEARCOAT_NORMAL,
     SHEEN_COLOR, SHEEN_ROUGHNESS, ANISOTROPY_STRENGTH, ANISOTROPY_ROTATION,
-    IRIDESCENCE_FACTOR, IRIDESCENCE_IOR, IRIDESCENCE_THICKNESS,
+    IRIDESCENCE_FACTOR, IRIDESCENCE_IOR, IRIDESCENCE_THICKNESS, DISPERSION,
     FRESNEL_BIAS, FRESNEL_SCALE, FRESNEL_POWER, IOR, \c TRANSMISSION_FACTOR,
     THICKNESS_FACTOR, ATTENUATION_COLOR, ATTENUATION_DISTANCE and \c OCCLUSION_AMOUNT.
 
@@ -582,6 +582,12 @@ QT_BEGIN_NAMESPACE
     nanometers. Note that this is the final thickness rather than the minimum and maximum
     pair a PrincipledMaterial interpolates between, since a custom shader can compute it
     directly. The default is \c{400.0}.
+    \note Available since Qt 6.13.
+
+    \li float \c DISPERSION Specifies how much the index of refraction varies across
+    wavelengths, splitting refracted light into color fringes. Only has an effect together
+    with \c TRANSMISSION_FACTOR. A typical value, and also the default, is \c{0.0} as that
+    is what a PrincipledMaterial would use.
     \note Available since Qt 6.13.
 
     \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value,
@@ -1757,6 +1763,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Anisotropy, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesIridescence))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Iridescence, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesDispersion))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Dispersion, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesFresnelScaleBias))

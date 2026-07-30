@@ -445,6 +445,7 @@ public:
         int sheenRoughnessIdx = -1;
         int anisotropyIdx = -1;
         int iridescenceIdx = -1;
+        int dispersionIdx = -1;
         int clearcoatFresnelPowerIdx = -1;
         int rhiPropertiesIdx = -1;
         int displaceAmountIdx = -1;

@@ -144,6 +144,11 @@ bool QSSGShaderDefaultMaterialAdapter::isIridescenceEnabled()
     return m_material.isIridescenceEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isDispersionEnabled()
+{
+    return m_material.isDispersionEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::isTransmissionEnabled()
 {
     return m_material.isTransmissionEnabled();
@@ -379,6 +384,11 @@ float QSSGShaderDefaultMaterialAdapter::iridescenceThicknessMaximum()
     return m_material.iridescenceThicknessMaximum;
 }
 
+float QSSGShaderDefaultMaterialAdapter::dispersion()
+{
+    return m_material.dispersion;
+}
+
 float QSSGShaderDefaultMaterialAdapter::transmissionFactor()
 {
     return m_material.transmissionFactor;
@@ -476,6 +486,12 @@ bool QSSGShaderCustomMaterialAdapter::isAnisotropyEnabled()
 bool QSSGShaderCustomMaterialAdapter::isIridescenceEnabled()
 {
     return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Iridescence);
+}
+
+bool QSSGShaderCustomMaterialAdapter::isDispersionEnabled()
+{
+    // Only declares the keyword; it is applied when transmission is used too
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Dispersion);
 }
 
 bool QSSGShaderCustomMaterialAdapter::isTransmissionEnabled()
@@ -721,6 +737,12 @@ float QSSGShaderCustomMaterialAdapter::iridescenceThicknessMinimum()
 float QSSGShaderCustomMaterialAdapter::iridescenceThicknessMaximum()
 {
     return 400.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::dispersion()
+{
+    // Custom materials provide the value through the DISPERSION keyword
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::transmissionFactor()
@@ -1105,6 +1127,8 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
                          || trimmedId == QByteArrayLiteral("IRIDESCENCE_IOR")
                          || trimmedId == QByteArrayLiteral("IRIDESCENCE_THICKNESS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesIridescence;
+                else if (trimmedId == QByteArrayLiteral("DISPERSION"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesDispersion;
                 else if (trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_SCALE") ||
                             trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_BIAS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias;
@@ -1224,6 +1248,12 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
 
     workData->inputs = inputs;
     workData->outputs = outputs;
+
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesDispersion)
+        && !md.flags.testFlag(QSSGCustomShaderMetaData::UsesTransmission)) {
+        qWarning("Custom material writes DISPERSION but never sets TRANSMISSION_FACTOR; "
+                 "dispersion requires transmission and will have no effect");
+    }
 
     *codeAndMetaData = { result, md };
 }

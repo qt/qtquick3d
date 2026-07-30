@@ -25,7 +25,7 @@
         "Sheen":          ["sheenColor", "sheenColorMap", "sheenRoughness", "sheenRoughnessMap", "sheenRoughnessChannel"],
         "Anisotropy":     ["anisotropyStrength", "anisotropyRotation", "anisotropyMap"],
         "Iridescence":    ["iridescenceFactor", "iridescenceMap", "iridescenceChannel", "iridescenceIndexOfRefraction", "iridescenceThicknessMinimum", "iridescenceThicknessMaximum", "iridescenceThicknessMap", "iridescenceThicknessChannel"],
-        "Refraction":     ["transmissionFactor", "transmissionMap", "transmissionChannel", "indexOfRefraction", "thicknessFactor", "thicknessMap", "thicknessChannel", "attenuationColor", "attenuationDistance"],
+        "Refraction":     ["transmissionFactor", "transmissionMap", "transmissionChannel", "indexOfRefraction", "dispersion", "thicknessFactor", "thicknessMap", "thicknessChannel", "attenuationColor", "attenuationDistance"],
         "Fresnel":        ["fresnelPower", "fresnelScaleBiasEnabled", "fresnelScale", "fresnelBias"],
         "Vertex Color":   ["vertexColorsEnabled", "vertexColorsMaskEnabled", "vertexColorRedMask", "vertexColorGreenMask", "vertexColorBlueMask", "vertexColorAlphaMask"],
         "Advanced":       ["pointSize", "lineWidth"],

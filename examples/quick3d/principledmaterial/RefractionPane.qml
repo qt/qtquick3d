@@ -161,6 +161,40 @@ used with a refractive material (especially ones with thickness).`
         }
 
         MarkdownLabel {
+            text: `## Dispersion
+A material's index of refraction is not really one number: it varies across
+wavelengths, so each color bends by a slightly different amount and the
+refracted image separates into colored fringes. This is what makes a prism
+split white light into a rainbow.
+
+The value is given the way the glTF extension defines it, as 20 divided by the
+Abbe number of the material, so \`1.0\` is about as dispersive as ordinary
+materials get. Window glass sits near \`0.3\`, lead crystal and diamond closer
+to \`1.0\`.
+
+Two things to expect. First, dispersion needs something to refract, so it does
+nothing unless Transmission and Thickness are set. Second, the effect is
+genuinely subtle at realistic values, showing up as thin colored edges rather
+than broad rainbows; a thicker volume and a higher IOR both make it easier to
+see, because the three rays have further to diverge. Refracting each channel
+separately costs three framebuffer lookups instead of one.
+`
+        }
+
+        RowLayout {
+            Label {
+                text: "Dispersion (" + rootView.targetMaterial.dispersion.toFixed(2) + ")"
+                Layout.fillWidth: true
+            }
+            Slider {
+                from: 0
+                to: 2
+                value: rootView.targetMaterial.dispersion
+                onValueChanged: rootView.targetMaterial.dispersion = value
+            }
+        }
+
+        MarkdownLabel {
             text: `## Thickness
 The Thickness properties are for giving refractive materials volume.  A
 transmissive material alone is considered to be infinitely thin so any
