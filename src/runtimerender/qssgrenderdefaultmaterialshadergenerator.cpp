@@ -68,6 +68,8 @@ DefineImageStrings(Thickness);
 DefineImageStrings(SheenColor);
 DefineImageStrings(SheenRoughness);
 DefineImageStrings(Anisotropy);
+DefineImageStrings(Iridescence);
+DefineImageStrings(IridescenceThickness);
 
 struct ImageStringSet
 {
@@ -104,7 +106,9 @@ constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(Thickness),
     DefineImageStringTableEntry(SheenColor),
     DefineImageStringTableEntry(SheenRoughness),
-    DefineImageStringTableEntry(Anisotropy)
+    DefineImageStringTableEntry(Anisotropy),
+    DefineImageStringTableEntry(Iridescence),
+    DefineImageStringTableEntry(IridescenceThickness)
 };
 
 const int TEXCOORD_VAR_LEN = 16;
@@ -269,6 +273,9 @@ static constexpr QByteArrayView qssg_shader_arg_names[] {
     { "SHEEN_ROUGHNESS" },
     { "ANISOTROPY_STRENGTH" },
     { "ANISOTROPY_ROTATION" },
+    { "IRIDESCENCE_FACTOR" },
+    { "IRIDESCENCE_IOR" },
+    { "IRIDESCENCE_THICKNESS" },
     { "IOR" },
     { "TRANSMISSION_FACTOR" },
     { "THICKNESS_FACTOR" },
@@ -471,6 +478,10 @@ struct SamplerState {
             return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::SheenRoughnessMap;
         case QSSGRenderableImage::Type::Anisotropy:
             return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::AnisotropyMap;
+        case QSSGRenderableImage::Type::Iridescence:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::IridescenceMap;
+        case QSSGRenderableImage::Type::IridescenceThickness:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::IridescenceThicknessMap;
         case QSSGRenderableImage::Type::Unknown:
             break;
         }
@@ -605,6 +616,7 @@ struct PassRequirmentsState {
     bool hasClearcoat = false;
     bool hasSheen = false;
     bool hasAnisotropy = false;
+    bool hasIridescence = false;
     bool hasTransmission = false;
     bool hasFresnelScaleBias = false;
     bool hasClearcoatFresnelScaleBias = false;
@@ -667,6 +679,8 @@ struct PassRequirmentsState {
         hasSheen = keyProps.m_sheenEnabled.getValue(inKey);
         // Anisotropy only modifies the specular lobe
         hasAnisotropy = keyProps.m_anisotropyEnabled.getValue(inKey) && hasSpecularLight;
+        // Iridescence only modifies the specular lobe
+        hasIridescence = keyProps.m_iridescenceEnabled.getValue(inKey) && hasSpecularLight;
         hasTransmission = keyProps.m_transmissionEnabled.getValue(inKey);
         hasFresnelScaleBias = keyProps.m_fresnelScaleBiasEnabled.getValue(inKey);
         hasClearcoatFresnelScaleBias = keyProps.m_clearcoatFresnelScaleBiasEnabled.getValue(inKey);
@@ -1017,6 +1031,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             // (strength, cos(rotation), sin(rotation))
             fragmentShader.addUniform("qt_material_anisotropy", "vec3");
         }
+        if (passRequirmentState.hasIridescence) {
+            // (factor, film ior, thickness minimum, thickness maximum)
+            fragmentShader.addUniform("qt_material_iridescence", "vec4");
+        }
     }
 
     if (passRequirmentState.hasVertexColors) {
@@ -1129,6 +1147,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    float qt_customAnisotropyStrength = 0.0;\n";
             fragmentShader << "    float qt_customAnisotropyRotation = 0.0;\n";
         }
+        if (passRequirmentState.hasIridescence) {
+            fragmentShader << "    float qt_customIridescenceFactor = 0.0;\n";
+            fragmentShader << "    float qt_customIridescenceIor = 1.3;\n";
+            fragmentShader << "    float qt_customIridescenceThickness = 400.0;\n";
+        }
         if (passRequirmentState.hasFresnelScaleBias) {
             fragmentShader << "    float qt_customFresnelScale = 1.0;\n";
             fragmentShader << "    float qt_customFresnelBias = 0.0;\n";
@@ -1178,6 +1201,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (passRequirmentState.hasAnisotropy) {
                 fragmentShader << ",\n                  qt_customAnisotropyStrength,\n"
                                << "                  qt_customAnisotropyRotation";
+            }
+            if (passRequirmentState.hasIridescence) {
+                fragmentShader << ",\n                  qt_customIridescenceFactor,\n"
+                               << "                  qt_customIridescenceIor,\n"
+                               << "                  qt_customIridescenceThickness";
             }
             if (passRequirmentState.hasFresnelScaleBias) {
                 fragmentShader << ",\n                  qt_customFresnelScale,\n"
@@ -1640,6 +1668,50 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_specularTint = vec3(1.0);\n";
                 fragmentShader << "    qt_f90 = vec3(clamp(qt_reflectance * 50.0, 0.0, 1.0));\n";
                 fragmentShader << "    qt_diffuseColor.rgb *= (1 - qt_reflectance);\n";
+            }
+
+            // Replacing qt_f0 reaches every specular path, at the cost of a second Schlick ramp on top
+            if (passRequirmentState.hasIridescence) {
+                fragmentShader.addDefinition("QSSG_ENABLE_IRIDESCENCE", "1");
+                fragmentShader.addInclude("iridescence.glsllib");
+                fragmentShader << "    float qt_iridescenceFactor = ";
+                if (hasCustomFrag)
+                    fragmentShader << "qt_customIridescenceFactor;\n";
+                else
+                    fragmentShader << "qt_material_iridescence.x;\n";
+                fragmentShader << "    float qt_iridescenceIor = ";
+                if (hasCustomFrag)
+                    fragmentShader << "qt_customIridescenceIor;\n";
+                else
+                    fragmentShader << "qt_material_iridescence.y;\n";
+
+                // Custom materials give a final thickness, with no uniform for the range
+                const char *thicknessMinimum = hasCustomFrag ? "qt_customIridescenceThickness"
+                                                            : "qt_material_iridescence.z";
+                const char *thicknessMaximum = hasCustomFrag ? "qt_customIridescenceThickness"
+                                                             : "qt_material_iridescence.w";
+                // With no thickness map the film is uniformly at its maximum
+                fragmentShader << "    float qt_iridescenceThickness = " << thicknessMaximum << ";\n";
+
+                if (samplerState.hasImage(QSSGRenderableImage::Type::Iridescence)) {
+                    samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::Iridescence, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                    const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::IridescenceChannel];
+                    fragmentShader << "    qt_iridescenceFactor *= texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::Iridescence) << ", "
+                                   << samplerState.fragCoordsName(QSSGRenderableImage::Type::Iridescence) << ")" << channelStr(channelProps, inKey) << ";\n";
+                }
+
+                if (samplerState.hasImage(QSSGRenderableImage::Type::IridescenceThickness)) {
+                    samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::IridescenceThickness, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                    const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::IridescenceThicknessChannel];
+                    fragmentShader << "    qt_iridescenceThickness = mix(" << thicknessMinimum << ", " << thicknessMaximum
+                                   << ", texture2D("
+                                   << samplerState.samplerName(QSSGRenderableImage::Type::IridescenceThickness) << ", "
+                                   << samplerState.fragCoordsName(QSSGRenderableImage::Type::IridescenceThickness) << ")" << channelStr(channelProps, inKey) << ");\n";
+                }
+
+                fragmentShader << "    float qt_iridescenceNdotV = clamp(dot(qt_world_normal, qt_view_vector), 0.0, 1.0);\n";
+                fragmentShader << "    qt_f0 = mix(qt_f0, qt_evalIridescence(1.0, qt_iridescenceIor, qt_iridescenceNdotV, "
+                               << "qt_iridescenceThickness, qt_f0), qt_iridescenceFactor);\n";
             }
 
             if (passRequirmentState.isSpecularAAEnabled) {
@@ -2728,6 +2800,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             const float rotation = materialAdapter->anisotropyRotation();
             const QVector3D anisotropy(materialAdapter->anisotropyStrength(), std::cos(rotation), std::sin(rotation));
             shaders.setUniform(ubufData, "qt_material_anisotropy", &anisotropy, 3 * sizeof(float), &cui.anisotropyIdx);
+        }
+
+        if (materialAdapter->isIridescenceEnabled()) {
+            const QVector4D iridescence(materialAdapter->iridescenceFactor(),
+                                        materialAdapter->iridescenceIndexOfRefraction(),
+                                        materialAdapter->iridescenceThicknessMinimum(),
+                                        materialAdapter->iridescenceThicknessMaximum());
+            shaders.setUniform(ubufData, "qt_material_iridescence", &iridescence, 4 * sizeof(float), &cui.iridescenceIdx);
         }
 
         const float material_clearcoat_fresnel_power = materialAdapter->clearcoatFresnelPower();

@@ -157,6 +157,7 @@ set(res_resource_files
     "res/effectlib/principledMaterialFresnel.glsllib"
     "res/effectlib/sampleProbe.glsllib"
     "res/effectlib/anisotropy.glsllib"
+    "res/effectlib/iridescence.glsllib"
     "res/effectlib/sheen.glsllib"
     "res/effectlib/sampleReflectionProbe.glsllib"
     "res/effectlib/shadowMapping.glsllib"

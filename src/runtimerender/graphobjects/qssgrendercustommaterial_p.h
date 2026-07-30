@@ -115,7 +115,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         NormalTexture = 1 << 18,
         MotionVectorTexture = 1 << 19,
         Sheen = 1 << 20,
-        Anisotropy = 1 << 21
+        Anisotropy = 1 << 21,
+        Iridescence = 1 << 22
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

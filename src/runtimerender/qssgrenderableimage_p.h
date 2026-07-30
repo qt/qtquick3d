@@ -55,7 +55,9 @@ struct QSSGRenderableImage
         Thickness,
         SheenColor,
         SheenRoughness,
-        Anisotropy
+        Anisotropy,
+        Iridescence,
+        IridescenceThickness
     };
     const QSSGRenderImage &m_imageNode;
     QSSGRenderImageTexture m_texture;

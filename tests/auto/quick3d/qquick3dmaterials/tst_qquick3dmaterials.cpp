@@ -376,6 +376,37 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(anisotropyRotation, material.anisotropyRotation());
     QCOMPARE(qDegreesToRadians(anisotropyRotation), node->anisotropyRotation);
 
+    QVERIFY(!node->isIridescenceEnabled());
+    float iridescenceFactor = 0.8f;
+    material.setIridescenceFactor(iridescenceFactor);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(iridescenceFactor, material.iridescenceFactor());
+    QCOMPARE(iridescenceFactor, node->iridescenceFactor);
+    QVERIFY(node->isIridescenceEnabled());
+    iridescenceFactor = 0.0f;
+    material.setIridescenceFactor(iridescenceFactor);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(!node->isIridescenceEnabled());
+
+    // The film has its own index of refraction, separate from the material's
+    QCOMPARE(1.3f, material.iridescenceIndexOfRefraction());
+    const float iridescenceIor = 1.8f;
+    material.setIridescenceIndexOfRefraction(iridescenceIor);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(iridescenceIor, material.iridescenceIndexOfRefraction());
+    QCOMPARE(iridescenceIor, node->iridescenceIndexOfRefraction);
+
+    // Thickness is in nanometers, and defaults to the range the extension uses
+    QCOMPARE(100.0f, material.iridescenceThicknessMinimum());
+    QCOMPARE(400.0f, material.iridescenceThicknessMaximum());
+    const float thicknessMinimum = 250.0f;
+    const float thicknessMaximum = 900.0f;
+    material.setIridescenceThicknessMinimum(thicknessMinimum);
+    material.setIridescenceThicknessMaximum(thicknessMaximum);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(thicknessMinimum, node->iridescenceThicknessMinimum);
+    QCOMPARE(thicknessMaximum, node->iridescenceThicknessMaximum);
+
     QVERIFY(material.metalness() == 0.0f);
     QVERIFY(node->metalnessAmount == 0.0f);
     QVERIFY(!node->isTransmissionEnabled());
@@ -565,6 +596,34 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QVERIFY(material.anisotropyMap());
     QCOMPARE(texture1.getRenderImage(), node->anisotropyMap);
+
+    // IridescenceMap
+    QVERIFY(!material.iridescenceMap());
+    QVERIFY(material.iridescenceChannel() == QQuick3DMaterial::R);
+    material.setIridescenceMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.iridescenceMap());
+    QCOMPARE(texture1.getRenderImage(), node->iridescenceMap);
+    const QQuick3DMaterial::TextureChannelMapping iridescenceChannel = QQuick3DMaterial::B;
+    material.setIridescenceChannel(iridescenceChannel);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(iridescenceChannel, material.iridescenceChannel());
+    QCOMPARE(qToUnderlying(iridescenceChannel), // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->iridescenceChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
+
+    // IridescenceThicknessMap; the glTF extension packs thickness into green
+    QVERIFY(!material.iridescenceThicknessMap());
+    QVERIFY(material.iridescenceThicknessChannel() == QQuick3DMaterial::G);
+    material.setIridescenceThicknessMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.iridescenceThicknessMap());
+    QCOMPARE(texture1.getRenderImage(), node->iridescenceThicknessMap);
+    const QQuick3DMaterial::TextureChannelMapping thicknessChannel = QQuick3DMaterial::A;
+    material.setIridescenceThicknessChannel(thicknessChannel);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(thicknessChannel, material.iridescenceThicknessChannel());
+    QCOMPARE(qToUnderlying(thicknessChannel), // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->iridescenceThicknessChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
 
     // ClearcoatNormalMap
     QVERIFY(!material.clearcoatNormalMap());

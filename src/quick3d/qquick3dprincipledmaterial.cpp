@@ -810,6 +810,130 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty real PrincipledMaterial::iridescenceFactor
+    \since 6.13
+
+    This property defines the strength of a thin film of material over the
+    surface, which produces the shifting colors of a soap bubble, an oil slick
+    or a beetle shell. Light reflecting off the two faces of the film
+    interferes with itself, and which wavelengths cancel out depends on the
+    thickness of the film and the angle it is viewed from, so the hue changes
+    as the surface curves away.
+
+    The value is in the range \c 0.0 to \c 1.0 and blends between the
+    material without and with the film. The default value is \c 0.0, which
+    disables iridescence.
+
+    \sa iridescenceMap, iridescenceIndexOfRefraction, iridescenceThicknessMaximum
+*/
+
+/*!
+    \qmlproperty Texture PrincipledMaterial::iridescenceMap
+    \since 6.13
+
+    This property defines a texture used to vary the strength of the
+    iridescence across the surface. The value read from the texture is
+    multiplied with \l iridescenceFactor, so a non-zero
+    \l iridescenceFactor is needed for this map to have any effect.
+
+    \note Texture maps are optional. Materials that use a large number of
+    maps at the same time can exceed the number of texture samplers
+    available to a fragment shader on some graphics APIs.
+
+    \sa iridescenceFactor, iridescenceChannel
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::iridescenceChannel
+    \since 6.13
+
+    This property defines the texture channel used to read the iridescence
+    strength from \l iridescenceMap. The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+
+    \sa iridescenceMap
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::iridescenceIndexOfRefraction
+    \since 6.13
+
+    This property defines the index of refraction of the thin film itself,
+    which together with the thickness decides which colors the film produces.
+    The default value is \c 1.3, which is roughly that of a soap film.
+
+    Note that this is the index of refraction of the film, not of the material
+    underneath it. The latter is \l indexOfRefraction.
+
+    \sa iridescenceFactor, indexOfRefraction
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::iridescenceThicknessMinimum
+    \since 6.13
+
+    This property defines the thickness of the thin film in nanometers where
+    \l iridescenceThicknessMap reads \c 0.0. The default value is \c 100.
+
+    It has no effect unless an \l iridescenceThicknessMap is set, since
+    without one the film is uniformly
+    \l iridescenceThicknessMaximum thick.
+
+    \sa iridescenceThicknessMaximum, iridescenceThicknessMap
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::iridescenceThicknessMaximum
+    \since 6.13
+
+    This property defines the thickness of the thin film in nanometers where
+    \l iridescenceThicknessMap reads \c 1.0, and the thickness of the whole
+    film when no thickness map is set. The default value is \c 400.
+
+    Thickness is what selects the hue, so varying this across the range of
+    visible light, roughly \c 200 to \c 800 nanometers, sweeps through the
+    colors the film can produce.
+
+    \sa iridescenceThicknessMinimum, iridescenceThicknessMap
+*/
+
+/*!
+    \qmlproperty Texture PrincipledMaterial::iridescenceThicknessMap
+    \since 6.13
+
+    This property defines a texture used to vary the thickness of the thin
+    film across the surface, and with it the color. The value read from the
+    texture interpolates between \l iridescenceThicknessMinimum and
+    \l iridescenceThicknessMaximum.
+
+    When no map is set the film is uniformly
+    \l iridescenceThicknessMaximum thick.
+
+    \sa iridescenceThicknessMinimum, iridescenceThicknessMaximum, iridescenceThicknessChannel
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::iridescenceThicknessChannel
+    \since 6.13
+
+    This property defines the texture channel used to read the film thickness
+    from \l iridescenceThicknessMap. The default value is \c Material.G,
+    which is the channel the glTF \c KHR_materials_iridescence extension
+    packs the thickness into.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+
+    \sa iridescenceThicknessMap
+*/
+
+/*!
     \qmlproperty real PrincipledMaterial::transmissionFactor
 
     This property defines the percentage of light that is transmitted through
@@ -1928,6 +2052,23 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->anisotropyMap = m_anisotropyMap->getRenderImage();
     }
 
+    if (m_dirtyAttributes & IridescenceDirty) {
+        material->iridescenceFactor = m_iridescenceFactor;
+        if (!m_iridescenceMap)
+            material->iridescenceMap = nullptr;
+        else
+            material->iridescenceMap = m_iridescenceMap->getRenderImage();
+        material->iridescenceChannel = channelMapping(m_iridescenceChannel);
+        material->iridescenceIndexOfRefraction = m_iridescenceIndexOfRefraction;
+        material->iridescenceThicknessMinimum = m_iridescenceThicknessMinimum;
+        material->iridescenceThicknessMaximum = m_iridescenceThicknessMaximum;
+        if (!m_iridescenceThicknessMap)
+            material->iridescenceThicknessMap = nullptr;
+        else
+            material->iridescenceThicknessMap = m_iridescenceThicknessMap->getRenderImage();
+        material->iridescenceThicknessChannel = channelMapping(m_iridescenceThicknessChannel);
+    }
+
     if (m_dirtyAttributes & TransmissionDirty) {
         material->transmissionFactor = m_transmissionFactor;
         if (!m_transmissionMap)
@@ -1989,6 +2130,8 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::refSceneManager(m_sheenColorMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_sheenRoughnessMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_anisotropyMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_iridescenceMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_iridescenceThicknessMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_transmissionMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_thicknessMap, *sceneManager);
     } else {
@@ -2008,6 +2151,8 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::derefSceneManager(m_sheenColorMap);
         QQuick3DObjectPrivate::derefSceneManager(m_sheenRoughnessMap);
         QQuick3DObjectPrivate::derefSceneManager(m_anisotropyMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_iridescenceMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_iridescenceThicknessMap);
         QQuick3DObjectPrivate::derefSceneManager(m_transmissionMap);
         QQuick3DObjectPrivate::derefSceneManager(m_thicknessMap);
     }
@@ -2271,6 +2416,131 @@ void QQuick3DPrincipledMaterial::setAnisotropyMap(QQuick3DTexture *newAnisotropy
     m_anisotropyMap = newAnisotropyMap;
     emit anisotropyMapChanged(m_anisotropyMap);
     markDirty(AnisotropyDirty);
+}
+
+float QQuick3DPrincipledMaterial::iridescenceFactor() const
+{
+    return m_iridescenceFactor;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceFactor(float newIridescenceFactor)
+{
+    newIridescenceFactor = ensureNormalized(newIridescenceFactor);
+    if (qFuzzyCompare(m_iridescenceFactor, newIridescenceFactor))
+        return;
+
+    m_iridescenceFactor = newIridescenceFactor;
+    emit iridescenceFactorChanged(m_iridescenceFactor);
+    markDirty(IridescenceDirty);
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::iridescenceMap() const
+{
+    return m_iridescenceMap;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceMap(QQuick3DTexture *newIridescenceMap)
+{
+    if (m_iridescenceMap == newIridescenceMap)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DPrincipledMaterial::setIridescenceMap, newIridescenceMap, m_iridescenceMap);
+
+    m_iridescenceMap = newIridescenceMap;
+    emit iridescenceMapChanged(m_iridescenceMap);
+    markDirty(IridescenceDirty);
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::iridescenceChannel() const
+{
+    return m_iridescenceChannel;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceChannel(QQuick3DMaterial::TextureChannelMapping newIridescenceChannel)
+{
+    if (m_iridescenceChannel == newIridescenceChannel)
+        return;
+
+    m_iridescenceChannel = newIridescenceChannel;
+    emit iridescenceChannelChanged(m_iridescenceChannel);
+    markDirty(IridescenceDirty);
+}
+
+float QQuick3DPrincipledMaterial::iridescenceIndexOfRefraction() const
+{
+    return m_iridescenceIndexOfRefraction;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceIndexOfRefraction(float newIridescenceIndexOfRefraction)
+{
+    if (qFuzzyCompare(m_iridescenceIndexOfRefraction, newIridescenceIndexOfRefraction))
+        return;
+
+    m_iridescenceIndexOfRefraction = newIridescenceIndexOfRefraction;
+    emit iridescenceIndexOfRefractionChanged(m_iridescenceIndexOfRefraction);
+    markDirty(IridescenceDirty);
+}
+
+float QQuick3DPrincipledMaterial::iridescenceThicknessMinimum() const
+{
+    return m_iridescenceThicknessMinimum;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceThicknessMinimum(float newIridescenceThicknessMinimum)
+{
+    if (qFuzzyCompare(m_iridescenceThicknessMinimum, newIridescenceThicknessMinimum))
+        return;
+
+    m_iridescenceThicknessMinimum = newIridescenceThicknessMinimum;
+    emit iridescenceThicknessMinimumChanged(m_iridescenceThicknessMinimum);
+    markDirty(IridescenceDirty);
+}
+
+float QQuick3DPrincipledMaterial::iridescenceThicknessMaximum() const
+{
+    return m_iridescenceThicknessMaximum;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceThicknessMaximum(float newIridescenceThicknessMaximum)
+{
+    if (qFuzzyCompare(m_iridescenceThicknessMaximum, newIridescenceThicknessMaximum))
+        return;
+
+    m_iridescenceThicknessMaximum = newIridescenceThicknessMaximum;
+    emit iridescenceThicknessMaximumChanged(m_iridescenceThicknessMaximum);
+    markDirty(IridescenceDirty);
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::iridescenceThicknessMap() const
+{
+    return m_iridescenceThicknessMap;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceThicknessMap(QQuick3DTexture *newIridescenceThicknessMap)
+{
+    if (m_iridescenceThicknessMap == newIridescenceThicknessMap)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DPrincipledMaterial::setIridescenceThicknessMap, newIridescenceThicknessMap, m_iridescenceThicknessMap);
+
+    m_iridescenceThicknessMap = newIridescenceThicknessMap;
+    emit iridescenceThicknessMapChanged(m_iridescenceThicknessMap);
+    markDirty(IridescenceDirty);
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::iridescenceThicknessChannel() const
+{
+    return m_iridescenceThicknessChannel;
+}
+
+void QQuick3DPrincipledMaterial::setIridescenceThicknessChannel(QQuick3DMaterial::TextureChannelMapping newIridescenceThicknessChannel)
+{
+    if (m_iridescenceThicknessChannel == newIridescenceThicknessChannel)
+        return;
+
+    m_iridescenceThicknessChannel = newIridescenceThicknessChannel;
+    emit iridescenceThicknessChannelChanged(m_iridescenceThicknessChannel);
+    markDirty(IridescenceDirty);
 }
 
 float QQuick3DPrincipledMaterial::transmissionFactor() const

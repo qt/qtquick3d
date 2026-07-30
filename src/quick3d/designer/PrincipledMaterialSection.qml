@@ -1061,6 +1061,156 @@ Column {
     }
 
     Section {
+        caption: qsTr("Iridescence")
+        width: parent.width
+
+        SectionLayout {
+            PropertyLabel {
+                text: qsTr("Factor")
+                tooltip: qsTr("Sets the strength of the thin film that produces iridescence. Zero, the default, disables it.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 1
+                    decimals: 2
+                    stepSize: 0.1
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.iridescenceFactor
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Map")
+                tooltip: qsTr("Sets a texture used to vary the strength of the iridescence across the surface.")
+            }
+
+            SecondColumnLayout {
+                ItemFilterComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.iridescenceMap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Channel")
+                tooltip: qsTr("Sets the texture channel used to read the iridescence strength from iridescenceMap.")
+            }
+
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Material"
+                    model: ["R", "G", "B", "A"]
+                    backendValue: backendValues.iridescenceChannel
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Index Of Refraction")
+                tooltip: qsTr("Sets the index of refraction of the thin film itself, which together with its thickness decides the colors produced.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 1
+                    maximumValue: 3
+                    decimals: 2
+                    stepSize: 0.1
+                    backendValue: backendValues.iridescenceIndexOfRefraction
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Thickness Minimum")
+                tooltip: qsTr("Sets the film thickness in nanometers where the thickness map reads zero.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 2000
+                    decimals: 0
+                    stepSize: 10
+                    backendValue: backendValues.iridescenceThicknessMinimum
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Thickness Maximum")
+                tooltip: qsTr("Sets the film thickness in nanometers where the thickness map reads one, and the thickness of the whole film when no map is set.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 2000
+                    decimals: 0
+                    stepSize: 10
+                    backendValue: backendValues.iridescenceThicknessMaximum
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Thickness Map")
+                tooltip: qsTr("Sets a texture used to vary the thickness of the film, and with it the color, across the surface.")
+            }
+
+            SecondColumnLayout {
+                ItemFilterComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.iridescenceThicknessMap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Thickness Channel")
+                tooltip: qsTr("Sets the texture channel used to read the film thickness from iridescenceThicknessMap.")
+            }
+
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Material"
+                    model: ["R", "G", "B", "A"]
+                    backendValue: backendValues.iridescenceThicknessChannel
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+        }
+    }
+
+    Section {
         caption: qsTr("Refraction")
         width: parent.width
 

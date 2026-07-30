@@ -139,6 +139,11 @@ bool QSSGShaderDefaultMaterialAdapter::isAnisotropyEnabled()
     return m_material.isAnisotropyEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isIridescenceEnabled()
+{
+    return m_material.isIridescenceEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::isTransmissionEnabled()
 {
     return m_material.isTransmissionEnabled();
@@ -354,6 +359,26 @@ float QSSGShaderDefaultMaterialAdapter::anisotropyRotation()
     return m_material.anisotropyRotation;
 }
 
+float QSSGShaderDefaultMaterialAdapter::iridescenceFactor()
+{
+    return m_material.iridescenceFactor;
+}
+
+float QSSGShaderDefaultMaterialAdapter::iridescenceIndexOfRefraction()
+{
+    return m_material.iridescenceIndexOfRefraction;
+}
+
+float QSSGShaderDefaultMaterialAdapter::iridescenceThicknessMinimum()
+{
+    return m_material.iridescenceThicknessMinimum;
+}
+
+float QSSGShaderDefaultMaterialAdapter::iridescenceThicknessMaximum()
+{
+    return m_material.iridescenceThicknessMaximum;
+}
+
 float QSSGShaderDefaultMaterialAdapter::transmissionFactor()
 {
     return m_material.transmissionFactor;
@@ -446,6 +471,11 @@ bool QSSGShaderCustomMaterialAdapter::isSheenEnabled()
 bool QSSGShaderCustomMaterialAdapter::isAnisotropyEnabled()
 {
     return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Anisotropy);
+}
+
+bool QSSGShaderCustomMaterialAdapter::isIridescenceEnabled()
+{
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Iridescence);
 }
 
 bool QSSGShaderCustomMaterialAdapter::isTransmissionEnabled()
@@ -670,6 +700,27 @@ float QSSGShaderCustomMaterialAdapter::anisotropyStrength()
 float QSSGShaderCustomMaterialAdapter::anisotropyRotation()
 {
     return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::iridescenceFactor()
+{
+    // Custom materials provide the value through the IRIDESCENCE_FACTOR keyword
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::iridescenceIndexOfRefraction()
+{
+    return 1.3f;
+}
+
+float QSSGShaderCustomMaterialAdapter::iridescenceThicknessMinimum()
+{
+    return 100.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::iridescenceThicknessMaximum()
+{
+    return 400.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::transmissionFactor()
@@ -1050,6 +1101,10 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
                 else if (trimmedId == QByteArrayLiteral("ANISOTROPY_STRENGTH")
                          || trimmedId == QByteArrayLiteral("ANISOTROPY_ROTATION"))
                     md.flags |= QSSGCustomShaderMetaData::UsesAnisotropy;
+                else if (trimmedId == QByteArrayLiteral("IRIDESCENCE_FACTOR")
+                         || trimmedId == QByteArrayLiteral("IRIDESCENCE_IOR")
+                         || trimmedId == QByteArrayLiteral("IRIDESCENCE_THICKNESS"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesIridescence;
                 else if (trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_SCALE") ||
                             trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_BIAS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias;

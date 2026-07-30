@@ -453,6 +453,7 @@ QT_BEGIN_NAMESPACE
     SPECULAR_AMOUNT, NORMAL, CLEARCOAT_FRESNEL_POWER, CLEARCOAT_FRESNEL_SCALE,
     CLEARCOAT_FRESNEL_BIAS, CLEARCOAT_AMOUNT, CLEARCOAT_ROUGHNESS, CLEARCOAT_NORMAL,
     SHEEN_COLOR, SHEEN_ROUGHNESS, ANISOTROPY_STRENGTH, ANISOTROPY_ROTATION,
+    IRIDESCENCE_FACTOR, IRIDESCENCE_IOR, IRIDESCENCE_THICKNESS,
     FRESNEL_BIAS, FRESNEL_SCALE, FRESNEL_POWER, IOR, \c TRANSMISSION_FACTOR,
     THICKNESS_FACTOR, ATTENUATION_COLOR, ATTENUATION_DISTANCE and \c OCCLUSION_AMOUNT.
 
@@ -565,6 +566,22 @@ QT_BEGIN_NAMESPACE
     within the tangent plane, in radians. Note that unlike the PrincipledMaterial property
     of the same name this is in radians, since shader code works in radians throughout. The
     default is \c{0.0}.
+    \note Available since Qt 6.13.
+
+    \li float \c IRIDESCENCE_FACTOR Specifies the strength of the thin film that produces
+    iridescence. A typical value, and also the default, is \c{0.0} as that is what a
+    PrincipledMaterial would use, which disables the effect.
+    \note Available since Qt 6.13.
+
+    \li float \c IRIDESCENCE_IOR Specifies the index of refraction of the thin film, which
+    together with its thickness decides the colors produced. The default is \c{1.3}, roughly
+    that of a soap film.
+    \note Available since Qt 6.13.
+
+    \li float \c IRIDESCENCE_THICKNESS Specifies the thickness of the thin film in
+    nanometers. Note that this is the final thickness rather than the minimum and maximum
+    pair a PrincipledMaterial interpolates between, since a custom shader can compute it
+    directly. The default is \c{400.0}.
     \note Available since Qt 6.13.
 
     \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value,
@@ -1738,6 +1755,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Sheen, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesAnisotropy))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Anisotropy, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesIridescence))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Iridescence, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesFresnelScaleBias))

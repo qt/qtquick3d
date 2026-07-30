@@ -46,6 +46,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isClearcoatEnabled() = 0;
     virtual bool isSheenEnabled() = 0;
     virtual bool isAnisotropyEnabled() = 0;
+    virtual bool isIridescenceEnabled() = 0;
     virtual bool isTransmissionEnabled() = 0;
     virtual bool hasLighting() = 0;
     virtual bool usesCustomSkinning() = 0;
@@ -88,6 +89,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual float sheenRoughness() = 0;
     virtual float anisotropyStrength() = 0;
     virtual float anisotropyRotation() = 0;
+    virtual float iridescenceFactor() = 0;
+    virtual float iridescenceIndexOfRefraction() = 0;
+    virtual float iridescenceThicknessMinimum() = 0;
+    virtual float iridescenceThicknessMaximum() = 0;
     virtual float transmissionFactor() = 0;
     virtual float thicknessFactor() = 0;
     virtual float attenuationDistance() = 0;
@@ -124,6 +129,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool isClearcoatEnabled() override;
     bool isSheenEnabled() override;
     bool isAnisotropyEnabled() override;
+    bool isIridescenceEnabled() override;
     bool isTransmissionEnabled() override;
     bool isFresnelScaleBiasEnabled() override;
     bool isClearcoatFresnelScaleBiasEnabled() override;
@@ -168,6 +174,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     float sheenRoughness() override;
     float anisotropyStrength() override;
     float anisotropyRotation() override;
+    float iridescenceFactor() override;
+    float iridescenceIndexOfRefraction() override;
+    float iridescenceThicknessMinimum() override;
+    float iridescenceThicknessMaximum() override;
     float transmissionFactor() override;
     float thicknessFactor() override;
     float attenuationDistance() override;
@@ -194,6 +204,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isClearcoatEnabled() override;
     bool isSheenEnabled() override;
     bool isAnisotropyEnabled() override;
+    bool isIridescenceEnabled() override;
     bool isTransmissionEnabled() override;
     bool isFresnelScaleBiasEnabled() override;
     bool isClearcoatFresnelScaleBiasEnabled() override;
@@ -238,6 +249,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     float sheenRoughness() override;
     float anisotropyStrength() override;
     float anisotropyRotation() override;
+    float iridescenceFactor() override;
+    float iridescenceIndexOfRefraction() override;
+    float iridescenceThicknessMinimum() override;
+    float iridescenceThicknessMaximum() override;
     float transmissionFactor() override;
     float thicknessFactor() override;
     float attenuationDistance() override;

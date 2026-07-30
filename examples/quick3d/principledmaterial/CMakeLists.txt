@@ -37,6 +37,7 @@ qt_add_qml_module(principledmaterial
         ClearcoatPane.qml
         SheenPane.qml
         AnisotropyPane.qml
+        IridescencePane.qml
         RefractionPane.qml
         SpecialPane.qml
         VertexColorPane.qml

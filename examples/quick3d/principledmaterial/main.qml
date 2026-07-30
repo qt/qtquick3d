@@ -54,6 +54,9 @@ Window {
                    text: "Anisotropy"
                }
                TabButton {
+                   text: "Iridescence"
+               }
+               TabButton {
                    text: "Refraction"
                }
                TabButton {
@@ -99,6 +102,12 @@ Window {
 
                 // Anisotropy is likewise PrincipledMaterial only
                 AnisotropyPane {
+                    targetMaterial: basicMaterial
+                    specularGlossyMode: viewport.specularGlossyMode
+                }
+
+                // As is iridescence
+                IridescencePane {
                     targetMaterial: basicMaterial
                     specularGlossyMode: viewport.specularGlossyMode
                 }

@@ -1,0 +1,100 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#ifndef IRIDESCENCE_GLSLLIB
+#define IRIDESCENCE_GLSLLIB 1
+
+#include "principledMaterialFresnel.glsllib" // qt_schlick
+
+#ifndef M_PI
+#define M_PI 3.14159265359
+#endif
+
+// Thin-film model of KHR_materials_iridescence (Belcour and Barla 2017)
+
+vec3 qt_iridescenceFresnel0ToIor(vec3 f0)
+{
+    vec3 sqrtF0 = sqrt(f0);
+    return (vec3(1.0) + sqrtF0) / (vec3(1.0) - sqrtF0);
+}
+
+float qt_iridescenceIorToFresnel0(float transmittedIor, float incidentIor)
+{
+    float r = (transmittedIor - incidentIor) / (transmittedIor + incidentIor);
+    return r * r;
+}
+
+vec3 qt_iridescenceIorToFresnel0(vec3 transmittedIor, float incidentIor)
+{
+    vec3 r = (transmittedIor - vec3(incidentIor)) / (transmittedIor + vec3(incidentIor));
+    return r * r;
+}
+
+// Optical path difference to color, using the extension's fit of the CIE XYZ curves
+vec3 qt_iridescenceEvalSensitivity(float opd, vec3 shift)
+{
+    float phase = 2.0 * M_PI * opd * 1.0e-9;
+    vec3 val = vec3(5.4856e-13, 4.4201e-13, 5.2481e-13);
+    vec3 pos = vec3(1.6810e+06, 1.7953e+06, 2.2084e+06);
+    vec3 var = vec3(4.3278e+09, 9.3046e+09, 6.6121e+09);
+
+    vec3 xyz = val * sqrt(2.0 * M_PI * var) * cos(pos * phase + shift) * exp(-(phase * phase) * var);
+    xyz.x += 9.7470e-14 * sqrt(2.0 * M_PI * 4.5282e+09) * cos(2.2399e+06 * phase + shift[0])
+             * exp(-4.5282e+09 * (phase * phase));
+    xyz /= 1.0685e-7;
+
+    // Column major
+    const mat3 qt_xyzToRec709 = mat3( 3.2404542, -0.9692660,  0.0556434,
+                                     -1.5371385,  1.8760108, -0.2040259,
+                                     -0.4985314,  0.0415560,  1.0572252);
+    return qt_xyzToRec709 * xyz;
+}
+
+// Thickness is in nanometers
+vec3 qt_evalIridescence(float outsideIor, float iridescenceIor, float cosTheta1,
+                        float iridescenceThickness, vec3 baseF0)
+{
+    float r0 = qt_iridescenceIorToFresnel0(iridescenceIor, outsideIor);
+    float r12 = r0 + (1.0 - r0) * qt_schlick(cosTheta1);
+    float t121 = 1.0 - r12;
+
+    // Total internal reflection
+    float sinTheta2Sq = (outsideIor / iridescenceIor) * (outsideIor / iridescenceIor)
+                        * (1.0 - cosTheta1 * cosTheta1);
+    float cosTheta2Sq = 1.0 - sinTheta2Sq;
+    if (cosTheta2Sq < 0.0)
+        return vec3(1.0);
+    float cosTheta2 = sqrt(cosTheta2Sq);
+
+    // The conversion is singular at F0 = 1
+    vec3 baseIor = qt_iridescenceFresnel0ToIor(clamp(baseF0, 0.0, 0.9999));
+    vec3 r1 = qt_iridescenceIorToFresnel0(baseIor, iridescenceIor);
+    vec3 r23 = r1 + (vec3(1.0) - r1) * qt_schlick(cosTheta2);
+
+    float opd = 2.0 * iridescenceIor * iridescenceThickness * cosTheta2;
+    float phi12 = iridescenceIor < outsideIor ? M_PI : 0.0;
+    float phi21 = M_PI - phi12;
+    vec3 phi23 = vec3(baseIor[0] < iridescenceIor ? M_PI : 0.0,
+                      baseIor[1] < iridescenceIor ? M_PI : 0.0,
+                      baseIor[2] < iridescenceIor ? M_PI : 0.0);
+    vec3 phi = vec3(phi21) + phi23;
+
+    // Two terms of the series are enough, as r123 < 1
+    vec3 r123 = clamp(vec3(r12) * r23, 1e-5, 0.9999);
+    vec3 r123Sqrt = sqrt(r123);
+    vec3 rs = (t121 * t121) * r23 / (vec3(1.0) - r123);
+
+    vec3 c0 = vec3(r12) + rs;
+    vec3 i = c0;
+
+    vec3 cm = rs - vec3(t121);
+    for (int m = 1; m <= 2; ++m) {
+        cm *= r123Sqrt;
+        vec3 sm = 2.0 * qt_iridescenceEvalSensitivity(float(m) * opd, float(m) * phi);
+        i += cm * sm;
+    }
+
+    return max(i, vec3(0.0));
+}
+
+#endif // IRIDESCENCE_GLSLLIB

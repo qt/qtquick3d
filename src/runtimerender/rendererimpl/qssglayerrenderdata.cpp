@@ -1096,6 +1096,12 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
             case QSSGShaderDefaultMaterialKeyProperties::SheenRoughnessMap:
                 value = inMaterial->sheenRoughnessChannel;
                 break;
+            case QSSGShaderDefaultMaterialKeyProperties::IridescenceMap:
+                value = inMaterial->iridescenceChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::IridescenceThicknessMap:
+                value = inMaterial->iridescenceThicknessChannel;
+                break;
             case QSSGShaderDefaultMaterialKeyProperties::TransmissionMap:
                 value = inMaterial->transmissionChannel;
                 break;
@@ -1281,6 +1287,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
         defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey, theMaterial->isClearcoatEnabled());
         defaultMaterialShaderKeyProperties.m_sheenEnabled.setValue(theGeneratedKey, theMaterial->isSheenEnabled());
         defaultMaterialShaderKeyProperties.m_anisotropyEnabled.setValue(theGeneratedKey, theMaterial->isAnisotropyEnabled());
+        defaultMaterialShaderKeyProperties.m_iridescenceEnabled.setValue(theGeneratedKey, theMaterial->isIridescenceEnabled());
         defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey, theMaterial->isTransmissionEnabled());
 
         // Run through the material's images and prepare them for render.
@@ -1321,6 +1328,12 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
             CHECK_IMAGE_AND_PREPARE(theMaterial->anisotropyMap,
                                     QSSGRenderableImage::Type::Anisotropy,
                                     QSSGShaderDefaultMaterialKeyProperties::AnisotropyMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->iridescenceMap,
+                                    QSSGRenderableImage::Type::Iridescence,
+                                    QSSGShaderDefaultMaterialKeyProperties::IridescenceMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->iridescenceThicknessMap,
+                                    QSSGRenderableImage::Type::IridescenceThickness,
+                                    QSSGShaderDefaultMaterialKeyProperties::IridescenceThicknessMap);
             CHECK_IMAGE_AND_PREPARE(theMaterial->transmissionMap,
                                     QSSGRenderableImage::Type::Transmission,
                                     QSSGShaderDefaultMaterialKeyProperties::TransmissionMap);
@@ -1475,6 +1488,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
 
     const bool usesAnisotropy = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Anisotropy);
     defaultMaterialShaderKeyProperties.m_anisotropyEnabled.setValue(theGeneratedKey, usesAnisotropy);
+
+    const bool usesIridescence = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Iridescence);
+    defaultMaterialShaderKeyProperties.m_iridescenceEnabled.setValue(theGeneratedKey, usesIridescence);
 
     const bool usesClearcoatFresnelScaleBias = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias);
     defaultMaterialShaderKeyProperties.m_clearcoatFresnelScaleBiasEnabled.setValue(theGeneratedKey, usesClearcoatFresnelScaleBias);

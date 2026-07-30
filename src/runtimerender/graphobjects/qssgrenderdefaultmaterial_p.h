@@ -108,6 +108,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *sheenColorMap = nullptr;
     QSSGRenderImage *sheenRoughnessMap = nullptr;
     QSSGRenderImage *anisotropyMap = nullptr;
+    QSSGRenderImage *iridescenceMap = nullptr;
+    QSSGRenderImage *iridescenceThicknessMap = nullptr;
     QSSGRenderImage *transmissionMap = nullptr;
     QSSGRenderImage *thicknessMap = nullptr;
 
@@ -149,6 +151,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float sheenRoughness = 0.0f; // 0 - 1
     float anisotropyStrength = 0.0f; // 0 - 1, 0 disables anisotropy
     float anisotropyRotation = 0.0f; // radians
+    float iridescenceFactor = 0.0f; // 0 - 1, 0 disables iridescence
+    float iridescenceIndexOfRefraction = 1.3f;
+    float iridescenceThicknessMinimum = 100.0f; // nanometers
+    float iridescenceThicknessMaximum = 400.0f; // nanometers
     float transmissionFactor = 0.0f; // 0 - 1
     float thicknessFactor = 0.0f; // 0 - 1
     float attenuationDistance = std::numeric_limits<float>::infinity();
@@ -173,6 +179,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping clearcoatChannel = TextureChannelMapping::R;
     TextureChannelMapping clearcoatRoughnessChannel = TextureChannelMapping::G;
     TextureChannelMapping sheenRoughnessChannel = TextureChannelMapping::A;
+    TextureChannelMapping iridescenceChannel = TextureChannelMapping::R;
+    TextureChannelMapping iridescenceThicknessChannel = TextureChannelMapping::G;
     TextureChannelMapping transmissionChannel = TextureChannelMapping::R;
     TextureChannelMapping thicknessChannel = TextureChannelMapping::G;
     TextureChannelMapping baseColorChannel = TextureChannelMapping::R;
@@ -203,6 +211,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool isClearcoatEnabled() const { return clearcoatAmount > 0.01f; }
     bool isSheenEnabled() const { return sheenColor.x() > 0.01f || sheenColor.y() > 0.01f || sheenColor.z() > 0.01f; }
     bool isAnisotropyEnabled() const { return anisotropyStrength > 0.01f; }
+    bool isIridescenceEnabled() const { return iridescenceFactor > 0.01f; }
     bool isTransmissionEnabled() const { return transmissionFactor > 0.01f; }
 
     [[nodiscard]] inline bool isDirty() const { return dirty; }

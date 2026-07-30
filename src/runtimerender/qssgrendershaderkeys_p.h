@@ -659,7 +659,7 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<9>
 struct QSSGShaderDefaultMaterialKeyProperties
 {
     enum {
-        SingleChannelImageCount = 14,
+        SingleChannelImageCount = 16,
     };
     enum ImageMapNames {
         DiffuseMap = 0,
@@ -684,6 +684,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         SpecularAmountMap,
         EmissiveMap,
         SheenRoughnessMap,
+        IridescenceMap,
+        IridescenceThicknessMap,
 
         ImageMapCount,
         SingleChannelImagesFirst = OpacityMap
@@ -703,6 +705,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         SpecularAmountChannel,
         EmissiveChannel,
         SheenRoughnessChannel,
+        IridescenceChannel,
+        IridescenceThicknessChannel,
     };
 
     QSSGShaderKeyBoolean m_hasLighting;
@@ -751,6 +755,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_clearcoatEnabled;
     QSSGShaderKeyBoolean m_sheenEnabled;
     QSSGShaderKeyBoolean m_anisotropyEnabled;
+    QSSGShaderKeyBoolean m_iridescenceEnabled;
     QSSGShaderKeyBoolean m_transmissionEnabled;
     QSSGShaderKeyBoolean m_specularAAEnabled;
     QSSGShaderKeyBoolean m_lightmapEnabled;
@@ -808,6 +813,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_clearcoatEnabled("clearcoatEnabled")
         , m_sheenEnabled("sheenEnabled")
         , m_anisotropyEnabled("anisotropyEnabled")
+        , m_iridescenceEnabled("iridescenceEnabled")
         , m_transmissionEnabled("transmissionEnabled")
         , m_specularAAEnabled("specularAAEnabled")
         , m_lightmapEnabled("lightmapEnabled")
@@ -842,6 +848,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[SpecularAmountMap].name = "specularAmountMap";
         m_imageMaps[EmissiveMap].name = "emissiveMap";
         m_imageMaps[SheenRoughnessMap].name = "sheenRoughnessMap";
+        m_imageMaps[IridescenceMap].name = "iridescenceMap";
+        m_imageMaps[IridescenceThicknessMap].name = "iridescenceThicknessMap";
 
         m_textureChannels[OpacityChannel].name = "opacityMap_channel";
         m_textureChannels[RoughnessChannel].name = "roughnessMap_channel";
@@ -857,6 +865,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureChannels[SpecularAmountChannel].name = "specularAmountMap_channel";
         m_textureChannels[EmissiveChannel].name = "emissiveMap_channel";
         m_textureChannels[SheenRoughnessChannel].name = "sheenRoughnessMap_channel";
+        m_textureChannels[IridescenceChannel].name = "iridescenceMap_channel";
+        m_textureChannels[IridescenceThicknessChannel].name = "iridescenceThicknessMap_channel";
 
         init();
     }
@@ -914,6 +924,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_clearcoatEnabled);
         inVisitor.visit(m_sheenEnabled);
         inVisitor.visit(m_anisotropyEnabled);
+        inVisitor.visit(m_iridescenceEnabled);
         inVisitor.visit(m_transmissionEnabled);
         inVisitor.visit(m_specularAAEnabled);
         inVisitor.visit(m_lightmapEnabled);
