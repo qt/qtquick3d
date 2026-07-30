@@ -118,4 +118,36 @@ vec4 qt_sampleGlossyPrincipled(vec3 normal, vec3 viewDir, vec3 F, float roughnes
     return vec4(qt_exposure(sampleColor, qt_lightProbeProperties.w), 1.0);
 }
 
+#if QSSG_ENABLE_SHEEN
+#include "sheen.glsllib"
+
+// The Charlie lobe is much wider than GGX, so it has its own mip mapping
+vec4 qt_sampleGlossySheen(vec3 normal, vec3 viewDir, vec3 sheenColor, float sheenRoughness)
+{
+    if (qt_lightProbeProperties.w < 0.005)
+        return vec4(0.0);
+
+    float levels = qt_lightProbeProperties.y - 1.0;
+    float lod = clamp(1.0 + sheenRoughness * (levels - 1.0), 0.0, levels);
+    vec3 smpDir = normalize(reflect(-viewDir, normal));
+#if QSSG_ENABLE_IBL_ORIENTATION
+    smpDir = qt_lightProbeOrientation * smpDir;
+#endif
+
+    vec3 sheenSample = qt_textureProbe(qt_lightProbe, smpDir, lod);
+    if (qt_lightProbeProperties.z > -1.0) {
+        float ctr = 0.5 + 0.5 * qt_lightProbeProperties.z;
+        float vertWt = smoothstep(ctr * 0.25, ctr + 0.25, smpDir.y);
+        float wtScaled = mix(1.0, vertWt, qt_lightProbeProperties.z + 1.0);
+        sheenSample *= wtScaled;
+    }
+
+    // The albedo takes the place of the split-sum BRDF factor
+    float NdotV = clamp(dot(normal, viewDir), 0.0, 1.0);
+    vec3 sampleColor = sheenSample * sheenColor * qt_E_sheen(NdotV, sheenRoughness);
+
+    return vec4(qt_exposure(sampleColor, qt_lightProbeProperties.w), 1.0);
+}
+#endif // QSSG_ENABLE_SHEEN
+
 #endif

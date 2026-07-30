@@ -83,4 +83,23 @@ vec4 qt_sampleGlossyReflectionPrincipled(samplerCube reflectionProbe, vec3 norma
     return vec4(specularSample * (F * brdf.x + brdf.y), 1.0);
 }
 
+#if QSSG_ENABLE_SHEEN
+#include "sheen.glsllib"
+
+// Reflection probe counterpart of qt_sampleGlossySheen()
+vec4 qt_sampleGlossySheenReflectionProbe(samplerCube reflectionProbe, vec3 normal, vec3 viewDir, vec3 sheenColor, float sheenRoughness)
+{
+    float levels = 4;
+
+    float lod = clamp(1.0 + sheenRoughness * (levels - 1.0), 0.0, levels);
+    vec3 smpDir = normalize(reflect(-viewDir, normal));
+
+    smpDir = qt_reflectionParallaxCorrection(smpDir);
+    vec3 sheenSample = qt_textureReflectionProbe(reflectionProbe, smpDir, lod);
+
+    float NdotV = clamp(dot(normal, viewDir), 0.0, 1.0);
+    return vec4(sheenSample * sheenColor * qt_E_sheen(NdotV, sheenRoughness), 1.0);
+}
+#endif // QSSG_ENABLE_SHEEN
+
 #endif

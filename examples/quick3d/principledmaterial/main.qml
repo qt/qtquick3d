@@ -48,6 +48,9 @@ Window {
                    text: "Clearcoat"
                }
                TabButton {
+                   text: "Sheen"
+               }
+               TabButton {
                    text: "Refraction"
                }
                TabButton {
@@ -82,6 +85,13 @@ Window {
 
                 ClearcoatPane {
                     targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                }
+
+                // Sheen is a PrincipledMaterial-only feature, so this pane
+                // always targets the PrincipledMaterial
+                SheenPane {
+                    targetMaterial: basicMaterial
+                    specularGlossyMode: viewport.specularGlossyMode
                 }
 
                 RefractionPane {

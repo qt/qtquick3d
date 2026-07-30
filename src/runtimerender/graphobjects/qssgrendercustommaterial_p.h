@@ -113,7 +113,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         FresnelScaleBias = 1 << 16,
         Transmission = 1 << 17,
         NormalTexture = 1 << 18,
-        MotionVectorTexture = 1 << 19
+        MotionVectorTexture = 1 << 19,
+        Sheen = 1 << 20
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

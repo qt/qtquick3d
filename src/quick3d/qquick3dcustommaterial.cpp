@@ -452,6 +452,7 @@ QT_BEGIN_NAMESPACE
     of the special writable variables \c BASE_COLOR, \c METALNESS, \c ROUGHNESS, \c
     SPECULAR_AMOUNT, NORMAL, CLEARCOAT_FRESNEL_POWER, CLEARCOAT_FRESNEL_SCALE,
     CLEARCOAT_FRESNEL_BIAS, CLEARCOAT_AMOUNT, CLEARCOAT_ROUGHNESS, CLEARCOAT_NORMAL,
+    SHEEN_COLOR, SHEEN_ROUGHNESS,
     FRESNEL_BIAS, FRESNEL_SCALE, FRESNEL_POWER, IOR, \c TRANSMISSION_FACTOR,
     THICKNESS_FACTOR, ATTENUATION_COLOR, ATTENUATION_DISTANCE and \c OCCLUSION_AMOUNT.
 
@@ -543,6 +544,16 @@ QT_BEGIN_NAMESPACE
     \li vec3 \c CLEARCOAT_NORMAL - The clearcoat layer normal that comes from the vertex shader in world
     space. While this property has the same initial value as \c VAR_WORLD_NORMAL,
     only changing the value of \c CLEARCOAT_NORMAL will have an effect on clearcoat layer normal.
+
+    \li vec3 \c SHEEN_COLOR Specifies the color of the sheen layer, which also acts as its
+    strength: the default \c{vec3(0.0)} leaves the sheen layer disabled, as that is what a
+    PrincipledMaterial with the default sheenColor would do.
+    \note Available since Qt 6.13.
+
+    \li float \c SHEEN_ROUGHNESS Specifies the roughness of the sheen layer, where higher
+    values spread the highlight further from the silhouette. A typical value, and also the
+    default, is \c{0.0} as that is what a PrincipledMaterial would use.
+    \note Available since Qt 6.13.
 
     \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value,
     and also the default, is \c{5.0} as that is what a PrincipledMaterial would use.
@@ -1711,6 +1722,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ViewIndex, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesClearcoat))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Clearcoat, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesSheen))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Sheen, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesFresnelScaleBias))

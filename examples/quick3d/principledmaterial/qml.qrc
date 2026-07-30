@@ -5,6 +5,7 @@
         <file>BackgroundCurtain.qml</file>
         <file>BasicsPane.qml</file>
         <file>ClearcoatPane.qml</file>
+        <file>SheenPane.qml</file>
         <file>DemoPane.qml</file>
         <file>DetailsPane.qml</file>
         <file>MarkdownLabel.qml</file>

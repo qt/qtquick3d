@@ -95,6 +95,14 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
                        clearcoatNormalMapChanged REVISION(6, 3))
     Q_PROPERTY(float clearcoatNormalStrength READ clearcoatNormalStrength WRITE setClearcoatNormalStrength NOTIFY clearcoatNormalStrengthChanged REVISION(6, 8))
 
+    Q_PROPERTY(QColor sheenColor READ sheenColor WRITE setSheenColor NOTIFY sheenColorChanged REVISION(6, 13))
+    Q_PROPERTY(QQuick3DTexture *sheenColorMap READ sheenColorMap WRITE setSheenColorMap NOTIFY sheenColorMapChanged REVISION(6, 13))
+    Q_PROPERTY(float sheenRoughness READ sheenRoughness WRITE setSheenRoughness NOTIFY sheenRoughnessChanged REVISION(6, 13))
+    Q_PROPERTY(QQuick3DTexture *sheenRoughnessMap READ sheenRoughnessMap WRITE setSheenRoughnessMap NOTIFY
+                       sheenRoughnessMapChanged REVISION(6, 13))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping sheenRoughnessChannel READ sheenRoughnessChannel WRITE
+                       setSheenRoughnessChannel NOTIFY sheenRoughnessChannelChanged REVISION(6, 13))
+
     Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping transmissionChannel READ transmissionChannel WRITE setTransmissionChannel NOTIFY transmissionChannelChanged)
@@ -221,6 +229,12 @@ public:
     Q_REVISION(6, 3) QQuick3DTexture *clearcoatNormalMap() const;
     Q_REVISION(6, 8) float clearcoatNormalStrength() const;
 
+    Q_REVISION(6, 13) const QColor &sheenColor() const;
+    Q_REVISION(6, 13) QQuick3DTexture *sheenColorMap() const;
+    Q_REVISION(6, 13) float sheenRoughness() const;
+    Q_REVISION(6, 13) QQuick3DTexture *sheenRoughnessMap() const;
+    Q_REVISION(6, 13) TextureChannelMapping sheenRoughnessChannel() const;
+
     Q_REVISION(6, 3) float transmissionFactor() const;
     Q_REVISION(6, 3) QQuick3DTexture *transmissionMap() const;
     Q_REVISION(6, 3) TextureChannelMapping transmissionChannel() const;
@@ -302,6 +316,12 @@ public Q_SLOTS:
     Q_REVISION(6, 3) void setClearcoatNormalMap(QQuick3DTexture *newClearcoatNormalMap);
     Q_REVISION(6, 8) void setClearcoatNormalStrength(float clearcoatNormalStrength);
 
+    Q_REVISION(6, 13) void setSheenColor(const QColor &newSheenColor);
+    Q_REVISION(6, 13) void setSheenColorMap(QQuick3DTexture *newSheenColorMap);
+    Q_REVISION(6, 13) void setSheenRoughness(float newSheenRoughness);
+    Q_REVISION(6, 13) void setSheenRoughnessMap(QQuick3DTexture *newSheenRoughnessMap);
+    Q_REVISION(6, 13) void setSheenRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newSheenRoughnessChannel);
+
     Q_REVISION(6, 3) void setTransmissionFactor(float newTransmissionFactor);
     Q_REVISION(6, 3) void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
     Q_REVISION(6, 3) void setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel);
@@ -382,6 +402,12 @@ Q_SIGNALS:
     Q_REVISION(6, 3) void clearcoatNormalMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 8) void clearcoatNormalStrengthChanged(float clearcoatNormalStrength);
 
+    Q_REVISION(6, 13) void sheenColorChanged(QColor color);
+    Q_REVISION(6, 13) void sheenColorMapChanged(QQuick3DTexture *texture);
+    Q_REVISION(6, 13) void sheenRoughnessChanged(float amount);
+    Q_REVISION(6, 13) void sheenRoughnessMapChanged(QQuick3DTexture *texture);
+    Q_REVISION(6, 13) void sheenRoughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+
     Q_REVISION(6, 3) void transmissionFactorChanged(float amount);
     Q_REVISION(6, 3) void transmissionMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 3) void transmissionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
@@ -434,7 +460,8 @@ private:
         ClearcoatDirty = 0x00004000,
         TransmissionDirty = 0x00008000,
         VolumeDirty = 0x00010000,
-        VertexColorsDirty = 0x00020000
+        VertexColorsDirty = 0x00020000,
+        SheenDirty = 0x00040000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -494,6 +521,11 @@ private:
     TextureChannelMapping m_clearcoatRoughnessChannel = QQuick3DMaterial::G;
     QQuick3DTexture *m_clearcoatRoughnessMap = nullptr;
     QQuick3DTexture *m_clearcoatNormalMap = nullptr;
+    QColor m_sheenColor = Qt::black;
+    QQuick3DTexture *m_sheenColorMap = nullptr;
+    float m_sheenRoughness = 0.0f;
+    QQuick3DTexture *m_sheenRoughnessMap = nullptr;
+    TextureChannelMapping m_sheenRoughnessChannel = QQuick3DMaterial::A;
     float m_transmissionFactor = 0.0f;
     QQuick3DTexture *m_transmissionMap = nullptr;
     TextureChannelMapping m_transmissionChannel = QQuick3DMaterial::R;

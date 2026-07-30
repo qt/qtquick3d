@@ -52,7 +52,9 @@ struct QSSGRenderableImage
         ClearcoatRoughness,
         ClearcoatNormal,
         Transmission,
-        Thickness
+        Thickness,
+        SheenColor,
+        SheenRoughness
     };
     const QSSGRenderImage &m_imageNode;
     QSSGRenderImageTexture m_texture;

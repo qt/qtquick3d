@@ -671,6 +671,84 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty color PrincipledMaterial::sheenColor
+    \since 6.13
+
+    This property defines the color and intensity of the sheen layer, a soft
+    retroreflective highlight at grazing angles that is characteristic of
+    cloth and fabric.
+
+    The sheen layer is disabled while this color is black, so setting a color
+    is what enables sheen. Note that \l sheenColorMap is multiplied with this
+    value, which means the map has no effect while the color is black.
+
+    The sheen layer is applied underneath the clearcoat layer and reduces the
+    energy of the layers below it, so enabling sheen darkens the base
+    material slightly.
+
+    The default value is \c "black", which disables sheen.
+
+    \sa sheenColorMap, sheenRoughness
+*/
+
+/*!
+    \qmlproperty Texture PrincipledMaterial::sheenColorMap
+    \since 6.13
+
+    This property defines a texture used to set the color of the sheen layer
+    per fragment. The RGB channels of the texture are multiplied with
+    \l sheenColor, so a \l sheenColor must be set for this map to have any
+    effect.
+
+    \note Texture maps are optional. Materials that use a large number of
+    maps at the same time can exceed the number of texture samplers
+    available to a fragment shader on some graphics APIs.
+
+    \sa sheenColor
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::sheenRoughness
+    \since 6.13
+
+    This property defines how soft and spread out the sheen highlight is.
+    Lower values give a tight highlight close to the silhouette, higher
+    values spread the sheen across the whole surface.
+
+    The value is in the range \c 0.0 to \c 1.0. The default value is \c 0.0.
+
+    \sa sheenRoughnessMap, sheenColor
+*/
+
+/*!
+    \qmlproperty Texture PrincipledMaterial::sheenRoughnessMap
+    \since 6.13
+
+    This property defines a texture used to set the sheen roughness per
+    fragment. The value read from the texture is multiplied with
+    \l sheenRoughness.
+
+    \sa sheenRoughness, sheenRoughnessChannel
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::sheenRoughnessChannel
+    \since 6.13
+
+    This property defines the texture channel used to read the sheen
+    roughness value from \l sheenRoughnessMap. The default value is
+    \c Material.A, which is the channel the glTF
+    \c KHR_materials_sheen extension packs sheen roughness into.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+
+    \sa sheenRoughnessMap
+*/
+
+/*!
     \qmlproperty real PrincipledMaterial::transmissionFactor
 
     This property defines the percentage of light that is transmitted through
@@ -1765,6 +1843,20 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->clearcoatFresnelPower = m_clearcoatFresnelPower;
     }
 
+    if (m_dirtyAttributes & SheenDirty) {
+        material->sheenColor = QSSGUtils::color::sRGBToLinear(m_sheenColor).toVector3D();
+        if (!m_sheenColorMap)
+            material->sheenColorMap = nullptr;
+        else
+            material->sheenColorMap = m_sheenColorMap->getRenderImage();
+        material->sheenRoughness = m_sheenRoughness;
+        if (!m_sheenRoughnessMap)
+            material->sheenRoughnessMap = nullptr;
+        else
+            material->sheenRoughnessMap = m_sheenRoughnessMap->getRenderImage();
+        material->sheenRoughnessChannel = channelMapping(m_sheenRoughnessChannel);
+    }
+
     if (m_dirtyAttributes & TransmissionDirty) {
         material->transmissionFactor = m_transmissionFactor;
         if (!m_transmissionMap)
@@ -1823,6 +1915,8 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatRoughnessMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatNormalMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_sheenColorMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_sheenRoughnessMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_transmissionMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_thicknessMap, *sceneManager);
     } else {
@@ -1839,6 +1933,8 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatMap);
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatRoughnessMap);
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatNormalMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_sheenColorMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_sheenRoughnessMap);
         QQuick3DObjectPrivate::derefSceneManager(m_transmissionMap);
         QQuick3DObjectPrivate::derefSceneManager(m_thicknessMap);
     }
@@ -1973,6 +2069,86 @@ void QQuick3DPrincipledMaterial::setClearcoatNormalStrength(float newClearcoatNo
     m_clearcoatNormalStrength = newClearcoatNormalStrength;
     emit clearcoatNormalStrengthChanged(m_clearcoatNormalStrength);
     markDirty(ClearcoatDirty);
+}
+
+const QColor &QQuick3DPrincipledMaterial::sheenColor() const
+{
+    return m_sheenColor;
+}
+
+void QQuick3DPrincipledMaterial::setSheenColor(const QColor &newSheenColor)
+{
+    if (m_sheenColor == newSheenColor)
+        return;
+
+    m_sheenColor = newSheenColor;
+    emit sheenColorChanged(m_sheenColor);
+    markDirty(SheenDirty);
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::sheenColorMap() const
+{
+    return m_sheenColorMap;
+}
+
+void QQuick3DPrincipledMaterial::setSheenColorMap(QQuick3DTexture *newSheenColorMap)
+{
+    if (m_sheenColorMap == newSheenColorMap)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DPrincipledMaterial::setSheenColorMap, newSheenColorMap, m_sheenColorMap);
+
+    m_sheenColorMap = newSheenColorMap;
+    emit sheenColorMapChanged(m_sheenColorMap);
+    markDirty(SheenDirty);
+}
+
+float QQuick3DPrincipledMaterial::sheenRoughness() const
+{
+    return m_sheenRoughness;
+}
+
+void QQuick3DPrincipledMaterial::setSheenRoughness(float newSheenRoughness)
+{
+    newSheenRoughness = ensureNormalized(newSheenRoughness);
+    if (qFuzzyCompare(m_sheenRoughness, newSheenRoughness))
+        return;
+
+    m_sheenRoughness = newSheenRoughness;
+    emit sheenRoughnessChanged(m_sheenRoughness);
+    markDirty(SheenDirty);
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::sheenRoughnessMap() const
+{
+    return m_sheenRoughnessMap;
+}
+
+void QQuick3DPrincipledMaterial::setSheenRoughnessMap(QQuick3DTexture *newSheenRoughnessMap)
+{
+    if (m_sheenRoughnessMap == newSheenRoughnessMap)
+        return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DPrincipledMaterial::setSheenRoughnessMap, newSheenRoughnessMap, m_sheenRoughnessMap);
+
+    m_sheenRoughnessMap = newSheenRoughnessMap;
+    emit sheenRoughnessMapChanged(m_sheenRoughnessMap);
+    markDirty(SheenDirty);
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::sheenRoughnessChannel() const
+{
+    return m_sheenRoughnessChannel;
+}
+
+void QQuick3DPrincipledMaterial::setSheenRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newSheenRoughnessChannel)
+{
+    if (m_sheenRoughnessChannel == newSheenRoughnessChannel)
+        return;
+
+    m_sheenRoughnessChannel = newSheenRoughnessChannel;
+    emit sheenRoughnessChannelChanged(m_sheenRoughnessChannel);
+    markDirty(SheenDirty);
 }
 
 float QQuick3DPrincipledMaterial::transmissionFactor() const

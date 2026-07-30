@@ -129,6 +129,11 @@ bool QSSGShaderDefaultMaterialAdapter::isClearcoatEnabled()
     return m_material.isClearcoatEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isSheenEnabled()
+{
+    return m_material.isSheenEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::isTransmissionEnabled()
 {
     return m_material.isTransmissionEnabled();
@@ -324,6 +329,16 @@ float QSSGShaderDefaultMaterialAdapter::clearcoatNormalStrength()
     return m_material.clearcoatNormalStrength;
 }
 
+QVector3D QSSGShaderDefaultMaterialAdapter::sheenColor()
+{
+    return m_material.sheenColor;
+}
+
+float QSSGShaderDefaultMaterialAdapter::sheenRoughness()
+{
+    return m_material.sheenRoughness;
+}
+
 float QSSGShaderDefaultMaterialAdapter::transmissionFactor()
 {
     return m_material.transmissionFactor;
@@ -406,6 +421,11 @@ bool QSSGShaderCustomMaterialAdapter::isEmissiveSingleChannelEnabled()
 bool QSSGShaderCustomMaterialAdapter::isClearcoatEnabled()
 {
     return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Clearcoat);
+}
+
+bool QSSGShaderCustomMaterialAdapter::isSheenEnabled()
+{
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Sheen);
 }
 
 bool QSSGShaderCustomMaterialAdapter::isTransmissionEnabled()
@@ -608,6 +628,17 @@ float QSSGShaderCustomMaterialAdapter::clearcoatRoughnessAmount()
 float QSSGShaderCustomMaterialAdapter::clearcoatNormalStrength()
 {
     return 1.0f;
+}
+
+QVector3D QSSGShaderCustomMaterialAdapter::sheenColor()
+{
+    // Custom materials provide the value through the SHEEN_COLOR keyword
+    return { 0.0f, 0.0f, 0.0f };
+}
+
+float QSSGShaderCustomMaterialAdapter::sheenRoughness()
+{
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::transmissionFactor()
@@ -982,6 +1013,9 @@ void QSSGShaderCustomMaterialAdapter::beginPrepareCustomShader(
                     md.flags |= QSSGCustomShaderMetaData::UsesInputTexture;
                 else if (trimmedId == QByteArrayLiteral("CLEARCOAT_AMOUNT"))
                     md.flags |= QSSGCustomShaderMetaData::UsesClearcoat;
+                else if (trimmedId == QByteArrayLiteral("SHEEN_COLOR")
+                         || trimmedId == QByteArrayLiteral("SHEEN_ROUGHNESS"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesSheen;
                 else if (trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_SCALE") ||
                             trimmedId == QByteArrayLiteral("CLEARCOAT_FRESNEL_BIAS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesClearcoatFresnelScaleBias;

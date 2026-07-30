@@ -65,6 +65,8 @@ DefineImageStrings(ClearcoatRoughness);
 DefineImageStrings(ClearcoatNormal);
 DefineImageStrings(Transmission);
 DefineImageStrings(Thickness);
+DefineImageStrings(SheenColor);
+DefineImageStrings(SheenRoughness);
 
 struct ImageStringSet
 {
@@ -98,7 +100,9 @@ constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(ClearcoatRoughness),
     DefineImageStringTableEntry(ClearcoatNormal),
     DefineImageStringTableEntry(Transmission),
-    DefineImageStringTableEntry(Thickness)
+    DefineImageStringTableEntry(Thickness),
+    DefineImageStringTableEntry(SheenColor),
+    DefineImageStringTableEntry(SheenRoughness)
 };
 
 const int TEXCOORD_VAR_LEN = 16;
@@ -259,6 +263,8 @@ static constexpr QByteArrayView qssg_shader_arg_names[] {
     { "CLEARCOAT_AMOUNT" },
     { "CLEARCOAT_NORMAL" },
     { "CLEARCOAT_ROUGHNESS" },
+    { "SHEEN_COLOR" },
+    { "SHEEN_ROUGHNESS" },
     { "IOR" },
     { "TRANSMISSION_FACTOR" },
     { "THICKNESS_FACTOR" },
@@ -356,6 +362,8 @@ static void generateFragmentDefines(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addDefinition("QSSG_ENABLE_SPECULAR", "1");
     if (keyProps.m_clearcoatEnabled.getValue(inKey))
         fragmentShader.addDefinition("QSSG_ENABLE_CLEARCOAT", "1");
+    if (keyProps.m_sheenEnabled.getValue(inKey))
+        fragmentShader.addDefinition("QSSG_ENABLE_SHEEN", "1");
     if (keyProps.m_transmissionEnabled.getValue(inKey))
         fragmentShader.addDefinition("QSSG_ENABLE_TRANSMISSION", "1");
     if (keyProps.m_metallicRoughnessEnabled.getValue(inKey))
@@ -453,6 +461,10 @@ struct SamplerState {
             return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::TransmissionMap;
         case QSSGRenderableImage::Type::Thickness:
             return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::ThicknessMap;
+        case QSSGRenderableImage::Type::SheenColor:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::SheenColorMap;
+        case QSSGRenderableImage::Type::SheenRoughness:
+            return QSSGShaderDefaultMaterialKeyProperties::ImageMapNames::SheenRoughnessMap;
         case QSSGRenderableImage::Type::Unknown:
             break;
         }
@@ -585,6 +597,7 @@ struct PassRequirmentsState {
     bool hasBumpNormalMap = false;
     bool hasParallaxMapping = false;
     bool hasClearcoat = false;
+    bool hasSheen = false;
     bool hasTransmission = false;
     bool hasFresnelScaleBias = false;
     bool hasClearcoatFresnelScaleBias = false;
@@ -644,6 +657,7 @@ struct PassRequirmentsState {
         hasBumpNormalMap = samplerState.hasImage(QSSGRenderableImage::Type::Normal) || samplerState.hasImage(QSSGRenderableImage::Type::Bump);
         hasParallaxMapping = samplerState.hasImage(QSSGRenderableImage::Type::Height);
         hasClearcoat = keyProps.m_clearcoatEnabled.getValue(inKey);
+        hasSheen = keyProps.m_sheenEnabled.getValue(inKey);
         hasTransmission = keyProps.m_transmissionEnabled.getValue(inKey);
         hasFresnelScaleBias = keyProps.m_fresnelScaleBiasEnabled.getValue(inKey);
         hasClearcoatFresnelScaleBias = keyProps.m_clearcoatFresnelScaleBiasEnabled.getValue(inKey);
@@ -979,6 +993,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addUniform("qt_material_properties5", "vec4");
         fragmentShader.addUniform("qt_material_clearcoat_normal_strength", "float");
         fragmentShader.addUniform("qt_material_clearcoat_fresnel_power", "float");
+        if (passRequirmentState.hasSheen) {
+            fragmentShader.addUniform("qt_material_sheen_color", "vec3");
+            fragmentShader.addUniform("qt_material_sheen_roughness", "float");
+        }
     }
 
     if (passRequirmentState.hasVertexColors) {
@@ -1077,6 +1095,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    float qt_customClearcoatFresnelBias = 0.0;\n";
             }
         }
+        if (passRequirmentState.hasSheen) {
+            fragmentShader << "    vec3 qt_customSheenColor = vec3(0.0);\n";
+            fragmentShader << "    float qt_customSheenRoughness = 0.0;\n";
+        }
         if (passRequirmentState.hasFresnelScaleBias) {
             fragmentShader << "    float qt_customFresnelScale = 1.0;\n";
             fragmentShader << "    float qt_customFresnelBias = 0.0;\n";
@@ -1118,6 +1140,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader << ",\n                  qt_customClearcoatFresnelScale,\n"
                                    << "                  qt_customClearcoatFresnelBias";
                 }
+            }
+            if (passRequirmentState.hasSheen) {
+                fragmentShader << ",\n                  qt_customSheenColor,\n"
+                               << "                  qt_customSheenRoughness";
             }
             if (passRequirmentState.hasFresnelScaleBias) {
                 fragmentShader << ",\n                  qt_customFresnelScale,\n"
@@ -1453,6 +1479,42 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             maskVariableByVertexColorChannel( "qt_aoFactor", QSSGRenderDefaultMaterial::OcclusionAmountMask );
         }
 
+        if (passRequirmentState.hasSheen) {
+            fragmentShader.addInclude("sheen.glsllib");
+            addLocalVariable(fragmentShader, "qt_sheenColor", "vec3");
+            addLocalVariable(fragmentShader, "qt_sheenRoughness", "float");
+            addLocalVariable(fragmentShader, "qt_global_sheen", "vec3");
+
+            if (hasCustomFrag)
+                fragmentShader << "    qt_sheenColor = qt_customSheenColor;\n";
+            else
+                fragmentShader << "    qt_sheenColor = qt_material_sheen_color;\n";
+            if (hasCustomFrag)
+                fragmentShader << "    qt_sheenRoughness = qt_customSheenRoughness;\n";
+            else
+                fragmentShader << "    qt_sheenRoughness = qt_material_sheen_roughness;\n";
+            fragmentShader << "    qt_global_sheen = vec3(0.0);\n";
+
+            if (samplerState.hasImage(QSSGRenderableImage::Type::SheenColor)) {
+                samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::SheenColor, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                fragmentShader << "    vec3 qt_sheenColorSample = texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::SheenColor) << ", "
+                               << samplerState.fragCoordsName(QSSGRenderableImage::Type::SheenColor) << ").rgb;\n";
+                if (!keyProps.m_imageMaps[QSSGShaderDefaultMaterialKeyProperties::SheenColorMap].isLinear(inKey)) {
+                    fragmentShader.addInclude("tonemapping.glsllib");
+                    fragmentShader << "    qt_sheenColorSample = qt_sRGBToLinear(qt_sheenColorSample);\n";
+                }
+                fragmentShader << "    qt_sheenColor *= qt_sheenColorSample;\n";
+            }
+
+            if (samplerState.hasImage(QSSGRenderableImage::Type::SheenRoughness)) {
+                samplerState.generateImageUVAndSampler(QSSGRenderableImage::Type::SheenRoughness, vertexShader, fragmentShader, inKey, passRequirmentState.hasParallaxMapping);
+                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::SheenRoughnessChannel];
+                fragmentShader << "    qt_sheenRoughness *= texture2D(" << samplerState.samplerName(QSSGRenderableImage::Type::SheenRoughness) << ", "
+                               << samplerState.fragCoordsName(QSSGRenderableImage::Type::SheenRoughness) << ")" << channelStr(channelProps, inKey) << ";\n";
+                fragmentShader << "    qt_sheenRoughness = clamp(qt_sheenRoughness, 0.0, 1.0);\n";
+            }
+        }
+
         if (passRequirmentState.hasClearcoat) {
             addLocalVariable(fragmentShader, "qt_clearcoatAmount", "float");
             addLocalVariable(fragmentShader, "qt_clearcoatRoughness", "float");
@@ -1613,6 +1675,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                            << "                               qt_clearcoatF0,\n"
                            << "                               qt_clearcoatF90,\n"
                            << "#endif // QSSG_ENABLE_CLEARCOAT\n"
+                           << "#if QSSG_ENABLE_SHEEN\n"
+                           << "                               qt_global_sheen,\n"
+                           << "                               qt_sheenColor,\n"
+                           << "                               qt_sheenRoughness,\n"
+                           << "#endif // QSSG_ENABLE_SHEEN\n"
                            << "#if QSSG_ENABLE_TRANSMISSION\n"
                            << "                               qt_global_transmission,\n"
                            << "                               qt_thicknessFactor,\n"
@@ -1651,6 +1718,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             // Clearcoat (pbr Only)
             if (passRequirmentState.hasClearcoat)
                 fragmentShader << "    qt_global_clearcoat += qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
+            if (passRequirmentState.hasSheen)
+                fragmentShader << "    qt_global_sheen += qt_sampleGlossySheenReflectionProbe(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_sheenColor, qt_sheenRoughness).rgb;\n";
 
         } else if (passRequirmentState.hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
@@ -1659,6 +1728,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 // DIFFUSE, SPECULAR, BASE_COLOR, AO_FACTOR, SPECULAR_AMOUNT, NORMAL, VIEW_VECTOR, IBL_ORIENTATION(, SHARED)
                 fragmentShader << "    vec3 qt_iblDiffuse = vec3(0.0);\n";
                 fragmentShader << "    vec3 qt_iblSpecular = vec3(0.0);\n";
+                if (passRequirmentState.hasClearcoat)
+                    fragmentShader << "    vec3 qt_iblClearcoat = vec3(0.0);\n";
+                if (passRequirmentState.hasSheen)
+                    fragmentShader << "    vec3 qt_iblSheen = vec3(0.0);\n";
                 fragmentShader << "    qt_iblProbeProcessor(qt_iblDiffuse, qt_iblSpecular, qt_customBaseColor, qt_aoFactor, qt_specularFactor, qt_roughnessAmount, qt_world_normal, qt_view_vector";
                 if (passRequirmentState.hasIblOrientation)
                     fragmentShader << ", qt_lightProbeOrientation";
@@ -1686,6 +1759,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 // Clearcoat (pbr Only)
                 if (passRequirmentState.hasClearcoat)
                     fragmentShader << "   vec3 qt_iblClearcoat = qt_sampleGlossyPrincipled(qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
+
+                if (passRequirmentState.hasSheen)
+                    fragmentShader << "   vec3 qt_iblSheen = qt_sampleGlossySheen(qt_world_normal, qt_view_vector, qt_sheenColor, qt_sheenRoughness).rgb;\n";
             }
 
             fragmentShader << "    global_diffuse_light.rgb += qt_iblDiffuse * qt_aoFactor;\n";
@@ -1693,6 +1769,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    global_specular_light += qt_iblSpecular * qt_aoFactor;\n";
             if (passRequirmentState.hasClearcoat)
                 fragmentShader << "    qt_global_clearcoat += qt_iblClearcoat * qt_aoFactor;\n";
+            if (passRequirmentState.hasSheen)
+                fragmentShader << "    qt_global_sheen += qt_iblSheen * qt_aoFactor;\n";
         } else if (hasCustomIblProbe) {
             // Prevent breaking the fragment code while seeking uniforms
             fragmentShader.addUniform("qt_lightProbe", "samplerCube");
@@ -1747,6 +1825,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         fragmentShader << "    vec4 qt_color_sum = vec4(global_diffuse_light.rgb + global_specular_light + qt_global_emission, global_diffuse_light.a);\n";
+
+        // Sheen goes between the base material and the clearcoat, like in glTF
+        if (passRequirmentState.hasSheen) {
+            fragmentShader.addInclude("sheen.glsllib");
+            fragmentShader << "    float qt_sheenScaling = qt_sheenAlbedoScaling(qt_sheenColor, clamp(dot(qt_world_normal, qt_view_vector), 0.0, 1.0), qt_sheenRoughness);\n";
+            fragmentShader << "    qt_color_sum.rgb = qt_color_sum.rgb * qt_sheenScaling + qt_global_sheen;\n";
+        }
 
         if (passRequirmentState.hasClearcoat) {
             fragmentShader.addInclude("bsdf.glsllib");
@@ -2530,6 +2615,13 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
         const float material_clearcoat_normal_strength = materialAdapter->clearcoatNormalStrength();
         shaders.setUniform(ubufData, "qt_material_clearcoat_normal_strength", &material_clearcoat_normal_strength, sizeof(float), &cui.clearcoatNormalStrengthIdx);
+
+        if (materialAdapter->isSheenEnabled()) {
+            const QVector3D sheenColor = materialAdapter->sheenColor();
+            shaders.setUniform(ubufData, "qt_material_sheen_color", &sheenColor, 3 * sizeof(float), &cui.sheenColorIdx);
+            const float sheenRoughness = materialAdapter->sheenRoughness();
+            shaders.setUniform(ubufData, "qt_material_sheen_roughness", &sheenRoughness, sizeof(float), &cui.sheenRoughnessIdx);
+        }
 
         const float material_clearcoat_fresnel_power = materialAdapter->clearcoatFresnelPower();
         shaders.setUniform(ubufData, "qt_material_clearcoat_fresnel_power", &material_clearcoat_fresnel_power, sizeof(float), &cui.clearcoatFresnelPowerIdx);

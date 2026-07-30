@@ -328,6 +328,33 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(clearcoatRoughnessAmount, material.clearcoatRoughnessAmount());
     QCOMPARE(clearcoatRoughnessAmount, node->clearcoatRoughnessAmount);
 
+    // Sheen is disabled while the color is black, since the color acts as
+    // a multiplier for the sheen color map
+    QVERIFY(!node->isSheenEnabled());
+    material.setSheenColor(QColor(Qt::white));
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(QColor(Qt::white), material.sheenColor());
+    QVERIFY(node->isSheenEnabled());
+    material.setSheenColor(QColor(Qt::black));
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(!node->isSheenEnabled());
+
+    const float sheenRoughness = 0.6f;
+    material.setSheenRoughness(sheenRoughness);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(sheenRoughness, material.sheenRoughness());
+    QCOMPARE(sheenRoughness, node->sheenRoughness);
+
+    // Out of range values clamp, and a value that clamps to what the property
+    // already holds is not a change, so it must not emit
+    material.setSheenRoughness(2.0f);
+    QCOMPARE(material.sheenRoughness(), 1.0f);
+    QSignalSpy sheenRoughnessSpy(&material, &QQuick3DPrincipledMaterial::sheenRoughnessChanged);
+    material.setSheenRoughness(3.0f);
+    QCOMPARE(material.sheenRoughness(), 1.0f);
+    QCOMPARE(sheenRoughnessSpy.size(), 0);
+    material.setSheenRoughness(sheenRoughness);
+
     QVERIFY(material.metalness() == 0.0f);
     QVERIFY(node->metalnessAmount == 0.0f);
     QVERIFY(!node->isTransmissionEnabled());
@@ -487,6 +514,28 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     QCOMPARE(channelMapping2, material.clearcoatRoughnessChannel());
     QCOMPARE(qToUnderlying(channelMapping2),                  // QQuick3DMaterial::TextureChannelMapping
              qToUnderlying(node->clearcoatRoughnessChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
+
+    // SheenColorMap (RGB, so no channel selection)
+    QVERIFY(!material.sheenColorMap());
+    material.setSheenColorMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.sheenColorMap());
+    QCOMPARE(texture1.getRenderImage(), node->sheenColorMap);
+
+    // SheenRoughnessMap; the glTF extension packs sheen roughness into the
+    // alpha channel, so that is our default too
+    QVERIFY(!material.sheenRoughnessMap());
+    QVERIFY(material.sheenRoughnessChannel() == QQuick3DMaterial::A);
+    material.setSheenRoughnessMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.sheenRoughnessMap());
+    QCOMPARE(texture1.getRenderImage(), node->sheenRoughnessMap);
+    const QQuick3DMaterial::TextureChannelMapping sheenChannel = QQuick3DMaterial::G;
+    material.setSheenRoughnessChannel(sheenChannel);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(sheenChannel, material.sheenRoughnessChannel());
+    QCOMPARE(qToUnderlying(sheenChannel), // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->sheenRoughnessChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
 
     // ClearcoatNormalMap
     QVERIFY(!material.clearcoatNormalMap());

@@ -33,6 +33,10 @@
 #include "funcdiffuseLambertWrapBRDF.glsllib"
 #endif
 
+#if QSSG_ENABLE_SHEEN
+#include "sheen.glsllib"
+#endif
+
 #if QSSG_CUSTOM_MATERIAL_DIRECTIONAL_LIGHT_PROCESSOR || QSSG_CUSTOM_MATERIAL_POINT_LIGHT_PROCESSOR || QSSG_CUSTOM_MATERIAL_SPOT_LIGHT_PROCESSOR || QSSG_CUSTOM_MATERIAL_SPECULAR_PROCESSOR
 #include "custommaterialforwarddeclarations.glsllib"
 #endif
@@ -162,6 +166,11 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
                                 in vec3 qt_clearcoatF0,
                                 in vec3 qt_clearcoatF90,
 #endif // QSSG_ENABLE_CLEARCOAT
+#if QSSG_ENABLE_SHEEN
+                                inout vec3 qt_global_sheen,
+                                in vec3 qt_sheenColor,
+                                in float qt_sheenRoughness,
+#endif // QSSG_ENABLE_SHEEN
 #if QSSG_ENABLE_TRANSMISSION
                                 inout vec3 qt_global_transmission,
                                 in float qt_thicknessFactor,
@@ -264,6 +273,17 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
                                                                                           qt_clearcoatRoughness).rgb;
         }
 # endif // QSSG_ENABLE_CLEARCOAT
+
+# if QSSG_ENABLE_SHEEN
+        if (qt_shadow_map_result.isLit) {
+            qt_global_sheen += qt_shadow_map_result.illumination * qt_sheenBSDF(qt_world_normal,
+                                                                               -ubDirectionalLights.directionalLights[i].direction,
+                                                                               qt_view_vector,
+                                                                               ubDirectionalLights.directionalLights[i].specularColor,
+                                                                               qt_sheenColor,
+                                                                               qt_sheenRoughness);
+        }
+# endif // QSSG_ENABLE_SHEEN
 
 # if QSSG_ENABLE_TRANSMISSION
         qt_global_transmission += qt_calculateTransmission(qt_world_normal,
@@ -423,6 +443,17 @@ void qt_processPunctualLighting(inout vec3 global_diffuse_light,
                                                                                                                 qt_clearcoatRoughness).rgb;
         }
 # endif // QSSG_ENABLE_CLEARCOAT
+
+# if QSSG_ENABLE_SHEEN
+        if (qt_shadow_map_result.isLit) {
+            qt_global_sheen += qt_lightAttenuation * qt_shadow_map_result.illumination * qt_sheenBSDF(qt_world_normal,
+                                                                                                     -specularLightDirection,
+                                                                                                     qt_view_vector,
+                                                                                                     ubLights.lights[i].specularColor,
+                                                                                                     qt_sheenColor,
+                                                                                                     qt_sheenRoughness);
+        }
+# endif // QSSG_ENABLE_SHEEN
 
 # if QSSG_ENABLE_TRANSMISSION
         qt_global_transmission += qt_calculateTransmission(qt_world_normal,

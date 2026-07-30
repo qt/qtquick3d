@@ -43,6 +43,8 @@ static inline void insertProcessorArgsFragmentMain(QByteArray &snippet, const ch
                 if (materialAdapter->isClearcoatFresnelScaleBiasEnabled())
                     flexArgs += QByteArrayLiteral(", inout float CLEARCOAT_FRESNEL_SCALE, inout float CLEARCOAT_FRESNEL_BIAS");
             }
+            if (materialAdapter->isSheenEnabled())
+                flexArgs += QByteArrayLiteral(", inout vec3 SHEEN_COLOR, inout float SHEEN_ROUGHNESS");
             if (materialAdapter->isFresnelScaleBiasEnabled())
                 flexArgs += QByteArrayLiteral(", inout float FRESNEL_SCALE, inout float FRESNEL_BIAS");
             if (materialAdapter->isTransmissionEnabled())

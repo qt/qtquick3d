@@ -44,6 +44,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isFresnelScaleBiasEnabled() = 0;
     virtual bool isClearcoatFresnelScaleBiasEnabled() = 0;
     virtual bool isClearcoatEnabled() = 0;
+    virtual bool isSheenEnabled() = 0;
     virtual bool isTransmissionEnabled() = 0;
     virtual bool hasLighting() = 0;
     virtual bool usesCustomSkinning() = 0;
@@ -82,6 +83,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual float clearcoatAmount() = 0;
     virtual float clearcoatRoughnessAmount() = 0;
     virtual float clearcoatNormalStrength() = 0;
+    virtual QVector3D sheenColor() = 0;
+    virtual float sheenRoughness() = 0;
     virtual float transmissionFactor() = 0;
     virtual float thicknessFactor() = 0;
     virtual float attenuationDistance() = 0;
@@ -116,6 +119,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool isSpecularAmountSingleChannelEnabled() override;
     bool isEmissiveSingleChannelEnabled() override;
     bool isClearcoatEnabled() override;
+    bool isSheenEnabled() override;
     bool isTransmissionEnabled() override;
     bool isFresnelScaleBiasEnabled() override;
     bool isClearcoatFresnelScaleBiasEnabled() override;
@@ -156,6 +160,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     float clearcoatAmount() override;
     float clearcoatRoughnessAmount() override;
     float clearcoatNormalStrength() override;
+    QVector3D sheenColor() override;
+    float sheenRoughness() override;
     float transmissionFactor() override;
     float thicknessFactor() override;
     float attenuationDistance() override;
@@ -180,6 +186,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isSpecularAmountSingleChannelEnabled() override;
     bool isEmissiveSingleChannelEnabled() override;
     bool isClearcoatEnabled() override;
+    bool isSheenEnabled() override;
     bool isTransmissionEnabled() override;
     bool isFresnelScaleBiasEnabled() override;
     bool isClearcoatFresnelScaleBiasEnabled() override;
@@ -220,6 +227,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     float clearcoatAmount() override;
     float clearcoatRoughnessAmount() override;
     float clearcoatNormalStrength() override;
+    QVector3D sheenColor() override;
+    float sheenRoughness() override;
     float transmissionFactor() override;
     float thicknessFactor() override;
     float attenuationDistance() override;

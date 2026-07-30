@@ -913,6 +913,92 @@ Column {
     }
 
     Section {
+        caption: qsTr("Sheen")
+        width: parent.width
+
+        SectionLayout {
+            PropertyLabel {
+                text: qsTr("Color")
+                tooltip: qsTr("Sets the color of the sheen layer. Black, the default, disables the sheen layer.")
+            }
+
+            ColorEditor {
+                backendValue: backendValues.sheenColor
+                supportGradient: false
+            }
+
+            PropertyLabel {
+                text: qsTr("Map")
+                tooltip: qsTr("Sets a texture used to modulate the color of the sheen layer.")
+            }
+
+            SecondColumnLayout {
+                ItemFilterComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.sheenColorMap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Roughness")
+                tooltip: qsTr("Sets the roughness of the sheen layer.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 1
+                    decimals: 2
+                    stepSize: 0.1
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.sheenRoughness
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Roughness Map")
+                tooltip: qsTr("Sets a texture used to determine the roughness of the sheen layer.")
+            }
+
+            SecondColumnLayout {
+                ItemFilterComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.sheenRoughnessMap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Roughness Channel")
+                tooltip: qsTr("Sets the texture channel used to read the sheen roughness value from sheenRoughnessMap.")
+            }
+
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Material"
+                    model: ["R", "G", "B", "A"]
+                    backendValue: backendValues.sheenRoughnessChannel
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+        }
+    }
+
+    Section {
         caption: qsTr("Refraction")
         width: parent.width
 

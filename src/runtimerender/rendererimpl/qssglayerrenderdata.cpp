@@ -1093,6 +1093,9 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
             case QSSGShaderDefaultMaterialKeyProperties::ClearcoatRoughnessMap:
                 value = inMaterial->clearcoatRoughnessChannel;
                 break;
+            case QSSGShaderDefaultMaterialKeyProperties::SheenRoughnessMap:
+                value = inMaterial->sheenRoughnessChannel;
+                break;
             case QSSGShaderDefaultMaterialKeyProperties::TransmissionMap:
                 value = inMaterial->transmissionChannel;
                 break;
@@ -1276,6 +1279,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
         defaultMaterialShaderKeyProperties.m_vertexColorBlueMask.setValue(theGeneratedKey, quint16(theMaterial->vertexColorBlueMask.toInt()));
         defaultMaterialShaderKeyProperties.m_vertexColorAlphaMask.setValue(theGeneratedKey, quint16(theMaterial->vertexColorAlphaMask.toInt()));
         defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey, theMaterial->isClearcoatEnabled());
+        defaultMaterialShaderKeyProperties.m_sheenEnabled.setValue(theGeneratedKey, theMaterial->isSheenEnabled());
         defaultMaterialShaderKeyProperties.m_transmissionEnabled.setValue(theGeneratedKey, theMaterial->isTransmissionEnabled());
 
         // Run through the material's images and prepare them for render.
@@ -1307,6 +1311,12 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
             CHECK_IMAGE_AND_PREPARE(theMaterial->clearcoatNormalMap,
                                     QSSGRenderableImage::Type::ClearcoatNormal,
                                     QSSGShaderDefaultMaterialKeyProperties::ClearcoatNormalMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->sheenColorMap,
+                                    QSSGRenderableImage::Type::SheenColor,
+                                    QSSGShaderDefaultMaterialKeyProperties::SheenColorMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->sheenRoughnessMap,
+                                    QSSGRenderableImage::Type::SheenRoughness,
+                                    QSSGShaderDefaultMaterialKeyProperties::SheenRoughnessMap);
             CHECK_IMAGE_AND_PREPARE(theMaterial->transmissionMap,
                                     QSSGRenderableImage::Type::Transmission,
                                     QSSGShaderDefaultMaterialKeyProperties::TransmissionMap);
@@ -1455,6 +1465,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
 
     const bool usesClearcoat = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Clearcoat);
     defaultMaterialShaderKeyProperties.m_clearcoatEnabled.setValue(theGeneratedKey, usesClearcoat);
+
+    const bool usesSheen = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Sheen);
+    defaultMaterialShaderKeyProperties.m_sheenEnabled.setValue(theGeneratedKey, usesSheen);
 
     const bool usesClearcoatFresnelScaleBias = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ClearcoatFresnelScaleBias);
     defaultMaterialShaderKeyProperties.m_clearcoatFresnelScaleBiasEnabled.setValue(theGeneratedKey, usesClearcoatFresnelScaleBias);
