@@ -10,7 +10,7 @@
         "pkg:github/zeux/meshoptimizer@v$<VERSION>"
     ],
     "Comment": "No relevant CPE found",
-    "Version": "1.0",
+    "Version": "1.2",
     "License": "MIT License",
     "LicenseId": "MIT",
     "LicenseFile": "LICENSE.md",
