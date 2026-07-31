@@ -32,16 +32,13 @@ qt_internal_add_module(Quick3DUtils
         ../3rdparty/meshoptimizer/src/indexcodec.cpp
         ../3rdparty/meshoptimizer/src/indexgenerator.cpp
         ../3rdparty/meshoptimizer/src/meshoptimizer.h
-        ../3rdparty/meshoptimizer/src/overdrawanalyzer.cpp
         ../3rdparty/meshoptimizer/src/overdrawoptimizer.cpp
         ../3rdparty/meshoptimizer/src/simplifier.cpp
         ../3rdparty/meshoptimizer/src/spatialorder.cpp
         ../3rdparty/meshoptimizer/src/stripifier.cpp
-        ../3rdparty/meshoptimizer/src/vcacheanalyzer.cpp
         ../3rdparty/meshoptimizer/src/vcacheoptimizer.cpp
         ../3rdparty/meshoptimizer/src/vertexcodec.cpp
         ../3rdparty/meshoptimizer/src/vertexfilter.cpp
-        ../3rdparty/meshoptimizer/src/vfetchanalyzer.cpp
         ../3rdparty/meshoptimizer/src/vfetchoptimizer.cpp
         ../3rdparty/meshoptimizer/src/partition.cpp
         ../3rdparty/meshoptimizer/src/quantization.cpp
@@ -52,16 +49,13 @@ qt_internal_add_module(Quick3DUtils
         ../3rdparty/meshoptimizer/src/indexcodec.cpp
         ../3rdparty/meshoptimizer/src/indexgenerator.cpp
         ../3rdparty/meshoptimizer/src/meshoptimizer.h
-        ../3rdparty/meshoptimizer/src/overdrawanalyzer.cpp
         ../3rdparty/meshoptimizer/src/overdrawoptimizer.cpp
         ../3rdparty/meshoptimizer/src/simplifier.cpp
         ../3rdparty/meshoptimizer/src/spatialorder.cpp
         ../3rdparty/meshoptimizer/src/stripifier.cpp
-        ../3rdparty/meshoptimizer/src/vcacheanalyzer.cpp
         ../3rdparty/meshoptimizer/src/vcacheoptimizer.cpp
         ../3rdparty/meshoptimizer/src/vertexcodec.cpp
         ../3rdparty/meshoptimizer/src/vertexfilter.cpp
-        ../3rdparty/meshoptimizer/src/vfetchanalyzer.cpp
         ../3rdparty/meshoptimizer/src/vfetchoptimizer.cpp
         ../3rdparty/meshoptimizer/src/partition.cpp
         ../3rdparty/meshoptimizer/src/quantization.cpp
