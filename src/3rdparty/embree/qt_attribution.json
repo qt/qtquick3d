@@ -7,7 +7,7 @@
 
     "Homepage": "https://www.embree.org/",
     "PURL": [
-        "pkg:github/RenderKit/embree@$v<VERSION>"
+        "pkg:github/RenderKit/embree@v$<VERSION>"
     ],
     "Comment": "No relevant CPE found",
     "Version": "3.13.3",
