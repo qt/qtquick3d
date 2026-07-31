@@ -53,6 +53,11 @@ qt_config_compile_test("quick3d_assimp"
 
 #### Features
 
+qt_feature("quick3d-gltf" PUBLIC PRIVATE
+    LABEL "Native glTF importer"
+    PURPOSE "Imports glTF 2.0 assets (.gltf and .glb) without Assimp."
+)
+qt_feature_definition("quick3d-gltf" "QT_NO_QUICK3D_GLTF" NEGATE VALUE "1")
 qt_feature("quick3d-assimp" PUBLIC PRIVATE
     LABEL "Assimp"
 )
@@ -64,6 +69,7 @@ qt_feature("system-assimp" PRIVATE SYSTEM_LIBRARY
     DISABLE INPUT_quick3d_assimp STREQUAL 'qt'
 )
 qt_configure_add_summary_section(NAME "QtQuick3D")
+qt_configure_add_summary_entry(ARGS "quick3d-gltf")
 qt_configure_add_summary_entry(ARGS "quick3d-assimp")
 qt_configure_add_summary_entry(ARGS "system-assimp")
 qt_configure_end_summary_section() # end of "QtQuick3D" section

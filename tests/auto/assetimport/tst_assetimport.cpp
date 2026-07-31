@@ -33,6 +33,7 @@ private slots:
     void idsDoNotLeakBetweenAssets();
     void importUrl_data();
     void importUrl();
+    void nativeGltfRouting();
 };
 
 tst_assetimport::tst_assetimport()
@@ -268,6 +269,53 @@ void tst_assetimport::importUrl()
     QCOMPARE(importState, result);
 
     scene.cleanup();
+}
+
+// The gltf and glb extensions route to the native glTF importer by default,
+// and back to the Assimp importer when QT_QUICK3D_DISABLE_NATIVE_GLTF is
+// set. Both paths must import successfully.
+void tst_assetimport::nativeGltfRouting()
+{
+    const QString file = QFINDTESTDATA(QStringLiteral("resources/cube_scene.gltf"));
+    QVERIFY(!file.isEmpty());
+
+    {
+        QSSGAssetImportManager manager;
+        // The native importer plugin must be present and claim gltf/glb
+        bool nativePresent = false;
+        const auto importers = manager.getImporterPluginInfos();
+        for (const auto &importer : importers) {
+            if (importer.name == QStringLiteral("gltf")) {
+                nativePresent = true;
+                QCOMPARE(importer.inputExtensions,
+                         QStringList({ QStringLiteral("gltf"), QStringLiteral("glb") }));
+            }
+        }
+        if (!nativePresent)
+            QSKIP("Native glTF importer plugin not available");
+
+        QString error;
+        const auto state = manager.importFile(file, QDir(QStringLiteral("./")), &error);
+        QVERIFY2(state == QSSGAssetImportManager::ImportState::Success, qPrintable(error));
+    }
+
+    {
+        // The opt-out makes the native importer dormant, and the Assimp
+        // importer handles glTF like before
+        qputenv("QT_QUICK3D_DISABLE_NATIVE_GLTF", "1");
+        const auto cleanup = qScopeGuard([] { qunsetenv("QT_QUICK3D_DISABLE_NATIVE_GLTF"); });
+
+        QSSGAssetImportManager manager;
+        const auto importers = manager.getImporterPluginInfos();
+        for (const auto &importer : importers) {
+            if (importer.name == QStringLiteral("gltf"))
+                QVERIFY(importer.inputExtensions.isEmpty());
+        }
+
+        QString error;
+        const auto state = manager.importFile(file, QDir(QStringLiteral("./")), &error);
+        QVERIFY2(state == QSSGAssetImportManager::ImportState::Success, qPrintable(error));
+    }
 }
 
 QTEST_APPLESS_MAIN(tst_assetimport)

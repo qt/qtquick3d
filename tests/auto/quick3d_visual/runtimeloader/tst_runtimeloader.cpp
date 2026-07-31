@@ -10,7 +10,9 @@ class tst_RuntimeLoader : public QQuick3DDataTest
     Q_OBJECT
 private slots:
     void initTestCase() override;
+    void queryAll_data();
     void queryAll();
+    void nativeGltfFeatures();
 };
 
 void tst_RuntimeLoader::initTestCase()
@@ -20,8 +22,20 @@ void tst_RuntimeLoader::initTestCase()
         return;
 }
 
+void tst_RuntimeLoader::queryAll_data()
+{
+    QTest::addColumn<bool>("assimpFallback");
+    QTest::newRow("nativeGltf") << false;
+    QTest::newRow("assimpFallback") << true;
+}
+
 void tst_RuntimeLoader::queryAll()
 {
+    QFETCH(bool, assimpFallback);
+    if (assimpFallback)
+        qputenv("QT_QUICK3D_DISABLE_NATIVE_GLTF", "1");
+    const auto cleanup = qScopeGuard([] { qunsetenv("QT_QUICK3D_DISABLE_NATIVE_GLTF"); });
+
     QScopedPointer<QQuickView> view(createView(QLatin1String("queryall.qml"), QSize(200, 200)));
     QVERIFY(view);
     QVERIFY(QTest::qWaitForWindowExposed(view.data()));
@@ -41,6 +55,27 @@ void tst_RuntimeLoader::queryAll()
     QVERIFY(view->rootObject()->property("modelCount").toInt() > 0);
     QVERIFY(view->rootObject()->property("lightCount").toInt() > 0);
     QVERIFY(view->rootObject()->property("queryNullForMissing").toBool());
+}
+
+// Loads assets exercising textures with transforms, material extensions,
+// skinning, morph targets, and animations through the native glTF importer.
+void tst_RuntimeLoader::nativeGltfFeatures()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("nativegltf.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    const QImage frame = grab(view.data());
+    if (frame.isNull())
+        return;
+
+    QTRY_VERIFY_WITH_TIMEOUT(view->rootObject()->property("settled").toBool(), 10000);
+    const QString errors = view->rootObject()->property("errors").toString();
+    if (errors.contains(QLatin1String("unsupported file extension")))
+        QSKIP("glTF importer plugin not available on this platform");
+    QCOMPARE(errors, QString());
+    QCOMPARE(view->rootObject()->property("loadedCount").toInt(),
+             view->rootObject()->property("totalCount").toInt());
 }
 
 QTEST_MAIN(tst_RuntimeLoader)

@@ -94,10 +94,16 @@ public:
 
     void removeFlagConflicts(const QCommandLineParser &cmdLineParser, QJsonObject &options) const
     {
+        // m_optionsMap only has the options of the loaded plugins
+        const auto isSet = [&](const QString &key) {
+            const QCommandLineOption *option = m_optionsMap.value(key);
+            return option && cmdLineParser.isSet(*option);
+        };
+
         // "generateNormals" and "generateSmoothNormals" are mutually exclusive. "generateNormals"
         // takes precedence.
         QJsonObject opt;
-        if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateNormals")])) {
+        if (isSet(QStringLiteral("generateNormals"))) {
             opt = options.value(QStringLiteral("generateSmoothNormals")).toObject();
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;
@@ -105,7 +111,7 @@ public:
                 std::cerr << "\"--generateSmoothNormals\" disabled due to \"--generateNormals\".\n";
             }
 
-        } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateSmoothNormals")])) {
+        } else if (isSet(QStringLiteral("generateSmoothNormals"))) {
             opt = options.value(QStringLiteral("generateNormals")).toObject();
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;
@@ -115,14 +121,14 @@ public:
         }
 
         // Ditto for "optimizeGraph" and "preTransformVertices".
-        if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("optimizeGraph")])) {
+        if (isSet(QStringLiteral("optimizeGraph"))) {
             opt = options.value(QStringLiteral("preTransformVertices")).toObject();
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;
                 options[QStringLiteral("preTransformVertices")] = opt;
                 std::cerr << "\"--preTransformVertices\" disabled due to \"--optimizeGraph\".\n";
             }
-        } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("preTransformVertices")])) {
+        } else if (isSet(QStringLiteral("preTransformVertices"))) {
             opt = options.value(QStringLiteral("optimizeGraph")).toObject();
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;

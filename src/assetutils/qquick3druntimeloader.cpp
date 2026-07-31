@@ -27,6 +27,12 @@
     RuntimeLoader supports .obj and glTF version 2.0 files in both in text (.gltf) and binary
     (.glb) formats.
 
+    glTF assets are loaded by the native glTF importer; see
+    \l{Balsam Asset Import Tool} for the supported feature set and
+    extensions. Setting the \c{QT_QUICK3D_DISABLE_NATIVE_GLTF} environment
+    variable routes glTF assets through the Assimp importer instead during
+    the transition period.
+
     \warning RuntimeLoader does not sandbox or validate asset contents. Loading
     malformed or untrusted assets may have security implications. See \l source
     for details.
@@ -157,7 +163,8 @@ QStringList QQuick3DRuntimeLoader::supportedExtensions()
 
     for (const auto &t : types) {
         for (const QString &extension : t.inputExtensions) {
-            if (supportedExtensions.contains(extension))
+            // Several plugins can claim the same extension
+            if (supportedExtensions.contains(extension) && !extensions.contains(extension))
                 extensions << extension;
         }
     }

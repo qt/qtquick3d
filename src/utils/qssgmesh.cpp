@@ -1510,6 +1510,23 @@ size_t generateVertexRemap(unsigned int *destination,
                                             meshoptStreams.constData(), streamCount);
 }
 
+void generateTangents(float *destination,
+                      const unsigned int *indices,
+                      size_t indexCount,
+                      const float *vertexPositions,
+                      size_t vertexCount,
+                      size_t vertexPositionsStride,
+                      const float *vertexNormals,
+                      size_t vertexNormalsStride,
+                      const float *vertexUvs,
+                      size_t vertexUvsStride)
+{
+    meshopt_generateTangents(destination, indices, indexCount,
+                             vertexPositions, vertexCount, vertexPositionsStride,
+                             vertexNormals, vertexNormalsStride,
+                             vertexUvs, vertexUvsStride, 0);
+}
+
 void remapVertexBuffer(void *destination,
                        const void *vertices,
                        size_t vertexCount,

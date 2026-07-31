@@ -78,6 +78,57 @@ Some of the formats supported also allow for either embedding or referencing of
 texture assets. These assets are also supported, provided Qt also has support
 for them.
 
+\section2 glTF 2.0 Import
+
+glTF 2.0 assets (.gltf and .glb) are imported by a native importer built
+directly on Qt, instead of going through the Assimp library like the other
+formats. The native importer supports the core glTF 2.0 feature set,
+including skinning, morph targets, animations with LINEAR, STEP, and
+CUBICSPLINE interpolation (the latter baked at a rate controlled by the
+\c{--animationSampleRate} option), sparse accessors, and quantized meshes,
+as well as the following extensions:
+
+\list
+  \li KHR_materials_pbrSpecularGlossiness
+  \li KHR_materials_unlit
+  \li KHR_materials_clearcoat
+  \li KHR_materials_transmission
+  \li KHR_materials_volume
+  \li KHR_materials_ior
+  \li KHR_materials_emissive_strength
+  \li KHR_materials_specular
+  \li KHR_texture_transform
+  \li KHR_lights_punctual
+  \li KHR_mesh_quantization
+\endlist
+
+Assets requiring KHR_draco_mesh_compression or KHR_texture_basisu are not
+supported and are rejected with an error naming the extension.
+
+An asset that lists an extension balsam does not convert still loads: the
+extension is ignored and a warning is logged. Accepting an asset is
+therefore not the same as applying every extension it names, and an asset
+that requires an extension the parser understands but the converter does not
+act on loads rather than failing.
+
+Some Assimp-specific post-processing options (such as
+\c{--preTransformVertices} and \c{--optimizeMeshes}) do not apply to the
+native importer; glTF scene data is imported as authored. Identical
+vertices are joined by default like before, controlled by
+\c{--joinIdenticalVertices}.
+
+Normal generation differs from the Assimp importer. \c{--generateNormals},
+which asks Assimp for flat normals on every face, is not recognized: the
+specification mandates flat shading for a mesh without normal data, and that
+is what the native importer produces. \c{--generateSmoothNormals} computes
+smooth normals for such meshes instead, and unlike with the Assimp importer
+it defaults to off. A glTF asset lacking normals therefore comes out flat
+shaded unless \c{--generateSmoothNormals} is given.
+
+During the transition period the \c{QT_QUICK3D_DISABLE_NATIVE_GLTF}
+environment variable can be set to route glTF assets through the Assimp
+importer instead.
+
 \section1 Baking for Image-Based Lighting
 
 Balsam also supports generating a pre-filtered cubemap image from .hdr

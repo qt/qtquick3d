@@ -5,6 +5,7 @@
 
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 
+#include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
 
 class tst_mesh : public QObject
@@ -18,6 +19,7 @@ private slots:
     void levelsOfDetailClearsSplitVertices();
     void levelsOfDetailFromUnweldedMesh();
     void levelsOfDetailReachTheFinestLevel();
+    void tangentsFollowTheTextureCoordinates();
 };
 
 // Two triangles given as six separate vertices, where three of them repeat a
@@ -250,6 +252,34 @@ void tst_mesh::levelsOfDetailReachTheFinestLevel()
              qPrintable(QStringLiteral("finest level %1 of %2 indexes leaves room for another")
                                 .arg(finest).arg(indexCount)));
     QVERIFY(finest < indexCount);
+}
+
+// A quad in the xy plane whose texture coordinates run along +x and +y, so the
+// tangent has to come out along +x and the bitangent along +y.
+void tst_mesh::tangentsFollowTheTextureCoordinates()
+{
+    const QVector<QVector3D> positions = { { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 } };
+    const QVector<QVector3D> normals(4, QVector3D(0, 0, 1));
+    const QVector<QVector2D> uvs = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+    const QVector<quint32> indexes = { 0, 1, 2, 0, 2, 3 };
+
+    QVector<float> tangents(indexes.size() * 4);
+    QSSGMesh::generateTangents(tangents.data(), indexes.constData(), size_t(indexes.size()),
+                               reinterpret_cast<const float *>(positions.constData()),
+                               size_t(positions.size()), sizeof(QVector3D),
+                               reinterpret_cast<const float *>(normals.constData()), sizeof(QVector3D),
+                               reinterpret_cast<const float *>(uvs.constData()), sizeof(QVector2D));
+
+    for (qsizetype corner = 0; corner < indexes.size(); ++corner) {
+        const float *t = tangents.constData() + corner * 4;
+        const QVector3D tangent(t[0], t[1], t[2]);
+        QVERIFY2(qFuzzyCompare(tangent, QVector3D(1, 0, 0)),
+                 qPrintable(QStringLiteral("corner %1 tangent %2 %3 %4")
+                                    .arg(corner).arg(t[0]).arg(t[1]).arg(t[2])));
+        // The sign is what turns the tangent and the normal into the bitangent
+        const QVector3D bitangent = QVector3D::crossProduct(normals.at(indexes.at(corner)), tangent) * t[3];
+        QVERIFY(qFuzzyCompare(bitangent, QVector3D(0, 1, 0)));
+    }
 }
 
 QTEST_APPLESS_MAIN(tst_mesh)

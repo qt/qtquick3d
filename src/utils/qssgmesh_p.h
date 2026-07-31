@@ -469,6 +469,18 @@ void Q_QUICK3DUTILS_EXPORT remapIndexBuffer(unsigned int *destination,
                                             size_t indexCount,
                                             const unsigned int *remap);
 
+// destination takes indexCount * 4 floats: tangent xyz and bitangent sign
+void Q_QUICK3DUTILS_EXPORT generateTangents(float *destination,
+                                            const unsigned int *indices,
+                                            size_t indexCount,
+                                            const float *vertexPositions,
+                                            size_t vertexCount,
+                                            size_t vertexPositionsStride,
+                                            const float *vertexNormals,
+                                            size_t vertexNormalsStride,
+                                            const float *vertexUvs,
+                                            size_t vertexUvsStride);
+
 struct MeshLevelOfDetail
 {
     float distance = 0.0f;

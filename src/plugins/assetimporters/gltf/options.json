@@ -1,0 +1,146 @@
+{
+    "options": {
+        "designStudioWorkarounds": {
+            "name": "Design Studio Compatibility Mode",
+            "description": "Enable options that are needed to create Design Studio compatible components.",
+            "value": false,
+            "type": "Boolean"
+        },
+        "expandValueComponents": {
+            "name": "Expand value components",
+            "description": "When enabled value types like vector3d and quaternion will be expanded.",
+            "value": false,
+            "type": "Boolean"
+        },
+        "joinIdenticalVertices": {
+            "name": "Join Identical Vertices",
+            "description": "Identifies and joins identical vertex data sets within all imported meshes.",
+            "value": true,
+            "type": "Boolean"
+        },
+        "generateSmoothNormals": {
+            "name": "Generate Smooth Normals",
+            "description": "Generate smooth instead of flat normals for meshes without normal data",
+            "value": false,
+            "type": "Boolean"
+        },
+        "calculateTangentSpace": {
+            "name": "Calculate Tangent Space",
+            "description": "Calculates tangents and bitangents for meshes without tangent data, even when no material needs them.",
+            "value": false,
+            "type": "Boolean"
+        },
+        "useFloatJointIndices": {
+            "name": "Use Float Joint Indices",
+            "description": "Stores joint indices as floating point numbers for GLES 2.0.",
+            "value": false,
+            "type": "Boolean"
+        },
+        "generateMipMaps": {
+            "name": "Generate Mip Maps",
+            "description": "Force all imported texture components to generate mip maps for mip map texture filtering",
+            "value": true,
+            "type": "Boolean"
+        },
+        "useBinaryKeyframes": {
+            "name": "Use Binary Keyframes",
+            "description": "Record keyframe data as binary files",
+            "value": true,
+            "type": "Boolean"
+        },
+        "manualAnimations": {
+            "name": "Use Manual Animations",
+            "description": "No TimelineAnimations are generated for Timelines so that they can be manually controlled",
+            "value": false,
+            "type": "Boolean"
+        },
+        "animationSampleRate": {
+            "name": "Animation Sample Rate",
+            "description": "Keyframe rate in frames per second used when baking cubic spline animation curves",
+            "value": 30.0,
+            "type": "Real"
+        },
+        "globalScale": {
+            "name": "Enable Global Scale",
+            "description": "This step will perform a global scale of the model.",
+            "value": false,
+            "type": "Boolean"
+        },
+        "globalScaleValue": {
+            "name": "Global Scale Value",
+            "description": "Global Scale factor.",
+            "value": 1,
+            "type": "Real",
+            "conditions": [
+                {
+                    "mode": "Equals",
+                    "property": "globalScale",
+                    "value": true
+                }
+            ]
+        },
+        "generateMeshLevelsOfDetail": {
+            "name": "Generate Mesh Levels of Detail",
+            "description": "When possible, create mesh Levels of Detail by automatically simplifying the source mesh",
+            "value": false,
+            "type": "Boolean"
+        },
+        "recalculateLodNormals": {
+            "name": "Recalculate Normals for Generated Mesh LODs",
+            "description": "Calculate new normals when necessary for Generated Mesh Levels of detail",
+            "value": true,
+            "type": "Boolean",
+            "conditions": [
+                {
+                    "mode": "Equals",
+                    "property": "generateMeshLevelsOfDetail",
+                    "value": true
+                }
+            ]
+        },
+        "recalculateLodNormalsMergeAngle": {
+            "name": "Merge Angle for Mesh LODs",
+            "description": "Maximum angle in degrees to consider for normal smoothing/merging",
+            "value": 60.0,
+            "type": "Real",
+            "conditions": [
+                {
+                    "mode": "Equals",
+                    "property": "recalculateLodNormals",
+                    "value": true
+                }
+            ]
+        },
+        "recalculateLodNormalsSplitAngle": {
+            "name": "Split Angle for Mesh LODs",
+            "description": "Maximum angle in degrees to consider for normal spliting, which creates new vertex data",
+            "value": 25.0,
+            "type": "Real",
+            "conditions": [
+                {
+                    "mode": "Equals",
+                    "property": "recalculateLodNormals",
+                    "value": true
+                }
+            ]
+        }
+    },
+    "groups": {
+        "globalScale": {
+            "name": "Global Scale",
+            "items": [
+                "globalScale",
+                "globalScaleValue"
+            ]
+        },
+        "generateMeshLevelsOfDetail": {
+            "name": "Level of Detail",
+            "items": [
+                "generateMeshLevelsOfDetail",
+                "recalculateLodNormals",
+                "recalculateLodNormalsMergeAngle",
+                "recalculateLodNormalsSplitAngle"
+            ]
+        }
+    }
+}
