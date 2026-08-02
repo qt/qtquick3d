@@ -586,6 +586,19 @@ Q_GLOBAL_STATIC(UniqueIdMap, g_idMap)
 using UniqueIdOthers = QSet<QString>;
 Q_GLOBAL_STATIC(UniqueIdOthers, g_idOthers)
 
+// The id allocator is process-wide and g_nodeNameMap is keyed by node pointer,
+// so it has to start empty for every component that is written out. A tool can
+// write several in one process - balsam converts every positional argument,
+// the material editor exports repeatedly - and each new scene's nodes are
+// allocated at addresses the previous scene's freed nodes occupied, so a stale
+// entry would otherwise take a false hit and hand a new node the earlier id.
+static void resetIdAllocator()
+{
+    g_nodeNameMap->clear();
+    g_idMap->clear();
+    g_idOthers->clear();
+}
+
 static QString getIdForNode(const QSSGSceneDesc::Node &node)
 {
     static constexpr const char *typeNames[] = {
@@ -1590,6 +1603,8 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     auto root = scene.root;
     Q_ASSERT(root);
 
+    resetIdAllocator();
+
     QJsonObject options = optionsObject;
 
     if (auto it = options.constFind(QLatin1String("options")), end = options.constEnd(); it != end)
@@ -1714,6 +1729,8 @@ void writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream, con
     using namespace QSSGSceneDesc;
 
     QSSG_ASSERT(node.scene != nullptr, return);
+
+    resetIdAllocator();
 
     if (node.runtimeType == Material::RuntimeType::CustomMaterial) {
         QString sourceDir = node.scene->sourceDir;
