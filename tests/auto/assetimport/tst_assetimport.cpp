@@ -28,6 +28,7 @@ private slots:
     void importFile();
     void meshLevelsOfDetailForUnweldedMesh_data();
     void meshLevelsOfDetailForUnweldedMesh();
+    void idsDoNotLeakBetweenAssets();
 
 };
 
@@ -187,6 +188,46 @@ void tst_assetimport::meshLevelsOfDetailForUnweldedMesh()
                                     .arg(lod.count).arg(previous).arg(indexCount)));
         previous = lod.count;
     }
+}
+
+// balsam converts every positional argument in one process, and the QML id
+// allocator is a process-wide static keyed by node pointer. Each scene frees
+// its nodes before the next is built, so the next scene's nodes land on the
+// same addresses and used to inherit the previous asset's ids - the second
+// component's root could come out named after a material from the first.
+void tst_assetimport::idsDoNotLeakBetweenAssets()
+{
+    const QString file = QFINDTESTDATA(QStringLiteral("resources/cube_scene.gltf"));
+    QVERIFY(!file.isEmpty());
+
+    const auto convertAndRead = [&file](const QDir &outdir) {
+        QSSGAssetImportManager manager;
+        QString error;
+        if (manager.importFile(file, outdir, &error) != QSSGAssetImportManager::ImportState::Success)
+            return QString();
+        const QStringList generated = outdir.entryList({ QStringLiteral("*.qml") }, QDir::Files);
+        if (generated.size() != 1)
+            return QString();
+        QFile qml(outdir.filePath(generated.first()));
+        if (!qml.open(QIODevice::ReadOnly))
+            return QString();
+        return QString::fromUtf8(qml.readAll());
+    };
+
+    QTemporaryDir firstDir;
+    QVERIFY(firstDir.isValid());
+    QTemporaryDir secondDir;
+    QVERIFY(secondDir.isValid());
+
+    const QString first = convertAndRead(QDir(firstDir.path()));
+    if (first.isEmpty())
+        QSKIP("Asset could not be converted");
+    const QString second = convertAndRead(QDir(secondDir.path()));
+    QVERIFY(!second.isEmpty());
+
+    // The same input converted twice has to produce the same component
+    QCOMPARE(second, first);
+    QVERIFY2(first.contains(QStringLiteral("id: root")), qPrintable(first));
 }
 
 QTEST_APPLESS_MAIN(tst_assetimport)
