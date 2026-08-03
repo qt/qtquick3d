@@ -431,6 +431,39 @@ void Q_QUICK3DUTILS_EXPORT optimizeVertexCache(unsigned int* destination,
                                                size_t indexCount,
                                                size_t vertexCount);
 
+// A vertex attribute stream for welding; mirrors meshopt_Stream
+struct MeshVertexStream
+{
+    const void *data;
+    size_t elementSize;
+    size_t stride;
+};
+
+// The largest number of attribute streams generateVertexRemap() accepts
+constexpr size_t maxVertexStreams = 16;
+
+// Builds a remap table that welds bitwise-identical vertices across all
+// given attribute streams, returning the unique vertex count. streamCount
+// must be between 1 and maxVertexStreams, and every stream's elementSize
+// must be no larger than its stride.
+size_t Q_QUICK3DUTILS_EXPORT generateVertexRemap(unsigned int *destination,
+                                                 const unsigned int *indices,
+                                                 size_t indexCount,
+                                                 size_t vertexCount,
+                                                 const MeshVertexStream *streams,
+                                                 size_t streamCount);
+
+void Q_QUICK3DUTILS_EXPORT remapVertexBuffer(void *destination,
+                                             const void *vertices,
+                                             size_t vertexCount,
+                                             size_t vertexSize,
+                                             const unsigned int *remap);
+
+void Q_QUICK3DUTILS_EXPORT remapIndexBuffer(unsigned int *destination,
+                                            const unsigned int *indices,
+                                            size_t indexCount,
+                                            const unsigned int *remap);
+
 } // namespace QSSGMesh
 
 QT_END_NAMESPACE
