@@ -1586,6 +1586,7 @@ void QQuick3DViewport::setGlobalPickingEnabled(bool isEnabled)
 void QQuick3DViewport::invalidateSceneGraph()
 {
     m_node = nullptr;
+    m_renderNode = nullptr;
 }
 
 QQuick3DSceneRenderer *QQuick3DViewport::getRenderer() const
