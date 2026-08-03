@@ -59,7 +59,7 @@ public:
         DoNotStoreDepthStencilContents = 1 << 2
     };
     Q_DECLARE_FLAGS(RenderTargetFlags, RenderTargetFlag)
-    Q_FLAGS(RenderTargetFlags)
+    Q_FLAG(RenderTargetFlags)
 
     explicit QQuick3DRenderPass(QQuick3DObject *parent = nullptr);
 
