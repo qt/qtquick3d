@@ -24,6 +24,7 @@ qt_internal_add_test(tst_qquick3dassetimport
     LIBRARIES
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
+        Qt::Quick3DUtilsPrivate
     TESTDATA ${test_data}
 )
 
