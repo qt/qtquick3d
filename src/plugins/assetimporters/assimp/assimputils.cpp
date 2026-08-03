@@ -17,6 +17,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/QHash>
 #include <QtCore/QSet>
+#include <QtCore/QVarLengthArray>
 
 QT_BEGIN_NAMESPACE
 
@@ -516,9 +517,58 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
     QVector<quint32> splitVertexIndices;
     quint32 splitVertexCount = vertexAttributes.size();
 
+    if (positions.isEmpty() || indexes.isEmpty())
+        return {};
+
+    // An edge can only be collapsed when its vertices are shared by the faces
+    // around it, so a vertex that appears more than once in the vertex buffer
+    // pins every edge that touches it. aiProcess_JoinIdenticalVertices only
+    // merges vertices that match in every attribute, so hard edges and UV chart
+    // borders still leave a position split, and an asset exported with one
+    // vertex per triangle corner keeps every one of them - such a mesh has no
+    // collapsible edge anywhere, so simplification returns the input unchanged
+    // and not a single level is produced. Weld by position to recover the real
+    // topology, simplify that, and translate the result back to the original
+    // vertex numbering afterwards, since that is what the vertex buffer being
+    // written out uses.
+    //
+    // Only the normals are rewritten below, so a position split to carry
+    // different normals can be welded, but one split to carry a different
+    // normal that has to be *kept* cannot: every face around it would be left
+    // reading whichever of them the weld happened to pick. So when the stored
+    // normals are to be preserved they join the weld key, and a hard edge stays
+    // pinned, at the cost of fewer levels for such a mesh.
+    QVector<quint32> weldRemap(positions.size());
+    QVarLengthArray<QSSGMesh::MeshVertexStream, 2> streams;
+    streams.append({ positions.constData(), sizeof(QVector3D), sizeof(QVector3D) });
+    if (!recalculateNormals)
+        streams.append({ normals.constData(), sizeof(QVector3D), sizeof(QVector3D) });
+    const quint32 weldedVertexCount = QSSGMesh::generateVertexRemap(weldRemap.data(), indexes.constData(),
+                                                                    indexes.size(), positions.size(),
+                                                                    streams.constData(), size_t(streams.size()));
+    QVector<quint32> weldedIndexes(indexes.size());
+    QSSGMesh::remapIndexBuffer(weldedIndexes.data(), indexes.constData(), indexes.size(), weldRemap.constData());
+    QVector<QVector3D> weldedPositions(weldedVertexCount);
+    QSSGMesh::remapVertexBuffer(weldedPositions.data(), positions.constData(), positions.size(),
+                                sizeof(QVector3D), weldRemap.constData());
+
+    // Pick one original vertex to stand for each welded one, so the simplified
+    // indexes can be mapped back. Every vertex welded together agrees on the
+    // attributes the weld key covers, so the choice only matters for the rest:
+    // where a position was split across a UV chart border the LOD has to settle
+    // on one of the charts either way.
+    constexpr quint32 unusedVertex = std::numeric_limits<quint32>::max();
+    QVector<quint32> weldedToOriginal(weldedVertexCount, unusedVertex);
+    for (quint32 i = 0, end = quint32(positions.size()); i < end; ++i) {
+        const quint32 welded = weldRemap.at(i);
+        // Vertices the index buffer never references are left unmapped
+        if (welded != unusedVertex && weldedToOriginal.at(welded) == unusedVertex)
+            weldedToOriginal[welded] = i;
+    }
+
     const float targetError = std::numeric_limits<float>::max(); // error doesn't matter, index count is more important
-    const float *vertexData = reinterpret_cast<const float *>(positions.constData());
-    const float scaleFactor = QSSGMesh::simplifyScale(vertexData, positions.size(), sizeof(QVector3D));
+    const float *vertexData = reinterpret_cast<const float *>(weldedPositions.constData());
+    const float scaleFactor = QSSGMesh::simplifyScale(vertexData, weldedVertexCount, sizeof(QVector3D));
     const quint32 indexCount = indexes.size();
     quint32 indexTarget = 12;
     quint32 lastIndexCount = 0;
@@ -528,7 +578,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
         float error;
         QVector<quint32> newIndexes;
         newIndexes.resize(indexCount); // Must be the same size as the original indexes to pass to simplifyMesh
-        size_t newLength = QSSGMesh::simplifyMesh(newIndexes.data(), indexes.constData(), indexes.size(), vertexData, positions.size(), sizeof(QVector3D), indexTarget, targetError, 0, &error);
+        size_t newLength = QSSGMesh::simplifyMesh(newIndexes.data(), weldedIndexes.constData(), weldedIndexes.size(), vertexData, weldedVertexCount, sizeof(QVector3D), indexTarget, targetError, 0, &error);
 
         // Not good enough, try again
         if (newLength < lastIndexCount * 1.5f) {
@@ -541,6 +591,11 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
             break;
 
         newIndexes.resize(newLength);
+
+        // Back to the original vertex numbering, which everything below - and
+        // the returned levels - is expressed in
+        for (quint32 &index : newIndexes)
+            index = weldedToOriginal.at(index);
 
         // LOD Normal Correction
         if (recalculateNormals) {

@@ -1271,6 +1271,38 @@ void optimizeVertexCache(unsigned int *destination, const unsigned int *indices,
     meshopt_optimizeVertexCache(destination, indices, indexCount, vertexCount);
 }
 
+size_t generateVertexRemap(unsigned int *destination,
+                           const unsigned int *indices,
+                           size_t indexCount,
+                           size_t vertexCount,
+                           const MeshVertexStream *streams,
+                           size_t streamCount)
+{
+    Q_ASSERT(streamCount > 0 && streamCount <= maxVertexStreams);
+    QVarLengthArray<meshopt_Stream, 16> meshoptStreams;
+    for (size_t i = 0; i < streamCount; ++i)
+        meshoptStreams.append({ streams[i].data, streams[i].elementSize, streams[i].stride });
+    return meshopt_generateVertexRemapMulti(destination, indices, indexCount, vertexCount,
+                                            meshoptStreams.constData(), streamCount);
+}
+
+void remapVertexBuffer(void *destination,
+                       const void *vertices,
+                       size_t vertexCount,
+                       size_t vertexSize,
+                       const unsigned int *remap)
+{
+    meshopt_remapVertexBuffer(destination, vertices, vertexCount, vertexSize, remap);
+}
+
+void remapIndexBuffer(unsigned int *destination,
+                      const unsigned int *indices,
+                      size_t indexCount,
+                      const unsigned int *remap)
+{
+    meshopt_remapIndexBuffer(destination, indices, indexCount, remap);
+}
+
 } // namespace QSSGMesh
 
 QT_END_NAMESPACE
