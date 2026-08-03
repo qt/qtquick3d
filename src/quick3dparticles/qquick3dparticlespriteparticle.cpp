@@ -461,6 +461,7 @@ void QQuick3DParticleSpriteParticle::handleSystemChanged(QQuick3DParticleSystem 
         value.particleUpdateNode = new ParticleUpdateNode(system);
         value.particleUpdateNode->m_particle = this;
     }
+    updateNodeLayers();
 }
 
 void QQuick3DParticleSpriteParticle::updateNodes()
@@ -473,6 +474,16 @@ void QQuick3DParticleSpriteParticle::markNodesDirty()
 {
     for (const PerEmitterData &value : std::as_const(m_perEmitterData))
         value.particleUpdateNode->m_nodeDirty = true;
+}
+
+void QQuick3DParticleSpriteParticle::updateNodeLayers()
+{
+    auto *psystem = system();
+    if (!psystem)
+        return;
+    const int layers = psystem->layers();
+    for (const PerEmitterData &value : std::as_const(m_perEmitterData))
+        value.particleUpdateNode->setLayers(layers);
 }
 
 void QQuick3DParticleSpriteParticle::updateFeatureLevel()
@@ -526,6 +537,7 @@ int QQuick3DParticleSpriteParticle::nextCurrentIndex(const QQuick3DParticleEmitt
         perEmitter.emitter = emitter;
         perEmitter.particleUpdateNode->m_particle = this;
         perEmitter.emitterIndex = m_nextEmitterIndex++;
+        updateNodeLayers();
     }
     auto &perEmitter = m_perEmitterData[emitter];
     int index = QQuick3DParticle::nextCurrentIndex(emitter);
