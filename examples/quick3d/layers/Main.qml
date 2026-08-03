@@ -1,11 +1,14 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.Helpers
+import QtQuick3D.Particles3D
 
 ApplicationWindow {
     id: window
@@ -78,6 +81,30 @@ ApplicationWindow {
                     roughness: 0.5
                 } ]
             }
+
+            ParticleSystem3D {
+                visible: particlesCheckbox.checked
+                running: particlesCheckbox.checked
+                layers: v3d.redModels
+                SpriteParticle3D {
+                    id: redParticle
+                    color: "red"
+                    maxAmount: 200
+                    particleScale: 8
+                    fadeInDuration: 500
+                    fadeOutDuration: 500
+                }
+                ParticleEmitter3D {
+                    particle: redParticle
+                    position: Qt.vector3d(0, -50, 0)
+                    emitRate: 40
+                    lifeSpan: 2000
+                    velocity: VectorDirection3D {
+                        direction: Qt.vector3d(0, 120, 0)
+                        directionVariation: Qt.vector3d(40, 40, 40)
+                    }
+                }
+            }
         }
 
         //! [red models]
@@ -109,6 +136,30 @@ ApplicationWindow {
                     roughness: 0.5
                 } ]
             }
+
+            ParticleSystem3D {
+                visible: particlesCheckbox.checked
+                running: particlesCheckbox.checked
+                layers: v3d.greenModels
+                SpriteParticle3D {
+                    id: greenParticle
+                    color: "green"
+                    maxAmount: 200
+                    particleScale: 8
+                    fadeInDuration: 500
+                    fadeOutDuration: 500
+                }
+                ParticleEmitter3D {
+                    particle: greenParticle
+                    position: Qt.vector3d(0, -50, 0)
+                    emitRate: 40
+                    lifeSpan: 2000
+                    velocity: VectorDirection3D {
+                        direction: Qt.vector3d(0, 120, 0)
+                        directionVariation: Qt.vector3d(40, 40, 40)
+                    }
+                }
+            }
         }
         //! [green models]
 
@@ -138,8 +189,86 @@ ApplicationWindow {
                     roughness: 0.5
                 } ]
             }
+
+            ParticleSystem3D {
+                visible: particlesCheckbox.checked
+                running: particlesCheckbox.checked
+                layers: v3d.blueModels
+                SpriteParticle3D {
+                    id: blueParticle
+                    color: "blue"
+                    maxAmount: 200
+                    particleScale: 8
+                    fadeInDuration: 500
+                    fadeOutDuration: 500
+                }
+                ParticleEmitter3D {
+                    particle: blueParticle
+                    position: Qt.vector3d(0, -50, 0)
+                    emitRate: 40
+                    lifeSpan: 2000
+                    velocity: VectorDirection3D {
+                        direction: Qt.vector3d(0, 120, 0)
+                        directionVariation: Qt.vector3d(40, 40, 40)
+                    }
+                }
+            }
         }
         //! [blue models]
+
+        // A model particle with a compound delegate; each model in the
+        // delegate sub-tree assigns its own content layer.
+        ParticleSystem3D {
+            visible: particlesCheckbox.checked
+            running: particlesCheckbox.checked
+
+            ModelParticle3D {
+                id: multiLayerParticle
+                maxAmount: 30
+                delegate: Node {
+                    Model {
+                        source: "#Cube"
+                        layers: v3d.redModels
+                        position: Qt.vector3d(-40, 0, 0)
+                        scale: Qt.vector3d(0.25, 0.25, 0.25)
+                        materials: [ PrincipledMaterial {
+                            baseColor: "red"
+                            roughness: 0.5
+                        } ]
+                    }
+                    Model {
+                        source: "#Sphere"
+                        layers: v3d.greenModels
+                        scale: Qt.vector3d(0.25, 0.25, 0.25)
+                        materials: [ PrincipledMaterial {
+                            baseColor: "green"
+                            roughness: 0.5
+                        } ]
+                    }
+                    Model {
+                        source: "#Cone"
+                        layers: v3d.blueModels
+                        position: Qt.vector3d(40, 0, 0)
+                        scale: Qt.vector3d(0.25, 0.25, 0.25)
+                        materials: [ PrincipledMaterial {
+                            baseColor: "blue"
+                            roughness: 0.5
+                        } ]
+                    }
+                }
+            }
+
+            ParticleEmitter3D {
+                particle: multiLayerParticle
+                position: Qt.vector3d(0, -50, 0)
+                emitRate: 4
+                lifeSpan: 5000
+                velocity: VectorDirection3D {
+                    direction: Qt.vector3d(0, 80, 0)
+                    directionVariation: Qt.vector3d(20, 20, 20)
+                }
+            }
+        }
 
         DebugView {
             id: dbg
@@ -213,6 +342,12 @@ ApplicationWindow {
             onCheckedChanged: {
                 v3d.cameraFilter = checked ? v3d.cameraFilter | v3d.blueModels : v3d.cameraFilter & ~v3d.blueModels;
             }
+        }
+
+        CheckBox {
+            id: particlesCheckbox
+            text: qsTr("Enable Particles")
+            checked: false
         }
 
         Label {

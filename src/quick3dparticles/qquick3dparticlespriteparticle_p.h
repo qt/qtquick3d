@@ -166,6 +166,7 @@ protected:
     void updateNodes();
     void deleteNodes();
     void markNodesDirty();
+    void updateNodeLayers() override;
 
     QMap<const QQuick3DParticleEmitter *, PerEmitterData> m_perEmitterData;
     QVector<SpriteParticleData> m_spriteParticleData;

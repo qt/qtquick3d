@@ -80,6 +80,12 @@ QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
     connect(m_loggingData, &QQuick3DParticleSystemLogging::loggingIntervalChanged, &m_loggingTimer, [this]() {
         m_loggingTimer.setInterval(m_loggingData->m_loggingInterval);
     });
+    // The layers property is not inherited, so forward the system's value to
+    // the internal render nodes of its particles whenever it changes.
+    connect(this, &QQuick3DNode::layersChanged, this, [this]() {
+        for (auto *particle : std::as_const(m_particles))
+            particle->updateNodeLayers();
+    });
 }
 
 QQuick3DParticleSystem::~QQuick3DParticleSystem()
