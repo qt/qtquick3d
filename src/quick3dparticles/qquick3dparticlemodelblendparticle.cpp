@@ -92,6 +92,11 @@ QQuick3DParticleModelBlendParticle::~QQuick3DParticleModelBlendParticle()
         delegate: modelComponent
     }
     \endqml
+
+    \note The model instantiated from the delegate keeps its own
+    \l {QtQuick3D::Node::layers}{layers} assignment; the layers value of the
+    \l ParticleSystem3D is not applied to it. To render the particle on a
+    specific content layer, set the layers property in the delegate.
 */
 QQmlComponent *QQuick3DParticleModelBlendParticle::delegate() const
 {

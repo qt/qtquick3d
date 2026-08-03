@@ -297,6 +297,7 @@ void QQuick3DParticleLineParticle::handleSystemChanged(QQuick3DParticleSystem *s
         value.particleUpdateNode = new LineParticleUpdateNode(system);
         value.particleUpdateNode->m_particle = this;
     }
+    updateNodeLayers();
 }
 
 QSSGRenderGraphObject *QQuick3DParticleLineParticle::LineParticleUpdateNode::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -345,6 +346,7 @@ int QQuick3DParticleLineParticle::nextCurrentIndex(const QQuick3DParticleEmitter
         perEmitter.emitter = emitter;
         perEmitter.particleUpdateNode->m_particle = this;
         perEmitter.emitterIndex = m_nextEmitterIndex++;
+        updateNodeLayers();
     }
     int index = QQuick3DParticleSpriteParticle::nextCurrentIndex(emitter);
     clearSegment(index);
