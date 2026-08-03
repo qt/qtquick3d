@@ -130,6 +130,12 @@ protected:
 
     virtual void reset();
     virtual void doSetMaxAmount(int amount);
+    // Pushes the owning system's content layers onto the hidden internal
+    // render node(s) this particle produces. The layers property is not
+    // inherited, so the system value has to be forwarded explicitly. This
+    // only applies to internal nodes the user cannot reach; user-provided
+    // delegate content is never touched and manages its own layers.
+    virtual void updateNodeLayers() { }
 
     void updateBurstIndex(int amount);
     // This will return the next available index
