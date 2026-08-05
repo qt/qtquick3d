@@ -34,6 +34,8 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
+#include <QtCore/qspan.h>
+
 #include <array>
 
 #include "qssgrenderpass_p.h"
@@ -3141,19 +3143,31 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     renderer->unregisterItem2DData(*item2DData);
 }
 
-static void sortInstances(QByteArray &sortedData, QList<QSSGRhiSortData> &sortData, const void *instances,
-                          int stride, int count, const QVector3D &cameraDirection)
+// Instance buffers are passed around as bytes: convert to entries in one place,
+// clamped to what the buffer can actually hold.
+static QSpan<const QSSGRenderInstanceTableEntry> instanceEntries(const void *data, qsizetype byteSize, int count)
 {
+    const qsizetype available = byteSize / qsizetype(sizeof(QSSGRenderInstanceTableEntry));
+    return { reinterpret_cast<const QSSGRenderInstanceTableEntry *>(data),
+             qBound(qsizetype(0), qsizetype(count), available) };
+}
+
+static QSpan<QSSGRenderInstanceTableEntry> instanceEntries(QByteArray &data)
+{
+    return { reinterpret_cast<QSSGRenderInstanceTableEntry *>(data.data()),
+             data.size() / qsizetype(sizeof(QSSGRenderInstanceTableEntry)) };
+}
+
+static void sortInstances(QSpan<QSSGRenderInstanceTableEntry> sortedInstances, QList<QSSGRhiSortData> &sortData,
+                          QSpan<const QSSGRenderInstanceTableEntry> instances, const QVector3D &cameraDirection)
+{
+    const int count = int(qMin(instances.size(), sortedInstances.size()));
     sortData.resize(count);
-    Q_ASSERT(stride == sizeof(QSSGRenderInstanceTableEntry));
     // create sort data
-    {
-        const QSSGRenderInstanceTableEntry *instance = reinterpret_cast<const QSSGRenderInstanceTableEntry *>(instances);
-        for (int i = 0; i < count; i++) {
-            const QVector3D pos = QVector3D(instance->row0.w(), instance->row1.w(), instance->row2.w());
-            sortData[i] = {QVector3D::dotProduct(pos, cameraDirection), i};
-            instance++;
-        }
+    for (int i = 0; i < count; ++i) {
+        const QSSGRenderInstanceTableEntry &instance = instances[i];
+        const QVector3D pos = QVector3D(instance.row0.w(), instance.row1.w(), instance.row2.w());
+        sortData[i] = {QVector3D::dotProduct(pos, cameraDirection), i};
     }
 
     // sort
@@ -3162,33 +3176,25 @@ static void sortInstances(QByteArray &sortedData, QList<QSSGRhiSortData> &sortDa
     });
 
     // copy instances
-    {
-        const QSSGRenderInstanceTableEntry *instance = reinterpret_cast<const QSSGRenderInstanceTableEntry *>(instances);
-        QSSGRenderInstanceTableEntry *dest = reinterpret_cast<QSSGRenderInstanceTableEntry *>(sortedData.data());
-        for (auto &s : sortData)
-            *dest++ = instance[s.indexOrOffset];
-    }
+    for (int i = 0; i < count; ++i)
+        sortedInstances[i] = instances[sortData[i].indexOrOffset];
 }
 
-static int cullLodInstances(QByteArray &lodData, const void *instances, int count,
+static int cullLodInstances(QSpan<QSSGRenderInstanceTableEntry> lodInstances,
+                            QSpan<const QSSGRenderInstanceTableEntry> instances,
                             const QVector3D &cameraPosition, float minThreshold, float maxThreshold)
 {
-    const QSSGRenderInstanceTableEntry *instance = reinterpret_cast<const QSSGRenderInstanceTableEntry *>(instances);
-    QSSGRenderInstanceTableEntry *dest = reinterpret_cast<QSSGRenderInstanceTableEntry *>(lodData.data());
+    const qsizetype count = qMin(instances.size(), lodInstances.size());
 
     int realSize = 0;
-    for (int i = 0; i < count; ++i) {
-        const float x = cameraPosition.x() - instance->row0.w();
-        const float y = cameraPosition.y() - instance->row1.w();
-        const float z = cameraPosition.z() - instance->row2.w();
+    for (qsizetype i = 0; i < count; ++i) {
+        const QSSGRenderInstanceTableEntry &instance = instances[i];
+        const float x = cameraPosition.x() - instance.row0.w();
+        const float y = cameraPosition.y() - instance.row1.w();
+        const float z = cameraPosition.z() - instance.row2.w();
         const float distanceSq = x * x + y * y + z * z;
-        if (distanceSq >= minThreshold * minThreshold && (maxThreshold < 0 || distanceSq < maxThreshold * maxThreshold)) {
-            realSize++;
-            *dest = *instance;
-            dest++;
-        }
-
-        instance++;
+        if (distanceSq >= minThreshold * minThreshold && (maxThreshold < 0 || distanceSq < maxThreshold * maxThreshold))
+            lodInstances[realSize++] = instance;
     }
 
     return realSize;
@@ -3237,16 +3243,15 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
         instanceData.buffer->create();
     }
     if (updateInstanceBuffer || updateForLod) {
+        Q_ASSERT(table->stride() == sizeof(QSSGRenderInstanceTableEntry));
         const void *data = nullptr;
         if (table->isDepthSortingEnabled()) {
             if (updateInstanceBuffer) {
                 QMatrix4x4 invGlobalTransform = renderableGlobalTransform.inverted();
                 instanceData.sortedData.resize(table->dataSize());
-                sortInstances(instanceData.sortedData,
+                sortInstances(instanceEntries(instanceData.sortedData),
                               instanceData.sortData,
-                              table->constData(),
-                              table->stride(),
-                              table->count(),
+                              instanceEntries(table->constData(), table->dataSize(), table->count()),
                               invGlobalTransform.map(cameraDirection).normalized());
             }
             data = instanceData.sortedData.constData();
@@ -3256,23 +3261,16 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
         }
         if (data) {
             if (updateForLod) {
+                // Either the depth sorted copy or the table itself, both with count() entries.
+                const auto instances = table->isDepthSortingEnabled()
+                        ? instanceEntries(instanceData.sortedData.constData(), instanceData.sortedData.size(), table->count())
+                        : instanceEntries(table->constData(), table->dataSize(), table->count());
                 instanceData.lodData.resize(table->dataSize());
-                if (table->isDepthSortingEnabled()) {
-                    modelContext.model.instanceLodCount = cullLodInstances(instanceData.lodData,
-                                                                           instanceData.sortedData.constData(),
-                                                                           instanceData.sortedData.size(),
-                                                                           cameraPosition,
-                                                                           minThreshold,
-                                                                           maxThreshold);
-
-                } else {
-                    modelContext.model.instanceLodCount = cullLodInstances(instanceData.lodData,
-                                                                           table->constData(),
-                                                                           table->count(),
-                                                                           cameraPosition,
-                                                                           minThreshold,
-                                                                           maxThreshold);
-                }
+                modelContext.model.instanceLodCount = cullLodInstances(instanceEntries(instanceData.lodData),
+                                                                      instances,
+                                                                      cameraPosition,
+                                                                      minThreshold,
+                                                                      maxThreshold);
                 data = instanceData.lodData.constData();
 
                 // Force clear the buffer to upload empty instance data.
