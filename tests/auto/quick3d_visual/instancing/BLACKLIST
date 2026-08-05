@@ -1,0 +1,8 @@
+# The Android emulator's GLES translator rejects the instanced vertex attribute
+# arrays of the LOD culled draws and then keeps whatever attribute state it had
+# ("a vertex attribute index out of boundary is detected. Skipping corresponding
+# vertex attribute", allocedBufferSize 240 against wantedEnd 256 and 1856), so
+# the instances are not drawn where the thresholds put them. The two rows
+# without culling render correctly, so this is not about the culling itself.
+[lod]
+android
