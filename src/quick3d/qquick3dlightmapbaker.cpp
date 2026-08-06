@@ -31,6 +31,8 @@ QQuick3DLightmapBaker::~QQuick3DLightmapBaker()
 }
 
 /*!
+    \internal
+
     Triggers a new frame where lightmap baking will take place.
     Will call \a callback for feedback and handling.
 
@@ -118,6 +120,8 @@ void QQuick3DLightmapBaker::bake()
 }
 
 /*!
+    \internal
+
     Triggers a new frame where lightmap denoising will take place.
     Will call \a callback for feedback and handling.
 */
