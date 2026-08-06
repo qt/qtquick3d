@@ -798,11 +798,12 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     for (QSSGRenderEffect *effectNode = m_layer->firstEffect; effectNode; effectNode = effectNode->m_nextEffect)
         effectNode->finalizeShaders(*m_layer, m_sgContext.get());
 
-    // Re-schedule top-level user passes in QML declaration order so a
-    // RenderOutputProvider that scheduled a later pass first cannot
-    // reorder them. A pass referenced by a SubRenderPass command is
-    // tagged SubPass and invoked by its parent, so it is never
-    // scheduled here.
+    // Re-schedule top-level user passes in the order they appear in the scene
+    // manager's userRenderPasses list so a RenderOutputProvider that scheduled
+    // a later pass first cannot reorder them. That list order follows the order
+    // in which the passes were first synced, not a guaranteed QML declaration
+    // order. A pass referenced by a SubRenderPass command is tagged SubPass and
+    // invoked by its parent, so it is never scheduled here.
     if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
         for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses))
             userPass->role = QSSGRenderUserPass::Role::TopLevel;
@@ -1014,7 +1015,13 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             // for user passes by using the parent node's index.
             if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
                 for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
-                    if (const auto *fo = sm->lookUpNode(userPass); fo && fo->parentItem()) {
+                    // Only top-level passes participate in dependency ordering; a
+                    // sub-pass is invoked by its parent, so a node-derived index on
+                    // it would corrupt the scheduled-pass ordering if it is also
+                    // scheduled directly (e.g. its output consumed via a provider).
+                    if (userPass->role != QSSGRenderUserPass::Role::TopLevel) {
+                        userPass->setDependencyIndex(0);
+                    } else if (const auto *fo = sm->lookUpNode(userPass); fo && fo->parentItem()) {
                         const auto *pi = fo->parentItem();
                         if (const QSSGRenderGraphObject *parentNode = QQuick3DObjectPrivate::get(pi)->spatialNode; parentNode && QSSGRenderGraphObject::isNodeType(parentNode->type))
                             userPass->setDependencyIndex(static_cast<const QSSGRenderNode *>(parentNode)->h.index());
