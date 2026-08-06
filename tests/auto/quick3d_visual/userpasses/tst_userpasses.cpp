@@ -8,6 +8,8 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3drenderpass_p.h>
+#include <QtQuick3D/private/qquick3dobject_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include "../shared/util.h"
 
 class tst_UserPasses : public QQuick3DDataTest
@@ -30,6 +32,7 @@ private slots:
     void testPipelineStateOverride_data();
     void subPassOverrideMaterial();
     void multipleSubPasses();
+    void subPassDependencyIndex();
     void slotLimitDoesNotCrash();
     void depthLimitDoesNotCrash();
     void testAddDefine();
@@ -769,6 +772,42 @@ void tst_UserPasses::multipleSubPasses()
     QVERIFY(comparePixelNormPos(result, 0.25, 0.5, Qt::red, FUZZ));
     // Right quarter (sphere on Layer1) should be blue.
     QVERIFY(comparePixelNormPos(result, 0.75, 0.5, Qt::blue, FUZZ));
+}
+
+void tst_UserPasses::subPassDependencyIndex()
+{
+    // Regression test for QTBUG-148554. A pass referenced as a SubRenderPass
+    // (Role::SubPass) must not be assigned a node-derived dependency index.
+    // The sub-pass in this scene is declared under a Node, so before the fix
+    // the dependency-index loop assigned it that node's (non-zero) index. If
+    // such a sub-pass is also scheduled directly (e.g. its output is consumed
+    // via a provider) the non-zero index sorts it ahead of genuine top-level
+    // passes in the scheduled list.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_dependency_index.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    // Force a full synchronize + render so the dependency-index loop runs.
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    auto *mainPass = view->rootObject()->findChild<QQuick3DRenderPass *>("mainPass");
+    auto *subPass = view->rootObject()->findChild<QQuick3DRenderPass *>("subPass");
+    QVERIFY(mainPass);
+    QVERIFY(subPass);
+
+    auto *mainNode = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(mainPass)->spatialNode);
+    auto *subNode = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(subPass)->spatialNode);
+    QVERIFY(mainNode);
+    QVERIFY(subNode);
+
+    // Roles are assigned during sync: the main pass is top-level and the
+    // referenced pass is tagged as a sub-pass.
+    QCOMPARE(mainNode->role, QSSGRenderUserPass::Role::TopLevel);
+    QCOMPARE(subNode->role, QSSGRenderUserPass::Role::SubPass);
+
+    // The invariant under test: a sub-pass carries no dependency index.
+    QCOMPARE(subNode->m_dependencyIndex, 0u);
 }
 
 void tst_UserPasses::slotLimitDoesNotCrash()

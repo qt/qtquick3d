@@ -70,7 +70,7 @@ QSSGRhiRenderableTextureV2Ptr QSSGUserRenderPassManager::getUserPassTexureResult
 void QSSGUserRenderPassManager::updateUserPassOrder(bool forceUpdate)
 {
     if (m_passlistDirty || forceUpdate) {
-        // stable_sort preserves QML declaration order for passes with
+        // stable_sort preserves the existing scheduled order for passes with
         // equal dependency indices.
         std::stable_sort(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), [](const QSSGRenderUserPass *a, const QSSGRenderUserPass *b) {
             return a->m_dependencyIndex > b->m_dependencyIndex;
