@@ -2282,97 +2282,107 @@ static void rhiPrepareSkyBox_helper(const QSSGRenderContextInterface &context,
         Q_UNREACHABLE_RETURN();
     }
 
-    const bool hasValidInput = (lightProbeTexture.m_texture != nullptr);
-
-    if (hasValidInput) {
-        const bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
-
-        if (cubeFace == QSSGRenderTextureCubeFaceNone)
-            layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
-        if (cubeMapMode)
-            layer.skyBoxIsSrgb = !lightProbeTexture.m_flags.isLinear();
-
-        QSSGRhiShaderResourceBindingList bindings;
-
-        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
-                                                 QRhiSampler::Linear,
-                                                 cubeMapMode ? QRhiSampler::None : QRhiSampler::Linear, // cube map doesn't have mipmaps
-                                                 QRhiSampler::Repeat,
-                                                 QRhiSampler::ClampToEdge,
-                                                 QRhiSampler::Repeat });
-        int samplerBinding = 1; // the shader code is hand-written, so we don't need to look that up
-        bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, lightProbeTexture.m_texture, sampler);
-
-        const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
-        const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * cubeFaceIdx;
-        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, nullptr, entry, entryIdx });
-
-        QRhi *rhi = rhiCtx->rhi();
-        const quint32 ubufSize = cameras.count() >= 2 ? 416 : 240; // same ubuf layout for both skybox and skyboxcube
-        if (!dcd.ubuf || dcd.ubuf->size() != ubufSize) {
-            delete dcd.ubuf;
-            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, int(ubufSize));
-            dcd.ubuf->create();
-        }
-
-        float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
-        const float exposure = layer.lightProbeSettings.probeExposure;
-        // orientation
-        const QMatrix3x3 &rotationMatrix(layer.lightProbeSettings.probeOrientation);
-
-        // The cubemap shader doesn't use blur or mipmapping, so it uses those for tonemapping and texture color space
-        const float blurAmountOrSrgb = cubeMapMode ? layer.skyBoxIsSrgb : layer.skyboxBlurAmount;
-        const float maxMipLevelOrTonemapMode = cubeMapMode ? float(tonemapMode) : float(lightProbeTexture.m_mipmapCount - 2);
-
-        const QVector4D skyboxProperties = {
-            adjustY,
-            exposure,
-            blurAmountOrSrgb,
-            maxMipLevelOrTonemapMode
-        };
-
-        char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-        quint32 ubufOffset = 0;
-        // skyboxProperties
-        memcpy(ubufData + ubufOffset, &skyboxProperties, 16);
-        ubufOffset += 16;
-        // orientation
-        memcpy(ubufData + ubufOffset, rotationMatrix.constData(), 12);
-        ubufOffset += 16;
-        memcpy(ubufData + ubufOffset, (char *)rotationMatrix.constData() + 12, 12);
-        ubufOffset += 16;
-        memcpy(ubufData + ubufOffset, (char *)rotationMatrix.constData() + 24, 12);
-        ubufOffset += 16;
-
-        for (qsizetype viewIdx = 0; viewIdx < cameras.count(); ++viewIdx) {
-            const QMatrix4x4 &inverseProjection = cameras[viewIdx]->projection.inverted();
-            const QMatrix4x4 &viewMatrix = renderData->getGlobalTransform(*cameras[viewIdx]);
-            QMatrix4x4 viewProjection(Qt::Uninitialized); // For cube mode
-            cameras[viewIdx]->calculateViewProjectionWithoutTranslation(viewMatrix, 0.1f, 5.0f, viewProjection);
-
-            quint32 viewDataOffset = ubufOffset;
-            memcpy(ubufData + viewDataOffset + viewIdx * 64, viewProjection.constData(), 64);
-            viewDataOffset += cameras.count() * 64;
-            memcpy(ubufData + viewDataOffset + viewIdx * 64, inverseProjection.constData(), 64);
-            viewDataOffset += cameras.count() * 64;
-            memcpy(ubufData + viewDataOffset + viewIdx * 48, viewMatrix.constData(), 48);
-        }
-        dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-
-        bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
-
+    if (lightProbeTexture.m_texture == nullptr) {
+        // No valid texture this frame; drop any previously built SRB rather than
+        // reuse one that may reference a texture ensureTextures() has since deleted.
         if (cubeFace != QSSGRenderTextureCubeFaceNone) {
-            const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
-            entry->m_skyBoxSrbs[cubeFaceIdx] = rhiCtxD->srb(bindings);
+            // All 6 face SRBs bind the same light probe texture, so all of them (not
+            // just the face passed in this call) are equally stale.
+            for (QRhiShaderResourceBindings *&srb : entry->m_skyBoxSrbs)
+                srb = nullptr;
         } else {
-            layer.skyBoxSrb = rhiCtxD->srb(bindings);
+            layer.skyBoxSrb = nullptr;
         }
-
-        if (cubeMapMode)
-            renderer.rhiCubeRenderer()->prepareCube(rhiCtx, nullptr);
-        else
-            renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+        return;
     }
+
+    const bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
+
+    if (cubeFace == QSSGRenderTextureCubeFaceNone)
+        layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
+    if (cubeMapMode)
+        layer.skyBoxIsSrgb = !lightProbeTexture.m_flags.isLinear();
+
+    QSSGRhiShaderResourceBindingList bindings;
+
+    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                             QRhiSampler::Linear,
+                                             cubeMapMode ? QRhiSampler::None : QRhiSampler::Linear, // cube map doesn't have mipmaps
+                                             QRhiSampler::Repeat,
+                                             QRhiSampler::ClampToEdge,
+                                             QRhiSampler::Repeat });
+    int samplerBinding = 1; // the shader code is hand-written, so we don't need to look that up
+    bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, lightProbeTexture.m_texture, sampler);
+
+    const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+    const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * cubeFaceIdx;
+    QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, nullptr, entry, entryIdx });
+
+    QRhi *rhi = rhiCtx->rhi();
+    const quint32 ubufSize = cameras.count() >= 2 ? 416 : 240; // same ubuf layout for both skybox and skyboxcube
+    if (!dcd.ubuf || dcd.ubuf->size() != ubufSize) {
+        delete dcd.ubuf;
+        dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, int(ubufSize));
+        dcd.ubuf->create();
+    }
+
+    float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
+    const float exposure = layer.lightProbeSettings.probeExposure;
+    // orientation
+    const QMatrix3x3 &rotationMatrix(layer.lightProbeSettings.probeOrientation);
+
+    // The cubemap shader doesn't use blur or mipmapping, so it uses those for tonemapping and texture color space
+    const float blurAmountOrSrgb = cubeMapMode ? layer.skyBoxIsSrgb : layer.skyboxBlurAmount;
+    const float maxMipLevelOrTonemapMode = cubeMapMode ? float(tonemapMode) : float(lightProbeTexture.m_mipmapCount - 2);
+
+    const QVector4D skyboxProperties = {
+        adjustY,
+        exposure,
+        blurAmountOrSrgb,
+        maxMipLevelOrTonemapMode
+    };
+
+    char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+    quint32 ubufOffset = 0;
+    // skyboxProperties
+    memcpy(ubufData + ubufOffset, &skyboxProperties, 16);
+    ubufOffset += 16;
+    // orientation
+    memcpy(ubufData + ubufOffset, rotationMatrix.constData(), 12);
+    ubufOffset += 16;
+    memcpy(ubufData + ubufOffset, (char *)rotationMatrix.constData() + 12, 12);
+    ubufOffset += 16;
+    memcpy(ubufData + ubufOffset, (char *)rotationMatrix.constData() + 24, 12);
+    ubufOffset += 16;
+
+    for (qsizetype viewIdx = 0; viewIdx < cameras.count(); ++viewIdx) {
+        const QMatrix4x4 &inverseProjection = cameras[viewIdx]->projection.inverted();
+        const QMatrix4x4 &viewMatrix = renderData->getGlobalTransform(*cameras[viewIdx]);
+        QMatrix4x4 viewProjection(Qt::Uninitialized); // For cube mode
+        cameras[viewIdx]->calculateViewProjectionWithoutTranslation(viewMatrix, 0.1f, 5.0f, viewProjection);
+
+        quint32 viewDataOffset = ubufOffset;
+        memcpy(ubufData + viewDataOffset + viewIdx * 64, viewProjection.constData(), 64);
+        viewDataOffset += cameras.count() * 64;
+        memcpy(ubufData + viewDataOffset + viewIdx * 64, inverseProjection.constData(), 64);
+        viewDataOffset += cameras.count() * 64;
+        memcpy(ubufData + viewDataOffset + viewIdx * 48, viewMatrix.constData(), 48);
+    }
+    dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+    bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
+
+    if (cubeFace != QSSGRenderTextureCubeFaceNone) {
+        const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
+        entry->m_skyBoxSrbs[cubeFaceIdx] = rhiCtxD->srb(bindings);
+    } else {
+        layer.skyBoxSrb = rhiCtxD->srb(bindings);
+    }
+
+    if (cubeMapMode)
+        renderer.rhiCubeRenderer()->prepareCube(rhiCtx, nullptr);
+    else
+        renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
 }
 
 void RenderHelpers::rhiPrepareSkyBox(const QSSGRenderContextInterface &context,
