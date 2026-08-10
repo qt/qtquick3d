@@ -2449,8 +2449,11 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
         bool needsBuild = !renderTarget->isValid();
 
         const qsizetype oldAttachmentCount = renderTarget->colorAttachmentCount();
+        // A pass without ColorAttachment commands gets one implicit default
+        // attachment, so compare against the effective count.
+        const qsizetype wantedAttachmentCount = qMax<qsizetype>(colorAttachments.size(), 1);
         // If the number of attachments has changed, we need to rebuild.
-        if (oldAttachmentCount != colorAttachments.size())
+        if (oldAttachmentCount != wantedAttachmentCount)
             needsBuild = true;
 
         // Even if the render target is valid we need to check if the textures are still compatible.
@@ -2462,11 +2465,15 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
         }
 
         if (!needsBuild) {
-            // Color attachments
+            // Color attachments (oldAttachmentCount == wantedAttachmentCount here;
+            // an attachment without a command is the implicit default).
             for (int i = 0; i != oldAttachmentCount; ++i) {
-                const auto &colorAttachment = colorAttachments.at(i);
-                QSSG_ASSERT(colorAttachment != nullptr, continue);
-                const auto expectedFormat = QSSGBufferManager::toRhiFormat(colorAttachment->format());
+                QRhiTexture::Format expectedFormat = QRhiTexture::RGBA8;
+                if (i < colorAttachments.size()) {
+                    const auto &colorAttachment = colorAttachments.at(i);
+                    QSSG_ASSERT(colorAttachment != nullptr, continue);
+                    expectedFormat = QSSGBufferManager::toRhiFormat(colorAttachment->format());
+                }
                 const auto &texture = renderTarget->getColorTexture(i);
                 needsBuild = needsBuild || needsRebuild(&(*texture->texture()), targetSize, expectedFormat);
             }
@@ -2499,8 +2506,8 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
 
             QRhiTextureRenderTargetDescription rtDesc;
 
-            // If no attachments are specified, create one.
-            const qsizetype colorAttachmentCount = qMax<qsizetype>(colorAttachments.size(), 1);
+            // If no attachments are specified, create one (the implicit default).
+            const qsizetype colorAttachmentCount = wantedAttachmentCount;
 
             bool createSucceeded = true;
             bool colorAllocatorsNeedsUpdate = false;
@@ -2509,6 +2516,14 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
                 // Used to set the color attachments in rtDesc below (don't let the raw ptrs leave this scope).
                 QVarLengthArray<QRhiTexture *, 4> textures;
                 for (qsizetype i = 0; i < colorAttachmentCount && createSucceeded ; ++i) {
+                    if (i >= colorAttachments.size()) {
+                        // No ColorAttachment command; create the implicit default attachment.
+                        auto *tex = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA8, targetSize, ps.samples, QRhiTexture::RenderTarget);
+                        tex->setName(QByteArrayLiteral("Default color attachment"));
+                        createSucceeded = createSucceeded && tex->create();
+                        textures.push_back(tex);
+                        continue;
+                    }
                     const auto &colorAttCmd = colorAttachments.at(i);
                     const auto &name = colorAttCmd->m_name;
                     const auto format = QSSGBufferManager::toRhiFormat(colorAttCmd->format());
@@ -2553,8 +2568,10 @@ void UserRenderPass::preparePassImpl(QSSGRenderer &renderer,
                 renderTarget->setDescription(rhiCtx->rhi(), std::move(rtDesc), passNode->renderTargetFlags);
 
                 // Now we can update the allocators for the color attachments that were created here.
+                // The implicit default attachment has no command, so only command-backed
+                // attachments are updated.
                 if (colorAllocatorsNeedsUpdate) {
-                    for (qsizetype i = 0; i < colorAttachmentCount; ++i) {
+                    for (qsizetype i = 0; i < colorAttachments.size(); ++i) {
                         const auto &colorAttCmd = colorAttachments.at(i);
                         const auto &allocateTexCmd = colorAttCmd->m_textureCmd;
                         allocateTexCmd->setTexture(renderTarget->getColorTexture(i));

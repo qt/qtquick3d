@@ -43,6 +43,7 @@ private slots:
     void testCullModeOverrideSubpass_data();
     void testCullModeOverrideSubpass();
     void testBlendOverrideOriginalMaterial();
+    void noColorAttachmentDoesNotCrash();
 
 private:
     // Helper function to check if an image contains a specific color (with lighting effects)
@@ -1174,6 +1175,28 @@ void tst_UserPasses::testBlendOverrideOriginalMaterial()
     QVERIFY2(qBlue(p2) < 30, "Phase 2: no blue bleed — One/Zero override must have worked");
 
     QVERIFY2(qBlue(p1) - qBlue(p2) > 60, "Phases must produce measurably different blue channel values");
+}
+
+void tst_UserPasses::noColorAttachmentDoesNotCrash()
+{
+    // A pass without ColorAttachment commands gets one implicit default color
+    // attachment. Before the fix, building the pass's render target indexed
+    // the empty command list (assert in debug, out-of-bounds read in release),
+    // and the compatibility check on the next frame both forced a rebuild and
+    // did the same.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("no_color_attachment.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    // Two grabs: the first exercises the render target build, the second the
+    // compatibility check against the implicitly created attachment.
+    QVERIFY(!grab(view.data()).isNull());
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    // The pass renders the red cube into the implicit default attachment,
+    // which the provider exposes for display.
+    QVERIFY(imageContainsDominantColor(result, Qt::red));
 }
 
 QTEST_MAIN(tst_UserPasses)
