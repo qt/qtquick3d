@@ -90,6 +90,10 @@ private:
     QHash<const QSSGRenderUserPass *, QSSGRhiRenderableTextureV2Ptr> m_renderPassRenderTargets;
     UserPassSet m_scheduledUserPasses;
 
+    // Sub-passes we have already warned about when a schedule request was
+    // rejected; keeps the per-frame provider path from spamming the warning.
+    QSet<const QSSGRenderUserPass *> m_subPassScheduleWarned;
+
     QHash<QRhiTexture *, size_t> m_trackedTextures;
 
     // We keep a list of these so we can notify them that it's

@@ -5,6 +5,7 @@
 #include <QSignalSpy>
 #include <QDir>
 #include <QFile>
+#include <QRegularExpression>
 #include <QtQml/QQmlComponent>
 #include <QtQuick/QQuickView>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
@@ -40,6 +41,7 @@ private slots:
     void subPassRefCounting();
     void subPassCommandDestroyed();
     void referencedPassDestroyed();
+    void unreferencedPassReturnsToTopLevel();
     void slotLimitDoesNotCrash();
     void depthLimitDoesNotCrash();
     void testAddDefine();
@@ -1029,6 +1031,46 @@ void tst_UserPasses::referencedPassDestroyed()
     QVERIFY(!result.isNull());
     QCOMPARE(roleOf(staticContainer), QSSGRenderUserPass::Role::TopLevel);
     QVERIFY(imageContainsDominantColor(result, Qt::red));
+}
+
+void tst_UserPasses::unreferencedPassReturnsToTopLevel()
+{
+    // A pass that is no longer referenced by any SubRenderPass command must
+    // return to being a top-level pass, and actually render as one again:
+    // the provider-driven quad shows the leaf's own output, which only exists
+    // when the leaf renders standalone.
+    //
+    // While referenced, the provider requests the leaf every frame and the
+    // manager rejects it with a once-per-pass warning; the first frames render
+    // during window exposure, so the expectation is armed up front.
+    QTest::ignoreMessage(QtWarningMsg,
+                         QRegularExpression(QStringLiteral("Ignoring request to schedule sub-pass")));
+    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_unreference.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *leafPass = view->rootObject()->findChild<QQuick3DRenderPass *>("leafPass");
+    QVERIFY(leafPass);
+
+    const auto roleOf = [](QQuick3DRenderPass *pass) {
+        auto *node = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+        return node ? node->role : QSSGRenderUserPass::Role::TopLevel;
+    };
+
+    // Referenced: the leaf is a sub-pass and the quad has nothing to show.
+    const QImage subPassResult = grab(view.data());
+    QVERIFY(!subPassResult.isNull());
+    QCOMPARE(roleOf(leafPass), QSSGRenderUserPass::Role::SubPass);
+    QVERIFY(!imageContainsDominantColor(subPassResult, Qt::green));
+
+    // Unreferenced: the leaf returns to top-level and renders the green cube
+    // into its own attachment, which the provider now exposes.
+    view->rootObject()->setProperty("useAsSubPass", false);
+    QVERIFY(!grab(view.data()).isNull()); // settle: role flip + first standalone render
+    const QImage topLevelResult = grab(view.data());
+    QVERIFY(!topLevelResult.isNull());
+    QCOMPARE(roleOf(leafPass), QSSGRenderUserPass::Role::TopLevel);
+    QVERIFY(imageContainsDominantColor(topLevelResult, Qt::green));
 }
 
 void tst_UserPasses::slotLimitDoesNotCrash()
