@@ -42,11 +42,21 @@ void QSSGUserRenderPassManager::scheduleUserPass(QSSGRenderUserPass *userPasses)
 
     // Only top-level passes are scheduled. A sub-pass is invoked by its parent
     // and renders into the parent's target, so it must never enter the scheduled
-    // list even if a provider requests its result (QTBUG-148554).
+    // list even if a provider requests its result (QTBUG-148554). This request
+    // typically comes from a RenderOutputProvider; since a sub-pass produces no
+    // output of its own, the provider will never get a texture, so warn (once
+    // per pass; the provider path requests every frame).
     if (userPasses->role != QSSGRenderUserPass::Role::TopLevel) {
-        qCDebug(QSSGUserRenderPassManagerLog) << "Ignoring schedule of a sub-pass:" << userPasses;
+        if (!m_subPassScheduleWarned.contains(userPasses)) {
+            m_subPassScheduleWarned.insert(userPasses);
+            qWarning() << "Ignoring request to schedule sub-pass" << userPasses
+                       << "; a sub-pass renders into its parent's render target and produces no output of its own."
+                          " A RenderOutputProvider must reference a top-level RenderPass.";
+        }
         return;
     }
+
+    m_subPassScheduleWarned.remove(userPasses);
 
     auto it = std::find(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), userPasses);
     if (it == m_scheduledUserPasses.end()) {
@@ -184,6 +194,7 @@ void QSSGUserRenderPassManager::resetForFrame()
 void QSSGUserRenderPassManager::releaseAll()
 {
     m_scheduledUserPasses.clear();
+    m_subPassScheduleWarned.clear();
 
     // NOTE: We own these so we'll invalidate them, meaning releasing their internal resources.
     //       Any shared pointers to them held elsewhere will become invalid, as in they will

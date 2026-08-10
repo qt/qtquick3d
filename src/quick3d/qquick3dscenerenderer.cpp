@@ -819,6 +819,22 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         // command list is rebuilt, or a pass's role flips, so re-derive it only
         // then.
         if (sm->userRenderPassesDirty) {
+            // A sub-pass renders into its parent's render target, so any attachment
+            // commands it declares are ignored. Warn so the mistake is not silent;
+            // this block only runs when the classification changes.
+            for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
+                if (userPass->role != QSSGRenderUserPass::Role::SubPass)
+                    continue;
+                for (const QSSGCommand *cmd : std::as_const(userPass->commands)) {
+                    if (cmd->m_type == CommandType::ColorAttachment
+                        || cmd->m_type == CommandType::DepthStencilAttachment
+                        || cmd->m_type == CommandType::DepthTextureAttachment) {
+                        qWarning() << "RenderPass" << sm->lookUpNode(userPass)
+                                   << "is used as a sub-pass; its" << cmd->typeAsString()
+                                   << "command is ignored because a sub-pass renders into its parent's render target.";
+                    }
+                }
+            }
             quint32 declarationOrder = 0;
             for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
                 if (userPass->role == QSSGRenderUserPass::Role::TopLevel)
