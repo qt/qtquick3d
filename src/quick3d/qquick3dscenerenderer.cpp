@@ -811,17 +811,22 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     // references it through a SubRenderPass command; a sub-pass is invoked by its
     // parent and renders into the parent's target, so it is never scheduled. Its
     // order is its command index, established by the parent. A top-level pass
-    // records its declaration order, which the manager uses as the tiebreak when
-    // ordering passes with an equal dependency index, so the render order is
-    // deterministic regardless of the order a RenderOutputProvider scheduled it.
+    // orders by its nesting depth, the number of RenderPass ancestors it has:
+    // deeper passes render first ("children before parents"), so a pass
+    // declared inside its consumer renders before it. Other ancestors do not
+    // count towards the depth, so a pass grouped under a Node orders as if it
+    // were declared at the level of that Node. The
+    // manager breaks ties between passes at equal depth by declaration order, so
+    // the render order is deterministic regardless of the order a
+    // RenderOutputProvider scheduled a pass.
     //
     // The role itself is not derived here: each pass mirrors it to its backend
     // node in updateSpatialNode() from the reference count the SubRenderPass
     // commands maintain, and the node updates have already been flushed above.
     if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
-        // The declaration order only changes when a pass is added or removed, a
-        // command list is rebuilt, or a pass's role flips, so re-derive it only
-        // then.
+        // The classification-dependent state only changes when a pass is added
+        // or removed, a command list is rebuilt, a pass is reparented, or a
+        // pass's role flips, so re-derive it only then.
         if (sm->userRenderPassesDirty) {
             // A sub-pass renders into its parent's render target, so any attachment
             // commands it declares are ignored. Warn so the mistake is not silent;
@@ -838,6 +843,27 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                                    << "command is ignored because a sub-pass renders into its parent's render target.";
                     }
                 }
+            }
+            // Nesting depth. Only top-level passes are considered: a sub-pass's
+            // placement never affects ordering, and a pass declared inline on a
+            // SubRenderPass command has no parent item. The depth is the number
+            // of RenderPass ancestors; other ancestors (a Node used for
+            // grouping, for example) are transparent and do not affect the
+            // order. RenderPass ancestors count regardless of their role, so
+            // the order is stable when a pass's role flips at runtime.
+            for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
+                userPass->m_nestingDepth = 0;
+                if (userPass->role != QSSGRenderUserPass::Role::TopLevel)
+                    continue;
+                const QQuick3DObject *fo = sm->lookUpNode(userPass);
+                if (!fo)
+                    continue; // Property-referenced pass without a parent; depth 0.
+                quint32 depth = 0;
+                for (QQuick3DObject *p = fo->parentItem(); p; p = p->parentItem()) {
+                    if (QSSGRenderGraphObjectUtils::isUserRenderPass(QQuick3DObjectPrivate::get(p)->type))
+                        ++depth;
+                }
+                userPass->m_nestingDepth = depth;
             }
             quint32 declarationOrder = 0;
             for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
@@ -1038,26 +1064,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         QSSGRenderRoot *rootNode = winAttacment->rootNode();
         if (rootNode->isDirty(QSSGRenderRoot::DirtyFlag::TreeDirty)) {
             rootNode->reindex();
-
-            // We exploit the fact that we can use the nodes indexes to establish a dependency order
-            // for user passes by using the parent node's index.
-            if (QQuick3DSceneManager *sm = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager; sm) {
-                for (QSSGRenderUserPass *userPass : std::as_const(sm->userRenderPasses)) {
-                    // Only top-level passes participate in dependency ordering. The
-                    // manager already rejects sub-passes from the scheduled list, so
-                    // this keeps the persistent dependency index consistent (0) for
-                    // a pass that is currently a sub-pass.
-                    if (userPass->role != QSSGRenderUserPass::Role::TopLevel) {
-                        userPass->setDependencyIndex(0);
-                    } else if (const auto *fo = sm->lookUpNode(userPass); fo && fo->parentItem()) {
-                        const auto *pi = fo->parentItem();
-                        if (const QSSGRenderGraphObject *parentNode = QQuick3DObjectPrivate::get(pi)->spatialNode; parentNode && QSSGRenderGraphObject::isNodeType(parentNode->type))
-                            userPass->setDependencyIndex(static_cast<const QSSGRenderNode *>(parentNode)->h.index());
-                        else
-                            userPass->setDependencyIndex(0); // 0 means no dependency.
-                    }
-                }
-            }
         }
     }
 

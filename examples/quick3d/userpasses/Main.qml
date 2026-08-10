@@ -195,16 +195,20 @@ ApplicationWindow {
                     }
                 }
             ]
+
+            // ![GBufferPass usage]
+            // The G-buffer pass is nested inside its consumer, so it renders
+            // first and the deferred lighting samples this frame's G-buffers.
+            GBufferPass {
+                id: gbufferPass
+                layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
+                depthTexture: mainDepthStencilTexture
+            }
+            // ![GBufferPass usage]
         }
         // ![main color pass]
 
-        // ![GBufferPass usage]
-        GBufferPass {
-            id: gbufferPass
-            layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
-            depthTexture: mainDepthStencilTexture
-        }
-
+        // ![gbuffer providers]
         RenderOutputProvider {
             id: gbuffer0Provider
             textureSource: RenderOutputProvider.UserPassTexture
@@ -225,7 +229,7 @@ ApplicationWindow {
             renderPass: gbufferPass
             attachmentSelector: RenderOutputProvider.Attachment2
         }
-        // ![GBufferPass usage]
+        // ![gbuffer providers]
 
         Model {
             id: donut

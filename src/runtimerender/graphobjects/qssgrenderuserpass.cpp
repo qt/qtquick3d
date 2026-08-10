@@ -112,11 +112,6 @@ void QSSGRenderUserPass::finalizeShaders(const QSSGRenderContextInterface &ctx)
     qCDebug(lcRenderUserPass) << "Finalizing shaders for user pass commands";
 }
 
-void QSSGRenderUserPass::setDependencyIndex(quint32 index)
-{
-    m_dependencyIndex = index;
-}
-
 void QSSGRenderUserPass::resetCommands()
 {
     qDeleteAll(commands);

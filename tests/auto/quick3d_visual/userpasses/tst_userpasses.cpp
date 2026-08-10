@@ -35,13 +35,17 @@ private slots:
     void testPipelineStateOverride_data();
     void subPassOverrideMaterial();
     void multipleSubPasses();
-    void subPassDependencyIndex();
+    void subPassNestingDepth();
     void userPassManagerScheduling();
     void subPassRoleTransition();
     void subPassRefCounting();
     void subPassCommandDestroyed();
     void referencedPassDestroyed();
     void unreferencedPassReturnsToTopLevel();
+    void nestedPassOrdering();
+    void nodeParentedPassIsTopLevel();
+    void reparentUpdatesDepth();
+    void multiConsumerProducerDepth();
     void slotLimitDoesNotCrash();
     void depthLimitDoesNotCrash();
     void testAddDefine();
@@ -783,20 +787,19 @@ void tst_UserPasses::multipleSubPasses()
     QVERIFY(comparePixelNormPos(result, 0.75, 0.5, Qt::blue, FUZZ));
 }
 
-void tst_UserPasses::subPassDependencyIndex()
+void tst_UserPasses::subPassNestingDepth()
 {
     // Regression test for QTBUG-148554. A pass referenced as a SubRenderPass
-    // (Role::SubPass) must not be assigned a node-derived dependency index.
-    // The sub-pass in this scene is declared under a Node, so before the fix
-    // the dependency-index loop assigned it that node's (non-zero) index. If
-    // such a sub-pass is also scheduled directly (e.g. its output is consumed
-    // via a provider) the non-zero index sorts it ahead of genuine top-level
-    // passes in the scheduled list.
-    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_dependency_index.qml"), QSize(400, 400)));
+    // (Role::SubPass) must carry no ordering state: its nesting depth stays 0
+    // even though it is declared as a QML child of the top-level pass. If a
+    // sub-pass carried a non-zero depth and ever entered the scheduled list
+    // (e.g. its output consumed via a provider) it would sort ahead of genuine
+    // top-level passes.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("subpass_nesting_depth.qml"), QSize(400, 400)));
     QVERIFY(view);
     QVERIFY(QTest::qWaitForWindowExposed(view.data()));
 
-    // Force a full synchronize + render so the dependency-index loop runs.
+    // Force a full synchronize + render so the classification runs.
     const QImage result = grab(view.data());
     QVERIFY(!result.isNull());
 
@@ -815,8 +818,10 @@ void tst_UserPasses::subPassDependencyIndex()
     QCOMPARE(mainNode->role, QSSGRenderUserPass::Role::TopLevel);
     QCOMPARE(subNode->role, QSSGRenderUserPass::Role::SubPass);
 
-    // The invariant under test: a sub-pass carries no dependency index.
-    QCOMPARE(subNode->m_dependencyIndex, 0u);
+    // The invariants under test: a sub-pass carries no ordering state, and the
+    // top-level pass parented to the View3D sits at depth 0.
+    QCOMPARE(subNode->m_nestingDepth, 0u);
+    QCOMPARE(mainNode->m_nestingDepth, 0u);
 }
 
 void tst_UserPasses::userPassManagerScheduling()
@@ -851,17 +856,149 @@ void tst_UserPasses::userPassManagerScheduling()
     QCOMPARE(manager->scheduledUserPasses().size(), 3);
     QVERIFY(!manager->scheduledUserPasses().contains(&sub));
 
-    // Ordering: higher dependency index first, then lower declaration order.
-    topA.m_dependencyIndex = 1; topA.m_declarationOrder = 0;
-    topB.m_dependencyIndex = 3; topB.m_declarationOrder = 1;
-    topC.m_dependencyIndex = 1; topC.m_declarationOrder = 2;
+    // Ordering: deeper nesting first, then lower declaration order.
+    topA.m_nestingDepth = 1; topA.m_declarationOrder = 0;
+    topB.m_nestingDepth = 3; topB.m_declarationOrder = 1;
+    topC.m_nestingDepth = 1; topC.m_declarationOrder = 2;
     manager->setScheduledPasses({ &topA, &topB, &topC });
     manager->updateUserPassOrder(true);
     const auto &ordered = manager->scheduledUserPasses();
     QCOMPARE(ordered.size(), 3);
-    QCOMPARE(ordered.at(0), &topB); // highest dependency index
-    QCOMPARE(ordered.at(1), &topA); // equal index, lower declaration order first
+    QCOMPARE(ordered.at(0), &topB); // deepest nesting
+    QCOMPARE(ordered.at(1), &topA); // equal depth, lower declaration order first
     QCOMPARE(ordered.at(2), &topC);
+}
+
+void tst_UserPasses::nestedPassOrdering()
+{
+    // A producer declared as a QML child of its consumer gets nesting depth 1
+    // and renders first, into its own render target.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("nested_pass_ordering.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    auto *consumer = view->rootObject()->findChild<QQuick3DRenderPass *>("consumerPass");
+    auto *producer = view->rootObject()->findChild<QQuick3DRenderPass *>("producerPass");
+    QVERIFY(consumer);
+    QVERIFY(producer);
+
+    auto *consumerNode = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(consumer)->spatialNode);
+    auto *producerNode = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(producer)->spatialNode);
+    QVERIFY(consumerNode);
+    QVERIFY(producerNode);
+
+    QCOMPARE(consumerNode->role, QSSGRenderUserPass::Role::TopLevel);
+    QCOMPARE(producerNode->role, QSSGRenderUserPass::Role::TopLevel);
+    QCOMPARE(consumerNode->m_nestingDepth, 0u);
+    QCOMPARE(producerNode->m_nestingDepth, 1u);
+
+    // The sphere drawn by the consumer is textured with the producer's output
+    // (red cube on yellow), so both colors must reach the screen.
+    QVERIFY(imageContainsDominantColor(result, Qt::red));
+    QVERIFY(imageContainsDominantColor(result, Qt::yellow));
+}
+
+void tst_UserPasses::nodeParentedPassIsTopLevel()
+{
+    // A pass declared under a Node is an active top-level pass. The Node is
+    // transparent for ordering: only RenderPass ancestors count towards the
+    // nesting depth, so the pass sits at depth 0.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("node_parented_pass.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    auto *grouped = view->rootObject()->findChild<QQuick3DRenderPass *>("groupedPass");
+    QVERIFY(grouped);
+    auto *groupedNode = static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(grouped)->spatialNode);
+    QVERIFY(groupedNode);
+
+    QCOMPARE(groupedNode->role, QSSGRenderUserPass::Role::TopLevel);
+    QCOMPARE(groupedNode->m_nestingDepth, 0u);
+
+    // The scene renders normally alongside the grouped pass.
+    QVERIFY(imageContainsDominantColor(result, Qt::red));
+}
+
+void tst_UserPasses::reparentUpdatesDepth()
+{
+    // Reparenting a pass at runtime re-derives its validity and depth.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("reparent_depth.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *viewport = view->rootObject()->findChild<QQuick3DViewport *>("view");
+    auto *passA = view->rootObject()->findChild<QQuick3DRenderPass *>("passA");
+    auto *passB = view->rootObject()->findChild<QQuick3DRenderPass *>("passB");
+    auto *nodeParent = view->rootObject()->findChild<QQuick3DObject *>("nodeParent");
+    QVERIFY(viewport);
+    QVERIFY(passA);
+    QVERIFY(passB);
+    QVERIFY(nodeParent);
+
+    const auto nodeOf = [](QQuick3DRenderPass *pass) {
+        return static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+    };
+
+    // Initially both passes are children of the viewport: depth 0.
+    QVERIFY(!grab(view.data()).isNull());
+    QVERIFY(nodeOf(passA));
+    QCOMPARE(nodeOf(passA)->m_nestingDepth, 0u);
+
+    // Under another pass: depth 1.
+    passA->setParentItem(passB);
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(nodeOf(passA)->m_nestingDepth, 1u);
+
+    // Under a Node: the Node is transparent for ordering, so depth 0 again.
+    passA->setParentItem(nodeParent);
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(nodeOf(passA)->m_nestingDepth, 0u);
+
+    // Back under the viewport's scene root: still depth 0.
+    passA->setParentItem(viewport->scene());
+    QVERIFY(!grab(view.data()).isNull());
+    QCOMPARE(nodeOf(passA)->m_nestingDepth, 0u);
+}
+
+void tst_UserPasses::multiConsumerProducerDepth()
+{
+    // A producer nested in consumerA (depth 1) renders before all depth-0
+    // passes, so consumerB also sees its output without a second edge.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("multi_consumer.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    auto *consumerA = view->rootObject()->findChild<QQuick3DRenderPass *>("consumerA");
+    auto *consumerB = view->rootObject()->findChild<QQuick3DRenderPass *>("consumerB");
+    auto *producer = view->rootObject()->findChild<QQuick3DRenderPass *>("producerPass");
+    QVERIFY(consumerA);
+    QVERIFY(consumerB);
+    QVERIFY(producer);
+
+    const auto nodeOf = [](QQuick3DRenderPass *pass) {
+        return static_cast<QSSGRenderUserPass *>(QQuick3DObjectPrivate::get(pass)->spatialNode);
+    };
+    QVERIFY(nodeOf(consumerA));
+    QVERIFY(nodeOf(consumerB));
+    QVERIFY(nodeOf(producer));
+
+    QCOMPARE(nodeOf(producer)->m_nestingDepth, 1u);
+    QCOMPARE(nodeOf(consumerA)->m_nestingDepth, 0u);
+    QCOMPARE(nodeOf(consumerB)->m_nestingDepth, 0u);
+
+    // consumerB's sphere is textured with the producer's output (red cube on
+    // yellow), even though the producer is nested inside consumerA.
+    QVERIFY(imageContainsDominantColor(result, Qt::red));
+    QVERIFY(imageContainsDominantColor(result, Qt::yellow));
 }
 
 void tst_UserPasses::subPassRoleTransition()

@@ -72,7 +72,6 @@ public:
     bool isReady() const { return (m_state == State::Ready); }
 
     void finalizeShaders(const QSSGRenderContextInterface &ctx);
-    void setDependencyIndex(quint32 index);
 
     QVector<QSSGCommand *> commands;
 
@@ -90,9 +89,13 @@ public:
 
     FlagT m_dirtyFlags = 0;
     State m_state = State::None;
-    quint32 m_dependencyIndex = 0;
+    // Number of RenderPass ancestors of the frontend item. Deeper-nested passes
+    // render first ("children before parents"), so a pass declared inside its
+    // consumer renders before it. Derived at sync when the scene manager's pass
+    // set is dirty.
+    quint32 m_nestingDepth = 0;
     // Registration order in the scene manager's userRenderPasses list. Used as a
-    // stable tiebreak when ordering scheduled passes with equal dependency index,
+    // stable tiebreak when ordering scheduled passes with equal nesting depth,
     // so the render order does not depend on when a provider scheduled a pass.
     quint32 m_declarationOrder = 0;
 

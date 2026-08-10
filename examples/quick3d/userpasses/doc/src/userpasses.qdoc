@@ -64,8 +64,14 @@
 
     \snippet userpasses/Main.qml GBufferPass usage
 
+    The G-buffer pass is declared as a child of the main color pass, its consumer.
+    Nesting a RenderPass inside another RenderPass makes the nested pass render
+    first, so the lighting stage always samples G-buffers produced in the same frame.
+
     Three \l {QtQuick3D.Helpers::}{RenderOutputProvider} instances are created to provide
     references to the rendered G-buffer textures, which will be used in the subsequent lighting pass.
+
+    \snippet userpasses/Main.qml gbuffer providers
 
     The \c layerMask property of the G-buffer pass is set to only render objects
     that are on ContentLayer.Layer0 and ContentLayer.Layer1. This allows us to control

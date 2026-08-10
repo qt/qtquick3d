@@ -29,7 +29,7 @@ QSSGUserRenderPassManager::~QSSGUserRenderPassManager()
 void QSSGUserRenderPassManager::setScheduledPasses(const UserPassSet &topLevelPasses)
 {
     // The scene sync establishes the full set of top-level passes each frame.
-    // The manager keeps this set ordered by dependency index and declaration
+    // The manager keeps this set ordered by nesting depth and declaration
     // order in updateUserPassOrder(), so the caller need not pre-sort it.
     m_scheduledUserPasses = topLevelPasses;
     m_passlistDirty = true;
@@ -98,12 +98,13 @@ QSSGRhiRenderableTextureV2Ptr QSSGUserRenderPassManager::getUserPassTexureResult
 void QSSGUserRenderPassManager::updateUserPassOrder(bool forceUpdate)
 {
     if (m_passlistDirty || forceUpdate) {
-        // Order by dependency index (higher renders first), then by declaration
-        // order so passes with an equal dependency index render in the order they
-        // were declared, independent of the order a provider scheduled them.
+        // Deeper-nested passes render first ("children before parents"), so a
+        // pass declared inside its consumer renders before it. Passes at equal
+        // depth render in declaration order, independent of the order a
+        // provider scheduled them.
         std::sort(m_scheduledUserPasses.begin(), m_scheduledUserPasses.end(), [](const QSSGRenderUserPass *a, const QSSGRenderUserPass *b) {
-            if (a->m_dependencyIndex != b->m_dependencyIndex)
-                return a->m_dependencyIndex > b->m_dependencyIndex;
+            if (a->m_nestingDepth != b->m_nestingDepth)
+                return a->m_nestingDepth > b->m_nestingDepth;
             return a->m_declarationOrder < b->m_declarationOrder;
         });
     }

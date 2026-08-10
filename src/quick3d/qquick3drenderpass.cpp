@@ -39,7 +39,24 @@ Q_LOGGING_CATEGORY(lcQuick3DRenderPass, "qt.quick3d.renderpass")
     \endlist
 
     A RenderPass becomes active for a scene when it is placed as a child
-    of a \l View3D or a \l Node.
+    of a \l View3D or a \l Node, or of another RenderPass.
+
+    \section1 Render order
+
+    Nesting a RenderPass inside another RenderPass expresses ordering:
+    nested passes render \e before their parent, so a pass that produces a
+    texture consumed by another pass is declared as a child of its
+    consumer, and results merge towards the top of the pass hierarchy.
+    Only RenderPass ancestors count towards the nesting depth; other
+    ancestors, such as \l Node items used for grouping, do not affect the
+    order. The relative render order of passes at the same nesting depth
+    is not defined; use nesting to express an ordering requirement.
+
+    Nesting affects ordering only; a nested pass still renders into its
+    own render target. To render into the parent pass's render target,
+    reference the pass from a \l SubRenderPass command instead. A pass
+    referenced by a SubRenderPass command is invoked by its parent and
+    never renders on its own.
 
     The following example sets up a simple off-screen pass that renders
     all scene objects into a custom texture, which can then be consumed
@@ -102,7 +119,8 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
     // The role follows the SubRenderPass reference count maintained by the
     // commands referencing this pass. A role change forces a full update, which
     // rebuilds the command list and thereby marks the scene manager's pass set
-    // dirty, so synchronize() re-derives the declaration order for the new role.
+    // dirty, so synchronize() re-derives the classification-dependent state
+    // (nesting depth, declaration order) for the new role.
     const bool isSubPass = (m_subRenderPassRef > 0);
     const bool subPassChanged = (renderPassNode->role == QSSGRenderUserPass::Role::SubPass) != isSubPass;
 
@@ -266,8 +284,15 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
 
 void QQuick3DRenderPass::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    if (change == QQuick3DObject::ItemSceneChange)
+    if (change == QQuick3DObject::ItemSceneChange) {
         updateSceneManager(value.sceneManager);
+    } else if (change == QQuick3DObject::ItemParentHasChanged) {
+        // The parent determines the pass's validity and nesting depth, both
+        // derived in synchronize(). A same-manager reparent does not travel
+        // through pass registration or removal, so mark the set dirty here.
+        if (QQuick3DSceneManager *sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager)
+            sceneManager->userRenderPassesDirty = true;
+    }
 }
 
 void QQuick3DRenderPass::markTrackedPropertyDirty(QMetaProperty property, DirtyPropertyHint hint)
@@ -644,9 +669,9 @@ void QQuick3DRenderPass::setRenderTargetFlags(RenderTargetFlags newRenderTargetF
 
 // A reference change can flip the pass's role, so the pass is updated to
 // mirror the new role to its backend node, and the scene manager's pass set is
-// marked dirty so the classification-dependent state (declaration order) is
-// re-derived. The scene manager may be null when the pass has not entered a
-// scene yet; registration sets the flag then.
+// marked dirty so the classification-dependent state (nesting depth,
+// declaration order) is re-derived. The scene manager may be null when the
+// pass has not entered a scene yet; registration sets the flag then.
 static void notifySubPassRefChange(QQuick3DRenderPass *pass)
 {
     pass->update();

@@ -126,6 +126,24 @@ with a set of commands that control what gets rendered and how. Each pass can:
 \li Use original materials, augment them with custom shaders, or override them entirely
 \endlist
 
+\section2 Pass Ordering
+
+The pass hierarchy determines the render order: nested passes render \e before
+their parent, so a pass that produces a texture consumed by another pass is
+declared as a child of its consumer, and results merge towards the top of the
+hierarchy. A pass's nesting depth is the number of RenderPass ancestors it
+has; other ancestors, such as \l Node items used for grouping, are transparent
+and do not affect the order. A deeper-nested pass renders before all passes at
+shallower depths, so its output is available to every consumer that frame, not
+only its parent. The relative render order of passes at the same nesting
+depth is not defined; use nesting to express an ordering requirement.
+
+Nesting affects ordering only; a nested pass still renders into its own render
+target, and its output is consumed through a \l RenderOutputProvider. To render
+into the parent pass's render target instead, reference the pass from a
+\l SubRenderPass command; such a pass is invoked by its parent and never
+renders on its own.
+
 \section2 RenderPassTexture
 
 The \l RenderPassTexture type defines textures that serve as render targets. These can be
@@ -685,8 +703,9 @@ has multiple render targets:
 
 \section2 Pass Chaining Example
 
-Multiple passes can be chained together where each pass processes the output of the
-previous pass:
+Multiple passes can be chained together where each pass processes the output of
+the previous pass. Each producer is nested inside its consumer, so it renders
+first (see \l{Pass Ordering}):
 
 \qml
 View3D {
@@ -697,22 +716,31 @@ View3D {
     RenderPassTexture { id: tex1; format: RenderPassTexture.RGBA16F }
     RenderPassTexture { id: tex2; format: RenderPassTexture.RGBA16F }
 
-    // Pass 1: Render scene
+    // Pass 3: Process tex1 -> tex2
     RenderPass {
-        id: scenePass
+        id: process2
         commands: [
-            ColorAttachment { target: tex0 },
-            DepthStencilAttachment { }
+            ColorAttachment { target: tex2 },
+            RenderablesFilter { layerMask: ContentLayer.Layer11 }
         ]
-    }
 
-    // Pass 2: Process tex0 -> tex1
-    RenderPass {
-        id: process1
-        materialMode: RenderPass.OriginalMaterial
-        commands: [
-            ColorAttachment { target: tex1 }
-        ]
+        // Pass 2: Process tex0 -> tex1; renders before process2
+        RenderPass {
+            id: process1
+            materialMode: RenderPass.OriginalMaterial
+            commands: [
+                ColorAttachment { target: tex1 }
+            ]
+
+            // Pass 1: Render scene; renders before process1
+            RenderPass {
+                id: scenePass
+                commands: [
+                    ColorAttachment { target: tex0 },
+                    DepthStencilAttachment { }
+                ]
+            }
+        }
     }
 
     Model {
@@ -729,15 +757,6 @@ View3D {
             }
             fragmentShader: "effect1.frag"
         }
-    }
-
-    // Pass 3: Process tex1 -> tex2
-    RenderPass {
-        id: process2
-        commands: [
-            ColorAttachment { target: tex2 },
-            RenderablesFilter { layerMask: ContentLayer.Layer11 }
-        ]
     }
 
     Model {
@@ -1390,14 +1409,27 @@ View3D {
     RenderPassTexture { id: gbuffer1Tex; format: RenderPassTexture.RGBA16F }
     RenderPassTexture { id: gbuffer2Tex; format: RenderPassTexture.RGBA16F }
 
-    // G-buffer pass
-    GBufferPass {
-        id: gbufferPass
-        layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
-        gbuffer0: gbuffer0Tex
-        gbuffer1: gbuffer1Tex
-        gbuffer2: gbuffer2Tex
-        depthTexture: mainDepthStencilTexture
+    // Lighting pass (commands as defined above). The G-buffer pass is nested
+    // inside its consumer, so it renders first and the lighting quad samples
+    // this frame's G-buffers.
+    RenderPass {
+        id: deferredLightingPass
+        materialMode: RenderPass.OriginalMaterial
+        commands: [
+            ColorAttachment { target: mainColorTexture },
+            DepthStencilAttachment { },
+            RenderablesFilter { layerMask: ContentLayer.Layer13 }
+        ]
+
+        // G-buffer pass
+        GBufferPass {
+            id: gbufferPass
+            layerMask: ContentLayer.Layer0 | ContentLayer.Layer1
+            gbuffer0: gbuffer0Tex
+            gbuffer1: gbuffer1Tex
+            gbuffer2: gbuffer2Tex
+            depthTexture: mainDepthStencilTexture
+        }
     }
 
     // Expose G-buffer outputs
@@ -1421,8 +1453,6 @@ View3D {
         renderPass: gbufferPass
         attachmentSelector: RenderOutputProvider.Attachment2
     }
-
-    // Lighting pass (defined above)
 
     // Display final result
     SimpleQuadRenderer {
@@ -1457,7 +1487,8 @@ View3D {
 The rendering proceeds as follows:
 
 \list 1
-\li \b{G-buffer Pass}: Scene objects on Layer0 and Layer1 are rendered. For each object,
+\li \b{G-buffer Pass}: Renders first because it is nested inside the lighting
+    pass. Scene objects on Layer0 and Layer1 are rendered. For each object,
     the augment shader writes albedo, normals, roughness, metalness, and position to three
     color attachments. Depth is written to the shared depth texture.
 \li \b{Lighting Pass}: The full-screen quad on Layer13 is rendered. Its custom material
@@ -1786,7 +1817,9 @@ For a 1920x1080 framebuffer:
 
 \section2 Pass Ordering Optimization
 
-Render passes execute in the order they are encountered. Optimize by:
+Render passes execute in nesting order: deeper-nested passes render first;
+the relative order of passes at equal depth is not defined (see
+\l{Pass Ordering}). Optimize by:
 
 \list
 \li Rendering opaque geometry before transparent geometry
