@@ -223,12 +223,12 @@ QSSGFrameData::QSSGFrameData(QSSGRenderContextInterface *ctx)
 /*!
     Constructor that allows users to specifying a user-type and flags for an extension.
 
-    \note For user-defined extensions the type must be a combination of \l QSSGRenderGraphObject::BaseType::User
+    \note For user-defined extensions the type must be a combination of QSSGRenderGraphObject::BaseType::User
     and a value between 0 and 4095.
 
-    \note The \l QSSGRenderGraphObject::BaseType::Extension type is automatically added to the given \a inType.
+    \note The QSSGRenderGraphObject::BaseType::Extension type is automatically added to the given \a inType.
 
-    \note The \a inFlags must include \l Flags::HasGraphicsResources if the extension
+    \note The \a inFlags must include Flags::HasGraphicsResources if the extension
           allocates graphics resources.
 
  */
