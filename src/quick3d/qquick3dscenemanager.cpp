@@ -464,10 +464,14 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateResources(QQuick3DO
         // Different processing for resource nodes vs hierarchical nodes etc.
         Q_ASSERT(!QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type) || !QSSGRenderGraphObject::isExtension(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
-        updateDirtyResource(item);
         auto *po = QQuick3DObjectPrivate::get(item);
-        hasSharedResources |= po->sharedResource;
+        // Unlink before calling updateSpatialNode() below: if that call re-enters dirty() on
+        // this very object (e.g. via a QML binding evaluated as a side effect of the update),
+        // dirty() needs prevDirtyItem to already be null so it re-links the object via its own
+        // addToDirtyList() call, onto the (already emptied) scene manager list.
         po->removeFromDirtyList();
+        updateDirtyResource(item);
+        hasSharedResources |= po->sharedResource;
         item = updateList;
     }
 
@@ -492,8 +496,10 @@ void QQuick3DSceneManager::updateNodes(QQuick3DObject **listHead)
         // Different processing for resource nodes vs hierarchical nodes (anything that's _not_ a resource)
         Q_ASSERT(QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
-        updateDirtySpatialNode(static_cast<QQuick3DNode *>(item));
+        // See the matching comment in updateResources() about the removeFromDirtyList()/
+        // updateSpatialNode() ordering.
         QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
+        updateDirtySpatialNode(static_cast<QQuick3DNode *>(item));
         item = updateList;
     }
 }
@@ -546,8 +552,10 @@ QQuick3DSceneManager::SyncResult QQuick3DSceneManager::updateExtensions(QQuick3D
         // Different processing for resource nodes vs hierarchical nodes (anything that's _not_ a resource)
         Q_ASSERT(QSSGRenderGraphObject::isExtension(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
-        updateDirtyExtensionNode(item);
+        // See the matching comment in updateResources() about the removeFromDirtyList()/
+        // updateSpatialNode() ordering.
         QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
+        updateDirtyExtensionNode(item);
         item = updateList;
     }
 

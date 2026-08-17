@@ -15,6 +15,36 @@ private slots:
     void refSceneManagerSurvivesManagerDeletion();
     void dirtyObjectSurvivesManagerDeletion();
     void detachLeavesObjectReQueueable();
+    void reentrantDirtyDuringUpdateSpatialNodeIsNotDropped();
+};
+
+// A QML binding evaluated as a side effect of updateSpatialNode() (e.g. Model::instanceRoot
+// bound to Model::bounds) can call dirty() on the very object that is currently being synced,
+// from inside its own updateSpatialNode() call. This stand-in reproduces that reentrancy without
+// needing a Model or any particular property.
+//
+// Plain QQuick3DObject (an "Unknown"-type, i.e. resource) is used rather than QQuick3DNode:
+// the node sync path (updateDirtySpatialNode()) additionally wires the object into a scene
+// graph rooted at a QQuick3DWindowAttachment, which this lightweight test has no need to set
+// up. The resource sync path (updateDirtyResource()) exercises the exact same reentrancy-guard
+// code and has none of that scaffolding.
+class ReentrantDirtyObject : public QQuick3DObject
+{
+public:
+    int updateCount = 0;
+
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override
+    {
+        ++updateCount;
+        QSSGRenderGraphObject *result = QQuick3DObject::updateSpatialNode(node);
+        if (updateCount == 1) {
+            // Simulate the reentrant re-dirty happening exactly once, on the first sync,
+            // the way a one-shot property-watcher registration or a binding tied to a
+            // property this very update just changed would.
+            QQuick3DObjectPrivate::get(this)->dirty(QQuick3DObjectPrivate::OpacityValue);
+        }
+        return result;
+    }
 };
 
 // An object can be referenced by more than one view. When the view owning the tracked scene
@@ -110,6 +140,39 @@ void tst_QQuick3DSceneManager::detachLeavesObjectReQueueable()
 
     delete object;
     delete managerB;
+}
+
+// If dirty() is re-entered on an object while that object is still inside its own
+// updateSpatialNode() call, the pending change it flags must not be silently dropped: the
+// object needs to end up back on a dirty list so a later sync actually revisits it. See
+// QTBUG-149055.
+void tst_QQuick3DSceneManager::reentrantDirtyDuringUpdateSpatialNodeIsNotDropped()
+{
+    auto *manager = new QQuick3DSceneManager;
+    auto *object = new ReentrantDirtyObject;
+    auto *priv = QQuick3DObjectPrivate::get(object);
+
+    QQuick3DObjectPrivate::refSceneManager(object, *manager);
+    object->update();
+    QVERIFY(priv->prevDirtyItem != nullptr);
+
+    // First sync: updateSpatialNode() reentrantly re-dirties the object.
+    manager->updateDirtyResourceNodes();
+    QCOMPARE(object->updateCount, 1);
+
+    // The reentrant dirty() call must leave the object relinked into a dirty list so a later
+    // sync actually revisits it, instead of merely dirty-flagged with nowhere to go.
+    QVERIFY(priv->dirtyAttributes != 0);
+    QVERIFY(priv->prevDirtyItem != nullptr);
+
+    // A subsequent sync must actually process the pending change that was set reentrantly.
+    manager->updateDirtyResourceNodes();
+    QCOMPARE(object->updateCount, 2);
+    QCOMPARE(priv->dirtyAttributes, 0u);
+    QVERIFY(priv->prevDirtyItem == nullptr);
+
+    delete object;
+    delete manager;
 }
 
 QTEST_MAIN(tst_QQuick3DSceneManager)
