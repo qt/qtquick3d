@@ -66,10 +66,12 @@ void QQuick3DXrController::setController(QQuick3DXrController::Controller newCon
     QQuick3DXrInputManager::instance()->registerController(this);
     auto *input = handInput();
     if (input) {
-        setVisible(input->isActive()); // ### position not set yet, so might show up briefly in wrong location
+        setIsActive(input->isActive());
+        setVisible(m_isActive); // ### position not set yet, so might show up briefly in wrong location
 
         m_isActiveConnection = connect(input, &QQuick3DXrHandInput::isActiveChanged, this, [this, input]{
-            setVisible(input->isActive());
+            setIsActive(input->isActive());
+            setVisible(m_isActive);
         });
 
         connect(input, &QQuick3DXrHandInput::pokePositionChanged, this, &QQuick3DXrController::pokePositionChanged);
@@ -77,6 +79,7 @@ void QQuick3DXrController::setController(QQuick3DXrController::Controller newCon
         connect(input, &QQuick3DXrHandInput::jointRotationsChanged, this, &QQuick3DXrController::jointRotationsChanged);
         connect(input, &QQuick3DXrHandInput::jointDataUpdated, this, &QQuick3DXrController::jointDataUpdated);
     } else {
+        setIsActive(false);
         setVisible(false);
     }
 }
@@ -181,6 +184,14 @@ QList<QQuaternion> QQuick3DXrController::jointRotations() const
 bool QQuick3DXrController::isActive() const
 {
     return m_isActive;
+}
+
+void QQuick3DXrController::setIsActive(bool isActive)
+{
+    if (m_isActive == isActive)
+        return;
+    m_isActive = isActive;
+    emit isActiveChanged();
 }
 
 QtQuick3DXr::Handedness QtQuick3DXr::handednessForController(QtQuick3DXr::Controller controller)

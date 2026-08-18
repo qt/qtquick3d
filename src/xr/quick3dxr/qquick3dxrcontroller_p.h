@@ -93,12 +93,14 @@ Q_SIGNALS:
     void isActiveChanged();
 
 private:
+    void setIsActive(bool isActive);
+
     QPointer<QQuick3DXrInputManager> m_inputManager;
     Controller m_controller = Controller::UnknownController;
     QMetaObject::Connection m_isActiveConnection;
     HandPoseSpace m_poseSpace = HandPoseSpace::AimPose;
     QVector3D m_pokePosition;
-    bool m_isActive;
+    bool m_isActive = false;
 };
 
 namespace QtQuick3DXr
