@@ -28,6 +28,8 @@
 
 #include <rhi/qshaderbaker.h>
 
+#include <memory>
+
 static inline void qDryRunPrintQsbcAdd(const QByteArray &id)
 {
     printf("Shader pipeline generated for (dry run):\n %s\n\n", qPrintable(id));
@@ -85,7 +87,8 @@ bool GenShaders::process(QVector<QString> &qsbcFiles,
         rootNode.addChild(layer);
         layer.rootNode = &rootNode;
     }
-    QSSGLayerRenderData layerRenderData(layer, *renderer);
+    const auto layerRenderDataPtr = std::make_unique<QSSGLayerRenderData>(layer, *renderer);
+    auto &layerRenderData = *layerRenderDataPtr;
 
     layerRenderData.prepareForRender();
 
