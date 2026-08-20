@@ -28,6 +28,8 @@
 #include <QtQuick3D/private/qquick3dabstractlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
 
+#include <array>
+
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3DParticle
@@ -184,7 +186,7 @@ private:
     // Call this whenever features which may affect the level change
     void updateFeatureLevel();
 
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
+    std::array<QMetaObject::Connection, 3> m_connections;
     PerEmitterData n_noPerEmitterData;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
