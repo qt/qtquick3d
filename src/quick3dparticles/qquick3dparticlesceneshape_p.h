@@ -18,8 +18,12 @@
 //
 
 #include "qquick3dparticleabstractshape_p.h"
+
 #include <QVector3D>
+
 #include <QList>
+
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 
@@ -107,7 +111,7 @@ private:
         }
     };
     struct SceneNapkinMesh;
-    QList<ShapeData> m_data;
+    std::vector<ShapeData> m_data;
     ShapeData m_sceneData;
     SceneNapkinMesh *m_sceneMesh = nullptr;
     QVector3D m_cachedNormal;

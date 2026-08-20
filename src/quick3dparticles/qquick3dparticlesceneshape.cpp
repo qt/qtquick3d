@@ -528,7 +528,7 @@ void QQuick3DParticleSceneShape::createShapeData()
             data.visibilityConnection = QObject::connect(data.model, &QQuick3DNode::visibleChanged, this, [&,index](){
                 m_data[index].dirty = true;
             });
-            m_data.append(data);
+            m_data.push_back(std::move(data));
             index++;
         }
     }
