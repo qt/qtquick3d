@@ -31,6 +31,8 @@
 
 #include <rhi/qshaderbaker.h>
 
+#include <memory>
+
 static inline void qDryRunPrintQsbcAdd(const QByteArray &id)
 {
     printf("Shader pipeline generated for (dry run):\n %s\n\n", qPrintable(id));
@@ -104,7 +106,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     }
     renderContext->renderer()->setViewport(QRect(QPoint(), QSize(888,666)));
     const auto &renderer = renderContext->renderer();
-    QSSGLayerRenderData layerData(layer, *renderer);
+    const auto layerDataPtr = std::make_unique<QSSGLayerRenderData>(layer, *renderer);
+    auto &layerData = *layerDataPtr;
 
     const auto &shaderLibraryManager = renderContext->shaderLibraryManager();
     const auto &shaderCache = renderContext->shaderCache();
