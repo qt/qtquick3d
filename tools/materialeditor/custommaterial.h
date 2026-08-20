@@ -1,8 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef CUSTOMMATERIAL_H
-#define CUSTOMMATERIAL_H
+#pragma once
 
 #include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
 
@@ -84,5 +83,3 @@ private:
 };
 
 QT_END_NAMESPACE
-
-#endif // CUSTOMMATERIAL_H

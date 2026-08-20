@@ -1,8 +1,7 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef LIGHTMAPIMAGEPROVIDER_H
-#define LIGHTMAPIMAGEPROVIDER_H
+#pragma once
 
 #include <QImage>
 #include <QQuickImageProvider>
@@ -17,5 +16,3 @@ public:
 private:
     QImage m_errorImage;
 };
-
-#endif // LIGHTMAPIMAGEPROVIDER_H
