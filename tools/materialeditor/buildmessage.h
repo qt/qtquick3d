@@ -1,8 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef BUILDMESSAGE_H
-#define BUILDMESSAGE_H
+#pragma once
 
 #include <QtCore/qobject.h>
 #include <QtCore/qdebug.h>
@@ -82,5 +81,3 @@ QML_NAMED_ELEMENT(ShaderConstants)
 }
 
 QT_END_NAMESPACE
-
-#endif // BUILDMESSAGE_H

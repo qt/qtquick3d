@@ -1,8 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef UNIFORMMODEL_H
-#define UNIFORMMODEL_H
+#pragma once
 
 #include <QAbstractTableModel>
 #include <QtQml/qqmlregistration.h>
@@ -53,5 +52,3 @@ private:
 };
 
 QT_END_NAMESPACE
-
-#endif // UNIFORMMODEL_H

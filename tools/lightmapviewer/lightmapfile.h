@@ -1,8 +1,7 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef LIGHTMAPFILE_H
-#define LIGHTMAPFILE_H
+#pragma once
 
 #include <QObject>
 #include <QList>
@@ -57,5 +56,3 @@ private:
     QString m_bakeDuration;
     QVariantList m_options;
 };
-
-#endif // LIGHTMAPFILE_H

@@ -1,8 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QWidget>
 
@@ -25,5 +24,3 @@ private:
     InputTab *generalTab = nullptr;
     SettingsTab *settingsTab = nullptr;
 };
-
-#endif

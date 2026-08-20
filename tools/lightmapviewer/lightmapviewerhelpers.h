@@ -1,8 +1,7 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef LIGHTMAPVIEWERHELPERS_H
-#define LIGHTMAPVIEWERHELPERS_H
+#pragma once
 
 #include <QByteArray>
 #include <QString>
@@ -26,5 +25,3 @@ struct LightmapViewerHelpers
     static SceneMetadata processSceneMetadata(const QVariantMap &map);
     static QVariantList processMetadata(const QString &key, const QVariantMap &map);
 };
-
-#endif // LIGHTMAPVIEWERHELPERS_H

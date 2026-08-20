@@ -1,8 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef INPUTTAB_H
-#define INPUTTAB_H
+#pragma once
 
 #include "converterthread.h"
 
@@ -50,5 +49,3 @@ private:
     QString lastInputPath;
     ConverterThread converterThread;
 };
-
-#endif
