@@ -1,8 +1,7 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef LIGHTMAPMESH_H
-#define LIGHTMAPMESH_H
+#pragma once
 
 #include <QQuick3DGeometry>
 
@@ -42,5 +41,3 @@ private:
 
     QQuick3DBounds3 m_bounds;
 };
-
-#endif // LIGHTMAPMESH_H

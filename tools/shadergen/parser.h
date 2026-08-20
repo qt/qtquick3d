@@ -1,8 +1,7 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef PARSER_H
-#define PARSER_H
+#pragma once
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
@@ -41,5 +40,3 @@ int parseQmlFiles(const QVector<QString> &filePaths, const QDir &sourceDir, Scen
 }
 
 QT_END_NAMESPACE
-
-#endif // PARSER_H
