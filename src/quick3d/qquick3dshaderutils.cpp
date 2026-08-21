@@ -1958,6 +1958,13 @@ QQuick3DPropertyWatcher::QQuick3DPropertyWatcher(QQuick3DPropertyChangedTracker 
     Q_ASSERT(tracker != nullptr);
     Q_ASSERT(property.isValid() && property.hasNotifySignal());
 
+    // Ensure that the watcher is on the watched object's thread if it's not already there.
+    // If not, the watcher will be created on the render thread and the notify connections
+    // will be queued to the render thread, which is not what we want
+    // (as can end-up concurrently mutating the dirty lists).
+    if (thread() != tracker->m_owner->thread())
+        moveToThread(tracker->m_owner->thread());
+
     const bool isPointerType = (property.metaType().flags().testFlag(QMetaType::IsPointer));
 
     if (!isPointerType) {
