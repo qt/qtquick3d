@@ -55,6 +55,7 @@
 //! [developing-applications]
     \li Developing XR Applications
         \list
+            \li \l{Coordinate Systems and Units in \qxr}
             \li \l{Locomotion in \qxr}
         \endlist
 //! [developing-applications]

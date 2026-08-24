@@ -27,9 +27,17 @@ QT_BEGIN_NAMESPACE
     does not change the position of the origin. To track the position of the headset, create
     an XrCamera and assign it to the \l camera property.
 
+    Tracked nodes must be children of the XrOrigin, and the positions the XR runtime
+    reports are in the origin's coordinate system. Use \l{Node::mapPositionToScene}
+    {mapPositionToScene} to convert them to scene coordinates. Do not apply a scale to
+    the XrOrigin: it scales the tracked motion and breaks the 1:1 correspondence with
+    the physical world.
+
     \warning Ensure you follow best practices when changing the position/rotation of
     the origin. Not doing so may cause physical discomfort, nausea, or loss of balance.
     In the worst case, this could lead to injury or even death.
+
+    \sa {Coordinate Systems and Units in \qxr}
 */
 
 QQuick3DXrOrigin::QQuick3DXrOrigin(QQuick3DNode *parent)

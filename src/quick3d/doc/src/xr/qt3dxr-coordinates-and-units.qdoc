@@ -1,0 +1,274 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qt3dxr-coordinates-and-units.html
+    \title Coordinate Systems and Units in \qxr
+
+    \brief This page explains how the XR tracking space, the 3D scene, and
+    2D Qt Quick content relate to each other, and what a coordinate value
+    means in each of them.
+
+    A \qxr application brings together three coordinate systems: the tracking
+    space that the XR runtime reports device poses in, the 3D scene inside the
+    \l XrView, and the 2D coordinate system of any Qt Quick content the
+    application displays. They use different units and, in the 2D case, a
+    different set of axes. Knowing which one a given value belongs to is
+    necessary to place content where you intend it to appear.
+
+    \section1 The three coordinate systems
+
+    \table
+    \header
+        \li Coordinate system
+        \li Unit
+        \li Axes
+        \li Origin
+    \row
+        \li XR tracking space
+        \li Meter, converted to centimeters before any value reaches QML
+        \li \c{+x} right, \c{+y} up, \c{-z} forward
+        \li Selected with \l{XrView::referenceSpace}{XrView.referenceSpace}
+    \row
+        \li 3D scene: any \l Node inside an \l XrView
+        \li Centimeter
+        \li \c{+x} right, \c{+y} up, \c{-z} forward
+        \li The parent node
+    \row
+        \li 2D content: any \l Item
+        \li Pixel
+        \li \c{+x} right, \c{+y} \e down
+        \li The top-left corner of the parent item
+    \endtable
+
+    \image qt3dxr-coordinate-systems.webp {A Qt Quick 3D scene with red, green
+           and blue arrows for the +x, +y and +z axes, and a built-in cube one
+           grid square wide resting on the floor}
+    \caption The middle row of the table, drawn as a real scene: the built-in
+    \c{#Cube} at scale 1 is 100 units across, which is one meter and one square
+    of the one-meter grid.
+
+    That cube is the whole unit rule in one object:
+
+    \snippet qt3dxr-coordinate-systems.qml unit cube
+
+    The tracking space and the 3D scene share the same right-handed axis
+    convention, so a pose never needs to be mirrored or swizzled. Only the unit
+    differs: \qxr multiplies every position it receives from the XR runtime by
+    100 before it reaches the scene. An application therefore never handles
+    meters directly, and never needs to convert a tracked pose itself.
+
+    2D content is the exception. Qt Quick's \c y axis grows downwards, which is
+    why moving a 2D child of a \l Node down the screen means increasing its
+    \c y, while moving the \l Node itself down means decreasing its \c y. See
+    \l{Qt Quick 3D Scenes with 2D Content} for the general rules, and
+    \l{Placing 2D content on a virtual surface} below for the XR specifics.
+
+    \section1 One unit is one centimeter
+
+    In a plain Qt Quick 3D scene the unit is arbitrary: nothing outside the
+    scene constrains it, so an application is free to treat a unit as a meter,
+    an inch, or anything else, as long as it is consistent.
+
+    In \qxr the unit is fixed. Tracked content has to line up with the physical
+    world, and \qxr expresses the scene in centimeters:
+
+    \table
+    \header
+        \li Real-world length
+        \li Scene value
+    \row
+        \li 1 mm
+        \li 0.1
+    \row
+        \li 1 cm
+        \li 1
+    \row
+        \li 1 m
+        \li 100
+    \endtable
+
+    This applies to every distance in the scene, not just to positions: the
+    dimensions of models, the \l{XrItem::width}{width} and
+    \l{XrItem::height}{height} of an \l XrItem, light ranges, and the
+    \l{XrCamera::clipNear}{clip planes} of an \l XrCamera are all in
+    centimeters.
+
+    Some values to calibrate against: a desk is about 75 high, a door about 200
+    high and 90 wide, and a seated user's eyes are about 120 above the floor, a
+    standing user's about 160.
+
+    \qml
+    XrView {
+        referenceSpace: XrView.ReferenceSpaceLocalFloor
+
+        Node {
+            // One meter in front, at standing eye height.
+            position: Qt.vector3d(0, 160, -100)
+
+            Model {
+                // #Cube is 100 units across, so this is a 20 cm cube.
+                source: "#Cube"
+                scale: Qt.vector3d(0.2, 0.2, 0.2)
+                materials: PrincipledMaterial { baseColor: "red" }
+            }
+        }
+    }
+    \endqml
+
+    An asset that was authored in meters therefore arrives in the scene 100
+    times too small. Correct this when importing the asset rather than by
+    scaling nodes in the scene, so that the values you read and write in QML
+    stay in centimeters. \l{Balsam Asset Import Tool}{Balsam} has the
+    \c{--globalScale} and \c{--globalScaleValue} options for this.
+
+    \section1 Where the scene origin is
+
+    \l{XrView::referenceSpace}{XrView.referenceSpace} determines what the point
+    \c{(0, 0, 0)} corresponds to in the physical world:
+
+    \list
+        \li \c XrView.ReferenceSpaceLocal places the scene origin at the
+            user's default view position, which is above the floor. To
+            place content relative to the floor, use
+            \c ReferenceSpaceLocalFloor or \c ReferenceSpaceStage instead.
+        \li \c XrView.ReferenceSpaceLocalFloor places the scene origin at
+            floor height, directly below the user's default view position.
+        \li \c XrView.ReferenceSpaceStage places the scene origin at floor
+            height, in the center of the area the user has set up.
+    \endlist
+
+    \image qt3dxr-reference-spaces.webp {Three views of a standing figure where
+           the scene origin sits at eye height for ReferenceSpaceLocal, on the
+           floor for ReferenceSpaceLocalFloor, and at the center of a marked
+           play area for ReferenceSpaceStage}
+    \caption The same model at \c{y: 0} in each of the three reference spaces.
+    The figure is 175 cm tall, and the floor grid is 50 cm.
+
+    Pick the reference space first, then position content, because the choice
+    shifts the whole scene vertically. A model placed at \c{y: 0} rests on the
+    floor in \c ReferenceSpaceLocalFloor and \c ReferenceSpaceStage, but floats
+    at head height in \c ReferenceSpaceLocal.
+
+    Not every platform honors the request. On visionOS the reference space is
+    always \c ReferenceSpaceLocalFloor, so an application written for
+    \c ReferenceSpaceLocal has to check the property at run time and adjust.
+
+    \l XrOrigin marks the scene origin in the scene. To move the user through
+    the virtual scene, move or rotate the \l XrOrigin. This does not change the
+    user's position in the physical world.
+
+    Scaling the \l XrOrigin scales the user's size in the virtual world: the
+    tracked motion of the user's head and hands is scaled with it. This can be
+    useful in VR, for example to let the user look at a scene from a giant's
+    view. In AR, or whenever scene distances must match physical distances, do
+    not scale the \l XrOrigin.
+
+    \section1 Tracked nodes and the XrOrigin
+
+    \image qt3dxr-origin-hierarchy.svg {A node tree where XrCamera,
+           XrController, and XrHandModel are children of the XrOrigin, while
+           scene content sits in a separate branch under the XrView}
+
+    \l XrCamera, \l XrController, and \l XrHandModel are tracked nodes. The XR
+    runtime updates their position and rotation every frame, so treat those
+    properties as read-only.
+
+    The tracked nodes must be children of the \l XrOrigin. The XR runtime
+    reports their poses relative to the reference space, and the \l XrOrigin
+    represents the reference space in the scene.
+
+    The tracking data that these types expose as plain values is also relative
+    to the \l XrOrigin. This includes
+    \l{XrController::pokePosition}{pokePosition},
+    \l{XrController::jointPositions}{jointPositions}, and the positions of
+    \l{XrSpatialAnchor}{spatial anchors}. These values match scene coordinates
+    only when the \l XrOrigin is at the scene root with no transform. To compare
+    them with other positions in the scene, map them to scene coordinates first:
+
+    \qml
+    XrController {
+        controller: XrController.RightController
+
+        // pokePosition is relative to the XrOrigin, so map it before
+        // hit-testing the scene with it.
+        property vector3d scenePos:
+            view.xrOrigin.mapPositionToScene(pokePosition)
+
+        onScenePosChanged: view.processTouch(scenePos, touchId)
+    }
+    \endqml
+
+    The \l{Qt Quick 3D - XR Simple Touch Example}{Touch Example} shows this in
+    context.
+
+    \l{XrCamera}{XrCamera}'s \l{XrCamera::clipNear}{clipNear} and
+    \l{XrCamera::clipFar}{clipFar} are in centimeters like every other
+    distance, so the useful range is roughly 1 to 10000. Unlike a
+    \l PerspectiveCamera, an \l XrCamera has no field of view to set: the
+    runtime supplies the projection for each eye.
+
+    \section1 Placing 2D content on a virtual surface
+
+    As in any Qt Quick 3D scene, you can place a plain \l Item directly under a
+    \l Node. One pixel of that item is then one scene unit, so in \qxr a
+    500-pixel-wide \l Rectangle is five meters wide. \l XrItem avoids this by
+    letting you set the surface size in centimeters. It also registers the
+    surface with its \l XrView, so \l{XrView::processTouch()}{processTouch()}
+    can send touch events to the content.
+
+    \l XrItem is the bridge between the two unit systems. Its
+    \l{XrItem::width}{width} and \l{XrItem::height}{height} are in centimeters,
+    while its \l{XrItem::contentItem}{contentItem} is an ordinary \l Item sized
+    in pixels. \l{XrItem::pixelsPerUnit}{pixelsPerUnit} is the conversion
+    factor between the two, and by default \l XrItem derives it so that the
+    content fills the surface:
+
+    \qml
+    XrItem {
+        // A 50 cm by 30 cm surface.
+        width: 50
+        height: 30
+        contentItem: Rectangle {
+            width: 500
+            height: 300
+            color: "white"
+        }
+    }
+    \endqml
+
+    \image qt3dxr-xritem-units.webp {A 50 by 30 centimeter virtual surface
+           holding a 500 by 300 pixel Qt Quick content item, with the node
+           origin marked at its top-left corner}
+    \caption With \l{XrItem::pixelsPerUnit}{pixelsPerUnit} at 10, one
+    centimeter of surface holds ten pixels of content.
+
+    With \l{XrItem::pixelsPerUnit}{pixelsPerUnit} at 10, \l XrItem scales the
+    content item to a tenth of its pixel size. \l XrItem scales the rendered
+    content item and does not render it at a higher resolution, so text on a
+    surface much larger than its content item looks coarse. To keep text sharp,
+    set \l{XrItem::manualPixelsPerUnit}{manualPixelsPerUnit} to \c true, set
+    \l{XrItem::pixelsPerUnit}{pixelsPerUnit}, and size the content item to match
+    the surface.
+
+    An \l XrItem's surface extends to the right of and \e below its own origin,
+    following the 2D convention. Offset it to center the surface on the node
+    position:
+
+    \qml
+    XrItem {
+        width: 50
+        height: 30
+        x: -width / 2
+        y: height / 2
+    }
+    \endqml
+
+    \section1 Related information
+
+    \list
+        \li \l{Qt Quick 3D Scenes with 2D Content}
+        \li \l{Locomotion in \qxr}
+        \li \l{\qxr QML Types}
+    \endlist
+*/

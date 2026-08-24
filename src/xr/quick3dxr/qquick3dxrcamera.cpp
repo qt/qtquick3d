@@ -25,8 +25,10 @@ QT_BEGIN_NAMESPACE
     Properties specific to the XrCamera, such as the \l{clipNear}{near} and \l{clipFar}{far} clip planes, are settable.
     When set, they override preferred values.
 
+    Unlike a \l PerspectiveCamera, an XrCamera has no field of view: the runtime supplies
+    the projection for each eye.
 
-    \sa XrOrigin::camera
+    \sa XrOrigin::camera, {Coordinate Systems and Units in \qxr}
 */
 
 QQuick3DXrEyeCamera::QQuick3DXrEyeCamera(QQuick3DXrOrigin *parent)
@@ -238,7 +240,11 @@ QQuick3DXrCamera::~QQuick3DXrCamera()
     \qmlproperty real QtQuick3D.Xr::XrCamera::clipNear
     \brief The start of the distance range, with reference to the camera position, in which objects will appear.
 
+    The distance is in centimeters, like every other distance in an XR scene.
+
     \note Unless set explicitly, the clipNear value will be set to the device's preferred value.
+
+    \sa {Coordinate Systems and Units in \qxr}
 */
 
 float QQuick3DXrCamera::clipNear() const
@@ -250,7 +256,11 @@ float QQuick3DXrCamera::clipNear() const
     \qmlproperty real QtQuick3D.Xr::XrCamera::clipFar
     \brief The end of the distance range, with reference to the camera position, in which objects will appear.
 
+    The distance is in centimeters, like every other distance in an XR scene.
+
     \note Unless set explicitly, the clipFar value will be set to the device's preferred value.
+
+    \sa {Coordinate Systems and Units in \qxr}
 */
 
 float QQuick3DXrCamera::clipFar() const
