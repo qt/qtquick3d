@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="390" viewBox="0 0 760 390">
+  <title>Tracked nodes live under the XrOrigin; scene content does not</title>
+  <style>
+    .bg      { fill: #ffffff; }
+    .box     { fill: #f7f8f9; stroke: #5c6066; stroke-width: 1.5; }
+    .boxroot { fill: #eef1f3; stroke: #17181a; stroke-width: 2; }
+    .boxtrk  { fill: #eaf6ec; stroke: #41cd52; stroke-width: 2; }
+    .name    { font: bold 13px sans-serif; fill: #17181a; }
+    .kind    { font: 11px sans-serif; fill: #5c6066; }
+    .edge    { stroke: #5c6066; stroke-width: 1.5; fill: none; }
+    .map     { stroke: #2e7d9a; stroke-width: 1.8; fill: none; stroke-dasharray: 6 4; }
+    .maplbl  { font: bold 12px sans-serif; fill: #2e7d9a; }
+    .note    { font: italic 12px sans-serif; fill: #5c6066; }
+  </style>
+  <defs>
+    <marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d9a"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="760" height="390"/>
+
+  <!-- XrView -->
+  <rect class="boxroot" x="320" y="20" width="160" height="34" rx="4"/>
+  <text class="name" x="400" y="42" text-anchor="middle">XrView</text>
+
+  <!-- edges from XrView -->
+  <path class="edge" d="M400,54 L400,77 L210,77 L210,100"/>
+  <path class="edge" d="M400,54 L400,77 L590,77 L590,100"/>
+
+  <!-- XrOrigin -->
+  <rect class="boxtrk" x="120" y="100" width="180" height="34" rx="4"/>
+  <text class="name" x="210" y="122" text-anchor="middle">XrOrigin</text>
+
+  <!-- scene root -->
+  <rect class="box" x="500" y="100" width="180" height="34" rx="4"/>
+  <text class="name" x="590" y="122" text-anchor="middle">Node (scene content)</text>
+
+  <!-- mapPositionToScene bridge -->
+  <path class="map" d="M300,117 L500,117" marker-end="url(#m1)"/>
+  <text class="maplbl" x="400" y="110" text-anchor="middle">mapPositionToScene()</text>
+
+  <!-- XrOrigin children -->
+  <path class="edge" d="M150,134 L150,320"/>
+  <path class="edge" d="M150,190 L170,190"/>
+  <path class="edge" d="M150,230 L170,230"/>
+  <path class="edge" d="M150,270 L170,270"/>
+  <path class="edge" d="M150,310 L170,310"/>
+
+  <rect class="boxtrk" x="170" y="176" width="180" height="28" rx="4"/>
+  <text class="name" x="182" y="195">XrCamera</text>
+  <rect class="boxtrk" x="170" y="216" width="180" height="28" rx="4"/>
+  <text class="name" x="182" y="235">XrController</text>
+  <text class="kind" x="278" y="235">left</text>
+  <rect class="boxtrk" x="170" y="256" width="180" height="28" rx="4"/>
+  <text class="name" x="182" y="275">XrController</text>
+  <text class="kind" x="278" y="275">right</text>
+  <rect class="boxtrk" x="170" y="296" width="180" height="28" rx="4"/>
+  <text class="name" x="182" y="315">XrHandModel</text>
+
+  <!-- scene content children -->
+  <path class="edge" d="M530,134 L530,240"/>
+  <path class="edge" d="M530,190 L550,190"/>
+  <path class="edge" d="M530,230 L550,230"/>
+
+  <rect class="box" x="550" y="176" width="180" height="28" rx="4"/>
+  <text class="name" x="562" y="195">Model</text>
+  <rect class="box" x="550" y="216" width="180" height="28" rx="4"/>
+  <text class="name" x="562" y="235">XrItem</text>
+
+  <!-- legend -->
+  <rect class="boxtrk" x="20" y="340" width="16" height="16" rx="3"/>
+  <text class="kind" x="44" y="353">Tracked by the runtime: spatial properties are read-only and relative to the XrOrigin.</text>
+
+  <text class="note" x="20" y="378">Positions reported by the runtime, including pokePosition and jointPositions, need mapPositionToScene() before use in the scene.</text>
+</svg>

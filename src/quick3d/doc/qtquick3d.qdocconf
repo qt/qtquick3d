@@ -62,7 +62,8 @@ sources += ../../assetutils/qquick3druntimeloader.cpp \
            ../../runtimerender/qssgrendercontextcore.cpp \
            ../../runtimerender/qssgrhicontext.cpp
 
-exampledirs +=  ../../../examples/quick3d
+exampledirs +=  ../../../examples/quick3d \
+                imagegen
 examples.fileextensions += "*.frag *.geom *.vert *.tesc *.tese *.comp"
 
 imagedirs   += images

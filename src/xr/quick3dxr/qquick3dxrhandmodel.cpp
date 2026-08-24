@@ -23,7 +23,9 @@ QT_BEGIN_NAMESPACE
 
     Contains an animated 3D model that tracks the user's hands.
 
-    XrHandModel is only visible when hand tracking is active.
+    XrHandModel is only visible when hand tracking is active. Like other tracked nodes, it
+    must be a child of the \l XrOrigin, because the joint poses that drive it are relative
+    to the origin.
 
     \note XrHandModel depends on hand-tracking data from the underlying
     system and is, therefore, not available on all platforms.
@@ -47,6 +49,8 @@ QT_BEGIN_NAMESPACE
 
     Use \c true instead of \c false in the \c uses-feature tag if your app's interaction
     is implemented only for hands.
+
+    \sa {Coordinate Systems and Units in \qxr}
 */
 
 QQuick3DXrHandModel::QQuick3DXrHandModel(QQuick3DNode *parent)

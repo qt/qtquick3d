@@ -188,6 +188,12 @@ void QQuick3DXrItemPrivate::updateContent()
         }
     }
     \endcode
+
+    The surface extends to the right of and below the XrItem's own origin, following the 2D
+    convention, so offset it by \c {x: -width / 2} and \c {y: height / 2} to center it on the
+    node position.
+
+    \sa {Coordinate Systems and Units in \qxr}
 */
 QQuick3DXrItem::QQuick3DXrItem(QQuick3DNode *parent)
     : QQuick3DNode(*(new QQuick3DXrItemPrivate()), parent)
@@ -251,12 +257,12 @@ void QQuick3DXrItem::setContentItem(QQuickItem *newContentItem)
     \qmlproperty real XrItem::pixelsPerUnit
 
     This property determines how many pixels in the contentItems's 2D coordinate system will fit
-    in one unit of the XrItem's 3D coordinate system. By default, this is calculated based on the
-    content item's size and the size of the XrItem.
+    in one unit of the XrItem's 3D coordinate system, that is, in one centimeter. By default, this
+    is calculated from the ratio of the two diagonals, so that the content fills the surface.
 
     Set \l manualPixelsPerUnit to disable the default behavior and set the pixels per unit value manually.
 
-    \sa manualPixelsPerUnit
+    \sa manualPixelsPerUnit, {Coordinate Systems and Units in \qxr}
  */
 qreal QQuick3DXrItem::pixelsPerUnit() const
 {
@@ -308,8 +314,11 @@ void QQuick3DXrItem::setManualPixelsPerUnit(bool newManualPixelsPerUnit)
 /*!
     \qmlproperty real XrItem::width
 
-    This property defines the width of the XrItem in the 3D coordinate system.
-    \sa height
+    This property defines the width of the XrItem in the 3D coordinate system, that is,
+    in centimeters. This is not the same as the pixel width of the \l contentItem;
+    \l pixelsPerUnit relates the two.
+
+    \sa height, pixelsPerUnit, {Coordinate Systems and Units in \qxr}
 */
 
 qreal QQuick3DXrItem::width() const
@@ -332,8 +341,11 @@ void QQuick3DXrItem::setWidth(qreal newWidth)
 /*!
     \qmlproperty real XrItem::height
 
-    This property defines the height of the XrItem in the 3D coordinate system.
-    \sa width
+    This property defines the height of the XrItem in the 3D coordinate system, that is,
+    in centimeters. This is not the same as the pixel height of the \l contentItem;
+    \l pixelsPerUnit relates the two.
+
+    \sa width, pixelsPerUnit, {Coordinate Systems and Units in \qxr}
 */
 
 qreal QQuick3DXrItem::height() const

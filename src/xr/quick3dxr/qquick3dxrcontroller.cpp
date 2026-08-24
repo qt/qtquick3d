@@ -27,8 +27,9 @@ QT_BEGIN_NAMESPACE
     The XrController is a tracked spatial node that tracks the position and orientation of an input controller.
 
     Since this is a tracked node, its spatial properties should be considered read-only.
+    They are relative to the \l XrOrigin, which the XrController must be a child of.
 
-    \sa XrInputAction
+    \sa XrInputAction, {Coordinate Systems and Units in \qxr}
 */
 
 QQuick3DXrController::QQuick3DXrController()
@@ -129,7 +130,10 @@ void QQuick3DXrController::setPoseSpace(HandPoseSpace newPoseSpace)
     This property holds the position to be used for touch interactions.
     Typically, it will be the tip of the index finger when tracking a hand.
 
-    \sa XrView::processTouch, XrView::setTouchpoint
+    The position is in the \l XrOrigin's coordinate system. Convert it with
+    \l{Node::mapPositionToScene}{mapPositionToScene} before using it against scene content.
+
+    \sa XrView::processTouch, XrView::setTouchpoint, {Coordinate Systems and Units in \qxr}
 */
 
 QVector3D QQuick3DXrController::pokePosition() const
@@ -144,9 +148,10 @@ QVector3D QQuick3DXrController::pokePosition() const
     \qmlproperty list<vector3d> XrController::jointPositions
 
     \readonly
-    When using hand tracking, this property holds the positions of all the bones in the hand.
+    When using hand tracking, this property holds the positions of all the bones in the hand,
+    in the \l XrOrigin's coordinate system.
 
-   \sa jointRotations, XrHandModel
+   \sa jointRotations, XrHandModel, {Coordinate Systems and Units in \qxr}
 */
 QList<QVector3D> QQuick3DXrController::jointPositions() const
 {

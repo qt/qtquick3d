@@ -52,15 +52,17 @@
 
     In an XR application, consider real-world units and tracking data when defining the scene.
     The camera's position and orientation are defined by the device's, or in the case of
-    head-mounted displays (HMD), the user's head position and orientation. The scene's units should
-    match the real-world unit. For example, you'd want a door or a desk to be the same
-    size in the real world as in the virtual world.
+    head-mounted displays (HMD), the user's head position and orientation. The scene's units are
+    no longer arbitrary: one unit is one centimeter, so that a door or a desk is the same
+    size in the real world as in the virtual world. See
+    \l{Coordinate Systems and Units in \qxr} for the details.
 
     \note The entry point in an \qxr application is not a \l View3D but the \l  XrView. In addition,
     an \l XrOrigin defines the scene's origin, which tracked items are placed relative to.
 
     \qml
     XrView {
+        referenceSpace: XrView.ReferenceSpaceLocalFloor
         DirectionalLight {
         }
 
@@ -87,8 +89,8 @@
 
             Model {
                 id: table
-                property real height: 0.7
-                position: Qt.vector3d(0, height - 2.5, 0)
+                // 75 cm, the height of a real desk
+                property real height: 75
                 source: ":meshes/table.mesh"
                 materials: PrincipledMaterial {
                     baseColor: "white"
@@ -136,6 +138,9 @@
     Take a look at \l{Getting Started With Meta Quest 3} or \l{Getting Started With Apple Vision Pro}
     for more information about how to get started with your specific device. See the
     \l{Supported Platforms} page for more information about platforms and devices supported.
+
+    See \l{Coordinate Systems and Units in \qxr}, which explains what a
+    coordinate value means in the tracking space, in the 3D scene, and in 2D Qt Quick content.
 
     If you are looking for a specific \qxr API, take a look at the \l{\qxr QML Types}{API Reference},
     or try out one of the \l{\qxr Examples}, which demonstrate how the \qxr APIs can be used.

@@ -31,6 +31,10 @@ Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
     \quotefromfile xr_simple/main.qml
     \printto XrOrigin
 
+    Unlike a \l View3D, an XrView is a \l Node and has no size in pixels: it
+    renders to the device, and the scene it contains is expressed in
+    centimeters. See \l{Coordinate Systems and Units in \qxr}.
+
     \section1 Platform notes
 
     \section2 Meta Quest Devices
@@ -844,6 +848,7 @@ QVariantMap QQuick3DXrView::touchpointState(int pointId) const
     \endcode
 
     \default XrView.ReferenceSpaceLocal
+    \sa {Coordinate Systems and Units in \qxr}
 */
 
 QQuick3DXrView::ReferenceSpace QQuick3DXrView::referenceSpace() const
