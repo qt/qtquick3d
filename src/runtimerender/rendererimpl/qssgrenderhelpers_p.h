@@ -226,20 +226,18 @@ inline QRect correctViewportCoordinates(const QRectF &layerViewport, const QRect
 
 inline quint32 rhiCalculateABufferSize(int nodeCount)
 {
-    quint32 s = nodeCount;
-    quint32 s_sqrt = qSqrt(s);
-    quint32 s2 = s_sqrt * s_sqrt;
-    while (s2 < s) {
-        s_sqrt += 1;
-        s2 = s_sqrt * s_sqrt;
-    }
-    return s_sqrt;
+    if (nodeCount <= 0)
+        return 0;
+    // Sqrt of the node count is a good approximation for the width and height of the A-buffer texture.
+    // we use qCeil to round up to the nearest integer, ensuring that we have enough space for all nodes.
+    return quint32(qCeil(qSqrt(double(nodeCount))));
 }
 
 inline quint32 rhiCalculateABufferSize(const QSize &size, int levels)
 {
-    quint32 s = size.width() * size.height() * levels;
-    return rhiCalculateABufferSize(s);
+    // Multiply in 64 bits and avoid negative numbers, or we can cause an overflow.
+    const quint64 s = quint64(qMax(0, size.width())) * quint64(qMax(0, size.height())) * quint64(qMax(0, levels));
+    return quint32(qCeil(qSqrt(double(s))));
 }
 
 }
