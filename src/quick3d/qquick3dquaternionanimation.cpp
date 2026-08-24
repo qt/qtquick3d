@@ -32,7 +32,8 @@ QT_BEGIN_NAMESPACE
     from and to values are expected to be fully specified either via a
     quaternion or the three euler angles.
 
-    \sa {Animation and Transitions in Qt Quick} QQuaternion QQuaternion::slerp() QQuaternion::nlerp()
+    \sa {Animation and Transitions in Qt Quick} QQuaternion QQuaternion::slerp()
+        QQuaternion::fastSlerp() QQuaternion::nlerp()
 */
 
 class QQuick3DQuaternionAnimationPrivate : public QQuickPropertyAnimationPrivate
@@ -52,7 +53,7 @@ public:
 
 QVariant q_quaternionInterpolator(const QQuaternion &from, const QQuaternion &to, qreal progress)
 {
-    return QVariant::fromValue(QQuaternion::slerp(from, to, progress));
+    return QVariant::fromValue(QQuaternion::fastSlerp(from, to, progress));
 }
 
 QVariant q_quaternionNlerpInterpolator(const QQuaternion &from, const QQuaternion &to, qreal progress)
