@@ -42,7 +42,8 @@ public:
     Type type;
 };
 
-class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickItemChangeListener
+class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject,
+                                         public QSafeQuickItemChangeListener<QQuick3DTexture>
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
