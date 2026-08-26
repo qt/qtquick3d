@@ -1,6 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-#include <QSignalSpy>
 #include <QTest>
 #include <QtQuick/QQuickItem>
 
@@ -900,7 +899,6 @@ void tst_Picking::test_picking_QTBUG_111997()
     const auto viewSize = view->size();
     const float halfWidth = viewSize.width() * 0.5f;
     const float halfHeight = viewSize.height() * 0.5f;
-    QSignalSpy frameSwappedSpy(view.data(), &QQuickWindow::frameSwapped);
 
     // Add custom geometry to the scene
     QScopedPointer<CustomGeometry> geometry(new CustomGeometry(20));
@@ -908,31 +906,25 @@ void tst_Picking::test_picking_QTBUG_111997()
     geometry->setParentItem(model1);
     model1->setGeometry(geometry.data());
 
-    // Wait for the next frame (so that geometry is up-to-date
-    if (!frameSwappedSpy.wait())
-        QFAIL("frameSwapped() signal not emitted");
-
     // Check picking with 20 subdivisions
+    QVERIFY(waitForFrames(view.data(), 2));
     auto result = view3d->pick(halfWidth, halfHeight);
     QVERIFY(result.objectHit() != nullptr);
     QCOMPARE(result.objectHit(), model1);
 
     // check picking with 350 subdivisions
     geometry->setCount(350);
-    if (!frameSwappedSpy.wait())
-        QFAIL("frameSwapped() signal not emitted");
+    QVERIFY(waitForFrames(view.data(), 2));
     result = view3d->pick(halfWidth, halfHeight);
     QVERIFY(result.objectHit() != nullptr);
     QCOMPARE(result.objectHit(), model1);
 
     // check picking with 500 subdivisions
     geometry->setCount(500);
-    if (!frameSwappedSpy.wait())
-        QFAIL("frameSwapped() signal not emitted");
+    QVERIFY(waitForFrames(view.data(), 2));
     result = view3d->pick(halfWidth, halfHeight);
     QVERIFY(result.objectHit() != nullptr);
     QCOMPARE(result.objectHit(), model1);
-
 }
 
 void tst_Picking::test_sphere_geometry()
@@ -949,11 +941,9 @@ void tst_Picking::test_sphere_geometry()
     const auto viewSize = view->size();
     const float halfWidth = viewSize.width() * 0.5f;
     const float halfHeight = viewSize.height() * 0.5f;
-    QSignalSpy frameSwappedSpy(view.data(), &QQuickWindow::frameSwapped);
 
-    // Wait for the next frame (so that geometry is up-to-date
-    if (!frameSwappedSpy.wait())
-        QFAIL("frameSwapped() signal not emitted");
+    // Wait for a couple of frames (so that geometry is up-to-date)
+    QVERIFY(waitForFrames(view.data(), 2));
 
     auto result = view3d->pick(halfWidth, halfHeight);
     QVERIFY(result.objectHit() != nullptr);
