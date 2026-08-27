@@ -15,6 +15,7 @@ ApplicationWindow {
     height: 720
     title: qsTr("Volumetric Fog")
 
+    //! [fog extension]
     VolumetricFogExtension {
         id: froxelExtension
         froxelWidth: 160
@@ -30,6 +31,7 @@ ApplicationWindow {
             IESLightProfileIndex { light: pinkSpot; index: settings.iesLightIndex; intensity: 0.5}
         ]
     }
+    //! [fog extension]
 
     View3D {
         id: view
@@ -41,6 +43,7 @@ ApplicationWindow {
 
         extensions: [ froxelExtension ]
 
+        //! [ies texture]
         Texture {
             id: iesAtlasTexture
             textureData: IESTextureData {
@@ -61,6 +64,7 @@ ApplicationWindow {
             magFilter: Texture.Linear
             generateMipmaps: false
         }
+        //! [ies texture]
 
         environment: ExtendedSceneEnvironment {
             id: se
@@ -72,6 +76,7 @@ ApplicationWindow {
             tonemapMode: SceneEnvironment.TonemapModeAces
             temporalAAMode: SceneEnvironment.TAAMotionVector
 
+            //! [fog effect]
             effects: [
                 VolumetricFogEffect {
                     froxelTexture: froxelExtension.froxelTexture
@@ -87,6 +92,7 @@ ApplicationWindow {
                     jitterIntensity: settings.jitterIntensity
                 }
             ]
+            //! [fog effect]
         }
 
         FrameAnimation {
@@ -230,6 +236,7 @@ ApplicationWindow {
             }
         }
 
+        //! [fog volume]
         Fog3DVolume {
             id: fogSphere
             type: Fog3DVolume.Sphere
@@ -245,6 +252,7 @@ ApplicationWindow {
             mostIntenseY: settings.fogVolumeHeightMostY
             heightCurve: settings.fogVolumeHeightCurve
         }
+        //! [fog volume]
 
         Room { id: room; visible: settings.sceneVisible }
 

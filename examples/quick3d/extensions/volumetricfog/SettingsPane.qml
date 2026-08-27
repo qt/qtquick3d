@@ -168,6 +168,8 @@ Item {
                         property int    numDecimals: 0
                         property color  accentColor: root.clBlue
 
+                        readonly property real handleSize: 14
+
                         Layout.fillWidth: true
                         Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.topMargin: 8
                         spacing: 3
@@ -196,13 +198,16 @@ Item {
                             stepSize: 0.01
 
                             background: Item {
+                                x: sl.leftPadding
+                                width: sl.availableWidth
                                 implicitWidth: 200; implicitHeight: 4
                                 Rectangle {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: parent.width; height: 4; radius: 2
                                     color: root.clBorder
                                     Rectangle {
-                                        width: sl.visualPosition * parent.width
+                                        width: slRow.handleSize / 2
+                                               + sl.visualPosition * (parent.width - slRow.handleSize)
                                         height: parent.height; radius: 2
                                         color: slRow.accentColor
                                     }
@@ -211,7 +216,9 @@ Item {
                             handle: Rectangle {
                                 x: sl.leftPadding + sl.visualPosition * (sl.availableWidth - width)
                                 y: sl.topPadding + sl.availableHeight / 2 - height / 2
-                                implicitWidth: 14; implicitHeight: 14; radius: 7
+                                implicitWidth: slRow.handleSize
+                                implicitHeight: slRow.handleSize
+                                radius: slRow.handleSize / 2
                                 color: sl.pressed ? Qt.lighter(slRow.accentColor, 1.5)
                                                   : (sl.hovered ? Qt.lighter(slRow.accentColor, 1.2)
                                                                 : slRow.accentColor)
