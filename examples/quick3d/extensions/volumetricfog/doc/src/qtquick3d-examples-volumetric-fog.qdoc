@@ -1,0 +1,139 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example extensions/volumetricfog
+    \ingroup quick3d-examples
+    \title Qt Quick 3D - Volumetric Fog Extension Example
+    \examplecategory {3D}
+    \brief Demonstrates how to implement volumetric fog in a render extension.
+    \image volumetric-fog-example.webp
+           {Bare tree on a round tiered stage lit by red, green, and blue
+           volumetric light beams, with a settings panel for lights, fog,
+           and shadows}
+
+    \section1 Overview
+
+    This example implements volumetric fog as a Qt Quick 3D
+    \l{QQuick3DRenderExtension}{render extension}, and shows how to reuse the
+    extension in your own project.
+
+    The extension divides the camera frustum into a 3D grid of \e{froxels},
+    frustum-aligned voxels, and uses a compute shader to accumulate the light
+    that scatters toward the camera in each cell. A post-processing effect then
+    composites the result onto the rendered frame.
+
+    \section1 Controls
+
+    Drag with the mouse to orbit the camera around the scene. Use the settings
+    panel to change the lighting, the fog, the post-processing, and the shadow
+    settings.
+
+    \section1 Implementation
+
+    \note The extension injects light into the froxel grid with a compute
+          shader, so it requires a graphics API and hardware with compute
+          shader support. OpenGL versions older than 4.3 and OpenGL ES
+          versions older than 3.1 have no compute support. See
+          \l QRhi::Compute for details.
+
+    The \c VolumetricFogExtension type implements the volumetric fog extension.
+    It lives in the separate \c VFExtension subproject, so you can add it to
+    your own project unchanged.
+
+    Set the following properties on \c VolumetricFogExtension:
+
+    \snippet extensions/volumetricfog/Main.qml fog extension
+
+    The \c froxelWidth, \c froxelHeight, and \c froxelDepth properties define
+    the resolution of the froxel grid that the compute shader fills. A higher
+    resolution produces more detailed light scattering, but uses more GPU
+    memory and compute time.
+
+    The \c nearPlane and \c farPlane properties define the depth range that the
+    volumetric effect covers. Match them to the clip distances of the
+    \l PerspectiveCamera.
+
+    The \c fogVolumes property holds the list of \c Fog3DVolume nodes that
+    define where fog is present in the scene.
+
+    \section2 IES Light Profiles
+
+    A photometric profile from the Illuminating Engineering Society (IES)
+    shapes the angular light distribution of a spot light. The \c iesTexture
+    property takes a \l Texture whose data comes from an \c IESTextureData
+    object. That object parses \c{.ies} files and packs them into a 2D atlas
+    texture. The \c iesCount property specifies how many profiles the atlas
+    holds, and \c iesLightProfiles maps individual lights to profile indices
+    through \c IESLightProfileIndex objects.
+
+    \snippet extensions/volumetricfog/Main.qml ies texture
+
+    \section2 Attaching the Extension to a View3D
+
+    Add the extension to the \l{View3D::extensions}{extensions} list of the
+    \l View3D. The render pipeline then invokes the extension's compute shader
+    once per frame:
+
+    \qml
+        View3D {
+            extensions: [ froxelExtension ]
+        }
+    \endqml
+
+    \section2 Fog Volumes
+
+    A \c Fog3DVolume node defines a fog region in the scene. The \c type
+    property selects one of two shapes, \c{Fog3DVolume.Sphere} or
+    \c{Fog3DVolume.Box}, and the \c extents property sets the bounding
+    dimensions. The \c color and \c density properties control the appearance.
+
+    Advancing \c noiseOffset each frame animates the noise. To make the density
+    fall off with height, set \c heightEnabled to \c true and adjust
+    \c leastIntenseY, \c mostIntenseY, and \c heightCurve:
+
+    \snippet extensions/volumetricfog/Main.qml fog volume
+
+    \section2 VolumetricFogEffect
+
+    The extension exposes its result through the read-only \c froxelTexture
+    property, a 3D RGBA texture that holds the accumulated light scattering
+    data for each froxel. Add the \c VolumetricFogEffect post-processing effect
+    to the \l ExtendedSceneEnvironment to consume that texture. The effect
+    ray-marches through the froxel texture and composites the volumetric light
+    onto the rendered frame:
+
+    \snippet extensions/volumetricfog/Main.qml fog effect
+
+    The \c marchSteps property controls the number of ray marching steps. Match
+    it to \c froxelDepth. The \c frameBaseJitter and \c jitterIntensity
+    properties enable temporal dithering, which reduces banding artifacts when
+    the scene also uses temporal antialiasing.
+
+    \section1 Reusing the Extension in Your Own Project
+
+    The \c VFExtension subproject builds as a QML module of its own. To use it
+    in another project, copy the directory, add it with
+    \c{add_subdirectory()}, and link the library into your target:
+
+    \badcode
+    add_subdirectory(VFExtension)
+
+    target_link_libraries(myapp PRIVATE VFExtension)
+    \endcode
+
+    Then import the module in QML:
+
+    \qml
+        import VFExtension
+    \endqml
+
+    \note The extension includes private Qt Quick 3D headers and links against
+          \c Qt6::Quick3DPrivate. Private API carries no source or binary
+          compatibility guarantee, so the extension may need changes when you
+          move to a newer Qt version.
+
+    \sa {Qt Quick 3D - Stencil Outline Extension Example},
+        {Qt Quick 3D - Simple Fog Example},
+        {User-Defined Render Passes in Qt Quick 3D}
+*/
