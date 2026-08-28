@@ -519,7 +519,7 @@ void QSSGQuadTextureProvider::prepareRender(QSSGFrameData &data)
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     QRhi *rhi = rhiCtx->rhi();
 
-    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, 0 });
+    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, nullptr, 0 });
     if (!dcd->ubuf) {
         const int uniformStride = rhiCtx->rhi()->ubufAligned(m_shaderPipeline->ub0Size());
         dcd->ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, uniformStride);

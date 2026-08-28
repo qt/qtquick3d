@@ -184,16 +184,23 @@ inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_N
 // like "render a model in a shared scene between multiple View3Ds" (here both
 // the View3D ('layer/cid') and the model ('model') act as the lookup key since
 // while the model is the same, we still want different uniform buffers per
-// View3D), or the case of shadow maps where the shadow map (there can be as
-// many as lights) is taken into account too ('entry') together with an entry index
-// where more resolution is needed (e.g., cube maps).
+// View3D). 'resource' is the resource the model is drawn with, typically a
+// material; many resources can map to one model. When 'resource' refers to a
+// material it must be the material pointer and nothing else, since
+// cleanupDrawCallDataForResource() finds the entries to release for a
+// to-be-destroyed material by matching on 'resource'. 'mapEntry' is the
+// per-light shadow map entry or per-probe reflection map entry being rendered
+// into, when the draw is part of a shadow or reflection pass, otherwise null.
+// 'resourceIdx' disambiguates multiple entries for the same resource and map
+// entry, e.g. the cube map face and the subset offset.
 //
 struct QSSGRhiDrawCallDataKey
 {
     const void *cid = nullptr; // Usually the sub-pass (see usage of QSSGPassKey)
     const void *model = nullptr;
-    const void *entry = nullptr;
-    quintptr entryIdx = 0;
+    const void *resource = nullptr;
+    const void *mapEntry = nullptr;
+    quintptr resourceIdx = 0;
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiBuffer
@@ -1090,6 +1097,7 @@ public:
     QSSGRhiDrawCallData &drawCallData(const QSSGRhiDrawCallDataKey &key);
     void releaseDrawCallData(QSSGRhiDrawCallData &dcd);
     void cleanupDrawCallData(const QSSGRenderModel *model);
+    void cleanupDrawCallDataForResource(const void *resource);
 
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable);
     void releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable);
@@ -1124,7 +1132,8 @@ public:
 
 inline bool operator==(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) noexcept
 {
-    return a.cid == b.cid && a.model == b.model && a.entry == b.entry && a.entryIdx == b.entryIdx;
+    return a.cid == b.cid && a.model == b.model && a.resource == b.resource && a.mapEntry == b.mapEntry
+            && a.resourceIdx == b.resourceIdx;
 }
 
 inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) noexcept
@@ -1134,10 +1143,7 @@ inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDat
 
 inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) noexcept
 {
-    return qHash(quintptr(k.cid)
-                 ^ quintptr(k.model)
-                 ^ quintptr(k.entry)
-                 ^ quintptr(k.entryIdx), seed);
+    return qHashMulti(seed, k.cid, k.model, k.resource, k.mapEntry, k.resourceIdx);
 }
 
 QT_END_NAMESPACE

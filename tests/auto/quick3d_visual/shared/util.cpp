@@ -323,6 +323,18 @@ bool QQuick3DTestOffscreenRenderer::init(const QUrl &fileUrl, void *vulkanInstan
     return true;
 }
 
+// Runs one complete frame through the render control. Tests that only inspect
+// backend state after a frame do not need a readback of the result.
+void QQuick3DTestOffscreenRenderer::renderNextFrame()
+{
+    QGuiApplication::processEvents();
+    renderControl->polishItems();
+    renderControl->beginFrame();
+    renderControl->sync();
+    renderControl->render();
+    renderControl->endFrame();
+}
+
 void QQuick3DTestOffscreenRenderer::enqueueReadback(bool *readCompleted, QRhiReadbackResult *readResult, QImage *result)
 {
     *readCompleted = false;

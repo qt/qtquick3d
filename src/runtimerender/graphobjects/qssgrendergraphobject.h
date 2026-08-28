@@ -129,7 +129,11 @@ public:
 
     [[nodiscard]] static constexpr bool isMaterial(Type type) noexcept
     {
-        return (TypeT(type) & BaseType::Material);
+        // Type::Skin sits in the material value range for historical reasons,
+        // but it is a texture-data resource, not a material. On the released
+        // branches the value cannot move, since Type values are inlined into
+        // binaries built against those headers.
+        return (TypeT(type) & BaseType::Material) && (type != Type::Skin);
     }
 
     [[nodiscard]] static constexpr bool isTexture(Type type) noexcept

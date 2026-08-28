@@ -373,7 +373,7 @@ quint32 QSSGRenderSkyMaterial::updateUniforms(const QSSGRenderContextInterface &
 
     QSSGRhiContext *rhiCtx = sgContext.rhiContext().get();
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, 0 });
+    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, nullptr, 0 });
 
     const int uniformStride = rhiCtx->rhi()->ubufAligned(iblPassPipeline->ub0Size());
     const int totalBufferSize = uniformStride * 6;
@@ -441,7 +441,7 @@ void QSSGRenderSkyMaterial::updateBackgroundUniforms(const QSSGRenderContextInte
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
     // Distinct drawCallData key index (1) so the background UBO does not collide with
     // the per-face IBL UBO (index 0) held for the same QSSGRenderSkyMaterial.
-    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, 1 });
+    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, nullptr, 1 });
 
     const int bufferSize = rhiCtx->rhi()->ubufAligned(backgroundPipeline->ub0Size());
 

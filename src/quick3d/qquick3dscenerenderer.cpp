@@ -427,7 +427,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     const auto &renderer = m_sgContext->renderer();
 
                     QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-                    QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ m_layer, nullptr, nullptr, 0 }));
+                    QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ m_layer, nullptr, nullptr, nullptr, 0 }));
                     QRhiBuffer *&ubuf = dcd.ubuf;
                     const int ubufSize = 4 * sizeof(float);
                     if (!ubuf) {

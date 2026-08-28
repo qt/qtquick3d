@@ -749,8 +749,11 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             // cascadeIndex is 0..3 for directional light and 0 for the pointlight & spotlight
             // cubeFaceIdx is 0 for directional & spotlight and 0..5 for the pointlight
             // pEntry is unique per light and a light can only be one of directional, point, or spotlight.
+            // NOTE: The material is deliberately not part of the key here. The shadow pass caches its
+            // srb on the renderable rather than in the draw call data, so keying on the material would
+            // orphan a cached srb every time the material is swapped.
             const quintptr entryIdx = cascadeIndex + cubeFaceIdx + (quintptr(renderable.subset.offset) << 3);
-            dcd = &rhiCtxD->drawCallData({ passKey, &renderable.modelContext.model, pEntry, entryIdx });
+            dcd = &rhiCtxD->drawCallData({ passKey, &renderable.modelContext.model, nullptr, pEntry, entryIdx });
         }
 
         QSSGRhiShaderResourceBindingList bindings;
@@ -959,18 +962,20 @@ void rhiPrepareRenderableImp(QSSGRhiContext *rhiCtx,
 
 
             // NOTE:
-            // - entryIdx should 0 for QSSGRenderTextureCubeFaceNone.
-            // In all other cases the entryIdx is a combination of the cubeface idx and the subset offset, where the lower bits
-            // are the cubeface idx.
+            // - entryIdx should 0 for QSSGRenderTextureCubeFaceNone (and a null entry).
+            // In all other cases the entryIdx is a combination of the cubeface idx and the subset
+            // offset, where the lower bits are the cubeface idx. The per-probe reflection map
+            // entry, if any, goes in the key's mapEntry slot. The key's resource must be the
+            // material itself, and nothing but the material, since
+            // cleanupDrawCallDataForResource() releases the entries for a to-be-destroyed
+            // material by matching on the resource.
             const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
-            const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(subsetRenderable.subset.offset) << 3));
-            // If there's an entry we merge that with the address of the material
-            const auto entryPartA = reinterpret_cast<quintptr>(&subsetRenderable.material);
-            const auto entryPartB = reinterpret_cast<quintptr>(entry);
-            const void *entryId = reinterpret_cast<const void *>(entryPartA ^ entryPartB);
+            const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone)
+                    * (cubeFaceIdx + (quintptr(subsetRenderable.subset.offset) << 3));
 
             QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-            QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, &modelNode, entryId, entryIdx });
+            QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, &modelNode, &subsetRenderable.material, entry,
+                                                               entryIdx });
 
             shaderPipeline->ensureCombinedUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
@@ -2077,7 +2082,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     //        vec2 cameraProperties;
 
     const int UBUF_SIZE = 72;
-    QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ passKey, nullptr, nullptr, 0 }));
+    QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ passKey, nullptr, nullptr, nullptr, 0 }));
     if (!dcd.ubuf) {
         dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
         dcd.ubuf->create();
@@ -2199,7 +2204,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, 
     int uniformBinding = 0;
     const int ubufSize = cameras.count() >= 2 ? 276 : 148;
 
-    QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ passKey, nullptr, nullptr, 0 })); // Change to Grid?
+    QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ passKey, nullptr, nullptr, nullptr, 0 })); // Change to Grid?
 
     QRhi *rhi = rhiCtx->rhi();
     if (!dcd.ubuf) {
@@ -2316,7 +2321,7 @@ static void rhiPrepareSkyBox_helper(const QSSGRenderContextInterface &context,
 
     const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
     const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * cubeFaceIdx;
-    QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, nullptr, entry, entryIdx });
+    QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, nullptr, nullptr, entry, entryIdx });
 
     QRhi *rhi = rhiCtx->rhi();
     const quint32 ubufSize = cameras.count() >= 2 ? 416 : 240; // same ubuf layout for both skybox and skyboxcube
@@ -2449,7 +2454,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
             const void *modelNode = &subsetRenderable.modelContext.model;
-            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, 0 });
+            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, 0 });
         }
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
@@ -2739,7 +2744,7 @@ bool RenderHelpers::rhiPrepareNormalPass(QSSGRhiContext *rhiCtx,
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const void *modelNode = &subsetRenderable.modelContext.model;
-            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, 0 });
+            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, 0 });
         }
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
@@ -2971,7 +2976,7 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
 
         QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
         const void *modelNode = &subsetRenderable.modelContext.model;
-        QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ passKey, modelNode, overrideMaterial, 0 });
+        QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ passKey, modelNode, overrideMaterial, nullptr, 0 });
 
         // Update the shader key to reflect the override material's properties
         // The subsetRenderable.shaderDescription was set during prepareModelsForRender for the original material,
@@ -3226,7 +3231,7 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
             obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const void *modelNode = &subsetRenderable.modelContext.model;
-            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, 0 });
+            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, 0 });
         }
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
@@ -3559,7 +3564,7 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const void *modelNode = &subsetRenderable.modelContext.model;
-            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, 0 });
+            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, 0 });
         }
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
@@ -3975,7 +3980,7 @@ void RenderHelpers::rhiPrepareMotionVectorRenderable(QSSGRhiContext *rhiCtx,
     QSSGRhiShaderResourceBindingList bindings;
 
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-    QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, &modelNode, nullptr, 0 });
+    QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ passKey, &modelNode, nullptr, nullptr, 0 });
 
 
     QSSGRenderTextureData *boneTextureData = nullptr;

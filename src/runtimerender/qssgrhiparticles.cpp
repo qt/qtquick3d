@@ -406,7 +406,8 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPip
     const bool needsConversion = !rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
 
     const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
-    QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(rhiCtx)->drawCallData({ passKey, node, entry, cubeFaceIdx });
+    QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(rhiCtx)->drawCallData({ passKey, node, nullptr, entry,
+                                                                                  cubeFaceIdx });
     shaderPipeline.ensureUniformBuffer(&dcd.ubuf);
 
     char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
