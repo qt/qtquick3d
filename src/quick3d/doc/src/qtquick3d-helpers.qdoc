@@ -509,9 +509,9 @@
     \li \l{glowEnabled}{Glow and bloom}
 
     Controlled by the properties \l glowEnabled, \l glowQualityHigh, \l
-    glowUseBicubicUpscale, \l glowStrength, \l glowIntensity, \l glowBloom, \l
-    glowBlendMode, \l glowHDRMaximumValue, \l glowHDRMinimumValue, \l
-    glowHDRScale.
+    glowUseBicubicUpscale, \l glowSuppressFireflies, \l glowBlurMode, \l
+    glowStrength, \l glowIntensity, \l glowBloom, \l glowBlendMode, \l
+    glowHDRMaximumValue, \l glowHDRMinimumValue, \l glowHDRScale.
 
     \image extendedsceneenvironment_glow.jpg {Scene demonstrating glow effect}
 
@@ -883,12 +883,42 @@
     \note Using bi-cubic up-scaling will come at the cost of performance.  Consider if
     \l {ExtendedSceneEnvironment::ditheringEnabled}{dithering} can be used instead.
 */
+/*! \qmlproperty bool ExtendedSceneEnvironment::glowSuppressFireflies
+    Reduces flickering of the glow around very small bright sources by
+    weighting the first downsampling pass by inverse brightness.
+
+    \default false
+
+    \note Only has an effect when \l glowBlurMode is \c DualFilter.
+
+    \since 6.13
+*/
+/*! \qmlproperty int ExtendedSceneEnvironment::glowBlurMode
+    Blur algorithm used for the glow effect.
+
+    \list
+      \li ExtendedSceneEnvironment.GlowBlurMode.Gaussian: separable gaussian
+          blur of each enabled level.
+      \li ExtendedSceneEnvironment.GlowBlurMode.DualFilter: dual-filter blur
+          chain. Round halos, lower GPU cost, no cost for levels above the
+          highest enabled \l glowLevel, slightly wider falloff.
+    \endlist
+
+    \default ExtendedSceneEnvironment.GlowBlurMode.Gaussian
+
+    \since 6.13
+*/
 /*! \qmlproperty real ExtendedSceneEnvironment::glowStrength
     Glow strength. Acceptable values are from \b 0 to \b 2.
 
     The strength is effectively a scale factor (multiplier) that is applied
-    per-level. This means the the more levels are enabled in \l glowLevel, the
+    per-level. This means the more levels are enabled in \l glowLevel, the
     more pronounced effect a larger glowStrength has.
+
+    \note In \c DualFilter mode the strength is applied once per
+    downsampling pass, so it also compounds with each level, but more slowly
+    than in \c Gaussian mode, which applies it in both the horizontal and
+    the vertical blur pass of each level.
 
     In practice the values for \l glowStrength, \l glowIntensity, and \l
     glowBloom will often be tuned together to achieve the desired results.
@@ -1044,6 +1074,11 @@
     total of 7 levels available.
 
     Not having any levels set means that the glow will have no visual effect.
+
+    In \c DualFilter \l glowBlurMode, the highest enabled level sets the depth
+    of the blur chain, and with it the GPU cost. Each lower enabled level is
+    added to the chain on the way back up, so it is blurred further by the
+    remaining upsampling passes instead of being added separately at the end.
 
     For example, to enable Glow Level \e One and \e Six we just OR the two enums together:
     \badcode

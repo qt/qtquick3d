@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "texturesample.glsllib"
+#include "glowblur.glsllib"
 
 void MAIN() {
     //glow uses larger sigma for a more rounded blur effect
@@ -42,13 +43,8 @@ void MAIN() {
 
     color *= glowStrength;
 
-    if (isFirstPass) {
-        color *= exposure;
+    if (isFirstPass)
+        color = qt_glowThreshold(color, exposure, glowHDRMinimumValue, glowHDRScale, glowBloom, glowHDRMaximumValue);
 
-        float luminance = max(color.r, max(color.g, color.b));
-        float feedback = max(smoothstep(glowHDRMinimumValue, glowHDRMinimumValue + glowHDRScale, luminance), glowBloom);
-
-        color = min(color * feedback, vec4(glowHDRMaximumValue));
-    }
     FRAGCOLOR = color;
 }

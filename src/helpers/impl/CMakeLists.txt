@@ -42,6 +42,8 @@ qt_internal_add_resource(Quick3DHelpersImpl "helpersimpl_resources"
         shaders/downsample.vert
         shaders/glowhorizontalblur.frag
         shaders/glowverticalblur.frag
+        shaders/glowdownsample.frag
+        shaders/glowupsample.frag
         shaders/ssgi_ssilvb.frag
         shaders/ssgi_dualfilterblur_down.frag
         shaders/ssgi_dualfilterblur_up.frag

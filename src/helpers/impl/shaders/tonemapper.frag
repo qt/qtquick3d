@@ -383,30 +383,35 @@ void MAIN()
 
     // Glow
     if (isGlowEnabled) {
-        // Read glow from the glowBuffers
-        const int GLOW_LEVEL_1 = 0x1;
-        const int GLOW_LEVEL_2 = 0x2;
-        const int GLOW_LEVEL_3 = 0x4;
-        const int GLOW_LEVEL_4 = 0x8;
-        const int GLOW_LEVEL_5 = 0x10;
-        const int GLOW_LEVEL_6 = 0x20;
-        const int GLOW_LEVEL_7 = 0x40;
-
         vec3 glow = vec3(0.0);
-        if ((glowLevel & GLOW_LEVEL_1) != 0)
-            glow += sampleGlowBuffer(glowBuffer1, 0);
-        if ((glowLevel & GLOW_LEVEL_2) != 0)
-            glow += sampleGlowBuffer(glowBuffer2, 1);
-        if ((glowLevel & GLOW_LEVEL_3) != 0)
-            glow += sampleGlowBuffer(glowBuffer3, 2);
-        if ((glowLevel & GLOW_LEVEL_4) != 0)
-            glow += sampleGlowBuffer(glowBuffer4, 3);
-        if ((glowLevel & GLOW_LEVEL_5) != 0)
-            glow += sampleGlowBuffer(glowBuffer5, 4);
-        if ((glowLevel & GLOW_LEVEL_6) != 0)
-            glow += sampleGlowBuffer(glowBuffer6, 5);
-        if ((glowLevel & GLOW_LEVEL_7) != 0)
-            glow += sampleGlowBuffer(glowBuffer7, 6);
+        if (glowBlurMode != 0) {
+            if ((glowLevel & 0x7f) != 0)
+                glow = sampleGlowBuffer(glowBuffer1, 1);
+        } else {
+            // Read glow from the glowBuffers
+            const int GLOW_LEVEL_1 = 0x1;
+            const int GLOW_LEVEL_2 = 0x2;
+            const int GLOW_LEVEL_3 = 0x4;
+            const int GLOW_LEVEL_4 = 0x8;
+            const int GLOW_LEVEL_5 = 0x10;
+            const int GLOW_LEVEL_6 = 0x20;
+            const int GLOW_LEVEL_7 = 0x40;
+
+            if ((glowLevel & GLOW_LEVEL_1) != 0)
+                glow += sampleGlowBuffer(glowBuffer1, 0);
+            if ((glowLevel & GLOW_LEVEL_2) != 0)
+                glow += sampleGlowBuffer(glowBuffer2, 1);
+            if ((glowLevel & GLOW_LEVEL_3) != 0)
+                glow += sampleGlowBuffer(glowBuffer3, 2);
+            if ((glowLevel & GLOW_LEVEL_4) != 0)
+                glow += sampleGlowBuffer(glowBuffer4, 3);
+            if ((glowLevel & GLOW_LEVEL_5) != 0)
+                glow += sampleGlowBuffer(glowBuffer5, 4);
+            if ((glowLevel & GLOW_LEVEL_6) != 0)
+                glow += sampleGlowBuffer(glowBuffer6, 5);
+            if ((glowLevel & GLOW_LEVEL_7) != 0)
+                glow += sampleGlowBuffer(glowBuffer7, 6);
+        }
         glow *= glowIntensity;
 
         // Tonemap the resulting glow

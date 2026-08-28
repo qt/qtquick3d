@@ -69,6 +69,7 @@ MainSceneEffect {
     readonly property bool isFirstPass: true
     property bool isGlowEnabled: false
     property bool glowQualityHigh: false
+    property bool glowSuppressFireflies: false
     property bool glowUseBicubicUpscale: false
     property real glowStrength : 1.0        // 0.0 - 2.0
     property real glowIntensity : 0.8       // 0.0 - 8.0
@@ -78,6 +79,8 @@ MainSceneEffect {
     property real glowHDRScale: 2.0         // 0.0 - 4.0
     property real glowHDRMinimumValue: 1.0     // 0.0 - 4.0
     property int glowLevel: 1               // 1 - 7
+    property int glowBlurMode: 0
+    property bool glowAddSelfLevel: false
 
     // Color Grading (LUT)
     property bool enableLut: false
@@ -120,6 +123,9 @@ MainSceneEffect {
     readonly property TextureInput glowBuffer7: TextureInput {
         texture: Texture {}
     }
+    readonly property TextureInput glowDownBuffer: TextureInput {
+        texture: Texture {}
+    }
 
     readonly property TextureInput lensFlareDownsampleBuffer: TextureInput {
         texture: Texture {}
@@ -136,6 +142,8 @@ MainSceneEffect {
     Component.onCompleted: buildPasses()
 
     onIsGlowEnabledChanged: buildPasses()
+    onGlowLevelChanged: if (glowBlurMode !== 0) buildPasses()
+    onGlowBlurModeChanged: buildPasses()
     onLensFlareEnabledChanged: buildPasses()
 
     function buildPasses() {
@@ -147,7 +155,7 @@ MainSceneEffect {
             passList.push(lensFlareBlurVerticalPass)
         }
 
-        if (isGlowEnabled) {
+        if (isGlowEnabled && glowBlurMode === 0) {
             passList.push(horizontalBlurPass1)
             passList.push(verticalBlurPass1)
             passList.push(horizontalBlurPass2)
@@ -162,6 +170,43 @@ MainSceneEffect {
             passList.push(verticalBlurPass6)
             passList.push(horizontalBlurPass7)
             passList.push(verticalBlurPass7)
+        } else if (isGlowEnabled && (glowLevel & 0x7f) !== 0) {
+            let depth = 1
+            for (let i = 6; i >= 0; --i) {
+                if (glowLevel & (1 << i)) {
+                    depth = i + 1
+                    break
+                }
+            }
+
+            const downPasses = [downsamplePass1, downsamplePass2, downsamplePass3,
+                                downsamplePass4, downsamplePass5, downsamplePass6,
+                                downsamplePass7]
+            const upPasses = [upsamplePass1, upsamplePass2, upsamplePass3,
+                              upsamplePass4, upsamplePass5, upsamplePass6]
+            const upInputsFromGlow = [upInputGlow1, upInputGlow2, upInputGlow3,
+                                      upInputGlow4, upInputGlow5, null]
+            const upInputsFromTemp = [upInputTemp1, upInputTemp2, upInputTemp3,
+                                      upInputTemp4, upInputTemp5, upInputTemp6]
+            const upDownInputs = [upDownInput1, upDownInput2, upDownInput3,
+                                  upDownInput4, upDownInput5, upDownInput6]
+
+            for (let i = 0; i < depth; ++i)
+                passList.push(downPasses[i])
+
+            if (depth === 1) {
+                upsamplePass1.commands = [upSelfLevelOff, upInputTempSelf1, upDownInput1] // qmllint disable read-only-property
+                passList.push(upsamplePass1)
+            }
+
+            for (let i = depth - 1; i >= 1; --i) {
+                const pass = upPasses[i - 1]
+                pass.commands = [(glowLevel & (1 << (i - 1))) ? upSelfLevelOn : upSelfLevelOff, // qmllint disable read-only-property
+                                 (i === depth - 1) ? upInputsFromTemp[i - 1]
+                                                   : upInputsFromGlow[i - 1],
+                                 upDownInputs[i - 1]]
+                passList.push(pass)
+            }
         }
 
         passList.push(tonemapPass)
@@ -186,6 +231,18 @@ MainSceneEffect {
         id: glowVerticalBlur
         stage: Shader.Fragment
         shader: "qrc:/qtquick3d_helpers/shaders/glowverticalblur.frag"
+    }
+
+    Shader {
+        id: glowDownsample
+        stage: Shader.Fragment
+        shader: "qrc:/qtquick3d_helpers/shaders/glowdownsample.frag"
+    }
+
+    Shader {
+        id: glowUpsample
+        stage: Shader.Fragment
+        shader: "qrc:/qtquick3d_helpers/shaders/glowupsample.frag"
     }
 
     Shader {
@@ -591,6 +648,164 @@ MainSceneEffect {
     }
 
     Pass {
+        id: downsamplePass1
+        shaders: [glowDownsample]
+        commands: [
+            SetUniformValue {
+                target: "isFirstPass"
+                value: true
+            }
+        ]
+        output: tempBuffer1
+    }
+
+    Pass {
+        id: downsamplePass2
+        shaders: [glowDownsample]
+        commands: [
+            SetUniformValue {
+                target: "isFirstPass"
+                value: false
+            },
+            BufferInput {
+                buffer: tempBuffer1
+            }
+        ]
+        output: tempBuffer2
+    }
+
+    Pass {
+        id: downsamplePass3
+        shaders: [glowDownsample]
+        commands: [
+            SetUniformValue {
+                target: "isFirstPass"
+                value: false
+            },
+            BufferInput {
+                buffer: tempBuffer2
+            }
+        ]
+        output: tempBuffer3
+    }
+
+    Pass {
+        id: downsamplePass4
+        shaders: [glowDownsample]
+        commands: [
+            SetUniformValue {
+                target: "isFirstPass"
+                value: false
+            },
+            BufferInput {
+                buffer: tempBuffer3
+            }
+        ]
+        output: tempBuffer4
+    }
+
+    Pass {
+        id: downsamplePass5
+        shaders: [glowDownsample]
+        commands: [
+            SetUniformValue {
+                target: "isFirstPass"
+                value: false
+            },
+            BufferInput {
+                buffer: tempBuffer4
+            }
+        ]
+        output: tempBuffer5
+    }
+
+    Pass {
+        id: downsamplePass6
+        shaders: [glowDownsample]
+        commands: [
+            SetUniformValue {
+                target: "isFirstPass"
+                value: false
+            },
+            BufferInput {
+                buffer: tempBuffer5
+            }
+        ]
+        output: tempBuffer6
+    }
+
+    Pass {
+        id: downsamplePass7
+        shaders: [glowDownsample]
+        commands: [
+            SetUniformValue {
+                target: "isFirstPass"
+                value: false
+            },
+            BufferInput {
+                buffer: tempBuffer6
+            }
+        ]
+        output: tempBuffer7
+    }
+
+    Pass {
+        id: upsamplePass1
+        shaders: [glowUpsample]
+        output: glowBuffer1
+    }
+    Pass {
+        id: upsamplePass2
+        shaders: [glowUpsample]
+        output: glowBuffer2
+    }
+    Pass {
+        id: upsamplePass3
+        shaders: [glowUpsample]
+        output: glowBuffer3
+    }
+    Pass {
+        id: upsamplePass4
+        shaders: [glowUpsample]
+        output: glowBuffer4
+    }
+    Pass {
+        id: upsamplePass5
+        shaders: [glowUpsample]
+        output: glowBuffer5
+    }
+    Pass {
+        id: upsamplePass6
+        shaders: [glowUpsample]
+        output: glowBuffer6
+    }
+
+    SetUniformValue { id: upSelfLevelOn; target: "glowAddSelfLevel"; value: true }
+    SetUniformValue { id: upSelfLevelOff; target: "glowAddSelfLevel"; value: false }
+
+    BufferInput { id: upInputTempSelf1; buffer: tempBuffer1 }
+
+    BufferInput { id: upInputGlow1; buffer: glowBuffer2 }
+    BufferInput { id: upInputGlow2; buffer: glowBuffer3 }
+    BufferInput { id: upInputGlow3; buffer: glowBuffer4 }
+    BufferInput { id: upInputGlow4; buffer: glowBuffer5 }
+    BufferInput { id: upInputGlow5; buffer: glowBuffer6 }
+
+    BufferInput { id: upInputTemp1; buffer: tempBuffer2 }
+    BufferInput { id: upInputTemp2; buffer: tempBuffer3 }
+    BufferInput { id: upInputTemp3; buffer: tempBuffer4 }
+    BufferInput { id: upInputTemp4; buffer: tempBuffer5 }
+    BufferInput { id: upInputTemp5; buffer: tempBuffer6 }
+    BufferInput { id: upInputTemp6; buffer: tempBuffer7 }
+
+    BufferInput { id: upDownInput1; buffer: tempBuffer1; sampler: "glowDownBuffer" }
+    BufferInput { id: upDownInput2; buffer: tempBuffer2; sampler: "glowDownBuffer" }
+    BufferInput { id: upDownInput3; buffer: tempBuffer3; sampler: "glowDownBuffer" }
+    BufferInput { id: upDownInput4; buffer: tempBuffer4; sampler: "glowDownBuffer" }
+    BufferInput { id: upDownInput5; buffer: tempBuffer5; sampler: "glowDownBuffer" }
+    BufferInput { id: upDownInput6; buffer: tempBuffer6; sampler: "glowDownBuffer" }
+
+    Pass {
         id: lensFlareDownsamplePass
         shaders: [lensFlareDownsample]
         output: lensFlareDownsampleBuffer
@@ -686,13 +901,17 @@ MainSceneEffect {
         function rebuildCommands() {
             let dynamicCommands = []
             if (sceneEffect.isGlowEnabled) {
-                dynamicCommands.push(glowBufferInput1)
-                dynamicCommands.push(glowBufferInput2)
-                dynamicCommands.push(glowBufferInput3)
-                dynamicCommands.push(glowBufferInput4)
-                dynamicCommands.push(glowBufferInput5)
-                dynamicCommands.push(glowBufferInput6)
-                dynamicCommands.push(glowBufferInput7)
+                if (sceneEffect.glowBlurMode === 0) {
+                    dynamicCommands.push(glowBufferInput1)
+                    dynamicCommands.push(glowBufferInput2)
+                    dynamicCommands.push(glowBufferInput3)
+                    dynamicCommands.push(glowBufferInput4)
+                    dynamicCommands.push(glowBufferInput5)
+                    dynamicCommands.push(glowBufferInput6)
+                    dynamicCommands.push(glowBufferInput7)
+                } else if ((sceneEffect.glowLevel & 0x7f) !== 0) {
+                    dynamicCommands.push(glowBufferInput1)
+                }
             }
             if (sceneEffect.lensFlareEnabled) {
                 dynamicCommands.push(lensFlareBufferInput)

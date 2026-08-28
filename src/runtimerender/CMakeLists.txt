@@ -164,6 +164,7 @@ set(res_resource_files
     "res/effectlib/particles.glsllib"
     "res/effectlib/fog.glsllib"
     "res/effectlib/texturesample.glsllib"
+    "res/effectlib/glowblur.glsllib"
     "res/effectlib/oitcommon.glsllib"
     "res/effectlib/oitweightedblended.glsllib"
     "res/effectlib/oitlinkedlist.glsllib"

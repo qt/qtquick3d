@@ -780,6 +780,43 @@ Column {
 
             PropertyLabel {
                 visible: glowEnabledCheckBox.checked
+                text: qsTr("Suppress Fireflies")
+                tooltip: qsTr("Reduces glow flickering around very small bright sources. DualFilter mode only.")
+            }
+
+            SecondColumnLayout {
+                visible: glowEnabledCheckBox.checked
+                CheckBox {
+                    text: backendValues.glowSuppressFireflies.valueToString
+                    backendValue: backendValues.glowSuppressFireflies
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                visible: glowEnabledCheckBox.checked
+                text: qsTr("Blur Mode")
+                tooltip: qsTr("Sets the blur algorithm used for the glow effect.")
+            }
+
+            SecondColumnLayout {
+                visible: glowEnabledCheckBox.checked
+                ComboBox {
+                    scope: "ExtendedSceneEnvironment.GlowBlurMode"
+                    model: ["Gaussian", "DualFilter"]
+                    backendValue: backendValues.glowBlurMode
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                visible: glowEnabledCheckBox.checked
                 text: qsTr("Strength")
                 tooltip: qsTr("Sets the strength of the glow effect.")
             }

@@ -69,9 +69,16 @@ SceneEffectEnvironment {
         Seven = 0x40
     }
 
+    enum GlowBlurMode {
+        Gaussian,
+        DualFilter
+    }
+
     property alias glowEnabled: sceneEffect.isGlowEnabled
     property alias glowQualityHigh: sceneEffect.glowQualityHigh
+    property alias glowSuppressFireflies: sceneEffect.glowSuppressFireflies
     property alias glowUseBicubicUpscale: sceneEffect.glowUseBicubicUpscale
+    property alias glowBlurMode: sceneEffect.glowBlurMode
     property alias glowStrength: sceneEffect.glowStrength
     property alias glowIntensity: sceneEffect.glowIntensity
     property alias glowBloom: sceneEffect.glowBloom

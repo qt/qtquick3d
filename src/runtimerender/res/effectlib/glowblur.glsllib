@@ -1,0 +1,45 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#include "texturesample.glsllib"
+
+vec4 qt_glowThreshold(vec4 color, float exposure, float minValue, float scale, float bloom, float maxValue)
+{
+    color *= exposure;
+
+    float luminance = max(color.r, max(color.g, color.b));
+    float feedback = max(smoothstep(minValue, minValue + scale, luminance), bloom);
+
+    return min(color * feedback, vec4(maxValue));
+}
+
+#if QSHADER_VIEW_COUNT >= 2
+vec4 qt_dualFilterDown5(sampler2DArray tex, vec2 uv, vec2 texelSize)
+#else
+vec4 qt_dualFilterDown5(sampler2D tex, vec2 uv, vec2 texelSize)
+#endif
+{
+    vec4 color = SAMPLE_LOD(tex, uv, 0.0) * 0.5;
+    color += SAMPLE_LOD(tex, uv + vec2(-texelSize.x, -texelSize.y), 0.0) * 0.125;
+    color += SAMPLE_LOD(tex, uv + vec2( texelSize.x, -texelSize.y), 0.0) * 0.125;
+    color += SAMPLE_LOD(tex, uv + vec2(-texelSize.x,  texelSize.y), 0.0) * 0.125;
+    color += SAMPLE_LOD(tex, uv + vec2( texelSize.x,  texelSize.y), 0.0) * 0.125;
+    return color;
+}
+
+#if QSHADER_VIEW_COUNT >= 2
+vec4 qt_dualFilterUp8(sampler2DArray tex, vec2 uv, vec2 halfpixel, float offset)
+#else
+vec4 qt_dualFilterUp8(sampler2D tex, vec2 uv, vec2 halfpixel, float offset)
+#endif
+{
+    vec4 sum = SAMPLE_LOD(tex, uv + vec2(-halfpixel.x * 2.0, 0.0) * offset, 0.0);
+    sum += SAMPLE_LOD(tex, uv + vec2(-halfpixel.x, halfpixel.y) * offset, 0.0) * 2.0;
+    sum += SAMPLE_LOD(tex, uv + vec2(0.0, halfpixel.y * 2.0) * offset, 0.0);
+    sum += SAMPLE_LOD(tex, uv + vec2(halfpixel.x, halfpixel.y) * offset, 0.0) * 2.0;
+    sum += SAMPLE_LOD(tex, uv + vec2(halfpixel.x * 2.0, 0.0) * offset, 0.0);
+    sum += SAMPLE_LOD(tex, uv + vec2(halfpixel.x, -halfpixel.y) * offset, 0.0) * 2.0;
+    sum += SAMPLE_LOD(tex, uv + vec2(0.0, -halfpixel.y * 2.0) * offset, 0.0);
+    sum += SAMPLE_LOD(tex, uv + vec2(-halfpixel.x, -halfpixel.y) * offset, 0.0) * 2.0;
+    return sum / 12.0;
+}
