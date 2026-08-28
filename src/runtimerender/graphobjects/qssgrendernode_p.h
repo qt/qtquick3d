@@ -22,6 +22,7 @@
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
 #include <QtGui/QMatrix4x4>
+#include <QtGui/qquaternion.h>
 #include <QtGui/QVector3D>
 
 QT_BEGIN_NAMESPACE

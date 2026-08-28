@@ -20,9 +20,10 @@
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 #include <private/qglobal_p.h>
 
-class QQuick3DNode;
-
 QT_BEGIN_NAMESPACE
+
+class QQuaternion;
+class QQuick3DNode;
 
 // Define this to use C++ std::sinf & std::cosf for particles.
 // Those are more accurate, but also potentially less performant

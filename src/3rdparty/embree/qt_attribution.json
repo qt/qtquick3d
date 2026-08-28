@@ -6,6 +6,10 @@
     "QtUsage": "Used for baking lightmaps in Qt Quick 3D",
 
     "Homepage": "https://www.embree.org/",
+    "PURL": [
+        "pkg:github/RenderKit/embree@$v<VERSION>"
+    ],
+    "Comment": "No relevant CPE found",
     "Version": "3.13.3",
     "License": "Apache License 2.0",
     "LicenseId": "Apache-2.0",

@@ -14,6 +14,9 @@
 #include "qquick3dparticlemodelblendparticle_p.h"
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <qtquick3d_tracepoints_p.h>
+
+#include <QtGui/qquaternion.h>
+
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
@@ -303,6 +306,7 @@ void QQuick3DParticleSystem::setStartTime(int startTime)
         return;
 
     m_startTime = startTime;
+    m_updateAnimation->setDirty(true);
     Q_EMIT startTimeChanged();
 }
 
