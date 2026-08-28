@@ -3140,6 +3140,33 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     if (userRenderPassManager)
         userRenderPassManager->releaseAll();
 
+    // Draw call data for content rendered by this layer is keyed on the pass
+    // objects owned here; release those entries now so content that outlives
+    // the layer, e.g. models and materials in a shared import scene, does not
+    // leave stale entries behind as views come and go.
+    if (const auto &rhiCtx = renderer->contextInterface()->rhiContext(); rhiCtx && rhiCtx->isValid()) {
+        auto *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
+        const QSSGRenderPass *passes[] = { &shadowMapPass, &reflectionMapPass, &zPrePassPass, &ssaoMapPass,
+                                           &depthMapPass, &depthMapPassMS, &skyMaterialPass, &screenMapPass,
+                                           &reflectionPass, &item2DPass, &skyboxPass, &skyMaterialBackgroundPass,
+                                           &skyboxCubeMapPass, &userRenderPasses, &opaquePass, &transparentPass,
+                                           &oitRenderPass, &oitCompositePass, &infiniteGridPass, &debugDrawPass,
+                                           &normalPass, &motionVectorMapPass };
+        for (const QSSGRenderPass *pass : passes)
+            rhiCtxD->cleanupDrawCallDataForCid(pass);
+        for (const auto &userPass : userPasses)
+            rhiCtxD->cleanupDrawCallDataForCid(&userPass);
+        // Extension-driven renderables are keyed on the owning extension
+        // combined with the prep context slot (see prepareRenderables()), so
+        // release those per context as well.
+        for (const auto &extCtx : extContexts) {
+            if (extCtx.owner) {
+                const auto cid = reinterpret_cast<const void *>(quintptr(extCtx.owner) ^ extCtx.slot);
+                rhiCtxD->cleanupDrawCallDataForCid(cid);
+            }
+        }
+    }
+
     renderer->unregisterItem2DData(*item2DData);
 }
 

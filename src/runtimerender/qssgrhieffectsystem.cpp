@@ -49,6 +49,9 @@ QSSGRhiEffectSystem::QSSGRhiEffectSystem(const std::shared_ptr<QSSGRenderContext
 
 QSSGRhiEffectSystem::~QSSGRhiEffectSystem()
 {
+    // The uniform buffers for the effect passes are keyed on this object.
+    if (const auto &rhiCtx = m_sgContext->rhiContext(); rhiCtx && rhiCtx->isValid())
+        QSSGRhiContextPrivate::get(rhiCtx.get())->cleanupDrawCallDataForCid(this);
     releaseResources();
 }
 
