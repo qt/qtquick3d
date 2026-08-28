@@ -3026,7 +3026,7 @@ static void clearTable(std::vector<T> &entry)
     for (auto &e : entry)
         e.clear();
 }
-void QSSGLayerRenderData::resolveLayerIblTexture()
+void QSSGLayerRenderData::resolveLayerIblTexture(QSSGPassKey passKey)
 {
     if (layer.skyMaterial) {
         // In the ScreenSpace skybox modes the visible background is evaluated directly on
@@ -3038,7 +3038,7 @@ void QSSGLayerRenderData::resolveLayerIblTexture()
                 || layer.skyMaterial->skyboxMode == QSSGRenderSkyMaterial::SkyboxMode::Cubemap
                 || reflectionProbesView.size() != 0 || layerPrepResult.flags.requiresScreenTexture();
         if (needCube)
-            skyMaterialTexture = requestSkyMaterialManager()->resolve(layer.skyMaterial);
+            skyMaterialTexture = requestSkyMaterialManager()->resolve(layer.skyMaterial, passKey);
         else
             skyMaterialTexture = {};
     }

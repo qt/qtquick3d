@@ -5,6 +5,8 @@
 
 #include "qssgrhicontext_p.h"
 
+#include "graphobjects/qssgrenderskymaterial_p.h"
+
 #include <QtCore/qvariant.h>
 #include <QtGui/private/qrhi_p.h>
 
@@ -1456,6 +1458,16 @@ void QSSGRhiContextPrivate::cleanupDrawCallDataForCid(const void *cid)
             ++it;
         }
     }
+}
+
+void QSSGRhiContextPrivate::cleanupDrawCallDataForSkyMaterial(QSSGRenderSkyMaterial *skyMaterial)
+{
+    // Not a material type-wise, but it keys its uniform buffers the
+    // same way, and the srbs for the environment cube and background
+    // passes are cached with the material's binding lists as the key.
+    releaseCachedSrb(skyMaterial->bindings);
+    releaseCachedSrb(skyMaterial->backgroundBindings);
+    cleanupDrawCallDataForResource(skyMaterial);
 }
 
 /*!

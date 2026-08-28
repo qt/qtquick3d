@@ -560,7 +560,7 @@ public:
     [[nodiscard]] const QSSGRhiRenderableTexture *getRenderResult(QSSGRenderResult::Key id) const { return &renderResults[size_t(id)]; }
 
     QSSGRenderImageTexture skyMaterialTexture; // Always a cubemap, might be IBL
-    void resolveLayerIblTexture();
+    void resolveLayerIblTexture(QSSGPassKey passKey);
 
     [[nodiscard]] static inline const std::unique_ptr<QSSGPerFrameAllocator> &perFrameAllocator(QSSGRenderContextInterface &ctx);
     [[nodiscard]] static inline QSSGLayerRenderData *getCurrent(const QSSGRenderer &renderer) { return renderer.m_currentLayer; }

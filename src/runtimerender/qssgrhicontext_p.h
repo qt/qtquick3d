@@ -27,6 +27,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderLayer;
+struct QSSGRenderSkyMaterial;
 struct QSSGRenderInstanceTable;
 struct QSSGRenderModel;
 struct QSSGRenderMesh;
@@ -1099,6 +1100,7 @@ public:
     void cleanupDrawCallData(const QSSGRenderModel *model);
     void cleanupDrawCallDataForResource(const void *resource);
     void cleanupDrawCallDataForCid(const void *cid);
+    void cleanupDrawCallDataForSkyMaterial(QSSGRenderSkyMaterial *skyMaterial);
 
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable);
     void releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable);

@@ -20,6 +20,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderskymaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
@@ -209,6 +210,10 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
             delete model->particleBuffer;
         } else if (QSSGRenderGraphObject::isMaterial(resource->type)) {
             QSSGRhiContextPrivate::get(rhiCtx.get())->cleanupDrawCallDataForResource(resource);
+        } else if (resource->type == QSSGRenderGraphObject::Type::SkyMaterial) {
+            auto *skyMaterial = static_cast<QSSGRenderSkyMaterial *>(resource);
+            auto *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
+            rhiCtxD->cleanupDrawCallDataForSkyMaterial(skyMaterial);
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData || resource->type == QSSGRenderGraphObject::Type::Skin) {
             static_assert(std::is_base_of_v<QSSGRenderTextureData, QSSGRenderSkin>, "QSSGRenderSkin is expected to be a QSSGRenderTextureData type!");
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
