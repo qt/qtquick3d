@@ -20,8 +20,10 @@ class tst_MaterialSwap : public QQuick3DDataTest
 private slots:
     void initTestCase() override;
     void swapDoesNotGrowDrawCallData();
+    void skyMaterialSwapDoesNotGrowDrawCallData();
 
 private:
+    void runSwapTest(const QString &qmlFile);
 #if QT_CONFIG(vulkan)
     QVulkanInstance vulkanInstance;
 #endif
@@ -41,12 +43,22 @@ void tst_MaterialSwap::initTestCase()
 
 void tst_MaterialSwap::swapDoesNotGrowDrawCallData()
 {
+    runSwapTest(QString::fromLatin1("materialSwap.qml"));
+}
+
+void tst_MaterialSwap::skyMaterialSwapDoesNotGrowDrawCallData()
+{
+    runSwapTest(QString::fromLatin1("skyMaterialSwap.qml"));
+}
+
+void tst_MaterialSwap::runSwapTest(const QString &qmlFile)
+{
     QQuick3DTestOffscreenRenderer renderer;
     void *vulkanInstancePtr = nullptr;
 #if QT_CONFIG(vulkan)
     vulkanInstancePtr = &vulkanInstance;
 #endif
-    QVERIFY(renderer.init(testFileUrl(QString::fromLatin1("materialSwap.qml")), vulkanInstancePtr));
+    QVERIFY(renderer.init(testFileUrl(qmlFile), vulkanInstancePtr));
 
 #ifdef Q_OS_MACOS
     if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)

@@ -159,7 +159,10 @@ void MAIN()
 }
 )";
 
-QSSGRenderSkyMaterial::QSSGRenderSkyMaterial() : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::SkyMaterial) { }
+QSSGRenderSkyMaterial::QSSGRenderSkyMaterial()
+    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::SkyMaterial, FlagT(Flags::HasGraphicsResources))
+{
+}
 
 QSSGRenderSkyMaterial::~QSSGRenderSkyMaterial() = default;
 
@@ -363,6 +366,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderSkyMaterial::ensureBackgroundPipeline(const Q
 }
 
 quint32 QSSGRenderSkyMaterial::updateUniforms(const QSSGRenderContextInterface &sgContext,
+                                              QSSGPassKey passKey,
                                               const QMatrix4x4 &mvp,
                                               const QVarLengthArray<QMatrix4x4, 6> views)
 {
@@ -373,7 +377,10 @@ quint32 QSSGRenderSkyMaterial::updateUniforms(const QSSGRenderContextInterface &
 
     QSSGRhiContext *rhiCtx = sgContext.rhiContext().get();
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, nullptr, 0 });
+    // Keyed on the driving pass (the layer's sky material pass) and the
+    // material; the material must be the key's resource so that
+    // cleanupDrawCallDataForResource() finds the entry when it is destroyed.
+    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ passKey, nullptr, this, nullptr, 0 });
 
     const int uniformStride = rhiCtx->rhi()->ubufAligned(iblPassPipeline->ub0Size());
     const int totalBufferSize = uniformStride * 6;
@@ -429,6 +436,7 @@ quint32 QSSGRenderSkyMaterial::updateUniforms(const QSSGRenderContextInterface &
 }
 
 void QSSGRenderSkyMaterial::updateBackgroundUniforms(const QSSGRenderContextInterface &sgContext,
+                                                     QSSGPassKey passKey,
                                                      const QVarLengthArray<QMatrix4x4, 2> &inverseProjections,
                                                      const QVarLengthArray<QMatrix4x4, 2> &viewRotations,
                                                      float adjustY,
@@ -439,9 +447,10 @@ void QSSGRenderSkyMaterial::updateBackgroundUniforms(const QSSGRenderContextInte
 
     QSSGRhiContext *rhiCtx = sgContext.rhiContext().get();
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx);
-    // Distinct drawCallData key index (1) so the background UBO does not collide with
-    // the per-face IBL UBO (index 0) held for the same QSSGRenderSkyMaterial.
-    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ (void *)this, nullptr, nullptr, nullptr, 1 });
+    // Keyed on the driving pass (the layer's background pass) and the
+    // material; the material must be the key's resource so that
+    // cleanupDrawCallDataForResource() finds the entry when it is destroyed.
+    QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ passKey, nullptr, this, nullptr, 0 });
 
     const int bufferSize = rhiCtx->rhi()->ubufAligned(backgroundPipeline->ub0Size());
 

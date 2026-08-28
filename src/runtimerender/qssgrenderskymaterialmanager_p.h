@@ -60,10 +60,10 @@ public:
 
     void releaseCachedResources();
 
-    QSSGRenderImageTexture resolve(QSSGRenderSkyMaterial *settings);
+    QSSGRenderImageTexture resolve(QSSGRenderSkyMaterial *settings, QSSGPassKey passKey);
 
 private:
-    bool ensureEnvironmentMap(QSSGRenderSkyMaterial *settings);
+    bool ensureEnvironmentMap(QSSGRenderSkyMaterial *settings, QSSGPassKey passKey);
 
     struct FrameState;
 
@@ -73,6 +73,7 @@ private:
     void validateAndUpdateCacheKey(const FrameState &fs, QSSGRhiShaderPipeline *envShaderPipelineKey);
     bool ensureSharedResources(FrameState &fs, QRhiCommandBuffer *cb);
     bool renderEnvironmentCube(QSSGRenderSkyMaterial *inSky,
+                               QSSGPassKey passKey,
                                const FrameState &fs,
                                const QSSGRhiShaderPipelinePtr &shaderPipeline,
                                QRhiCommandBuffer *cb,

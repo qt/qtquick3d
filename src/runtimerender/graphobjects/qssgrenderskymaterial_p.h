@@ -57,8 +57,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkyMaterial : public QSSGRenderGr
                                                       int viewCount);
 
     // returns uniform stride per face
-    quint32 updateUniforms(const QSSGRenderContextInterface &sgContext, const QMatrix4x4 &mvp, const QVarLengthArray<QMatrix4x4, 6> views);
+    quint32 updateUniforms(const QSSGRenderContextInterface &sgContext,
+                           QSSGPassKey passKey,
+                           const QMatrix4x4 &mvp,
+                           const QVarLengthArray<QMatrix4x4, 6> views);
     void updateBackgroundUniforms(const QSSGRenderContextInterface &sgContext,
+                                  QSSGPassKey passKey,
                                   const QVarLengthArray<QMatrix4x4, 2> &inverseProjections,
                                   const QVarLengthArray<QMatrix4x4, 2> &viewRotations,
                                   float adjustY,

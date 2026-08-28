@@ -474,13 +474,13 @@ void QSSGRenderSkyMaterialManager::releaseCachedResources()
     m_finalizeIblPending = false;
 }
 
-QSSGRenderImageTexture QSSGRenderSkyMaterialManager::resolve(QSSGRenderSkyMaterial *settings)
+QSSGRenderImageTexture QSSGRenderSkyMaterialManager::resolve(QSSGRenderSkyMaterial *settings, QSSGPassKey passKey)
 {
     const auto &rhiCtx = m_context.rhiContext();
     if (!QSSG_GUARD(rhiCtx && rhiCtx->isValid() && rhiCtx->rhi()->isRecordingFrame()))
         return { };
 
-    if (!ensureEnvironmentMap(settings)) {
+    if (!ensureEnvironmentMap(settings, passKey)) {
         return { };
     }
 
@@ -490,7 +490,7 @@ QSSGRenderImageTexture QSSGRenderSkyMaterialManager::resolve(QSSGRenderSkyMateri
     return m_skyIblTexture;
 }
 
-bool QSSGRenderSkyMaterialManager::ensureEnvironmentMap(QSSGRenderSkyMaterial *inSky)
+bool QSSGRenderSkyMaterialManager::ensureEnvironmentMap(QSSGRenderSkyMaterial *inSky, QSSGPassKey passKey)
 {
     const auto &context = m_context.rhiContext();
     if (!context->rhi()->isTextureFormatSupported(cTextureFormat)) {
@@ -551,7 +551,7 @@ bool QSSGRenderSkyMaterialManager::ensureEnvironmentMap(QSSGRenderSkyMaterial *i
     }
 
     if (fs.needRenderEnv) {
-        if (!renderEnvironmentCube(inSky, fs, shaderPipeline, cb, rub))
+        if (!renderEnvironmentCube(inSky, passKey, fs, shaderPipeline, cb, rub))
             return false;
         rub = nullptr;
     }
@@ -862,6 +862,7 @@ bool QSSGRenderSkyMaterialManager::ensureSharedResources(FrameState &fs, QRhiCom
 }
 
 bool QSSGRenderSkyMaterialManager::renderEnvironmentCube(QSSGRenderSkyMaterial *inSky,
+                                                         QSSGPassKey passKey,
                                                          const FrameState &fs,
                                                          const QSSGRhiShaderPipelinePtr &shaderPipeline,
                                                          QRhiCommandBuffer *cb,
@@ -871,7 +872,7 @@ bool QSSGRenderSkyMaterialManager::renderEnvironmentCube(QSSGRenderSkyMaterial *
     auto *rhi = context->rhi();
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(context.get());
 
-    const quint32 skyElementSize = inSky->updateUniforms(m_context, fs.mvp, fs.views);
+    const quint32 skyElementSize = inSky->updateUniforms(m_context, passKey, fs.mvp, fs.views);
 
     if (!m_cache.envFaceTargets.renderPassDesc) {
         if (!skyIblCreateFaceTargets(rhi, m_envCubeMap, "SkyMaterialLightProbe procEnvCube"_ba, &m_cache.envFaceTargets))

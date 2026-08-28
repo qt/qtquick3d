@@ -351,7 +351,7 @@ void SkyMaterialPass::renderPass(QSSGRenderer &renderer)
     Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick3D Sky Material"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
-    layerData->resolveLayerIblTexture();
+    layerData->resolveLayerIblTexture(this);
 
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("sky_material"));
@@ -1241,7 +1241,7 @@ void SkyMaterialBackgroundPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRend
     const float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
     const float exposure = layer->lightProbeSettings.probeExposure;
 
-    skyMaterial.updateBackgroundUniforms(ctx, inverseProjections, viewRotations, adjustY, exposure);
+    skyMaterial.updateBackgroundUniforms(ctx, this, inverseProjections, viewRotations, adjustY, exposure);
 
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
     backgroundSrb = rhiCtxD->srb(skyMaterial.backgroundBindings);
