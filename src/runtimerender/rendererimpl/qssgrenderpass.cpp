@@ -1559,7 +1559,7 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         QRhi *rhi = rhiCtx->rhi();
         QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
         debugDraw->prepareGeometry(rhiCtx.get(), rub);
-        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, nullptr, 0 });
         if (!dcd.ubuf) {
             dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 * data.renderedCameras.count());
             dcd.ubuf->create();
@@ -1596,7 +1596,7 @@ void DebugDrawPass::renderPass(QSSGRenderer &renderer)
         Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Quick 3D debug objects"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, debugObjectShader.get());
-        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 });
+        QSSGRhiDrawCallData &dcd = rhiCtxD->drawCallData({ this, nullptr, nullptr, nullptr, 0 });
         QRhiShaderResourceBindings *srb = dcd.srb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         debugDraw->recordRenderDebugObjects(rhiCtx.get(), &ps, srb, rpDesc);
@@ -1746,7 +1746,7 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         clearData[0] = QVector4D(0.0, 0.0, 0.0, 0.0);
         clearData[1] = QVector4D(1.0, 1.0, 1.0, 1.0);
 
-        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, clearPipeline.get(), nullptr, 0 }));
+        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, clearPipeline.get(), nullptr, nullptr, 0 }));
         QRhiBuffer *&ubuf = dcd.ubuf;
         const int ubufSize = sizeof(clearData);
         if (!ubuf) {
@@ -1885,7 +1885,7 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         QSSGRhiShaderResourceBindingList bindings;
         quint32 clearImageData[8] = {0};
 
-        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, clearPipeline.get(), nullptr, 0 }));
+        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, clearPipeline.get(), nullptr, nullptr, 0 }));
         QRhiBuffer *&ubuf = dcd.ubuf;
         const int ubufSize = sizeof(clearImageData);
         if (!ubuf) {
@@ -2068,7 +2068,7 @@ void OITCompositePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
 #endif
 
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
-        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 }));
+        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, nullptr, nullptr, nullptr, 0 }));
         QRhiBuffer *&ubuf = dcd.ubuf;
         const int ubufSize = 6 * sizeof(quint32);
         if (!ubuf) {
@@ -2140,7 +2140,7 @@ void OITCompositePass::renderPass(QSSGRenderer &renderer)
         QSSGRhiShaderResourceBindingList bindings;
 
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
-        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, nullptr, nullptr, 0 }));
+        QSSGRhiDrawCallData &dcd(rhiCtxD->drawCallData({ this, nullptr, nullptr, nullptr, 0 }));
         QRhiBuffer *&ubuf = dcd.ubuf;
 
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);

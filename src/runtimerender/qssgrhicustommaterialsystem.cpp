@@ -222,17 +222,23 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         const auto &modelNode = renderable.modelContext.model;
 
         // NOTE:
-        // - entryIdx should 0 for QSSGRenderTextureCubeFaceNone.
-        // In all other cases the entryIdx is a combination of the cubeface idx and the subset offset, where the lower bits
-        // are the cubeface idx.
+        // - entryIdx should 0 for QSSGRenderTextureCubeFaceNone (and a null entry).
+        // In all other cases the entryIdx is a combination of the cubeface idx and the subset
+        // offset, where the lower bits are the cubeface idx. The per-probe reflection map
+        // entry, if any, goes in the key's mapEntry slot. The key's resource must be the
+        // material itself, and nothing but the material, since
+        // cleanupDrawCallDataForResource() releases the entries for a to-be-destroyed
+        // material by matching on the resource.
         const auto cubeFaceIdx = QSSGBaseTypeHelpers::indexOfCubeFace(cubeFace);
-        const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone) * (cubeFaceIdx + (quintptr(renderable.subset.offset) << 3));
-        // As the entry might be null we create an entry key consisting of the entry and the material.
-        const auto entryPartA = reinterpret_cast<quintptr>(&material);
-        const auto entryPartB = reinterpret_cast<quintptr>(entry);
-        const void *entryKey = reinterpret_cast<const void *>(entryPartA ^ entryPartB);
+        const quintptr entryIdx = quintptr(cubeFace != QSSGRenderTextureCubeFaceNone)
+                * (cubeFaceIdx + (quintptr(renderable.subset.offset) << 3));
 
-        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(rhiCtx)->drawCallData({ passKey, &modelNode, entryKey, entryIdx });
+        // cleanupDrawCallDataForResource() is handed a QSSGRenderGraphObject pointer, so
+        // that is the identity the key has to carry.
+        const auto *materialResource = static_cast<const QSSGRenderGraphObject *>(&material);
+        QSSGRhiDrawCallData &dcd = QSSGRhiContextPrivate::get(rhiCtx)->drawCallData({ passKey, &modelNode,
+                                                                                      materialResource, entry,
+                                                                                      entryIdx });
 
         shaderPipeline->ensureCombinedUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();

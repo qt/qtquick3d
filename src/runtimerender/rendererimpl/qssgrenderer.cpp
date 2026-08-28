@@ -207,6 +207,8 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
             auto model = static_cast<QSSGRenderModel*>(resource);
             QSSGRhiContextPrivate::get(rhiCtx.get())->cleanupDrawCallData(model);
             delete model->particleBuffer;
+        } else if (QSSGRenderGraphObject::isMaterial(resource->type)) {
+            QSSGRhiContextPrivate::get(rhiCtx.get())->cleanupDrawCallDataForResource(resource);
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData || resource->type == QSSGRenderGraphObject::Type::Skin) {
             static_assert(std::is_base_of_v<QSSGRenderTextureData, QSSGRenderSkin>, "QSSGRenderSkin is expected to be a QSSGRenderTextureData type!");
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);

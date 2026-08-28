@@ -1427,6 +1427,21 @@ void QSSGRhiContextPrivate::cleanupDrawCallData(const QSSGRenderModel *model)
     }
 }
 
+void QSSGRhiContextPrivate::cleanupDrawCallDataForResource(const void *resource)
+{
+    // Find all QSSGRhiUniformBufferSet that were keyed on resource (typically
+    // a material that is being destroyed) and delete them.
+    auto it = m_drawCallData.begin();
+    while (it != m_drawCallData.end()) {
+        if (it.key().resource == resource) {
+            releaseDrawCallData(*it);
+            it = m_drawCallData.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 /*!
     \return a texture that has the specified \a flags and pixel \a size.
 

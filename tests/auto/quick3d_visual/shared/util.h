@@ -87,6 +87,7 @@ public:
         return rd->cb;
     }
     void enqueueReadback(bool *readCompleted, QRhiReadbackResult *readResult, QImage *result);
+    void renderNextFrame();
     bool resize(const QSize &newSize);
 
     QScopedPointer<QQuickRenderControl> renderControl;
