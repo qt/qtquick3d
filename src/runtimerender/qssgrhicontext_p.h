@@ -1098,6 +1098,7 @@ public:
     void releaseDrawCallData(QSSGRhiDrawCallData &dcd);
     void cleanupDrawCallData(const QSSGRenderModel *model);
     void cleanupDrawCallDataForResource(const void *resource);
+    void cleanupDrawCallDataForCid(const void *cid);
 
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable);
     void releaseInstanceBuffer(QSSGRenderInstanceTable *instanceTable);

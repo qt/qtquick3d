@@ -216,6 +216,8 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
         } else if (resource->type == QSSGRenderGraphObject::Type::RenderExtension) {
             auto *rext = static_cast<QSSGRenderExtension *>(resource);
             bufferManager->releaseExtensionResult(*rext);
+            // Extensions can create draw call data keyed on themselves.
+            QSSGRhiContextPrivate::get(rhiCtx.get())->cleanupDrawCallDataForCid(resource);
         } else if (resource->type == QSSGRenderGraphObject::Type::ModelInstance) {
             auto *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
             auto *table = static_cast<QSSGRenderInstanceTable *>(resource);

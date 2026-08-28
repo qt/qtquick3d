@@ -212,6 +212,10 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
     m_sgContext->bufferManager()->releaseResourcesForLayer(m_layer);
 
     if (m_layer) {
+        // The uniform buffer for the tonemapping/blit quad is keyed on the layer.
+        if (rhiCtx->isValid())
+            QSSGRhiContextPrivate::get(rhiCtx.get())->cleanupDrawCallDataForCid(m_layer);
+
         // The scene root is created by the scene manager and released by the normal cleanup of
         // scene nodes. Since we delete the layer at a later point, detach the scene root from the
         // layer now. QSSGRenderNode::removeChild() ignores a node that is no longer a child of

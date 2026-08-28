@@ -1442,6 +1442,22 @@ void QSSGRhiContextPrivate::cleanupDrawCallDataForResource(const void *resource)
     }
 }
 
+void QSSGRhiContextPrivate::cleanupDrawCallDataForCid(const void *cid)
+{
+    // Find all QSSGRhiUniformBufferSet that were keyed on cid (a pass, or a
+    // pass-like owner such as a render extension or an effect system, that is
+    // being destroyed) and delete them.
+    auto it = m_drawCallData.begin();
+    while (it != m_drawCallData.end()) {
+        if (it.key().cid == cid) {
+            releaseDrawCallData(*it);
+            it = m_drawCallData.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 /*!
     \return a texture that has the specified \a flags and pixel \a size.
 
