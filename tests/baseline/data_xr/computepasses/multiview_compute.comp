@@ -1,0 +1,52 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Multiview ComputePass coverage test.
+//
+// A ComputePass is dispatched exactly once per frame regardless of
+// multiview (there is no per-view re-dispatch, and no engine-provided
+// "which view is this invocation" identifier for compute shaders -- unlike
+// vertex/fragment stages, compute has no GL_EXT_multiview gl_ViewIndex
+// equivalent). What multiview DOES change is that camera uniforms (other
+// than CAMERA_PROPERTIES) and the screen/depth/AO textures become per-view
+// arrays, each holding that eye's own data.
+//
+// This checks the confirmed part of that plumbing directly: under
+// multiview, INVERSE_VIEW_MATRIX[0] and INVERSE_VIEW_MATRIX[1] must
+// describe two distinct eye positions (not both aliasing the same, or
+// garbage, data), and SCREEN_TEXTURE must be sampleable as a
+// sampler2DArray at both view layers. The #if QSHADER_VIEW_COUNT >= 2
+// guard mirrors the same dual-mode pattern already used in
+// tests/baseline/data_xr/effects/projmatrix.frag.
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba8", targetImage, image2D, "writeonly");
+
+void main() {
+    ivec2 size = imageSize(targetImage);
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    bool ok = true;
+
+#if QSHADER_VIEW_COUNT >= 2
+    // The two eyes must have distinct view matrices (different eye
+    // positions), proving the per-view camera-uniform arrays are
+    // populated correctly rather than both views aliasing each other.
+    vec3 eye0 = (INVERSE_VIEW_MATRIX[0] * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    vec3 eye1 = (INVERSE_VIEW_MATRIX[1] * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    ok = ok && (distance(eye0, eye1) > 0.0001);
+
+    // Both view layers of the screen texture array must be sampleable and
+    // produce a finite (non-NaN/garbage) value.
+    vec4 screen0 = texture(SCREEN_TEXTURE, vec3(0.5, 0.5, 0.0));
+    vec4 screen1 = texture(SCREEN_TEXTURE, vec3(0.5, 0.5, 1.0));
+    ok = ok && all(lessThanEqual(abs(screen0), vec4(10.0)));
+    ok = ok && all(lessThanEqual(abs(screen1), vec4(10.0)));
+#endif
+
+    vec4 result = ok ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);
+    imageStore(targetImage, coord, result);
+}

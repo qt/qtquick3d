@@ -1,0 +1,73 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Exercises the shadow-related built-ins: the QSSG_SHADOW_SOFTNESS
+// compile-time constant and the DIRECTIONAL_LIGHT_SHADOW/POINT_LIGHT_SHADOW/
+// SPOT_LIGHT_SHADOW sampling macros. Shadow map lookups don't require
+// matching visible receiver geometry at the sample point (see
+// compute_shader.comp's froxel sampling in examples/quick3d/volumetricfog_rp
+// for the same technique against empty space), so this checks that each
+// macro is correctly bound and returns a valid illumination factor, rather
+// than asserting an exact shadowed-vs-lit value at a specific world point
+// (which would depend on the shadow camera's auto-fit frustum bounds, not
+// verified here).
+//
+// As in builtin_uniforms.comp, each check is painted into its own cell of a
+// GRID_COLS x GRID_ROWS grid (green = pass, red = fail) instead of a single
+// pass/fail colour, so a failure names the exact check at fault. See
+// tst_computepasses.cpp's kShadowUniformCheckNames for the matching,
+// ordered list of names.
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba8", targetImage, image2D, "writeonly");
+
+const int GRID_COLS = 4;
+const int GRID_ROWS = 2;
+const int NUM_CHECKS = GRID_COLS * GRID_ROWS; // 8 cells; only the first 7 are used.
+
+bool inRange01(float v) { return v >= 0.0 && v <= 1.0; }
+
+void main() {
+    ivec2 size = imageSize(targetImage);
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    bool results[NUM_CHECKS];
+    for (int i = 0; i < NUM_CHECKS; i++)
+        results[i] = true; // Default true; the unused trailing cell stays green.
+
+    int idx = 0;
+
+    // Exactly one light of each type.
+    results[idx++] = (DIRECTIONAL_LIGHT_COUNT == 1u);
+    results[idx++] = (POINT_LIGHT_COUNT == 1u);
+    results[idx++] = (SPOT_LIGHT_COUNT == 1u);
+
+    // All three lights use Light.PCF8, which maps to a softness of 8.
+    results[idx++] = (QSSG_SHADOW_SOFTNESS == 8);
+
+    vec3 samplePos = vec3(0.0, 100.0, 0.0);
+    float viewDepth = (VIEW_MATRIX * vec4(samplePos, 1.0)).z;
+
+    float dirShadow = DIRECTIONAL_LIGHT_SHADOW(0, viewDepth, samplePos);
+    float pointShadow = POINT_LIGHT_SHADOW(0, samplePos);
+    float spotShadow = SPOT_LIGHT_SHADOW(0, samplePos);
+
+    results[idx++] = inRange01(dirShadow);
+    results[idx++] = inRange01(pointShadow);
+    results[idx++] = inRange01(spotShadow);
+
+    int col = coord.x * GRID_COLS / size.x;
+    int row = coord.y * GRID_ROWS / size.y;
+    // Image rows follow the framebuffer, whose first row is at the bottom
+    // when it is Y-up (OpenGL). Flip so the first check is always top-left,
+    // where the C++ test expects it.
+    if (FRAMEBUFFER_Y_UP > 0.0)
+        row = GRID_ROWS - 1 - row;
+    int cellIndex = row * GRID_COLS + col;
+
+    vec4 result = results[cellIndex] ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);
+    imageStore(targetImage, coord, result);
+}

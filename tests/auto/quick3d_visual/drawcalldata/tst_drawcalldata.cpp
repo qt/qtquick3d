@@ -23,6 +23,8 @@ private slots:
     void viewChurnReleasesShaderResourceBindings();
     void resizeDoesNotGrowPipelineCache();
     void resizeDoesNotGrowSrbCacheForQuadRenderer();
+    void computePassChurnReleasesDrawCallData_data();
+    void computePassChurnReleasesDrawCallData();
 
 private:
 #if QT_CONFIG(vulkan)
@@ -248,6 +250,87 @@ void tst_DrawCallData::resizeDoesNotGrowSrbCacheForQuadRenderer()
     QVERIFY2(finalSrbs <= baselineSrbs,
              qPrintable(QString::fromLatin1("m_srbCache grew from %1 to %2 entries over %3 resizes")
                                 .arg(baselineSrbs).arg(finalSrbs).arg(ResizeCount)));
+}
+
+void tst_DrawCallData::computePassChurnReleasesDrawCallData_data()
+{
+    QTest::addColumn<QByteArray>("loadProperty");
+
+    // Destroying the ComputePass alone releases its draw call data through the
+    // pass node; destroying the whole View3D also takes the layer with it.
+    QTest::newRow("pass") << QByteArrayLiteral("loadPass");
+    QTest::newRow("view") << QByteArrayLiteral("loadView");
+}
+
+// A ComputePass keeps its uniform buffer and srb in draw call data keyed on the
+// layer's user pass object and on the pass node itself. Both have to be released
+// when the pass goes away, whether on its own or together with its View3D;
+// otherwise every destroyed pass leaves a uniform buffer and an srb behind.
+void tst_DrawCallData::computePassChurnReleasesDrawCallData()
+{
+    QFETCH(QByteArray, loadProperty);
+
+    QQuick3DTestOffscreenRenderer renderer;
+    void *vulkanInstancePtr = nullptr;
+#if QT_CONFIG(vulkan)
+    vulkanInstancePtr = &vulkanInstance;
+#endif
+    QVERIFY(renderer.init(testFileUrl(QString::fromLatin1("computeChurn.qml")), vulkanInstancePtr));
+
+#ifdef Q_OS_MACOS
+    if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)
+        QSKIP("Skipping test due to software OpenGL renderer problems on macOS");
+#endif
+    if (!renderer.rhi->isFeatureSupported(QRhi::Compute))
+        QSKIP("Compute shaders are not supported by this QRhi backend");
+
+    renderer.renderNextFrame();
+
+    const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
+    QVERIFY(context);
+
+    const auto &rhiContext = context->rhiContext();
+    QVERIFY(rhiContext);
+    const QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+
+    int frameCounter = 0;
+    const auto setLoadedAndRenderFrames = [&](bool loaded) {
+        renderer.rootItem->setProperty(loadProperty.constData(), loaded);
+        // Loader3D destroys the unloaded ComputePass with deleteLater(), which
+        // processEvents() in renderNextFrame() does not handle.
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        // See viewChurnReleasesDrawCallData() for why more than one frame is
+        // needed. The frame counter keeps the other View3D syncing, which is
+        // what releases the resources of a destroyed one.
+        for (int frame = 0; frame < 3; ++frame) {
+            renderer.rootItem->setProperty("frameCounter", ++frameCounter);
+            renderer.renderNextFrame();
+        }
+    };
+
+    setLoadedAndRenderFrames(false);
+    const qsizetype unloadedDcd = rhiCtxD->m_drawCallData.size();
+    const qsizetype unloadedSrbs = rhiCtxD->m_srbCache.size();
+
+    // Make sure the pass really ran, otherwise there is nothing to release and
+    // the checks below would pass vacuously.
+    setLoadedAndRenderFrames(true);
+    QVERIFY2(rhiCtxD->m_drawCallData.size() > unloadedDcd, "The compute pass created no draw call data");
+    QVERIFY2(rhiCtxD->m_srbCache.size() > unloadedSrbs, "The compute pass created no srb");
+
+    constexpr int ChurnCount = 5;
+    for (int i = 0; i < ChurnCount; ++i) {
+        setLoadedAndRenderFrames(false);
+        const qsizetype dcd = rhiCtxD->m_drawCallData.size();
+        const qsizetype srbs = rhiCtxD->m_srbCache.size();
+        QVERIFY2(dcd <= unloadedDcd,
+                 qPrintable(QString::fromLatin1("m_drawCallData has %1 entries after unload %2, expected at most %3")
+                                    .arg(dcd).arg(i + 1).arg(unloadedDcd)));
+        QVERIFY2(srbs <= unloadedSrbs,
+                 qPrintable(QString::fromLatin1("m_srbCache has %1 entries after unload %2, expected at most %3")
+                                    .arg(srbs).arg(i + 1).arg(unloadedSrbs)));
+        setLoadedAndRenderFrames(true);
+    }
 }
 
 QTEST_MAIN(tst_DrawCallData)

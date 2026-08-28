@@ -1,0 +1,17 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Zero-initializes the counter buffer that effect_write.frag/effect_verify.frag
+// share. Runs as a bare ComputePass, which is always scheduled before the
+// opaque/transparent render and the Effects chain within a frame, so this
+// reset is guaranteed to complete before writeEffect's first atomicAdd.
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+STORAGE_BUFFER(counterBuffer, "writeonly") {
+    uint counter[];
+}
+
+void main() {
+    counter[0] = 0u;
+}

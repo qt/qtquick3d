@@ -1,0 +1,22 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Writes a fixed 2x2 procedural pattern (one distinct colour per texel).
+// One invocation per texel, so no bounds check is needed given the
+// Dispatch group count matches the image size exactly.
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba8", targetImage, image2D, "writeonly");
+
+void main() {
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    vec4 colors[4] = vec4[](
+        vec4(1.0, 0.0, 0.0, 1.0), // (0,0) red
+        vec4(0.0, 1.0, 0.0, 1.0), // (1,0) green
+        vec4(0.0, 0.0, 1.0, 1.0), // (0,1) blue
+        vec4(1.0, 1.0, 0.0, 1.0)  // (1,1) yellow
+    );
+    int idx = coord.x + coord.y * 2;
+    imageStore(targetImage, coord, colors[idx]);
+}

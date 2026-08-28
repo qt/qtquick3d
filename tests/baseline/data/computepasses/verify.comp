@@ -1,0 +1,33 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Reads back the counter buffer and histogram image written by count.comp
+// and paints the whole output image green if every atomic total is exactly
+// what 400x400 invocations bucketed into 4 equal columns should produce
+// (160000 total, 40000 per bucket), or red otherwise. "volatile" documents
+// that these values were most recently written by a separate dispatch
+// (countPass) and must be re-read from memory rather than assumed cached.
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+STORAGE_BUFFER(counterBuffer, "volatile readonly") {
+    uint counter[];
+}
+
+SHADER_IMAGE("r32ui", histogramImage, uimage2D, "volatile readonly");
+SHADER_IMAGE("rgba8", targetImage, image2D, "writeonly");
+
+void main() {
+    ivec2 size = imageSize(targetImage);
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    int bucket = clamp(coord.x / 100, 0, 3);
+
+    bool totalOk = (counter[0] == 160000u);
+    bool bucketOk = (imageLoad(histogramImage, ivec2(bucket, 0)).r == 40000u);
+
+    vec4 result = (totalOk && bucketOk) ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);
+    imageStore(targetImage, coord, result);
+}

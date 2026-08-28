@@ -1,0 +1,12 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+STORAGE_BUFFER(sharedBuffer, "writeonly") {
+    vec4 colors[];
+}
+
+void main() {
+    colors[0] = vec4(0.0, 1.0, 0.0, 1.0);
+}

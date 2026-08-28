@@ -51,6 +51,7 @@ private slots:
     void testAddDefine();
     void testAugmentShaderTextureBinding();
     void testAugmentShaderArrayTextureBinding();
+    void testAugmentShaderResources();
     void testSkyboxPass();
     void testItem2DPass();
     void testDepthTestDisabled();
@@ -1335,6 +1336,30 @@ void tst_UserPasses::testAugmentShaderArrayTextureBinding()
 
     QVERIFY2(imageContainsDominantColor(result, Qt::green),
              "The unbound array sampler should read the dummy texture array");
+}
+
+void tst_UserPasses::testAugmentShaderResources()
+{
+    // A ComputePass writes known values into a ShaderImage and a
+    // ShaderStorageBuffer, both of which are exposed to the AugmentMaterial
+    // pass as properties of the RenderPass. The augment shader declares them
+    // with SHADER_IMAGE/STORAGE_BUFFER, reads them back and outputs green only
+    // if both hold the written values. An unbound resource reads as zero, so
+    // a missing declaration or a dropped binding shows up as red rather than
+    // as a subtly wrong shade.
+    if (!isComputeSupported())
+        QSKIP("Compute shaders are not supported with this graphics API");
+
+    QScopedPointer<QQuickView> view(createView(QLatin1String("augment_resources.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    QVERIFY2(imageContainsDominantColor(result, Qt::green),
+             "The augment shader should read back both the compute-written image texel "
+             "and the compute-written buffer value");
 }
 
 void tst_UserPasses::testSkyboxPass()

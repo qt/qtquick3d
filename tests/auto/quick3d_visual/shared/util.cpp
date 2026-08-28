@@ -75,6 +75,9 @@ QString QQuick3DDataTest::testFile(const QString &fileName) const
     return result;
 }
 
+static QSGRendererInterface::GraphicsApi s_graphicsApi = QSGRendererInterface::Unknown;
+static bool s_computeSupported = false;
+
 bool QQuick3DDataTest::isRunningOnRhi()
 {
     static bool retval = false;
@@ -88,10 +91,27 @@ bool QQuick3DDataTest::isRunningOnRhi()
             return false;
         }
         QSGRendererInterface::GraphicsApi api = dummy.rendererInterface()->graphicsApi();
+        s_graphicsApi = api;
+        // The QRhi only exists once the render thread has rendered a frame.
+        if (!dummy.rhi())
+            waitForFrames(&dummy, 1);
+        s_computeSupported = dummy.rhi() && dummy.rhi()->isFeatureSupported(QRhi::Compute);
         retval = QSGRendererInterface::isApiRhiBased(api);
         dummy.hide();
     }
     return retval;
+}
+
+QSGRendererInterface::GraphicsApi QQuick3DDataTest::graphicsApi()
+{
+    isRunningOnRhi(); // ensures the probe above has run at least once
+    return s_graphicsApi;
+}
+
+bool QQuick3DDataTest::isComputeSupported()
+{
+    isRunningOnRhi(); // ensures the probe above has run at least once
+    return s_computeSupported;
 }
 
 QQuickView *QQuick3DDataTest::createView(const QString &filename, const QSize &windowSize)

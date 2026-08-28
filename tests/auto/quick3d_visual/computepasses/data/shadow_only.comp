@@ -1,0 +1,31 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Samples the three *_LIGHT_SHADOW macros without referencing any of the
+// light identifiers (the light counts and per-light accessors). The shadow
+// macros alone have to make the light data and the shadow maps available;
+// otherwise this shader fails to build and nothing is written.
+// Paints the whole image green if every macro returns a valid illumination
+// factor, red otherwise.
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba8", targetImage, image2D, "writeonly");
+
+bool inRange01(float v) { return v >= 0.0 && v <= 1.0; }
+
+void main() {
+    ivec2 size = imageSize(targetImage);
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    vec3 samplePos = vec3(0.0, 100.0, 0.0);
+    float viewDepth = (VIEW_MATRIX * vec4(samplePos, 1.0)).z;
+
+    bool ok = inRange01(DIRECTIONAL_LIGHT_SHADOW(0, viewDepth, samplePos))
+            && inRange01(POINT_LIGHT_SHADOW(0, samplePos))
+            && inRange01(SPOT_LIGHT_SHADOW(0, samplePos));
+
+    imageStore(targetImage, coord, ok ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0));
+}

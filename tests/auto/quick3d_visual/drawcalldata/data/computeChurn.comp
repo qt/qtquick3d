@@ -1,0 +1,10 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba8", churnImage, image2D, "writeonly");
+
+void main() {
+    imageStore(churnImage, ivec2(gl_GlobalInvocationID.xy), vec4(1.0, 0.0, 1.0, 1.0));
+}

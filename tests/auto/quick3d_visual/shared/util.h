@@ -33,6 +33,8 @@ public:
     bool initialized() const { return m_initialized; }
 
     static bool isRunningOnRhi();
+    static QSGRendererInterface::GraphicsApi graphicsApi();
+    static bool isComputeSupported();
     QQuickView *createView(const QString &filename, const QSize &windowSize);
     QQuickWindow *createWindow(const QString &filename, const QSize &windowSize);
     QImage grab(QQuickWindow *window);

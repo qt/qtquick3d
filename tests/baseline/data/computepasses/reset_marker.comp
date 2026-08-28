@@ -1,0 +1,30 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Zero-initializes the counter buffer and pre-clears the marker image to a
+// "not written" sentinel (red) that custommaterial_write.frag/
+// custommaterial_verify.frag share. Unlike reset_counter.comp (used by the
+// full-screen Effect write test, where every pixel is guaranteed to be
+// overwritten anyway), a CustomMaterial only covers whatever geometry
+// rasterizes to -- the sentinel is what lets the verify step tell "written"
+// apart from "never touched" for the background.
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+STORAGE_BUFFER(counterBuffer, "writeonly") {
+    uint counter[];
+}
+
+SHADER_IMAGE("rgba8", markerImage, image2D, "writeonly");
+
+void main() {
+    ivec2 size = imageSize(markerImage);
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    imageStore(markerImage, coord, vec4(1.0, 0.0, 0.0, 1.0)); // sentinel: not written
+
+    if (coord.x == 0 && coord.y == 0)
+        counter[0] = 0u;
+}

@@ -1,0 +1,17 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Green when the runtime-sized array has exactly expectedCount elements.
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+STORAGE_BUFFER(checkBuffer, "readonly") {
+    vec4 values[];
+}
+
+SHADER_IMAGE("rgba8", targetImage, image2D, "writeonly");
+
+void main()
+{
+    const bool ok = values.length() == expectedCount;
+    imageStore(targetImage, ivec2(gl_GlobalInvocationID.xy), ok ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0));
+}

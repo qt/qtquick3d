@@ -1,0 +1,29 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// One invocation per output pixel (400x400 = 160000 invocations total,
+// dispatched across many workgroups). Every invocation atomically
+// increments the shared buffer counter and its bucket in the histogram
+// image. "coherent" is required because workgroups other than the one
+// that most recently wrote a location must see the update; "restrict"
+// asserts the two resources never alias each other's memory.
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+STORAGE_BUFFER(counterBuffer, "coherent restrict") {
+    uint counter[];
+}
+
+SHADER_IMAGE("r32ui", histogramImage, uimage2D, "coherent restrict");
+
+void main() {
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    if (coord.x >= 400 || coord.y >= 400)
+        return;
+
+    atomicAdd(counter[0], 1u);
+
+    // 4 buckets of 100 columns each.
+    int bucket = clamp(coord.x / 100, 0, 3);
+    imageAtomicAdd(histogramImage, ivec2(bucket, 0), 1u);
+}

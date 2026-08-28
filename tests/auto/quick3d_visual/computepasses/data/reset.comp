@@ -1,0 +1,22 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Zero-initializes the atomic counter buffer and histogram image. Plain
+// writes only: each invocation touches a distinct location (its own
+// histogram bin, or the buffer counter for invocation 0 only), so no
+// atomics or extra memory qualifiers are needed here.
+
+layout(local_size_x = 4, local_size_y = 1, local_size_z = 1) in;
+
+STORAGE_BUFFER(counterBuffer, "writeonly") {
+    uint counter[];
+}
+
+SHADER_IMAGE("r32ui", histogramImage, uimage2D, "writeonly");
+
+void main() {
+    uint i = gl_GlobalInvocationID.x;
+    imageStore(histogramImage, ivec2(int(i), 0), uvec4(0u));
+    if (i == 0u)
+        counter[0] = 0u;
+}

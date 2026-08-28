@@ -1,0 +1,148 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Exercises the internally-defined (non-shadow) uniforms and textures a
+// ComputePass can reference: camera matrices/properties, RHI/framebuffer
+// sentinel properties, the frame counter, per-light-type counts and accessors, and
+// the screen/depth/AO/normal-roughness G-buffer textures.
+//
+// Rather than collapsing every check into one pass/fail colour, the output
+// image is divided into a GRID_COLS x GRID_ROWS grid, one cell per check,
+// painted green if that check passes and red if it fails -- so the C++ test
+// (which knows the same ordering) can report exactly which uniform is wrong
+// instead of just "something is wrong". See tst_computepasses.cpp's
+// kBuiltinUniformCheckNames for the matching, ordered list of names.
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba8", targetImage, image2D, "writeonly");
+
+const int GRID_COLS = 6;
+const int GRID_ROWS = 5;
+const int NUM_CHECKS = GRID_COLS * GRID_ROWS; // 30 cells; only the first 26 are used.
+
+bool approxEqual(float a, float b, float eps) { return abs(a - b) < eps; }
+
+bool approxEqualVec3(vec3 a, vec3 b, float eps)
+{
+    return approxEqual(a.x, b.x, eps) && approxEqual(a.y, b.y, eps) && approxEqual(a.z, b.z, eps);
+}
+
+// QQuick3DAbstractLight converts its QML "color" (sRGB) to linear before
+// storing it as m_diffuseColor -- see QSSGUtils::color::sRGBToLinear()
+// (src/utils/qssgutils.cpp), which the *_LIGHT_DIFFUSE accessors
+// are bound from. It's a cubic polynomial fit, not the standard
+// piecewise sRGB curve, so it's replicated exactly here rather than
+// approximated with pow(c, gamma).
+//
+// Note that there is no separate intensity/brightness uniform: the compute
+// light path premultiplies Light::brightness into the colour in C++ (see
+// QSSGComputeManager's handlePositionalLight()/directional loop), so the
+// expected value is linear(colour) * brightness.
+vec3 sRGBToLinear(vec3 c)
+{
+    const float C1 = 0.305306011;
+    const vec3 C2 = vec3(0.682171111);
+    const vec3 C3 = vec3(0.012522878);
+    return c * (c * (c * C1 + C2) + C3);
+}
+
+// Self-consistency check (A * inverse(A) == identity). This is true by
+// definition regardless of how the engine internally derives the two
+// matrices, so it doesn't depend on assumptions about matrix layout or
+// multiplication order -- unlike checking e.g. VIEWPROJECTION_MATRIX
+// against a fresh PROJECTION_MATRIX * VIEW_MATRIX product.
+bool approxIdentity(mat4 m, float eps)
+{
+    for (int c = 0; c < 4; c++) {
+        for (int r = 0; r < 4; r++) {
+            float expected = (c == r) ? 1.0 : 0.0;
+            if (!approxEqual(m[c][r], expected, eps))
+                return false;
+        }
+    }
+    return true;
+}
+
+void main() {
+    ivec2 size = imageSize(targetImage);
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    if (coord.x >= size.x || coord.y >= size.y)
+        return;
+
+    bool results[NUM_CHECKS];
+    for (int i = 0; i < NUM_CHECKS; i++)
+        results[i] = true; // Default true; the unused trailing cell(s) stay green.
+
+    int idx = 0;
+
+    // Camera matrices are mutually consistent (each pair are inverses).
+    results[idx++] = approxIdentity(VIEW_MATRIX * INVERSE_VIEW_MATRIX, 0.02);
+    results[idx++] = approxIdentity(PROJECTION_MATRIX * INVERSE_PROJECTION_MATRIX, 0.02);
+    results[idx++] = approxIdentity(VIEWPROJECTION_MATRIX * INVERSE_VIEWPROJECTION_MATRIX, 0.05);
+
+    // Camera position/direction/clip planes match the scene setup:
+    // PerspectiveCamera { position: (0, 0, 300) }, clipNear: 10, clipFar: 1000.
+    results[idx++] = approxEqualVec3(CAMERA_POSITION, vec3(0.0, 0.0, 300.0), 0.5);
+    results[idx++] = approxEqualVec3(normalize(CAMERA_DIRECTION), vec3(0.0, 0.0, -1.0), 0.1);
+    results[idx++] = approxEqual(CAMERA_PROPERTIES.x, 10.0, 0.5);
+    results[idx++] = approxEqual(CAMERA_PROPERTIES.y, 1000.0, 0.5);
+
+    // RHI/framebuffer sentinel properties must be one of their two valid values.
+    results[idx++] = approxEqual(abs(FRAMEBUFFER_Y_UP), 1.0, 0.01);
+    results[idx++] = approxEqual(abs(NDC_Y_UP), 1.0, 0.01);
+    results[idx++] = approxEqual(NEAR_CLIP_VALUE, 0.0, 0.01) || approxEqual(NEAR_CLIP_VALUE, -1.0, 0.01);
+
+    // Frame counter is bound.
+    results[idx++] = (FRAME >= 0.0);
+
+    // Exactly one light of each type, with the configured colour/brightness/
+    // position/attenuation/cone angles.
+    results[idx++] = (DIRECTIONAL_LIGHT_COUNT == 1u);
+    results[idx++] = (POINT_LIGHT_COUNT == 1u);
+    results[idx++] = (SPOT_LIGHT_COUNT == 1u);
+
+    vec3 dirExpected = sRGBToLinear(vec3(1.0, 0.0, 0.0)) * 2.0;
+    results[idx++] = approxEqualVec3(DIRECTIONAL_LIGHT_DIFFUSE(0u), dirExpected, 0.05);
+
+    vec3 pointExpected = sRGBToLinear(vec3(0.0, 1.0, 0.0)) * 3.0;
+    results[idx++] = approxEqualVec3(POINT_LIGHT_DIFFUSE(0u), pointExpected, 0.05);
+    results[idx++] = approxEqualVec3(POINT_LIGHT_POSITION(0u), vec3(50.0, 0.0, 0.0), 0.5);
+    results[idx++] = approxEqual(POINT_LIGHT_ATTENUATION(0u).x, 1.0, 0.05);
+
+    vec3 spotExpected = sRGBToLinear(vec3(0.0, 0.0, 1.0)) * 4.0;
+    results[idx++] = approxEqualVec3(SPOT_LIGHT_DIFFUSE(0u), spotExpected, 0.05);
+    results[idx++] = approxEqualVec3(SPOT_LIGHT_POSITION(0u), vec3(-50.0, 0.0, 0.0), 0.5);
+    // Inner cone angle (20deg) < outer cone angle (40deg) => cos(inner) > cos(outer).
+    // SPOT_LIGHT_CONES returns (cos inner, cos outer) in (x, y).
+    results[idx++] = (SPOT_LIGHT_CONES(0u).x > SPOT_LIGHT_CONES(0u).y);
+
+    // Screen/depth/AO/normal-roughness textures reflect the actual rendered
+    // scene: a lit sphere at the origin covers the centre of the frame.
+    float depthCenter = texture(DEPTH_TEXTURE, vec2(0.5)).r;
+    float depthCorner = texture(DEPTH_TEXTURE, vec2(0.02)).r;
+    results[idx++] = (depthCenter < 0.99);
+    results[idx++] = (depthCorner > 0.99);
+
+    vec3 sceneColorCenter = texture(SCREEN_TEXTURE, vec2(0.5)).rgb;
+    results[idx++] = (sceneColorCenter.r + sceneColorCenter.g + sceneColorCenter.b > 0.3);
+
+    float ao = texture(AO_TEXTURE, vec2(0.5)).r;
+    results[idx++] = (ao >= 0.0 && ao <= 1.0);
+
+    // Sanity only (no assumed decode convention): finite, not NaN/garbage.
+    vec4 nr = texture(NORMAL_ROUGHNESS_TEXTURE, vec2(0.5));
+    results[idx++] = all(lessThanEqual(abs(nr), vec4(10.0)));
+
+    int col = coord.x * GRID_COLS / size.x;
+    int row = coord.y * GRID_ROWS / size.y;
+    // Image rows follow the framebuffer, whose first row is at the bottom
+    // when it is Y-up (OpenGL). Flip so the first check is always top-left,
+    // where the C++ test expects it.
+    if (FRAMEBUFFER_Y_UP > 0.0)
+        row = GRID_ROWS - 1 - row;
+    int cellIndex = row * GRID_COLS + col;
+
+    vec4 result = results[cellIndex] ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);
+    imageStore(targetImage, coord, result);
+}
