@@ -20,6 +20,7 @@ class tst_DrawCallData : public QQuick3DDataTest
 private slots:
     void initTestCase() override;
     void viewChurnReleasesDrawCallData();
+    void resizeDoesNotGrowPipelineCache();
 
 private:
 #if QT_CONFIG(vulkan)
@@ -102,6 +103,47 @@ void tst_DrawCallData::viewChurnReleasesDrawCallData()
     QVERIFY2(reloadedSize <= loadedSize,
              qPrintable(QString::fromLatin1("m_drawCallData grew from %1 to %2 entries after view churn")
                                 .arg(loadedSize).arg(reloadedSize)));
+}
+
+// The viewport and scissor rects are dynamic state and must not take part in the
+// graphics pipeline cache key. When they did, every window resize created a new set
+// of pipelines (a full program link on OpenGL) that stayed in the cache forever.
+void tst_DrawCallData::resizeDoesNotGrowPipelineCache()
+{
+    QQuick3DTestOffscreenRenderer renderer;
+    void *vulkanInstancePtr = nullptr;
+#if QT_CONFIG(vulkan)
+    vulkanInstancePtr = &vulkanInstance;
+#endif
+    QVERIFY(renderer.init(testFileUrl(QString::fromLatin1("viewChurn.qml")), vulkanInstancePtr));
+
+#ifdef Q_OS_MACOS
+    if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)
+        QSKIP("Skipping test due to software OpenGL renderer problems on macOS");
+#endif
+
+    renderer.renderNextFrame();
+
+    const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
+    QVERIFY(context);
+
+    const auto &rhiContext = context->rhiContext();
+    QVERIFY(rhiContext);
+    const QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+
+    const qsizetype baselinePipelines = rhiCtxD->m_pipelines.size();
+    QVERIFY(baselinePipelines > 0);
+
+    constexpr int ResizeCount = 20;
+    for (int i = 0; i < ResizeCount; ++i) {
+        QVERIFY(renderer.resize(QSize(500 + i * 7, 400 + i * 5)));
+        renderer.renderNextFrame();
+    }
+
+    const qsizetype finalPipelines = rhiCtxD->m_pipelines.size();
+    QVERIFY2(finalPipelines <= baselinePipelines,
+             qPrintable(QString::fromLatin1("m_pipelines grew from %1 to %2 entries over %3 resizes")
+                                .arg(baselinePipelines).arg(finalPipelines).arg(ResizeCount)));
 }
 
 QTEST_MAIN(tst_DrawCallData)

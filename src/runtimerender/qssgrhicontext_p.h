@@ -137,6 +137,10 @@ inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
         }
         return true;
     };
+    // The viewport and scissor rects are intentionally not compared: they are
+    // dynamic state, never baked into a QRhiGraphicsPipeline, and comparing
+    // them made the pipeline cache key size-dependent, growing the cache with
+    // a new set of pipelines for every window size!
     return QSSGRhiGraphicsPipelineStatePrivate::getShaderPipeline(a) == QSSGRhiGraphicsPipelineStatePrivate::getShaderPipeline(b)
             && a.samples == b.samples
             && a.flags == b.flags
@@ -147,8 +151,6 @@ inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
             && a.cullMode == b.cullMode
             && a.depthBias == b.depthBias
             && a.slopeScaledDepthBias == b.slopeScaledDepthBias
-            && a.viewport == b.viewport
-            && a.scissor == b.scissor
             && ia_a.topology == ia_b.topology
             && ia_a.inputLayout == ia_b.inputLayout
             && a.colorAttachmentCount == b.colorAttachmentCount
