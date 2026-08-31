@@ -125,6 +125,10 @@ class tst_Picking : public QQuick3DDataTest
 private Q_SLOTS:
     void initTestCase() override;
     void test_view_picking();
+    void test_view_picking_data();
+    void test_view_picking_item_transition();
+    void test_view_picking_pickAll();
+    void test_view_picking_pickAll_data();
     void test_ray_picking();
     void test_object_picking2();
     void test_item_picking();
@@ -163,6 +167,173 @@ QQuickItem *tst_Picking::find2DChildIn3DNode(QQuickView *view, const QString &ob
     return static_cast<QQuickItem *>(child);
 }
 
+enum PickMode {
+    regularPick,
+    filterModel2,
+    filterInstancedModel,
+    subsetPick
+};
+
+void tst_Picking::test_view_picking_data()
+{
+    {
+        QTest::addColumn<int>("x");
+        QTest::addColumn<int>("y");
+        QTest::addColumn<PickMode>("pickMode");
+        QTest::addColumn<QQuick3DPickResultEnums::HitType>("hitType");
+        QTest::addColumn<QString>("objectHit");
+        QTest::addColumn<float>("distance");
+        QTest::addColumn<QVector2D>("uvPosition");
+        QTest::addColumn<QVector3D>("scenePosition");
+        QTest::addColumn<QVector3D>("position");
+        QTest::addColumn<int>("instanceIndex");
+        QTest::addColumn<int>("subsetSize");
+
+        // Pick nearest based on viewport position
+        // Center of model1
+        QTest::newRow("model1 center") << 200 << 200
+                                << regularPick
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("model1")
+                                << 550.0f
+                                << QVector2D(0.5f, 0.5f)
+                                << QVector3D(0.0f, 0.0f, 50.0f)
+                                << QVector3D(0.0f, 0.0f, 50.0f)
+                                << 0
+                                << -1;
+
+        // Upper right corner of model1
+        QTest::newRow("model1 upper right") << 250 << 150
+                                << regularPick
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("model1")
+                                << 550.0f
+                                << QVector2D(1.0f, 1.0f)
+                                << QVector3D(50.0f, 50.0f, 50.0f)
+                                << QVector3D(50.0f, 50.0f, 50.0f)
+                                << 0
+                                << -1;
+
+        // Just outside model1's upper right corner, so should hit the model behind (model2)
+        // This one might cause some floating point grief
+        QTest::newRow("just outside model1 -> model2") << 251 << 151
+                                << regularPick
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("model2")
+                                << 600.0f
+                                << QVector2D(0.5099999904632568, 0.4899999797344208)
+                                << QVector3D(51.0f, 49.0f, -0.000003814697265625)
+                                << QVector3D(1.0f, -1.0f, 49.999996185302734f)
+                                << 0
+                                << -1;
+
+        // Upper right corner of model2
+        QTest::newRow("model2 upper right") << 300 << 100
+                                << regularPick
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("model2") << 600.0f
+                                << QVector2D(1.0f, 1.0f)
+                                << QVector3D(100.0f, 100.0f, 0.0f)
+                                << QVector3D(50.0f, 50.0f, 50.0f)
+                                << 0
+                                << -1;
+
+        // Just outside model2's upper right corner, so there should be no hit
+        QTest::newRow("just outside model2 -> no hit") << 301 << 99
+                                << regularPick
+                                << QQuick3DPickResultEnums::HitType::Null
+                                << QString()
+                                << -1.0f
+                                << QVector2D()
+                                << QVector3D()
+                                << QVector3D()
+                                << -1
+                                << -1;
+
+        // Center of the third entry in the instance table
+        QTest::newRow("instancedModel 3rd instance center") << 350 << 200
+                                << regularPick
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("instancedModel")
+                                << 550.0f
+                                << QVector2D(0.0f, 0.5f)
+                                << QVector3D(150.0f, 0.0f, 50.0f)
+                                << QVector3D(-50.0f, 0.0f, 50.0f)
+                                << 2
+                                << -1;
+
+        // The bottom right of instancedModel,
+        // overlapped by model1 and then model2, should hit model1
+        QTest::newRow("instancedModel lower right, overlapped -> model1") << 225 << 175
+                                << regularPick
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("model1")
+                                << 550.0f
+                                << QVector2D(0.75f, 0.75f)
+                                << QVector3D(25.0f, 25.0f, 50.0f)
+                                << QVector3D(25.0f, 25.0f, 50.0f)
+                                << 0
+                                << -1;
+
+        // Pick one specific based on viewport position
+        // Center of model1, overlapping model2,
+        // only check for model2, so should hit model2
+        QTest::newRow("filter model2: model1 center -> model2") << 200 << 200
+                                << filterModel2
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("model2")
+                                << 600.0f
+                                << QVector2D(0.0f, 0.0f)
+                                << QVector3D(0.0f, 0.0f, 0.0f)
+                                << QVector3D(-50.0f, -50.0f, 50.0f)
+                                << 0
+                                << -1;
+
+        // The bottom right of instancedModel,
+        // overlapped model1 and then model2,
+        // only check for instancedModel, should hit instancedModel
+        QTest::newRow("filter instancedModel: lower right -> instancedModel") << 225 << 175
+                                << filterInstancedModel
+                                << QQuick3DPickResultEnums::HitType::Model
+                                << QStringLiteral("instancedModel")
+                                << 650.0f
+                                << QVector2D(1.0f, 0.0f)
+                                << QVector3D(25.0f, 25.0f, -50.0f)
+                                << QVector3D(50.0f, -50.0f, 50.0f)
+                                << 1
+                                << -1;
+
+        // Pick subset based on viewport position
+        // Upper right corner of model1, center of model2
+        // Check for model2 only
+        // Should hit model2, ignore model1
+        QTest::newRow("subset {model2}: model1 upper right -> model2") << 250 << 150
+                                 << subsetPick
+                                 << QQuick3DPickResultEnums::HitType::Model
+                                 << QStringLiteral("model2")
+                                 << 600.0f << QVector2D(0.5f, 0.5f)
+                                 << QVector3D(50.0f, 50.0f, 0.0f)
+                                 << QVector3D(0.0f, 0.0f, 50.0f)
+                                 << 0
+                                 << 1;
+
+        // The bottom right of instancedModel,
+        // overlapped model1 and then model2,
+        // Check for both model2 and instancedModel
+        // Should hit both and ignore model1
+        QTest::newRow("subset {model2, instancedModel}: lower right -> model2") << 225 << 175
+                                 << subsetPick
+                                 << QQuick3DPickResultEnums::HitType::Model
+                                 << QStringLiteral("model2")
+                                 << 600.0f
+                                 << QVector2D(0.25f, 0.25f)
+                                 << QVector3D(25.0f, 25.0f, 0.0f)
+                                 << QVector3D(-25.0f, -25.0f, 50.0f)
+                                 << 0
+                                 << 2;
+    }
+}
+
 void tst_Picking::test_view_picking()
 {
     QScopedPointer<QQuickView> view(createView(QLatin1String("picking.qml"), QSize(400, 400)));
@@ -185,182 +356,123 @@ void tst_Picking::test_view_picking()
         QSKIP("Test uses window positions to get exact values and those assume DPR of 1.0");
     }
 
-    // Pick nearest based on viewport position
+    QFETCH(int, x);
+    QFETCH(int, y);
+    QFETCH(PickMode, pickMode);
+    QFETCH(QQuick3DPickResultEnums::HitType, hitType);
+    QFETCH(QString, objectHit);
+    QFETCH(float, distance);
+    QFETCH(QVector2D, uvPosition);
+    QFETCH(QVector3D, scenePosition);
+    QFETCH(QVector3D, position);
+    QFETCH(int, instanceIndex);
+    QFETCH(int, subsetSize);
 
-    // Center of model1
-    auto result = view3d->pick(200, 200);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), model1);
-    QCOMPARE(result.distance(), 550.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(0.5f, 0.5f));
-    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 50.0f));
-    QCOMPARE(result.position(), QVector3D(0.0f, 0.0f, 50.0f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 0);
-    QCOMPARE(result.itemHit(), nullptr);
+    {
+        QQuick3DPickResult result;
+        QList<QQuick3DPickResult> resultList;
+        switch (pickMode) {
+        case regularPick:
+            result = view3d->pick(x, y);
+            break;
+        case filterModel2:
+            result = view3d->pick(x, y, model2);
+            break;
+        case filterInstancedModel:
+            result = view3d->pick(x, y, instancedModel);
+            break;
+        case subsetPick: {
+            QJSEngine engine;
+            QJSValue array = engine.newArray(subsetSize);
+            array.setProperty(0, engine.newQObject(model2));
+            if (subsetSize > 1)
+                array.setProperty(1, engine.newQObject(instancedModel));
 
-    // Upper right corner of model1
-    result = view3d->pick(250, 150);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), model1);
-    QCOMPARE(result.distance(), 550.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(1.0f, 1.0f));
-    QCOMPARE(result.scenePosition(), QVector3D(50.0f, 50.0f, 50.0f));
-    QCOMPARE(result.position(), QVector3D(50.0f, 50.0f, 50.0f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 0);
-    QCOMPARE(result.itemHit(), nullptr);
+            resultList = view3d->pickSubset(x, y, array);
+            break;
+        }
+        }
 
-    // Just outside model1's upper right corner, so should hit the model behind (model2)
-    // This one might cause some floating point grief
-    result = view3d->pick(251, 151);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), model2);
-    QCOMPARE(result.distance(), 600.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(0.5099999904632568, 0.4899999797344208));
-    QCOMPARE(result.scenePosition(), QVector3D(51.0f, 49.0f, -0.000003814697265625));
-    QCOMPARE(result.position(), QVector3D(1.0f, -1.0f, 49.999996185302734f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 0);
-    QCOMPARE(result.itemHit(), nullptr);
+        // Subset picks: one result per hit model in the subset
+        if (pickMode == subsetPick) {
+            QCOMPARE(resultList.size(), subsetSize);
+            QCOMPARE(resultList[0].hitType(), hitType);
+            QCOMPARE(resultList[0].objectHit()->objectName(), objectHit);
+            QCOMPARE(resultList[0].distance(), distance);
+            QCOMPARE(resultList[0].uvPosition(), uvPosition);
+            QCOMPARE(resultList[0].scenePosition(), scenePosition);
+            QCOMPARE(resultList[0].position(), position);
+            QCOMPARE(resultList[0].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+            QCOMPARE(resultList[0].normal(), QVector3D(0.0f, 0.0f, 1.0f));
+            QCOMPARE(resultList[0].instanceIndex(), instanceIndex);
+            QCOMPARE(resultList[0].itemHit(), nullptr);
+            if (subsetSize > 1) {
+                // Same expected values as the "filter instancedModel" row
+                QCOMPARE(resultList[1].hitType(), hitType);
+                QCOMPARE(resultList[1].objectHit()->objectName(), QStringLiteral("instancedModel"));
+                QCOMPARE(resultList[1].distance(), 650.0f);
+                QCOMPARE(resultList[1].uvPosition(), QVector2D(1.0f, 0.0f));
+                QCOMPARE(resultList[1].scenePosition(), QVector3D(25.0f, 25.0f, -50.0f));
+                QCOMPARE(resultList[1].position(), QVector3D(50.0f, -50.0f, 50.0f));
+                QCOMPARE(resultList[1].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+                QCOMPARE(resultList[1].normal(), QVector3D(0.0f, 0.0f, 1.0f));
+                QCOMPARE(resultList[1].instanceIndex(), 1);
+                QCOMPARE(resultList[1].itemHit(), nullptr);
+            }
+            return;
+        }
 
-    // Upper right corner of model2
-    result = view3d->pick(300, 100);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), model2);
-    QCOMPARE(result.distance(), 600.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(1.0f, 1.0f));
-    QCOMPARE(result.scenePosition(), QVector3D(100.0f, 100.0f, 0.0f));
-    QCOMPARE(result.position(), QVector3D(50.0f, 50.0f, 50.0f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 0);
-    QCOMPARE(result.itemHit(), nullptr);
+        // No-hit rows: nothing should be reported
+        if (hitType == QQuick3DPickResultEnums::HitType::Null) {
+            QCOMPARE(result.hitType(), hitType);
+            QCOMPARE(result.objectHit(), nullptr);
+            QCOMPARE(result.itemHit(), nullptr);
+            return;
+        }
 
-    // Just outside model2's upper right corner, so there should be no hit
-    result = view3d->pick(301, 99);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Null);
-    QCOMPARE(result.objectHit(), nullptr);
-    QCOMPARE(result.itemHit(), nullptr);
+        // Single-result picks (regular and filtered)
+        QCOMPARE(result.hitType(), hitType);
+        QVERIFY(result.objectHit());
+        QCOMPARE(result.objectHit()->objectName(), objectHit);
+        QCOMPARE(result.distance(), distance);
+        QCOMPARE(result.uvPosition(), uvPosition);
+        QCOMPARE(result.scenePosition(), scenePosition);
+        QCOMPARE(result.position(), position);
+        QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
+        QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
+        QCOMPARE(result.instanceIndex(), instanceIndex);
+        QCOMPARE(result.itemHit(), nullptr);
+    }
+}
 
-    // Center of the third entry in the instance table
-    result = view3d->pick(350, 200);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), instancedModel);
-    QCOMPARE(result.distance(), 550.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.5f));
-    QCOMPARE(result.scenePosition(), QVector3D(150.0f, 0.0f, 50.0f));
-    QCOMPARE(result.position(), QVector3D(-50.0f, 0.0f, 50.0f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 2);
-    QCOMPARE(result.itemHit(), nullptr);
 
-    // The bottom right of instancedModel,
-    // overlapped by model1 and then model2, should hit model1
-    result = view3d->pick(225, 175);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), model1);
-    QCOMPARE(result.distance(), 550.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(0.75f, 0.75f));
-    QCOMPARE(result.scenePosition(), QVector3D(25.0f, 25.0f, 50.0f));
-    QCOMPARE(result.position(), QVector3D(25.0f, 25.0f, 50.0f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 0);
-    QCOMPARE(result.itemHit(), nullptr);
+void tst_Picking::test_view_picking_item_transition()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("picking.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
 
-    // Pick one specific based on viewport position
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+    QQuick3DModel *model1 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model1"));
+    QVERIFY(model1);
+    QQuick3DModel *model2 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model2"));
+    QVERIFY(model2);
+    QQuick3DModel *instancedModel = view3d->findChild<QQuick3DModel *>(QStringLiteral("instancedModel"));
+    QVERIFY(instancedModel);
+    QQuickItem *item2d = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dNode", "item2d"));
+    QVERIFY(item2d);
 
-    // Center of model1, overlapping model2,
-    // only check for model2, so should hit model2
-    result = view3d->pick(200, 200, model2);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), model2);
-    QCOMPARE(result.distance(), 600.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(0.0f, 0.0f));
-    QCOMPARE(result.scenePosition(), QVector3D(0.0f, 0.0f, 0.0f));
-    QCOMPARE(result.position(), QVector3D(-50.0f, -50.0f, 50.0f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 0);
-    QCOMPARE(result.itemHit(), nullptr);
-
-    // The bottom right of instancedModel,
-    // overlapped model1 and then model2,
-    // only check for instancedModel, should hit instancedModel
-    result = view3d->pick(225, 175, instancedModel);
-    QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(result.objectHit(), instancedModel);
-    QCOMPARE(result.distance(), 650.0f);
-    QCOMPARE(result.uvPosition(), QVector2D(1.0f, 0.0f));
-    QCOMPARE(result.scenePosition(), QVector3D(25.0f, 25.0f, -50.0f));
-    QCOMPARE(result.position(), QVector3D(50.0f, -50.0f, 50.0f));
-    QCOMPARE(result.sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(result.instanceIndex(), 1);
-    QCOMPARE(result.itemHit(), nullptr);
-
-    // Pick subset based on viewport position
-
-    // Upper right corner of model1, center of model2
-    // Check for model2 only
-    // Should hit model2, ignore model1
-    QJSEngine engine;
-    QJSValue array = engine.newArray(1);
-    array.setProperty(0, engine.newQObject(model2));
-    auto resultList = view3d->pickSubset(250, 150, array);
-    QCOMPARE(resultList.size(), 1);
-    QCOMPARE(resultList[0].hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(resultList[0].objectHit(), model2);
-    QCOMPARE(resultList[0].distance(), 600.0f);
-    QCOMPARE(resultList[0].uvPosition(), QVector2D(0.5f, 0.5f));
-    QCOMPARE(resultList[0].scenePosition(), QVector3D(50.0f, 50.0f, 0.0f));
-    QCOMPARE(resultList[0].position(), QVector3D(0.0f, 0.0f, 50.0f));
-    QCOMPARE(resultList[0].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(resultList[0].normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(resultList[0].instanceIndex(), 0);
-    QCOMPARE(resultList[0].itemHit(), nullptr);
-
-    // The bottom right of instancedModel,
-    // overlapped model1 and then model2,
-    // Check for both model2 and instancedModel
-    // Should hit both and ignore model1
-    array = engine.newArray(2);
-    array.setProperty(0, engine.newQObject(model2));
-    array.setProperty(1, engine.newQObject(instancedModel));
-    resultList = view3d->pickSubset(225, 175, array);
-    QCOMPARE(resultList.size(), 2);
-    QCOMPARE(resultList[0].hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(resultList[0].objectHit(), model2);
-    QCOMPARE(resultList[0].distance(), 600.0f);
-    QCOMPARE(resultList[0].uvPosition(), QVector2D(0.25f, 0.25f));
-    QCOMPARE(resultList[0].scenePosition(), QVector3D(25.0f, 25.0f, 0.0f));
-    QCOMPARE(resultList[0].position(), QVector3D(-25.0f, -25.0f, 50.0f));
-    QCOMPARE(resultList[0].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(resultList[0].normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(resultList[0].instanceIndex(), 0);
-    QCOMPARE(resultList[0].itemHit(), nullptr);
-    QCOMPARE(resultList[1].hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(resultList[1].objectHit(), instancedModel);
-    QCOMPARE(resultList[1].distance(), 650.0f);
-    QCOMPARE(resultList[1].uvPosition(), QVector2D(1.0f, 0.0f));
-    QCOMPARE(resultList[1].scenePosition(), QVector3D(25.0f, 25.0f, -50.0f));
-    QCOMPARE(resultList[1].position(), QVector3D(50.0f, -50.0f, 50.0f));
-    QCOMPARE(resultList[1].sceneNormal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(resultList[1].normal(), QVector3D(0.0f, 0.0f, 1.0f));
-    QCOMPARE(resultList[1].instanceIndex(), 1);
-    QCOMPARE(resultList[1].itemHit(), nullptr);
-
+    const qreal dpr = view->devicePixelRatio();
+    if (dpr != 1.0) {
+        QSKIP("Test uses window positions to get exact values and those assume DPR of 1.0");
+    }
 
     // Enable the 2D item
     item2d->setEnabled(true);
     QVERIFY(waitForFrames(view.data(), 1));
     // Then picking on top of model1 should not pick it anymore
-    result = view3d->pick(200, 200);
+    auto result = view3d->pick(200, 200);
     QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Item);
     QCOMPARE(result.itemHit(), item2d);
     QCOMPARE(result.distance(), 400.0f);
@@ -378,55 +490,139 @@ void tst_Picking::test_view_picking()
     result = view3d->pick(200, 200);
     QCOMPARE(result.hitType(), QQuick3DPickResultEnums::HitType::Model);
     QCOMPARE(result.objectHit(), model1);
+}
 
-    // Pick all based on viewport position
 
-    // Center of model1, bottom left corner of model2
-    resultList = view3d->pickAll(200, 200);
-    QCOMPARE(resultList.size(), 2);
-    QCOMPARE(resultList[0].objectHit(), model1);
-    QCOMPARE(resultList[1].objectHit(), model2);
+void tst_Picking::test_view_picking_pickAll_data()
+{
+    QTest::addColumn<int>("x");
+    QTest::addColumn<int>("y");
+    QTest::addColumn<bool>("itemVisible");
 
-    // Add the 2D item
-    item2d->setVisible(true);
+    QTest::addColumn<QStringList>("expectedHits");
+    QTest::addColumn<QList<QQuick3DPickResultEnums::HitType>>("expectedHitTypes");
+    QTest::addColumn<QList<int>>("expectedInstanceIndices");
+
+    QTest::newRow("model1 center, item hidden -> model1, model2")
+            << 200
+            << 200
+            << false
+            << QStringList{"model1", "model2"}
+            << QList<QQuick3DPickResultEnums::HitType>{
+                   QQuick3DPickResultEnums::HitType::Model,
+                   QQuick3DPickResultEnums::HitType::Model
+               }
+            << QList<int>{0, 0};
+
+    QTest::newRow("model1 center, item visible -> item2d, model1, model2")
+            << 200
+            << 200
+            << true
+            << QStringList{"item2d", "model1", "model2"}
+            << QList<QQuick3DPickResultEnums::HitType>{
+                   QQuick3DPickResultEnums::HitType::Item,
+                   QQuick3DPickResultEnums::HitType::Model,
+                   QQuick3DPickResultEnums::HitType::Model
+               }
+            << QList<int>{-1, 0, 0};
+
+    QTest::newRow("model1 upper right -> model1, model2")
+            << 250
+            << 150
+            << false
+            << QStringList{"model1", "model2"}
+            << QList<QQuick3DPickResultEnums::HitType>{
+                   QQuick3DPickResultEnums::HitType::Model,
+                   QQuick3DPickResultEnums::HitType::Model
+               }
+            << QList<int>{0, 0};
+
+    QTest::newRow("just outside model1 -> model2 only")
+            << 251
+            << 151
+            << false
+            << QStringList{"model2"}
+            << QList<QQuick3DPickResultEnums::HitType>{
+                   QQuick3DPickResultEnums::HitType::Model
+               }
+            << QList<int>{0};
+
+    QTest::newRow("instancedModel lower right -> model1, model2, instancedModel")
+            << 225
+            << 175
+            << false
+            << QStringList{"model1", "model2", "instancedModel"}
+            << QList<QQuick3DPickResultEnums::HitType>{
+                   QQuick3DPickResultEnums::HitType::Model,
+                   QQuick3DPickResultEnums::HitType::Model,
+                   QQuick3DPickResultEnums::HitType::Model
+               }
+            << QList<int>{0, 0, 1};
+
+    QTest::newRow("just outside model2 -> no hits")
+            << 301
+            << 99
+            << false
+            << QStringList{}
+            << QList<QQuick3DPickResultEnums::HitType>{}
+            << QList<int>{};
+}
+
+void tst_Picking::test_view_picking_pickAll()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("picking.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+    QQuick3DModel *model1 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model1"));
+    QVERIFY(model1);
+    QQuick3DModel *model2 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model2"));
+    QVERIFY(model2);
+    QQuick3DModel *instancedModel = view3d->findChild<QQuick3DModel *>(QStringLiteral("instancedModel"));
+    QVERIFY(instancedModel);
+    QQuickItem *item2d = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dNode", "item2d"));
+    QVERIFY(item2d);
+
+    const qreal dpr = view->devicePixelRatio();
+    if (dpr != 1.0) {
+        QSKIP("Test uses window positions to get exact values and those assume DPR of 1.0");
+    }
+
+    QFETCH(int, x);
+    QFETCH(int, y);
+    QFETCH(bool, itemVisible);
+
+    QFETCH(QStringList, expectedHits);
+    QFETCH(QList<QQuick3DPickResultEnums::HitType>, expectedHitTypes);
+    QFETCH(QList<int>, expectedInstanceIndices);
+
+    QCOMPARE(expectedHits.size(), expectedHitTypes.size());
+    QCOMPARE(expectedHits.size(), expectedInstanceIndices.size());
+
+    item2d->setVisible(itemVisible);
+    item2d->setEnabled(true);
     QVERIFY(waitForFrames(view.data(), 1));
-    resultList = view3d->pickAll(200, 200);
-    QCOMPARE(resultList.size(), 3);
-    QCOMPARE(resultList[0].hitType(), QQuick3DPickResultEnums::HitType::Item);
-    QCOMPARE(resultList[0].itemHit(), item2d);
-    QCOMPARE(resultList[1].hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(resultList[1].objectHit(), model1);
-    QCOMPARE(resultList[2].hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(resultList[2].objectHit(), model2);
-    // Hide the 2D item
-    item2d->setVisible(false);
-    QVERIFY(waitForFrames(view.data(), 1));
 
-    // Top right corner of model1, center of model2
-    resultList = view3d->pickAll(250, 150);
-    QCOMPARE(resultList.size(), 2);
-    QCOMPARE(resultList[0].hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(resultList[0].objectHit(), model1);
-    QCOMPARE(resultList[1].hitType(), QQuick3DPickResultEnums::HitType::Model);
-    QCOMPARE(resultList[1].objectHit(), model2);
+    auto resultList = view3d->pickAll(x, y);
 
-    // Just outside model1's upper right corner, so should hit the model behind (model2)
-    resultList = view3d->pickAll(251, 151);
-    QCOMPARE(resultList.size(), 1);
-    QCOMPARE(resultList[0].objectHit(), model2);
+    QCOMPARE(resultList.size(), expectedHits.size());
 
-    // The bottom right of the second entry in the instance table,
-    // overlapping model1 and model2
-    resultList = view3d->pickAll(225, 175);
-    QCOMPARE(resultList.size(), 3);
-    QCOMPARE(resultList[0].objectHit(), model1);
-    QCOMPARE(resultList[1].objectHit(), model2);
-    QCOMPARE(resultList[2].objectHit(), instancedModel);
-    QCOMPARE(resultList[2].instanceIndex(), 1);
+    for (int i = 0; i < resultList.size(); ++i) {
+        QCOMPARE(resultList[i].hitType(), expectedHitTypes[i]);
 
-    // Just outside model2's upper right corner, so there should be no hit
-    resultList = view3d->pickAll(301, 99);
-    QVERIFY(resultList.isEmpty());
+        if (expectedHitTypes[i] == QQuick3DPickResultEnums::HitType::Item) {
+            QCOMPARE(resultList[i].itemHit(), item2d);
+        } else {
+            QVERIFY(resultList[i].objectHit());
+            QCOMPARE(resultList[i].objectHit()->objectName(),
+                     expectedHits[i]);
+        }
+
+        QCOMPARE(resultList[i].instanceIndex(),
+                 expectedInstanceIndices[i]);
+    }
 }
 
 void tst_Picking::test_ray_picking()
