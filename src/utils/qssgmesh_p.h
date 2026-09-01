@@ -1,6 +1,6 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-// Qt-Security score:significant reason:default
+// Qt-Security score:critical reason:data-parser
 
 
 #ifndef QSSGMESHUTILITIES_P_H
@@ -374,8 +374,10 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
 
         Mesh::Subset toMeshSubset() const {
             Mesh::Subset subset;
-            if (nameLength > 0)
-                subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(rawNameUtf16.constData()), nameLength - 1);
+            // Only as many units as were actually read, less the terminator.
+            const qsizetype units = qMin(qsizetype(nameLength), rawNameUtf16.size() / 2);
+            if (units > 0)
+                subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(rawNameUtf16.constData()), units - 1);
             subset.bounds.min = bounds.min;
             subset.bounds.max = bounds.max;
             subset.count = count;

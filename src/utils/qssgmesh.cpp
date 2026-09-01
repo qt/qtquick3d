@@ -1,6 +1,6 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-// Qt-Security score:significant reason:default
+// Qt-Security score:critical reason:data-parser
 
 
 #include "qssgmesh_p.h"
@@ -46,9 +46,24 @@ static const size_t SUBSET_STRUCT_SIZE_V6 = 52;
 //lod entry: count, offset, distance
 static const size_t LOD_STRUCT_SIZE = 12;
 
+// Bounds a count by the file rather than by a chosen cap, so the limit scales
+// with the file and cannot be set wrong.
+static bool canRead(QIODevice *device, quint64 count, quint64 itemSize)
+{
+    quint64 bytes = 0;
+    if (qMulOverflow(count, itemSize, &bytes))
+        return false;
+    const qint64 remaining = device->size() - device->pos();
+    return remaining >= 0 && bytes <= quint64(remaining);
+}
+
 MeshInternal::MultiMeshInfo MeshInternal::readFileHeader(QIODevice *device)
 {
     const qint64 multiHeaderStartOffset = device->size() - qint64(MULTI_HEADER_STRUCT_SIZE);
+    if (multiHeaderStartOffset < 0) {
+        qWarning("Mesh file is too small to hold a header");
+        return {};
+    }
 
     device->seek(multiHeaderStartOffset);
     QDataStream inputStream(device);
@@ -66,6 +81,12 @@ MeshInternal::MultiMeshInfo MeshInternal::readFileHeader(QIODevice *device)
     quint32 multiEntriesOffset; // unused, the entry list is right before the header
     quint32 meshCount;
     inputStream >> multiEntriesOffset >> meshCount;
+
+    // The entry list sits immediately before the header, so it bounds the count.
+    if (quint64(meshCount) * MULTI_ENTRY_STRUCT_SIZE > quint64(multiHeaderStartOffset)) {
+        qWarning("Mesh file declares %u meshes, which do not fit in it", meshCount);
+        return {};
+    }
 
     for (quint32 i = 0; i < meshCount; ++i) {
         device->seek(multiHeaderStartOffset
@@ -163,6 +184,12 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
 
     offsetTracker.advance(MESH_STRUCT_SIZE);
 
+    if (!canRead(device, vertexBufferEntriesCount, VERTEX_BUFFER_ENTRY_STRUCT_SIZE)) {
+        qWarning("Mesh declares %u vertex buffer entries, which do not fit in the file",
+                 vertexBufferEntriesCount);
+        return 0;
+    }
+
     quint32 entriesByteSize = 0;
     for (quint32 i = 0; i < vertexBufferEntriesCount; ++i) {
         Mesh::VertexBufferEntry vertexBufferEntry;
@@ -189,6 +216,11 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         quint32 nameLength;
         inputStream >> nameLength;
         offsetTracker.advance(sizeof(quint32));
+        if (!canRead(device, nameLength, 1)) {
+            qWarning("Mesh declares a %u byte attribute name, which does not fit in the file",
+                     nameLength);
+            return 0;
+        }
         const QByteArray nameWithZeroTerminator = device->read(nameLength);
         entry.name = QByteArray(nameWithZeroTerminator.constData(), qMax(0, nameWithZeroTerminator.size() - 1));
         alignAmount = offsetTracker.alignedAdvance(nameLength);
@@ -200,7 +232,10 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         // So just checking numTargets is safe with the above assumption and
         // it will try to reconstruct the unsupported attributes.
         if (numTargets > 0 || (!header->hasSeparateTargetBuffer() && entry.name.startsWith("attr_t"))) {
-            if (entry.name.sliced(6).startsWith("pos")) {
+            // Any later name lands here once a target has been seen, including
+            // short ones, and sliced() asserts where mid() would not.
+            const QByteArray suffix = entry.name.size() > 6 ? entry.name.sliced(6) : QByteArray();
+            if (suffix.startsWith("pos")) {
                 const quint32 targetId = entry.name.mid(9).toUInt();
                 // All the attributes of the first target should be recorded correctly.
                 if (targetId == 0)
@@ -209,7 +244,7 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                 entry.name = MeshInternal::getPositionAttrName();
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
-            } else if (entry.name.sliced(6).startsWith("norm")) {
+            } else if (suffix.startsWith("norm")) {
                 const quint32 targetId = entry.name.mid(10).toUInt();
                 if (targetId == 0)
                     attrNames.append(MeshInternal::getNormalAttrName());
@@ -217,7 +252,7 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                 entry.name = MeshInternal::getNormalAttrName();
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
-            } else if (entry.name.sliced(6).startsWith("tan")) {
+            } else if (suffix.startsWith("tan")) {
                 const quint32 targetId = entry.name.mid(9).toUInt();
                 if (targetId == 0)
                     attrNames.append(MeshInternal::getTexTanAttrName());
@@ -225,7 +260,7 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                 entry.name = MeshInternal::getTexTanAttrName();
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
-            } else if (entry.name.sliced(6).startsWith("binorm")) {
+            } else if (suffix.startsWith("binorm")) {
                 const quint32 targetId = entry.name.mid(12).toUInt();
                 if (targetId == 0)
                     attrNames.append(MeshInternal::getTexBinormalAttrName());
@@ -234,7 +269,12 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
             } else if (entry.name.startsWith("attr_unsupported")) {
-                // Reconstruct
+                // Reconstruct, if target 0 recorded a layout to do it from.
+                if (attrNames.isEmpty()) {
+                    qWarning("Mesh has an unsupported morph target attribute with no target 0 to "
+                             "take the layout from");
+                    return 0;
+                }
                 entry.name = attrNames[targetBufferEntriesCount % attrNames.size()];
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
@@ -242,15 +282,33 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         }
     }
 
+    if (!canRead(device, vertexBufferDataSize, 1)) {
+        qWarning("Mesh declares %u bytes of vertex data, which do not fit in the file",
+                 vertexBufferDataSize);
+        return 0;
+    }
     mesh->m_vertexBuffer.data = device->read(vertexBufferDataSize);
     alignAmount = offsetTracker.alignedAdvance(vertexBufferDataSize);
     if (alignAmount)
         device->read(alignPadding, alignAmount);
 
+    if (!canRead(device, indexBufferDataSize, 1)) {
+        qWarning("Mesh declares %u bytes of index data, which do not fit in the file",
+                 indexBufferDataSize);
+        return 0;
+    }
     mesh->m_indexBuffer.data = device->read(indexBufferDataSize);
     alignAmount = offsetTracker.alignedAdvance(indexBufferDataSize);
     if (alignAmount)
         device->read(alignPadding, alignAmount);
+
+    const size_t subsetStructSize = header->hasLodDataHint() ? SUBSET_STRUCT_SIZE_V6
+            : header->hasLightmapSizeHint()                   ? SUBSET_STRUCT_SIZE_V5
+                                                              : SUBSET_STRUCT_SIZE_V3_V4;
+    if (!canRead(device, subsetsCount, subsetStructSize)) {
+        qWarning("Mesh declares %u subsets, which do not fit in the file", subsetsCount);
+        return 0;
+    }
 
     quint32 subsetByteSize = 0;
     QVector<MeshInternal::Subset> internalSubsets;
@@ -300,7 +358,12 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         device->read(alignPadding, alignAmount);
 
     for (MeshInternal::Subset &internalSubset : internalSubsets) {
-        internalSubset.rawNameUtf16 = device->read(internalSubset.nameLength * 2); //UTF_16_le
+        if (!canRead(device, internalSubset.nameLength, 2)) {
+            qWarning("Mesh subset declares a %u character name, which does not fit in the file",
+                     internalSubset.nameLength);
+            return 0;
+        }
+        internalSubset.rawNameUtf16 = device->read(qint64(internalSubset.nameLength) * 2);
         alignAmount = offsetTracker.alignedAdvance(internalSubset.nameLength * 2);
         if (alignAmount)
             device->read(alignPadding, alignAmount);
@@ -308,6 +371,12 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
 
     quint32 lodByteSize = 0;
     for (const MeshInternal::Subset &internalSubset : internalSubsets) {
+        // The subsets share these bytes, so check them as they are consumed.
+        if (!canRead(device, internalSubset.lodCount, LOD_STRUCT_SIZE)) {
+            qWarning("Mesh subset declares %u levels of detail, which do not fit in the file",
+                     internalSubset.lodCount);
+            return 0;
+        }
         auto meshSubset = internalSubset.toMeshSubset();
         // Read Level of Detail data here
         for (auto &lod : meshSubset.lods) {
@@ -331,6 +400,11 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     // Data for morphTargets
     if (targetBufferEntriesCount > 0) {
         if (header->hasSeparateTargetBuffer()) {
+            if (!canRead(device, targetBufferEntriesCount, VERTEX_BUFFER_ENTRY_STRUCT_SIZE)) {
+                qWarning("Mesh declares %u morph target entries, which do not fit in the file",
+                         targetBufferEntriesCount);
+                return 0;
+            }
             entriesByteSize = 0;
             for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
                 Mesh::VertexBufferEntry targetBufferEntry;
@@ -352,6 +426,11 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                 quint32 nameLength;
                 inputStream >> nameLength;
                 offsetTracker.advance(sizeof(quint32));
+                if (!canRead(device, nameLength, 1)) {
+                    qWarning("Mesh declares a %u byte morph target name, which does not fit in "
+                             "the file", nameLength);
+                    return 0;
+                }
                 const QByteArray nameWithZeroTerminator = device->read(nameLength);
                 entry.name = QByteArray(nameWithZeroTerminator.constData(), qMax(0, nameWithZeroTerminator.size() - 1));
                 alignAmount = offsetTracker.alignedAdvance(nameLength);
@@ -359,24 +438,75 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                     device->read(alignPadding, alignAmount);
             }
 
+            if (!canRead(device, targetBufferDataSize, 1)) {
+                qWarning("Mesh declares %u bytes of morph target data, which do not fit in the "
+                         "file", targetBufferDataSize);
+                return 0;
+            }
             mesh->m_targetBuffer.data = device->read(targetBufferDataSize);
         } else {
+            // The target buffer is sized by the product of these two, and the
+            // layout has only position, normal, tangent and binormal per target.
+            constexpr quint32 maxTargets = 8;
+            constexpr quint32 maxComponentsPerTarget = 4;
+            if (mesh->m_vertexBuffer.stride == 0 || numTargets == 0
+                || numTargets > maxTargets
+                || vertexBufferDataSize < mesh->m_vertexBuffer.stride
+                || targetBufferEntriesCount > vertexBufferEntriesCount
+                || targetBufferEntriesCount < numTargets
+                || targetBufferEntriesCount > numTargets * maxComponentsPerTarget) {
+                qWarning("Mesh morph target layout is inconsistent: stride %u, %u targets, %u "
+                         "entries of %u",
+                         mesh->m_vertexBuffer.stride, numTargets, targetBufferEntriesCount,
+                         vertexBufferEntriesCount);
+                return 0;
+            }
             // remove target entries from vertexbuffer entries
             mesh->m_vertexBuffer.entries.remove(vertexBufferEntriesCount - targetBufferEntriesCount,
                                                 targetBufferEntriesCount);
+            // At least one vertex, so vertexCount - 1 below does not wrap.
             const quint32 vertexCount = vertexBufferDataSize / mesh->m_vertexBuffer.stride;
+            // The least an entry can need, checked before sizing from vertexCount.
+            if (qsizetype(vertexCount - 1) * qsizetype(mesh->m_vertexBuffer.stride)
+                        + 3 * qsizetype(sizeof(float))
+                > qsizetype(vertexBufferDataSize)) {
+                qWarning("Mesh morph target source does not fit a %u byte vertex buffer of stride "
+                         "%u", vertexBufferDataSize, mesh->m_vertexBuffer.stride);
+                return 0;
+            }
             const quint32 targetEntryTexWidth = qCeil(qSqrt(vertexCount));
-            const quint32 targetCompStride = targetEntryTexWidth * targetEntryTexWidth * 4 * sizeof(float);
-            mesh->m_targetBuffer.data.resize(targetCompStride * targetBufferEntriesCount);
+            qsizetype targetCompStride = 0;
+            qsizetype targetBufferSize = 0;
+            if (qMulOverflow(qsizetype(targetEntryTexWidth), qsizetype(targetEntryTexWidth),
+                             &targetCompStride)
+                || qMulOverflow(targetCompStride, qsizetype(4 * sizeof(float)), &targetCompStride)
+                || qMulOverflow(targetCompStride, qsizetype(targetBufferEntriesCount),
+                                &targetBufferSize)) {
+                qWarning("Mesh morph target buffer for %u vertices is too large", vertexCount);
+                return 0;
+            }
+            mesh->m_targetBuffer.data.resize(targetBufferSize);
             const quint32 numComps = targetBufferEntriesCount / numTargets;
             for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
                 auto &entry = mesh->m_targetBuffer.entries[i];
-                char *dstBuf = mesh->m_targetBuffer.data.data()
-                                + (i / numComps) * targetCompStride
-                                + (i % numComps) * (targetCompStride * numTargets);
+                const qsizetype dstOffset = qsizetype(i / numComps) * targetCompStride
+                        + qsizetype(i % numComps) * targetCompStride * numTargets;
+                // Three floats per vertex, so it is the last twelve byte copy
+                // that has to fit.
+                const qsizetype copyBytes = 3 * qsizetype(sizeof(float));
+                const qsizetype dstNeeded = dstOffset
+                        + qsizetype(vertexCount - 1) * qsizetype(4 * sizeof(float)) + copyBytes;
+                const qsizetype srcNeeded = qsizetype(entry.offset)
+                        + qsizetype(vertexCount - 1) * qsizetype(mesh->m_vertexBuffer.stride)
+                        + copyBytes;
+                if (dstOffset < 0 || dstNeeded > targetBufferSize
+                    || srcNeeded > mesh->m_vertexBuffer.data.size()) {
+                    qWarning("Mesh morph target entry %u does not fit its buffer", i);
+                    return 0;
+                }
+                char *dstBuf = mesh->m_targetBuffer.data.data() + dstOffset;
                 const char *srcBuf = mesh->m_vertexBuffer.data.constData() + entry.offset;
                 for (quint32 j = 0; j < vertexCount; ++j) {
-                    // The number of old target components is fixed as 3
                     memcpy(dstBuf + j * 4 * sizeof(float),
                            srcBuf + j * mesh->m_vertexBuffer.stride,
                            3 * sizeof(float));

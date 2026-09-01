@@ -333,6 +333,13 @@ private slots:
     void saveAndLoadRoundTrip();
     void rejectsBadFileIds_data();
     void rejectsBadFileIds();
+    void truncatedAtEveryOffset_data();
+    void truncatedAtEveryOffset();
+    void countsAndSizesAreBounded_data();
+    void countsAndSizesAreBounded();
+    void subsetsShareTheLevelOfDetailBudget();
+    void malformedLegacyMorphTargets_data();
+    void malformedLegacyMorphTargets();
     void fuzzRegressions_data();
     void fuzzRegressions();
 
@@ -343,6 +350,23 @@ private:
         QBuffer buffer(&copy);
         buffer.open(QIODevice::ReadOnly);
         return Mesh::loadMesh(&buffer, id);
+    }
+    // Finds a little endian quint32 with a distinctive value, so a field can be
+    // located without counting bytes by hand.
+    static qsizetype offsetOf(const QByteArray &blob, quint32 marker)
+    {
+        char needle[4];
+        qToLittleEndian(marker, needle);
+        return blob.indexOf(QByteArray(needle, 4));
+    }
+    // Overwrites a little endian quint32 at a byte offset, counted from the end
+    // of the blob when negative.
+    static QByteArray patched(const QByteArray &blob, qsizetype at, quint32 value)
+    {
+        QByteArray out = blob;
+        const qsizetype pos = at < 0 ? out.size() + at : at;
+        qToLittleEndian(value, out.data() + pos);
+        return out;
     }
     static QMap<quint32, Mesh> loadAll(const QByteArray &blob)
     {
@@ -619,6 +643,209 @@ void tst_QSSGMesh::rejectsBadFileIds()
     const Mesh mesh = load(data);
     QVERIFY(!mesh.isValid());
     QVERIFY(mesh.subsets().isEmpty());
+}
+
+void tst_QSSGMesh::truncatedAtEveryOffset_data()
+{
+    QTest::addColumn<QByteArray>("data");
+
+    for (int v = 3; v <= 7; ++v) {
+        MeshBuilder builder;
+        builder.setVersion(quint16(v))
+                .setEntries({ { "attr_pos"_ba, 10, 3, 0 } })
+                .setIndexData(QByteArray(4 * 3, '\x01'), 5);
+        if (v >= 6) {
+            MeshBuilder::Subset subset;
+            subset.name = QStringLiteral("s");
+            subset.count = 3;
+            subset.lods = { { 3, 0, 1.0f } };
+            builder.setSubsets({ subset });
+        }
+        QTest::addRow("v%d", v) << builder.build();
+    }
+}
+
+void tst_QSSGMesh::truncatedAtEveryOffset()
+{
+    QFETCH(QByteArray, data);
+
+    // Cutting a known good file at every length at once. Nothing may crash,
+    // hang or allocate wildly, and the result is either the whole mesh or none
+    // of it.
+    for (qsizetype n = 0; n < data.size(); ++n) {
+        const Mesh mesh = load(data.left(n));
+        if (mesh.isValid())
+            QCOMPARE(n, data.size());
+    }
+}
+
+void tst_QSSGMesh::countsAndSizesAreBounded_data()
+{
+    QTest::addColumn<QByteArray>("data");
+
+    const quint32 huge = 0xfffffff0u;
+
+    // Every count in the header sizes an allocation or bounds a loop, and none
+    // of them can be larger than the file that holds the data.
+    QTest::newRow("vertex-entry-count") << MeshBuilder().patchMeshField(1, huge).build();
+    QTest::newRow("vertex-data-size") << MeshBuilder().patchMeshField(4, huge).build();
+    QTest::newRow("index-data-size") << MeshBuilder().patchMeshField(7, huge).build();
+    QTest::newRow("subset-count") << MeshBuilder().patchMeshField(9, huge).build();
+    QTest::newRow("target-entry-count") << MeshBuilder().patchMeshField(0, huge).build();
+    QTest::newRow("target-data-size")
+            << MeshBuilder()
+                       .setTargetEntries({ { "attr_pos"_ba, 10, 3, 0 } })
+                       .setTargetData(QByteArray(16, '\0'), 1)
+                       .patchMeshField(3, huge)
+                       .build();
+
+    // The mesh count is in the container footer, which is the last four bytes.
+    QTest::newRow("mesh-count") << patched(MeshBuilder().build(), -4, huge);
+
+    // An attribute name length, which is the first quint32 after the entry list
+    // and its padding: 56 bytes of Mesh struct, 16 of entry, 4 of padding.
+    QTest::newRow("attribute-name-length")
+            << patched(MeshBuilder().build(), 12 + 56 + 16 + 4, huge);
+
+    // A subset name length. The subset gets a distinctive count so its record
+    // can be found, and nameLength is nine quint32 fields further on.
+    MeshBuilder::Subset marked;
+    marked.name = QStringLiteral("sub");
+    marked.count = 0x51525354u;
+    const QByteArray oneSubset = MeshBuilder().setSubsets({ marked }).build();
+    const qsizetype subsetAt = offsetOf(oneSubset, marked.count);
+    QVERIFY(subsetAt >= 0);
+    QTest::newRow("subset-name-length") << patched(oneSubset, subsetAt + 9 * 4, huge);
+}
+
+void tst_QSSGMesh::countsAndSizesAreBounded()
+{
+    QFETCH(QByteArray, data);
+
+    const Mesh mesh = load(data);
+    QVERIFY(!mesh.isValid());
+    QVERIFY(mesh.vertexBuffer().data.isEmpty());
+    QVERIFY(mesh.targetBuffer().data.isEmpty());
+}
+
+void tst_QSSGMesh::subsetsShareTheLevelOfDetailBudget()
+{
+    // One subset carries real levels, so there are bytes for the others to claim.
+    constexpr int levels = 100;
+    MeshBuilder::Subset withLods;
+    withLods.name = QStringLiteral("a");
+    withLods.count = 0x41414141u;
+    for (int i = 0; i < levels; ++i)
+        withLods.lods.append({ 0, 0, float(i) });
+
+    MeshBuilder::Subset second;
+    second.name = QStringLiteral("b");
+    second.count = 0x42424242u;
+    second.lods.append({ 0, 0, 0.0f });
+
+    MeshBuilder::Subset third;
+    third.name = QStringLiteral("c");
+    third.count = 0x43434343u;
+    third.lods.append({ 0, 0, 0.0f });
+
+    QByteArray blob = MeshBuilder().setSubsets({ withLods, second, third }).build();
+
+    // lodCount is the thirteenth quint32 of a subset record.
+    for (quint32 marker : { 0x42424242u, 0x43434343u }) {
+        const qsizetype at = offsetOf(blob, marker);
+        QVERIFY(at >= 0);
+        blob = patched(blob, at + 12 * 4, quint32(levels));
+    }
+
+    const Mesh mesh = load(blob);
+    QVERIFY(!mesh.isValid());
+}
+
+void tst_QSSGMesh::malformedLegacyMorphTargets_data()
+{
+    QTest::addColumn<QByteArray>("data");
+
+    // Before version 7 morph targets were extra vertex buffer entries, and the
+    // reader rebuilds a target buffer out of them. Every step of that layout
+    // comes from the file.
+    QTest::newRow("no-target-zero-to-copy-from")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(16)
+                       .setEntries({ { "attr_tpos1"_ba, 10, 3, 0 },
+                                     { "attr_unsupported"_ba, 10, 3, 12 } })
+                       .setVertexData(QByteArray(32, '\0'))
+                       .build();
+
+    QList<MeshBuilder::Entry> nineTargets;
+    for (int i = 0; i < 9; ++i)
+        nineTargets.append({ QByteArrayLiteral("attr_tpos") + QByteArray::number(i), 10, 3, 0 });
+    QTest::newRow("more-targets-than-the-format-allows")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(12)
+                       .setEntries(nineTargets)
+                       .setVertexData(QByteArray(12, '\0'))
+                       .build();
+
+    QList<MeshBuilder::Entry> fiveComponents;
+    for (int i = 0; i < 5; ++i)
+        fiveComponents.append({ "attr_tpos0"_ba, 10, 3, 0 });
+    QTest::newRow("more-components-per-target-than-exist")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(12)
+                       .setEntries(fiveComponents)
+                       .setVertexData(QByteArray(12, '\0'))
+                       .build();
+
+    QTest::newRow("stride-zero")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(0)
+                       .setEntries({ { "attr_tpos0"_ba, 10, 3, 0 } })
+                       .setVertexData(QByteArray(16, '\0'))
+                       .build();
+
+    // One entry claiming to belong to target 7, so eight targets are inferred
+    // from one entry and the components per target round down to zero.
+    QTest::newRow("fewer-entries-than-targets")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(16)
+                       .setEntries({ { "attr_tpos7"_ba, 10, 3, 0 } })
+                       .setVertexData(QByteArray(16, '\0'))
+                       .build();
+
+    // No vertex data at all, so there is no vertex to build a target from and
+    // the vertex count the layout is derived from is zero.
+    QTest::newRow("no-vertices")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(16)
+                       .setEntries({ { "attr_tpos0"_ba, 10, 3, 0 } })
+                       .setVertexData(QByteArray())
+                       .build();
+
+    // A name too short to slice from the seventh byte. Once one target
+    // attribute has been seen every later name takes that path, whatever it is.
+    // An attribute offset past the end of the vertex data it is read from.
+    QTest::newRow("entry-offset-past-the-vertex-data")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(4)
+                       .setEntries({ { "attr_tpos0"_ba, 10, 3, 0x7ffffff0 } })
+                       .setVertexData(QByteArray(64, '\0'))
+                       .build();
+}
+
+void tst_QSSGMesh::malformedLegacyMorphTargets()
+{
+    QFETCH(QByteArray, data);
+
+    const Mesh mesh = load(data);
+    QVERIFY(!mesh.isValid());
+    QVERIFY(mesh.targetBuffer().data.isEmpty());
 }
 
 void tst_QSSGMesh::fuzzRegressions_data()
