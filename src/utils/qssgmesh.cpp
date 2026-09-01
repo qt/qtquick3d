@@ -200,7 +200,10 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     quint32 targetCount;
     quint32 subsetsCount;
     inputStream >> targetCount >> subsetsCount;
-    mesh->m_targetBuffer.numTargets = targetCount;
+    // Before version 7 this field is a leftover subset offset, not a count;
+    // the legacy path below works the count out from the attribute names.
+    if (header->hasSeparateTargetBuffer())
+        mesh->m_targetBuffer.numTargets = targetCount;
 
     quint32 jointsOffsets; // unused, see the format documentation
     quint32 jointsCount;

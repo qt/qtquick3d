@@ -346,6 +346,8 @@ private slots:
     void unknownComponentTypes();
     void jointBlockIsSkipped();
     void jointCountIsBounded();
+    void targetCountBeforeVersion7_data();
+    void targetCountBeforeVersion7();
     void fuzzRegressions_data();
     void fuzzRegressions();
 
@@ -976,6 +978,31 @@ void tst_QSSGMesh::jointCountIsBounded()
 {
     const quint32 huge = 0xfffffff0u;
     QVERIFY(!load(MeshBuilder().patchMeshField(11, huge).build()).isValid());
+}
+
+void tst_QSSGMesh::targetCountBeforeVersion7_data()
+{
+    QTest::addColumn<int>("version");
+    QTest::addColumn<quint32>("expected");
+
+    // Field nine is a target count only from version 7. Before that it is a
+    // subset offset the writer left behind, which is not a count of anything.
+    for (int v = 3; v <= 6; ++v)
+        QTest::addRow("v%d", v) << v << 0u;
+    QTest::newRow("v7") << 7 << 3u;
+}
+
+void tst_QSSGMesh::targetCountBeforeVersion7()
+{
+    QFETCH(int, version);
+    QFETCH(quint32, expected);
+
+    const Mesh mesh = load(MeshBuilder()
+                                   .setVersion(quint16(version))
+                                   .patchMeshField(8, 3)
+                                   .build());
+    QVERIFY(mesh.isValid());
+    QCOMPARE(mesh.targetBuffer().numTargets, expected);
 }
 
 void tst_QSSGMesh::fuzzRegressions_data()
