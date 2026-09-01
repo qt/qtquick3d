@@ -7,13 +7,6 @@
 ## Quick3DRuntimeRender Module:
 #####################################################################
 
-# Handle the conditional finding of either system zlib or qt zlib.
-if(NOT QT_FEATURE_system_zlib)
-    find_package(Qt6 COMPONENTS ZlibPrivate)
-elseif(NOT TARGET WrapZLIB::WrapZLIB)
-    qt_find_package(WrapZLIB PROVIDED_TARGETS WrapZLIB::WrapZLIB)
-endif()
-
 qt_internal_add_module(Quick3DRuntimeRender
     SOURCES
         graphobjects/qssgrendercamera.cpp graphobjects/qssgrendercamera_p.h
@@ -93,9 +86,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssguserrenderpassmanager.cpp qssguserrenderpassmanager_p.h
         qssgrenderparticleshaderkeys_p.h
     NO_UNITY_BUILD_SOURCES
-        rendererimpl/qssglightmapper.cpp              # avoiding possible clash with tinyexr' macros
         resourcemanager/qssgrenderbuffermanager.cpp # redefinition of 'cube' (from qssgrenderreflectionmap.cpp)
-        resourcemanager/qssgrenderloadedtexture.cpp   # avoiding possible clash with tinyexr' macros
     DEFINES
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES
@@ -199,25 +190,6 @@ qt_internal_add_resource(Quick3DRuntimeRender "res"
 )
 
 # special case begin
-
-qt_internal_extend_target(Quick3DRuntimeRender
-    INCLUDE_DIRECTORIES
-        ../3rdparty/tinyexr
-    NO_UNITY_BUILD_SOURCES
-        ../3rdparty/tinyexr/tinyexr.h
-    ATTRIBUTION_FILE_DIR_PATHS
-        ../3rdparty/tinyexr
-)
-
-qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_FEATURE_system_zlib
-    LIBRARIES
-        WrapZLIB::WrapZLIB
-)
-
-qt_internal_extend_target(Quick3DRuntimeRender CONDITION NOT QT_FEATURE_system_zlib
-    LIBRARIES
-        Qt6::ZlibPrivate
-)
 
 qt_internal_generate_tracepoints(Quick3DRuntimeRender quick3d
     SOURCES
