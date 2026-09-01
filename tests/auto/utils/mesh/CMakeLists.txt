@@ -18,3 +18,20 @@ qt_internal_add_test(tst_qquick3dmesh
         Qt::Gui
         Qt::Quick3DUtilsPrivate
 )
+
+#####################################################################
+## tst_qssgmesh Test:
+#####################################################################
+
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*)
+list(APPEND test_data ${test_data_glob})
+
+qt_internal_add_test(tst_qssgmesh
+    SOURCES
+        tst_qssgmesh.cpp
+    LIBRARIES
+        Qt::Quick3DUtilsPrivate
+    TESTDATA ${test_data}
+)

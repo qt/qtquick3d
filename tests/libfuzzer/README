@@ -1,0 +1,35 @@
+Fuzz targets for Qt Quick 3D, to be built and run with clang's libFuzzer.
+
+The layout and the build recipe follow qtbase's tests/libfuzzer; see the README
+there for the full instructions. As in qtbase there is no top level
+CMakeLists.txt: each target is a standalone project, so none of this enters the
+normal build and none of it costs anything in CI.
+
+In short: configure a Qt with
+
+    configure -sanitize address -sanitize undefined -sanitize fuzzer-no-link
+
+build qtquick3d against it, then build a target on its own with
+
+    <sanitized qt>/bin/qt-cmake -DCMAKE_CXX_COMPILER=clang++ \
+        -S utils/qssgmesh/read -B /tmp/meshfuzz \
+        && cmake --build /tmp/meshfuzz
+
+and run it over a seed corpus:
+
+    /tmp/meshfuzz/read <corpus dir> \
+        -dict=utils/qssgmesh/read/read.dict \
+        -rss_limit_mb=2048 -malloc_limit_mb=512 -timeout=25
+
+The seed corpus is whatever is to hand; the .mesh files under tests/ and
+examples/ cover every supported version of the format and are a good start. It
+is deliberately not duplicated here. Minimise any finding with
+-minimize_crash=1 and commit it to tests/auto/utils/mesh/data/fuzz, where
+tst_qssgmesh picks it up automatically as a regression test.
+
+utils/qssgmesh/read
+    The whole .mesh path: the container footer and entry list, then the mesh
+    header, the buffers, the subsets and their names, and the morph target
+    reconstruction that older versions of the format need. Every count and
+    offset in the file is attacker controlled and most of them size an
+    allocation or bound a loop.

@@ -1,0 +1,3 @@
+Minimised fuzzer findings, picked up automatically by tst_qssgmesh's
+fuzzRegressions() slot so that a fixed crash cannot come back. Empty is the
+normal, healthy state.

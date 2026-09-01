@@ -30,7 +30,8 @@ path = ["tests/**.png", "tests/**.jpg", "tests/**.mesh", "tests/**.frag",
         "tests/baseline/data/lighting/lightmaps/qlm_box.exr",
         "tests/baseline/data/particles3d/qt_logo_in_4096.cbor",
         "tests/baseline/scenegrabber_xr/testscenes/maps/oulu_2.jpeg",
-        "tests/baseline/data/shared/maps/oulu_2.jpeg"]
+        "tests/baseline/data/shared/maps/oulu_2.jpeg",
+        "tests/libfuzzer/**.dict"]
 precedence = "closest"
 comment = "test"
 SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
