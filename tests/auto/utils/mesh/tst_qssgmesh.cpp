@@ -13,6 +13,30 @@
 using namespace Qt::StringLiterals;
 using namespace QSSGMesh;
 
+// A device that stops accepting data part way through, the way a full disk or a
+// read only location does.
+class ShortDevice : public QIODevice
+{
+public:
+    explicit ShortDevice(qint64 limit) : m_limit(limit) { }
+
+protected:
+    qint64 readData(char *, qint64) override { return -1; }
+    qint64 writeData(const char *, qint64 len) override
+    {
+        const qint64 room = m_limit - m_written;
+        if (room <= 0)
+            return -1;
+        const qint64 taken = qMin(room, len);
+        m_written += taken;
+        return taken;
+    }
+
+private:
+    qint64 m_limit;
+    qint64 m_written = 0;
+};
+
 // Assembles a .mesh container byte by byte, from the format description in
 // src/quick3d/doc/src/qtquick3d-mesh-format.qdoc rather than by mirroring the
 // reader, so that a wrong reading of the format is not masked.
@@ -348,6 +372,8 @@ private slots:
     void jointCountIsBounded();
     void targetCountBeforeVersion7_data();
     void targetCountBeforeVersion7();
+    void saveReportsAFailedWrite_data();
+    void saveReportsAFailedWrite();
     void fuzzRegressions_data();
     void fuzzRegressions();
 
@@ -1003,6 +1029,34 @@ void tst_QSSGMesh::targetCountBeforeVersion7()
                                    .build());
     QVERIFY(mesh.isValid());
     QCOMPARE(mesh.targetBuffer().numTargets, expected);
+}
+
+void tst_QSSGMesh::saveReportsAFailedWrite_data()
+{
+    QTest::addColumn<int>("limit");
+
+    // Enough to get through the header and part of the payload, so the failure
+    // lands in a different write each time.
+    for (int limit : { 0, 16, 80, 100, 140, 200 })
+        QTest::addRow("limit%d", limit) << limit;
+}
+
+void tst_QSSGMesh::saveReportsAFailedWrite()
+{
+    QFETCH(int, limit);
+
+    const Mesh mesh = load(MeshBuilder()
+                                   .setStride(12)
+                                   .setVertexData(QByteArray(36, '\x33'))
+                                   .setIndexData(QByteArray(4 * 3, '\x01'), 5)
+                                   .build());
+    QVERIFY(mesh.isValid());
+
+    // A device that fills up must not come back as a successful save, or the
+    // caller writes a truncated file and reports success.
+    ShortDevice device(limit);
+    QVERIFY(device.open(QIODevice::WriteOnly));
+    QCOMPARE(mesh.save(&device), 0u);
 }
 
 void tst_QSSGMesh::fuzzRegressions_data()

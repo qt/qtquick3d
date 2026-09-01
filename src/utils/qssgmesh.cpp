@@ -623,6 +623,14 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     outputStream.setByteOrder(QDataStream::LittleEndian);
     outputStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
+    // The buffers bypass the stream, so one flag covers their writes and is
+    // tested at the end with the stream's own status.
+    bool writesOk = true;
+    auto writeBytes = [&](const char *data, qint64 size) {
+        if (size > 0 && device->write(data, size) != size)
+            writesOk = false;
+    };
+
     const qint64 startPos = device->pos();
     MeshInternal::MeshOffsetTracker offsetTracker(startPos);
     Q_ASSERT(offsetTracker.offset() == device->pos());
@@ -673,27 +681,27 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     }
     quint32 alignAmount = offsetTracker.alignedAdvance(entriesByteSize);
     if (alignAmount)
-        device->write(alignPadding, alignAmount);
+        writeBytes(alignPadding, alignAmount);
 
     for (quint32 i = 0; i < vertexBufferEntriesCount; ++i) {
         const Mesh::VertexBufferEntry &entry(mesh.m_vertexBuffer.entries[i]);
         const quint32 nameLength = entry.name.size() + 1;
         outputStream << nameLength;
-        device->write(entry.name.constData(), nameLength); // with zero terminator included
+        writeBytes(entry.name.constData(), nameLength); // with zero terminator included
         alignAmount = offsetTracker.alignedAdvance(sizeof(quint32) + nameLength);
         if (alignAmount)
-            device->write(alignPadding, alignAmount);
+            writeBytes(alignPadding, alignAmount);
     }
 
-    device->write(mesh.m_vertexBuffer.data.constData(), vertexBufferDataSize);
+    writeBytes(mesh.m_vertexBuffer.data.constData(), vertexBufferDataSize);
     alignAmount = offsetTracker.alignedAdvance(vertexBufferDataSize);
     if (alignAmount)
-        device->write(alignPadding, alignAmount);
+        writeBytes(alignPadding, alignAmount);
 
-    device->write(mesh.m_indexBuffer.data.constData(), indexBufferDataSize);
+    writeBytes(mesh.m_indexBuffer.data.constData(), indexBufferDataSize);
     alignAmount = offsetTracker.alignedAdvance(indexBufferDataSize);
     if (alignAmount)
-        device->write(alignPadding, alignAmount);
+        writeBytes(alignPadding, alignAmount);
 
     quint32 subsetByteSize = 0;
     for (quint32 i = 0; i < subsetsCount; ++i) {
@@ -727,16 +735,16 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     }
     alignAmount = offsetTracker.alignedAdvance(subsetByteSize);
     if (alignAmount)
-        device->write(alignPadding, alignAmount);
+        writeBytes(alignPadding, alignAmount);
 
     for (quint32 i = 0; i < subsetsCount; ++i) {
         const Mesh::Subset &subset(mesh.m_subsets[i]);
         const char *utf16Name = reinterpret_cast<const char *>(subset.name.utf16());
         const quint32 nameByteSize = (subset.name.size() + 1) * 2;
-        device->write(utf16Name, nameByteSize);
+        writeBytes(utf16Name, nameByteSize);
         alignAmount = offsetTracker.alignedAdvance(nameByteSize);
         if (alignAmount)
-            device->write(alignPadding, alignAmount);
+            writeBytes(alignPadding, alignAmount);
     }
 
     // LOD data
@@ -753,7 +761,7 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     }
     alignAmount = offsetTracker.alignedAdvance(lodDataByteSize);
     if (alignAmount)
-        device->write(alignPadding, alignAmount);
+        writeBytes(alignPadding, alignAmount);
 
     // Data for morphTargets
     for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
@@ -769,19 +777,24 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     }
     alignAmount = offsetTracker.alignedAdvance(entriesByteSize);
     if (alignAmount)
-        device->write(alignPadding, alignAmount);
+        writeBytes(alignPadding, alignAmount);
 
     for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
         const Mesh::VertexBufferEntry &entry(mesh.m_targetBuffer.entries[i]);
         const quint32 nameLength = entry.name.size() + 1;
         outputStream << nameLength;
-        device->write(entry.name.constData(), nameLength); // with zero terminator included
+        writeBytes(entry.name.constData(), nameLength); // with zero terminator included
         alignAmount = offsetTracker.alignedAdvance(sizeof(quint32) + nameLength);
         if (alignAmount)
-            device->write(alignPadding, alignAmount);
+            writeBytes(alignPadding, alignAmount);
     }
 
-    device->write(mesh.m_targetBuffer.data.constData(), targetBufferDataSize);
+    writeBytes(mesh.m_targetBuffer.data.constData(), targetBufferDataSize);
+
+    if (!writesOk || outputStream.status() != QDataStream::Ok) {
+        qWarning("Failed to write mesh data");
+        return 0;
+    }
 
     const quint32 endPos = device->pos();
     const quint32 sizeInBytes = endPos - startPos;
@@ -1155,6 +1168,8 @@ quint32 Mesh::save(QIODevice *device, quint32 id) const
     // skip the space for the mesh header for now
     device->seek(device->pos() + MESH_HEADER_STRUCT_SIZE);
     meshHeader.sizeInBytes = MeshInternal::writeMeshData(device, *this);
+    if (meshHeader.sizeInBytes == 0)
+        return 0;
     // now the mesh header is ready to be written out
     device->seek(meshOffset);
     MeshInternal::writeMeshHeader(device, meshHeader);
