@@ -340,6 +340,10 @@ private slots:
     void subsetsShareTheLevelOfDetailBudget();
     void malformedLegacyMorphTargets_data();
     void malformedLegacyMorphTargets();
+    void drawRangesAreValidated_data();
+    void drawRangesAreValidated();
+    void unknownComponentTypes_data();
+    void unknownComponentTypes();
     void fuzzRegressions_data();
     void fuzzRegressions();
 
@@ -829,6 +833,14 @@ void tst_QSSGMesh::malformedLegacyMorphTargets_data()
 
     // A name too short to slice from the seventh byte. Once one target
     // attribute has been seen every later name takes that path, whatever it is.
+    QTest::newRow("short-attribute-name-after-a-target")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setStride(16)
+                       .setEntries({ { "attr_tpos0"_ba, 10, 3, 0 }, { "ab"_ba, 10, 3, 12 } })
+                       .setVertexData(QByteArray(32, '\0'))
+                       .build();
+
     // An attribute offset past the end of the vertex data it is read from.
     QTest::newRow("entry-offset-past-the-vertex-data")
             << MeshBuilder()
@@ -846,6 +858,93 @@ void tst_QSSGMesh::malformedLegacyMorphTargets()
     const Mesh mesh = load(data);
     QVERIFY(!mesh.isValid());
     QVERIFY(mesh.targetBuffer().data.isEmpty());
+}
+
+void tst_QSSGMesh::drawRangesAreValidated_data()
+{
+    QTest::addColumn<QByteArray>("data");
+    QTest::addColumn<bool>("valid");
+
+    // Nine indices of four bytes, so nine are available to draw.
+    auto indexed = [](quint32 count, quint32 offset) {
+        MeshBuilder::Subset subset;
+        subset.name = QStringLiteral("s");
+        subset.count = count;
+        subset.offset = offset;
+        return MeshBuilder()
+                .setIndexData(QByteArray(4 * 9, '\0'), 5)
+                .setSubsets({ subset })
+                .build();
+    };
+    QTest::newRow("whole-index-buffer") << indexed(9, 0) << true;
+    QTest::newRow("tail-of-the-index-buffer") << indexed(3, 6) << true;
+    QTest::newRow("one-index-too-many") << indexed(10, 0) << false;
+    QTest::newRow("one-past-the-end") << indexed(3, 7) << false;
+    QTest::newRow("offset-past-the-end") << indexed(1, 4000) << false;
+    QTest::newRow("count-wraps") << indexed(0xffffffffu, 8) << false;
+
+    // With no index buffer the ranges are vertices instead: 36 bytes at a
+    // stride of 12 is three of them.
+    auto nonIndexed = [](quint32 count, quint32 offset) {
+        MeshBuilder::Subset subset;
+        subset.name = QStringLiteral("s");
+        subset.count = count;
+        subset.offset = offset;
+        return MeshBuilder()
+                .setStride(12)
+                .setVertexData(QByteArray(36, '\0'))
+                .setSubsets({ subset })
+                .build();
+    };
+    QTest::newRow("whole-vertex-buffer") << nonIndexed(3, 0) << true;
+    QTest::newRow("one-vertex-too-many") << nonIndexed(4, 0) << false;
+
+    // A level of detail range is drawn the same way and gets the same check.
+    MeshBuilder::Subset withLods;
+    withLods.name = QStringLiteral("s");
+    withLods.count = 9;
+    withLods.lods = { { 6, 0, 1.0f }, { 4, 6, 2.0f } };
+    QTest::newRow("level-of-detail-past-the-end")
+            << MeshBuilder()
+                       .setVersion(6)
+                       .setIndexData(QByteArray(4 * 9, '\0'), 5)
+                       .setSubsets({ withLods })
+                       .build()
+            << false;
+}
+
+void tst_QSSGMesh::drawRangesAreValidated()
+{
+    QFETCH(QByteArray, data);
+    QFETCH(bool, valid);
+
+    QCOMPARE(load(data).isValid(), valid);
+}
+
+void tst_QSSGMesh::unknownComponentTypes_data()
+{
+    QTest::addColumn<QByteArray>("data");
+
+    // getSizeOfType() is Q_UNREACHABLE for anything outside the enumeration, so
+    // a component type from the file has to be checked before it gets there.
+    for (quint32 bad : { 0u, 12u, 0xffffffffu }) {
+        QTest::addRow("index-buffer-%u", bad)
+                << MeshBuilder().setIndexData(QByteArray(16, '\0'), bad).build();
+        QTest::addRow("attribute-%u", bad)
+                << MeshBuilder().setEntries({ { "attr_pos"_ba, bad, 3, 0 } }).build();
+        QTest::addRow("morph-target-attribute-%u", bad)
+                << MeshBuilder()
+                           .setTargetEntries({ { "attr_pos"_ba, bad, 3, 0 } })
+                           .setTargetData(QByteArray(16, '\0'), 1)
+                           .build();
+    }
+}
+
+void tst_QSSGMesh::unknownComponentTypes()
+{
+    QFETCH(QByteArray, data);
+
+    QVERIFY(!load(data).isValid());
 }
 
 void tst_QSSGMesh::fuzzRegressions_data()

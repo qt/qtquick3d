@@ -46,6 +46,28 @@ static const size_t SUBSET_STRUCT_SIZE_V6 = 52;
 //lod entry: count, offset, distance
 static const size_t LOD_STRUCT_SIZE = 12;
 
+// getSizeOfType() is Q_UNREACHABLE outside its enumeration, so a component type
+// from the file has to be checked before it gets there.
+// Spelled out so that a new component type fails to compile until handled.
+static bool isKnownComponentType(quint32 value)
+{
+    switch (Mesh::ComponentType(value)) {
+    case Mesh::ComponentType::UnsignedInt8:
+    case Mesh::ComponentType::Int8:
+    case Mesh::ComponentType::UnsignedInt16:
+    case Mesh::ComponentType::Int16:
+    case Mesh::ComponentType::UnsignedInt32:
+    case Mesh::ComponentType::Int32:
+    case Mesh::ComponentType::UnsignedInt64:
+    case Mesh::ComponentType::Int64:
+    case Mesh::ComponentType::Float16:
+    case Mesh::ComponentType::Float32:
+    case Mesh::ComponentType::Float64:
+        return true;
+    }
+    return false;
+}
+
 // Bounds a count by the file rather than by a chosen cap, so the limit scales
 // with the file and cannot be set wrong.
 static bool canRead(QIODevice *device, quint64 count, quint64 itemSize)
@@ -166,6 +188,10 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     inputStream >> indexBufferComponentType
                 >> indexBufferDataOffset
                 >> indexBufferDataSize;
+    if (!isKnownComponentType(indexBufferComponentType)) {
+        qWarning("Mesh index buffer has unknown component type %u", indexBufferComponentType);
+        return 0;
+    }
     mesh->m_indexBuffer.componentType = Mesh::ComponentType(indexBufferComponentType);
 
     quint32 targetCount;
@@ -199,6 +225,10 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                     >> componentType
                     >> vertexBufferEntry.componentCount
                     >> vertexBufferEntry.offset;
+        if (!isKnownComponentType(componentType)) {
+            qWarning("Mesh attribute %u has unknown component type %u", i, componentType);
+            return 0;
+        }
         vertexBufferEntry.componentType = Mesh::ComponentType(componentType);
         mesh->m_vertexBuffer.entries.append(vertexBufferEntry);
         entriesByteSize += VERTEX_BUFFER_ENTRY_STRUCT_SIZE;
@@ -414,6 +444,11 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                             >> componentType
                             >> targetBufferEntry.componentCount
                             >> targetBufferEntry.offset;
+                if (!isKnownComponentType(componentType)) {
+                    qWarning("Mesh morph target attribute %u has unknown component type %u", i,
+                             componentType);
+                    return 0;
+                }
                 targetBufferEntry.componentType = Mesh::ComponentType(componentType);
                 mesh->m_targetBuffer.entries.append(targetBufferEntry);
                 entriesByteSize += VERTEX_BUFFER_ENTRY_STRUCT_SIZE;
@@ -516,6 +551,30 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
             // now we don't need to have redundant targetbuffer entries
             mesh->m_targetBuffer.entries.remove(numComps, targetBufferEntriesCount - numComps);
             mesh->m_targetBuffer.numTargets = numTargets;
+        }
+    }
+
+    // These go straight to drawIndexed() or draw(), so a range outside the
+    // buffer it indexes has to be caught here rather than by the driver.
+    const quint32 indexSize = byteSizeForComponentType(mesh->m_indexBuffer.componentType);
+    quint64 drawableCount = 0;
+    if (!mesh->m_indexBuffer.data.isEmpty())
+        drawableCount = indexSize ? quint64(mesh->m_indexBuffer.data.size()) / indexSize : 0;
+    else if (mesh->m_vertexBuffer.stride)
+        drawableCount = quint64(mesh->m_vertexBuffer.data.size()) / mesh->m_vertexBuffer.stride;
+
+    for (const Mesh::Subset &subset : std::as_const(mesh->m_subsets)) {
+        if (quint64(subset.offset) + subset.count > drawableCount) {
+            qWarning("Mesh subset draws %u from %u, but only %llu are available", subset.count,
+                     subset.offset, qulonglong(drawableCount));
+            return 0;
+        }
+        for (const Mesh::Lod &lod : subset.lods) {
+            if (quint64(lod.offset) + lod.count > drawableCount) {
+                qWarning("Mesh level of detail draws %u from %u, but only %llu are available",
+                         lod.count, lod.offset, qulonglong(drawableCount));
+                return 0;
+            }
         }
     }
 
