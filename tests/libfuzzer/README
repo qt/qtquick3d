@@ -21,15 +21,25 @@ and run it over a seed corpus:
         -dict=utils/qssgmesh/read/read.dict \
         -rss_limit_mb=2048 -malloc_limit_mb=512 -timeout=25
 
-The seed corpus is whatever is to hand; the .mesh files under tests/ and
-examples/ cover every supported version of the format and are a good start. It
-is deliberately not duplicated here. Minimise any finding with
--minimize_crash=1 and commit it to tests/auto/utils/mesh/data/fuzz, where
-tst_qssgmesh picks it up automatically as a regression test.
+The seed corpora are whatever is to hand and are deliberately not duplicated
+here; what to start from is listed with each target below. Minimise any finding
+with -minimize_crash=1 and commit it to the fuzz data directory of the matching
+autotest, where it is picked up automatically as a regression test.
 
 utils/qssgmesh/read
     The whole .mesh path: the container footer and entry list, then the mesh
     header, the buffers, the subsets and their names, and the morph target
     reconstruction that older versions of the format need. Every count and
     offset in the file is attacker controlled and most of them size an
-    allocation or bound a loop.
+    allocation or bound a loop. Seeds: the .mesh files under tests/ and
+    examples/, which cover every supported version of the format. Findings go
+    in tests/auto/utils/mesh/data/fuzz.
+
+texturehelpers/qssgexrreader/read
+    The whole file path: magic, version, attributes, offset table and every
+    chunk. Seeds: the fixture set in tests/auto/exr/data. Findings go in
+    tests/auto/exr/data/fuzz.
+
+texturehelpers/qssgexrcodecs/piz
+    The PIZ Huffman and wavelet stages on their own, which the file level
+    target rarely reaches past header validation.
