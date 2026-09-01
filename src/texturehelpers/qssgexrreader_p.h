@@ -110,7 +110,8 @@ public:
 
     // 'rgba' holds 4 * size().width() floats, valid for the call only. Rows
     // arrive in an unspecified order, exactly once each, dstRow already
-    // accounting for FlipVertically.
+    // accounting for FlipVertically. The sink may be called from several
+    // threads at once.
     using RowSink = qxp::function_ref<void(qint32 dstRow, const float *rgba) const>;
 
     // Resolution level 0 only. Success means every row was delivered.

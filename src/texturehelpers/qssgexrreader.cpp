@@ -11,6 +11,14 @@
 #include <QtCore/qnumeric.h>
 #include <QtCore/qvarlengtharray.h>
 
+#if QT_CONFIG(thread)
+#include <QtCore/qatomic.h>
+#include <QtCore/qrunnable.h>
+#include <QtCore/qsemaphore.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qthreadpool.h>
+#endif
+
 #include <algorithm>
 #include <cstring>
 #include <limits>
@@ -263,8 +271,6 @@ public:
     qint64 tilesX = 0;
     qint64 tilesY = 0;
 
-    std::unique_ptr<QSSGExr::PizScratch> pizScratch;
-
     std::vector<float> band;
 
     bool setError(const QString &message)
@@ -278,8 +284,16 @@ public:
     bool validate();
     bool readOffsetTable(ByteCursor &cursor);
 
-    bool decodeChunk(QByteArrayView payload, qint64 expected, qint64 tw, qint64 th,
-                     QByteArray *out, QByteArray *scratch, QByteArrayView *decoded);
+    struct ChunkScratch
+    {
+        QByteArray chunk;
+        QByteArray scratch;
+        std::vector<float> row;
+        std::unique_ptr<QSSGExr::PizScratch> piz;
+    };
+
+    bool decodeChunk(QByteArrayView payload, qint64 expected, qint64 tw, qint64 th, ChunkScratch *s, QByteArrayView *decoded, QString *err);
+    bool decodeScanlineChunk(qsizetype i, const ChannelMap &map, Flags flags, RowSink sink, ChunkScratch *s, QString *err);
     void scatter(QByteArrayView chunk, qint64 r, qint64 tw, qint64 rowStride, const ChannelMap &map, float *row);
 
     bool decodeScanlines(const ChannelMap &map, Flags flags, RowSink sink);
@@ -553,10 +567,10 @@ bool QSSGExrReader::Private::readOffsetTable(ByteCursor &cursor)
     return true;
 }
 
-bool QSSGExrReader::Private::decodeChunk(QByteArrayView payload, qint64 expected, qint64 tw,
-                                         qint64 th, QByteArray *out, QByteArray *scratch,
-                                         QByteArrayView *decoded)
+bool QSSGExrReader::Private::decodeChunk(QByteArrayView payload, qint64 expected, qint64 tw, qint64 th, ChunkScratch *s, QByteArrayView *decoded, QString *err)
 {
+    QByteArray *out = &s->chunk;
+    QByteArray *scratch = &s->scratch;
     if (payload.size() == expected) {
         // A block that did not shrink is stored raw.
         *decoded = payload;
@@ -569,27 +583,29 @@ bool QSSGExrReader::Private::decodeChunk(QByteArrayView payload, qint64 expected
 
     switch (compression) {
     case Compression::None:
-        return setError(QStringLiteral("uncompressed chunk has the wrong size"));
+        *err = QStringLiteral("uncompressed chunk has the wrong size");
+        return false;
     case Compression::Rle:
         scratch->resize(expected);
-        if (!QSSGExr::rleDecode(payload, QSpan<char>(scratch->data(), expected), &error))
+        if (!QSSGExr::rleDecode(payload, QSpan<char>(scratch->data(), expected), err))
             return false;
-        return QSSGExr::undoPredictorAndDeinterleave(outSpan, QSpan<char>(scratch->data(), expected), &error);
+        return QSSGExr::undoPredictorAndDeinterleave(outSpan, QSpan<char>(scratch->data(), expected), err);
     case Compression::Zips:
     case Compression::Zip:
         scratch->resize(expected);
-        if (!QSSGExr::inflateExact(payload, QSpan<char>(scratch->data(), expected), &error))
+        if (!QSSGExr::inflateExact(payload, QSpan<char>(scratch->data(), expected), err))
             return false;
-        return QSSGExr::undoPredictorAndDeinterleave(outSpan, QSpan<char>(scratch->data(), expected), &error);
+        return QSSGExr::undoPredictorAndDeinterleave(outSpan, QSpan<char>(scratch->data(), expected), err);
     case Compression::Piz:
-        if (!pizScratch)
-            pizScratch = std::make_unique<QSSGExr::PizScratch>();
-        return QSSGExr::pizDecode(payload, outSpan, pizChannels, tw, th, bytesPerPixel, pizScratch.get(), &error);
+        if (!s->piz)
+            s->piz = std::make_unique<QSSGExr::PizScratch>();
+        return QSSGExr::pizDecode(payload, outSpan, pizChannels, tw, th, bytesPerPixel, s->piz.get(), err);
     default:
         break;
     }
 
-    return setError(QStringLiteral("%1 compression is not supported").arg(QString::fromLatin1(compressionName(compression))));
+    *err = QStringLiteral("%1 compression is not supported").arg(QString::fromLatin1(compressionName(compression)));
+    return false;
 }
 
 // 'row' points at the first component of the column this chunk starts at.
@@ -637,68 +653,153 @@ void QSSGExrReader::Private::scatter(QByteArrayView chunk, qint64 r, qint64 tw, 
     }
 }
 
+bool QSSGExrReader::Private::decodeScanlineChunk(qsizetype i, const ChannelMap &map, Flags flags, RowSink sink, ChunkScratch *s, QString *err)
+{
+    const qint64 lpc = linesPerChunk(compression);
+
+    ByteCursor cursor(data, err);
+    if (!cursor.seek(qint64(offsets[i])))
+        return false;
+
+    qint32 y = 0;
+    qint32 rawSize = 0;
+    if (!cursor.readI32(&y) || !cursor.readI32(&rawSize))
+        return false;
+
+    const qint64 blockRow = qint64(y) - dataWindow.top();
+    if (blockRow < 0 || blockRow >= height) {
+        *err = QStringLiteral("chunk %1 is outside the data window").arg(i);
+        return false;
+    }
+    if (blockRow % lpc != 0) {
+        *err = QStringLiteral("chunk %1 does not start on a block boundary").arg(i);
+        return false;
+    }
+    if (blockRow / lpc >= offsets.size()) {
+        *err = QStringLiteral("chunk %1 is outside the data window").arg(i);
+        return false;
+    }
+
+    const qint64 numLines = qMin(lpc, height - blockRow);
+    qint64 expected = 0;
+    if (qMulOverflow(numLines * width, bytesPerPixel, &expected) || expected > limits.maxChunkBytes) {
+        *err = QStringLiteral("chunk %1 is implausibly large").arg(i);
+        return false;
+    }
+
+    const qint64 size = rawSize;
+    if (size < 1 || size > expected || size > cursor.remaining()) {
+        *err = QStringLiteral("chunk %1 has an implausible size").arg(i);
+        return false;
+    }
+
+    QByteArrayView decoded;
+    if (!decodeChunk(cursor.view(size), expected, width, numLines, s, &decoded, err))
+        return false;
+
+    if (s->row.size() != size_t(width * 4))
+        s->row.assign(size_t(width * 4), 0.0f);
+    for (qint64 r = 0; r < numLines; ++r) {
+        scatter(decoded, r, width, width * bytesPerPixel, map, s->row.data());
+        sink(qint32(destinationRow(blockRow + r, flags)), s->row.data());
+    }
+    return true;
+}
+
 bool QSSGExrReader::Private::decodeScanlines(const ChannelMap &map, Flags flags, RowSink sink)
 {
     const qint64 lpc = linesPerChunk(compression);
-    QBitArray seen(offsets.size());
-    QByteArray chunk;
-    QByteArray scratch;
-    std::vector<float> row(size_t(width * 4), 0.0f);
 
+    // Checked up front, so that the workers share no state.
+    QBitArray seen(offsets.size());
     for (qsizetype i = 0; i < offsets.size(); ++i) {
         ByteCursor cursor(data, &error);
-        if (!cursor.seek(qint64(offsets[i])))
-            return false;
-
         qint32 y = 0;
-        qint32 rawSize = 0;
-        if (!cursor.readI32(&y) || !cursor.readI32(&rawSize))
+        if (!cursor.seek(qint64(offsets[i])) || !cursor.readI32(&y))
             return false;
-
         const qint64 blockRow = qint64(y) - dataWindow.top();
         if (blockRow < 0 || blockRow >= height)
             return setError(QStringLiteral("chunk %1 is outside the data window").arg(i));
         if (blockRow % lpc != 0)
             return setError(QStringLiteral("chunk %1 does not start on a block boundary").arg(i));
-
         const qint64 block = blockRow / lpc;
         if (block >= offsets.size())
             return setError(QStringLiteral("chunk %1 is outside the data window").arg(i));
         if (seen.testBit(block))
             return setError(QStringLiteral("row block %1 appears more than once").arg(block));
         seen.setBit(block);
-
-        const qint64 numLines = qMin(lpc, height - blockRow);
-        qint64 expected = 0;
-        if (qMulOverflow(numLines * width, bytesPerPixel, &expected) || expected > limits.maxChunkBytes) {
-            return setError(QStringLiteral("chunk %1 is implausibly large").arg(i));
-        }
-
-        const qint64 size = rawSize;
-        if (size < 1 || size > expected || size > cursor.remaining())
-            return setError(QStringLiteral("chunk %1 has an implausible size").arg(i));
-
-        QByteArrayView decoded;
-        if (!decodeChunk(cursor.view(size), expected, width, numLines, &chunk, &scratch, &decoded))
-            return false;
-
-        for (qint64 r = 0; r < numLines; ++r) {
-            scatter(decoded, r, width, width * bytesPerPixel, map, row.data());
-            sink(qint32(destinationRow(blockRow + r, flags)), row.data());
-        }
     }
-
     if (seen.count(false) != 0)
         return setError(QStringLiteral("image is missing %1 row blocks").arg(seen.count(false)));
 
+#if QT_CONFIG(thread)
+    if (offsets.size() > 1) {
+        const int threads = qMin<int>(QThread::idealThreadCount(), int(offsets.size()));
+        std::vector<ChunkScratch> scratches;
+        std::vector<QString> errors;
+        scratches.resize(size_t(threads));
+        errors.resize(size_t(threads));
+        QAtomicInt next(0);
+        QAtomicInt failed(0);
+
+        const auto worker = [&](int slot) {
+            for (;;) {
+                const int i = next.fetchAndAddOrdered(1);
+                if (i >= offsets.size() || failed.loadRelaxed())
+                    return;
+                if (!decodeScanlineChunk(i, map, flags, sink, &scratches[size_t(slot)], &errors[size_t(slot)])) {
+                    failed.storeRelaxed(1);
+                    return;
+                }
+            }
+        };
+
+        // Take back helpers that never started, or a saturated pool deadlocks.
+        QThreadPool *pool = QThreadPool::globalInstance();
+        QSemaphore finished;
+        std::vector<std::unique_ptr<QRunnable>> helpers;
+        helpers.reserve(size_t(threads - 1));
+        for (int t = 1; t < threads; ++t) {
+            std::unique_ptr<QRunnable> helper(QRunnable::create([&worker, &finished, t] {
+                worker(t);
+                finished.release();
+            }));
+            helper->setAutoDelete(false);
+            pool->start(helper.get());
+            helpers.push_back(std::move(helper));
+        }
+        worker(0);
+        int started = 0;
+        for (const auto &h : helpers) {
+            if (!pool->tryTake(h.get()))
+                ++started;
+        }
+        finished.acquire(started);
+
+        if (failed.loadRelaxed()) {
+            for (const QString &e : errors) {
+                if (!e.isEmpty())
+                    return setError(e);
+            }
+            return setError(QStringLiteral("failed to decode a chunk"));
+        }
+        return true;
+    }
+#endif // QT_CONFIG(thread)
+
+    ChunkScratch scratch;
+    for (qsizetype i = 0; i < offsets.size(); ++i) {
+        QString err;
+        if (!decodeScanlineChunk(i, map, flags, sink, &scratch, &err))
+            return setError(err);
+    }
     return true;
 }
 
 bool QSSGExrReader::Private::decodeTiles(const ChannelMap &map, Flags flags, RowSink sink)
 {
     QBitArray seen(offsets.size());
-    QByteArray chunk;
-    QByteArray scratch;
+    ChunkScratch cs;
 
     const qint64 bandHeight = qMin(qint64(tileHeight), height);
     band.assign(size_t(width * bandHeight * 4), 0.0f);
@@ -743,7 +844,7 @@ bool QSSGExrReader::Private::decodeTiles(const ChannelMap &map, Flags flags, Row
             return setError(QStringLiteral("tile %1 has an implausible size").arg(i));
 
         QByteArrayView decoded;
-        if (!decodeChunk(cursor.view(size), expected, tw, th, &chunk, &scratch, &decoded))
+        if (!decodeChunk(cursor.view(size), expected, tw, th, &cs, &decoded, &error))
             return false;
 
         if (bandY != y0) {
@@ -915,7 +1016,6 @@ bool QSSGExrReader::decode(const ChannelMap &map, Flags flags, RowSink sink)
 
     d->band.clear();
     d->band.shrink_to_fit();
-    d->pizScratch.reset();
 
     return ok;
 }
