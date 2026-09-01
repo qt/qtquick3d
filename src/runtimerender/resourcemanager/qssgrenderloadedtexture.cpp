@@ -404,8 +404,14 @@ float convertComponent(int exponent, int val)
     return v * d;
 }
 
-void decrunchScanline(const char *&p, const char *pEnd, RGBE *scanline, int w)
+// Decodes one run length encoded scanline. Returns false, having written no
+// more than w pixels, if the data is malformed; every run has to be bounded
+// against the row, because the counts come from the file.
+bool decrunchScanline(const char *&p, const char *pEnd, RGBE *scanline, int w)
 {
+    if (pEnd - p < 4)
+        return false;
+
     scanline[0][R] = *p++;
     scanline[0][G] = *p++;
     scanline[0][B] = *p++;
@@ -414,38 +420,47 @@ void decrunchScanline(const char *&p, const char *pEnd, RGBE *scanline, int w)
     if (scanline[0][R] == 2 && scanline[0][G] == 2 && scanline[0][B] < 128) {
         // new rle, the first pixel was a dummy
         for (int channel = 0; channel < 4; ++channel) {
-            for (int x = 0; x < w && p < pEnd; ) {
+            int x = 0;
+            while (x < w) {
+                if (p >= pEnd)
+                    return false;
                 unsigned char c = *p++;
                 if (c > 128) { // run
-                    if (p < pEnd) {
-                        int repCount = c & 127;
-                        c = *p++;
-                        while (repCount--)
-                            scanline[x++][channel] = c;
-                    }
+                    const int repCount = c & 127;
+                    if (p >= pEnd || repCount > w - x)
+                        return false;
+                    c = *p++;
+                    for (int i = 0; i < repCount; ++i)
+                        scanline[x++][channel] = c;
                 } else { // not a run
-                    while (c-- && p < pEnd)
+                    if (c > w - x || pEnd - p < c)
+                        return false;
+                    for (int i = 0; i < c; ++i)
                         scanline[x++][channel] = *p++;
                 }
             }
         }
     } else {
         // old rle
-        scanline[0][R] = 2;
         int bitshift = 0;
         int x = 1;
-        while (x < w && pEnd - p >= 4) {
+        while (x < w) {
+            if (pEnd - p < 4)
+                return false;
             scanline[x][R] = *p++;
             scanline[x][G] = *p++;
             scanline[x][B] = *p++;
             scanline[x][E] = *p++;
 
             if (scanline[x][R] == 1 && scanline[x][G] == 1 && scanline[x][B] == 1) { // run
-                int repCount = scanline[x][3] << bitshift;
-                while (repCount--) {
+                // A consecutive run shifts the count up by another byte, so
+                // beyond 24 the shift itself would be undefined, and the
+                // shifted count no longer fits in an int.
+                if (bitshift > 24 || scanline[x][E] > ((w - x) >> bitshift))
+                    return false;
+                const int repCount = int(scanline[x][E]) << bitshift;
+                for (int i = 0; i < repCount; ++i, ++x)
                     memcpy(scanline[x], scanline[x - 1], 4);
-                    ++x;
-                }
                 bitshift += 8;
             } else { // not a run
                 ++x;
@@ -453,6 +468,8 @@ void decrunchScanline(const char *&p, const char *pEnd, RGBE *scanline, int w)
             }
         }
     }
+
+    return true;
 }
 
 void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, qsizetype offset, QSSGRenderTextureFormat inFormat)
@@ -479,10 +496,9 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
 {
     QSSGLoadedTexture *imageData = nullptr;
 
-    char sig[256];
+    char sig[11];
     source->seek(0);
-    source->read(sig, 11);
-    if (!strncmp(sig, "#?RADIANCE\n", 11)) {
+    if (source->read(sig, sizeof(sig)) == sizeof(sig) && !memcmp(sig, "#?RADIANCE\n", sizeof(sig))) {
         QByteArray buf = source->readAll();
         const char *p = buf.constData();
         const char *pEnd = p + buf.size();
@@ -534,8 +550,8 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
             qWarning("Unsupported HDR resolution string '%s'", line.constData());
             return imageData;
         }
-        if (width <= 0 || height <= 0) {
-            qWarning("Invalid HDR resolution");
+        if (width <= 0 || height <= 0 || width > 65536 || height > 65536) {
+            qWarning("Invalid HDR resolution %dx%d", width, height);
             return imageData;
         }
 
@@ -545,7 +561,7 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
             qWarning("HDR image dimensions %dx%d are too large", width, height);
             return imageData;
         }
-        void *data = ::malloc(size_t(dataSize));
+        void *data = ::calloc(1, size_t(dataSize));
         if (!data) {
             qWarning("Failed to allocate %lld bytes for HDR image", qlonglong(dataSize));
             return imageData;
@@ -566,12 +582,10 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
         // to correct for -Y orientation
         for (int y = 0; y < height; ++y) {
             const qsizetype byteOffset = qsizetype(height - 1 - y) * width * bytesPerPixel;
-            if (pEnd - p < 4) {
-                qWarning("Unexpected end of HDR data");
-                delete[] scanline;
-                return imageData;
+            if (!decrunchScanline(p, pEnd, scanline, width)) {
+                qWarning("Malformed HDR scanline data at row %d of %d", y, height);
+                break;
             }
-            decrunchScanline(p, pEnd, scanline, width);
             decodeScanlineToTexture(scanline, width, imageData->data, byteOffset, format);
         }
 
