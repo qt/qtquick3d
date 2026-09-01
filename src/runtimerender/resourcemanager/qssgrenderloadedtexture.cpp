@@ -9,10 +9,10 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 #include <QtGui/QImageReader>
 #include <QtGui/QColorSpace>
+#include <QtCore/qnumeric.h>
 #include <QtMath>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
-#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <private/qtexturefilereader_p.h>
 
@@ -372,11 +372,30 @@ typedef unsigned char RGBE[4];
 #define MINELEN 8 // minimum scanline length for encoding
 #define MAXELEN 0x7fff // maximum scanline length for encoding
 
+// Size in bytes of an image with the given geometry, or -1 if the result would
+// overflow or exceed what QSSGLoadedTexture::dataSizeInBytes can describe. The
+// dimensions come from image file headers, so they cannot be trusted.
+qsizetype calculateDataSize(qsizetype width, qsizetype height, qsizetype depth, qsizetype bytesPerPixel)
+{
+    if (width <= 0 || height <= 0 || depth < 0 || bytesPerPixel <= 0)
+        return -1;
 
+    qsizetype line = 0;
+    if (qMulOverflow(width, bytesPerPixel, &line))
+        return -1;
+    const qsizetype pitch = (line + 3) & ~qsizetype(3); // rows are 4-byte aligned
 
-inline int calculateLine(int width, int bitdepth) { return ((width * bitdepth) + 7) / 8; }
+    qsizetype dataSize = 0;
+    if (qMulOverflow(height, pitch, &dataSize))
+        return -1;
+    if (depth > 0 && qMulOverflow(dataSize, depth, &dataSize))
+        return -1;
 
-inline int calculatePitch(int line) { return (line + 3) & ~3; }
+    if (dataSize > qsizetype(std::numeric_limits<quint32>::max()))
+        return -1;
+
+    return dataSize;
+}
 
 float convertComponent(int exponent, int val)
 {
@@ -436,7 +455,7 @@ void decrunchScanline(const char *&p, const char *pEnd, RGBE *scanline, int w)
     }
 }
 
-void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, quint32 offset, QSSGRenderTextureFormat inFormat)
+void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, qsizetype offset, QSSGRenderTextureFormat inFormat)
 {
     quint8 *target = reinterpret_cast<quint8 *>(outBuf);
     target += offset;
@@ -521,13 +540,19 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
         }
 
         const int bytesPerPixel = format.getSizeofFormat();
-        const int bitCount = bytesPerPixel * 8;
-        const int pitch = calculatePitch(calculateLine(width, bitCount));
-        const size_t dataSize = height * pitch;
-        QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
+        const qsizetype dataSize = calculateDataSize(width, height, 0, bytesPerPixel);
+        if (dataSize < 0) {
+            qWarning("HDR image dimensions %dx%d are too large", width, height);
+            return imageData;
+        }
+        void *data = ::malloc(size_t(dataSize));
+        if (!data) {
+            qWarning("Failed to allocate %lld bytes for HDR image", qlonglong(dataSize));
+            return imageData;
+        }
         imageData = new QSSGLoadedTexture;
         imageData->dataSizeInBytes = quint32(dataSize);
-        imageData->data = ::malloc(dataSize);
+        imageData->data = data;
         imageData->width = width;
         imageData->height = height;
         imageData->format = format;
@@ -540,7 +565,7 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
         // Note we are writing to the data buffer from bottom to top
         // to correct for -Y orientation
         for (int y = 0; y < height; ++y) {
-            quint32 byteOffset = quint32((height - 1 - y) * width * bytesPerPixel);
+            const qsizetype byteOffset = qsizetype(height - 1 - y) * width * bytesPerPixel;
             if (pEnd - p < 4) {
                 qWarning("Unexpected end of HDR data");
                 delete[] scanline;
@@ -613,23 +638,6 @@ QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRe
         return imageData;
     }
 
-    // Setup Output container
-    const int bytesPerPixel = format.getSizeofFormat();
-    const int bitCount = bytesPerPixel * 8;
-    const int pitch = calculatePitch(calculateLine(exrImage.width, bitCount));
-    const size_t dataSize = exrImage.height * pitch;
-    QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
-    imageData = new QSSGLoadedTexture;
-    imageData->dataSizeInBytes = quint32(dataSize);
-    imageData->data = ::malloc(imageData->dataSizeInBytes);
-    imageData->width = exrImage.width;
-    imageData->height = exrImage.height;
-    imageData->format = format;
-    imageData->components = format.getNumberOfComponent();
-    imageData->isSRGB = false;
-
-    quint8 *target = reinterpret_cast<quint8 *>(imageData->data);
-
     // Convert data
     // RGBA
     int idxR = -1;
@@ -647,6 +655,45 @@ QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRe
             idxA = c;
     }
     const bool isSingleChannel = exrHeader.num_channels == 1;
+
+    // Anything but a lone channel is read as R, G and B, so all three have to be
+    // present. Without this a file whose channels are named something else (the
+    // luminance/chroma Y, BY, RY convention, for example) would index the plane
+    // array with -1.
+    if (!isSingleChannel && (idxR == -1 || idxG == -1 || idxB == -1)) {
+        qWarning("EXR image has no R, G and B channels");
+        FreeEXRImage(&exrImage);
+        FreeEXRHeader(&exrHeader);
+        return imageData;
+    }
+
+    // Setup Output container
+    const int bytesPerPixel = format.getSizeofFormat();
+    const qsizetype dataSize = calculateDataSize(exrImage.width, exrImage.height, 0, bytesPerPixel);
+    if (dataSize < 0) {
+        qWarning("EXR image dimensions %dx%d are too large", exrImage.width, exrImage.height);
+        FreeEXRImage(&exrImage);
+        FreeEXRHeader(&exrHeader);
+        return imageData;
+    }
+    void *data = ::malloc(size_t(dataSize));
+    if (!data) {
+        qWarning("Failed to allocate %lld bytes for EXR image", qlonglong(dataSize));
+        FreeEXRImage(&exrImage);
+        FreeEXRHeader(&exrHeader);
+        return imageData;
+    }
+    imageData = new QSSGLoadedTexture;
+    imageData->dataSizeInBytes = quint32(dataSize);
+    imageData->data = data;
+    imageData->width = exrImage.width;
+    imageData->height = exrImage.height;
+    imageData->format = format;
+    imageData->components = format.getNumberOfComponent();
+    imageData->isSRGB = false;
+
+    quint8 *target = reinterpret_cast<quint8 *>(imageData->data);
+
     float rgbaF32[4];
 
     if (exrHeader.tiled) {
@@ -683,7 +730,7 @@ QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRe
                         else
                             rgbaF32[3] = 1.0f;
                     }
-                    format.encodeToPixel(rgbaF32, target, idx * bytesPerPixel);
+                    format.encodeToPixel(rgbaF32, target + qsizetype(idx) * bytesPerPixel, 0);
                 }
         }
     } else {
@@ -705,7 +752,7 @@ QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRe
                     else
                         rgbaF32[3] = 1.0f;
                 }
-                format.encodeToPixel(rgbaF32, target, idx * bytesPerPixel);
+                format.encodeToPixel(rgbaF32, target + qsizetype(idx) * bytesPerPixel, 0);
                 ++idx;
             }
         }
@@ -750,18 +797,54 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
     return imageData;
 }
 
+// Size in bytes of tightly packed texture data, or -1 if the result would
+// overflow or exceed what dataSizeInBytes can describe. The upload path assumes
+// rows with no padding, so calculateDataSize()'s 4-byte aligned pitch must not
+// be used here.
+static qsizetype packedDataSize(const QSize &size, int depth, int bytesPerPixel)
+{
+    if (size.width() <= 0 || size.height() <= 0 || depth < 0 || bytesPerPixel <= 0)
+        return -1;
+
+    qsizetype dataSize = bytesPerPixel;
+    if (qMulOverflow(dataSize, qsizetype(size.width()), &dataSize)
+        || qMulOverflow(dataSize, qsizetype(size.height()), &dataSize)
+        || qMulOverflow(dataSize, qsizetype(qMax(depth, 1)), &dataSize)) {
+        return -1;
+    }
+
+    if (dataSize > qsizetype(std::numeric_limits<quint32>::max()))
+        return -1;
+
+    return dataSize;
+}
+
 QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *textureData)
 {
     QSSGLoadedTexture *imageData = new QSSGLoadedTexture;
 
     if (!textureData->format().isCompressedTextureFormat()) {
         const int bytesPerPixel = textureData->format().getSizeofFormat();
-        const int bitCount = bytesPerPixel * 8;
-        const int pitch = calculatePitch(calculateLine(textureData->size().width(), bitCount));
-        size_t dataSize = size_t(textureData->size().height()) * pitch;
-        if (textureData->depth() > 0)
-            dataSize *= textureData->depth();
-        QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
+        const qsizetype dataSize = packedDataSize(textureData->size(), textureData->depth(), bytesPerPixel);
+        if (dataSize < 0) {
+            qWarning("TextureData dimensions %dx%dx%d are not usable",
+                     textureData->size().width(),
+                     textureData->size().height(),
+                     textureData->depth());
+            return imageData;
+        }
+        // The size only describes what the data is meant to be; the upload
+        // reads that many bytes from it either way.
+        if (dataSize > textureData->textureData().size()) {
+            qWarning("TextureData holds %lld bytes, but %dx%dx%d at %d bytes per pixel needs %lld",
+                     qlonglong(textureData->textureData().size()),
+                     textureData->size().width(),
+                     textureData->size().height(),
+                     textureData->depth(),
+                     bytesPerPixel,
+                     qlonglong(dataSize));
+            return imageData;
+        }
         imageData->dataSizeInBytes = quint32(dataSize);
         // We won't modifiy the data, but that is a nasty cast...
         imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
@@ -773,9 +856,13 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *tex
     } else {
         // Compressed Textures work a bit differently
         // Fill out what makes sense, leave the rest at the default 0 and null.
-        imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
-        const size_t dataSize = textureData->textureData().size();
-        QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
+        const qsizetype dataSize = textureData->textureData().size();
+        if (dataSize > qsizetype(std::numeric_limits<quint32>::max())) {
+            qWarning("TextureData holds %lld bytes, which exceeds the 4GB limit",
+                     qlonglong(dataSize));
+            return imageData;
+        }
+        imageData->data = const_cast<void *>(reinterpret_cast<const void *>(textureData->textureData().data()));
         imageData->dataSizeInBytes = quint32(dataSize);
         // When we use depth we need to do slicing per layer for the uploads, but right now there it is non-trivial
         // to determine the size of each "pixel" for compressed formats, so we don't support it for now.
@@ -946,6 +1033,14 @@ static QSSGLoadedTexture *loadCubeMap(const QString &inPath, bool flipY)
         prevImage = face;
     }
 
+    const qsizetype dataSize = prevImage.sizeInBytes();
+    if (dataSize > qsizetype(std::numeric_limits<quint32>::max())) {
+        qWarning("Cube map face %dx%d is too large to describe",
+                 prevImage.width(),
+                 prevImage.height());
+        return nullptr;
+    }
+
     QSSGLoadedTexture *retval = new QSSGLoadedTexture;
 
     retval->textureFileData = *textureFileData;
@@ -955,8 +1050,6 @@ static QSSGLoadedTexture *loadCubeMap(const QString &inPath, bool flipY)
     retval->components = prevImage.pixelFormat().channelCount();
     retval->image = prevImage;
     retval->data = (void *)retval->image.bits();
-    const size_t dataSize = prevImage.sizeInBytes();
-    QSSG_CHECK_X(dataSize <= std::numeric_limits<quint32>::max(), "Requested data size exceeds 4GB limit!");
     retval->dataSizeInBytes = quint32(dataSize);
     retval->setFormatFromComponents();
     // #TODO: This is a very crude way detect color space
