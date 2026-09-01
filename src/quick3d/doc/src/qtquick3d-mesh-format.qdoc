@@ -1,0 +1,361 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\internal
+\title Qt Quick 3D Mesh File Format
+\page quick3d-mesh-format
+
+This describes the binary layout of the \c .mesh files that
+\l{Balsam Asset Import Tool}{Balsam} writes and that \c Model::source loads. It
+documents what the reader in \c qssgmesh.cpp accepts, so that the parser, the
+writer and any external tooling can be checked against one description.
+
+\section1 Container
+
+A \c .mesh file is a container holding one or more meshes, each with its own
+vertex and index buffers and subset views into them. It is read back to front:
+the last 16 bytes are the footer, the entry list sits immediately before it, and
+each entry gives the absolute offset of one mesh.
+
+All values are little endian. Floating point values are 32-bit. Some strings are
+UTF-8 and some are UTF-16LE, as noted per field.
+
+\badcode
+[mesh 0][mesh 1]...[entry 0][entry 1]...[footer]
+\endcode
+
+\section2 MultiMeshFooter, 16 bytes, at the end of the file
+
+\table
+\header
+    \li Type
+    \li Field
+    \li Notes
+\row
+    \li quint32
+    \li fileId
+    \li 555777497
+\row
+    \li quint32
+    \li version
+    \li 1, the only container version
+\row
+    \li quint32
+    \li entriesOffset
+    \li Ignore, see \l{Offset fields}
+\row
+    \li quint32
+    \li entriesSize
+    \li Number of meshes, and so of entries
+\endtable
+
+\section2 MultiMeshEntry, 16 bytes, entriesSize of them before the footer
+
+\table
+\header
+    \li Type
+    \li Field
+    \li Notes
+\row
+    \li quint64
+    \li meshOffset
+    \li Absolute offset of the mesh. The only offset in the format that can be
+        trusted
+\row
+    \li quint32
+    \li meshId
+    \li Identifies the mesh within the container
+\row
+    \li quint32
+    \li padding
+    \li Unused
+\endtable
+
+\section1 Mesh
+
+\section2 MeshDataHeader, 12 bytes, at meshOffset
+
+\table
+\header
+    \li Type
+    \li Field
+    \li Notes
+\row
+    \li quint32
+    \li fileId
+    \li 3365961549
+\row
+    \li quint16
+    \li fileVersion
+    \li 3 to 7, see \l{Versions}
+\row
+    \li quint16
+    \li headerFlags
+    \li Unused
+\row
+    \li quint32
+    \li sizeInBytes
+    \li Size of the mesh that follows, excluding this header
+\endtable
+
+\section2 Mesh, 56 bytes
+
+Fourteen quint32 fields. Three of them were repurposed in version 7, which is
+why the size did not change:
+
+\table
+\header
+    \li Field, before version 7
+    \li Field, version 7
+    \li Notes
+\row
+    \li vertexBuffer.entriesOffset
+    \li targetBufferEntriesCount
+    \li Ignore before version 7
+\row
+    \li vertexBuffer.entriesSize
+    \li vertexBuffer.entriesSize
+    \li Number of vertex buffer entries
+\row
+    \li vertexBuffer.stride
+    \li vertexBuffer.stride
+    \li Bytes per vertex
+\row
+    \li vertexBuffer.dataOffset
+    \li targetBufferDataSize
+    \li Ignore before version 7
+\row
+    \li vertexBuffer.dataSize
+    \li vertexBuffer.dataSize
+    \li Bytes of vertex data
+\row
+    \li indexBuffer.componentType
+    \li indexBuffer.componentType
+    \li See \l{Component types}
+\row
+    \li indexBuffer.dataOffset
+    \li indexBuffer.dataOffset
+    \li Ignore
+\row
+    \li indexBuffer.dataSize
+    \li indexBuffer.dataSize
+    \li Bytes of index data, zero for a non-indexed mesh
+\row
+    \li subsetsOffset
+    \li targetCount
+    \li Ignore before version 7
+\row
+    \li subsetsSize
+    \li subsetsSize
+    \li Number of subsets
+\row
+    \li jointsOffset
+    \li jointsOffset
+    \li Ignore
+\row
+    \li jointsSize
+    \li jointsSize
+    \li Number of joints, see \l{Joints}
+\row
+    \li drawMode
+    \li drawMode
+    \li See \l{Draw modes}
+\row
+    \li winding
+    \li winding
+    \li See \l{Windings}
+\endtable
+
+\section2 Blocks after the Mesh struct, in file order
+
+\list 1
+\li Vertex buffer entries, \c entriesSize of them, 16 bytes each: a
+    \c nameOffset to ignore, then \c componentType, \c componentCount and the
+    byte \c offset of the attribute within a vertex. Followed by padding.
+\li Vertex buffer entry names, one per entry: a quint32 byte length, then that
+    many bytes of UTF-8 including a terminating zero, then padding.
+\li Vertex buffer data, \c vertexBuffer.dataSize bytes, then padding.
+\li Index buffer data, \c indexBuffer.dataSize bytes, then padding.
+\li Subsets, \c subsetsSize of them, sized by version, followed by padding.
+\li Subset names, one per subset: \c nameLength UTF-16LE code units including a
+    terminating zero, then padding.
+\li Level of detail entries, in subset order, \c lodCount of them per subset,
+    12 bytes each, followed by padding. Version 6 and later.
+\li Joints, \c jointsSize of them, 136 bytes each.
+\li Target buffer entries, names and data, laid out exactly as the vertex buffer
+    ones. Version 7 only.
+\endlist
+
+\section2 Subset
+
+40 bytes before version 5, 48 in version 5, 52 in version 6 and later:
+
+\table
+\header
+    \li Type
+    \li Field
+    \li Notes
+\row
+    \li quint32
+    \li count
+    \li Number of indices, or of vertices when there is no index buffer
+\row
+    \li quint32
+    \li offset
+    \li First index, or first vertex
+\row
+    \li float[6]
+    \li bounds
+    \li Minimum xyz then maximum xyz
+\row
+    \li quint32
+    \li nameOffset
+    \li Ignore
+\row
+    \li quint32
+    \li nameLength
+    \li UTF-16 code units including the terminating zero, so the name occupies
+        twice this many bytes
+\row
+    \li quint32
+    \li lightmapWidth
+    \li Version 5 and later
+\row
+    \li quint32
+    \li lightmapHeight
+    \li Version 5 and later
+\row
+    \li quint32
+    \li lodCount
+    \li Version 6 and later
+\endtable
+
+\section2 Level of detail entry, 12 bytes
+
+A quint32 \c count and \c offset into the index buffer, as for a subset, and a
+float \c distance, the screen space threshold at which the level is used.
+
+\section1 Padding
+
+Every block is aligned to four bytes, but not in the way that phrase usually
+means. The alignment step adds \c{4 - (byteCounter % 4)} bytes, which is a full
+four bytes when the position is already aligned. So an already aligned block
+still carries four bytes of padding.
+
+\note This started as a bug in the original writer, and became part of the
+format the moment files were shipped with it. A reader that skips the padding
+only when it is needed will misparse every file.
+
+The padding follows the vertex buffer entries as a group, not each entry; the
+same is true of the subsets and of the level of detail entries. Entry names and
+subset names are each padded individually.
+
+\section1 Offset fields
+
+Several fields hold an offset that the original implementation filled in while
+parsing, and which was then written back out. They carry no useful information
+and differ between writers: version 3 files have whatever the producing tool
+left there, and version 4 and later write zero. Read them and discard them.
+
+\c MultiMeshEntry::meshOffset is the exception, and is the only offset a reader
+should act on.
+
+\section1 Joints
+
+The 136 byte joint records hold a joint id, a parent id and two 4x4 matrices.
+Qt Quick 3D does not use them, and its writer always emits \c{jointsSize = 0},
+but the block is part of the layout: a reader must skip \c{jointsSize * 136}
+bytes or everything after it will be misparsed. Only files from Qt 3D Studio
+are known to carry joints.
+
+\section1 Versions
+
+The container version is 1 and has never changed. Mesh versions:
+
+\table
+\header
+    \li Version
+    \li Change
+\row
+    \li 1, 2
+    \li Not supported. Unique to Nvidia Drive Design and early Qt 3D Studio
+\row
+    \li 3
+    \li The oldest supported version, and the last that Qt 3D Studio produces
+\row
+    \li 4
+    \li The offset fields are written as zero
+\row
+    \li 5
+    \li Subsets gain a lightmap size hint
+\row
+    \li 6
+    \li Subsets gain levels of detail
+\row
+    \li 7
+    \li Morph target data moves to its own buffer, and three fields of the Mesh
+        struct are repurposed to describe it. Written by current versions
+\endtable
+
+Before version 7 morph targets were extra vertex buffer entries named
+\c attr_tpos0, \c attr_tnorm1 and so on, with anything beyond the supported
+number named \c attr_unsupported. The reader converts these into a version 7
+target buffer on load, so callers see one representation.
+
+\section1 Enumerations
+
+\section2 Component types
+
+\table
+\header
+    \li Value
+    \li Type
+    \li Size
+\row
+    \li 1, 2
+    \li quint8, qint8
+    \li 1
+\row
+    \li 3, 4
+    \li quint16, qint16
+    \li 2
+\row
+    \li 5, 6
+    \li quint32, qint32
+    \li 4
+\row
+    \li 7, 8
+    \li quint64, qint64
+    \li 8
+\row
+    \li 9
+    \li 16-bit float
+    \li 2
+\row
+    \li 10
+    \li 32-bit float
+    \li 4
+\row
+    \li 11
+    \li 64-bit float
+    \li 8
+\endtable
+
+\section2 Draw modes
+
+1 points, 2 line strip, 3 line loop, 4 lines, 5 triangle strip, 6 triangle fan,
+7 triangles, 8 patches.
+
+\section2 Windings
+
+1 clockwise, 2 counter-clockwise.
+
+\section2 Attribute names
+
+\c attr_pos, \c attr_norm, \c attr_uv0, \c attr_uv1, \c attr_textan,
+\c attr_binormal, \c attr_joints, \c attr_weights, \c attr_colors, and the
+morph target names described under \l{Versions}.
+
+\sa {Balsam Asset Import Tool}
+*/
