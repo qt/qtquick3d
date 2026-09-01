@@ -16,17 +16,10 @@
 
 #include <private/qtexturefilereader_p.h>
 
-#define TINYEXR_IMPLEMENTATION
-#define TINYEXR_USE_MINIZ 0
-#define TINYEXR_USE_THREAD 1
-#include <zlib.h>
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_CLANG("-Wunused-parameter")
-QT_WARNING_DISABLE_CLANG("-Wunused-function")
-QT_WARNING_DISABLE_GCC("-Wunused-parameter")
-QT_WARNING_DISABLE_GCC("-Wunused-function")
-#include <tinyexr.h>
-QT_WARNING_POP
+#include <memory>
+
+#include <QtQuick3DTextureHelpers/private/qssgexrreader_p.h>
+
 #include "qssglightmapio_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -364,13 +357,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath)
 
 namespace {
 typedef unsigned char RGBE[4];
-#define R 0
-#define G 1
-#define B 2
-#define E 3
-
-#define MINELEN 8 // minimum scanline length for encoding
-#define MAXELEN 0x7fff // maximum scanline length for encoding
+enum : size_t { R = 0, G = 1, B = 2, E = 3 };
 
 // Size in bytes of an image with the given geometry, or -1 if the result would
 // overflow or exceed what QSSGLoadedTexture::dataSizeInBytes can describe. The
@@ -597,189 +584,70 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
 
 QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRenderTextureFormat format)
 {
-    QSSGLoadedTexture *imageData = nullptr;
-
-    char versionBuffer[tinyexr::kEXRVersionSize];
     source->seek(0);
-    auto size = source->read(versionBuffer, tinyexr::kEXRVersionSize);
-    // Check if file is big enough
-    if (size != tinyexr::kEXRVersionSize)
-        return imageData;
-    // Try to load the Version
-    EXRVersion exrVersion;
-    if (ParseEXRVersionFromMemory(&exrVersion, reinterpret_cast<unsigned char *>(versionBuffer), tinyexr::kEXRVersionSize) != TINYEXR_SUCCESS)
-        return imageData;
+    const QByteArray buf = source->readAll();
+    // Silent, since loadHdrImage() falls through to here for any other file.
+    if (!QSSGExrReader::isExr(buf))
+        return nullptr;
 
-    // Check that the file is not a multipart file
-    if (exrVersion.multipart)
-        return imageData;
-
-    // If we get here, than this is an EXR file
-    source->seek(0);
-    QByteArray buf = source->readAll();
-    const char *err = nullptr;
-    // Header
-    EXRHeader exrHeader;
-    InitEXRHeader(&exrHeader);
-    if (ParseEXRHeaderFromMemory(&exrHeader,
-                                 &exrVersion,
-                                 reinterpret_cast<const unsigned char *>(buf.constData()),
-                                 buf.size(),
-                                 &err) != TINYEXR_SUCCESS) {
-        qWarning("Failed to parse EXR Header with error: '%s'", err);
-        FreeEXRErrorMessage(err);
-        return imageData;
+    QSSGExrReader reader;
+    if (!reader.parseHeader(buf)) {
+        qWarning("Failed to parse EXR file: %s", qPrintable(reader.errorMessage()));
+        return nullptr;
     }
 
-    // Make sure we get floats instead of half floats
-    for (int i = 0; i < exrHeader.num_channels; i++) {
-        if (exrHeader.pixel_types[i] == TINYEXR_PIXELTYPE_HALF)
-            exrHeader.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+    const QSSGExrReader::ChannelMap map = qssgExrRgbaChannelMap(reader);
+    if (map.source[0] < 0 && map.source[1] < 0 && map.source[2] < 0) {
+        QByteArrayList names;
+        for (const QSSGExrReader::Channel &channel : reader.channels())
+            names.append(channel.name);
+        qWarning("EXR image has no R, G or B channel; its channels are: %s", names.join(", ").constData());
+        return nullptr;
     }
 
-    // Image
-    EXRImage exrImage;
-
-    InitEXRImage(&exrImage);
-    if (LoadEXRImageFromMemory(&exrImage,
-                               &exrHeader,
-                               reinterpret_cast<const unsigned char *>(buf.constData()),
-                               buf.size(),
-                               &err) != TINYEXR_SUCCESS) {
-        qWarning("Failed to load EXR Image with error: '%s'", err);
-        FreeEXRHeader(&exrHeader);
-        FreeEXRErrorMessage(err);
-        return imageData;
-    }
-
-    // Convert data
-    // RGBA
-    int idxR = -1;
-    int idxG = -1;
-    int idxB = -1;
-    int idxA = -1;
-    for (int c = 0; c < exrHeader.num_channels; c++) {
-        if (strcmp(exrHeader.channels[c].name, "R") == 0)
-            idxR = c;
-        else if (strcmp(exrHeader.channels[c].name, "G") == 0)
-            idxG = c;
-        else if (strcmp(exrHeader.channels[c].name, "B") == 0)
-            idxB = c;
-        else if (strcmp(exrHeader.channels[c].name, "A") == 0)
-            idxA = c;
-    }
-    const bool isSingleChannel = exrHeader.num_channels == 1;
-
-    // Anything but a lone channel is read as R, G and B, so all three have to be
-    // present. Without this a file whose channels are named something else (the
-    // luminance/chroma Y, BY, RY convention, for example) would index the plane
-    // array with -1.
-    if (!isSingleChannel && (idxR == -1 || idxG == -1 || idxB == -1)) {
-        qWarning("EXR image has no R, G and B channels");
-        FreeEXRImage(&exrImage);
-        FreeEXRHeader(&exrHeader);
-        return imageData;
-    }
-
-    // Setup Output container
+    const qint32 width = reader.size().width();
+    const qint32 height = reader.size().height();
     const int bytesPerPixel = format.getSizeofFormat();
-    const qsizetype dataSize = calculateDataSize(exrImage.width, exrImage.height, 0, bytesPerPixel);
+    const qsizetype dataSize = calculateDataSize(width, height, 0, bytesPerPixel);
     if (dataSize < 0) {
-        qWarning("EXR image dimensions %dx%d are too large", exrImage.width, exrImage.height);
-        FreeEXRImage(&exrImage);
-        FreeEXRHeader(&exrHeader);
-        return imageData;
+        qWarning("EXR image dimensions %dx%d are too large", width, height);
+        return nullptr;
     }
     void *data = ::malloc(size_t(dataSize));
     if (!data) {
         qWarning("Failed to allocate %lld bytes for EXR image", qlonglong(dataSize));
-        FreeEXRImage(&exrImage);
-        FreeEXRHeader(&exrHeader);
-        return imageData;
+        return nullptr;
     }
-    imageData = new QSSGLoadedTexture;
+
+    std::unique_ptr<QSSGLoadedTexture> imageData(new QSSGLoadedTexture);
     imageData->dataSizeInBytes = quint32(dataSize);
     imageData->data = data;
-    imageData->width = exrImage.width;
-    imageData->height = exrImage.height;
+    imageData->width = width;
+    imageData->height = height;
     imageData->format = format;
     imageData->components = format.getNumberOfComponent();
     imageData->isSRGB = false;
 
-    quint8 *target = reinterpret_cast<quint8 *>(imageData->data);
+    quint8 *const target = reinterpret_cast<quint8 *>(data);
+    const qsizetype pitch = dataSize / height;
 
-    float rgbaF32[4];
-
-    if (exrHeader.tiled) {
-        for (int it = 0; it < exrImage.num_tiles; it++) {
-            for (int j = 0; j < exrHeader.tile_size_y; j++)
-                for (int i = 0; i < exrHeader.tile_size_x; i++) {
-                    const int ii =
-                            exrImage.tiles[it].offset_x * exrHeader.tile_size_x + i;
-                    const int jj =
-                            exrImage.tiles[it].offset_y * exrHeader.tile_size_y + j;
-                    const int inverseJJ = std::abs(jj - (exrImage.height - 1));
-                    const int idx = ii + inverseJJ * exrImage.width;
-
-                    // out of region check.
-                    if (ii >= exrImage.width) {
-                        continue;
-                    }
-                    if (jj >= exrImage.height) {
-                        continue;
-                    }
-                    const int srcIdx = i + j * exrHeader.tile_size_x;
-                    unsigned char **src = exrImage.tiles[it].images;
-                    if (isSingleChannel) {
-                        rgbaF32[R] = reinterpret_cast<float **>(src)[0][srcIdx];
-                        rgbaF32[G] = rgbaF32[R];
-                        rgbaF32[B] = rgbaF32[R];
-                        rgbaF32[3] = rgbaF32[R];
-                    } else {
-                        rgbaF32[R] = reinterpret_cast<float **>(src)[idxR][srcIdx];
-                        rgbaF32[G] = reinterpret_cast<float **>(src)[idxG][srcIdx];
-                        rgbaF32[B] = reinterpret_cast<float **>(src)[idxB][srcIdx];
-                        if (idxA != -1)
-                            rgbaF32[3] = reinterpret_cast<float **>(src)[idxA][srcIdx];
-                        else
-                            rgbaF32[3] = 1.0f;
-                    }
-                    format.encodeToPixel(rgbaF32, target + qsizetype(idx) * bytesPerPixel, 0);
-                }
+    const bool ok = reader.decode(map, QSSGExrReader::FlipVertically, [&](qint32 row, const float *rgba) {
+        quint8 *dst = target + qsizetype(row) * pitch;
+        for (qint32 x = 0; x < width; ++x) {
+            float px[4] = { rgba[x * 4], rgba[x * 4 + 1], rgba[x * 4 + 2], rgba[x * 4 + 3] };
+            format.encodeToPixel(px, dst, x * bytesPerPixel);
         }
-    } else {
-        int idx = 0;
-        for (int y = exrImage.height - 1; y >= 0; --y) {
-            for (int x = 0; x < exrImage.width; x++) {
-                const int i = y * exrImage.width + x;
-                if (isSingleChannel) {
-                    rgbaF32[R] = reinterpret_cast<float **>(exrImage.images)[0][i];
-                    rgbaF32[G] = rgbaF32[R];
-                    rgbaF32[B] = rgbaF32[R];
-                    rgbaF32[3] = rgbaF32[R];
-                } else {
-                    rgbaF32[R] = reinterpret_cast<float **>(exrImage.images)[idxR][i];
-                    rgbaF32[G] = reinterpret_cast<float **>(exrImage.images)[idxG][i];
-                    rgbaF32[B] = reinterpret_cast<float **>(exrImage.images)[idxB][i];
-                    if (idxA != -1)
-                        rgbaF32[3] = reinterpret_cast<float **>(exrImage.images)[idxA][i];
-                    else
-                        rgbaF32[3] = 1.0f;
-                }
-                format.encodeToPixel(rgbaF32, target + qsizetype(idx) * bytesPerPixel, 0);
-                ++idx;
-            }
-        }
+    });
+
+    if (!ok) {
+        qWarning("Failed to decode EXR file: %s", qPrintable(reader.errorMessage()));
+        return nullptr;
     }
 
-    // Cleanup
-    FreeEXRImage(&exrImage);
-    FreeEXRHeader(&exrHeader);
-
-    return imageData;
-
+    return imageData.release();
 }
-}
+
+} // namespace
 
 QSSGLoadedTexture *QSSGLoadedTexture::loadLightmapImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, const QString &key)
 {

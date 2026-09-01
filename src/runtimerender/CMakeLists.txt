@@ -99,6 +99,7 @@ qt_internal_add_module(Quick3DRuntimeRender
     DEFINES
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES
+        Qt::Quick3DTextureHelpersPrivate
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
     PUBLIC_LIBRARIES

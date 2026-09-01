@@ -117,6 +117,10 @@ or library \c target.
 the suffix \c{.hdr}, or \c{.exr}. These files will be converted at build time
 to \c .ktx files, using the \l{Balsam Asset Import Tool}.
 
+\note Of the \c{.exr} variants, single part files with no compression or with
+RLE, ZIPS, ZIP or PIZ compression are supported. PXR24, B44, B44A, DWAA and
+DWAB compression, deep images and multi part files are not.
+
 By default, the \c .ktx files will show up in embedded Qt resources of
 the target binary under the same base name and relative path. Use \c BASE
 to remove a common directory from the relative paths at runtime. That is, if all
