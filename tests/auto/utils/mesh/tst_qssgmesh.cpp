@@ -344,6 +344,8 @@ private slots:
     void drawRangesAreValidated();
     void unknownComponentTypes_data();
     void unknownComponentTypes();
+    void jointBlockIsSkipped();
+    void jointCountIsBounded();
     void fuzzRegressions_data();
     void fuzzRegressions();
 
@@ -945,6 +947,35 @@ void tst_QSSGMesh::unknownComponentTypes()
     QFETCH(QByteArray, data);
 
     QVERIFY(!load(data).isValid());
+}
+
+void tst_QSSGMesh::jointBlockIsSkipped()
+{
+    // The joint records sit between the level of detail data and the morph
+    // target entries, so a reader that does not step over them reads the target
+    // entries out of joint data. Nothing Qt writes has joints, but the format
+    // has them and Qt 3D Studio wrote them.
+    MeshBuilder builder;
+    builder.setStride(12)
+            .setEntries({ { "attr_pos"_ba, 10, 3, 0 } })
+            .setVertexData(QByteArray(36, '\x11'))
+            .setJointCount(2)
+            .setTargetEntries({ { "attr_pos"_ba, 10, 3, 0 } })
+            .setTargetData(QByteArray(48, '\x22'), 1);
+
+    const Mesh mesh = load(builder.build());
+    QVERIFY(mesh.isValid());
+    QCOMPARE(mesh.targetBuffer().numTargets, 1u);
+    QCOMPARE(mesh.targetBuffer().entries.size(), 1);
+    QCOMPARE(mesh.targetBuffer().entries.first().name, "attr_pos"_ba);
+    QCOMPARE(mesh.targetBuffer().data, QByteArray(48, '\x22'));
+    QCOMPARE(mesh.vertexBuffer().data, QByteArray(36, '\x11'));
+}
+
+void tst_QSSGMesh::jointCountIsBounded()
+{
+    const quint32 huge = 0xfffffff0u;
+    QVERIFY(!load(MeshBuilder().patchMeshField(11, huge).build()).isValid());
 }
 
 void tst_QSSGMesh::fuzzRegressions_data()

@@ -46,6 +46,9 @@ static const size_t SUBSET_STRUCT_SIZE_V6 = 52;
 //lod entry: count, offset, distance
 static const size_t LOD_STRUCT_SIZE = 12;
 
+// joint list: jointID, parentID, invBindPose, localToGlobalBoneSpace
+static const size_t JOINT_STRUCT_SIZE = 136;
+
 // getSizeOfType() is Q_UNREACHABLE outside its enumeration, so a component type
 // from the file has to be checked before it gets there.
 // Spelled out so that a new component type fails to compile until handled.
@@ -199,8 +202,8 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     inputStream >> targetCount >> subsetsCount;
     mesh->m_targetBuffer.numTargets = targetCount;
 
-    quint32 jointsOffsets; // unused
-    quint32 jointsCount; // unused
+    quint32 jointsOffsets; // unused, see the format documentation
+    quint32 jointsCount;
     inputStream >> jointsOffsets >> jointsCount;
     quint32 drawMode;
     quint32 winding;
@@ -426,6 +429,16 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     if (alignAmount)
         device->read(alignPadding, alignAmount);
 
+    // Unused, but the morph target entries come after them.
+    if (jointsCount) {
+        if (!canRead(device, jointsCount, JOINT_STRUCT_SIZE)) {
+            qWarning("Mesh declares %u joints, which do not fit in the file", jointsCount);
+            return 0;
+        }
+        const quint64 jointsByteSize = quint64(jointsCount) * JOINT_STRUCT_SIZE;
+        device->seek(device->pos() + qint64(jointsByteSize));
+        offsetTracker.advance(qint32(jointsByteSize));
+    }
 
     // Data for morphTargets
     if (targetBufferEntriesCount > 0) {
