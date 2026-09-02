@@ -17,6 +17,7 @@ private slots:
     void levelsOfDetailWithoutNormals();
     void levelsOfDetailClearsSplitVertices();
     void levelsOfDetailFromUnweldedMesh();
+    void levelsOfDetailReachTheFinestLevel();
 };
 
 // Two triangles given as six separate vertices, where three of them repeat a
@@ -221,6 +222,34 @@ void tst_mesh::levelsOfDetailFromUnweldedMesh()
         for (const quint32 index : lod.indexes)
             QVERIFY(index < vertexCount);
     }
+}
+
+// The index target doubles after every level, which used to step over the three
+// quarter limit and end the loop while a level still fitted under it. A 12x12
+// height field, 864 indexes, is sized to hit that case.
+void tst_mesh::levelsOfDetailReachTheFinestLevel()
+{
+    QVector<QVector3D> positions;
+    QVector<QVector3D> normals;
+    QVector<quint32> indexes;
+    makeHeightField(12, positions, normals, indexes);
+    // Sized so that the doubled target overshoots the limit
+    QCOMPARE(indexes.size(), 864);
+
+    QVector<QSSGMesh::MeshVertexSplit> splitVertices;
+    const auto lods = QSSGMesh::generateMeshLevelsOfDetail(positions, normals, indexes, splitVertices);
+    QVERIFY(!lods.isEmpty());
+
+    // Levels come back from the smallest index count to the largest
+    const quint32 indexCount = quint32(indexes.size());
+    const quint32 finest = quint32(lods.last().indexes.size());
+
+    // A level half again this size would still fit, so stopping here means one
+    // was left ungenerated
+    QVERIFY2(finest * 2 >= indexCount,
+             qPrintable(QStringLiteral("finest level %1 of %2 indexes leaves room for another")
+                                .arg(finest).arg(indexCount)));
+    QVERIFY(finest < indexCount);
 }
 
 QTEST_APPLESS_MAIN(tst_mesh)

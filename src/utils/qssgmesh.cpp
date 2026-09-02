@@ -1600,6 +1600,11 @@ QVector<MeshLevelOfDetail> generateMeshLevelsOfDetail(const QVector<QVector3D> &
     const float *vertexData = reinterpret_cast<const float *>(weldedPositions.constData());
     const float scaleFactor = simplifyScale(vertexData, weldedVertexCount, sizeof(QVector3D));
     const quint32 indexCount = indexes.size();
+    // A level is kept when it is at least half again the previous one and still
+    // under three quarters of the mesh; simplifyMesh() rounds up to whole
+    // triangles, so a larger target only yields levels that get thrown away.
+    const quint32 maxLevelIndexes = indexCount - indexCount / 4 - 1;
+    const quint32 maxIndexTarget = maxLevelIndexes - maxLevelIndexes % 3;
     quint32 indexTarget = 12;
     quint32 lastIndexCount = 0;
     QVector<MeshLevelOfDetail> lods;
@@ -1613,13 +1618,16 @@ QVector<MeshLevelOfDetail> generateMeshLevelsOfDetail(const QVector<QVector3D> &
                                         targetError, 0, &error);
 
         // Not good enough, try again
-        if (newLength < lastIndexCount * 1.5f) {
-            indexTarget = indexTarget * 1.5f;
+        if (newLength < lastIndexCount + (lastIndexCount + 1) / 2) {
+            const quint32 nextTarget = qMin(indexTarget + indexTarget / 2, maxIndexTarget);
+            if (nextTarget <= indexTarget)
+                break;
+            indexTarget = nextTarget;
             continue;
         }
 
         // We are done
-        if (newLength == 0 || (newLength >= (indexCount * 0.75f)))
+        if (newLength == 0 || newLength > maxLevelIndexes)
             break;
 
         newIndexes.resize(newLength);
@@ -1718,8 +1726,17 @@ QVector<MeshLevelOfDetail> generateMeshLevelsOfDetail(const QVector<QVector3D> &
         }
 
         lods.append({error * scaleFactor, newIndexes});
-        indexTarget = qMax(newLength, indexTarget) * 2;
         lastIndexCount = newLength;
+
+        // No level can be both big enough and small enough any more
+        if (lastIndexCount + (lastIndexCount + 1) / 2 > maxLevelIndexes)
+            break;
+
+        const size_t doubled = qMax(newLength, size_t(indexTarget)) * 2; // may exceed quint32
+        const quint32 nextTarget = quint32(qMin<size_t>(doubled, maxIndexTarget));
+        if (nextTarget <= indexTarget)
+            break;
+        indexTarget = nextTarget;
 
         if (error == 0.0f)
             break;
