@@ -91,12 +91,13 @@ public:
         ResourceLoader, // Resource [meta]
         RenderPass, // Resource
         SkyMaterial, // Resource
+        Skin, // Resource
         // Materials
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource
         CustomMaterial, // Resource
         SpecularGlossyMaterial, //Resource
-        Skin, // Resource
+        LegacySkin, // Reserved; Type::Skin had this value before Qt 6.13. Never construct an object with it.
         // Textures
         Image2D = BaseType::Texture | BaseType::Resource, // Resource
         ImageCube, // Resource
@@ -129,11 +130,10 @@ public:
 
     [[nodiscard]] static constexpr bool isMaterial(Type type) noexcept
     {
-        // Type::Skin sits in the material value range for historical reasons,
-        // but it is a texture-data resource, not a material. On the released
-        // branches the value cannot move, since Type values are inlined into
-        // binaries built against those headers.
-        return (TypeT(type) & BaseType::Material) && (type != Type::Skin);
+        // Type::Skin had the LegacySkin value, in the material range, before
+        // Qt 6.13. Keep rejecting it here in case it reaches us from code
+        // built against the older headers, where the value was inlined.
+        return (TypeT(type) & BaseType::Material) && (type != Type::LegacySkin);
     }
 
     [[nodiscard]] static constexpr bool isTexture(Type type) noexcept
