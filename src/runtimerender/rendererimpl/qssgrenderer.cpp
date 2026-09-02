@@ -218,7 +218,7 @@ static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Co
             static_assert(std::is_base_of_v<QSSGRenderTextureData, QSSGRenderSkin>, "QSSGRenderSkin is expected to be a QSSGRenderTextureData type!");
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
             bufferManager->releaseTextureData(textureData);
-        } else if (resource->type == QSSGRenderGraphObject::Type::RenderExtension) {
+        } else if (QSSGRenderGraphObject::isExtension(resource->type)) {
             auto *rext = static_cast<QSSGRenderExtension *>(resource);
             bufferManager->releaseExtensionResult(*rext);
             // Extensions can create draw call data keyed on themselves.
