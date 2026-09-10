@@ -300,8 +300,11 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+        QRhiTexture *dummyTextureArray = rhiCtx->dummyTexture({}, resourceUpdates, QSize(64, 64), Qt::black, qMax(2, viewCount));
         QRhiTexture *dummyTexture3D = rhiCtx->dummyTexture(QRhiTexture::ThreeDimensional, resourceUpdates);
         QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+        QRhiTexture *dummyCubeTextureArray = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates, QSize(64, 64), Qt::black, qMax(2, viewCount));
+
         rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
 
         bindings.addUniformBuffer(0, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
@@ -605,6 +608,10 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                         t = dummyCubeTexture;
                     else if (var.type == QShaderDescription::Sampler3D)
                         t = dummyTexture3D;
+                    else if (var.type == QShaderDescription::Sampler2DArray)
+                        t = dummyTextureArray;
+                    else if (var.type == QShaderDescription::SamplerCubeArray)
+                        t = dummyCubeTextureArray;
                     else
                         t = dummyTexture;
                     bindings.addTexture(var.binding, CUSTOM_MATERIAL_VISIBILITY_ALL, t, dummySampler);

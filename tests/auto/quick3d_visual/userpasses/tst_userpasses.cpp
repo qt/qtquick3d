@@ -49,6 +49,8 @@ private slots:
     void slotLimitDoesNotCrash();
     void depthLimitDoesNotCrash();
     void testAddDefine();
+    void testAugmentShaderTextureBinding();
+    void testAugmentShaderArrayTextureBinding();
     void testSkyboxPass();
     void testItem2DPass();
     void testDepthTestDisabled();
@@ -1276,6 +1278,61 @@ void tst_UserPasses::testAddDefine()
 
     const bool hasRed2 = imageContainsDominantColor(result2, Qt::red);
     QVERIFY2(hasRed2, "After clearing AddDefine name, sphere should appear red");
+}
+
+void tst_UserPasses::testAugmentShaderTextureBinding()
+{
+    // The pass declares a sampler for every texture property, but only binds
+    // the ones that resolve to a GPU texture; the rest have to be filled with
+    // the engine's dummy texture so the shader resource bindings stay
+    // complete. The augment shader checks that the bound sampler still reads
+    // its own texture and the unbound one reads the dummy, so filling a
+    // sampler that was already bound -- or leaving one unfilled -- shows up as
+    // red rather than as a subtly wrong image.
+    //
+    // The unbound cube map covers the same ground for a samplerCube, and in
+    // particular that the dummy has content on every face, not just on the
+    // first one.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("augment_texture_binding.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    // The bound texture is backed by a sourceItem, which needs a frame to be
+    // rendered into before it can be sampled, so check the second frame.
+    QImage warmup = grab(view.data());
+    QVERIFY(!warmup.isNull());
+
+    QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    QVERIFY2(imageContainsDominantColor(result, Qt::green),
+             "The bound texture property should still be sampled from its own texture, "
+             "and the unbound 2D and cube ones from the dummy");
+}
+
+void tst_UserPasses::testAugmentShaderArrayTextureBinding()
+{
+    // Same idea for an array sampler. A sampler2DArray that nothing binds has
+    // to be filled with a dummy that is itself a texture array -- a plain 2D
+    // dummy would be a view type mismatch against what the shader declares,
+    // which is undefined rather than diagnosed on most backends. The material
+    // shader samples two layers of it and expects the dummy's opaque black.
+    //
+    // A sampler hint is only honoured for CustomMaterial properties, hence the
+    // custom material here, and the augment shader only forwards the verdict
+    // the material arrived at.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("augment_array_texture_binding.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QImage warmup = grab(view.data());
+    QVERIFY(!warmup.isNull());
+
+    QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    QVERIFY2(imageContainsDominantColor(result, Qt::green),
+             "The unbound array sampler should read the dummy texture array");
 }
 
 void tst_UserPasses::testSkyboxPass()
