@@ -357,8 +357,11 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         json.clear();
         qint64 offset = 12;
         while (offset + 8 <= qint64(length)) {
+            QT_WARNING_PUSH QT_WARNING_DISABLE_GCC("-Warray-bounds")
+            // gcc 15.2.0 warns because of static const char _empty in QByteArray
             const quint32 chunkLength = qFromLittleEndian<quint32>(data.constData() + offset);
             const quint32 chunkType = qFromLittleEndian<quint32>(data.constData() + offset + 4);
+            QT_WARNING_POP
             offset += 8;
             if (offset + qint64(chunkLength) > qint64(length))
                 return setError(QStringLiteral("Truncated GLB chunk at offset %1").arg(offset - 8));
