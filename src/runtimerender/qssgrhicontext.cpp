@@ -1484,12 +1484,20 @@ void QSSGRhiContextPrivate::cleanupDrawCallDataForSkyMaterial(QSSGRenderSkyMater
 
     When \a arraySize is 2 or more, a 2D texture array is returned.
 
+    Note that the function currently returns plain cube map instead of array
+    cube map if requested due to missing support in rhi.
+
     The ownership of the returned texture stays with Qt Quick 3D.
  */
 QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
                                           const QSize &size, const QColor &fillColor, int arraySize)
 {
     Q_D(QSSGRhiContext);
+    // The rhi doesn't have cubemap array view type so best we can do is plain cubemap
+    // Once they are supported, remove arraySize = 0 and update the fill loop for all faces
+    const bool isCube = flags.testFlags(QRhiTexture::CubeMap);
+    if (isCube)
+        arraySize = 0;
     auto it = d->m_dummyTextures.constFind({flags, size, fillColor, arraySize});
     if (it != d->m_dummyTextures.constEnd())
         return *it;
@@ -1501,7 +1509,9 @@ QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResource
         QImage image(t->pixelSize(), QImage::Format_RGBA8888);
         image.fill(fillColor);
         rub->uploadTexture(t, image);
-        for (int layer = 1; layer < arraySize; ++layer)
+        // Must fill all cubemap faces. Otherwise the result is undefined.
+        const int layerCount = isCube ? 6 : arraySize;
+        for (int layer = 1; layer < layerCount; ++layer)
             rub->uploadTexture(t, QRhiTextureUploadDescription(QRhiTextureUploadEntry(layer, 0, QRhiTextureSubresourceUploadDescription(image))));
     } else {
         qWarning("Failed to build dummy texture");
