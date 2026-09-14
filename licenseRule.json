@@ -142,6 +142,11 @@
                 "spdx": ["LicenseRef-Qt-Commercial OR GPL-3.0-only AND MIT",
                           "LicenseRef-Qt-Commercial OR GPL-3.0-only"]
             },
+            "src/runtimerender/rendererimpl/qssgrenderer_closest_point_p.h": {
+                "comment": "adapted algorithm with Apache-2.0 license",
+                "file type": "3rd party",
+                "spdx": ["Apache-2.0"]
+            },
             "src/runtimerender/res/effectlib/fog.glsllib": {
                 "comment": "in file license test can't see MIT license",
                 "file type": "3rd party",

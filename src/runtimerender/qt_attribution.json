@@ -20,7 +20,7 @@
         "Name": "closestPointOnTriangle",
         "QDocModule": "qtquick3d",
         "QtUsage": "Used in the Qt Quick 3D module.",
-        "Files": "rendererimpl/qssgrenderer.cpp",
+        "Files": "rendererimpl/qssgrenderer_closest_point_p.h",
 
         "Description": "Closest point on triangle algorithm from Intel® Embree",
         "DownloadLocation": "https://github.com/RenderKit/embree/blob/master/tutorials/common/math/closest_point.h",
