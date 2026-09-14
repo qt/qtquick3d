@@ -1,6 +1,8 @@
 [
   {
     "Id": "skfb-bedroominteriordesign-gozdemrl",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a 3D scene in the Qt Quick 3D SSGI Lightmap example.",
     "Name": "Bedroom Interior Design",
     "Homepage": "https://sketchfab.com/3d-models/bedroom-interior-design-d573616b117c4696895f8cb53a590630",
     "LicenseId": "CC-BY-4.0",
@@ -15,6 +17,8 @@
   },
   {
     "Id": "polyhaven-bambanani_sunset",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a light probe and skybox in the Qt Quick 3D SSGI Lightmap example.",
     "Name": "Bambanani Sunset",
     "Homepage": "https://polyhaven.com/a/bambanani_sunset",
     "LicenseId": "CC0",
@@ -25,6 +29,8 @@
   },
   {
     "Id": "polyhaven-moonless_golf",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a light probe and skybox in the Qt Quick 3D SSGI Lightmap example.",
     "Name": "Moonless Golf",
     "Homepage": "https://polyhaven.com/a/moonless_golf",
     "LicenseId": "CC0",
@@ -35,6 +41,7 @@
   },
   {
     "Id": "sponza",
+    "QtParts": [ "examples" ],
     "Name": "Sponza Atrium Model",
     "QtUsage": "Used as a test/demo model for global illumination, lightmapping, and rendering benchmarks.",
     "Files": [
@@ -49,6 +56,7 @@
   },
   {
     "Id": "qtquick3d-cornellbox",
+    "QtParts": [ "examples" ],
     "Name": "Cornell Box (OBJ Dataset)",
     "QtUsage": "Used as a test/demo model for global illumination, lightmapping, and rendering benchmarks.",
     "Files": [

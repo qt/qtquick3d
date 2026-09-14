@@ -7,6 +7,8 @@
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/414252/bake",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/baked.svg" ]
   },
   {
@@ -16,6 +18,8 @@
     "License": "CC0 License",
     "Copyright": "The Qt Company",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/cornell.svg" ]
   },
   {
@@ -26,6 +30,8 @@
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/72904/colosseum",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/sponza.svg" ]
   },
   {
@@ -36,6 +42,8 @@
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/437538/camera-viewfinder",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/reset-camera.svg" ]
   },
   {
@@ -46,6 +54,8 @@
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/362806/house-simple-bold",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/bedroom.svg" ]
   },
   {
@@ -56,6 +66,8 @@
     "Copyright": "GNOME",
     "Homepage": "https://www.svgrepo.com/svg/451859/screen-shared",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/ssgi.svg" ]
   },
   {
@@ -66,6 +78,8 @@
     "Copyright": "GNOME",
     "Homepage": "https://www.svgrepo.com/svg/451794/night-light-disabled",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/off.svg" ]
   },
   {
@@ -76,6 +90,8 @@
     "Copyright": "SVG Repo",
     "Homepage": "https://www.svgrepo.com/svg/486236/right-arrow-backup-2",
     "QDocModule": "qtquick3d",
+    "QtParts": [ "examples" ],
+    "QtUsage": "Used as a toolbar icon in the Qt Quick 3D SSGI Lightmap example.",
     "Files": [ "assets/icons/right-arrow.svg" ]
   }
 ]
