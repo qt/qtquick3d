@@ -158,6 +158,11 @@
                 "file type": "3rd party",
                 "spdx": ["CC0-1.0"]
             },
+            "tests/manual/volumetricfog_computepass/blue_noise.png": {
+                "comment": "Copy of the blue noise texture used for ray march jitter",
+                "file type": "3rd party",
+                "spdx": ["CC0-1.0"]
+            },
             "tests/baseline/scenegrabber_xr/testscenes/maps/skybox/skybox-image.txt": {
                 "comment": "",
                 "file type": "3rd party",

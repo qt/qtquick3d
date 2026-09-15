@@ -1,0 +1,122 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba32f", froxelTexture, image3D, "writeonly");
+
+bool isInsideFroxel(ivec3 coord) {
+    return coord.x >= 0 && coord.x < int(gridDimensions.x) &&
+           coord.y >= 0 && coord.y < int(gridDimensions.y) &&
+           coord.z >= 0 && coord.z < int(gridDimensions.z);
+}
+
+vec3 froxelToWorld(ivec3 froxelCoord) {
+    float u = (float(froxelCoord.x) + 0.5) / gridDimensions.x;
+    float v = (float(froxelCoord.y) + 0.5) / gridDimensions.y;
+    float t = (float(froxelCoord.z) + 0.5) / gridDimensions.z;
+
+    float nearPlane = CAMERA_PROPERTIES.x;
+    float farPlane  = CAMERA_PROPERTIES.y;
+
+    float viewDepth;
+    if (useExponentialDepth > 0.5) {
+        float depthScale = log2(farPlane / nearPlane);
+        viewDepth = nearPlane * pow(2.0, t * depthScale);
+    } else {
+        viewDepth = nearPlane + (farPlane - nearPlane) * t;
+    }
+    float flipy = step(0.0, FRAMEBUFFER_Y_UP * NDC_Y_UP);
+    vec2 ndc = vec2(u, mix(1.0 - v, v, flipy)) * 2.0 - 1.0;
+
+    vec4 nearWorld = INVERSE_VIEWPROJECTION_MATRIX * vec4(ndc, NEAR_CLIP_VALUE, 1.0);
+    nearWorld /= nearWorld.w;
+    vec4 farWorld  = INVERSE_VIEWPROJECTION_MATRIX * vec4(ndc, 1.0, 1.0);
+    farWorld /= farWorld.w;
+
+    vec3 rayDir = normalize(farWorld.xyz - nearWorld.xyz);
+    float cosTheta = dot(rayDir, CAMERA_DIRECTION);
+    return CAMERA_POSITION + rayDir * (viewDepth / cosTheta);
+}
+
+float calcAttenuationFactor(in float distance, in vec3 factors)
+{
+    return 1.0 / (factors.x + factors.y * distance + factors.z * distance * distance);
+}
+
+vec3 calculateLighting(vec3 worldPos) {
+    vec3 totalLight = vec3(0.0);
+    float zDepthView = (VIEW_MATRIX * vec4(worldPos, 1.0)).z;
+    for (uint i = 0u; i < DIRECTIONAL_LIGHT_COUNT; ++i) {
+        totalLight += 0.01 * DIRECTIONAL_LIGHT_DIFFUSE(i).rgb * DIRECTIONAL_LIGHT_SHADOW(i, zDepthView, worldPos);
+    }
+    for (uint i = 0u; i < POINT_LIGHT_COUNT; ++i) {
+        vec3  lightPosition  = POINT_LIGHT_POSITION(i).xyz;
+        vec3  lightColor     = 0.01 * POINT_LIGHT_DIFFUSE(i).rgb;
+        float dist = length(lightPosition - worldPos);
+        totalLight += lightColor * calcAttenuationFactor(dist, POINT_LIGHT_ATTENUATION(i)) * POINT_LIGHT_SHADOW(i, worldPos);
+    }
+    for (uint i = 0u; i < SPOT_LIGHT_COUNT; ++i) {
+        vec3  lightPosition  = SPOT_LIGHT_POSITION(i).xyz;
+        vec3  lightColor     = 0.01 * SPOT_LIGHT_DIFFUSE(i).rgb;
+        float attenuation = 1.0;
+        float dist = length(lightPosition - worldPos);
+        attenuation = calcAttenuationFactor(dist, SPOT_LIGHT_ATTENUATION(i));
+        vec3 sdir = normalize(vec3(SPOT_LIGHT_DIRECTION(i)));
+        vec3 ldir = normalize(worldPos - lightPosition);
+        float spot = max(0.0, dot(ldir, sdir));
+        float cone = 1.0 - smoothstep(SPOT_LIGHT_CONES(i).x, SPOT_LIGHT_CONES(i).y, spot);
+        attenuation *= cone;
+        totalLight += lightColor * attenuation * SPOT_LIGHT_SHADOW(i, worldPos);
+    }
+    return totalLight;
+}
+
+float hash(ivec3 c) {
+    uint x = uint(c.x) * 1664525u ^ uint(c.y) * 1013904223u ^ uint(c.z) * 22695477u;
+    x = (x ^ (x >> 16u)) * 0x45d9f3bu;
+    x =  x ^ (x >> 16u);
+    return float(x) / float(0xFFFFFFFFu);
+}
+
+float valueNoise(vec3 p) {
+    ivec3 i = ivec3(floor(p));
+    vec3  f = fract(p);
+    vec3  u = f * f * (3.0 - 2.0 * f); // smoothstep
+
+    float v000 = hash(i + ivec3(0,0,0));
+    float v100 = hash(i + ivec3(1,0,0));
+    float v010 = hash(i + ivec3(0,1,0));
+    float v110 = hash(i + ivec3(1,1,0));
+    float v001 = hash(i + ivec3(0,0,1));
+    float v101 = hash(i + ivec3(1,0,1));
+    float v011 = hash(i + ivec3(0,1,1));
+    float v111 = hash(i + ivec3(1,1,1));
+
+    return mix(mix(mix(v000,v100,u.x), mix(v010,v110,u.x), u.y),
+               mix(mix(v001,v101,u.x), mix(v011,v111,u.x), u.y), u.z);
+}
+
+vec4 applyScattering(vec3 lighting, vec3 worldPos, vec3 fogPos, float fd, float fs) {
+
+    vec3 p = worldPos * 0.02 * fs + fogPos * 0.02;
+    float n  = valueNoise(p) * 0.5
+             + valueNoise(p * 2.0) * 0.3
+             + valueNoise(p * 4.0) * 0.2;
+    float density = mix(0.0005, 0.003, n) * fd;
+    return vec4(lighting, density);
+}
+
+void main() {
+    ivec3 froxelCoord = ivec3(gl_GlobalInvocationID.xyz);
+    if (!isInsideFroxel(froxelCoord))
+        return;
+
+    vec3 worldPos = froxelToWorld(froxelCoord);
+    vec4 viewPos = VIEW_MATRIX * vec4(worldPos, 1.0);
+    vec4 result = vec4(0.0);
+
+    if (viewPos.z < 0.0)
+        result = applyScattering(calculateLighting(worldPos), worldPos, fogPos, fogDensity, fogScale);
+    imageStore(froxelTexture, froxelCoord, result);
+}
