@@ -711,6 +711,46 @@ QByteArray QSSGBaseTypeHelpers::toString(QSSGRenderSamplerType value)
     Q_UNREACHABLE_RETURN(QByteArray());
 }
 
+QByteArray QSSGBaseTypeHelpers::toString(QSSGMemoryQualifiers flags)
+{
+    QByteArrayList parts;   // fixed order, so the output is canonical
+    if (flags & QSSGMemoryQualifier::Readonly)
+        parts << "readonly";
+    if (flags & QSSGMemoryQualifier::Writeonly)
+        parts << "writeonly";
+    if (flags & QSSGMemoryQualifier::Coherent)
+        parts << "coherent";
+    if (flags & QSSGMemoryQualifier::Volatile)
+        parts << "volatile";
+    if (flags & QSSGMemoryQualifier::Restrict)
+        parts << "restrict";
+    return parts.join(' ');
+}
+
+// Returns false on an unknown token, e.g. "readonlywriteonly".
+bool QSSGBaseTypeHelpers::parseMemoryQualifiers(QByteArrayView str, QSSGMemoryQualifiers &out)
+{
+    QSSGMemoryQualifiers result;
+    for (const QByteArray &token : QByteArray(str).simplified().split(' ')) {
+        if (token.isEmpty())
+            continue;
+        if (token == "readonly")
+            result |= QSSGMemoryQualifier::Readonly;
+        else if (token == "writeonly")
+            result |= QSSGMemoryQualifier::Writeonly;
+        else if (token == "coherent")
+            result |= QSSGMemoryQualifier::Coherent;
+        else if (token == "volatile")
+            result |= QSSGMemoryQualifier::Volatile;
+        else if (token == "restrict")
+            result |= QSSGMemoryQualifier::Restrict;
+        else
+            return false;
+    }
+    out = result;
+    return true;
+}
+
 const char *QSSGBaseTypeHelpers::displayName(QSSGRenderTextureCubeFace face)
 {
     switch (face) {

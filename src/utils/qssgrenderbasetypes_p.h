@@ -357,6 +357,16 @@ enum class QSSGRenderTextureCubeFace : quint8
 
 using QSSGRenderTextureCubeFaceT = std::underlying_type_t<QSSGRenderTextureCubeFace>;
 
+enum class QSSGMemoryQualifier : quint8 {
+    Readonly  = 0x01,
+    Writeonly = 0x02,
+    Coherent  = 0x04,
+    Volatile  = 0x08,
+    Restrict  = 0x10,
+};
+Q_DECLARE_FLAGS(QSSGMemoryQualifiers, QSSGMemoryQualifier)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGMemoryQualifiers)
+
 // Same order as expected by QRHI!
 static constexpr QSSGRenderTextureCubeFace QSSGRenderTextureCubeFaces[] {
     QSSGRenderTextureCubeFace::PosX, QSSGRenderTextureCubeFace::NegX,
@@ -382,10 +392,13 @@ public:
     static const char *toString(QSSGRenderTextureCoordOp value);
     static const char *toString(QSSGRenderTextureFilterOp value);
     static QByteArray toString(QSSGRenderSamplerType value);
+    static QByteArray toString(QSSGMemoryQualifiers flags);
 
     static const char *displayName(QSSGRenderTextureCubeFace face);
 
     static size_t getSizeOfType(QSSGRenderComponentType type);
+
+    static bool parseMemoryQualifiers(QByteArrayView str, QSSGMemoryQualifiers &out);
 
     // Note: These will wrap around
     static constexpr QSSGRenderTextureCubeFace next(QSSGRenderTextureCubeFace face)

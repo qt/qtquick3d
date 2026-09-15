@@ -87,6 +87,31 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     QList<QByteArray> m_addedFunctions;
     TStrTableStrMap m_addedTypeDeclarations;
     TStrTableStrMap m_addedDefinitions;
+
+    struct Buffer
+    {
+        Buffer() = default;
+        Buffer(const QByteArray &name, const QByteArray &contentType, QSSGMemoryQualifiers qualifiers, const QByteArray &condition)
+            : name(name), contentType(contentType), qualifiers(qualifiers), condition(condition) {}
+        QByteArray name;
+        QByteArray contentType;
+        QSSGMemoryQualifiers qualifiers;
+        QByteArray condition;
+    };
+    struct Image
+    {
+        Image() = default;
+        Image(const QByteArray &name, const QByteArray &imageType, const QByteArray &format, QSSGMemoryQualifiers qualifiers, const QByteArray &condition)
+            : name(name), imageType(imageType), format(format), qualifiers(qualifiers), condition(condition) {}
+        QByteArray name;
+        QByteArray imageType;
+        QByteArray format;
+        QSSGMemoryQualifiers qualifiers;
+        QByteArray condition;
+    };
+
+    std::vector<Image> m_images;
+    std::vector<Buffer> m_buffers;
     QSSGShaderResourceMergeContext *m_mergeContext = nullptr;
 
     explicit QSSGStageGeneratorBase(QSSGShaderGeneratorStage inStage);
@@ -138,6 +163,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGStageGeneratorBase
     virtual void addTypeDeclaration(const QByteArray &typeName, const QByteArray &snippet) final;
 
     void addPrefix(const QByteArray &data);
+
+    void addImage(const QByteArray &name, const QByteArray &imageType, const QByteArray &format, QSSGMemoryQualifiers qualifiers, const QByteArray &condition = {});
+    void addBuffer(const QByteArray &name, const QByteArray &contentType, QSSGMemoryQualifiers qualifiers, const QByteArray &condition = {});
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGStageGeneratorBase::ShaderItemMapFlags)

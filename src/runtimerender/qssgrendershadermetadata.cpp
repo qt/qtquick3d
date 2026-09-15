@@ -131,9 +131,30 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
                 it = uObj.constFind(QLatin1String("imgtype"));
                 img.imageType = (it != end) ? it->toString().toLatin1() : QByteArray();
                 it = uObj.constFind(QLatin1String("qualifiers"));
-                img.qualifiers = (it != end) ? it->toString().toLatin1() : QByteArray();
+                QByteArray qualifiers = (it != end) ? it->toString().toLatin1() : QByteArray();
+                if (!qualifiers.isEmpty()) {
+                    if (!QSSGBaseTypeHelpers::parseMemoryQualifiers(qualifiers, img.qualifiers))
+                        qWarning("Invalid qualifiers %s for image %s", qualifiers.constData(), uniform.name.constData());
+                }
             }
             return img;
+        };
+        static const auto toBuffer = [](const QJsonObject &uObj, const Uniform &uniform)
+        {
+            Buffer buf(uniform);
+            auto it = uObj.constBegin();
+            const auto end = uObj.constEnd();
+            if (it != end) {
+                it = uObj.constFind(QLatin1String("contentType"));
+                buf.contentType = (it != end) ? it->toString().toLatin1() : QByteArray();
+                it = uObj.constFind(QLatin1String("qualifiers"));
+                QByteArray qualifiers = (it != end) ? it->toString().toLatin1() : QByteArray();
+                if (!qualifiers.isEmpty()) {
+                    if (!QSSGBaseTypeHelpers::parseMemoryQualifiers(qualifiers, buf.qualifiers))
+                        qWarning("Invalid qualifiers %s for buffer %s", qualifiers.constData(), uniform.name.constData());
+                }
+            }
+            return buf;
         };
 
         static const auto toInputOutput = [](const QJsonObject &uObj) {
@@ -153,6 +174,31 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
             return inOutVar;
         };
 
+        const auto addUniformEntry = [&result](const QJsonObject &uObj) {
+            const auto uniform = toUniform(uObj);
+            if (uniform.type.isEmpty() || uniform.name.isEmpty()) {
+                qWarning("Invalid uniform, skipping");
+                return;
+            }
+            if (uObj.constFind(QLatin1String("imgtype")) != uObj.constEnd()) {
+                Image img(toImage(uObj, uniform));
+                if (img.imageType.isEmpty()) {
+                    qWarning("Image type missing for image %s, skipping", img.name.constData());
+                    return;
+                }
+                result.images.push_back(img);
+            } else if (uniform.type == "buffer") {
+                Buffer buf(toBuffer(uObj, uniform));
+                if (buf.contentType.isEmpty()) {
+                    qWarning("Content type missing for buffer %s, skipping", buf.name.constData());
+                    return;
+                }
+                result.buffers.push_back(buf);
+            } else {
+                result.uniforms.push_back(uniform);
+            }
+        };
+
         const QJsonObject obj = doc.object();
         auto it = obj.constBegin();
         const auto end = obj.constEnd();
@@ -162,32 +208,12 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
             if (it != obj.constEnd()) {
                 // Check if it's an array or a single object
                 if (it->type() == QJsonValue::Array) {
-                    const auto uniformArray = it->toArray();
-                    for (const auto valueRef : uniformArray) {
-                        if (!valueRef.isObject())
-                            continue;
-
-                        const QJsonObject obj = valueRef.toObject();
-                        const auto uniform = toUniform(obj);
-                        if (!uniform.type.isEmpty() && !uniform.name.isEmpty()) {
-                            if (obj.constFind(QLatin1String("imgtype")) != obj.constEnd())
-                                result.images.push_back(toImage(obj, uniform));
-                            else
-                                result.uniforms.push_back(uniform);
-                        } else {
-                            qWarning("Invalid uniform, skipping");
-                        }
+                    for (const auto valueRef : it->toArray()) {
+                        if (valueRef.isObject())
+                            addUniformEntry(valueRef.toObject());
                     }
                 } else if (it->type() == QJsonValue::Object) {
-                    const auto uniform = toUniform(it->toObject());
-                    if (!uniform.type.isEmpty() && !uniform.name.isEmpty()) {
-                        if (obj.constFind(QLatin1String("imgtype")) != obj.constEnd())
-                            result.images.push_back(toImage(obj, uniform));
-                        else
-                            result.uniforms.push_back(uniform);
-                    } else {
-                        qWarning("Invalid uniform, skipping");
-                    }
+                    addUniformEntry(it->toObject());
                 }
             }
 

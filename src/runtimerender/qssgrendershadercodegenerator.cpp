@@ -71,6 +71,8 @@ void QSSGStageGeneratorBase::begin(QSSGShaderGeneratorStageFlags inEnabledStages
     m_addedDefinitions.clear();
     m_addedTypeDeclarations.clear();
     m_prefixes.clear();
+    m_images.clear();
+    m_buffers.clear();
     // the shared buffers will be cleared elsewhere.
 }
 
@@ -286,6 +288,23 @@ void QSSGStageGeneratorBase::buildShaderSourcePass1(QSSGShaderResourceMergeConte
         m_finalBuilder.append("\"\n");
     }
 
+    for (const auto &image : std::as_const(m_images)) {
+        auto strcond = QString::fromUtf8(image.condition);
+        auto condition = QSSGRenderShaderMetadata::Uniform::conditionFromString(strcond);
+        if (condition == QSSGRenderShaderMetadata::Uniform::Negated)
+            strcond = strcond.mid(1);
+        mergeContext->registerImage(m_stage, image.imageType, image.name, image.format, image.qualifiers,
+                                    condition, strcond.toUtf8());
+    }
+    for (const auto &buffer : std::as_const(m_buffers)) {
+        auto strcond = QString::fromUtf8(buffer.condition);
+        auto condition = QSSGRenderShaderMetadata::Uniform::conditionFromString(strcond);
+        if (condition == QSSGRenderShaderMetadata::Uniform::Negated)
+            strcond = strcond.mid(1);
+        mergeContext->registerBuffer(m_stage, buffer.contentType, buffer.name, buffer.qualifiers,
+                                     condition, strcond.toUtf8());
+    }
+
     appendShaderCode();
 }
 
@@ -296,7 +315,30 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
     const int typeLen = 1;
     int from = 0;
 
+    std::vector<const QSSGShaderResourceMergeContext::Image *> locationDependentImages;
+    std::vector<const QSSGShaderResourceMergeContext::Buffer *> locationDependentBuffers;
+
     mergeContext->rearrangeResources();
+
+    const auto imageDeclaration = [](QByteArray &block, const QSSGShaderResourceMergeContext::Image &image) {
+        addStartCond(block, image);
+        block += QString::asprintf("layout(binding = %d, %s) uniform %s %s %s;\n",
+                                   image.binding,
+                                   image.imgType.constData(),
+                                   QSSGBaseTypeHelpers::toString(image.qualifiers).constData(),
+                                   image.type.constData(),
+                                   image.name.constData()).toUtf8();
+        addEndCond(block, image);
+    };
+    const auto bufferDeclaration = [](QByteArray &block, const QSSGShaderResourceMergeContext::Buffer &buffer) {
+        addStartCond(block, buffer);
+        block += QString::asprintf("layout(std430, binding = %d) %s buffer %s {\n    %s\n};\n",
+                                   buffer.binding,
+                                   QSSGBaseTypeHelpers::toString(buffer.qualifiers).constData(),
+                                   buffer.name.constData(),
+                                   buffer.contentType.constData()).toUtf8();
+        addEndCond(block, buffer);
+    };
 
     for (; ;) {
         int pos = m_finalBuilder.indexOf(prefix, from);
@@ -339,16 +381,14 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
             case ShaderItemType::Image:
             {
                 QByteArray block;
-
                 for (const auto &image : std::as_const(mergeContext->m_images)) {
-                    addStartCond(block, image);
-                    block += QString::asprintf("layout(binding = %d, %s) uniform %s %s %s;\n",
-                                               image.binding,
-                                               image.imgType.constData(),
-                                               image.qualifiers.constData(),
-                                               image.type.constData(),
-                                               image.name.constData()).toUtf8();
-                    addEndCond(block, image);
+                    if (image.stages & m_stage) {
+                        const QByteArray atname = QByteArrayLiteral("@") + image.name + QByteArrayLiteral("@");
+                        if (m_finalBuilder.indexOf(atname) >= 0)
+                            locationDependentImages.push_back(&image);
+                        else
+                            imageDeclaration(block, image);
+                    }
                 }
                 m_finalBuilder.replace(pos, prefixLen + typeLen, block);
             } break;
@@ -387,6 +427,17 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
                     // materials cannot. So leave it out.
                     block += QByteArrayLiteral("};\n");
                 }
+
+                for (const auto &buffer : std::as_const(mergeContext->m_buffers)) {
+                    if (buffer.stages & m_stage) {
+                        const QByteArray atname = QByteArrayLiteral("@") + buffer.name + QByteArrayLiteral("@");
+                        if (m_finalBuilder.indexOf(atname, 0) >= 0)
+                            locationDependentBuffers.push_back(&buffer);
+                        else
+                            bufferDeclaration(block, buffer);
+                    }
+                }
+
                 m_finalBuilder.replace(pos, prefixLen + typeLen, block);
             }
                 break;
@@ -396,6 +447,20 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
         } else {
             break;
         }
+    }
+    for (const auto *image : std::as_const(locationDependentImages)) {
+        const QByteArray atname = QByteArrayLiteral("@") + image->name + QByteArrayLiteral("@");
+        qsizetype index = m_finalBuilder.indexOf(atname, 0);
+        QByteArray block;
+        imageDeclaration(block, *image);
+        m_finalBuilder.replace(index, atname.length(), block);
+    }
+    for (const auto *buffer : std::as_const(locationDependentBuffers)) {
+        const QByteArray atname = QByteArrayLiteral("@") + buffer->name + QByteArrayLiteral("@");
+        qsizetype index = m_finalBuilder.indexOf(atname, 0);
+        QByteArray block;
+        bufferDeclaration(block, *buffer);
+        m_finalBuilder.replace(index, atname.length(), block);
     }
 
     return m_finalBuilder;
@@ -414,6 +479,19 @@ void QSSGStageGeneratorBase::addFunction(const QByteArray &functionName)
 void QSSGStageGeneratorBase::addPrefix(const QByteArray &data)
 {
     m_prefixes.append(data);
+}
+
+void QSSGStageGeneratorBase::addImage(const QByteArray &name, const QByteArray &imageType,
+                                      const QByteArray &format, QSSGMemoryQualifiers qualifiers,
+                                      const QByteArray &condition)
+{
+    m_images.emplace_back(name, imageType, format, qualifiers, condition);
+}
+
+void QSSGStageGeneratorBase::addBuffer(const QByteArray &name, const QByteArray &contentType,
+                                       QSSGMemoryQualifiers qualifiers, const QByteArray &condition)
+{
+    m_buffers.emplace_back(name, contentType, qualifiers, condition);
 }
 
 void QSSGStageGeneratorBase::addDefinition(const QByteArray &name, const QByteArray &value)
@@ -507,7 +585,9 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
     }
 
     for (const QSSGRenderShaderMetadata::Image &img : std::as_const(meta.images))
-        mergeContext->registerImage(img.type, img.name, img.imageType, img.qualifiers, img.condition, img.conditionName);
+        mergeContext->registerImage(stage, img.type, img.name, img.imageType, img.qualifiers, img.condition, img.conditionName);
+    for (const QSSGRenderShaderMetadata::Buffer &buf : std::as_const(meta.buffers))
+        mergeContext->registerBuffer(stage, buf.contentType, buf.name, buf.qualifiers, buf.condition, buf.conditionName);
 
     for (const QSSGRenderShaderMetadata::InputOutput &inputVar : std::as_const(meta.inputs)) {
         if (inputVar.stage == stage)

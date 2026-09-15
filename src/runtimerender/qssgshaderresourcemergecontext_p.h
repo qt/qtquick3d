@@ -55,7 +55,8 @@ public:
     struct Image : public Sampler
     {
         QByteArray imgType;
-        QByteArray qualifiers;
+        QSSGMemoryQualifiers qualifiers;
+        QSSGShaderGeneratorStageFlags stages;
     };
 
     struct BlockMember {
@@ -63,6 +64,14 @@ public:
         QByteArray name;
         QSSGRenderShaderMetadata::Uniform::Condition conditionType;
         QByteArray conditionName;
+    };
+
+    struct Buffer : public BlockMember
+    {
+        int binding;
+        QByteArray contentType;
+        QSSGMemoryQualifiers qualifiers;
+        QSSGShaderGeneratorStageFlags stages;
     };
 
     // Using QMap intentionally - while it is not strictly required to use an
@@ -74,6 +83,7 @@ public:
     QMap<QByteArray, InOutVar> m_inOutVars;
     QMap<QByteArray, Sampler> m_samplers;
     QMap<QByteArray, Image> m_images;
+    QMap<QByteArray, Buffer> m_buffers;
     QMap<QByteArray, BlockMember> m_uniformMembers;
 
     int m_nextFreeResourceBinding = FIRST_CUSTOM_RESOURCE_BINDING_POINT;
@@ -85,14 +95,21 @@ public:
 
     void rearrangeResources()
     {
-        // Put the images before samplers since images have
-        // separate binding points in OpenGL and minimum
-        // amount is only 8 so with many textures we might run
-        // out of binding points. Minimum amount of texture
-        // binding points is 16.
+        // Put images and storage buffers before samplers. QRhi's OpenGL
+        // backend uses the binding number directly as the image unit and as
+        // the shader storage buffer binding point, and the guaranteed minimum
+        // for both is only 8 (GL_MAX_IMAGE_UNITS, GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS).
+        // These are separate namespaces in OpenGL, but QRhi needs unique binding
+        // numbers across all resource types, so the numbers used by uniform buffers (0..2),
+        // images and buffers all count against both limits. Linked list OIT adds three
+        // images, which leaves two bindings for custom images and buffers.
+        // Samplers and uniform buffers are not affected: QRhi assigns texture
+        // units itself and sets uniform block members as plain uniforms.
         int binding = FIRST_CUSTOM_RESOURCE_BINDING_POINT + s_additionalBuffers;
         for (auto &image : m_images)
             image.binding = binding++;
+        for (auto &buffer : m_buffers)
+            buffer.binding = binding++;
         for (auto &sampler : m_samplers)
             sampler.binding = binding++;
     }
@@ -124,23 +141,64 @@ public:
                          QSSGRenderShaderMetadata::Uniform::Condition conditionType = QSSGRenderShaderMetadata::Uniform::None,
                          const QByteArray &conditionName = QByteArray())
     {
-        if (m_samplers.contains(name) || m_images.contains(name))
+        if (m_images.contains(name) || m_buffers.contains(name)) {
+            qWarning("Sampler %s name conflicts with existing image or buffer.", name.constData());
+            return;
+        }
+        if (m_samplers.contains(name))
             return;
         Sampler var { type, name, conditionType, conditionName, m_nextFreeResourceBinding++ };
         m_samplers.insert(name, var);
     }
 
-    void registerImage(const QByteArray &type,
+    void registerImage(QSSGShaderGeneratorStage stage,
+                       const QByteArray &type,
                        const QByteArray &name,
                        const QByteArray &imgtype,
-                       const QByteArray &qualifiers,
+                       QSSGMemoryQualifiers qualifiers,
                        QSSGRenderShaderMetadata::Uniform::Condition conditionType = QSSGRenderShaderMetadata::Uniform::None,
                        const QByteArray &conditionName = QByteArray())
     {
-        if (m_samplers.contains(name) || m_images.contains(name))
+        if (m_samplers.contains(name) || m_buffers.contains(name)) {
+            qWarning("Image %s name conflicts with existing sampler or buffer.", name.constData());
             return;
-        Image var { {type, name, conditionType, conditionName, m_nextFreeResourceBinding++}, imgtype, qualifiers};
+        }
+        auto iter = m_images.find(name);
+        if (iter != m_images.end()) {
+            auto &img = *iter;
+            if (img.type != type || img.imgType != imgtype || img.qualifiers != qualifiers)
+                qWarning("Image %s is declared differently between shader stages.", name.constData());
+            if (img.conditionType != conditionType || img.conditionName != conditionName)
+                qWarning("Image %s condition doesn't match between shader stages.", name.constData());
+            img.stages |= stage;
+            return;
+        }
+        Image var {{type, name, conditionType, conditionName, m_nextFreeResourceBinding++}, imgtype, qualifiers, stage};
         m_images.insert(name, var);
+    }
+    void registerBuffer(QSSGShaderGeneratorStage stage,
+                        const QByteArray &contentType,
+                        const QByteArray &name,
+                        QSSGMemoryQualifiers qualifiers,
+                        QSSGRenderShaderMetadata::Uniform::Condition conditionType = QSSGRenderShaderMetadata::Uniform::None,
+                        const QByteArray &conditionName = QByteArray())
+    {
+        if (m_samplers.contains(name) || m_images.contains(name)) {
+            qWarning("Buffer %s name conflicts with existing sampler or image.", name.constData());
+            return;
+        }
+        auto iter = m_buffers.find(name);
+        if (iter != m_buffers.end()) {
+            auto &buf = *iter;
+            if (buf.contentType.simplified() != contentType.simplified() || buf.qualifiers != qualifiers)
+                qWarning("Storage buffer %s is declared differently between shader stages.", name.constData());
+            if (buf.conditionType != conditionType || buf.conditionName != conditionName)
+                qWarning("Storage buffer %s condition doesn't match between shader stages.", name.constData());
+            buf.stages |= stage;
+            return;
+        }
+        Buffer var {{"buffer", name, conditionType, conditionName}, m_nextFreeResourceBinding++, contentType, qualifiers, stage};
+        m_buffers.insert(name, var);
     }
 
     void registerUniformMember(const QByteArray &type,

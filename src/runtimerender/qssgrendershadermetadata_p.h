@@ -44,10 +44,18 @@ struct Uniform
 
 struct Image : public Uniform
 {
-    Image() {};
+    Image() = default;
     Image(const Uniform &u) : Uniform(u) {}
     QByteArray imageType;
-    QByteArray qualifiers;
+    QSSGMemoryQualifiers qualifiers;
+};
+
+struct Buffer : public Uniform
+{
+    Buffer() = default;
+    Buffer(const Uniform &u) : Uniform(u) {}
+    QByteArray contentType;
+    QSSGMemoryQualifiers qualifiers;
 };
 
 struct InputOutput
@@ -64,6 +72,7 @@ struct ShaderMetaData
 {
     QVector<Uniform> uniforms;
     QVector<Image> images;
+    QVector<Buffer> buffers;
     QVector<InputOutput> inputs;
     QVector<InputOutput> outputs;
 };
