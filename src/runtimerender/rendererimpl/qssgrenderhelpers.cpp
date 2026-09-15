@@ -684,9 +684,9 @@ void RenderHelpers::addAccumulatorImageBindings(QSSGRhiShaderPipeline *shaderPip
         return;
 
 #ifdef QSSG_OIT_USE_BUFFERS
-    bindings.addStorageBuffer(3, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[0]);
-    bindings.addStorageBuffer(4, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[1]);
-    bindings.addStorageBuffer(5, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[2]);
+    bindings.addStorageBufferStore(3, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[0]);
+    bindings.addStorageBufferLoadStore(4, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[1]);
+    bindings.addStorageBufferLoadStore(5, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[2]);
 #else
     int abuf = shaderPipeline->bindingForImage("qt_imgAbuffer");
     int aux = shaderPipeline->bindingForImage("qt_imgAux");

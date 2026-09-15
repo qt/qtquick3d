@@ -1908,7 +1908,7 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
 #ifdef QSSG_OIT_USE_BUFFERS
-        bindings.addStorageBuffer(1, QRhiShaderResourceBinding::FragmentStage, rhiAuxBuffer);
+        bindings.addStorageBufferStore(1, QRhiShaderResourceBinding::FragmentStage, rhiAuxBuffer);
 #else
         bindings.addImageStore(1, QRhiShaderResourceBinding::FragmentStage, rhiAuxiliaryImage->texture, 0);
 #endif
@@ -2145,8 +2145,8 @@ void OITCompositePass::renderPass(QSSGRenderer &renderer)
 
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
 #ifdef QSSG_OIT_USE_BUFFERS
-        bindings.addStorageBuffer(1, QRhiShaderResourceBinding::FragmentStage, rhiABuffer);
-        bindings.addStorageBuffer(2, QRhiShaderResourceBinding::FragmentStage, rhiAuxBuffer);
+        bindings.addStorageBufferLoad(1, QRhiShaderResourceBinding::FragmentStage, rhiABuffer);
+        bindings.addStorageBufferLoad(2, QRhiShaderResourceBinding::FragmentStage, rhiAuxBuffer);
 #else
         bindings.addImageLoad(1, QRhiShaderResourceBinding::FragmentStage, rhiABufferImage->texture, 0);
         bindings.addImageLoad(2, QRhiShaderResourceBinding::FragmentStage, rhiAuxiliaryImage->texture, 0);
