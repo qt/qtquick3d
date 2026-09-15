@@ -225,58 +225,61 @@ QSSGRenderGraphObject *QQuick3DRenderPass::updateSpatialNode(QSSGRenderGraphObje
         // Nothing to do
     } else if (renderPassNode->materialMode == QSSGRenderUserPass::AugmentMaterial) {
         // Augment Shaders
-        if (!m_augmentShader.isEmpty()) {
-            const QQmlContext *context = qmlContext(this);
-            QByteArray shaderPathKey("augment material --");
-            QByteArray augment = QSSGShaderUtils::resolveShader(m_augmentShader, context, shaderPathKey);
-            QByteArray augmentSnippet;
-            QByteArray augmentPreamble;
+        if (m_dirtyAttributes & AugmentShaderDirty) {
+            if (!m_augmentShader.isEmpty()) {
+                const QQmlContext *context = qmlContext(this);
+                QByteArray shaderPathKey("augment material --");
+                QByteArray augment = QSSGShaderUtils::resolveShader(m_augmentShader, context, shaderPathKey);
+                QByteArray augmentSnippet;
+                QByteArray augmentPreamble;
 
-            // We have to pick apart the shader string such that the contents of the:
-            // void MAIN_FRAGMENT_AUGMENT() { }
-            // function are taken out, and will get added to the end of the shader generation
-            // and the goal is to overwrite the "output" of the shader
+                // We have to pick apart the shader string such that the contents of the:
+                // void MAIN_FRAGMENT_AUGMENT() { }
+                // function are taken out, and will get added to the end of the shader generation
+                // and the goal is to overwrite the "output" of the shader
 
-            // We also need to scan the who shader code for certain "keywords" so that we know
-            // what features to enable in the original material.
+                // We also need to scan the who shader code for certain "keywords" so that we know
+                // what features to enable in the original material.
 
-            // Everything else outsode of MAIN_FRAGMENT_AUGMENT function ends up being preamble code
-            // that will get pasted in before the real main().  So that will include helper functions and
-            // resolvable #includes etc.
+                // Everything else outsode of MAIN_FRAGMENT_AUGMENT function ends up being preamble code
+                // that will get pasted in before the real main().  So that will include helper functions and
+                // resolvable #includes etc.
 
-            static const char *mainFuncStart = "void MAIN_FRAGMENT_AUGMENT()";
-            qsizetype mainFuncIdx = augment.indexOf(mainFuncStart);
-            if (mainFuncIdx != -1) {
-                qsizetype braceOpenIdx = augment.indexOf('{', mainFuncIdx + int(strlen(mainFuncStart)));
-                if (braceOpenIdx != -1) {
-                    qsizetype braceCloseIdx = braceOpenIdx;
-                    qsizetype openBraces = 1;
-                    while (openBraces > 0 && braceCloseIdx + 1 < augment.size()) {
-                        braceCloseIdx++;
-                        if (augment[braceCloseIdx] == '{')
-                            openBraces++;
-                        else if (augment[braceCloseIdx] == '}')
-                            openBraces--;
-                    }
-                    if (openBraces == 0) {
-                        // We found the closing brace
-                        augmentSnippet = augment.mid(braceOpenIdx + 1, braceCloseIdx - braceOpenIdx - 1);
-                        augmentPreamble = augment.left(mainFuncIdx);
-                        augmentPreamble += augment.mid(braceCloseIdx + 1);
+                static const char *mainFuncStart = "void MAIN_FRAGMENT_AUGMENT()";
+                qsizetype mainFuncIdx = augment.indexOf(mainFuncStart);
+                if (mainFuncIdx != -1) {
+                    qsizetype braceOpenIdx = augment.indexOf('{', mainFuncIdx + int(strlen(mainFuncStart)));
+                    if (braceOpenIdx != -1) {
+                        qsizetype braceCloseIdx = braceOpenIdx;
+                        qsizetype openBraces = 1;
+                        while (openBraces > 0 && braceCloseIdx + 1 < augment.size()) {
+                            braceCloseIdx++;
+                            if (augment[braceCloseIdx] == '{')
+                                openBraces++;
+                            else if (augment[braceCloseIdx] == '}')
+                                openBraces--;
+                        }
+                        if (openBraces == 0) {
+                            // We found the closing brace
+                            augmentSnippet = augment.mid(braceOpenIdx + 1, braceCloseIdx - braceOpenIdx - 1);
+                            augmentPreamble = augment.left(mainFuncIdx);
+                            augmentPreamble += augment.mid(braceCloseIdx + 1);
+                        } else {
+                            qWarning("QQuick3DRenderPass: Could not find the closing brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
+                        }
                     } else {
-                        qWarning("QQuick3DRenderPass: Could not find the closing brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
+                        qWarning("QQuick3DRenderPass: Could not find the opening brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
                     }
                 } else {
-                    qWarning("QQuick3DRenderPass: Could not find the opening brace of MAIN_FRAGMENT_AUGMENT() in shader %s", qPrintable(m_augmentShader.toString()));
+                    qWarning("QQuick3DRenderPass: Could not find MAIN_FRAGMENT_AUGMENT() function in shader %s", qPrintable(m_augmentShader.toString()));
                 }
-            } else {
-                qWarning("QQuick3DRenderPass: Could not find MAIN_FRAGMENT_AUGMENT() function in shader %s", qPrintable(m_augmentShader.toString()));
-            }
 
-            renderPassNode->shaderAugmentation.body = augmentSnippet;
-            renderPassNode->shaderAugmentation.preamble = augmentPreamble;
-            renderPassNode->markDirty(QSSGRenderUserPass::DirtyFlag::ShaderDirty);
+                renderPassNode->shaderAugmentation.body = augmentSnippet;
+                renderPassNode->shaderAugmentation.preamble = augmentPreamble;
+                renderPassNode->markDirty(QSSGRenderUserPass::DirtyFlag::ShaderDirty);
+            }
         }
+        clearDirty(Dirty::AugmentShaderDirty);
     }
 
     return renderPassNode;
