@@ -60,19 +60,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QMetaObject::Connection depthTilingChangedConn;
     };
     using TexturePropertyList = QList<TextureProperty>;
-
-    struct Property
-    {
-        Property() = default;
-        Property(const QByteArray &name, const QVariant &value, QSSGRenderShaderValue::Type shaderDataType, int pid = -1)
-            : name(name), value(value), shaderDataType(shaderDataType), pid(pid)
-        { }
-        QByteArray name;
-        QVariant value;
-        QSSGRenderShaderValue::Type shaderDataType;
-        int pid;
-    };
-    using PropertyList = QList<Property>;
+    using Property = QSSGBaseTypeProperty;
+    using PropertyUniformsList = QList<Property>;
 
     enum class Flags : quint8
     {
@@ -129,7 +118,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     CustomShaderPresence m_customShaderPresence;
 
     TexturePropertyList m_textureProperties;
-    PropertyList m_properties;
+    PropertyUniformsList m_properties;
 
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;

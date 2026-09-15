@@ -1881,7 +1881,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 const auto type = uniformType(propType);
                 if (type != QSSGRenderShaderValue::Unknown) {
                     uniforms.append({ uniformTypeName(propType), name });
-                    customMaterial->m_properties.push_back({ name, propValue, uniformType(propType), i});
+                    customMaterial->m_properties.push_back({ name, uniformTypeName(propType), propValue, uniformType(propType), i});
                     if (newBackendNode) {
                         // Track the property changes
                         if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
@@ -1965,7 +1965,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                     const auto type = uniformType(propType);
                     if (type != QSSGRenderShaderValue::Unknown) {
                         uniforms.append({ uniformTypeName(propType), name });
-                        customMaterial->m_properties.push_back({ name, propValue,
+                        customMaterial->m_properties.push_back({ name, uniformTypeName(propType), propValue,
                                                                  uniformType(propType), -1 /* aka. dynamic property */});
                         // We don't need to track property changes
                     } else {

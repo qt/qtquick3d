@@ -65,21 +65,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     };
 
     QVector<TextureProperty> textureProperties;
+    using Property = QSSGBaseTypeProperty;
+    using PropertyUniformsList = QList<Property>;
 
-    struct Property
-    {
-        Property() = default;
-        Property(const QByteArray &name, const QByteArray &typeName, const QVariant &value, QSSGRenderShaderValue::Type shaderDataType, int pid = -1)
-            : name(name), typeName(typeName), value(value), shaderDataType(shaderDataType), pid(pid)
-        { }
-        QByteArray name;
-        QByteArray typeName;
-        mutable QVariant value;
-        QSSGRenderShaderValue::Type shaderDataType;
-        int pid;
-    };
-
-    QVector<Property> properties;
+    PropertyUniformsList properties;
 
     QSSGRenderEffect *m_nextEffect = nullptr;
 
