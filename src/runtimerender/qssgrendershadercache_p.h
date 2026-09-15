@@ -297,15 +297,21 @@ public:
                                                          const QSSGRenderGraphObject &obj,
                                                          QSSGRhiShaderPipeline::StageFlags stageFlags = {});
 
-    QSSGRhiShaderPipelinePtr compileForRhi(const QByteArray &inKey,
-                                           const QByteArray &inVert,
-                                           const QByteArray &inFrag,
-                                           const QSSGShaderFeatures &inFeatures,
-                                           QSSGRhiShaderPipeline::StageFlags stageFlags,
-                                           const QSSGUserShaderAugmentation &shaderAugmentation,
-                                           int viewCount,
-                                           bool perTargetCompilation,
-                                           const QByteArray &inCacheKey = {});
+    QSSGRhiShaderPipelinePtr compileGraphicsPipeline(const QByteArray &inKey,
+                                                     const QByteArray &inVert,
+                                                     const QByteArray &inFrag,
+                                                     const QSSGShaderFeatures &inFeatures,
+                                                     QSSGRhiShaderPipeline::StageFlags stageFlags,
+                                                     const QSSGUserShaderAugmentation &shaderAugmentation,
+                                                     int viewCount,
+                                                     bool perTargetCompilation,
+                                                     const QByteArray &inCacheKey = {});
+
+    QSSGRhiShaderPipelinePtr compileComputePipeline(const QByteArray &inKey,
+                                                    const QByteArray &inComp,
+                                                    int viewCount,
+                                                    bool perTargetCompilation,
+                                                    const QByteArray &inCacheKey = {});
 
     QSSGBuiltInRhiShaderCache &getBuiltInRhiShaders() { return m_builtInShaders; }
 

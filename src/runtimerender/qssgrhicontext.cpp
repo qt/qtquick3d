@@ -391,11 +391,11 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
 
     // Copy all member infos for the uniform block with binding 0 into m_ub0
     // for faster lookup.
-    if (stage.type() == QRhiShaderStage::Vertex) {
-        // Optimize by doing it only for the vertex shader. This code path is
-        // only hit for pipelines with vertex+fragment stages and an in shaders
-        // from materials an identical uniform block is present in both
-        // shaders, so go through only one of them.
+    if (stage.type() == QRhiShaderStage::Vertex || stage.type() == QRhiShaderStage::Compute) {
+        // For graphics pipelines, optimize by doing it only for the vertex
+        // shader. Pipelines with vertex+fragment stages from materials have an
+        // identical uniform block in both shaders, so go through only one of
+        // them. Compute pipelines have a single stage.
         const QVector<QShaderDescription::UniformBlock> uniformBlocks = stage.shader().description().uniformBlocks();
         for (const QShaderDescription::UniformBlock &blk : uniformBlocks) {
             if (blk.binding == 0) {

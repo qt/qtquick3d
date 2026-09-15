@@ -406,6 +406,13 @@ public:
         }
         return nullptr;
     }
+    const QRhiShaderStage *computeStage() const {
+        for (const QRhiShaderStage &s : m_stages) {
+            if (s.type() == QRhiShaderStage::Compute)
+                return &s;
+        }
+        return nullptr;
+    }
 
     int ub0Size() const { return m_ub0Size; }
     int ub0LightDataOffset() const { return m_ub0NextUBufOffset; }

@@ -41,6 +41,8 @@ Q_GLOBAL_STATIC(QMutex, s_statusMutex);
 
 size_t qHash(QSSGShaderFeatures features) noexcept { return (features.flags & (~QSSGShaderFeatures::IndexMask)); }
 
+#ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
+
 static QString dumpFilename(QShader::Stage stage)
 {
     switch (stage) {
@@ -50,10 +52,47 @@ static QString dumpFilename(QShader::Stage stage)
     case QShader::FragmentStage:
         return QStringLiteral("failedfrag.txt");
         break;
+    case QShader::ComputeStage:
+        return QStringLiteral("failedcomp.txt");
+        break;
     default:
         return QStringLiteral("failedshader.txt");
     }
 }
+
+static void dumpShader(QShader::Stage stage, const QByteArray &code)
+{
+    switch (stage) {
+    case QShader::Stage::VertexStage:
+        qDebug("VERTEX SHADER:\n*****\n");
+        break;
+    case QShader::Stage::FragmentStage:
+        qDebug("FRAGMENT SHADER:\n*****\n");
+        break;
+    case QShader::Stage::ComputeStage:
+        qDebug("COMPUTE SHADER:\n*****\n");
+        break;
+    default:
+        qDebug("SHADER:\n*****\n");
+        break;
+    }
+    const auto lines = code.split('\n');
+    for (int i = 0; i < lines.size(); i++)
+        qDebug("%3d  %s", i + 1, lines.at(i).constData());
+    qDebug("\n*****\n");
+}
+
+static void dumpShaderToFile(QShader::Stage stage, const QByteArray &data)
+{
+    QFile f(dumpFilename(stage));
+    if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        f.write(data);
+    } else {
+        qWarning("Failed to write to file: %s (%s)\n",
+                 qPrintable(f.fileName()), qPrintable(f.errorString()));
+    }
+}
+#endif // QT_QUICK3D_HAS_RUNTIME_SHADERS
 
 struct DefineEntry
 {
@@ -440,12 +479,11 @@ QByteArray QSSGShaderCache::particleShaderCollectionFile()
     return QByteArrayLiteral("qtparticleshaders.qsbc");
 }
 
-QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
-                                                        const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags,
-                                                        const QSSGUserShaderAugmentation &shaderAugmentation,
-                                                        int viewCount,
-                                                        bool perTargetCompilation,
-                                                        const QByteArray &inCacheKey)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::compileGraphicsPipeline(
+    const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
+    const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags,
+    const QSSGUserShaderAugmentation &shaderAugmentation,
+    int viewCount, bool perTargetCompilation, const QByteArray &inCacheKey)
 {
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
     // inKey is also used as the shader name in a comment in the generated
@@ -454,8 +492,10 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     const QByteArray &cacheKeyString = inCacheKey.isEmpty() ? inKey : inCacheKey;
 
     const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(cacheKeyString, inFeatures);
-    if (rhiShaders)
+    if (rhiShaders) {
+        QSSG_ASSERT(rhiShaders->vertexStage() && rhiShaders->fragmentStage(), return {});
         return rhiShaders;
+    }
 
     QSSGShaderCacheKey tempKey(cacheKeyString);
     tempKey.m_features = inFeatures;
@@ -496,34 +536,6 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     const bool editorMode = QSSGRhiContextPrivate::editorMode();
     // Shader debug is disabled in editor mode
     const bool shaderDebug = !editorMode && QSSGRhiContextPrivate::shaderDebuggingEnabled();
-
-   static auto dumpShader = [](QShader::Stage stage, const QByteArray &code) {
-       switch (stage) {
-       case QShader::Stage::VertexStage:
-           qDebug("VERTEX SHADER:\n*****\n");
-           break;
-       case QShader::Stage::FragmentStage:
-           qDebug("FRAGMENT SHADER:\n*****\n");
-           break;
-       default:
-           qDebug("SHADER:\n*****\n");
-           break;
-       }
-       const auto lines = code.split('\n');
-       for (int i = 0; i < lines.size(); i++)
-           qDebug("%3d  %s", i + 1, lines.at(i).constData());
-       qDebug("\n*****\n");
-   };
-
-    static auto dumpShaderToFile = [](QShader::Stage stage, const QByteArray &data) {
-        QFile f(dumpFilename(stage));
-        if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            f.write(data);
-        } else {
-            qWarning("Failed to write to file: %s (%s)\n",
-                    qPrintable(f.fileName()), qPrintable(f.errorString()));
-        }
-    };
 
     baker.setSourceString(vertexCode, QShader::VertexStage);
     QShader vertexShader = baker.bake();
@@ -596,6 +608,90 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     Q_UNUSED(inFrag);
     Q_UNUSED(inFeatures);
     Q_UNUSED(stageFlags);
+    Q_UNUSED(inCacheKey);
+    qWarning("Cannot compile and condition shaders at runtime because this build of Qt Quick 3D is not linking to Qt Shader Tools. "
+             "Only pre-processed materials are supported.");
+    return {};
+#endif
+}
+
+QSSGRhiShaderPipelinePtr QSSGShaderCache::compileComputePipeline(
+        const QByteArray &inKey, const QByteArray &inComp,
+        int viewCount, bool perTargetCompilation, const QByteArray &inCacheKey)
+{
+#ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
+    const QByteArray &cacheKeyString = inCacheKey.isEmpty() ? inKey : inCacheKey;
+    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(cacheKeyString, {});
+    if (rhiShaders) {
+        QSSG_ASSERT(rhiShaders->computeStage(), return {});
+        return rhiShaders;
+    }
+    QSSGShaderCacheKey tempKey(cacheKeyString);
+    tempKey.updateHashCode();
+
+    QShaderBaker baker;
+    m_initBaker(&baker, m_rhiContext.rhi());
+
+    QByteArray computeCode = "#version 440\n";
+
+    if (!inKey.isNull()) {
+        computeCode += "//Shader name -";
+        computeCode += inKey;
+        computeCode += "\n";
+    }
+
+    // match Qt Quick and QSGMaterial(Shader)
+    computeCode += "#define QSHADER_VIEW_COUNT ";
+    computeCode += QByteArray::number(viewCount);
+    computeCode += "\n";
+
+    computeCode += inComp;
+
+    // If requested, per-target compilation allows doing things like #if
+    // QSHADER_HLSL in the shader code, at the expense of spending more time in
+    // bake())
+    baker.setPerTargetCompilation(perTargetCompilation);
+    baker.setSourceString(computeCode, QShader::ComputeStage);
+    baker.setMultiViewCount(viewCount);
+
+    const bool editorMode = QSSGRhiContextPrivate::editorMode();
+    // Shader debug is disabled in editor mode
+    const bool shaderDebug = !editorMode && QSSGRhiContextPrivate::shaderDebuggingEnabled();
+
+    QShader computeShader = baker.bake();
+    QSSGRhiShaderPipelinePtr shaders;
+    const auto valid = computeShader.isValid();
+    if (shaderDebug) {
+        dumpShader(QShader::Stage::ComputeStage, computeCode);
+        if (!valid)
+            dumpShaderToFile(QShader::Stage::ComputeStage, computeCode);
+    }
+    if (valid) {
+        shaders = std::make_shared<QSSGRhiShaderPipeline>(m_rhiContext);
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Compute, computeShader), {});
+        if (shaderDebug)
+            qDebug("Compilation for compute stage succeeded");
+    } else if (!editorMode) {
+        qWarning("Failed to compile compute shader: %s\n", qPrintable(baker.errorMessage()));
+        if (!shaderDebug)
+            qWarning() << inKey << '\n';
+    }
+    auto result = m_rhiShaders.insert(tempKey, shaders).value();
+    if (result && result->computeStage()) {
+        QQsbCollection::EntryDesc entryDesc = {
+            cacheKeyString,
+            {},
+            result->computeStage()->shader(),
+            {}
+        };
+        m_persistentShaderBakingCache.addEntry(entryDesc.generateSha(), entryDesc);
+    }
+    return result;
+#else
+    Q_UNUSED(inKey);
+    Q_UNUSED(inComp);
+    Q_UNUSED(viewCount);
+    Q_UNUSED(perTargetCompilation);
     Q_UNUSED(inCacheKey);
     qWarning("Cannot compile and condition shaders at runtime because this build of Qt Quick 3D is not linking to Qt Shader Tools. "
              "Only pre-processed materials are supported.");
@@ -699,6 +795,21 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::tryNewPipelineFromPersistentCache(cons
         QSSGRhiShaderPipelinePtr shaders(new QSSGRhiShaderPipeline(m_rhiContext));
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader), stageFlags);
+        QSSGShaderCacheKey cacheKey(inKey);
+        cacheKey.m_features = inFeatures;
+        cacheKey.updateHashCode();
+        return m_rhiShaders.insert(cacheKey, shaders).value();
+    } else if (entryDesc.vertShader.isValid()) {
+        const bool shaderDebug = !QSSGRhiContextPrivate::editorMode() && QSSGRhiContextPrivate::shaderDebuggingEnabled();
+        if (shaderDebug)
+            qDebug("Loading rhi shaders from disk cache for %s (%s)", qsbcKey.constData(), inKey.constData());
+
+        if (entryDesc.vertShader.stage() != QShader::ComputeStage) {
+            qWarning("Failed to find compute stage while loading rhi shaders from disk cache for %s.", qsbcKey.constData());
+            return {};
+        }
+        QSSGRhiShaderPipelinePtr shaders(new QSSGRhiShaderPipeline(m_rhiContext));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Compute, entryDesc.vertShader), stageFlags);
         QSSGShaderCacheKey cacheKey(inKey);
         cacheKey.m_features = inFeatures;
         cacheKey.updateHashCode();

@@ -305,14 +305,16 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
             ShaderItemType itemType = ShaderItemType(m_finalBuilder.mid(pos + prefixLen, typeLen).toInt());
             switch (itemType) {
             case ShaderItemType::VertexInput:
+            {
+                QByteArray block;
                 if (m_stage == QSSGShaderGeneratorStage::Vertex) {
-                    QByteArray block;
                     for (const QSSGShaderResourceMergeContext::InOutVar &var : std::as_const(mergeContext->m_inOutVars)) {
                         if (var.stagesInputIn.testFlag(m_stage))
                             block += QString::asprintf("layout(location = %d) in %s %s;\n", var.location, var.type.constData(), var.name.constData()).toUtf8();
                     }
-                    m_finalBuilder.replace(pos, prefixLen + typeLen, block);
                 }
+                m_finalBuilder.replace(pos, prefixLen + typeLen, block);
+            }
                 break;
             case ShaderItemType::Input:
             {
@@ -447,8 +449,12 @@ void QSSGProgramGenerator::linkStages()
 
 void QSSGProgramGenerator::beginProgram(QSSGShaderGeneratorStageFlags inEnabledStages)
 {
+    // If compute is enabled it must be the only stage
+    QSSG_ASSERT(!inEnabledStages.testFlag(QSSGShaderGeneratorStage::Compute)
+                    || inEnabledStages == QSSGShaderGeneratorStage::Compute, m_enabledStages = {}; return);
     m_vs.begin(inEnabledStages);
     m_fs.begin(inEnabledStages);
+    m_cs.begin(inEnabledStages);
     m_enabledStages = inEnabledStages;
     linkStages();
 }
@@ -462,6 +468,8 @@ QSSGStageGeneratorBase &QSSGProgramGenerator::internalGetStage(QSSGShaderGenerat
         return m_vs;
     case QSSGShaderGeneratorStage::Fragment:
         return m_fs;
+    case QSSGShaderGeneratorStage::Compute:
+        return m_cs;
     default:
         Q_ASSERT(false);
         break;
@@ -565,16 +573,23 @@ QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const Q
 
     // qDebug("VERTEX:\n%s\n\n", m_vs.m_finalBuilder.constData());
     // qDebug("FRAGMENT:\n%s\n\n", m_fs.m_finalBuilder.constData());
-
-    return theCache.compileForRhi(inMaterialInfoString,
-                                   m_vs.m_finalBuilder,
-                                   m_fs.m_finalBuilder,
-                                   inFeatureSet,
-                                   stageFlags,
-                                   shaderAugmentation,
-                                   viewCount,
-                                   perTargetCompilation,
-                                   inCacheKey);
+    if (m_enabledStages & QSSGShaderGeneratorStage::Compute) {
+        QSSG_ASSERT(inFeatureSet.isNull(), return {});
+        return theCache.compileComputePipeline(inMaterialInfoString,
+                                               m_cs.m_finalBuilder,
+                                               viewCount,
+                                               perTargetCompilation,
+                                               inCacheKey);
+    }
+    return theCache.compileGraphicsPipeline(inMaterialInfoString,
+                                            m_vs.m_finalBuilder,
+                                            m_fs.m_finalBuilder,
+                                            inFeatureSet,
+                                            stageFlags,
+                                            shaderAugmentation,
+                                            viewCount,
+                                            perTargetCompilation,
+                                            inCacheKey);
 }
 
 QSSGVertexShaderGenerator::QSSGVertexShaderGenerator()
@@ -583,6 +598,10 @@ QSSGVertexShaderGenerator::QSSGVertexShaderGenerator()
 
 QSSGFragmentShaderGenerator::QSSGFragmentShaderGenerator()
     : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Fragment)
+{}
+
+QSSGComputeShaderGenerator::QSSGComputeShaderGenerator()
+    : QSSGStageGeneratorBase(QSSGShaderGeneratorStage::Compute)
 {}
 
 void QSSGFragmentShaderGenerator::addShaderIncomingMap()

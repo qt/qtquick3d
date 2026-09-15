@@ -69,7 +69,7 @@ public:
     struct Q_QUICK3DUTILS_EXPORT EntryDesc {
         QByteArray materialKey;
         FeatureSet featureSet;
-        QShader vertShader;
+        QShader vertShader; // Also used by compute shader
         QShader fragShader;
         QByteArray generateSha() const;
         static QByteArray generateSha(const QByteArray &materialKey, const FeatureSet &featureSet);

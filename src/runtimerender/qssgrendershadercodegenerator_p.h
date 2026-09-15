@@ -30,7 +30,8 @@ enum class QSSGShaderGeneratorStage
     None = 0,
     Vertex = 1,
     Fragment = 1 << 1,
-    StageCount = 2,
+    Compute = 1 << 2,
+    StageCount = 3,
 };
 
 Q_DECLARE_FLAGS(QSSGShaderGeneratorStageFlags, QSSGShaderGeneratorStage)
@@ -145,6 +146,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGVertexShaderGenerator final : public QS
 {
     QSSGVertexShaderGenerator();
 };
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGComputeShaderGenerator final : public QSSGStageGeneratorBase
+{
+    QSSGComputeShaderGenerator();
+};
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGFragmentShaderGenerator final : public QSSGStageGeneratorBase
 {
@@ -160,6 +165,7 @@ public:
     QSSGProgramGenerator() = default;
     QSSGVertexShaderGenerator m_vs;
     QSSGFragmentShaderGenerator m_fs;
+    QSSGComputeShaderGenerator m_cs;
 
     QSSGShaderGeneratorStageFlags m_enabledStages;
 
