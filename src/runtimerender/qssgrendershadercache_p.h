@@ -36,6 +36,7 @@ class QSSGRenderContextInterface;
 class QSSGRhiShaderPipeline;
 class QShaderBaker;
 class QRhi;
+class QSurfaceFormat;
 
 using QSSGUserShaderFragmentOutputs = QVector<QByteArrayView>;
 
@@ -292,6 +293,7 @@ public:
     static QByteArray shaderCollectionFile();
     static QByteArray particleShaderCollectionFile();
     static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *rhi);
+    static QList<QShaderVersion> glslTargetsForContext(const QSurfaceFormat &format, bool isGLESModule);
 };
 
 namespace QtQuick3DEditorHelpers {

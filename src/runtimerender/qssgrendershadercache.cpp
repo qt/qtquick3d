@@ -98,6 +98,61 @@ void QSSGShaderFeatures::set(QSSGShaderFeatures::Feature feature, bool val)
         flags &= ~(static_cast<FlagType>(feature) & ~IndexMask);
 }
 
+QList<QShaderVersion> QSSGShaderCache::glslTargetsForContext(const QSurfaceFormat &format, bool isGLESModule)
+{
+    QList<QShaderVersion> versions;
+
+    // QShaderVersion from QSurfaceFormat::version pair. Only valid from GLSL
+    // 330 and GLSL ES 300 up; below those the GLSL version does not follow the
+    // context version, but the callers below never get there.
+    const auto fromVersion = [](const std::pair<int, int> &version, const QShaderVersion::Flags flags = {}) -> QShaderVersion {
+        return QShaderVersion(version.first * 100 + version.second * 10, flags);
+    };
+
+    const auto version = format.version();
+
+    if (format.profile() == QSurfaceFormat::CoreProfile && version >= qMakePair(3, 3)) {
+        // Add the floor version so that silent translation errors do not leave the
+        // GLSL outputs empty
+        versions.append(QShaderVersion(330));
+        // Use actual version
+        if (version > qMakePair(3, 3))
+            versions.append(fromVersion(version));
+    } else if (format.renderableType() == QSurfaceFormat::OpenGLES || isGLESModule) {
+        if (format.majorVersion() >= 3) {
+            // Add the floor version so that silent translation errors do not leave the
+            // GLSL outputs empty
+            versions.append(QShaderVersion(300, QShaderVersion::GlslEs));
+            // Use actual version
+            if (version > qMakePair(3, 0))
+                versions.append(fromVersion(version, QShaderVersion::GlslEs));
+        } else {
+            versions.append(QShaderVersion(100, QShaderVersion::GlslEs)); // GLES 2.0
+        }
+    } else {
+        // Need to default to at least GLSL 130 (OpenGL 3.0), not 120.
+        // The difference is actually relevant when it comes to certain
+        // GLSL features (textureSize, unsigned integers, and with
+        // SPIRV-Cross even bool), and we do not have to care about
+        // pure OpenGL (non-ES) 2.x implementations in practice.
+
+        // For full feature set we need GLSL 140 (OpenGL 3.1), e.g.
+        // because of inverse() used for instancing.
+
+        // GLSL 130 should still be attempted, to support old Mesa
+        // llvmpipe that only gives us OpenGL 3.0. At the time of
+        // writing the opengl32sw.dll shipped with pre-built Qt is one
+        // of these still.
+
+        if (version >= qMakePair(3, 1))
+            versions.append(QShaderVersion(140)); // OpenGL 3.1+
+        else
+            versions.append(QShaderVersion(130)); // OpenGL 3.0+
+    }
+
+    return versions;
+}
+
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
 static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
 {
@@ -119,47 +174,17 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
     case QRhi::OpenGLES2:
     {
         QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+        bool isGLESModule = false;
 #if QT_CONFIG(opengl)
         auto h = static_cast<const QRhiGles2NativeHandles *>(rhi->nativeHandles());
         if (h && h->context)
             format = h->context->format();
+        isGLESModule = QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES;
 #endif
-        if (format.profile() == QSurfaceFormat::CoreProfile && format.version() >= qMakePair(3, 3)) {
-            outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
-            outputs.append({ QShader::GlslShader, QShaderVersion(420) }); // OpenGL 4.2+
-        } else {
-            bool isGLESModule = false;
-#if QT_CONFIG(opengl)
-            isGLESModule = QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES;
-#endif
-            if (format.renderableType() == QSurfaceFormat::OpenGLES || isGLESModule) {
-                if (format.majorVersion() >= 3) {
-                    outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
-                    outputs.append({ QShader::GlslShader, QShaderVersion(310, QShaderVersion::GlslEs) }); // GLES 3.1+
-                } else {
-                    outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
-                }
-            } else {
-                // Need to default to at least GLSL 130 (OpenGL 3.0), not 120.
-                // The difference is actually relevant when it comes to certain
-                // GLSL features (textureSize, unsigned integers, and with
-                // SPIRV-Cross even bool), and we do not have to care about
-                // pure OpenGL (non-ES) 2.x implementations in practice.
-
-                // For full feature set we need GLSL 140 (OpenGL 3.1), e.g.
-                // because of inverse() used for instancing.
-
-                // GLSL 130 should still be attempted, to support old Mesa
-                // llvmpipe that only gives us OpenGL 3.0. At the time of
-                // writing the opengl32sw.dll shipped with pre-built Qt is one
-                // of these still.
-
-                if (format.version() >= qMakePair(3, 1))
-                    outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
-                else
-                    outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+
-            }
-        }
+        const QList<QShaderVersion> versions = QSSGShaderCache::glslTargetsForContext(format, isGLESModule);
+        outputs.reserve(outputs.size() + versions.size());
+        for (const QShaderVersion &version : versions)
+            outputs.append({ QShader::GlslShader, version });
     }
         break;
     default: // Vulkan, Null
@@ -167,6 +192,9 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
         break;
     }
 
+    // Do not fail baking if one of the target fails
+    // See comment on initBakerForPersistentUse
+    baker->setBreakOnShaderTranslationError(false);
     baker->setGeneratedShaders(outputs);
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
@@ -174,7 +202,7 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
 void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
-    outputs.reserve(8);
+    outputs.reserve(13);
 
 #ifndef Q_OS_WASM
     outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
@@ -186,6 +214,7 @@ void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
     outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
 #endif // Q_OS_VISIONOS
 
+    outputs.append({ QShader::GlslShader, QShaderVersion(430) }); // OpenGL 4.3+ (compute shaders, shader storage buffers)
     outputs.append({ QShader::GlslShader, QShaderVersion(420) }); // OpenGL 4.2+
     outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
     outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
@@ -194,6 +223,7 @@ void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
 #endif
     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
     outputs.append({ QShader::GlslShader, QShaderVersion(310, QShaderVersion::GlslEs) }); // GLES 3.1+
+    outputs.append({ QShader::GlslShader, QShaderVersion(320, QShaderVersion::GlslEs) }); // GLES 3.2+ (image atomics)
 
     // If one of the above cannot be generated due to failing at the
     // SPIRV-Cross translation stage, it will be skipped, but bake() will not
@@ -218,7 +248,7 @@ static void initBakerForNonPersistentUse(QShaderBaker *, QRhi *)
 {
 }
 
-static void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *, QRhi *)
+void QSSGShaderCache::initBakerForPersistentUse(QShaderBaker *, QRhi *)
 {
 }
 #endif // QT_QUICK3D_HAS_RUNTIME_SHADERS
