@@ -10,6 +10,7 @@ else()
     if(NOT ANDROID) # QTBUG-102711
     add_subdirectory(multiwindow)
     add_subdirectory(sourceitem)
+    add_subdirectory(layers)
     endif()
     add_subdirectory(buffermanager)
     add_subdirectory(rendershutdown)
