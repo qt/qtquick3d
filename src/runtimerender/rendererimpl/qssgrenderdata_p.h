@@ -152,6 +152,7 @@ public:
         None,
         ActiveChanged = 0x1,
         PickableChanged = 0x2,
+        TagChanged = 0x4, // a node's content layer tag changed; the layer filter needs a rerun
     };
 
     using GlobalStateResultT = std::underlying_type_t<GlobalStateResult>;

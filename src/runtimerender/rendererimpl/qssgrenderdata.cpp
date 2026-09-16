@@ -162,12 +162,19 @@ QSSGRenderDataHelpers::GlobalStateResult QSSGRenderDataHelpers::updateGlobalNode
 
     constexpr DirtyFlag ClearDirtyMask = DirtyFlag(FlagT(DirtyFlag::ActiveDirty) | FlagT(DirtyFlag::PickableDirty) | FlagT(DirtyFlag::ImportDirty));
 
+    constexpr GlobalStateResult activeChangeFlag[] = { GlobalStateResult::None, GlobalStateResult::ActiveChanged };
+    constexpr GlobalStateResult pickableChangeFlag[] = { GlobalStateResult::None, GlobalStateResult::PickableChanged };
+    constexpr GlobalStateResult tagChangeFlag[] = { GlobalStateResult::None, GlobalStateResult::TagChanged };
+
     if (Q_UNLIKELY(!node || (node->h.version() != version)))
         return GlobalStateResult::None;
 
     const bool activeDirty = node->isDirty(DirtyFlag::ActiveDirty);
     const bool pickableDirty = node->isDirty(DirtyFlag::PickableDirty);
     const bool importedDirty = node->isDirty(DirtyFlag::ImportDirty);
+    // There's nothing more to do if the tag is dirty, but we still need to clear the dirty flag.
+    const bool tagDirty = node->isDirty(DirtyFlag::TagDirty);
+    node->clearDirty(DirtyFlag::TagDirty);
 
     const bool updateState = activeDirty || pickableDirty || importedDirty;
 
@@ -185,7 +192,9 @@ QSSGRenderDataHelpers::GlobalStateResult QSSGRenderDataHelpers::updateGlobalNode
         node->clearDirty(ClearDirtyMask);
     }
 
-    return GlobalStateResult(FlagT(activeDirty) | (FlagT(pickableDirty) << 1));
+    return GlobalStateResult(FlagT(activeChangeFlag[activeDirty])
+                             | FlagT(pickableChangeFlag[pickableDirty])
+                             | FlagT(tagChangeFlag[tagDirty]));
 }
 
 bool QSSGRenderDataHelpers::calcInstanceTransforms(QSSGRenderNode *node,
