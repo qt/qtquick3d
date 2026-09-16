@@ -2601,7 +2601,9 @@ void QSSGLayerRenderData::prepareForRender()
         explicitCamera->clearDirty(QSSGRenderCamera::DirtyFlag::LayerMaskDirty);
     }
 
-    const bool restatNodes = (layerTreeWasDirty || (globalStateResult & QSSGRenderDataHelpers::GlobalStateResult::ActiveChanged) || cameraLayerMaskDirty);
+    const bool restatNodes = (layerTreeWasDirty
+                              || (globalStateResult & (QSSGRenderDataHelpers::GlobalStateResult::ActiveChanged | QSSGRenderDataHelpers::GlobalStateResult::TagChanged))
+                              || cameraLayerMaskDirty);
 
     if (restatNodes)
         updateFilteredLayerNodes(layerMask);
