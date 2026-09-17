@@ -391,7 +391,7 @@ qsizetype calculateDataSize(qsizetype width, qsizetype height, qsizetype depth, 
     if (depth > 0 && qMulOverflow(dataSize, depth, &dataSize))
         return -1;
 
-    if (dataSize > qsizetype(std::numeric_limits<quint32>::max()))
+    if (quint64(dataSize) > quint64(std::numeric_limits<quint32>::max()))
         return -1;
 
     return dataSize;
