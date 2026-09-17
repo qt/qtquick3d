@@ -700,9 +700,9 @@ void RenderHelpers::addAccumulatorImageBindings(QSSGRhiShaderPipeline *shaderPip
     bindings.addStorageBufferLoadStore(4, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[1]);
     bindings.addStorageBufferLoadStore(5, QRhiShaderResourceBinding::FragmentStage, (QRhiBuffer*)images[2]);
 #else
-    int abuf = shaderPipeline->bindingForImage("qt_imgAbuffer");
-    int aux = shaderPipeline->bindingForImage("qt_imgAux");
-    int counter = shaderPipeline->bindingForImage("qt_imgCounter");
+    int abuf = shaderPipeline->bindingForStorageImage("qt_imgAbuffer");
+    int aux = shaderPipeline->bindingForStorageImage("qt_imgAux");
+    int counter = shaderPipeline->bindingForStorageImage("qt_imgCounter");
     if (abuf == -1 || aux == -1 || counter == -1) {
         qWarning()<<"Shader is missing image binding points;";
         return;

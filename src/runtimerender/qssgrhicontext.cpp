@@ -446,6 +446,11 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
             }
         }
     }
+    const QVector<QShaderDescription::StorageBlock> storageBlocks = stage.shader().description().storageBlocks();
+    for (const QShaderDescription::StorageBlock &blk : storageBlocks) {
+        if (blk.binding > 0)
+            m_storageBuffers[blk.blockName] = blk;
+    }
 
     const QVector<QShaderDescription::InOutVariable> combinedImageSamplers  = stage.shader().description().combinedImageSamplers();
     for (const QShaderDescription::InOutVariable &var : combinedImageSamplers)
@@ -463,6 +468,42 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
 int QSSGRhiShaderPipeline::ub0DirectionalLightDataOffset() const
 {
     return m_ub0NextUBufOffset + m_context.rhi()->ubufAligned(sizeof(QSSGShaderLightsUniformData));
+}
+
+void QSSGRhiShaderPipeline::addStorageBufferBinding(const QByteArray &name, QRhiShaderResourceBinding::Type type, QRhiBuffer *buffer, int binding)
+{
+    QSSG_ASSERT(type >= QRhiShaderResourceBinding::BufferLoad && type <= QRhiShaderResourceBinding::BufferLoadStore, return);
+    QSSG_ASSERT(buffer->usage().testFlag(QRhiBuffer::StorageBuffer), return);
+    m_storageBufferBindings.insert(binding, StorageResourceBinding(binding, name, type, buffer));
+}
+
+void QSSGRhiShaderPipeline::addStorageImageBinding(const QByteArray &name, QRhiShaderResourceBinding::Type type, QRhiTexture *texture, int binding)
+{
+    QSSG_ASSERT(type >= QRhiShaderResourceBinding::ImageLoad && type <= QRhiShaderResourceBinding::ImageLoadStore, return);
+    QSSG_ASSERT(texture->flags().testFlags(QRhiTexture::UsedWithLoadStore), return);
+    m_storageImageBindings.insert(binding, StorageResourceBinding(binding, name, type, texture));
+}
+
+void QSSGRhiShaderPipeline::applyAndClearStorageBindings(QRhiShaderResourceBinding::StageFlags stage, QSSGRhiShaderResourceBindingList &bindings)
+{
+    for (const auto &binding : std::as_const(m_storageBufferBindings)) {
+        if (binding.type == QRhiShaderResourceBinding::BufferLoad)
+            bindings.addStorageBufferLoad(binding.binding, stage, binding.buffer);
+        else if (binding.type == QRhiShaderResourceBinding::BufferStore)
+            bindings.addStorageBufferStore(binding.binding, stage, binding.buffer);
+        else
+            bindings.addStorageBufferLoadStore(binding.binding, stage, binding.buffer);
+    }
+    for (const auto &binding : std::as_const(m_storageImageBindings)) {
+        if (binding.type == QRhiShaderResourceBinding::ImageLoad)
+            bindings.addImageLoad(binding.binding, stage, binding.texture, 0);
+        else if (binding.type == QRhiShaderResourceBinding::ImageStore)
+            bindings.addImageStore(binding.binding, stage, binding.texture, 0);
+        else
+            bindings.addImageLoadStore(binding.binding, stage, binding.texture, 0);
+    }
+    m_storageBufferBindings.clear();
+    m_storageImageBindings.clear();
 }
 
 void QSSGRhiShaderPipeline::setUniformValue(char *ubufData, const char *name, const QVariant &inValue, QSSGRenderShaderValue::Type inType)
@@ -1043,11 +1084,21 @@ int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
     return binding;
 }
 
-int QSSGRhiShaderPipeline::bindingForImage(const char *name)
+static inline QByteArray asLookupKey(QByteArrayView name)
 {
-    auto it = m_storageImages.constFind(QByteArray::fromRawData(name, strlen(name)));
-    const int binding = it != m_storageImages.cend() ? it->binding : -1;
-    return binding;
+    return QByteArray::fromRawData(name.data(), name.size());
+}
+
+int QSSGRhiShaderPipeline::bindingForStorageImage(QByteArrayView name)
+{
+    auto it = m_storageImages.constFind(asLookupKey(name));
+    return it != m_storageImages.cend() ? it->binding : -1;
+}
+
+int QSSGRhiShaderPipeline::bindingForStorageBuffer(QByteArrayView name)
+{
+    auto storageIt = m_storageBuffers.constFind(asLookupKey(name));
+    return storageIt != m_storageBuffers.cend() ? storageIt->binding : -1;
 }
 
 void QSSGRhiShaderPipeline::setShaderResources(char *ubufData,

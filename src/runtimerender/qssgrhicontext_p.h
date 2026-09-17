@@ -370,6 +370,7 @@ struct QSSGShaderDirectionalLightsUniformData {
     QSSGShaderDirectionalLightData directionalLightData[QSSG_MAX_NUM_DIRECTIONAL_LIGHTS];
 };
 
+class QSSGRhiShaderResourceBindingList;
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderPipeline
 {
     Q_DISABLE_COPY(QSSGRhiShaderPipeline)
@@ -495,7 +496,8 @@ public:
     void setUniform(char *ubufData, const char *name, const void *data, size_t size, int *storeIndex = nullptr, UniformFlags flags = {});
     void setUniformArray(char *ubufData, const char *name, const void *data, size_t itemCount, QSSGRenderShaderValue::Type type, int *storeIndex = nullptr);
     int bindingForTexture(const char *name, int hint = -1);
-    int bindingForImage(const char *name);
+    int bindingForStorageImage(QByteArrayView name);
+    int bindingForStorageBuffer(QByteArrayView name);
 
     void setShaderResources(char *ubufData,
                             QSSGBufferManager &theBufferManager,
@@ -558,6 +560,27 @@ public:
     const QSSGRhiTexture &extraTextureAt(int index) const { return m_extraTextures[index]; }
     QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
+    struct StorageResourceBinding
+    {
+        int binding = 0;
+        QByteArray name;
+        QRhiShaderResourceBinding::Type type = QRhiShaderResourceBinding::BufferLoadStore;
+        QRhiBuffer *buffer = nullptr;
+        QRhiTexture *texture = nullptr;
+        StorageResourceBinding() = default;
+        StorageResourceBinding(int binding, const QByteArray &name, QRhiShaderResourceBinding::Type type, QRhiBuffer *buffer)
+            : binding(binding), name(name), type(type), buffer(buffer), texture(nullptr) {}
+        StorageResourceBinding(int binding, const QByteArray &name, QRhiShaderResourceBinding::Type type, QRhiTexture *texture)
+            : binding(binding), name(name), type(type), buffer(nullptr), texture(texture) {}
+    };
+    using StorageBindingMap = QMap<int, StorageResourceBinding>;
+
+    void addStorageBufferBinding(const QByteArray &name, QRhiShaderResourceBinding::Type type, QRhiBuffer *buffer, int binding);
+    void addStorageImageBinding(const QByteArray &name, QRhiShaderResourceBinding::Type type, QRhiTexture *texture, int binding);
+    void applyAndClearStorageBindings(QRhiShaderResourceBinding::StageFlags stage, QSSGRhiShaderResourceBindingList &bindings);
+    const StorageBindingMap &storageBufferBindings() const { return m_storageBufferBindings; }
+    const StorageBindingMap &storageImageBindings() const { return m_storageImageBindings; }
+
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
     QSSGShaderDirectionalLightsUniformData &directionalLightsUniformData() { return m_directionalLightsUniformData; }
     InstanceLocations instanceBufferLocations() const { return instanceLocations; }
@@ -573,6 +596,7 @@ private:
     QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_storageImages;
+    QHash<QByteArray, QShaderDescription::StorageBlock> m_storageBuffers;
     int m_materialImageSamplerBindings[size_t(QSSGRhiSamplerBindingHints::BindingMapSize)];
 
     QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
@@ -596,6 +620,9 @@ private:
     QRhiTexture *m_oitImages[3] = {nullptr};
     QRhiTexture *m_motionVectorTexture = nullptr;
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures;
+
+    QMap<int, StorageResourceBinding> m_storageImageBindings;
+    QMap<int, StorageResourceBinding> m_storageBufferBindings;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::StageFlags)
