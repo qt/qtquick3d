@@ -1806,9 +1806,9 @@ void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourc
     d->binding = binding;
     d->stage = stage;
     d->type = QRhiShaderResourceBinding::SampledTexture;
-    d->u.stex.count = 1;
-    d->u.stex.texSamplers[0].tex = tex;
-    d->u.stex.texSamplers[0].sampler = sampler;
+    d->stex.texSamplers.resize(1);
+    d->stex.texSamplers[0].tex = tex;
+    d->stex.texSamplers[0].sampler = sampler;
 }
 
 void QSSGRhiShaderResourceBindingList::addImageLoad(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level)
