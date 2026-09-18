@@ -1875,9 +1875,7 @@ QRhiComputePipeline *QSSGRhiContextPrivate::computePipeline(const QSSGComputePip
  */
 QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const
 {
-    // We do not use GPU compute at all at the moment, this means we can
-    // get a small performance gain with OpenGL by declaring this.
-    return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
+    return {};
 }
 
 QSSGRhiRenderableTextureV2::~QSSGRhiRenderableTextureV2()
