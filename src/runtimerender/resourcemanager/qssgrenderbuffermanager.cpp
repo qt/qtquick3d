@@ -836,8 +836,11 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     if (!preFilteredEnvCubeMap->create())
         qWarning("Failed to create Pre-filtered Environment Cube Map");
     preFilteredEnvCubeMap->setName(rtName);
-    int mipmapCount = rhi->mipLevelsForSize(environmentMapSize);
-    mipmapCount = qMin(mipmapCount, 6);  // don't create more than 6 mip levels
+    // The texture is created with QRhiTexture::MipMapped, so the graphics API
+    // allocates the full mip chain even though only the first few levels are
+    // prefiltered below.
+    const int fullMipCount = rhi->mipLevelsForSize(environmentMapSize);
+    const int mipmapCount = qMin(fullMipCount, 6);  // don't create more than 6 mip levels
     QMap<int, QSize> mipLevelSizes;
     QMap<int, QVarLengthArray<QRhiTextureRenderTarget *, 6>> renderTargetsMap;
     QRhiRenderPassDescriptor *renderPassDescriptorPhase2 = nullptr;
@@ -978,6 +981,35 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("environment_map", mipLevel, face));
         }
     }
+
+    // Nothing renders into the mip levels past mipmapCount, but they exist:
+    // the texture is MipMapped, so the full chain is allocated and the shader
+    // resource view covers all of it. Some APIs require every subresource of a
+    // render target to be initialized by a clear, discard or copy before the
+    // resource is used, even when the shader never samples those levels.
+    for (int mipLevel = mipmapCount; mipLevel < fullMipCount; ++mipLevel) {
+        for (const auto face : QSSGRenderTextureCubeFaces) {
+            QRhiColorAttachment att(preFilteredEnvCubeMap);
+            att.setLayer(quint8(face));
+            att.setLevel(mipLevel);
+            QRhiTextureRenderTargetDescription rtDesc;
+            rtDesc.setColorAttachments({att});
+            auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+            renderTarget->setDescription(rtDesc);
+            renderTarget->setRenderPassDescriptor(renderPassDescriptorPhase2);
+            if (!renderTarget->create()) {
+                qWarning("Failed to build prefilter env map render target for unused mip level");
+                delete renderTarget;
+                continue;
+            }
+            renderTarget->deleteLater();
+            cb->beginPass(renderTarget, QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, context->commonPassFlags());
+            QSSGRHICTX_STAT(context, beginRenderPass(renderTarget));
+            cb->endPass();
+            QSSGRHICTX_STAT(context, endRenderPass());
+        }
+    }
+
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_cube_prefilter"));
     Q_TRACE(QSSG_renderPass_exit);
