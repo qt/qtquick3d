@@ -68,8 +68,11 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
     const bool multiView = featureSet.isSet(QSSGShaderFeatures::Feature::DisableMultiView)
         ? false
         : defaultMaterialShaderKeyProperties.m_viewCount.getValue(renderable.shaderDescription) >= 2;
-    const QByteArray shaderPathKey = material.m_shaderPathKey[multiView ? QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex
-                                                                        : QSSGRenderCustomMaterial::RegularShaderPathKeyIndex] + shaderAugmentation.preamble + shaderAugmentation.body;
+    const QByteArray &baseShaderPathKey = material.m_shaderPathKey[multiView ? QSSGRenderCustomMaterial::MultiViewShaderPathKeyIndex
+                                                                             : QSSGRenderCustomMaterial::RegularShaderPathKeyIndex];
+    const QByteArray shaderPathKey = shaderAugmentation.hasUserAugmentation()
+            ? baseShaderPathKey + ':' + shaderAugmentation.hash
+            : baseShaderPathKey;
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find(). This is the first

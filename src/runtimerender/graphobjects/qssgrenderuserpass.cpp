@@ -7,6 +7,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercommands_p.h>
 
 #include <QtCore/qregularexpression.h>
+#include <QtCore/qcryptographichash.h>
 
 #include <ssg/qssgrendercontextcore.h>
 
@@ -86,6 +87,12 @@ void QSSGRenderUserPass::finalizeShaders(const QSSGRenderContextInterface &ctx)
         // Replace any instances of the AugmentMacros with the appropriate built-in variable names
         shaderAugmentation.preamble = replaceAugmentMacros(shaderAugmentation.preamble);
         shaderAugmentation.body = replaceAugmentMacros(shaderAugmentation.body);
+        // Used to build the unique shader cache key. The shader key goes in the generated
+        // shader as a one line comment so it can't be multiline. Generate hash from the
+        // augmented shader preamble and body instead, which gets combined with the material key.
+        const QByteArray fullAugmentation = shaderAugmentation.preamble + shaderAugmentation.body;
+        shaderAugmentation.hash = QCryptographicHash::hash(QByteArrayView(fullAugmentation),
+                                                           QCryptographicHash::Algorithm::Sha1).toHex();
 
         // Check if body needs certain features
         shaderAugmentation.needsBaseColor = shaderAugmentation.body.contains(AugmentMacros["BASE_COLOR"]);

@@ -52,6 +52,7 @@ class QSSGUserShaderAugmentation
 public:
     QByteArray preamble;
     QByteArray body;
+    QByteArray hash;
 
     bool needsBaseColor = false;
     bool needsRoughness = false;

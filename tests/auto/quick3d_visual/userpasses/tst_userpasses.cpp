@@ -60,6 +60,7 @@ private slots:
     void testCullModeOverrideSubpass();
     void testBlendOverrideOriginalMaterial();
     void noColorAttachmentDoesNotCrash();
+    void testAugmentShaderWithCustomMaterial();
 
 private:
     // Helper function to check if an image contains a specific color (with lighting effects)
@@ -1636,6 +1637,26 @@ void tst_UserPasses::noColorAttachmentDoesNotCrash()
     // The pass renders the red cube into the implicit default attachment,
     // which the provider exposes for display.
     QVERIFY(imageContainsDominantColor(result, Qt::red));
+}
+
+void tst_UserPasses::testAugmentShaderWithCustomMaterial()
+{
+    // A custom material folds the augmentation into its shader path key, and
+    // that key is emitted as the "//Shader name -" comment of the generated
+    // shader. Appending the augmentation verbatim spilled everything after its
+    // first line out of the comment, so the shader did not compile at all and
+    // nothing was drawn. The augment shader here paints green over the
+    // material's red.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("augment_custom_material.qml"), QSize(400, 400)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QVERIFY(!grab(view.data()).isNull());
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+
+    QVERIFY2(imageContainsDominantColor(result, Qt::green),
+             "The augment shader should have overridden the custom material's own output");
 }
 
 QTEST_MAIN(tst_UserPasses)
