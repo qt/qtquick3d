@@ -1091,8 +1091,7 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::getShaderPipelineForDefaultMateria
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find()
-    // FIXME: Would be good to have some better approach here for the key.
-    QByteArray name = shaderAugmentation.preamble + shaderAugmentation.body;
+    QByteArray name = shaderAugmentation.hash;
     for (const auto &def : shaderAugmentation.defines)
         name.append(def.name).append(def.value);
     QSSGShaderMapKey skey = QSSGShaderMapKey(name,
