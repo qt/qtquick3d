@@ -6,6 +6,7 @@
 #include "qquick3dprofiler_p.h"
 
 #include <QtQml/qqmlfile.h>
+#include <QtQml/private/qqmlcontextdata_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qthread.h>
@@ -55,7 +56,8 @@ int QQuick3DProfiler::registerObject(const QObject *object)
     int id = 0;
     if (qmlData) {
         QQmlType qmlType = QQmlMetaType::qmlType(object->metaObject());
-        QString fileName = qmlData->compilationUnit->fileName();
+        QString fileName = qmlData->compilationUnit
+                ? qmlData->compilationUnit->fileName() : (qmlData->outerContext ? qmlData->outerContext->urlString() : QString());
         typeAndLocation = (qmlType.qmlTypeName() + QLatin1Char(' ') + fileName + QLatin1Char(':') + QString::number(qmlData->lineNumber)).toUtf8();
         if (!s_eventData.contains(typeAndLocation)) {
             id = s_eventData.size() + 1;
