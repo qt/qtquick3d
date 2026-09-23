@@ -793,6 +793,7 @@ private:
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set
     QSSGRenderNodeVersionType version = 0;
+    QSSGRenderNodeVersionType stateGeneration = 0; // Last seen QSSGGlobalRenderNodeData::stateGeneration()
     bool particlesEnabled = true;
     bool hasDepthWriteObjects = false;
     bool zPrePassActive = false;
