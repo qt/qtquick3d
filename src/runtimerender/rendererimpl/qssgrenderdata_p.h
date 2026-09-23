@@ -85,6 +85,13 @@ public:
 
     [[nodiscard]] VersionType version() const { return m_version; }
 
+    // The state generation is bumped whenever a layer consumes an active or tag change on a
+    // node that is shared between layers (imported scene). The node's dirty flags are cleared by
+    // the first layer that sees them, so the other layers sharing the node compare the generation
+    // they last saw against this one to know that they need to redo their filtered node lists.
+    [[nodiscard]] VersionType stateGeneration() const { return m_stateGeneration; }
+    void bumpStateGeneration() { ++m_stateGeneration; }
+
     // NOTE: The node count is the number of nodes in the "world" tree.
     //       This is not the the same as the storage size. as some nodes
     //       may not be stored in the data or use the same storage location!
@@ -133,6 +140,7 @@ private:
     size_t m_size = 0;
     size_t m_nodeCount = 0;
     VersionType m_version = 0;
+    VersionType m_stateGeneration = 0;
 };
 
 using QSSGGlobalRenderNodeDataPtr = std::shared_ptr<QSSGGlobalRenderNodeData>;
