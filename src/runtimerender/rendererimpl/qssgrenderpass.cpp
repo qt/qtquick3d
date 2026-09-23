@@ -1776,10 +1776,12 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 
         TransparentPass::prep(*ctx, data, this, ps, shaderFeatures, oitrt.renderPassDescriptor, sortedTransparentObjects, true);
     } else if (method == QSSGRenderLayer::OITMethod::LinkedList) {
-        if (this->rub) {
-            rhiCtx->commandBuffer()->resourceUpdate(this->rub);
-            this->rub = nullptr;
+        oitRenderContext = &data.getOitRenderContext();
+        if (oitRenderContext->rub) {
+            rhiCtx->commandBuffer()->resourceUpdate(oitRenderContext->rub);
+            oitRenderContext->rub = nullptr;
         }
+
         // same as transparent pass
         // transparent objects (or, without LayerEnableDepthTest, all objects)
         ps.flags.setFlag(QSSGRhiGraphicsPipelineState::Flag::BlendEnabled, true);
@@ -1966,56 +1968,42 @@ void OITRenderPass::renderPass(QSSGRenderer &renderer)
         renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rhiCtx->mainRenderPassDescriptor(), {});
 
         TransparentPass::render(*ctx, ps, sortedTransparentObjects);
+
+        if (!oitRenderContext->pendingResult) {
+            QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+            QRhiReadbackResult *result = nullptr;
+            if (oitRenderContext->completedResults.size()) {
+                result = oitRenderContext->completedResults.takeLast();
+                result->pixelSize = {};
+                result->data = {};
+                result->format = QRhiTexture::UnknownFormat;
+            }  else  {
+                result = new QRhiReadbackResult();
+            }
+            auto *oitrt = oitRenderContext;
+            const auto completedFunc = [this, oitrt, result](){
+                if (result) {
+                    const quint32 *d = reinterpret_cast<const quint32 *>(result->data.constData());
+                    quint32 nodeCount = *d;
+                    if (nodeCount)
+                        this->reportedNodeCount = ensureFreeNodes(nodeCount, 32u * 1024u);
+                    oitrt->completedResults.append(result);
+                    QSSG_ASSERT(oitrt->pendingResult == result, return;);
+                    oitrt->pendingResult = nullptr;
+                }
+            };
+            result->completed = completedFunc;
 #ifdef QSSG_OIT_USE_BUFFERS
-        QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-        QRhiReadbackResult *result = nullptr;
-        if (results.size() > 1) {
-            result = results.takeLast();
-            result->pixelSize = {};
-            result->data = {};
-            result->format = QRhiTexture::UnknownFormat;
-        }  else  {
-            result = new QRhiReadbackResult();
-        }
-        const auto completedFunc = [this, result](){
-            if (result) {
-                const quint32 *d = reinterpret_cast<const quint32 *>(result->data.constData());
-                quint32 nodeCount = *d;
-                if (nodeCount)
-                    this->reportedNodeCount = ensureFreeNodes(nodeCount, 32u * 1024u);
-                this->results.append(result);
-            }
-        };
-        result->completed = completedFunc;
-        rub->readBackBuffer(rhiCounterBuffer, 0, 4, result);
-        this->rub = rub;
+            rub->readBackBuffer(rhiCounterBuffer, 0, 4, result);
 #else
-        QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-        rub->copyTexture(readbackImage, rhiCounterImage->texture);
-        QRhiReadbackDescription rbdesc;
-        rbdesc.setTexture(readbackImage);
-        QRhiReadbackResult *result = nullptr;
-        if (results.size() > 1) {
-            result = results.takeLast();
-            result->pixelSize = {};
-            result->data = {};
-            result->format = QRhiTexture::UnknownFormat;
-        }  else  {
-            result = new QRhiReadbackResult();
-        }
-        const auto completedFunc = [this, result](){
-            if (result) {
-                const quint32 *d = reinterpret_cast<const quint32 *>(result->data.constData());
-                quint32 nodeCount = *d;
-                if (nodeCount)
-                    this->reportedNodeCount = ensureFreeNodes(nodeCount, 32u * 1024u);
-                this->results.append(result);
-            }
-        };
-        result->completed = completedFunc;
-        rub->readBackTexture(rbdesc, result);
-        this->rub = rub;
+            rub->copyTexture(readbackImage, rhiCounterImage->texture);
+            QRhiReadbackDescription rbdesc;
+            rbdesc.setTexture(readbackImage);
+            rub->readBackTexture(rbdesc, result);
 #endif
+            oitRenderContext->rub = rub;
+            oitRenderContext->pendingResult = result;
+        }
         cb->debugMarkEnd();
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("transparent_order_independent_pass"));
         Q_TRACE(QSSG_renderPass_exit);
@@ -2039,6 +2027,7 @@ void OITRenderPass::resetForFrame()
     rhiRevealageTexture = nullptr;
     rhiDepthTexture = nullptr;
     rhiCounterImage = nullptr;
+    oitRenderContext = nullptr;
 }
 
 void OITCompositePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
