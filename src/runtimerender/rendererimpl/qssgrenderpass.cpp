@@ -1707,11 +1707,14 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             || rhiDepthTexture->texture != oitrt.oitRenderTarget->description().depthTexture()
             || ps.samples != oitrt.oitRenderTarget->sampleCount()) {
             if (oitrt.oitRenderTarget) {
-                rhiAccumTexture->texture->destroy();
-                rhiRevealageTexture->texture->destroy();
-                oitrt.oitRenderTarget->destroy();
-                oitrt.renderPassDescriptor->destroy();
+                delete oitrt.oitRenderTarget;
+                delete oitrt.renderPassDescriptor;
+                delete rhiAccumTexture->texture;
+                delete rhiRevealageTexture->texture;
                 oitrt.oitRenderTarget = nullptr;
+                oitrt.renderPassDescriptor = nullptr;
+                rhiAccumTexture->texture = nullptr;
+                rhiRevealageTexture->texture = nullptr;
             }
             const QRhiTexture::Flags textureFlags = QRhiTexture::RenderTarget;
             if (ps.viewCount >= 2) {
