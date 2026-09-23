@@ -296,6 +296,9 @@ struct QSSGOITRenderContext
     QRhiBuffer *aBuffer = nullptr;
     QRhiBuffer *auxBuffer = nullptr;
     QRhiBuffer *counterBuffer = nullptr;
+    QRhiResourceUpdateBatch *rub = nullptr;
+    QList<QRhiReadbackResult *> completedResults;
+    QRhiReadbackResult *pendingResult = nullptr;
     void reset()
     {
         delete oitRenderTarget;
@@ -304,12 +307,24 @@ struct QSSGOITRenderContext
         delete aBuffer;
         delete auxBuffer;
         delete counterBuffer;
+        for (const auto *result : std::as_const(completedResults))
+            delete result;
+        completedResults.clear();
+        if (rub) {
+            rub->release();
+            rub = nullptr;
+            delete pendingResult;
+        } else if (pendingResult) {
+            // Still in flight: QRhi writes to it later, so the completion callback takes ownership.
+            pendingResult->completed = [result = pendingResult] { delete result; };
+        }
         oitRenderTarget = nullptr;
         renderPassDescriptor = nullptr;
         copyTexture = nullptr;
         aBuffer = nullptr;
         auxBuffer = nullptr;
         counterBuffer = nullptr;
+        pendingResult = nullptr;
     }
 };
 

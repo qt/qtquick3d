@@ -427,6 +427,7 @@ protected:
     static constexpr size_t MAX_SUBPASS_DEPTH = 16;
 };
 
+struct QSSGOITRenderContext;
 class OITRenderPass : public QSSGRenderPass
 {
 public:
@@ -462,8 +463,7 @@ public:
     QRhiTextureRenderTarget *renderTarget = nullptr;
     quint32 reportedNodeCount = 0;
     quint32 currentNodeCount = 0;
-    QList<QRhiReadbackResult* > results;
-    QRhiResourceUpdateBatch *rub = nullptr;
+    QSSGOITRenderContext *oitRenderContext = nullptr;
 };
 
 class OITCompositePass : public QSSGRenderPass
