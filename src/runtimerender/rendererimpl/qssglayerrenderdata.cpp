@@ -2561,8 +2561,24 @@ void QSSGLayerRenderData::prepareForRender()
         wasDataDirty = true;
         layerNodes = nodeData->getLayerNodeView(layer);
     } else {
-        for (auto &node : layerNodes)
-            globalStateResult |= QSSGRenderDataHelpers::updateGlobalNodeState(node, version);
+        using GlobalStateResult = QSSGRenderDataHelpers::GlobalStateResult;
+        // If the active state or tags of a node changed, it may affect the filtered node list for this layer. If so, we need to re-filter the nodes.
+        constexpr QSSGRenderDataHelpers::GlobalStateResultT FilterAffectingChanges = GlobalStateResult::ActiveChanged
+                                                                                     | GlobalStateResult::TagChanged;
+        bool sharedStateChanged = false;
+        for (auto &node : layerNodes) {
+            const auto result = QSSGRenderDataHelpers::updateGlobalNodeState(node, version);
+            globalStateResult |= result;
+            // If the node is shared and the change affects the filtered node list, we need to re-filter the nodes for this layer.
+            // The reason we need to do that is because the first layer processing the node will clear the dirty flag making the
+            // change invisible to the other layers sharing the node (we'll call bumpStateGeneration() further down).
+            const bool affectsFilter = ((result & FilterAffectingChanges) != 0);
+            const bool isShared = node->getGlobalState(QSSGRenderNode::GlobalState::Imported);
+            sharedStateChanged |= (affectsFilter && isShared);
+        }
+
+        if (sharedStateChanged)
+            nodeData->bumpStateGeneration();
 
         bool transformAndOpacityDirty = false;
         for (auto &node : layerNodes)
@@ -2601,9 +2617,14 @@ void QSSGLayerRenderData::prepareForRender()
         explicitCamera->clearDirty(QSSGRenderCamera::DirtyFlag::LayerMaskDirty);
     }
 
+    // Pick up active and tag changes on shared nodes that were consumed by another layer.
+    const bool sharedStateDirty = (stateGeneration != nodeData->stateGeneration());
+    stateGeneration = nodeData->stateGeneration();
+
     const bool restatNodes = (layerTreeWasDirty
                               || (globalStateResult & (QSSGRenderDataHelpers::GlobalStateResult::ActiveChanged | QSSGRenderDataHelpers::GlobalStateResult::TagChanged))
-                              || cameraLayerMaskDirty);
+                              || cameraLayerMaskDirty
+                              || sharedStateDirty);
 
     if (restatNodes)
         updateFilteredLayerNodes(layerMask);
