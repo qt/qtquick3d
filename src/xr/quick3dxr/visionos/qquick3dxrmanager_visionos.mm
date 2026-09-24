@@ -23,6 +23,7 @@
 
 #include <QtCore/qoperatingsystemversion.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qvarlengtharray.h>
 
 #include <TargetConditionals.h>
 
@@ -39,6 +40,43 @@ static bool qssgDisableFoveation()
 {
     static bool foveationDisabled = qEnvironmentVariableIntValue("QT_QUICK3D_XR_DISABLE_FOVEATION") != 0;
     return foveationDisabled;
+}
+
+// Qt Quick and Qt Quick 3D produce display-referred, sRGB-encoded output, just like they do for a
+// window swapchain; the tonemapper is the last step of the 3D pass and the 2D scenegraph writes
+// its colors as they are. The compositor treats a RGBA16Float layer as linear light, so such
+// output would be gamma-encoded a second time when it is displayed. Prefer the 8-bit sRGB
+// formats instead and render into them through a non-sRGB view (see qssgNonSrgbFormat()), which
+// stores Qt's output as it is. This matches what the OpenXR backends do.
+static MTLPixelFormat qssgPreferredColorFormat(cp_layer_renderer_capabilities_t capabilities)
+{
+    static const MTLPixelFormat preferredFormats[] = { MTLPixelFormatBGRA8Unorm_sRGB, MTLPixelFormatRGBA8Unorm_sRGB };
+
+    const size_t count = cp_layer_renderer_capabilities_supported_color_formats_count_with_options(capabilities, cp_supported_color_formats_options_none);
+    QVarLengthArray<MTLPixelFormat, 8> supportedFormats;
+    for (size_t i = 0; i < count; ++i)
+        supportedFormats.append(cp_layer_renderer_capabilities_supported_color_format_with_options(capabilities, cp_supported_color_formats_options_none, i));
+
+    for (MTLPixelFormat format : preferredFormats) {
+        if (supportedFormats.contains(format))
+            return format;
+    }
+
+    qCWarning(lcQuick3DXr, "The compositor layer supports no 8-bit sRGB color format, falling back to RGBA16Float. "
+                           "Colors will be gamma-encoded twice and appear too bright.");
+    return MTLPixelFormatRGBA16Float;
+}
+
+static MTLPixelFormat qssgNonSrgbFormat(MTLPixelFormat format)
+{
+    switch (format) {
+    case MTLPixelFormatBGRA8Unorm_sRGB:
+        return MTLPixelFormatBGRA8Unorm;
+    case MTLPixelFormatRGBA8Unorm_sRGB:
+        return MTLPixelFormatRGBA8Unorm;
+    default:
+        return format;
+    }
 }
 
 // Default clip distances used when the compositor does not report usable ones.
@@ -133,7 +171,8 @@ public:
 
         cp_layer_renderer_configuration_set_layout(configuration, textureLayout);
         cp_layer_renderer_configuration_set_foveation_enabled(configuration, m_foveationEnabled);
-        cp_layer_renderer_configuration_set_color_format(configuration, MTLPixelFormatRGBA16Float);
+        m_colorFormat = qssgPreferredColorFormat(capabilities);
+        cp_layer_renderer_configuration_set_color_format(configuration, m_colorFormat);
 
         // NOTE: The depth range is inverted for VisionOS (x = far, y = near)
         const simd_float2 systemDepthRange = cp_layer_renderer_configuration_get_default_depth_range(configuration);
@@ -147,6 +186,7 @@ public:
                              << "\n\tMultiview enabled: " << m_multiviewEnabled
                              << "\n\tFoveation supported: " << m_foveationSupported
                              << "\n\tFoveation enabled: " << m_foveationEnabled
+                             << "\n\tColor format: " << NSUInteger(m_colorFormat)
                              << "\n\tSystem depth range: " << systemDepthRange.y << " to: " << systemDepthRange.x
                              << "\n\tDepth Range: " << m_depthRange[0] << " to: " << m_depthRange[1];
     }
@@ -508,6 +548,7 @@ private:
     mutable bool m_multiviewEnabled = true;
     mutable bool m_foveationSupported = true;
     mutable bool m_foveationEnabled = true;
+    mutable MTLPixelFormat m_colorFormat = MTLPixelFormatBGRA8Unorm_sRGB;
 };
 
 struct QSSGCompositionLayerInstance
@@ -1101,6 +1142,12 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
     for (size_t i = 0, end = renderCalls; i != end ; ++i) {
         // Setup the RenderTarget based on the current drawable
         id<MTLTexture> colorMetalTexture = cp_drawable_get_color_texture(drawable, i);
+        // Qt Quick and Qt Quick 3D write sRGB-encoded colors, so render into an sRGB texture through
+        // a non-sRGB view; otherwise the GPU would encode the output a second time on write. This is
+        // what the OpenXR backends do with their sRGB swapchain images as well. See
+        // qssgPreferredColorFormat() for the format choice.
+        const MTLPixelFormat colorFormat = [colorMetalTexture pixelFormat];
+        const MTLPixelFormat colorViewFormat = qssgNonSrgbFormat(colorFormat);
 
         // The size everything is laid out and rendered at: the view's viewport in the drawable's
         // texture, which is the source description of where the view's content goes.
@@ -1116,12 +1163,14 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
         // than the render size; QRhi derives the logical size from the shading rate map.
         const QSize textureSize = QSize([colorMetalTexture width], [colorMetalTexture height]);
 
-        QQuickRenderTarget renderTarget;
-
-        if (multiviewTarget)
-            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, textureSize, 1 /*sampleCount*/, viewsPerTexture, {});
-        else
-            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], textureSize);
+        // With one view per texture this sets up a plain 2D render target.
+        QQuickRenderTarget renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture),
+                                                                              colorFormat,
+                                                                              colorViewFormat,
+                                                                              textureSize,
+                                                                              1 /*sampleCount*/,
+                                                                              viewsPerTexture,
+                                                                              {});
 
         auto depthMetalTexture = cp_drawable_get_depth_texture(drawable, i);
         const QSize depthTextureSize = QSize([depthMetalTexture width], [depthMetalTexture height]);
