@@ -491,7 +491,15 @@ const std::unique_ptr<QSSGPerFrameAllocator> &QSSGLayerRenderData::perFrameAlloc
 void QSSGLayerRenderData::saveRenderState(const QSSGRenderer &renderer)
 {
     QSSG_CHECK(!savedRenderState.has_value());
-    savedRenderState = std::make_optional<SavedRenderState>({ renderer.m_viewport, renderer.m_scissorRect, renderer.m_dpr });
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    savedRenderState = std::make_optional<SavedRenderState>({ renderer.m_viewport,
+                                                              renderer.m_scissorRect,
+                                                              renderer.m_dpr,
+                                                              rhiCtx->mainRenderPassDescriptor(),
+                                                              rhiCtx->renderTarget(),
+                                                              rhiCtx->commandBuffer(),
+                                                              rhiCtx->mainPassSampleCount(),
+                                                              rhiCtx->mainPassViewCount() });
 }
 
 void QSSGLayerRenderData::restoreRenderState(QSSGRenderer &renderer)
@@ -501,6 +509,15 @@ void QSSGLayerRenderData::restoreRenderState(QSSGRenderer &renderer)
     renderer.m_viewport = savedRenderState->viewport;
     renderer.m_scissorRect = savedRenderState->scissorRect;
     renderer.m_dpr = savedRenderState->dpr;
+
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
+    auto *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
+    rhiCtxD->setMainRenderPassDescriptor(savedRenderState->mainRenderPassDescriptor);
+    rhiCtxD->setRenderTarget(savedRenderState->renderTarget);
+    rhiCtxD->setCommandBuffer(savedRenderState->commandBuffer);
+    rhiCtxD->setMainPassSampleCount(savedRenderState->mainPassSampleCount);
+    rhiCtxD->setMainPassViewCount(savedRenderState->mainPassViewCount);
+
     savedRenderState.reset();
 }
 
