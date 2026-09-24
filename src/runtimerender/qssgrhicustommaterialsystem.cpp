@@ -84,14 +84,17 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                              renderable.shaderDescription);
     auto it = shaderMap.find(skey);
     if (it == shaderMap.end()) {
-        // NB this key calculation must replicate exactly what the generator does in generateMaterialRhiShader()
+        // This is also passed to generateMaterialRhiShader() so that newly
+        // generated shaders get stored in the caches under the same key.
         QByteArray shaderString = shaderPathKey;
         QSSGShaderDefaultMaterialKey matKey(renderable.shaderDescription);
         matKey.toString(shaderString, defaultMaterialShaderKeyProperties);
+        for (const auto &def : shaderAugmentation.defines)
+            shaderString.append(def.name).append(';').append(def.value).append(';');
 
         // Try the persistent (disk-based) cache.
         const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(featureSet));
-        shaderPipeline = context->shaderCache()->tryNewPipelineFromPersistentCache(qsbcKey, shaderPathKey, featureSet);
+        shaderPipeline = context->shaderCache()->tryNewPipelineFromPersistentCache(qsbcKey, shaderString, featureSet);
 
         if (!shaderPipeline) {
             // Have to generate the shaders and send it all through the shader conditioning pipeline.
@@ -102,6 +105,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
                                                       material.adapter);
 
             shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(shaderPathKey,
+                                                                                    shaderString,
                                                                                     vertexPipeline,
                                                                                     renderable.shaderDescription,
                                                                                     defaultMaterialShaderKeyProperties,
