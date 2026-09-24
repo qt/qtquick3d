@@ -1107,25 +1107,19 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
         const MTLViewport viewport = cp_view_texture_map_get_viewport(textureMap);
         const QSize renderSize(int(viewport.width), int(viewport.height));
 
-        // WORKAROUND: QRhi has no way to express the logical size of a shading rate map, and
-        // QRhi, Qt Quick and Quick3D all derive their viewports, scissors and device rects from
-        // the render target's pixel size. With foveation the drawable textures are allocated at
-        // the physical size, so using the texture size would clip and shrink everything to the
-        // top left part of each eye. Report the logical size as the render target size instead;
-        // Metal itself only cares about the actual textures. This can go away once
-        // there's a way to query the logical size of a shading rate map from QRhi.
-        const QSize renderTargetSize = renderSize;
+        // The render target wrappers use the actual texture size. With foveation that is smaller
+        // than the render size; QRhi derives the logical size from the shading rate map.
+        const QSize textureSize = QSize([colorMetalTexture width], [colorMetalTexture height]);
 
         QQuickRenderTarget renderTarget;
 
         if (multiviewRenderingEnabled)
-            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, renderTargetSize, 1 /*sampleCount*/, viewCount, {});
+            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, textureSize, 1 /*sampleCount*/, viewCount, {});
         else
-            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], renderTargetSize);
+            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], textureSize);
 
         auto depthMetalTexture = cp_drawable_get_depth_texture(drawable, i);
-        // See the workaround note above; the depth texture wrapper has to match the color one.
-        const QSize depthTextureSize = renderTargetSize;
+        const QSize depthTextureSize = QSize([depthMetalTexture width], [depthMetalTexture height]);
         MTLPixelFormat depthTextureFormat = [depthMetalTexture pixelFormat];
         static const auto convertFormat = [](MTLPixelFormat format) -> QRhiTexture::Format {
             switch (format) {
