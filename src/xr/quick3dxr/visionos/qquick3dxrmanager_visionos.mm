@@ -39,7 +39,7 @@ static bool qssgDisableFoveation()
     return foveationDisabled;
 }
 
-class CompositorLayer : public QObject, public QNativeInterface::QVisionOSApplication::ImmersiveSpaceCompositorLayer
+class CompositorLayer final : public QObject, public QNativeInterface::QVisionOSApplication::ImmersiveSpaceCompositorLayer
 {
     Q_OBJECT
 public:
