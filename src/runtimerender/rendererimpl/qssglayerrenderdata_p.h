@@ -796,6 +796,16 @@ private:
         QRect viewport;
         QRect scissorRect;
         float dpr = 1.0;
+        // The main pass state on the shared rhi context. A sublayer can contain a
+        // nested 3D scene, e.g. a View3D inside an Item2D, which renders to its own
+        // target and leaves its own state behind on the context. The passes of this
+        // layer that come after would otherwise build their graphics pipelines for
+        // that target's render pass and sample count instead of their own.
+        QRhiRenderPassDescriptor *mainRenderPassDescriptor = nullptr;
+        QRhiRenderTarget *renderTarget = nullptr;
+        QRhiCommandBuffer *commandBuffer = nullptr;
+        int mainPassSampleCount = 1;
+        int mainPassViewCount = 1;
     };
 
     std::optional<SavedRenderState> savedRenderState;
