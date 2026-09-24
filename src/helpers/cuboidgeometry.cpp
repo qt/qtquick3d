@@ -253,6 +253,7 @@ void CuboidGeometry::scheduleGeometryUpdate()
 
 void CuboidGeometry::updateGeometry(const GeometryData &geometryData)
 {
+    clear();
     setStride(sizeof(float) * 8); // 3 for position, 2 for uv0, 3 for normal
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
     addAttribute(QQuick3DGeometry::Attribute::PositionSemantic,

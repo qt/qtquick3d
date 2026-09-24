@@ -310,7 +310,7 @@ void ExtrudedTextGeometry::scheduleGeometryUpdate()
 
 void ExtrudedTextGeometry::updateGeometry(const GeometryData &geometryData)
 {
-    // clear();
+    clear();
     setStride(sizeof(float) * 6); // 3 for position, 3 for normal
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
     addAttribute(QQuick3DGeometry::Attribute::PositionSemantic,

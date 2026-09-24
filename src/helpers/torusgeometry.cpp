@@ -207,6 +207,7 @@ void TorusGeometry::scheduleGeometryUpdate()
 
 void TorusGeometry::updateGeometry(const GeometryData &geometryData)
 {
+    clear();
     setStride(sizeof(float) * 8); // 3 for position, 3 for normal, 2 for uv0
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
     addAttribute(QQuick3DGeometry::Attribute::PositionSemantic,
