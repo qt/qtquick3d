@@ -309,6 +309,7 @@ QSSGRhiShaderPipelinePtr QSSGRendererPrivate::generateRhiShaderPipelineImpl(QSSG
                                               material.adapter);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(rendererLogPrefix(),
+                                                                  shaderString,
                                                                   vertexPipeline,
                                                                   renderable.shaderDescription,
                                                                   shaderKeyProperties,

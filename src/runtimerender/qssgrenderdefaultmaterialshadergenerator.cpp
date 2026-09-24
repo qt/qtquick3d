@@ -1910,6 +1910,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 }
 
 QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
+                                                                                const QByteArray &inCacheKey,
                                                                                 QSSGMaterialVertexPipeline &vertexPipeline,
                                                                                 const QSSGShaderDefaultMaterialKey &key,
                                                                                 const QSSGShaderDefaultMaterialKeyProperties &inProperties,
@@ -1937,17 +1938,15 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
             perTargetCompilation = true;
     }
 
-    QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
-    // inShaderKeyPrefix can be a static string for default materials, but must
-    // be unique for different sets of shaders in custom materials.
-    materialInfoString = inShaderKeyPrefix;
+    // Used as the shader name (in a comment in the generated source, and in
+    // log messages). The shader caches are keyed on inCacheKey instead, which
+    // must be the exact same string the caller used for looking up the
+    // shaders, otherwise the entries stored in the persistent cache would
+    // never be found. inShaderKeyPrefix can be a static string for default
+    // materials, but must be unique for different sets of shaders in custom
+    // materials.
+    QByteArray materialInfoString = inShaderKeyPrefix;
     key.toString(materialInfoString, inProperties);
-
-    // Include defines in the cache key. Preamble/body are excluded because
-    // materialInfoString is also used as a GLSL shader-name comment, and their
-    // newlines would break that comment line.
-    for (const auto &def : shaderAugmentation.defines)
-        materialInfoString.append(def.name).append(';').append(def.value).append(';');
 
     // the call order is: beginVertex, beginFragment, endVertex, endFragment
     vertexPipeline.beginVertexGeneration(key, inFeatureSet, shaderLibraryManager);
@@ -1962,7 +1961,8 @@ QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(
                                                                         {},
                                                                         shaderAugmentation,
                                                                         viewCount,
-                                                                        perTargetCompilation);
+                                                                        perTargetCompilation,
+                                                                        inCacheKey);
 }
 
 static quint32 softShadowQualityToInt(QSSGRenderLight::SoftShadowQuality quality)
