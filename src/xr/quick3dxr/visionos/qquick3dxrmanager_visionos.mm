@@ -1085,13 +1085,18 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
         }
     }
 
-    // NOTE: Expectation is that when multiview rendering is enabled we get a multiple drawables with a single texture array,
-    //       each view/eye is then rendered to a slice in the texture array. If multiview rendering is _not_ enabled we get
-    //       two drawables with two textures, one for each eye. In this case we render each eye to its own texture.
+    // NOTE: With the layered layout (multiview rendering enabled) the drawable has a single texture array and each
+    //       view/eye is rendered to a slice in that array in one pass. With the dedicated layout (multiview rendering
+    //       disabled) the drawable has one texture per view and each view is rendered to its own texture.
     //
-    //       And just to keep things interesting the emulator will use one view and one texture, so even if we hit the
-    //       "dedicated"/non-multiview case we need to handle that as well. NOTE: We don't do threaded rendering when
-    //       multiview rendering is disabled!
+    //       The simulator accepts the layered layout but delivers a single view, so the texture array has one slice.
+    //       In that case there is nothing to render with multiview and the texture is treated as a plain 2D render
+    //       target. The render target, depth texture and cameras therefore follow the number of views the drawable
+    //       holds per texture rather than the configured layout. NOTE: We don't do threaded rendering when multiview
+    //       rendering is disabled!
+    const int viewsPerTexture = multiviewRenderingEnabled ? int(viewCount) : 1;
+    const bool multiviewTarget = viewsPerTexture >= 2;
+    QSSG_ASSERT_X(viewsPerTexture <= 2, "Unsupported number of views per texture", return false);
 
     for (size_t i = 0, end = renderCalls; i != end ; ++i) {
         // Setup the RenderTarget based on the current drawable
@@ -1113,8 +1118,8 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
 
         QQuickRenderTarget renderTarget;
 
-        if (multiviewRenderingEnabled)
-            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, textureSize, 1 /*sampleCount*/, viewCount, {});
+        if (multiviewTarget)
+            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, textureSize, 1 /*sampleCount*/, viewsPerTexture, {});
         else
             renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], textureSize);
 
@@ -1140,8 +1145,8 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
             }
 
             if (!m_rhiDepthTexture) {
-                if (multiviewRenderingEnabled)
-                    m_rhiDepthTexture = rhi->newTextureArray(depthFormat, viewCount, depthTextureSize, 1, QRhiTexture::RenderTarget);
+                if (multiviewTarget)
+                    m_rhiDepthTexture = rhi->newTextureArray(depthFormat, viewsPerTexture, depthTextureSize, 1, QRhiTexture::RenderTarget);
                 else
                     m_rhiDepthTexture = rhi->newTexture(depthFormat, depthTextureSize, 1, QRhiTexture::RenderTarget);
             }
@@ -1167,7 +1172,7 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
 
         // Update the camera pose
         if (QSSG_GUARD(xrOrigin)) {
-            if (multiviewRenderingEnabled)
+            if (multiviewTarget)
                 updateCameraMultiview(xrViewport, headTransform, drawable, xrOrigin);
             else
                 updateCamera(xrViewport, headTransform, drawable, xrOrigin, i);
