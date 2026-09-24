@@ -110,13 +110,28 @@ QQuickRenderTarget QOpenXRGraphicsMetal::renderTarget(const XrSwapchainSubImage 
                                                       quint64 depthSwapchainFormat) const
 {
     MTLTexture *const colorTexture = static_cast<MTLTexture * const>(reinterpret_cast<const XrSwapchainImageMetalKHR*>(swapchainImage)->texture);
-    MTLPixelFormat colorFormat = static_cast<MTLPixelFormat>(swapchainFormat);
+    const MTLPixelFormat colorFormat = static_cast<MTLPixelFormat>(swapchainFormat);
+
+    // Render into the sRGB swapchain image through a non-sRGB view, like the
+    // other backends do. Qt's output is already sRGB-encoded, so the GPU must
+    // not encode it again on write.
+    MTLPixelFormat colorViewFormat = colorFormat;
+    switch (colorFormat) {
+    case MTLPixelFormatRGBA8Unorm_sRGB:
+        colorViewFormat = MTLPixelFormatRGBA8Unorm;
+        break;
+    case MTLPixelFormatBGRA8Unorm_sRGB:
+        colorViewFormat = MTLPixelFormatBGRA8Unorm;
+        break;
+    default:
+        break;
+    }
 
     QQuickRenderTarget::Flags flags;
     if (samples > 1)
         flags |= QQuickRenderTarget::Flag::MultisampleResolve;
 
-    QQuickRenderTarget renderTarget = QQuickRenderTarget::fromMetalTexture(colorTexture, colorFormat, colorFormat, QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height), samples, arraySize, flags);
+    QQuickRenderTarget renderTarget = QQuickRenderTarget::fromMetalTexture(colorTexture, colorFormat, colorViewFormat, QSize(subImage.imageRect.extent.width, subImage.imageRect.extent.height), samples, arraySize, flags);
 
     Q_UNUSED(depthSwapchainImage)
     Q_UNUSED(depthSwapchainFormat)
