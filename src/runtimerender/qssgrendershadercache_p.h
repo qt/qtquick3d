@@ -283,7 +283,8 @@ public:
                                            QSSGRhiShaderPipeline::StageFlags stageFlags,
                                            const QSSGUserShaderAugmentation &shaderAugmentation,
                                            int viewCount,
-                                           bool perTargetCompilation);
+                                           bool perTargetCompilation,
+                                           const QByteArray &inCacheKey = {});
 
     QSSGBuiltInRhiShaderCache &getBuiltInRhiShaders() { return m_builtInShaders; }
 

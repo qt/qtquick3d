@@ -186,7 +186,8 @@ public:
                                                        QSSGRhiShaderPipeline::StageFlags stageFlags,
                                                        const QSSGUserShaderAugmentation &shaderAugmentation,
                                                        int viewCount,
-                                                       bool perTargetCompilation);
+                                                       bool perTargetCompilation,
+                                                       const QByteArray &inCacheKey = {});
 };
 
 QT_END_NAMESPACE

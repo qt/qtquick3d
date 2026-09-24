@@ -415,14 +415,20 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
                                                         const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags,
                                                         const QSSGUserShaderAugmentation &shaderAugmentation,
                                                         int viewCount,
-                                                        bool perTargetCompilation)
+                                                        bool perTargetCompilation,
+                                                        const QByteArray &inCacheKey)
 {
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
-    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(inKey, inFeatures);
+    // inKey is also used as the shader name in a comment in the generated
+    // source, so it may not contain everything needed to identify the
+    // shaders. When inCacheKey is set, that is what the caches are keyed on.
+    const QByteArray &cacheKeyString = inCacheKey.isEmpty() ? inKey : inCacheKey;
+
+    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(cacheKeyString, inFeatures);
     if (rhiShaders)
         return rhiShaders;
 
-    QSSGShaderCacheKey tempKey(inKey);
+    QSSGShaderCacheKey tempKey(cacheKeyString);
     tempKey.m_features = inFeatures;
     tempKey.updateHashCode();
 
@@ -546,7 +552,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     auto result = m_rhiShaders.insert(tempKey, shaders).value();
     if (result && result->vertexStage() && result->fragmentStage()) {
         QQsbCollection::EntryDesc entryDesc = {
-            inKey,
+            cacheKeyString,
             QQsbCollection::toFeatureSet(inFeatures),
             result->vertexStage()->shader(),
             result->fragmentStage()->shader()
@@ -561,6 +567,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     Q_UNUSED(inFrag);
     Q_UNUSED(inFeatures);
     Q_UNUSED(stageFlags);
+    Q_UNUSED(inCacheKey);
     qWarning("Cannot compile and condition shaders at runtime because this build of Qt Quick 3D is not linking to Qt Shader Tools. "
              "Only pre-processed materials are supported.");
     return {};
