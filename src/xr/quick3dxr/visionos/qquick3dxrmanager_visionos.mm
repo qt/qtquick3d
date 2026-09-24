@@ -1010,17 +1010,36 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
     for (size_t i = 0, end = renderCalls; i != end ; ++i) {
         // Setup the RenderTarget based on the current drawable
         id<MTLTexture> colorMetalTexture = cp_drawable_get_color_texture(drawable, i);
-        auto textureSize = QSize([colorMetalTexture width], [colorMetalTexture height]);
+
+        // The size everything is laid out and rendered at: the view's viewport in the drawable's
+        // texture, which is the source description of where the view's content goes.
+        // Without foveation it matches the texture size. With foveation the rasterization rate
+        // map maps this larger logical (screen space) size onto the physical texture, and Metal
+        // interprets viewports and scissors in that logical space.
+        cp_view_t view = cp_drawable_get_view(drawable, i);
+        cp_view_texture_map_t textureMap = cp_view_get_view_texture_map(view);
+        const MTLViewport viewport = cp_view_texture_map_get_viewport(textureMap);
+        const QSize renderSize(int(viewport.width), int(viewport.height));
+
+        // WORKAROUND: QRhi has no way to express the logical size of a shading rate map, and
+        // QRhi, Qt Quick and Quick3D all derive their viewports, scissors and device rects from
+        // the render target's pixel size. With foveation the drawable textures are allocated at
+        // the physical size, so using the texture size would clip and shrink everything to the
+        // top left part of each eye. Report the logical size as the render target size instead;
+        // Metal itself only cares about the actual textures. This can go away once
+        // there's a way to query the logical size of a shading rate map from QRhi.
+        const QSize renderTargetSize = renderSize;
 
         QQuickRenderTarget renderTarget;
 
         if (multiviewRenderingEnabled)
-            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, textureSize, 1 /*sampleCount*/, viewCount, {});
+            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], [colorMetalTexture pixelFormat]/*viewFormat*/, renderTargetSize, 1 /*sampleCount*/, viewCount, {});
         else
-            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], textureSize);
+            renderTarget = QQuickRenderTarget::fromMetalTexture(static_cast<MTLTexture*>(colorMetalTexture), [colorMetalTexture pixelFormat], renderTargetSize);
 
         auto depthMetalTexture = cp_drawable_get_depth_texture(drawable, i);
-        auto depthTextureSize = QSize([depthMetalTexture width], [depthMetalTexture height]);
+        // See the workaround note above; the depth texture wrapper has to match the color one.
+        const QSize depthTextureSize = renderTargetSize;
         MTLPixelFormat depthTextureFormat = [depthMetalTexture pixelFormat];
         static const auto convertFormat = [](MTLPixelFormat format) -> QRhiTexture::Format {
             switch (format) {
@@ -1054,17 +1073,7 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
 
         window->setRenderTarget(renderTarget);
 
-        // Initial window size is the size of the texture, but we also need to check the viewport size
-        // as this can be different. If the viewport size is different we need to adjust the window size.
-        // This is the case when we render to a smaller texture and then scale it up to the window (i.e. foveated rendering).
-        QSize renderSize = textureSize;
-        if (foveationEnabled) {
-            cp_view_t view = cp_drawable_get_view(drawable, i);
-            cp_view_texture_map_t texture_map = cp_view_get_view_texture_map(view);
-            auto vp = cp_view_texture_map_get_viewport(texture_map);
-            renderSize = QSize(vp.width, vp.height);
-        }
-
+        // The window size follows the (logical) render size computed above.
         window->setGeometry(0,
                             0,
                             renderSize.width(),
