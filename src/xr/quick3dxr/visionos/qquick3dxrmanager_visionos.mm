@@ -26,6 +26,8 @@
 
 #include <TargetConditionals.h>
 
+#include <cmath>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcQuick3DXr);
@@ -37,6 +39,38 @@ static bool qssgDisableFoveation()
 {
     static bool foveationDisabled = qEnvironmentVariableIntValue("QT_QUICK3D_XR_DISABLE_FOVEATION") != 0;
     return foveationDisabled;
+}
+
+// Default clip distances used when the compositor does not report usable ones.
+// These match the defaults used by the OpenXR backend.
+//
+// NOTE: CompositorServices nominally takes the depth range in meters, while these
+// are Quick3D scene units, i.e. centimeters, so 1 cm to 100 m. It works out for
+// us, because the eye transforms are scaled to centimeters as well and the
+// projection comes from cp_drawable_compute_projection(), built from the very
+// same numbers, which leaves the depth range acting as scene units throughout.
+// It does mean the compositor itself is told the far plane sits at 10 km. That
+// was already the case when we took the range from the compositor's default and
+// handed it to the eye cameras unchanged.
+static constexpr float s_defaultClipNear = 1.0f;
+static constexpr float s_defaultClipFar = 10000.0f;
+
+// The compositor reports the depth range in reverse-Z order (x = far, y = near),
+// and the default far plane it reports is infinite. That is what visionOS 27
+// reports, and the same has been observed as far back as visionOS 1.0. An
+// infinite far plane is fine for the projection matrix, but Quick3D also uses
+// the clip distances as plain values for shadow cascades, fog and depth
+// linearization, which all break down with inf. Make sure we always end up with
+// finite values that are in the right order.
+static void qssgSanitizeDepthRange(simd_float2 depthRange, float &near, float &far)
+{
+    near = depthRange.y;
+    far = depthRange.x;
+
+    if (!std::isfinite(near) || near <= 0.0f)
+        near = s_defaultClipNear;
+    if (!std::isfinite(far) || far <= near)
+        far = qMax(s_defaultClipFar, near * 2.0f);
 }
 
 class CompositorLayer final : public QObject, public QNativeInterface::QVisionOSApplication::ImmersiveSpaceCompositorLayer
@@ -100,16 +134,20 @@ public:
         cp_layer_renderer_configuration_set_layout(configuration, textureLayout);
         cp_layer_renderer_configuration_set_foveation_enabled(configuration, m_foveationEnabled);
         cp_layer_renderer_configuration_set_color_format(configuration, MTLPixelFormatRGBA16Float);
-        simd_float2 depthRange = cp_layer_renderer_configuration_get_default_depth_range(configuration);
+
         // NOTE: The depth range is inverted for VisionOS (x = far, y = near)
-        m_depthRange[0] = depthRange.y;
-        m_depthRange[1] = depthRange.x;
+        const simd_float2 systemDepthRange = cp_layer_renderer_configuration_get_default_depth_range(configuration);
+        qssgSanitizeDepthRange(systemDepthRange, m_depthRange[0], m_depthRange[1]);
+        // Don't rely on the system default, which is undocumented and not finite; set the
+        // range we're going to use explicitly so the drawables report the same finite values.
+        cp_layer_renderer_configuration_set_default_depth_range(configuration, simd_make_float2(m_depthRange[1], m_depthRange[0]));
 
         qCDebug(lcQuick3DXr) << "Configuring with the following settings:"
                              << "\n\tMultiview supported: " << m_multiviewSupported
                              << "\n\tMultiview enabled: " << m_multiviewEnabled
                              << "\n\tFoveation supported: " << m_foveationSupported
                              << "\n\tFoveation enabled: " << m_foveationEnabled
+                             << "\n\tSystem depth range: " << systemDepthRange.y << " to: " << systemDepthRange.x
                              << "\n\tDepth Range: " << m_depthRange[0] << " to: " << m_depthRange[1];
     }
 
@@ -479,17 +517,33 @@ struct QSSGCompositionLayerInstance
 
 Q_GLOBAL_STATIC(QSSGCompositionLayerInstance, s_compositorLayer)
 
+// Sanitize the depth range the drawable reports and, if it needed fixing up, write it
+// back on the drawable. The projection is computed from the drawable's own range, so
+// without the write-back the projection and the clip distances the cameras get, which
+// Quick3D also uses for shadows, fog and depth linearization, could disagree.
+static void qssgUpdateDrawableDepthRange(cp_drawable_t drawable, float &clipNear, float &clipFar)
+{
+    const simd_float2 reportedRange = cp_drawable_get_depth_range(drawable);
+    qssgSanitizeDepthRange(reportedRange, clipNear, clipFar);
+
+    // NOTE: The depth range is inverted for visionOS (x = far, y = near)
+    if (reportedRange.y != clipNear || reportedRange.x != clipFar)
+        cp_drawable_set_depth_range(drawable, simd_make_float2(clipFar, clipNear));
+}
+
 // FIXME: Maybe unify with the openxr implementation?!
 void QQuick3DXrManagerPrivate::updateCameraImp(simd_float4x4 headTransform, cp_drawable_t drawable, QQuick3DXrOrigin *xrOrigin, int i)
 {
     cp_view_t view = cp_drawable_get_view(drawable, i);
-    simd_float2 depth_range = cp_drawable_get_depth_range(drawable);
-    const float clipNear = depth_range[1];
-    const float clipFar = depth_range[0];
+    // The drawable normally reports the range set on the layer configuration, but
+    // make sure we never hand non-finite clip distances to the cameras.
+    float clipNear, clipFar;
+    qssgUpdateDrawableDepthRange(drawable, clipNear, clipFar);
 
     xrOrigin->eyeCamera(i)->setClipNear(clipNear);
     xrOrigin->eyeCamera(i)->setClipFar(clipFar);
 
+    // NOTE: Must be queried after the depth range has been set on the drawable.
     simd_float4x4 projection = cp_drawable_compute_projection(drawable, cp_axis_direction_convention_right_up_forward, i);
     QMatrix4x4 proj{projection.columns[0].x, projection.columns[1].x, projection.columns[2].x, projection.columns[3].x,
                      projection.columns[0].y, projection.columns[1].y, projection.columns[2].y, projection.columns[3].y,
