@@ -932,10 +932,42 @@ bool QQuick3DXrManagerPrivate::renderFrameImpl(QMutexLocker<QMutex> &locker, QWa
     cp_time_wait_until(optimalInputTime);
 
     cp_frame_start_submission(frame);
-    cp_drawable_t drawable = cp_frame_query_drawable(frame);
-    if (Q_UNLIKELY(drawable == nullptr)) {
-        qWarning("Failed to get drawable for frame");
+
+    // A frame can come with more than one drawable since visionOS 26, for example an additional
+    // one for capture (recording or streaming). We render the one shown on the device and, for
+    // now, leave the others alone; they are never encoded or presented.
+    //
+    // NOTE: That is also what we got from the deprecated cp_frame_query_drawable(), which only
+    // ever handed out one drawable, so an app had no way of presenting a capture drawable to
+    // begin with. The assumption is therefore that the compositor sources the capture from what
+    // we do present, as it must have done before. None of this is documented, so if a capture
+    // ever turns out to be empty or stale, the fix is to encode and present the remaining
+    // drawables as well, at the very least as a cleared pass.
+    cp_drawable_array_t drawables = cp_frame_query_drawables(frame);
+    const size_t drawableCount = cp_drawable_array_get_count(drawables);
+    if (Q_UNLIKELY(drawableCount == 0)) {
+        // The frame has been cancelled (the layer is paused or invalidated) and must be discarded.
+        qCDebug(lcQuick3DXr, "No drawables for frame, skipping");
         return false;
+    }
+
+    cp_drawable_t drawable = nullptr;
+    for (size_t d = 0; d < drawableCount && !drawable; ++d) {
+        cp_drawable_t candidate = cp_drawable_array_get_drawable(drawables, d);
+        if (cp_drawable_get_target(candidate) == cp_drawable_target_built_in)
+            drawable = candidate;
+    }
+    if (Q_UNLIKELY(!drawable)) {
+        qCWarning(lcQuick3DXr, "No built-in drawable for frame, using the first one");
+        drawable = cp_drawable_array_get_drawable(drawables, 0);
+    }
+    if (drawableCount > 1) {
+        static bool extraDrawablesWarningShown = false;
+        if (!extraDrawablesWarningShown) {
+            extraDrawablesWarningShown = true;
+            qCWarning(lcQuick3DXr) << "Frame has" << drawableCount
+                                   << "drawables; only the built-in one is rendered";
+        }
     }
 
     cp_frame_timing_t actualTiming = cp_drawable_get_frame_timing(drawable);
