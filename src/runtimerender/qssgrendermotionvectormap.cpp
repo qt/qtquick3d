@@ -125,8 +125,10 @@ QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMoti
         }
 
         MotionResultData firstFrameResult = { currentModelViewProjection, currentInstanceLocal, currentInstanceGlobal,
-                                              QSSGRenderImageTexture(), QSSGRenderImageTexture(),
-                                              QSSGRenderImageTexture(), QSSGRenderImageTexture() };
+                                              loadAndReleaseIfNeeded(dataToStore.prevBoneTextureData, dataToStore.lastPrevBoneTextureDataSize),
+                                              loadAndReleaseIfNeeded(dataToStore.prevInstanceTextureData, dataToStore.lastPrevInstanceTextureDataSize),
+                                              loadAndReleaseIfNeeded(dataToStore.currentMorphWeightTextureData, dataToStore.lastCurrentMorphWeightTextureDataSize),
+                                              loadAndReleaseIfNeeded(dataToStore.prevMorphWeightTextureData, dataToStore.lastPrevMorphWeightTextureDataSize) };
         dataToStore.cachedResult = firstFrameResult;
         m_cache[modelKey] = dataToStore;
         return firstFrameResult;
@@ -182,7 +184,10 @@ QSSGRenderMotionVectorMap::MotionResultData QSSGRenderMotionVectorMap::trackMoti
             lastFrameDataIterator->prevMorphWeightTextureData = std::make_shared<QSSGRenderTextureData>();
 
         lastFrameDataIterator->lastPrevMorphWeightTextureDataSize = lastFrameDataIterator->prevMorphWeightTextureData->size();
-        copyToTextureData(lastFrameDataIterator->prevMorphWeightTextureData.get(), lastFrameDataIterator->currentMorphWeightTextureData.get());
+        if (lastFrameDataIterator->currentMorphWeightTextureData)
+            copyToTextureData(lastFrameDataIterator->prevMorphWeightTextureData.get(), lastFrameDataIterator->currentMorphWeightTextureData.get());
+        else
+            copyToTextureData(lastFrameDataIterator->prevMorphWeightTextureData.get(), currentMorphWeights);
 
         if (!lastFrameDataIterator->currentMorphWeightTextureData)
             lastFrameDataIterator->currentMorphWeightTextureData = std::make_shared<QSSGRenderTextureData>();
