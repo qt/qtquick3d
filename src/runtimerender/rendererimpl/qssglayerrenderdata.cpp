@@ -1651,11 +1651,13 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
         // many renderableFlags are the same for all the subsets
         QSSGRenderableObjectFlags renderableFlagsForModel;
 
+        bool usesBlendParticles = particlesEnabled && theModelContext.model.particleBuffer != nullptr
+                && model.particleBuffer->particleCount();
+
         if (meshSubsetCount > 0) {
             const QSSGRenderSubset &theSubset = meshSubsets.at(0);
 
-            renderableFlagsForModel.setMotionVectorParticipant(model.motionVectorEnabled);
-
+            renderableFlagsForModel.setMotionVectorParticipant(model.motionVectorEnabled && !usesBlendParticles);
             renderableFlagsForModel.setCastsShadows(model.castsShadows);
             renderableFlagsForModel.setReceivesShadows(model.receivesShadows);
             renderableFlagsForModel.setReceivesReflections(model.receivesReflections);
@@ -1708,8 +1710,6 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
         }
 
         QSSGRenderableObjectList bakedLightingObjects;
-        bool usesBlendParticles = particlesEnabled && theModelContext.model.particleBuffer != nullptr
-                && model.particleBuffer->particleCount();
         const bool anyLightHasShadows = std::find_if(lights.begin(),
                                                      lights.end(),
                                                      [](const QSSGShaderLight &light) { return light.shadows; })

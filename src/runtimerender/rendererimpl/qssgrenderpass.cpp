@@ -102,6 +102,8 @@ void MotionVectorMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData
                 handle.obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
                 QSSGSubsetRenderable *renderable(static_cast<QSSGSubsetRenderable *>(handle.obj));
                 if (handle.obj->renderableFlags.isMotionVectorParticipant()) {
+                    if (renderable->modelContext.model.instancing() && renderable->modelContext.model.instanceCount() == 0)
+                        continue;
                     bool skin = renderable->modelContext.model.usesBoneTexture();
                     bool instance = renderable->modelContext.model.instanceCount() > 0;
                     bool morph = renderable->modelContext.model.morphTargets.size() > 0;
