@@ -144,10 +144,9 @@ QList<QShaderVersion> QSSGShaderCache::glslTargetsForContext(const QSurfaceForma
         // writing the opengl32sw.dll shipped with pre-built Qt is one
         // of these still.
 
-        if (version >= qMakePair(3, 1))
-            versions.append(QShaderVersion(140)); // OpenGL 3.1+
-        else
-            versions.append(QShaderVersion(130)); // OpenGL 3.0+
+        versions.append(QShaderVersion(version >= qMakePair(3, 1) ? 140 : 130));
+        if (version >= qMakePair(3, 3))
+            versions.append(fromVersion(version));
     }
 
     return versions;

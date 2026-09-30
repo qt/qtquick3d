@@ -59,7 +59,7 @@ void tst_ShaderCache::glslTargetsForContext_data()
 
     // Below 3.3, and any non-core profile, fall back to the fixed 140/130.
     QTest::newRow("core 3.2") << 3 << 2 << core << gl << false << QByteArray("140");
-    QTest::newRow("compat 4.6") << 4 << 6 << compat << gl << false << QByteArray("140");
+    QTest::newRow("compat 4.6") << 4 << 6 << compat << gl << false << QByteArray("140, 460");
     QTest::newRow("desktop 3.0") << 3 << 0 << noProfile << gl << false << QByteArray("130");
 
     // GLES: same shape, floored at 300, and every version has to keep the es
