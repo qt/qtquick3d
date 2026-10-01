@@ -117,7 +117,7 @@ Rectangle {
                 NumberAnimation on rotation {
                     from: 0
                     to: 360
-                    duration: 4000
+                    duration: 200
                     easing.type: Easing.InOutQuad
                 }
             }
