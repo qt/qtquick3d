@@ -1590,9 +1590,10 @@ QVector<MeshLevelOfDetail> generateMeshLevelsOfDetail(const QVector<QVector3D> &
     streams.append({ positions.constData(), sizeof(QVector3D), sizeof(QVector3D) });
     if (!recalculateNormals && normals.size() == positions.size())
         streams.append({ normals.constData(), sizeof(QVector3D), sizeof(QVector3D) });
-    const quint32 weldedVertexCount = generateVertexRemap(weldRemap.data(), indexes.constData(), indexes.size(),
+    const quint32 weldedVertexCount = quint32(generateVertexRemap(weldRemap.data(), indexes.constData(),
+                                                          indexes.size(),
                                                           positions.size(), streams.constData(),
-                                                          size_t(streams.size()));
+                                                          size_t(streams.size())));
     QVector<quint32> weldedIndexes(indexes.size());
     remapIndexBuffer(weldedIndexes.data(), indexes.constData(), indexes.size(), weldRemap.constData());
     QVector<QVector3D> weldedPositions(weldedVertexCount);
@@ -1743,7 +1744,7 @@ QVector<MeshLevelOfDetail> generateMeshLevelsOfDetail(const QVector<QVector3D> &
         }
 
         lods.append({error * scaleFactor, newIndexes});
-        lastIndexCount = newLength;
+        lastIndexCount = quint32(newLength);
 
         // No level can be both big enough and small enough any more
         if (lastIndexCount + (lastIndexCount + 1) / 2 > maxLevelIndexes)
