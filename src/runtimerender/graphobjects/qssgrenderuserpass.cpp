@@ -43,17 +43,17 @@ QSSGRenderUserPass::~QSSGRenderUserPass()
 
 bool QSSGRenderUserPass::isDirty(DirtyFlag flag) const
 {
-    return (flags & FlagT(flag)) != 0;
+    return (m_dirtyFlags & FlagT(flag)) != 0;
 }
 
 void QSSGRenderUserPass::markDirty(DirtyFlag flag)
 {
-    flags |= FlagT(flag);
+    m_dirtyFlags |= FlagT(flag);
 }
 
 void QSSGRenderUserPass::clearDirty(DirtyFlag flag)
 {
-    flags &= ~FlagT(flag);
+    m_dirtyFlags &= ~FlagT(flag);
 }
 
 QByteArray replaceAugmentMacros(const QByteArray &shaderCode)
