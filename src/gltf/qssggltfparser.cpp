@@ -416,9 +416,11 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // extensionsUsed / extensionsRequired
-    for (const auto &value : root.value(QLatin1String("extensionsUsed")).toArray())
+    const QJsonArray extensionsUsed = root.value(QLatin1String("extensionsUsed")).toArray();
+    for (const auto &value : extensionsUsed)
         document->extensionsUsed.append(value.toString());
-    for (const auto &value : root.value(QLatin1String("extensionsRequired")).toArray())
+    const QJsonArray extensionsRequired = root.value(QLatin1String("extensionsRequired")).toArray();
+    for (const auto &value : extensionsRequired)
         document->extensionsRequired.append(value.toString());
     document->rootExtensions = root.value(QLatin1String("extensions")).toObject();
 
@@ -426,7 +428,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     {
         const QJsonValue variantsExt = document->rootExtensions.value(QLatin1String("KHR_materials_variants"));
         if (variantsExt.isObject()) {
-            for (const auto &value : variantsExt.toObject().value(QLatin1String("variants")).toArray())
+            const QJsonArray variants = variantsExt.toObject().value(QLatin1String("variants")).toArray();
+            for (const auto &value : variants)
                 document->materialVariants.append(value.toObject().value(QLatin1String("name")).toString());
         }
     }
@@ -442,7 +445,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // buffers
-    for (const auto &value : root.value(QLatin1String("buffers")).toArray()) {
+    const QJsonArray buffers = root.value(QLatin1String("buffers")).toArray();
+    for (const auto &value : buffers) {
         const QJsonObject object = value.toObject();
         Buffer buffer;
         buffer.uri = object.value(QLatin1String("uri")).toString();
@@ -484,7 +488,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
 
     // bufferViews
     MeshoptDecodeState meshoptState;
-    for (const auto &value : root.value(QLatin1String("bufferViews")).toArray()) {
+    const QJsonArray bufferViews = root.value(QLatin1String("bufferViews")).toArray();
+    for (const auto &value : bufferViews) {
         const QJsonObject object = value.toObject();
         BufferView view;
         view.buffer = object.value(QLatin1String("buffer")).toInt(-1);
@@ -531,7 +536,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // accessors
-    for (const auto &value : root.value(QLatin1String("accessors")).toArray()) {
+    const QJsonArray accessors = root.value(QLatin1String("accessors")).toArray();
+    for (const auto &value : accessors) {
         const QJsonObject object = value.toObject();
         Accessor accessor;
         accessor.bufferView = object.value(QLatin1String("bufferView")).toInt(-1);
@@ -566,9 +572,11 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
                                     .arg(document->accessors.size()));
         accessor.normalized = object.value(QLatin1String("normalized")).toBool(false);
         accessor.name = object.value(QLatin1String("name")).toString();
-        for (const auto &m : object.value(QLatin1String("min")).toArray())
+        const QJsonArray minValues = object.value(QLatin1String("min")).toArray();
+        for (const auto &m : minValues)
             accessor.min.append(m.toDouble());
-        for (const auto &m : object.value(QLatin1String("max")).toArray())
+        const QJsonArray maxValues = object.value(QLatin1String("max")).toArray();
+        for (const auto &m : maxValues)
             accessor.max.append(m.toDouble());
 
         const QJsonValue sparseValue = object.value(QLatin1String("sparse"));
@@ -651,7 +659,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // images
-    for (const auto &value : root.value(QLatin1String("images")).toArray()) {
+    const QJsonArray images = root.value(QLatin1String("images")).toArray();
+    for (const auto &value : images) {
         const QJsonObject object = value.toObject();
         Image image;
         image.uri = object.value(QLatin1String("uri")).toString();
@@ -665,7 +674,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // samplers
-    for (const auto &value : root.value(QLatin1String("samplers")).toArray()) {
+    const QJsonArray samplers = root.value(QLatin1String("samplers")).toArray();
+    for (const auto &value : samplers) {
         const QJsonObject object = value.toObject();
         Sampler sampler;
         sampler.magFilter = object.value(QLatin1String("magFilter")).toInt(0);
@@ -677,7 +687,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // textures
-    for (const auto &value : root.value(QLatin1String("textures")).toArray()) {
+    const QJsonArray textures = root.value(QLatin1String("textures")).toArray();
+    for (const auto &value : textures) {
         const QJsonObject object = value.toObject();
         Texture texture;
         texture.sampler = object.value(QLatin1String("sampler")).toInt(-1);
@@ -714,7 +725,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         return info;
     };
 
-    for (const auto &value : root.value(QLatin1String("materials")).toArray()) {
+    const QJsonArray materials = root.value(QLatin1String("materials")).toArray();
+    for (const auto &value : materials) {
         const QJsonObject object = value.toObject();
         Material material;
         material.name = object.value(QLatin1String("name")).toString();
@@ -871,14 +883,17 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
         return setError(QStringLiteral("Material references invalid texture %1").arg(badTextureIndex));
 
     // meshes
-    for (const auto &value : root.value(QLatin1String("meshes")).toArray()) {
+    const QJsonArray meshes = root.value(QLatin1String("meshes")).toArray();
+    for (const auto &value : meshes) {
         const QJsonObject object = value.toObject();
         Mesh mesh;
         mesh.name = object.value(QLatin1String("name")).toString();
-        for (const auto &w : object.value(QLatin1String("weights")).toArray())
+        const QJsonArray weights = object.value(QLatin1String("weights")).toArray();
+        for (const auto &w : weights)
             mesh.weights.append(float(w.toDouble()));
 
-        for (const auto &primitiveValue : object.value(QLatin1String("primitives")).toArray()) {
+        const QJsonArray primitives = object.value(QLatin1String("primitives")).toArray();
+        for (const auto &primitiveValue : primitives) {
             const QJsonObject primitiveObject = primitiveValue.toObject();
             MeshPrimitive primitive;
             const QJsonObject attributes = primitiveObject.value(QLatin1String("attributes")).toObject();
@@ -887,7 +902,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
             primitive.indices = primitiveObject.value(QLatin1String("indices")).toInt(-1);
             primitive.material = primitiveObject.value(QLatin1String("material")).toInt(-1);
             primitive.mode = primitiveObject.value(QLatin1String("mode")).toInt(MeshPrimitive::Triangles);
-            for (const auto &targetValue : primitiveObject.value(QLatin1String("targets")).toArray()) {
+            const QJsonArray targets = primitiveObject.value(QLatin1String("targets")).toArray();
+            for (const auto &targetValue : targets) {
                 const QJsonObject targetObject = targetValue.toObject();
                 QHash<QByteArray, int> target;
                 for (auto it = targetObject.constBegin(); it != targetObject.constEnd(); ++it)
@@ -898,7 +914,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
 
             const QJsonValue variantsExt = primitive.extensions.value(QLatin1String("KHR_materials_variants"));
             if (variantsExt.isObject()) {
-                for (const auto &mappingValue : variantsExt.toObject().value(QLatin1String("mappings")).toArray()) {
+                const QJsonArray mappings = variantsExt.toObject().value(QLatin1String("mappings")).toArray();
+                for (const auto &mappingValue : mappings) {
                     const QJsonObject mappingObject = mappingValue.toObject();
                     MeshPrimitive::VariantMapping mapping;
                     mapping.material = mappingObject.value(QLatin1String("material")).toInt(-1);
@@ -908,7 +925,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
                                         .arg(document->meshes.size())
                                         .arg(mapping.material));
                     }
-                    for (const auto &variantValue : mappingObject.value(QLatin1String("variants")).toArray()) {
+                    const QJsonArray mappingVariants = mappingObject.value(QLatin1String("variants")).toArray();
+                    for (const auto &variantValue : mappingVariants) {
                         const int variant = variantValue.toInt(-1);
                         if (variant < 0 || variant >= document->materialVariants.size()) {
                             return setError(
@@ -951,7 +969,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // cameras
-    for (const auto &value : root.value(QLatin1String("cameras")).toArray()) {
+    const QJsonArray cameras = root.value(QLatin1String("cameras")).toArray();
+    for (const auto &value : cameras) {
         const QJsonObject object = value.toObject();
         Camera camera;
         camera.name = object.value(QLatin1String("name")).toString();
@@ -978,7 +997,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     {
         const QJsonValue lightsExt = document->rootExtensions.value(QLatin1String("KHR_lights_punctual"));
         if (lightsExt.isObject()) {
-            for (const auto &value : lightsExt.toObject().value(QLatin1String("lights")).toArray()) {
+            const QJsonArray lights = lightsExt.toObject().value(QLatin1String("lights")).toArray();
+            for (const auto &value : lights) {
                 const QJsonObject object = value.toObject();
                 Light light;
                 light.name = object.value(QLatin1String("name")).toString();
@@ -1003,11 +1023,13 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // nodes
-    for (const auto &value : root.value(QLatin1String("nodes")).toArray()) {
+    const QJsonArray nodes = root.value(QLatin1String("nodes")).toArray();
+    for (const auto &value : nodes) {
         const QJsonObject object = value.toObject();
         Node node;
         node.name = object.value(QLatin1String("name")).toString();
-        for (const auto &child : object.value(QLatin1String("children")).toArray())
+        const QJsonArray children = object.value(QLatin1String("children")).toArray();
+        for (const auto &child : children)
             node.children.append(child.toInt(-1));
         node.mesh = object.value(QLatin1String("mesh")).toInt(-1);
         node.skin = object.value(QLatin1String("skin")).toInt(-1);
@@ -1033,7 +1055,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
                                         float(rotation.at(1).toDouble()), float(rotation.at(2).toDouble()));
         }
         node.scale = toVector3D(object.value(QLatin1String("scale")).toArray(), node.scale);
-        for (const auto &w : object.value(QLatin1String("weights")).toArray())
+        const QJsonArray weights = object.value(QLatin1String("weights")).toArray();
+        for (const auto &w : weights)
             node.weights.append(float(w.toDouble()));
         node.extensions = object.value(QLatin1String("extensions")).toObject();
 
@@ -1138,13 +1161,15 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // skins
-    for (const auto &value : root.value(QLatin1String("skins")).toArray()) {
+    const QJsonArray skins = root.value(QLatin1String("skins")).toArray();
+    for (const auto &value : skins) {
         const QJsonObject object = value.toObject();
         Skin skin;
         skin.name = object.value(QLatin1String("name")).toString();
         skin.inverseBindMatrices = object.value(QLatin1String("inverseBindMatrices")).toInt(-1);
         skin.skeleton = object.value(QLatin1String("skeleton")).toInt(-1);
-        for (const auto &joint : object.value(QLatin1String("joints")).toArray())
+        const QJsonArray joints = object.value(QLatin1String("joints")).toArray();
+        for (const auto &joint : joints)
             skin.joints.append(joint.toInt(-1));
 
         if (skin.inverseBindMatrices >= document->accessors.size())
@@ -1164,12 +1189,14 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // animations
-    for (const auto &value : root.value(QLatin1String("animations")).toArray()) {
+    const QJsonArray animations = root.value(QLatin1String("animations")).toArray();
+    for (const auto &value : animations) {
         const QJsonObject object = value.toObject();
         Animation animation;
         animation.name = object.value(QLatin1String("name")).toString();
 
-        for (const auto &samplerValue : object.value(QLatin1String("samplers")).toArray()) {
+        const QJsonArray animationSamplers = object.value(QLatin1String("samplers")).toArray();
+        for (const auto &samplerValue : animationSamplers) {
             const QJsonObject samplerObject = samplerValue.toObject();
             AnimationSampler sampler;
             sampler.input = samplerObject.value(QLatin1String("input")).toInt(-1);
@@ -1188,7 +1215,8 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
             animation.samplers.append(sampler);
         }
 
-        for (const auto &channelValue : object.value(QLatin1String("channels")).toArray()) {
+        const QJsonArray channels = object.value(QLatin1String("channels")).toArray();
+        for (const auto &channelValue : channels) {
             const QJsonObject channelObject = channelValue.toObject();
             AnimationChannel channel;
             channel.sampler = channelObject.value(QLatin1String("sampler")).toInt(-1);
@@ -1220,12 +1248,14 @@ bool QSSGGltfParser::parse(const QByteArray &data, const QString &baseDir, QSSGG
     }
 
     // scenes
-    for (const auto &value : root.value(QLatin1String("scenes")).toArray()) {
+    const QJsonArray scenes = root.value(QLatin1String("scenes")).toArray();
+    for (const auto &value : scenes) {
         const QJsonObject object = value.toObject();
         Scene scene;
         scene.name = object.value(QLatin1String("name")).toString();
         QSet<int> seenRoots;
-        for (const auto &nodeIndex : object.value(QLatin1String("nodes")).toArray()) {
+        const QJsonArray sceneNodes = object.value(QLatin1String("nodes")).toArray();
+        for (const auto &nodeIndex : sceneNodes) {
             const int index = nodeIndex.toInt(-1);
             if (index < 0 || index >= nodeCount)
                 return setError(QStringLiteral("Scene %1 references invalid node %2")

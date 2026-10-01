@@ -581,7 +581,7 @@ QSSGMesh::Mesh buildMesh(const QSSGGltfDocument &document, const QSSGGltf::Mesh 
                                                                    options.lodNormalMergeAngle,
                                                                    options.lodNormalSplitAngle);
             // Split vertices are copies with a recalculated normal
-            for (const QSSGMesh::MeshVertexSplit &split : splitVertices) {
+            for (const QSSGMesh::MeshVertexSplit &split : std::as_const(splitVertices)) {
                 primitive.positions.append(primitive.positions.at(split.sourceIndex));
                 primitive.normals.append(split.normal);
                 appendCopy(primitive.tangents, split.sourceIndex);
