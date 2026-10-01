@@ -44,6 +44,12 @@ QT_BEGIN_NAMESPACE
 
     \image sceneenvironment_lightprobe_proceduralsky.jpg {Architectural scene lit by procedural sky visible in background}
 
+    \l ProceduralSkyMaterial offers the same sky model rendered on the GPU
+    via \l SceneEnvironment::skyMaterial. It avoids the CPU texture baking
+    and updates in real time when its properties change, which makes it the
+    preferred choice when the sky parameters are animated or when startup
+    time matters.
+
     \sa SceneEnvironment, ProceduralSkyMaterial
 */
 

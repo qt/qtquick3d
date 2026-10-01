@@ -30,6 +30,11 @@ QT_BEGIN_NAMESPACE
     \note Changes to shader code or properties may take a frame or more
     before being reflected in the generated IBL.
 
+    A ready-made SkyMaterial with a gradient sky, ground, and sun disk is
+    available as \l ProceduralSkyMaterial in the \l{Qt Quick 3D Helpers QML
+    Types}{QtQuick3D.Helpers} module. It can be used directly without writing
+    any shader code.
+
     \section1 Shader
 
     The shader has access to the built-in variable \c qt_eyeDir (\c vec3),
@@ -76,6 +81,8 @@ QT_BEGIN_NAMESPACE
     \row \li point, size \li vec2 \li
     \row \li TextureInput \li sampler2D \li
     \endtable
+
+    \sa SceneEnvironment::skyMaterial, ProceduralSkyMaterial
 */
 
 /*!

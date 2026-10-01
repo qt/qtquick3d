@@ -472,6 +472,11 @@ based, dynamically generated image data. Instead of specifying
 the SceneEnvironment or ProceduralSkyTextureData objects could have also been
 defined elsewhere in the object tree, and then referenced by \c id.
 
+\note The same sky can also be rendered on the GPU with \l ProceduralSkyMaterial
+by setting \l{SceneEnvironment::backgroundMode}{backgroundMode} to \c SkyMaterial
+and assigning the material to \l{SceneEnvironment::skyMaterial}{skyMaterial}.
+This avoids baking a texture on the CPU and allows animating the sky parameters.
+
 As a result, we have both a skybox and improved lighting. (the former due to
 the \l{SceneEnvironment::backgroundMode}{backgroundMode} being set to SkyBox
 and \l{SceneEnvironment::lightProbe}{light probe} being set to a valid \l
