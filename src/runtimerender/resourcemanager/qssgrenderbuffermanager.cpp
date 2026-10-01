@@ -624,11 +624,14 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     QRhiTexture::Format cubeTextureFormat = inImage->format.isCompressedTextureFormat()
             ? QRhiTexture::RGBA16F // let's just assume that if compressed textures are available, then it's at least a GLES 3.0 level API
             : sourceTextureFormat;
-#ifdef Q_OS_IOS
-    // iOS doesn't support mip map filtering on RGBA32F textures
+    // The generated cube maps are rendered to and then sampled with trilinear
+    // filtering. Linear filtering of 32-bit float textures is optional on
+    // OpenGL ES (OES_texture_float_linear) and Vulkan, and missing on iOS and
+    // a number of embedded GPUs (e.g. Vivante), where sampling such a texture
+    // yields black. 16-bit float has more than enough range and precision for
+    // a prefiltered environment map, so never use RGBA32F for the cube maps.
     if (cubeTextureFormat == QRhiTexture::RGBA32F)
         cubeTextureFormat = QRhiTexture::RGBA16F;
-#endif
 
     const int colorSpace = inImage->isSRGB ? 1 : 0; // 0 Linear | 1 sRGB
 
