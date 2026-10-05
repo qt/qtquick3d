@@ -171,16 +171,6 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                 QRhiSampler::Repeat
             };
 
-            const QSSGRhiSamplerDescription samplerDesc {
-                QRhiSampler::Linear,
-                QRhiSampler::Linear,
-                QRhiSampler::None,
-                QRhiSampler::ClampToEdge,
-                QRhiSampler::ClampToEdge,
-                QRhiSampler::Repeat
-            };
-
-            QRhiSampler *sampler = m_context.rhiContext()->sampler(samplerDesc);
             QRhiSampler *cubeSampler = m_context.rhiContext()->sampler(samplerMipMapDesc);
 
             QRhiVertexInputLayout inputLayout;
@@ -242,7 +232,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
             pEntry->m_irradianceSrb->setBindings({
                                   QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, pEntry->m_prefilterVertBuffer, 128),
                                   QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, pEntry->m_irradianceFragBuffer, 20),
-                                  QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, pEntry->m_rhiCube, sampler)
+                                  QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, pEntry->m_rhiCube, cubeSampler)
                               });
             pEntry->m_irradianceSrb->create();
 
