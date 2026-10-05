@@ -9,8 +9,15 @@ out gl_PerVertex {
     vec4 gl_Position;
 };
 
+#if QSHADER_VIEW_COUNT >= 2
+layout(location = 0) flat out uint v_viewIndex;
+#endif
+
 void main()
 {
     vec3 p = attr_pos;
     gl_Position = vec4(p, 1.0);
+#if QSHADER_VIEW_COUNT >= 2
+    v_viewIndex = gl_ViewIndex;
+#endif
 }

@@ -60,12 +60,12 @@ public:
     QSSGRhiShaderPipelinePtr getRhiSkyIblPreFilterNormalizeShader();
     QSSGRhiShaderPipelinePtr getRhienvironmentmapPreFilterShader(bool isRGBE);
     QSSGRhiShaderPipelinePtr getRhiEnvironmentmapShader();
-    QSSGRhiShaderPipelinePtr getRhiClearMRTShader();
-    QSSGRhiShaderPipelinePtr getRhiOitCompositeShader(QSSGRenderLayer::OITMethod method, bool multisample, bool use_buffers = false);
+    QSSGRhiShaderPipelinePtr getRhiClearMRTShader(int viewCount);
+    QSSGRhiShaderPipelinePtr getRhiOitCompositeShader(QSSGRenderLayer::OITMethod method, bool multisample, int viewCount, bool useBuffers = false);
     QSSGRhiShaderPipelinePtr getRhiCubeMapToAtlasShader();
     QSSGRhiShaderPipelinePtr getRhiClearShadowMapShader();
-    QSSGRhiShaderPipelinePtr getRhiClearImageShader();
-    QSSGRhiShaderPipelinePtr getRhiClearBufferShader();
+    QSSGRhiShaderPipelinePtr getRhiClearImageShader(int viewCount);
+    QSSGRhiShaderPipelinePtr getRhiClearBufferShader(int viewCount);
 
 private:
     QSSGShaderCache &m_shaderCache; // We're owned by the shadercache

@@ -850,6 +850,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_clearimage"
     SILENT
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL "320es,430"
     PREFIX
         "/"
@@ -865,6 +866,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_clearbuffer"
     SILENT
     PRECOMPILE
     OPTIMIZED
+    MULTIVIEW
     GLSL "320es,430"
     PREFIX
         "/"

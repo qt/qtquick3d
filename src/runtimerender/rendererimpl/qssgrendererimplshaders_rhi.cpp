@@ -203,32 +203,32 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiEnvironmentmapShader()
     return getBuiltinRhiShader(QByteArrayLiteral("environmentmap"), m_cache.environmentmapShader);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearMRTShader()
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearMRTShader(int viewCount)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("clear_mrt"), m_cache.clearMRTShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("clear_mrt"), m_cache.clearMRTShader, viewCount);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOitCompositeShader(QSSGRenderLayer::OITMethod method, bool multisample, bool use_buffers)
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiOitCompositeShader(QSSGRenderLayer::OITMethod method, bool multisample, int viewCount, bool useBuffers)
 {
     if (method == QSSGRenderLayer::OITMethod::WeightedBlended){
         if (multisample)
-            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended_ms"), m_cache.oitCompositeShader[1]);
+            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended_ms"), m_cache.oitCompositeShader[1], viewCount);
         else
-            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended"), m_cache.oitCompositeShader[0]);
+            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended"), m_cache.oitCompositeShader[0], viewCount);
     } else if (method == QSSGRenderLayer::OITMethod::LinkedList) {
-        if (use_buffers) {
+        if (useBuffers) {
             if (multisample)
-                return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist_ms_buf"), m_cache.oitCompositeShader[5]);
+                return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist_ms_buf"), m_cache.oitCompositeShader[5], viewCount);
             else
-                return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist_buf"), m_cache.oitCompositeShader[4]);
+                return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist_buf"), m_cache.oitCompositeShader[4], viewCount);
         } else {
         if (multisample)
-            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist_ms"), m_cache.oitCompositeShader[3]);
+            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist_ms"), m_cache.oitCompositeShader[3], viewCount);
         else
-            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist"), m_cache.oitCompositeShader[2]);
+            return getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_linkedlist"), m_cache.oitCompositeShader[2], viewCount);
         }
     }
-    Q_UNREACHABLE_RETURN(getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended"), m_cache.oitCompositeShader[0]));
+    Q_UNREACHABLE_RETURN(getBuiltinRhiShader(QByteArrayLiteral("oitcomposite_weightedblended"), m_cache.oitCompositeShader[0], viewCount));
 }
 
 QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiCubeMapToAtlasShader()
@@ -241,14 +241,14 @@ QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearShadowMapShader()
     return getBuiltinRhiShader(QByteArrayLiteral("clearshadowmap"), m_cache.clearShadowMapShader);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearImageShader()
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearImageShader(int viewCount)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("clearimage"), m_cache.clearImageShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("clearimage"), m_cache.clearImageShader, viewCount);
 }
 
-QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearBufferShader()
+QSSGRhiShaderPipelinePtr QSSGBuiltInRhiShaderCache::getRhiClearBufferShader(int viewCount)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("clearbuffer"), m_cache.clearBufferShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("clearbuffer"), m_cache.clearBufferShader, viewCount);
 }
 
 QT_END_NAMESPACE
