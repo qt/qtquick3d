@@ -1744,7 +1744,7 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         }
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
         const auto &shaderCache = renderer.contextInterface()->shaderCache();
-        clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearMRTShader();
+        clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearMRTShader(ps.viewCount);
 
         QSSGRhiShaderResourceBindingList bindings;
         QVector4D clearData[2];
@@ -1885,9 +1885,9 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
         const auto &shaderCache = renderer.contextInterface()->shaderCache();
 #ifdef QSSG_OIT_USE_BUFFERS
-        clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearBufferShader();
+        clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearBufferShader(ps.viewCount);
 #else
-        clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearImageShader();
+        clearPipeline = shaderCache->getBuiltInRhiShaders().getRhiClearImageShader(ps.viewCount);
 #endif
         QSSGRhiShaderResourceBindingList bindings;
         quint32 clearImageData[8] = {0};
@@ -1903,7 +1903,7 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
         clearImageData[4] = data.layerPrepResult.textureDimensions().width();
         clearImageData[5] = data.layerPrepResult.textureDimensions().height();
         clearImageData[6] = ps.samples;
-        clearImageData[7] = ps.viewCount;
+        clearImageData[7] = 0;
 
         rub->updateDynamicBuffer(ubuf, 0, ubufSize, clearImageData);
         quint32 zero = 0;
@@ -2049,16 +2049,16 @@ void OITCompositePass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &d
     if (method == QSSGRenderLayer::OITMethod::WeightedBlended) {
         rhiAccumTexture = data.getRenderResult(QSSGRenderResult::Key::AccumTexture);
         rhiRevealageTexture = data.getRenderResult(QSSGRenderResult::Key::RevealageTexture);
-        compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false);
+        compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false, ps.viewCount);
     } else if (method == QSSGRenderLayer::OITMethod::LinkedList) {
 #ifdef QSSG_OIT_USE_BUFFERS
         rhiABuffer = data.getOitRenderContext().aBuffer;
         rhiAuxBuffer = data.getOitRenderContext().auxBuffer;
-        compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false, true);
+        compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false, ps.viewCount, true);
 #else
         rhiABufferImage = data.getRenderResult(QSSGRenderResult::Key::ABufferImage);
         rhiAuxiliaryImage = data.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
-        compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false);
+        compositeShaderPipeline = shaderCache->getBuiltInRhiShaders().getRhiOitCompositeShader(method, ps.samples > 1 ? true : false, ps.viewCount);
 #endif
 
         QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
