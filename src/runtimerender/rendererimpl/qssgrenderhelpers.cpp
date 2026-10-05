@@ -600,6 +600,7 @@ static void rhiPrepareResourcesForReflectionMap(const QSSGRenderContextInterface
     QSSGShaderFeatures features = inData.getShaderFeatures();
     // because of alteredCamera/alteredMvp below
     features.set(QSSGShaderFeatures::Feature::DisableMultiView, true);
+    features.set(QSSGShaderFeatures::Feature::Ssao, false);
 
     const auto &defaultMaterialShaderKeyProperties = inData.getDefaultMaterialPropertyTable();
 
