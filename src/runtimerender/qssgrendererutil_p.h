@@ -25,13 +25,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QSSGRendererUtil
-{
-inline constexpr quint32 nextMultipleOf4(quint32 value) {
-    return (value + 3) & ~3;
-}
-}
-
 class QSSGRenderPath
 {
 public:
