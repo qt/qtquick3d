@@ -94,6 +94,12 @@ public:
     {
     }
 
+    ~QSSGRenderSimpleQuadRenderer() override
+    {
+        if (srb)
+            srb->deleteLater();
+    }
+
     virtual bool prepareData(QSSGFrameData &data) final
     {
         bool wasDirty = true;
@@ -136,8 +142,29 @@ public:
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
             QSSGRhiShaderResourceBindingList bindings;
             bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, renderImage.m_texture, sampler);
-            QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
-            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+            // The texture is often a render pass output that is recreated on resize, so
+            // the srb is owned here and rebuilt when the bindings change. Going through
+            // the shared srb cache would leave an entry behind for every texture that was
+            // ever bound, and since the bindings carry nothing unique to this renderer,
+            // releasing the previous entry could pull it from under another renderer
+            // showing the same texture.
+            if (!srb || bindings != srbBindings) {
+                // render() can be called more than once in a frame, so the previous srb
+                // may already be referenced by commands recorded for this frame, so defer
+                // deletion until the next frame.
+                if (srb)
+                    srb->deleteLater();
+                srb = rhiCtx->rhi()->newShaderResourceBindings();
+                srb->setBindings(bindings.v, bindings.v + bindings.p);
+                srbBindings = bindings;
+                if (!srb->create()) {
+                    qWarning("Failed to build srb for the simple quad renderer");
+                    srb->deleteLater();
+                    srb = nullptr;
+                    cb->debugMarkEnd();
+                    return;
+                }
+            }
 
             QSSGRhiGraphicsPipelineStatePrivate::setShaderPipeline(ps, shaderPipeline.get());
             renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rhiCtx->mainRenderPassDescriptor(), QSSGRhiQuadRenderer::UvCoords | QSSGRhiQuadRenderer::PremulBlend);
@@ -151,6 +178,7 @@ public:
     QSSGRenderImage *image = nullptr;
     QSSGRenderImageTexture renderImage;
     QRhiShaderResourceBindings *srb = nullptr;
+    QSSGRhiShaderResourceBindingList srbBindings;
     QSSGRhiShaderPipelinePtr quadShaderPipeline;
 };
 

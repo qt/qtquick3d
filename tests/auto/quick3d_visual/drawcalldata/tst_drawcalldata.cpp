@@ -21,6 +21,7 @@ private slots:
     void initTestCase() override;
     void viewChurnReleasesDrawCallData();
     void resizeDoesNotGrowPipelineCache();
+    void resizeDoesNotGrowSrbCacheForQuadRenderer();
 
 private:
 #if QT_CONFIG(vulkan)
@@ -144,6 +145,49 @@ void tst_DrawCallData::resizeDoesNotGrowPipelineCache()
     QVERIFY2(finalPipelines <= baselinePipelines,
              qPrintable(QString::fromLatin1("m_pipelines grew from %1 to %2 entries over %3 resizes")
                                 .arg(baselinePipelines).arg(finalPipelines).arg(ResizeCount)));
+}
+
+// The SimpleQuadRenderer binds a texture to output, which is recreated when the view is resized.
+// The srb built for the previous texture must therefore be released then, otherwise every resize
+// leaves an srb in the cache that references a deleted texture.
+void tst_DrawCallData::resizeDoesNotGrowSrbCacheForQuadRenderer()
+{
+    QQuick3DTestOffscreenRenderer renderer;
+    void *vulkanInstancePtr = nullptr;
+#if QT_CONFIG(vulkan)
+    vulkanInstancePtr = &vulkanInstance;
+#endif
+    QVERIFY(renderer.init(testFileUrl(QString::fromLatin1("quadResize.qml")), vulkanInstancePtr));
+
+#ifdef Q_OS_MACOS
+    if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)
+        QSKIP("Skipping test due to software OpenGL renderer problems on macOS");
+#endif
+
+    renderer.renderNextFrame();
+    renderer.renderNextFrame();
+
+    const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
+    QVERIFY(context);
+
+    const auto &rhiContext = context->rhiContext();
+    QVERIFY(rhiContext);
+    const QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+
+    const qsizetype baselineSrbs = rhiCtxD->m_srbCache.size();
+    QVERIFY(baselineSrbs > 0);
+
+    constexpr int ResizeCount = 10;
+    for (int i = 0; i < ResizeCount; ++i) {
+        QVERIFY(renderer.resize(QSize(500 + i * 7, 400 + i * 5)));
+        renderer.renderNextFrame();
+        renderer.renderNextFrame();
+    }
+
+    const qsizetype finalSrbs = rhiCtxD->m_srbCache.size();
+    QVERIFY2(finalSrbs <= baselineSrbs,
+             qPrintable(QString::fromLatin1("m_srbCache grew from %1 to %2 entries over %3 resizes")
+                                .arg(baselineSrbs).arg(finalSrbs).arg(ResizeCount)));
 }
 
 QTEST_MAIN(tst_DrawCallData)
