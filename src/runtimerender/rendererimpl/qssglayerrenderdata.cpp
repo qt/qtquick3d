@@ -3151,8 +3151,7 @@ bool QSSGLayerRenderPreparationResult::isLayerVisible() const
 
 QSize QSSGLayerRenderPreparationResult::textureDimensions() const
 {
-    const auto size = viewport.size().toSize();
-    return QSize(QSSGRendererUtil::nextMultipleOf4(size.width()), QSSGRendererUtil::nextMultipleOf4(size.height()));
+    return viewport.size().toSize();
 }
 
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer &inRenderer)
