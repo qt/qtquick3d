@@ -20,6 +20,7 @@ class tst_DrawCallData : public QQuick3DDataTest
 private slots:
     void initTestCase() override;
     void viewChurnReleasesDrawCallData();
+    void viewChurnReleasesShaderResourceBindings();
     void resizeDoesNotGrowPipelineCache();
     void resizeDoesNotGrowSrbCacheForQuadRenderer();
 
@@ -103,6 +104,65 @@ void tst_DrawCallData::viewChurnReleasesDrawCallData()
     const qsizetype reloadedSize = rhiCtxD->m_drawCallData.size();
     QVERIFY2(reloadedSize <= loadedSize,
              qPrintable(QString::fromLatin1("m_drawCallData grew from %1 to %2 entries after view churn")
+                                .arg(loadedSize).arg(reloadedSize)));
+}
+
+// The depth pre-pass, shadow, normal and user passes build their srbs around the
+// uniform buffer of their draw call data. Unless the srb is owned by the draw call
+// data, releasing the draw call data with a destroyed view leaves the srb in the
+// cache, still referencing the deleted uniform buffer, so the cache grows with
+// every destroyed view (or window) for as long as the content is alive.
+void tst_DrawCallData::viewChurnReleasesShaderResourceBindings()
+{
+    QQuick3DTestOffscreenRenderer renderer;
+    void *vulkanInstancePtr = nullptr;
+#if QT_CONFIG(vulkan)
+    vulkanInstancePtr = &vulkanInstance;
+#endif
+    QVERIFY(renderer.init(testFileUrl(QString::fromLatin1("srbChurn.qml")), vulkanInstancePtr));
+
+#ifdef Q_OS_MACOS
+    if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)
+        QSKIP("Skipping test due to software OpenGL renderer problems on macOS");
+#endif
+
+    renderer.renderNextFrame();
+
+    const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
+    QVERIFY(context);
+
+    const auto &rhiContext = context->rhiContext();
+    QVERIFY(rhiContext);
+    const QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiContext.get());
+
+    const auto setViewLoadedAndRenderFrames = [&](bool loaded) {
+        renderer.rootItem->setProperty("loadView", loaded);
+        // See viewChurnReleasesDrawCallData() for why more than one frame is needed.
+        for (int frame = 0; frame < 3; ++frame)
+            renderer.renderNextFrame();
+    };
+
+    const qsizetype loadedSize = rhiCtxD->m_srbCache.size();
+    QVERIFY(loadedSize > 0);
+
+    setViewLoadedAndRenderFrames(false);
+    const qsizetype unloadedSize = rhiCtxD->m_srbCache.size();
+
+    constexpr int ChurnCount = 5;
+    for (int i = 0; i < ChurnCount; ++i) {
+        setViewLoadedAndRenderFrames(true);
+        setViewLoadedAndRenderFrames(false);
+    }
+
+    const qsizetype finalUnloadedSize = rhiCtxD->m_srbCache.size();
+    QVERIFY2(finalUnloadedSize <= unloadedSize,
+             qPrintable(QString::fromLatin1("m_srbCache grew from %1 to %2 entries over %3 view load/unload cycles")
+                                .arg(unloadedSize).arg(finalUnloadedSize).arg(ChurnCount)));
+
+    setViewLoadedAndRenderFrames(true);
+    const qsizetype reloadedSize = rhiCtxD->m_srbCache.size();
+    QVERIFY2(reloadedSize <= loadedSize,
+             qPrintable(QString::fromLatin1("m_srbCache grew from %1 to %2 entries after view churn")
                                 .arg(loadedSize).arg(reloadedSize)));
 }
 

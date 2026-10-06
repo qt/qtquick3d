@@ -714,6 +714,23 @@ void RenderHelpers::addAccumulatorImageBindings(QSSGRhiShaderPipeline *shaderPip
 #endif
 }
 
+// Returns the srb for the bindings and records it in the draw call data, releasing the
+// previously recorded srb if the bindings changed. The bindings refer to the draw call
+// data's uniform buffer, so the srb must be owned by the draw call data; otherwise
+// releaseDrawCallData() cannot purge it and the cache keeps an srb referencing a
+// deleted buffer.
+static QRhiShaderResourceBindings *drawCallDataSrb(QSSGRhiContextPrivate *rhiCtxD,
+                                                   QSSGRhiDrawCallData &dcd,
+                                                   const QSSGRhiShaderResourceBindingList &bindings)
+{
+    if (!dcd.srb || bindings != dcd.bindings) {
+        dcd.srb = rhiCtxD->srb(bindings);
+        rhiCtxD->releaseCachedSrb(dcd.bindings);
+        dcd.bindings = bindings;
+    }
+    return dcd.srb;
+}
+
 static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             const QSSGLayerRenderData &inData,
                                             QSSGPassKey passKey,
@@ -761,9 +778,8 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             // cascadeIndex is 0..3 for directional light and 0 for the pointlight & spotlight
             // cubeFaceIdx is 0 for directional & spotlight and 0..5 for the pointlight
             // pEntry is unique per light and a light can only be one of directional, point, or spotlight.
-            // NOTE: The material is deliberately not part of the key here. The shadow pass caches its
-            // srb on the renderable rather than in the draw call data, so keying on the material would
-            // orphan a cached srb every time the material is swapped.
+            // NOTE: The material is deliberately not part of the key here. The draw call data belongs to
+            // the shadow map entry, so swapping the material reuses it instead of creating a new one.
             const quintptr entryIdx = cascadeIndex + cubeFaceIdx + (quintptr(renderable.subset.offset) << 3);
             dcd = &rhiCtxD->drawCallData({ passKey, &renderable.modelContext.model, nullptr, pEntry, entryIdx });
         }
@@ -892,7 +908,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 }
             }
 
-            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+            QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
             subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtxD->pipeline(*ps, pEntry->m_rhiRenderPassDesc[cascadeIndex], srb);
             subsetRenderable.rhiRenderData.shadowPass.srb[cubeFaceIdx] = srb;
         }
@@ -2575,7 +2591,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                 }
             }
 
-            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+            QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
 
             subsetRenderable.rhiRenderData.depthPrePass.pipeline = rhiCtxD->pipeline(*ps,
                                                                                      rpDesc,
@@ -2878,7 +2894,7 @@ bool RenderHelpers::rhiPrepareNormalPass(QSSGRhiContext *rhiCtx,
                 }
             }
 
-            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+            QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
 
             subsetRenderable.rhiRenderData.normalPass.pipeline = rhiCtxD->pipeline(ps,
                                                                                    rpDesc,
@@ -2988,7 +3004,9 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
 
         QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
         const void *modelNode = &subsetRenderable.modelContext.model;
-        QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ passKey, modelNode, overrideMaterial, nullptr, 0 });
+        // All user passes share the pass key, so the slot index tells them apart.
+        QSSGRhiDrawCallData *dcd = &rhiCtxD->drawCallData({ passKey, modelNode, overrideMaterial, nullptr,
+                                                             quintptr(index) });
 
         // Update the shader key to reflect the override material's properties
         // The subsetRenderable.shaderDescription was set during prepareModelsForRender for the original material,
@@ -3207,7 +3225,7 @@ qsizetype RenderHelpers::rhiPrepareOverrideMaterialUserPass(QSSGRhiContext *rhiC
             }
         }
 
-        QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+        QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
 
         QSSG_ASSERT(srb, continue);
         auto &rhiPassData = subsetRenderable.rhiRenderData.userPassData[index];
@@ -3243,7 +3261,8 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
             obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const void *modelNode = &subsetRenderable.modelContext.model;
-            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, 0 });
+            // All user passes share the pass key, so the slot index tells them apart.
+            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, quintptr(index) });
         }
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
@@ -3534,7 +3553,7 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
                 }
             }
 
-            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+            QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
 
             QSSG_ASSERT(srb, continue);
 
@@ -3576,7 +3595,8 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &subsetRenderable(*static_cast<QSSGSubsetRenderable *>(obj));
             const void *modelNode = &subsetRenderable.modelContext.model;
-            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, 0 });
+            // All user passes share the pass key, so the slot index tells them apart.
+            dcd = &rhiCtxD->drawCallData({ passKey, modelNode, &subsetRenderable.material, nullptr, quintptr(index) });
         }
 
         if (obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
@@ -3923,7 +3943,7 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
                 }
             }
 
-            QRhiShaderResourceBindings *srb = rhiCtxD->srb(bindings);
+            QRhiShaderResourceBindings *srb = drawCallDataSrb(rhiCtxD, *dcd, bindings);
             QSSG_ASSERT(srb, return -1);
             auto &rhiPassData = subsetRenderable.rhiRenderData.userPassData[index];
             rhiPassData.pipeline = rhiCtxD->pipeline(ps, rpDesc, srb);
