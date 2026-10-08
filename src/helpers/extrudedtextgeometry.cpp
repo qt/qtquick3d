@@ -274,7 +274,8 @@ void ExtrudedTextGeometry::doUpdateGeometry()
 
 #if QT_CONFIG(concurrent)
 
-    if (m_asynchronous) {
+    // without threads, QtConcurrent::run() would never run the task
+    if (m_asynchronous && QT_CONFIG(thread)) {
         m_geometryDataFuture = QtConcurrent::run(generateExtrudedTextGeometryAsync,
                                                  m_text,
                                                  m_font,
