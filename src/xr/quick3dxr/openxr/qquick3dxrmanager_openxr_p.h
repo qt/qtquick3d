@@ -78,7 +78,7 @@ public:
     void setMultiViewRenderingEnabled(bool enable);
     bool isMultiViewRenderingEnabled() const { return m_multiviewRendering; }
 
-    void setPassthroughEnabled(bool enable);
+    [[nodiscard]] bool setPassthroughEnabled(bool enable);
     bool isPassthroughEnabled() const { return m_enablePassthrough; }
 
     void setDepthSubmissionEnabled(bool enable);
@@ -111,7 +111,6 @@ private:
 
     void checkViewConfiguration();
     [[nodiscard]] bool checkXrResult(const XrResult &result);
-    bool resolveXrFunction(const char *name, PFN_xrVoidFunction *function);
     void checkEnvironmentBlendMode(XrViewConfigurationType type);
 
     void pollEvents(bool *exitRenderLoop, bool *requestRestart);

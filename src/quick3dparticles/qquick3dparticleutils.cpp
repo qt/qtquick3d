@@ -4,9 +4,13 @@
 #include "qquick3dparticleutils_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
 
+#include <QtGui/qquaternion.h>
+
+#include <iterator>
+
 QT_BEGIN_NAMESPACE
 
-const float qt_quick3d_sine_table[QT_QUICK3D_SINE_TABLE_SIZE] = {
+Q_CONSTINIT const float qt_quick3d_sine_table[] = {
     float(0.0),
     float(0.024541228522912288),
     float(0.049067674327418015),
@@ -264,6 +268,7 @@ const float qt_quick3d_sine_table[QT_QUICK3D_SINE_TABLE_SIZE] = {
     float(-0.049067674327418091),
     float(-0.024541228522912448)
 };
+static_assert(std::size(qt_quick3d_sine_table) == QT_QUICK3D_SINE_TABLE_SIZE);
 
 QQuick3DNode *getSharedParentNode(QQuick3DNode *node, QQuick3DNode *system) {
     QQuick3DNode *systemSharedParent = nullptr;

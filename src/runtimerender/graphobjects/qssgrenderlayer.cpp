@@ -7,6 +7,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 QSSGRenderLayer::QSSGRenderLayer()
@@ -27,6 +29,10 @@ QSSGRenderLayer::~QSSGRenderLayer()
 {
     delete importSceneNode;
     importSceneNode = nullptr;
+
+    if (renderData && renderData->renderer)
+        renderData->renderer->releaseItem2DData(*this);
+
     delete renderData;
 }
 

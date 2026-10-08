@@ -12,6 +12,8 @@
 #include "qquick3dxrview_p.h"
 #include "qquick3dxractionmapper_p.h"
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!

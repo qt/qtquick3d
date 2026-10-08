@@ -25,7 +25,7 @@ function(_qt_internal_quick3d_generate_resource_from_qrc target resource_name)
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::rcc>
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::shadergen>
         COMMENT
-            RCC ${resource_name}
+            "RCC ${resource_name}"
         VERBATIM
     )
 

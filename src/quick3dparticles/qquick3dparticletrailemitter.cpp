@@ -3,6 +3,8 @@
 
 #include "qquick3dparticletrailemitter_p.h"
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!

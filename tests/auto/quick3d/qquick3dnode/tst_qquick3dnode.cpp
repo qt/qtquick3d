@@ -9,6 +9,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 
+#include <QtGui/qquaternion.h>
+
 class tst_QQuick3DNode : public QObject
 {
     Q_OBJECT

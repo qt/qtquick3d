@@ -716,10 +716,11 @@ bool QQuick3DXrManagerPrivate::isMultiViewRenderingEnabled() const
     return m_multiviewRenderingEnabled;
 }
 
-void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
+bool QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
     Q_UNUSED(enable);
-    Q_UNIMPLEMENTED(); qWarning() << Q_FUNC_INFO;
+    qCWarning(lcQuick3DXr) << "Changing passthrough is not supported at runtime on visionOS!";
+    return supportsPassthrough();
 }
 
 QtQuick3DXr::ReferenceSpace QQuick3DXrManagerPrivate::getReferenceSpace() const

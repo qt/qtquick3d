@@ -26,6 +26,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuaternion;
 class QQuick3DXrHandInput;
 class QQuick3DXrInputManager;
 class QQuick3DXrHandModel;
@@ -90,7 +91,6 @@ private:
     void setupActions();
     void destroyActions();
     [[nodiscard]] bool checkXrResult(const XrResult &result);
-    bool resolveXrFunction(const char *name, PFN_xrVoidFunction *function);
     void setPath(XrPath &path, const QByteArray &pathString);
 
     void createAction(XrActionType type,

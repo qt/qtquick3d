@@ -15,6 +15,8 @@
 
 #include <parser.h>
 
+#include <QtGui/qquaternion.h>
+
 class Shadergen : public QObject
 {
     Q_OBJECT

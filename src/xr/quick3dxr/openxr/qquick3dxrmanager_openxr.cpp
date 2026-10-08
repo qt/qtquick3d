@@ -20,6 +20,8 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickrendercontrol.h>
 
+#include <QtGui/qquaternion.h>
+
 #include <QtCore/qobject.h>
 
 #include <openxr/openxr_reflection.h>
@@ -331,8 +333,6 @@ void QQuick3DXrManagerPrivate::doRenderFrame()
     }
 
     QVector<XrCompositionLayerBaseHeader*> layers;
-
-    m_passthroughSupported = supportsPassthrough();
 
     XrCompositionLayerPassthroughFB passthroughCompLayer{};
     passthroughCompLayer.type = XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB;
@@ -1137,11 +1137,12 @@ void QQuick3DXrManagerPrivate::setMultiViewRenderingEnabled(bool enable)
     }
 }
 
-void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
+bool QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
 {
-    m_enablePassthrough = enable;
+    m_passthroughSupported = supportsPassthrough();
 
     if (m_passthroughSupported) {
+        m_enablePassthrough = enable;
         if (m_enablePassthrough) {
             if (m_passthroughFeature == XR_NULL_HANDLE)
                 createMetaQuestPassthrough(); // Create and start
@@ -1161,6 +1162,7 @@ void QQuick3DXrManagerPrivate::setPassthroughEnabled(bool enable)
                 pauseMetaQuestPassthrough();
         }
     }
+    return m_passthroughSupported;
 }
 
 void QQuick3DXrManagerPrivate::setDepthSubmissionEnabled(bool enable)
@@ -1600,7 +1602,7 @@ void QQuick3DXrManagerPrivate::doRender(const XrSwapchainSubImage &subImage,
 void QQuick3DXrManagerPrivate::setupMetaQuestColorSpaces()
 {
     PFN_xrEnumerateColorSpacesFB pfnxrEnumerateColorSpacesFB = NULL;
-    resolveXrFunction("xrEnumerateColorSpacesFB", (PFN_xrVoidFunction*)(&pfnxrEnumerateColorSpacesFB));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrEnumerateColorSpacesFB", (PFN_xrVoidFunction*)(&pfnxrEnumerateColorSpacesFB));
     if (!pfnxrEnumerateColorSpacesFB) // simulator
         return;
 
@@ -1626,7 +1628,7 @@ void QQuick3DXrManagerPrivate::setupMetaQuestColorSpaces()
     const XrColorSpaceFB requestColorSpace = XR_COLOR_SPACE_QUEST_FB;
 
     PFN_xrSetColorSpaceFB pfnxrSetColorSpaceFB = NULL;
-    resolveXrFunction("xrSetColorSpaceFB", (PFN_xrVoidFunction*)(&pfnxrSetColorSpaceFB));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrSetColorSpaceFB", (PFN_xrVoidFunction*)(&pfnxrSetColorSpaceFB));
 
     if (!checkXrResult(pfnxrSetColorSpaceFB(m_session, requestColorSpace)))
         qWarning("Failed to set color space");
@@ -1637,7 +1639,7 @@ void QQuick3DXrManagerPrivate::setupMetaQuestColorSpaces()
 void QQuick3DXrManagerPrivate::setupMetaQuestRefreshRates()
 {
     PFN_xrEnumerateDisplayRefreshRatesFB pfnxrEnumerateDisplayRefreshRatesFB = NULL;
-    resolveXrFunction("xrEnumerateDisplayRefreshRatesFB", (PFN_xrVoidFunction*)(&pfnxrEnumerateDisplayRefreshRatesFB));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrEnumerateDisplayRefreshRatesFB", (PFN_xrVoidFunction*)(&pfnxrEnumerateDisplayRefreshRatesFB));
     if (!pfnxrEnumerateDisplayRefreshRatesFB)
         return;
 
@@ -1667,7 +1669,7 @@ void QQuick3DXrManagerPrivate::setupMetaQuestRefreshRates()
     }
 
     PFN_xrGetDisplayRefreshRateFB pfnGetDisplayRefreshRate;
-    resolveXrFunction("xrGetDisplayRefreshRateFB", (PFN_xrVoidFunction*)(&pfnGetDisplayRefreshRate));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrGetDisplayRefreshRateFB", (PFN_xrVoidFunction*)(&pfnGetDisplayRefreshRate));
 
     float currentDisplayRefreshRate = 0.0f;
     if (!checkXrResult(pfnGetDisplayRefreshRate(m_session, &currentDisplayRefreshRate)))
@@ -1676,7 +1678,7 @@ void QQuick3DXrManagerPrivate::setupMetaQuestRefreshRates()
     qCDebug(lcQuick3DXr, "Current System Display Refresh Rate: %f", currentDisplayRefreshRate);
 
     PFN_xrRequestDisplayRefreshRateFB pfnRequestDisplayRefreshRate;
-    resolveXrFunction("xrRequestDisplayRefreshRateFB", (PFN_xrVoidFunction*)(&pfnRequestDisplayRefreshRate));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrRequestDisplayRefreshRateFB", (PFN_xrVoidFunction*)(&pfnRequestDisplayRefreshRate));
 
     // Test requesting the system default.
     if (!checkXrResult(pfnRequestDisplayRefreshRate(m_session, 0.0f)))
@@ -1688,15 +1690,15 @@ void QQuick3DXrManagerPrivate::setupMetaQuestRefreshRates()
 void QQuick3DXrManagerPrivate::setupMetaQuestFoveation()
 {
     PFN_xrCreateFoveationProfileFB pfnCreateFoveationProfileFB;
-    resolveXrFunction("xrCreateFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnCreateFoveationProfileFB));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrCreateFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnCreateFoveationProfileFB));
     if (!pfnCreateFoveationProfileFB) // simulator
         return;
 
     PFN_xrDestroyFoveationProfileFB pfnDestroyFoveationProfileFB;
-    resolveXrFunction("xrDestroyFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnDestroyFoveationProfileFB));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrDestroyFoveationProfileFB", (PFN_xrVoidFunction*)(&pfnDestroyFoveationProfileFB));
 
     PFN_xrUpdateSwapchainFB pfnUpdateSwapchainFB;
-    resolveXrFunction("xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrUpdateSwapchainFB", (PFN_xrVoidFunction*)(&pfnUpdateSwapchainFB));
 
     for (auto swapchain : m_swapchains) {
         XrFoveationLevelProfileCreateInfoFB levelProfileCreateInfo = {};
@@ -1717,11 +1719,13 @@ void QQuick3DXrManagerPrivate::setupMetaQuestFoveation()
         foveationUpdateState.type = XR_TYPE_SWAPCHAIN_STATE_FOVEATION_FB;
         foveationUpdateState.profile = foveationProfile;
 
-        pfnUpdateSwapchainFB(
-                swapchain.handle,
-                (XrSwapchainStateBaseHeaderFB*)(&foveationUpdateState));
+        XrResult updateSwapchainFBResult = OpenXRHelpers::safeCall(pfnUpdateSwapchainFB, swapchain.handle, (const XrSwapchainStateBaseHeaderFB*)(&foveationUpdateState));
+        if (updateSwapchainFBResult == XR_ERROR_FUNCTION_UNSUPPORTED)
+            return;
 
-        pfnDestroyFoveationProfileFB(foveationProfile);
+        XrResult destroyFoveationProfileFBResult = OpenXRHelpers::safeCall(pfnDestroyFoveationProfileFB, foveationProfile);
+        if (destroyFoveationProfileFBResult == XR_ERROR_FUNCTION_UNSUPPORTED)
+            return;
 
         qCDebug(lcQuick3DXr, "Fixed foveated rendering requested with level %d", int(m_foveationLevel));
     }
@@ -1735,22 +1739,24 @@ void QQuick3DXrManagerPrivate::createMetaQuestPassthrough()
     Q_ASSERT(m_passthroughSupported && m_enablePassthrough);
 
     PFN_xrCreatePassthroughFB pfnXrCreatePassthroughFBX = nullptr;
-    resolveXrFunction("xrCreatePassthroughFB", (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrCreatePassthroughFB", (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughFBX));
 
     XrPassthroughCreateInfoFB passthroughCreateInfo{};
     passthroughCreateInfo.type = XR_TYPE_PASSTHROUGH_CREATE_INFO_FB;
     passthroughCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
 
-    if (!checkXrResult(pfnXrCreatePassthroughFBX(m_session, &passthroughCreateInfo, &m_passthroughFeature)))
+    XrResult xrCreatePassthroughFBXResult = OpenXRHelpers::safeCall(pfnXrCreatePassthroughFBX, m_session, static_cast<const XrPassthroughCreateInfoFB*>(&passthroughCreateInfo), &m_passthroughFeature);
+    if (!checkXrResult(xrCreatePassthroughFBXResult))
         qWarning("Failed to create passthrough object");
 }
 
 void QQuick3DXrManagerPrivate::destroyMetaQuestPassthrough()
 {
     PFN_xrDestroyPassthroughFB pfnXrDestroyPassthroughFBX = nullptr;
-    resolveXrFunction("xrDestroyPassthroughFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrDestroyPassthroughFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughFBX));
 
-    if (!checkXrResult(pfnXrDestroyPassthroughFBX(m_passthroughFeature)))
+    XrResult xrDestroyPassthroughFBXResult = OpenXRHelpers::safeCall(pfnXrDestroyPassthroughFBX, m_passthroughFeature);
+    if (!checkXrResult(xrDestroyPassthroughFBXResult))
         qWarning("Failed to destroy passthrough object");
 
     m_passthroughFeature = XR_NULL_HANDLE;
@@ -1759,25 +1765,27 @@ void QQuick3DXrManagerPrivate::destroyMetaQuestPassthrough()
 void QQuick3DXrManagerPrivate::startMetaQuestPassthrough()
 {
     PFN_xrPassthroughStartFB pfnXrPassthroughStartFBX = nullptr;
-    resolveXrFunction("xrPassthroughStartFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughStartFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughStartFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughStartFBX));
 
-    if (!checkXrResult(pfnXrPassthroughStartFBX(m_passthroughFeature)))
+    XrResult xrPassthroughStartFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughStartFBX, m_passthroughFeature);
+    if (!checkXrResult(xrPassthroughStartFBXResult))
         qWarning("Failed to start passthrough");
 }
 
 void QQuick3DXrManagerPrivate::pauseMetaQuestPassthrough()
 {
     PFN_xrPassthroughPauseFB pfnXrPassthroughPauseFBX = nullptr;
-    resolveXrFunction("xrPassthroughPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughPauseFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughPauseFBX));
 
-    if (!checkXrResult(pfnXrPassthroughPauseFBX(m_passthroughFeature)))
+    XrResult xrPassthroughPauseFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughPauseFBX, m_passthroughFeature);
+    if (!checkXrResult(xrPassthroughPauseFBXResult))
         qWarning("Failed to pause passthrough");
 }
 
 void QQuick3DXrManagerPrivate::createMetaQuestPassthroughLayer()
 {
     PFN_xrCreatePassthroughLayerFB pfnXrCreatePassthroughLayerFBX = nullptr;
-    resolveXrFunction("xrCreatePassthroughLayerFB", (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughLayerFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrCreatePassthroughLayerFB", (PFN_xrVoidFunction*)(&pfnXrCreatePassthroughLayerFBX));
 
     XrPassthroughLayerCreateInfoFB layerCreateInfo{};
     layerCreateInfo.type = XR_TYPE_PASSTHROUGH_LAYER_CREATE_INFO_FB;
@@ -1786,16 +1794,18 @@ void QQuick3DXrManagerPrivate::createMetaQuestPassthroughLayer()
     if (m_enablePassthrough)
         layerCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
 
-    if (!checkXrResult(pfnXrCreatePassthroughLayerFBX(m_session, &layerCreateInfo, &m_passthroughLayer)))
+    XrResult xrCreatePassthroughLayerFBXResult = OpenXRHelpers::safeCall(pfnXrCreatePassthroughLayerFBX, m_session, static_cast<const XrPassthroughLayerCreateInfoFB*>(&layerCreateInfo), &m_passthroughLayer);
+    if (!checkXrResult(xrCreatePassthroughLayerFBXResult))
         qWarning("Failed to create passthrough layer");
 }
 
 void QQuick3DXrManagerPrivate::destroyMetaQuestPassthroughLayer()
 {
     PFN_xrDestroyPassthroughLayerFB pfnXrDestroyPassthroughLayerFBX = nullptr;
-    resolveXrFunction("xrDestroyPassthroughLayerFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughLayerFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrDestroyPassthroughLayerFB", (PFN_xrVoidFunction*)(&pfnXrDestroyPassthroughLayerFBX));
 
-    if (!checkXrResult(pfnXrDestroyPassthroughLayerFBX(m_passthroughLayer)))
+    XrResult xrDestroyPassthroughLayerFBXResult = OpenXRHelpers::safeCall(pfnXrDestroyPassthroughLayerFBX, m_passthroughLayer);
+    if (!checkXrResult(xrDestroyPassthroughLayerFBXResult))
         qWarning("Failed to destroy passthrough layer");
 
     m_passthroughLayer = XR_NULL_HANDLE;
@@ -1804,18 +1814,20 @@ void QQuick3DXrManagerPrivate::destroyMetaQuestPassthroughLayer()
 void QQuick3DXrManagerPrivate::pauseMetaQuestPassthroughLayer()
 {
     PFN_xrPassthroughLayerPauseFB pfnXrPassthroughLayerPauseFBX = nullptr;
-    resolveXrFunction("xrPassthroughLayerPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerPauseFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughLayerPauseFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerPauseFBX));
 
-    if (!checkXrResult(pfnXrPassthroughLayerPauseFBX(m_passthroughLayer)))
-    qWarning("Failed to pause passthrough layer");
+    XrResult xrPassthroughLayerPauseFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughLayerPauseFBX, m_passthroughLayer);
+    if (!checkXrResult(xrPassthroughLayerPauseFBXResult))
+        qWarning("Failed to pause passthrough layer");
 }
 
 void QQuick3DXrManagerPrivate::resumeMetaQuestPassthroughLayer()
 {
     PFN_xrPassthroughLayerResumeFB pfnXrPassthroughLayerResumeFBX = nullptr;
-    resolveXrFunction("xrPassthroughLayerResumeFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerResumeFBX));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrPassthroughLayerResumeFB", (PFN_xrVoidFunction*)(&pfnXrPassthroughLayerResumeFBX));
 
-    if (!checkXrResult(pfnXrPassthroughLayerResumeFBX(m_passthroughLayer)))
+    XrResult xrPassthroughLayerResumeFBXResult = OpenXRHelpers::safeCall(pfnXrPassthroughLayerResumeFBX, m_passthroughLayer);
+    if (!checkXrResult(xrPassthroughLayerResumeFBXResult))
         qWarning("Failed to resume passthrough layer");
 }
 
@@ -1984,8 +1996,7 @@ XrResult QQuick3DXrManagerPrivate::createXrInstance()
     // Passthrough extensions (require manifest feature to work)
     // <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
     uint32_t passthroughSpecVersion = 0;
-    m_passthroughSupported = isExtensionSupported(XR_FB_PASSTHROUGH_EXTENSION_NAME, extensionProperties, &passthroughSpecVersion);
-    if (m_passthroughSupported) {
+    if (isExtensionSupported(XR_FB_PASSTHROUGH_EXTENSION_NAME, extensionProperties, &passthroughSpecVersion)) {
         qCDebug(lcQuick3DXr, "Passthrough extension is supported, spec version %u", passthroughSpecVersion);
         enabledExtensions.append(XR_FB_PASSTHROUGH_EXTENSION_NAME);
     } else {
@@ -2107,11 +2118,11 @@ void QQuick3DXrManagerPrivate::setupDebugMessenger()
 
 #ifdef XR_EXT_debug_utils
     PFN_xrCreateDebugUtilsMessengerEXT xrCreateDebugUtilsMessengerEXT = nullptr;
-    resolveXrFunction("xrCreateDebugUtilsMessengerEXT", reinterpret_cast<PFN_xrVoidFunction *>(&xrCreateDebugUtilsMessengerEXT));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrCreateDebugUtilsMessengerEXT", reinterpret_cast<PFN_xrVoidFunction *>(&xrCreateDebugUtilsMessengerEXT));
     if (!xrCreateDebugUtilsMessengerEXT)
         return;
 
-    resolveXrFunction("xrDestroyDebugUtilsMessengerEXT", reinterpret_cast<PFN_xrVoidFunction *>(&m_xrDestroyDebugUtilsMessengerEXT));
+    OpenXRHelpers::resolveXrFunction(m_instance, "xrDestroyDebugUtilsMessengerEXT", reinterpret_cast<PFN_xrVoidFunction *>(&m_xrDestroyDebugUtilsMessengerEXT));
 
     XrDebugUtilsMessengerCreateInfoEXT messengerInfo = {};
     messengerInfo.type = XR_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -2239,17 +2250,6 @@ void QQuick3DXrManagerPrivate::checkViewConfiguration()
 bool QQuick3DXrManagerPrivate::checkXrResult(const XrResult &result)
 {
     return OpenXRHelpers::checkXrResult(result, m_instance);
-}
-
-bool QQuick3DXrManagerPrivate::resolveXrFunction(const char *name, PFN_xrVoidFunction *function)
-{
-    XrResult result = xrGetInstanceProcAddr(m_instance, name, function);
-    if (!OpenXRHelpers::checkXrResult(result, m_instance)) {
-        qWarning("Failed to resolve OpenXR function %s", name);
-        *function = nullptr;
-        return false;
-    }
-    return true;
 }
 
 void QQuick3DXrManagerPrivate::checkEnvironmentBlendMode(XrViewConfigurationType type)

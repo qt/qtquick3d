@@ -9,6 +9,7 @@
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <QtGui/qquaternion.h>
 #include <QtGui/QVector2D>
 
 #include <qmath.h>

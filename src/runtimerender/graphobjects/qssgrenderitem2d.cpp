@@ -9,17 +9,12 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderItem2D::QSSGRenderItem2D()
-    : QSSGRenderNode(QSSGRenderGraphObject::Type::Item2D)
+    : QSSGRenderNode(QSSGRenderGraphObject::Type::Item2D, FlagT(Flags::HasGraphicsResources))
 {
 }
 
 QSSGRenderItem2D::~QSSGRenderItem2D()
 {
-    // Normally it will be deleted when m_renderer destroyed
-    // by QQuick3DItem2D's connection
-    // But if this backend node may suddenly be deleted,
-    // it is safe to remain this deletion here.
-    delete m_rp;
 }
 
 QT_END_NAMESPACE
