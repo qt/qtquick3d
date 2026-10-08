@@ -229,7 +229,8 @@ void CapsuleGeometry::doUpdateGeometry()
 #endif
 
 #if QT_CONFIG(concurrent)
-    if (m_asynchronous) {
+    // without threads, QtConcurrent::run() would never run the task
+    if (m_asynchronous && QT_CONFIG(thread)) {
         m_geometryDataFuture = QtConcurrent::run(generateCapsuleGeometryAsync,
                                                  m_enableNormals,
                                                  m_enableUV,
