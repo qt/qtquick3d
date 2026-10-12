@@ -458,9 +458,13 @@ void QSSGRenderSkyMaterial::updateBackgroundUniforms(const QSSGRenderContextInte
 
     const int bufferSize = rhiCtx->rhi()->ubufAligned(backgroundPipeline->ub0Size());
 
-    if (!dcd->ubuf || int(dcd->ubuf->size()) != bufferSize) {
-        delete dcd->ubuf;
+    if (!dcd->ubuf) {
         dcd->ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, bufferSize);
+        dcd->ubuf->create();
+    } else if (int(dcd->ubuf->size()) != bufferSize) {
+        // Resize in place. A new buffer would leave the srbs cached for the old one
+        // behind, as the cache only releases those when the draw call data goes away.
+        dcd->ubuf->setSize(bufferSize);
         dcd->ubuf->create();
     }
 

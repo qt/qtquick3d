@@ -2364,9 +2364,13 @@ static void rhiPrepareSkyBox_helper(const QSSGRenderContextInterface &context,
 
     QRhi *rhi = rhiCtx->rhi();
     const quint32 ubufSize = cameras.count() >= 2 ? 416 : 240; // same ubuf layout for both skybox and skyboxcube
-    if (!dcd.ubuf || dcd.ubuf->size() != ubufSize) {
-        delete dcd.ubuf;
+    if (!dcd.ubuf) {
         dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, int(ubufSize));
+        dcd.ubuf->create();
+    } else if (dcd.ubuf->size() != ubufSize) {
+        // Resize in place. A new buffer would leave the srbs cached for the old one
+        // behind, as the cache only releases those when the draw call data goes away.
+        dcd.ubuf->setSize(ubufSize);
         dcd.ubuf->create();
     }
 
