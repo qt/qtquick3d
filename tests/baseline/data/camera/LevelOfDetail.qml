@@ -43,19 +43,19 @@ Rectangle {
         }
 
         Model {
-            source: "../shared/models/lod_mixed_shapes.mesh"
+            source: "../shared/models/lod_digits.mesh"
             position: Qt.vector3d(-400, 0, 300)
             materials: [uvdebug]
         }
 
         Model {
-            source: "../shared/models/lod_mixed_shapes.mesh"
+            source: "../shared/models/lod_digits.mesh"
             position: Qt.vector3d(0, 0, -300)
             materials: PrincipledMaterial { baseColor: "red" }
         }
 
         Model {
-            source: "../shared/models/lod_mixed_shapes.mesh"
+            source: "../shared/models/lod_digits.mesh"
             position: Qt.vector3d(400, 0, -1000)
             materials: PrincipledMaterial { baseColor: "cyan" }
         }
