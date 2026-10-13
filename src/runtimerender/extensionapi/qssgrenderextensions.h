@@ -48,6 +48,7 @@ public:
         Attachment1 = 1,
         Attachment2 = 2,
         Attachment3 = 3,
+        DepthAttachment = 0x8000,
     };
 
     struct Result

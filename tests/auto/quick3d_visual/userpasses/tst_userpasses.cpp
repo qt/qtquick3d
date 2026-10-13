@@ -13,6 +13,8 @@
 #include <QtQuick3D/private/qquick3dobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderuserpass_p.h>
 #include <QtQuick3DRuntimeRender/private/qssguserrenderpassmanager_p.h>
+#include <QtQuick3DHelpers/private/qquick3drenderoutputprovider_p.h>
+#include <QtQuick3D/private/qquick3dshaderutils_p.h>
 #include "../shared/util.h"
 
 class tst_UserPasses : public QQuick3DDataTest
@@ -66,6 +68,10 @@ private slots:
     void testAugmentShaderWithCustomMaterial();
     void testAugmentFeatureFlagsFollowShader();
     void testAugmentShaderRemovedClearsState();
+    void testUserPassDepthTexture_data();
+    void testUserPassDepthTexture();
+    void testUserPassDepthTextureSwitchSource();
+    void userPassDepthTextureWithDepthStencilDoesNotCrash();
 
 private:
     // Helper function to check if an image contains a specific color (with lighting effects)
@@ -1813,6 +1819,104 @@ void tst_UserPasses::testAugmentShaderRemovedClearsState()
     QVERIFY(node->shaderAugmentation.body.isEmpty());
     QVERIFY(node->shaderAugmentation.preamble.isEmpty());
     QVERIFY(node->shaderAugmentation.hash.isEmpty());
+}
+
+namespace {
+using TextureFormat = QQuick3DShaderUtilsRenderPassTexture::TextureFormat;
+using TextureSource = QQuick3DRenderOutputProvider::TextureSource;
+
+QQuickView *createDepthTextureView(const QUrl &url, TextureFormat format, TextureSource source)
+{
+    auto *view = new QQuickView;
+    view->setInitialProperties({ { QStringLiteral("depthFormat"), int(format) },
+                                 { QStringLiteral("textureSource"), int(source) } });
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+    view->resize(200, 200);
+    view->setSource(url);
+    view->show();
+    return view;
+}
+
+// The sphere's front is at depth 0.4 and the cleared depth is 1.0 (see
+// userpass_depth_texture.qml). Only red is checked: depending on the backend,
+// sampling a depth texture returns either (d, 0, 0, 1) or (d, d, d, 1).
+bool showsDepth(const QImage &image)
+{
+    const int center = image.pixelColor(image.width() / 2, image.height() / 2).red();
+    const int corner = image.pixelColor(2, 2).red();
+    if (center < 60 || center > 150 || corner < 230) {
+        qWarning() << "Unexpected depth: center" << center << "corner" << corner;
+        return false;
+    }
+    return true;
+}
+
+bool showsColor(const QImage &image)
+{
+    const QColor center = image.pixelColor(image.width() / 2, image.height() / 2);
+    const QColor corner = image.pixelColor(2, 2);
+    const bool yellowSphere = center.red() > 200 && center.green() > 200 && center.blue() < 80;
+    const bool darkBlueClear = corner.blue() > 100 && corner.red() < 30 && corner.green() < 30;
+    if (!yellowSphere || !darkBlueClear) {
+        qWarning() << "Unexpected color: center" << center << "corner" << corner;
+        return false;
+    }
+    return true;
+}
+} // namespace
+
+void tst_UserPasses::testUserPassDepthTexture_data()
+{
+    QTest::addColumn<TextureFormat>("format");
+
+    // No Depth16 row: the D3D11 and D3D12 backends of QRhi create the shader
+    // resource view of a D16 texture as R16_FLOAT instead of R16_UNORM.
+    QTest::newRow("Depth24") << TextureFormat::Depth24;
+    QTest::newRow("Depth32") << TextureFormat::Depth32;
+    QTest::newRow("Depth24Stencil8") << TextureFormat::Depth24Stencil8;
+}
+
+void tst_UserPasses::testUserPassDepthTexture()
+{
+    QFETCH(TextureFormat, format);
+
+    QScopedPointer<QQuickView> view(createDepthTextureView(testFileUrl("userpass_depth_texture.qml"), format,
+                                                           TextureSource::UserPassDepthTexture));
+    QVERIFY(view->rootObject());
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QVERIFY(showsDepth(grab(view.data())));
+}
+
+void tst_UserPasses::testUserPassDepthTextureSwitchSource()
+{
+    // Switching textureSource alone, with renderPass already set, must
+    // switch the exposed attachment both ways.
+    QScopedPointer<QQuickView> view(createDepthTextureView(testFileUrl("userpass_depth_texture.qml"),
+                                                           TextureFormat::Depth24Stencil8,
+                                                           TextureSource::UserPassTexture));
+    QQuickItem *root = view->rootObject();
+    QVERIFY(root);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QVERIFY(showsColor(grab(view.data())));
+
+    root->setProperty("textureSource", int(TextureSource::UserPassDepthTexture));
+    QVERIFY(showsDepth(grab(view.data())));
+
+    root->setProperty("textureSource", int(TextureSource::UserPassTexture));
+    QVERIFY(showsColor(grab(view.data())));
+}
+
+void tst_UserPasses::userPassDepthTextureWithDepthStencilDoesNotCrash()
+{
+    // Test that a DepthStencilAttachment, which has no depth texture to expose, does not crash.
+    QScopedPointer<QQuickView> view(createView(QLatin1String("userpass_depth_stencil.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QVERIFY(!grab(view.data()).isNull());
+    QVERIFY(!grab(view.data()).isNull());
 }
 
 QTEST_MAIN(tst_UserPasses)

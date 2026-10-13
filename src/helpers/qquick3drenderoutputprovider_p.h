@@ -43,6 +43,7 @@ public:
         ScreenTexture,
         NormalTexture,
         MotionVectorTexture,
+        UserPassDepthTexture,
     };
     Q_ENUM(TextureSource)
 

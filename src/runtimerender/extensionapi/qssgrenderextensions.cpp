@@ -95,7 +95,8 @@ qsizetype QSSGFrameData::getAttachmentCount(QSSGResourceId userPassId) const
 /*!
     \return The renderable texture result from a user defined render pass with the given \a userPassId.
     If no matching user pass could be found, or if the user pass did not produce any renderable textures,
-    an invalid Result is returned.
+    an invalid Result is returned. Returns only depth texture and depth-stencil buffer if \a attachment
+    is \c AttachmentSelector::DepthAttachment.
 
     \note Even if the function returns a non-null result, the returned QSSGRhiRenderableTexture
     might not be ready unless the pass rendering to the texture has been executed.
@@ -118,11 +119,18 @@ QSSGFrameData::Result QSSGFrameData::getRenderResult(QSSGResourceId userPassId, 
     const quint32 attachmentSelector = static_cast<quint32>(attachment);
 
     if (res && res->isValid()) {
-        if (const qsizetype attachmentCount = res->colorAttachmentCount(); attachmentCount > qsizetype(attachmentSelector)) {
-            // Get the selected attachment
-            result = { res->getColorTexture(attachmentSelector)->texture().get(), res->getDepthStencil().get() };
+        if (attachment == AttachmentSelector::DepthAttachment) {
+            if (const auto &depth = res->getDepthTexture())
+                result.texture = depth->texture().get();
+            result.buffer = res->getDepthStencil().get();
         } else {
-            qWarning() << "Requested attachment" << attachmentSelector << "but user pass only has" << attachmentCount << "attachments.";
+            if (const qsizetype attachmentCount = res->colorAttachmentCount(); attachmentCount > qsizetype(attachmentSelector)) {
+                // Get the selected attachment
+                result.texture = res->getColorTexture(attachmentSelector)->texture().get();
+                result.buffer = res->getDepthStencil().get();
+            } else {
+                qWarning() << "Requested attachment" << attachmentSelector << "but user pass only has" << attachmentCount << "attachments.";
+            }
         }
     }
 

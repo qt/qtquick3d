@@ -2683,6 +2683,7 @@ void QQuick3DShaderUtilsSubRenderPass::setRenderPass(QQuick3DRenderPass *newRend
     }
 
     RenderPass {
+        id: myRenderPass
         commands: [
             ColorAttachment { name: "color0"; target: colorTexture },
             DepthTextureAttachment { target: depthTexture }
@@ -2692,9 +2693,11 @@ void QQuick3DShaderUtilsSubRenderPass::setRenderPass(QQuick3DRenderPass *newRend
     // Expose the depth texture to a material via RenderOutputProvider
     Texture {
         textureProvider: RenderOutputProvider {
-            textureSource: RenderOutputProvider.UserPassTexture
+            textureSource: RenderOutputProvider.UserPassDepthTexture
             renderPass: myRenderPass
         }
+        minFilter: Texture.Nearest
+        magFilter: Texture.Nearest
     }
     \endqml
 

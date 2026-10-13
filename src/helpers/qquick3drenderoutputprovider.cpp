@@ -97,7 +97,6 @@ bool QSSGRenderOutputProviderExtension::prepareData(QSSGFrameData &data)
                 // Associate the texture with this extension and expose it so it can be used.
                 QSSGRenderExtensionHelpers::registerRenderResult(data, m_extensionId, extResult.texture);
                 m_isDirty = false;
-
             }
         }
         // No "else" in this case since its likely the texture for the pass doesn't exist yet, try again in prepareRender.
@@ -189,6 +188,7 @@ QSSGRenderGraphObject *QQuick3DRenderOutputProvider::updateSpatialNode(QSSGRende
             // m_builtInPass is not used in this case
             break;
         case QQuick3DRenderOutputProvider::TextureSource::UserPassTexture:
+        case QQuick3DRenderOutputProvider::TextureSource::UserPassDepthTexture:
             providerNode->m_sourceType = QSSGRenderOutputProviderExtension::SourceType::UserPass;
             break;
         case QQuick3DRenderOutputProvider::TextureSource::AoTexture:
@@ -214,11 +214,13 @@ QSSGRenderGraphObject *QQuick3DRenderOutputProvider::updateSpatialNode(QSSGRende
         }
     }
 
-    if (m_dirtyAttributes & UserPassTextureDirty) {
+    if (m_dirtyAttributes & (UserPassTextureDirty | TextureSourceDirty)) {
          // m_builtInPass is not used in this case
         QSSGResourceId userPassId = m_renderPass ? QQuick3DExtensionHelpers::getResourceId(*m_renderPass) : QSSGResourceId::Invalid;
         providerNode->userPassId = userPassId;
-        providerNode->attachmentSelector = QSSGFrameData::AttachmentSelector(m_attachmentSelector);
+        providerNode->attachmentSelector = (m_textureSource == QQuick3DRenderOutputProvider::TextureSource::UserPassDepthTexture)
+                                                ? QSSGFrameData::AttachmentSelector::DepthAttachment
+                                                : QSSGFrameData::AttachmentSelector(m_attachmentSelector);
     }
 
     m_dirtyAttributes = 0;
@@ -245,9 +247,11 @@ void QQuick3DRenderOutputProvider::markDirty(QQuick3DRenderOutputProvider::Dirty
     This property holds which pass buffer texture to expose.
 
     \value RenderOutputProvider.None No texture source is selected.
-    \value RenderOutputProvider.UserPassTexture Accesses a color attachment from a user-defined
+    \value RenderOutputProvider.UserPassTexture Accesses \l {ColorAttachment}{a color attachment} from a user-defined
            \l RenderPass. Use the \l renderPass and \l attachmentSelector properties to specify
            which pass and attachment to use.
+    \value [since 6.13] RenderOutputProvider.UserPassDepthTexture Accesses \l {DepthTextureAttachment}{a depth attachment} from a user-defined
+           \l RenderPass. Use the \l renderPass property to specify which pass to use. With a \l DepthStencilAttachment the texture stays null.
     \value RenderOutputProvider.AoTexture The ambient occlusion texture created by QtQuick3D's SSAO pass.
     \value RenderOutputProvider.DepthTexture The depth texture created by QtQuick3D's depth pre-pass.
     \value RenderOutputProvider.ScreenTexture The texture containing the rendered scene.
@@ -274,6 +278,7 @@ void QQuick3DRenderOutputProvider::setTextureSource(TextureSource newTextureSour
     The \l RenderPass whose output attachments will be exposed as a texture. Setting this
     property automatically sets \l textureSource to \c UserPassTexture. Use
     \l attachmentSelector to choose which color attachment of the pass to expose.
+    Set the textureSource to \c UserPassDepthTexture to access the depth attachment.
 
     \sa attachmentSelector, textureSource, RenderPass
 */
@@ -291,8 +296,11 @@ void QQuick3DRenderOutputProvider::setRenderPass(QQuick3DRenderPass *newRenderPa
     QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DRenderOutputProvider::setRenderPass, newRenderPass, m_renderPass);
 
     m_renderPass = newRenderPass;
-
-    setTextureSource(m_renderPass ? TextureSource::UserPassTexture : TextureSource::None);
+    if (m_renderPass) {
+        if (m_textureSource != TextureSource::UserPassTexture && m_textureSource != TextureSource::UserPassDepthTexture)
+            setTextureSource(TextureSource::UserPassTexture);
+    }
+    // Keep the current m_textureSource if m_renderPass is null.
 
     markDirty(UserPassTextureDirty);
 
