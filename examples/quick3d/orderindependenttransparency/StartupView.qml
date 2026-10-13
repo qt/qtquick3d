@@ -15,9 +15,6 @@ Item {
 
     readonly property real listItemWidth: 180
     readonly property real listItemHeight: 40
-    // Enable this when only want to list the demos
-    // Tweak the demos list as needed
-    readonly property bool showOnlyDemos: false
 
     anchors.fill: parent
 
