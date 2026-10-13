@@ -11,7 +11,9 @@ Item {
     View3D {
         id: view3D
         anchors.fill: parent
-        camera: camera
+        camera: PerspectiveCamera {
+            position: Qt.vector3d(0, 100, 600)
+        }
 
         environment: SceneEnvironment {
             clearColor: "#000000"
@@ -19,11 +21,6 @@ Item {
             antialiasingMode: AppSettings.antialiasingMode
             antialiasingQuality: AppSettings.antialiasingQuality
             oitMethod: method.index
-        }
-
-        PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 100, 600)
         }
 
         Node {

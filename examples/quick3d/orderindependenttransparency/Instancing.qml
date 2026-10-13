@@ -13,7 +13,9 @@ Item {
     View3D {
         id: view3D
         anchors.fill: parent
-        camera: camera
+        camera: PerspectiveCamera {
+            position: Qt.vector3d(0, 100, 300)
+        }
 
         environment: SceneEnvironment {
             clearColor: "#000000"
@@ -24,15 +26,6 @@ Item {
                 textureData: ProceduralSkyTextureData{}
             }
             oitMethod: SceneEnvironment.OITWeightedBlended
-        }
-
-        Node {
-            PerspectiveCamera {
-                id: camera
-                position: Qt.vector3d(0, 100, 300)
-            }
-
-
         }
 
         Node {
