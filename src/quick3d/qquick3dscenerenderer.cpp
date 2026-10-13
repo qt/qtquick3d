@@ -881,12 +881,13 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 topLevelPasses.push_back(userPass);
         }
 
-        // The layer render data (and thus the manager) may not exist yet on the
-        // first frame; the provider path schedules on demand until it does.
-        if (m_layer->renderData) {
-            if (const QSSGUserRenderPassManagerPtr &upm = m_layer->renderData->requestUserRenderPassManager())
-                upm->setScheduledPasses(topLevelPasses);
-        }
+        // The layer render data is normally created when the layer is first
+        // prepared, which is after this point. Create it here so the passes are
+        // scheduled for the very first frame as well, rather than only from the
+        // second frame on.
+        QSSGLayerRenderData *renderData = m_sgContext->renderer()->getOrCreateLayerRenderData(*m_layer);
+        if (const QSSGUserRenderPassManagerPtr &upm = renderData->requestUserRenderPassManager())
+            upm->setScheduledPasses(topLevelPasses);
     }
 
     if (newRenderStats)
