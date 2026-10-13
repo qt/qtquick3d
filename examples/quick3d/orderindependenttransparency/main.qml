@@ -7,7 +7,7 @@ import QtQuick.Controls
 Window {
     id: rootWindow
 
-    readonly property url startupView: "StartupView.qml"
+    readonly property url startupView: Qt.resolvedUrl("StartupView.qml")
 
     width: 1280
     height: 720
@@ -33,7 +33,6 @@ Window {
         anchors.top: parent.top
         implicitWidth: AppSettings.iconSize
         implicitHeight: AppSettings.iconSize
-        //height: width
         opacity: loader.source !== rootWindow.startupView
         visible: opacity
         icon.source: "qrc:/images/arrow_icon.png"
