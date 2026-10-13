@@ -50,7 +50,7 @@ Item {
             oitMethod: SceneEnvironment.OITWeightedBlended
         }
 //! [scene environment]
-        PerspectiveCamera {
+        camera: PerspectiveCamera {
             position: Qt.vector3d(0, 0, 600)
             clipFar: 2000
         }
