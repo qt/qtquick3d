@@ -827,7 +827,7 @@ static qsizetype packedDataSize(const QSize &size, int depth, int bytesPerPixel)
         return -1;
     }
 
-    if (dataSize > qsizetype(std::numeric_limits<quint32>::max()))
+    if (quint64(dataSize) > quint64(std::numeric_limits<quint32>::max()))
         return -1;
 
     return dataSize;
@@ -871,7 +871,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *tex
         // Compressed Textures work a bit differently
         // Fill out what makes sense, leave the rest at the default 0 and null.
         const qsizetype dataSize = textureData->textureData().size();
-        if (dataSize > qsizetype(std::numeric_limits<quint32>::max())) {
+        if (quint64(dataSize) > quint64(std::numeric_limits<quint32>::max())) {
             qWarning("TextureData holds %lld bytes, which exceeds the 4GB limit",
                      qlonglong(dataSize));
             return imageData;
@@ -1048,7 +1048,7 @@ static QSSGLoadedTexture *loadCubeMap(const QString &inPath, bool flipY)
     }
 
     const qsizetype dataSize = prevImage.sizeInBytes();
-    if (dataSize > qsizetype(std::numeric_limits<quint32>::max())) {
+    if (quint64(dataSize) > quint64(std::numeric_limits<quint32>::max())) {
         qWarning("Cube map face %dx%d is too large to describe",
                  prevImage.width(),
                  prevImage.height());
