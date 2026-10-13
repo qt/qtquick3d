@@ -30,7 +30,7 @@ class QSGLayer;
 class QSGRootNode;
 class QQuickRootItem;
 
-class Q_AUTOTEST_EXPORT QQuick3DItem2D : public QQuick3DNode, public QQuickItemChangeListener
+class Q_QUICK3D_EXPORT QQuick3DItem2D : public QQuick3DNode, public QQuickItemChangeListener
 {
     Q_OBJECT
 public:
