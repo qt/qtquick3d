@@ -82,18 +82,18 @@ Item {
                 position: Qt.vector3d(0,-10, -200)
                 eulerRotation.x: -89
 
-                materials: DefaultMaterial {
-                    diffuseColor: "gray"
+                materials: PrincipledMaterial {
+                    baseColor: "gray"
                 }
             }
             Model {
                 source: "#Sphere"
                 scale: Qt.vector3d(3, 0.01, 3)
                 position: Qt.vector3d(0, -9, -30)
-                materials: DefaultMaterial {
-                    diffuseColor: "#979797"
-                    lighting: DefaultMaterial.NoLighting
-                    diffuseMap: Texture {
+                materials: PrincipledMaterial {
+                    baseColor: "#979797"
+                    lighting: PrincipledMaterial.NoLighting
+                    baseColorMap: Texture {
                         source: "images/firestone.png"
                     }
                 }
@@ -189,7 +189,7 @@ Item {
             position: test.position
             scale: Qt.vector3d(test.outerRadius / 100, test.outerRadius / 100, test.outerRadius / 100)
             materials : [
-                DefaultMaterial {
+                PrincipledMaterial {
                 }
             ]
         }

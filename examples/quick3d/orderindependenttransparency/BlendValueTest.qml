@@ -40,27 +40,27 @@ Item {
                 source: "#Rectangle"
                 scale: Qt.vector3d(10.0, 10.0, 1)
                 position: Qt.vector3d(0, 0, -250)
-                materials: DefaultMaterial {
-                    diffuseColor: "white"
-                    diffuseMap: Texture {
+                materials: PrincipledMaterial {
+                    baseColor: "white"
+                    baseColorMap: Texture {
                         source: "images/tilepattern.png"
                         magFilter: Texture.Nearest
                     }
-                    lighting: DefaultMaterial.NoLighting
+                    lighting: PrincipledMaterial.NoLighting
                     opacity: 1
                 }
             }
 
             component CircleModel : Model {
-                property alias baseColor: circleMaterial.diffuseColor
+                property alias baseColor: circleMaterial.baseColor
 
                 source: "#Sphere"
                 scale: Qt.vector3d(3.0, 3.0, 0.01)
-                materials: DefaultMaterial {
+                materials: PrincipledMaterial {
                     id: circleMaterial
-                    lighting: DefaultMaterial.NoLighting
+                    lighting: PrincipledMaterial.NoLighting
                     opacity: 0.5
-                    diffuseMap: textureCheckBox.checked ? modelTexture : noTexture
+                    baseColorMap: textureCheckBox.checked ? modelTexture : noTexture
                 }
             }
             CircleModel {
