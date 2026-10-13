@@ -1794,9 +1794,11 @@ bool QSSGLayerRenderData::prepareModelsForRender(QSSGRenderContextInterface &con
 
                     // At this stage, the distance and position of the most detailed instance are unknown;
                     // therefore, the level of detail is managed manually using instancingLodFactor.
+                    // lods only holds the simplified levels, so map the factor over lodsCount + 1
+                    // levels: 0 selects the original mesh (currentLod == -1), 1 the coarsest level.
                     int lodsCount = theSubset.lods.size();
                     if (model.instanceTable && lodsCount) {
-                        currentLod = qRound((lodsCount - 1) * qBound(0.f, model.instancingLodFactor, 1.f));
+                        currentLod = qRound(lodsCount * qBound(0.f, model.instancingLodFactor, 1.f)) - 1;
                     } else {
                         const float threshold = distanceThreshold * lodDistanceMultiplier;
                         const float modelBias = 1 / model.levelOfDetailBias;
