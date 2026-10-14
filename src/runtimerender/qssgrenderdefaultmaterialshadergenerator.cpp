@@ -2656,15 +2656,17 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                          (QRhiTexture*)inRenderProperties.getOitRenderContextConst().auxBuffer,
                          (QRhiTexture*)inRenderProperties.getOitRenderContextConst().counterBuffer);
     if (inRenderProperties.getOitRenderContextConst().aBuffer) {
+        int abufWidth = 0;
+        int listNodeCount = inRenderProperties.layer.oitNodeCount;
 #else
     const QSSGRhiRenderableTexture *abuf = inRenderProperties.getRenderResult(QSSGRenderResult::Key::ABufferImage);
     const QSSGRhiRenderableTexture *aux = inRenderProperties.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
     const QSSGRhiRenderableTexture *counter = inRenderProperties.getRenderResult(QSSGRenderResult::Key::CounterImage);
     shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
     if (abuf->texture) {
-#endif
         int abufWidth = RenderHelpers::rhiCalculateABufferSize(inRenderProperties.layer.oitNodeCount);
         int listNodeCount = abufWidth * abufWidth;
+#endif
         shaders.setUniform(ubufData, "qt_ABufImageWidth", &abufWidth, sizeof(int), &cui.abufImageWidth);
         shaders.setUniform(ubufData, "qt_listNodeCount", &listNodeCount, sizeof(int), &cui.listNodeCount);
         int viewSize[2] = {inRenderProperties.layerPrepResult.textureDimensions().width(), inRenderProperties.layerPrepResult.textureDimensions().height()};

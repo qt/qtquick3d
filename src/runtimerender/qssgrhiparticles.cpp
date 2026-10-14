@@ -188,15 +188,17 @@ void QSSGParticleRenderer::updateUniformsForParticles(const QSSGLayerRenderData 
                          (QRhiTexture*)inData.oitRenderContext.auxBuffer,
                          (QRhiTexture*)inData.oitRenderContext.counterBuffer);
     if (inData.oitRenderContext.aBuffer) {
+        int abufWidth = 0;
+        int listNodeCount = inData.layer.oitNodeCount;
 #else
     const QSSGRhiRenderableTexture *abuf = inData.getRenderResult(QSSGRenderResult::Key::ABufferImage);
     const QSSGRhiRenderableTexture *aux = inData.getRenderResult(QSSGRenderResult::Key::AuxiliaryImage);
     const QSSGRhiRenderableTexture *counter = inData.getRenderResult(QSSGRenderResult::Key::CounterImage);
     shaders.setOITImages(abuf->texture, aux->texture, counter->texture);
     if (abuf->texture) {
-#endif
         int abufWidth = RenderHelpers::rhiCalculateABufferSize(inData.layer.oitNodeCount);
         int listNodeCount = abufWidth * abufWidth;
+#endif
         shaders.setUniform(ubufData, "qt_ABufImageWidth", &abufWidth, sizeof(int), &cui.abufImageWidth);
         shaders.setUniform(ubufData, "qt_listNodeCount", &listNodeCount, sizeof(int), &cui.listNodeCount);
         int viewSize[2] = {inData.layerPrepResult.textureDimensions().width(), inData.layerPrepResult.textureDimensions().height()};
