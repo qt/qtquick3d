@@ -93,7 +93,7 @@ void main()
 #endif
 #endif
     vec4 color = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e6), a);
-    fragOutput = vec4(color);
+    fragOutput = vec4(color.rgb * color.a, color.a);
 }
 
 #endif // QSSG_OIT_WEIGHTED_BLENDED
