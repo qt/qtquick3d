@@ -16,7 +16,7 @@ void qt_bubbleSort(inout SortType data[SORT_SIZE], int n)
     for (int i = 0; i < n - 1; i++) {
         bool swapped = false;
         for (int j = 0; j < n - i - 1; j++) {
-            if (SortOp(data[j], data[j + 1])) {
+            if (SortOp(data[j + 1], data[j])) {
                 // Swap data[j] and data[j + 1]
                 SortType temp = data[j + 1];
                 data[j + 1]   = data[j];

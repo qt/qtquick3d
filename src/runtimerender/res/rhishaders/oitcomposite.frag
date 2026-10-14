@@ -36,10 +36,14 @@ vec4 doBlendPacked(vec4 baseColor, uint fragment)
     return doBlend(baseColor, unpackedColor);
 }
 
-vec4 doInverseBlendPacked(vec4 baseColor, uint fragment)
+vec4 doInverseBlendPacked(vec4 srcColor, uint fragment)
 {
-    vec4 unpackedColor = unpackUnorm4x8(fragment);
-    return doBlend(unpackedColor, baseColor);
+    vec4 dstColor = unpackUnorm4x8(fragment);
+    vec4 ret = dstColor;
+    const float oneMinusSrcAlpha = 1.0 - srcColor.a;
+    ret.rgb = srcColor.rgb + oneMinusSrcAlpha * dstColor.rgb * dstColor.a;
+    ret.a   = srcColor.a   + oneMinusSrcAlpha * dstColor.a;
+    return ret;
 }
 
 #if QSSG_OIT_METHOD == QSSG_OIT_WEIGHTED_BLENDED
@@ -192,7 +196,7 @@ void main()
         count++;
     }
     // Blend all of the fragments together:
-    for (uint i = 0; i < fragments; i++)
+    for (int i = int(fragments) - 1; i >= 0; i--)
         colorSum = doBlendPacked(colorSum, array[i].x);
 
     fragOutput = colorSum;
