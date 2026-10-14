@@ -25,16 +25,6 @@ qt_internal_add_test(tst_qquick3dlayers
     TESTDATA ${test_data}
 )
 
-qt_internal_extend_target(tst_qquick3dlayers CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquick3dlayers CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 qt6_add_qml_module(tst_qquick3dlayers
     VERSION 1.0
     URI io.qt.tests.auto.Layers
