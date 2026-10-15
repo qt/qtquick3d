@@ -67,15 +67,21 @@ QT_BEGIN_NAMESPACE
     \li Notes
     \row \li real, int, bool \li float, int, bool \li
     \row \li color \li vec4 \li sRGB is converted to linear space
-    \row \li vector2d \li vec2 \li
-    \row \li vector3d \li vec3 \li
-    \row \li vector4d \li vec4 \li
+    \row \li vector2d, vector3d, vector4d \li vec2, vec3, vec4 \li
     \row \li matrix4x4 \li mat4 \li
     \row \li quaternion \li vec4 \li w stores scalar component
     \row \li rect \li vec4 \li
     \row \li point, size \li vec2 \li
-    \row \li TextureInput \li sampler2D \li
+    \row \li Texture \li sampler2D, samplerCube, sampler3D
+    \li The sampler type follows the referenced texture: a \l CubeMapTexture
+    becomes a \c samplerCube, a \l Texture with 3D texture data becomes a
+    \c sampler3D, and any other \l Texture becomes a \c sampler2D.
     \endtable
+
+    A texture property that has no texture set is not exposed to the shader at
+    all, so referencing it in the shader code results in a compilation error.
+
+    \sa SceneEnvironment::skyMaterial
 */
 
 /*!
