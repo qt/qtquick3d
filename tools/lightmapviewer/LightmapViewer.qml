@@ -1,5 +1,6 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -140,7 +141,7 @@ ApplicationWindow {
 
                                 if (i >= 0 && i < listView.count) {
                                     listView.currentIndex = i
-                                    selectedKey = listView.model[i]
+                                    window.selectedKey = listView.model[i]
                                 }
 
                                 event.accepted = true
@@ -213,7 +214,7 @@ ApplicationWindow {
                             spacing: 4
 
                             Repeater {
-                                model: LightmapFile.metadataFor(selectedKey)
+                                model: LightmapFile.metadataFor(window.selectedKey)
                                 delegate: RowLayout {
                                     width: metadataColumn.width
                                     spacing: 8
@@ -311,7 +312,7 @@ ApplicationWindow {
                         enabled: true
                         onClicked: {
                             listView.currentIndex = index
-                            selectedKey = modelData
+                            window.selectedKey = modelData
                         }
                     }
                 }

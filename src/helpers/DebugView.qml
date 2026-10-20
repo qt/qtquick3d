@@ -29,7 +29,7 @@ Pane {
             CheckBox {
                 checked: root.resourceDetailsVisible
                 onCheckedChanged: {
-                    resourceDetailsVisible = checked;
+                    root.resourceDetailsVisible = checked;
                 }
             }
         }

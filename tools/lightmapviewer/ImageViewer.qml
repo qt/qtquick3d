@@ -107,7 +107,7 @@ ColumnLayout {
             cursorShape: mouseArea.dragging ? Qt.ClosedHandCursor : Qt.ArrowCursor
 
             onWheel: event => {
-                         const oldZoom = imageZoom
+                         const oldZoom = root.imageZoom
                          const zoomDelta = event.angleDelta.y / 256
                          const newZoom = Math.max(1,
                                                   Math.min(32,
