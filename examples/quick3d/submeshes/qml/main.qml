@@ -14,11 +14,11 @@ Window {
     View3D {
         id: view
         anchors.fill: parent
-        camera: camera
+        camera: sceneCamera
         visible: true
 
         PerspectiveCamera {
-            id: camera
+            id: sceneCamera
             z: 20
         }
 
