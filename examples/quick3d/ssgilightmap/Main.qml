@@ -121,8 +121,8 @@ ApplicationWindow {
             onCheckedChanged: {
                 if (checked) {
                     env.ssgiEnabled = true
-                    if (view.currentLoader.item) {
-                        view.currentLoader.item.enableLightmaps = false
+                    if (view.currentScene) {
+                        view.currentScene.enableLightmaps = false
                     }
                 }
             }
@@ -137,8 +137,8 @@ ApplicationWindow {
             onCheckedChanged: {
                 if (checked) {
                     env.ssgiEnabled = false
-                    if (view.currentLoader.item) {
-                        view.currentLoader.item.enableLightmaps = true
+                    if (view.currentScene) {
+                        view.currentScene.enableLightmaps = true
                     }
                 }
             }
@@ -152,8 +152,8 @@ ApplicationWindow {
             onCheckedChanged: {
                 if (checked) {
                     env.ssgiEnabled = false
-                    if (view.currentLoader.item) {
-                        view.currentLoader.item.enableLightmaps = false
+                    if (view.currentScene) {
+                        view.currentScene.enableLightmaps = false
                     }
                 }
             }
