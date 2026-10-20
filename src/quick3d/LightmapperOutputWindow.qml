@@ -79,7 +79,7 @@ Pane {
         RowLayout {
             Label {
                 padding: 0
-                text: totalTimeRemaining > 0 ? "Remaining: " + root.formatDuration(root.totalTimeRemaining) : ""
+                text: root.totalTimeRemaining > 0 ? "Remaining: " + root.formatDuration(root.totalTimeRemaining) : ""
             }
             Item {
                 Layout.fillWidth: true

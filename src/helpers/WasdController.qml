@@ -238,7 +238,7 @@ Item {
             var velocity = Qt.vector3d(direction.x * speed,
                                        direction.y * speed,
                                        direction.z * speed);
-            controlledObject.position = Qt.vector3d(position.x + velocity.x,
+            root.controlledObject.position = Qt.vector3d(position.x + velocity.x,
                                                     position.y + velocity.y,
                                                     position.z + velocity.z);
         }
@@ -275,17 +275,17 @@ Item {
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
-                var rotateX = delta.x * xSpeed * legacyDeltaScale
-                if (xInvert)
+                var rotateX = delta.x * root.xSpeed * legacyDeltaScale
+                if (root.xInvert)
                     rotateX = -rotateX;
                 rotationVector.y += rotateX;
 
                 // rotate y
-                var rotateY = delta.y * -ySpeed * legacyDeltaScale
-                if (yInvert)
+                var rotateY = delta.y * -root.ySpeed * legacyDeltaScale
+                if (root.yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;
-                controlledObject.setEulerRotation(rotationVector);
+                root.controlledObject.setEulerRotation(rotationVector);
                 lastPos = currentPos;
             }
         }

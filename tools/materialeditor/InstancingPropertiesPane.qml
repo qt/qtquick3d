@@ -17,11 +17,11 @@ Pane {
             id: enableInstCheckBox
             text: qsTr("Enable Instancing")
             onCheckStateChanged: {
-                targetModel.enableInstancing = checkState == Qt.Checked
+                root.targetModel.enableInstancing = checkState == Qt.Checked
             }
         }
         ColumnLayout {
-            visible: targetModel.enableInstancing
+            visible: root.targetModel.enableInstancing
             RowLayout {
                 Label {
                     text: qsTr("Color")
