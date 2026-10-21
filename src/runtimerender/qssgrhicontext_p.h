@@ -678,8 +678,10 @@ public:
     void addStorageBufferStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset = 0 , int size = 0);
     void addStorageBufferLoadStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset = 0 , int size = 0);
 private:
-    void fillImage(QRhiShaderResourceBinding::Data *d, QRhiShaderResourceBinding::Type t, int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
-    void fillStorageBuffer(QRhiShaderResourceBinding::Data *d, QRhiShaderResourceBinding::Type t, int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size);
+    template<QRhiShaderResourceBinding::Type T>
+    void fillImage(QRhiShaderResourceBinding::Data *d, int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level);
+    template<QRhiShaderResourceBinding::Type T>
+    void fillStorageBuffer(QRhiShaderResourceBinding::Data *d, int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size);
     QRhiShaderResourceBinding::Data *newBinding();
 };
 
