@@ -551,8 +551,11 @@ bool QSSGRenderSkyMaterialManager::ensureEnvironmentMap(QSSGRenderSkyMaterial *i
     }
 
     if (fs.needRenderEnv) {
-        if (!renderEnvironmentCube(inSky, passKey, fs, shaderPipeline, cb, rub))
+        if (!renderEnvironmentCube(inSky, passKey, fs, shaderPipeline, cb, rub)) {
+            // The batch is only submitted on success, return it to the pool
+            rub->release();
             return false;
+        }
         rub = nullptr;
     }
 
@@ -563,8 +566,12 @@ bool QSSGRenderSkyMaterialManager::ensureEnvironmentMap(QSSGRenderSkyMaterial *i
         rub = context->rhi()->nextResourceUpdateBatch();
 
     cb->debugMarkBegin("Sky IBL Pre-filtered Environment Cubemap Generation");
-    if (!runPrefilterCycle(inSky, fs, cb, rub))
+    if (!runPrefilterCycle(inSky, fs, cb, rub)) {
+        if (rub)
+            rub->release();
+        cb->debugMarkEnd();
         return false;
+    }
     if (rub) {
         cb->resourceUpdate(rub);
         rub = nullptr;

@@ -327,7 +327,9 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
                 increaseMemoryStat(theImageData.value().renderImageTexture.m_texture);
             }
         } else {
-            theImageData.value() = ImageData();
+            // Keep the version so that a failing texture is not attempted
+            // again every frame, only when the data changes.
+            theImageData.value() = ImageData{ {}, {}, data->version() };
         }
     }
 
@@ -758,6 +760,9 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     envMapPipeline->setRenderPassDescriptor(renderPassDesc);
     if (!envMapPipeline->create()) {
         qWarning("failed to create source env map pipeline state");
+        delete envMapPipeline;
+        // The batch was never submitted, return it to the pool
+        rub->release();
         return false;
     }
     envMapPipeline->deleteLater();
@@ -937,6 +942,10 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     prefilterPipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
     if (!prefilterPipeline->create()) {
         qWarning("failed to create pre-filter env map pipeline state");
+        delete prefilterPipeline;
+        preFilteredEnvCubeMap->deleteLater();
+        cb->debugMarkEnd();
+        Q_TRACE(QSSG_renderPass_exit);
         return false;
     }
     prefilterPipeline->deleteLater();

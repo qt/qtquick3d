@@ -267,6 +267,8 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     envMapPipeline->setShaderResourceBindings(envMapSrb);
     envMapPipeline->setRenderPassDescriptor(renderPassDesc);
     if (!envMapPipeline->create()) {
+        delete envMapPipeline;
+        rub->release();
         return QStringLiteral("Failed to create source env map pipeline state");
     }
     envMapPipeline->deleteLater();
