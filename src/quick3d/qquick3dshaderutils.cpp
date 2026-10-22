@@ -1855,30 +1855,29 @@ std::optional<QQuick3DPropertyChangedTracker::UniformProperty> QQuick3DPropertyC
 
 QList<QQuick3DPropertyChangedTracker::UniformProperty> QQuick3DPropertyChangedTracker::extractProperties()
 {
-    if (!m_dirtyProperties.empty()) {
-        for (int propertyIndex : std::as_const(m_dirtyProperties)) {
-            auto it = std::lower_bound(m_propertyList.begin(),
-                                       m_propertyList.end(),
-                                       propertyIndex,
-                                       [](const UniformProperty &p, int index) { return p.pid < index; });
-            if (it == m_propertyList.end()) {
-                Q_ASSERT(false);
-                continue;
-            }
+    for (int propertyIndex : std::as_const(m_dirtyProperties)) {
+        auto it = std::lower_bound(m_propertyList.begin(),
+                                   m_propertyList.end(),
+                                   propertyIndex,
+                                   [](const UniformProperty &p, int index) { return p.pid < index; });
 
-            QMetaProperty property = m_owner->metaObject()->property(propertyIndex);
-            if (Q_UNLIKELY(!property.isValid())) {
-                m_propertyList.erase(it);
-                continue;
-            }
+        const bool found = (it != m_propertyList.end() && it->pid == propertyIndex);
+        const QMetaProperty property = m_owner->metaObject()->property(propertyIndex);
+        std::optional<UniformProperty> trackedProperty;
 
-            if (auto trackedProperty = createOrUpdateTrackedProperty(property, false); trackedProperty.has_value())
+        if (Q_LIKELY(property.isValid()))
+            trackedProperty = createOrUpdateTrackedProperty(property, false);
+
+        if (trackedProperty.has_value()) {
+            if (found)
                 *it = *trackedProperty;
             else
-                m_propertyList.erase(it);
+                m_propertyList.insert(it, *trackedProperty); // keeps the list sorted by pid
+        } else if (found) {
+            m_propertyList.erase(it);
         }
-        m_dirtyProperties.clear();
     }
+    m_dirtyProperties.clear();
 
     if (m_extracted)
         return m_propertyList;
@@ -1952,9 +1951,16 @@ void QQuick3DPropertyChangedTracker::addPropertyWatcher(QMetaProperty property, 
             }
         }
 
-        m_dirtyProperties.push_back(property.propertyIndex());
+        addDirtyProperty(property.propertyIndex());
         markTrackedPropertyDirty(property, hint);
     }
+}
+
+void QQuick3DPropertyChangedTracker::addDirtyProperty(int pid)
+{
+    // A plain vector rather than a set, so the storage is reused between frames
+    if (std::find(m_dirtyProperties.cbegin(), m_dirtyProperties.cend(), pid) == m_dirtyProperties.cend())
+        m_dirtyProperties.push_back(pid);
 }
 
 void QQuick3DPropertyChangedTracker::markTrackedPropertyDirty(QMetaProperty property, DirtyPropertyHint hint)
@@ -1999,13 +2005,13 @@ QQuick3DPropertyWatcher::QQuick3DPropertyWatcher(QQuick3DPropertyChangedTracker 
 
 void QQuick3DPropertyWatcher::onValuePropertyChanged()
 {
-    m_tracker->m_dirtyProperties.push_back(m_property.propertyIndex());
+    m_tracker->addDirtyProperty(m_property.propertyIndex());
     m_tracker->markTrackedPropertyDirty(m_property, QQuick3DPropertyChangedTracker::DirtyPropertyHint::Value);
 }
 
 void QQuick3DPropertyWatcher::onPointerPropertyChanged()
 {
-    m_tracker->m_dirtyProperties.push_back(m_property.propertyIndex());
+    m_tracker->addDirtyProperty(m_property.propertyIndex());
     m_tracker->markTrackedPropertyDirty(m_property, QQuick3DPropertyChangedTracker::DirtyPropertyHint::Reference);;
 }
 
