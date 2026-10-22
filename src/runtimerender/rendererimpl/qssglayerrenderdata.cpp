@@ -3351,6 +3351,10 @@ bool QSSGLayerRenderData::prepareInstancing(QSSGRhiContext *rhiCtx,
         instanceData.buffer = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::VertexBuffer, instanceBufferSize);
         instanceData.buffer->create();
     }
+    // Redo the culling on every full upload, also the first, when the camera can be at the
+    // stored position, which starts out as the origin.
+    if (updateInstanceBuffer && usesLod)
+        updateForLod = true;
     if (updateInstanceBuffer || updateForLod) {
         Q_ASSERT(table->stride() == sizeof(QSSGRenderInstanceTableEntry));
         const void *data = nullptr;
