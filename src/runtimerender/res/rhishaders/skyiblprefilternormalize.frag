@@ -5,7 +5,7 @@
 layout(location = 0) out vec4 FragColor;
 
 layout(binding = 1) uniform sampler2DArray accumulator;
-layout(std140, binding = 2) uniform buf {
+layout(std140, binding = 2) uniform buf2 {
     int faceIndex;
     int _pad0;
     int _pad1;

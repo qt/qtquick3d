@@ -4,7 +4,7 @@ layout(location = 0) in vec3 localPos;
 layout(location = 0) out vec4 FragColor;
 
 layout(binding = 1) uniform sampler2D environmentMap;
-layout(std140, binding = 2) uniform buf {
+layout(std140, binding = 2) uniform buf2 {
     int colorSpace;
 } ubuf2;
 

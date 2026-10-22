@@ -11,7 +11,7 @@ layout(location = 1) out vec4 normal;
 layout(location = 2) out vec4 baseColor;
 layout(location = 3) out vec4 emissive;
 
-layout(std140, binding = 0) uniform buf {
+layout(std140, binding = 0) uniform buf2 {
     vec4 baseColorLinear;
     vec3 emissiveFactor;
     int flipY;
@@ -19,7 +19,7 @@ layout(std140, binding = 0) uniform buf {
     int hasEmissiveMap;
     int hasNormalMap;
     float normalStrength;
-};
+} ubuf2;
 
 layout(binding = 1) uniform sampler2D baseColorMap;
 layout(binding = 2) uniform sampler2D emissiveMap;
@@ -38,21 +38,21 @@ void main()
 {
     position = vec4(v_pos, 1.0);
 
-    baseColor = baseColorLinear;
-    if (hasBaseColorMap != 0)
+    baseColor = ubuf2.baseColorLinear;
+    if (ubuf2.hasBaseColorMap != 0)
         baseColor *= sRGBToLinear(texture(baseColorMap, v_uv));
 
-    emissive = vec4(emissiveFactor, 1.0);
-    if (hasEmissiveMap != 0)
+    emissive = vec4(ubuf2.emissiveFactor, 1.0);
+    if (ubuf2.hasEmissiveMap != 0)
         emissive.rgb *= sRGBToLinear(texture(emissiveMap, v_uv).rgb);
 
     vec3 N = normalize(v_normal);
-    if (hasNormalMap != 0) {
+    if (ubuf2.hasNormalMap != 0) {
         vec3 tangent = normalize(v_tangent);
         vec3 binormal = normalize(v_binormal);
         mat3 tanFrame = mat3(tangent, binormal, N);
         vec3 tsNormal = texture(normalMap, v_uv).xyz * 2.0 - vec3(1.0);
-        tsNormal *= vec3(normalStrength, normalStrength, 1.0);
+        tsNormal *= vec3(ubuf2.normalStrength, ubuf2.normalStrength, 1.0);
         N = tanFrame * normalize(tsNormal);
     }
     normal = vec4(N, 1.0);
