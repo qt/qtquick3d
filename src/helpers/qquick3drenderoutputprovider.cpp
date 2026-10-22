@@ -322,6 +322,7 @@ void QQuick3DRenderOutputProvider::setAttachmentSelector(AttachmentSelector newA
     if (m_attachmentSelector == newAttachmentSelector)
         return;
     m_attachmentSelector = newAttachmentSelector;
+    markDirty(UserPassTextureDirty);
     emit attachmentSelectorChanged();
 }
 
