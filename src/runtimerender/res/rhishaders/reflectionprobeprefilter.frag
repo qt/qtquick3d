@@ -3,7 +3,7 @@ layout(location = 0) out vec4 FragColor;
 layout(location = 0) in vec3 localPos;
 
 layout(binding = 1) uniform samplerCube environmentMap;
-layout(std140, binding = 2) uniform buf {
+layout(std140, binding = 2) uniform buf2 {
     vec4 sampleDirections[16];
     float invTotalWeight;
     uint sampleCount;
