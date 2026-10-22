@@ -814,6 +814,7 @@ protected:
 
 private:
     std::optional<UniformProperty> createOrUpdateTrackedProperty(const QMetaProperty property, bool addWatchers);
+    void addDirtyProperty(int pid);
     std::vector<int> m_dirtyProperties;
     bool m_extracted = false;
 };
