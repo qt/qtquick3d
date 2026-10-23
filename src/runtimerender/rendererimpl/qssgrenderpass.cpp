@@ -1730,7 +1730,13 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             rhiRevealageTexture->texture->create();
 
             QRhiTextureRenderTargetDescription desc;
-            desc.setColorAttachments({{rhiAccumTexture->texture}, {rhiRevealageTexture->texture}});
+            QRhiColorAttachment accumAttachment(rhiAccumTexture->texture);
+            QRhiColorAttachment revealageAttachment(rhiRevealageTexture->texture);
+            if (ps.viewCount >= 2) {
+                accumAttachment.setMultiViewCount(ps.viewCount);
+                revealageAttachment.setMultiViewCount(ps.viewCount);
+            }
+            desc.setColorAttachments({{accumAttachment}, {revealageAttachment}});
             desc.setDepthTexture(rhiDepthTexture->texture);
 
             if (oitrt.oitRenderTarget == nullptr) {
