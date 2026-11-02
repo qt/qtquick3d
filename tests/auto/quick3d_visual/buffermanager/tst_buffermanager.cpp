@@ -3,10 +3,12 @@
 
 #include <QTest>
 #include <QQuickView>
+#include <QTemporaryDir>
 
 #include <private/qquick3dviewport_p.h>
 #include <ssg/qssgrendercontextcore.h>
 #include <private/qssgrenderbuffermanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <private/qquick3dresourceloader_p.h>
 
 #if QT_CONFIG(vulkan)
@@ -38,6 +40,8 @@ private slots:
     void staticScene_data();
     void staticScene();
     void dynamicScene();
+    void releaseCachedResources_data();
+    void releaseCachedResources();
 
 private:
     bool initRenderer(QQuick3DTestOffscreenRenderer *renderer, const QString &filename);
@@ -325,6 +329,74 @@ void tst_BufferManager::dynamicScene()
     QCOMPARE(bufferManager->getCustomTextureMap().size(), 0);
     QCOMPARE(bufferManager->getMeshMap().size(), 1);
     QCOMPARE(bufferManager->getCustomMeshMap().size(), 0);
+}
+
+void tst_BufferManager::releaseCachedResources_data()
+{
+    QTest::addColumn<bool>("customTextures");
+
+    QTest::newRow("texture data") << true;
+    QTest::newRow("image files") << false;
+}
+
+void tst_BufferManager::releaseCachedResources()
+{
+    QFETCH(bool, customTextures);
+
+    QTemporaryDir imageDir;
+    QVERIFY(imageDir.isValid());
+    QList<QUrl> textureSources;
+    constexpr int TextureCount = 64;
+    if (!customTextures) {
+        QImage image(16, 16, QImage::Format_RGBA8888);
+        image.fill(Qt::red);
+        for (int i = 0; i < TextureCount; ++i) {
+            const QString path = imageDir.filePath(QString::number(i) + QStringLiteral(".png"));
+            QVERIFY(image.save(path));
+            textureSources.append(QUrl::fromLocalFile(path));
+        }
+    }
+
+    QQuick3DTestOffscreenRenderer renderer;
+    QVERIFY(initRenderer(&renderer, QStringLiteral("releaseCachedResources.qml")));
+
+#ifdef Q_OS_MACOS
+    if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL)
+        QSKIP("Skipping test due to software OpenGL renderer problems on macOS");
+#endif
+
+    QVERIFY(renderer.rootItem->setProperty("customTextures", customTextures));
+    QVERIFY(renderer.rootItem->setProperty("textureSources", QVariant::fromValue(textureSources)));
+    renderer.renderNextFrame();
+
+    auto *attachment = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow);
+    const auto &context = attachment->rci();
+    QVERIFY(context);
+    const auto &bufferManager = context->bufferManager();
+    const auto *rhiCtxD = QSSGRhiContextPrivate::get(context->rhiContext().get());
+    const auto &stats = QSSGRhiContextStats::get(*context->rhiContext()).globalInfo;
+
+    for (int cycle = 0; cycle < 3; ++cycle) {
+        QCOMPARE(bufferManager->getCustomTextureMap().size(), customTextures ? TextureCount : 0);
+        QCOMPARE(bufferManager->getImageMap().size(), customTextures ? 0 : TextureCount);
+        QCOMPARE(rhiCtxD->m_textures.size(), TextureCount);
+        QCOMPARE(stats.imageDataSize, quint64(TextureCount * 16 * 16 * 4));
+
+        // Use the same handler as QQuickWindow::releaseResources(), since
+        // a render-control window does not have a window manager.
+        QVERIFY(QMetaObject::invokeMethod(attachment, "onReleaseCachedResources", Qt::DirectConnection));
+
+        // Empty caches alone do not prove that every texture was released.
+        QVERIFY(bufferManager->getCustomTextureMap().isEmpty());
+        QVERIFY(bufferManager->getImageMap().isEmpty());
+        QVERIFY(rhiCtxD->m_textures.isEmpty());
+        QCOMPARE(stats.imageDataSize, quint64(0));
+
+        QVERIFY(renderer.rootItem->setProperty("cameraZ", 601 + cycle));
+        renderer.renderNextFrame();
+    }
+    QCOMPARE(rhiCtxD->m_textures.size(), TextureCount);
+    QCOMPARE(stats.imageDataSize, quint64(TextureCount * 16 * 16 * 4));
 }
 
 bool tst_BufferManager::initRenderer(QQuick3DTestOffscreenRenderer *renderer, const QString &filename)

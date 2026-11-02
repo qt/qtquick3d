@@ -2096,16 +2096,20 @@ void QSSGBufferManager::clear()
     }
 
     // Textures (by path)
-    for (auto it = imageMap.constBegin(), end = imageMap.constEnd(); it != end; ++it)
-        releaseImage(it.key());
+    // The releaseImage function erase entries, so iterate over a copy of the keys.
+    const auto imageKeys = imageMap.keys();
+    for (const auto &key : imageKeys)
+        releaseImage(key);
 
-    imageMap.clear();
+    QSSG_ASSERT(imageMap.isEmpty(), imageMap.clear());
 
     // Textures (custom)
-    for (auto it = customTextureMap.cbegin(), end = customTextureMap.cend(); it != end; ++it)
-        releaseTextureData(it.key());
+    // The releaseTextureData function erase entries, so iterate over a copy of the keys.
+    const auto customTextureKeys = customTextureMap.keys();
+    for (const auto &key : customTextureKeys)
+        releaseTextureData(key);
 
-    customTextureMap.clear();
+    QSSG_ASSERT(customTextureMap.isEmpty(), customTextureMap.clear());
 
     // Textures (QSG)
     // these don't have any owned objects to release so just clearing is fine.
