@@ -585,10 +585,10 @@ QSSGLoadedTexture *loadRadianceHdr(const QSharedPointer<QIODevice> &source, cons
 QSSGLoadedTexture *loadExr(const QSharedPointer<QIODevice> &source, const QSSGRenderTextureFormat format)
 {
     source->seek(0);
-    const QByteArray buf = source->readAll();
     // Silent, since loadHdrImage() falls through to here for any other file.
-    if (!QSSGExrReader::isExr(buf))
+    if (!QSSGExrReader::isExr(source->peek(4)))
         return nullptr;
+    const QByteArray buf = source->readAll();
 
     QSSGExrReader reader;
     if (!reader.parseHeader(buf)) {
