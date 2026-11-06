@@ -419,7 +419,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                     // Just mirror what is set up by the ScreenMap pass.
                     const QRhiTexture::Flags flags = screenTexture->flags();
                     // and set the dummy texture so there's something for the shader to sample.
-                    screenTexture = rhiCtx->dummyTexture(flags, resourceUpdates);
+                    screenTexture = rhiCtx->dummyTexture(flags, resourceUpdates, QSize(64, 64), Qt::black, screenTexture->arraySize());
                     rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
                 }
                 // linear min/mag, mipmap filtering depends on the
