@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 
     QQmlApplicationEngine engine;
-    const QUrl url(QStringLiteral("qrc:/QtQuick3D/Lancelot/Xr/main.qml"));
+    const QUrl url(QStringLiteral("qrc:/qt/qml/QtQuick3D/Lancelot/Xr/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url, viewOnly](QObject *obj, const QUrl &objUrl) {
         if (!obj && url == objUrl) {
