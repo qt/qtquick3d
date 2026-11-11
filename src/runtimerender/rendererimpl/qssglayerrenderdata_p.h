@@ -521,12 +521,24 @@ public:
 
     QQsbCollection::EntryMap m_particleShaderEntries;
 
-    bool nonExplicitCameraWithLayerMaskWarningShown = false;
-    bool tooManyLightsWarningShown = false;
-    bool tooManyDirectionalLightsWarningShown = false;
-    bool oitWarningUnsupportedShown = false;
-    bool oitWarningInvalidBlendModeShown = false;
-    bool computeUnsupportedWarningShown = false;
+    enum class OneShotWarning : quint16 {
+        NonExplicitCameraWithLayerMask = 0x0001,
+        TooManyLights                  = 0x0002,
+        TooManyDirectionalLights       = 0x0004,
+        OitUnsupported                 = 0x0008,
+        OitInvalidBlendMode            = 0x0010,
+        ComputeUnsupported             = 0x0020,
+    };
+    Q_DECLARE_FLAGS(OneShotWarnings, OneShotWarning)
+
+    [[nodiscard]] bool warnOnce(OneShotWarning warning)
+    {
+        if (shownWarnings.testFlag(warning))
+            return false;
+        shownWarnings |= warning;
+        return true;
+    }
+
     bool orderIndependentTransparencyEnabled = false;
     bool disableMainPasses = true;
     bool computeLightsUpdated = false;
@@ -752,6 +764,8 @@ private:
     friend class QSSGModelHelpers;
     friend class QSSGRenderHelpers;
     friend class QSSGParticleRenderer;
+
+    OneShotWarnings shownWarnings;
 
     class ExtensionContext
     {

@@ -2522,18 +2522,14 @@ void QSSGLayerRenderData::prepareForRender()
         orderIndependentTransparencyEnabled = rhiCtx->rhi()->isFeatureSupported(QRhi::PerRenderTargetBlending);
         if (rhiCtx->mainPassSampleCount() > 1)
             orderIndependentTransparencyEnabled &= rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
-        if (!orderIndependentTransparencyEnabled && !oitWarningUnsupportedShown) {
+        if (!orderIndependentTransparencyEnabled && warnOnce(OneShotWarning::OitUnsupported))
             qCWarning(lcQuick3DRender) << "WeightedBlended OIT is requested, but it is not supported.";
-            oitWarningUnsupportedShown = true;
-        }
     } else if (layer.oitMethod == QSSGRenderLayer::OITMethod::LinkedList) {
         orderIndependentTransparencyEnabled = rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32UI, QRhiTexture::UsedWithLoadStore);
         if (rhiCtx->mainPassSampleCount() > 1)
             orderIndependentTransparencyEnabled &= rhiCtx->rhi()->isFeatureSupported(QRhi::SampleVariables);
-        if (!orderIndependentTransparencyEnabled && !oitWarningUnsupportedShown) {
+        if (!orderIndependentTransparencyEnabled && warnOnce(OneShotWarning::OitUnsupported))
             qCWarning(lcQuick3DRender) << "LinkedList OIT is requested, but it is not supported.";
-            oitWarningUnsupportedShown = true;
-        }
     }
     if (layer.oitMethodDirty) {
         oitRenderContext.reset();
@@ -2728,8 +2724,7 @@ void QSSGLayerRenderData::prepareForRender()
         // If you are reading this due to seeing the warning: Not requiring an explicit camera was
         // a mistake, but we kept it for compatability reasons unfortunately.
         if (renderedCameras.size() > 0 && (renderedCameras[0]->layerMask & QSSGRenderCamera::LayerMaskUserAll) != QSSGRenderCamera::LayerMaskUserAll) {
-            if (!nonExplicitCameraWithLayerMaskWarningShown) {
-                nonExplicitCameraWithLayerMaskWarningShown = true;
+            if (warnOnce(OneShotWarning::NonExplicitCameraWithLayerMask)) {
                 qWarning() << "Scenes with non-explicit cameras with a layer detected!"
                               " Set the camera explicitly to avoid unnecessary evaluation of scene nodes!";
             }
@@ -2798,17 +2793,11 @@ void QSSGLayerRenderData::prepareForRender()
         }
     }
 
-    const bool showLightCountWarning = !tooManyLightsWarningShown && (positionalLightsCount > maxLightCount);
-    if (showLightCountWarning) {
+    if (positionalLightsCount > maxLightCount && warnOnce(OneShotWarning::TooManyLights))
         qWarning("Too many lights in scene, maximum is %d", maxLightCount);
-        tooManyLightsWarningShown = true;
-    }
 
-    const bool showDirectionalLightCountWarning = !tooManyDirectionalLightsWarningShown && (directionalLightsCount > maxDirectionalLights);
-    if (showDirectionalLightCountWarning) {
+    if (directionalLightsCount > maxDirectionalLights && warnOnce(OneShotWarning::TooManyDirectionalLights))
         qWarning("Too many directional lights in scene, maximum is %d", maxDirectionalLights);
-        tooManyDirectionalLightsWarningShown = true;
-    }
 
     if (shadowMapCount > 0) { // Setup Shadow Maps Entries for Lights casting shadows
         requestShadowMapManager(); // Ensure we have a shadow map manager
@@ -2946,10 +2935,9 @@ void QSSGLayerRenderData::prepareForRender()
             }
         } else {
             orderIndependentTransparencyEnabled = false;
-            if (!oitWarningInvalidBlendModeShown) {
+            if (warnOnce(OneShotWarning::OitInvalidBlendMode)) {
                 qCWarning(lcQuick3DRender) << "Order Independent Transparency requested, but disabled due to invalid blend modes.";
                 qCWarning(lcQuick3DRender) << "Use SourceOver blend mode for Order Independent Transparency.";
-                oitWarningInvalidBlendModeShown = true;
             }
         }
     }

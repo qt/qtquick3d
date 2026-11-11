@@ -294,10 +294,8 @@ void prepareComputePass(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGR
     QSSGRhiContextPrivate *rhiCtxD = QSSGRhiContextPrivate::get(rhiCtx.get());
     auto &bufferManager(renderer.contextInterface()->bufferManager());
     if (!rhiCtx->rhi()->isFeatureSupported(QRhi::Compute)) {
-        if (!data.computeUnsupportedWarningShown) {
+        if (data.warnOnce(QSSGLayerRenderData::OneShotWarning::ComputeUnsupported))
             qWarning() << "Compute is not supported by the current RHI backend, ComputePass will be skipped.";
-            data.computeUnsupportedWarningShown = true;
-        }
         return;
     }
     if (!passNode->isReady())
