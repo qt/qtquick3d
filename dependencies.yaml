@@ -1,13 +1,13 @@
 dependencies:
   ../qtbase:
-    ref: 505a4b128c724d61e12c71946ce92b48a9b01370
+    ref: a3e7fe4f06eb551cb493731118a8292a69d1e0f2
     required: true
   ../qtdeclarative:
-    ref: 82e17690553bf69b260591648562719955fb4580
+    ref: b4f30ef5b5a988b5bdf2b89cbf52144de6c7fabf
     required: true
   ../qtquicktimeline:
-    ref: 28de1122462b44d7fbafa51fc04d04ab251506a0
+    ref: bb92f9262cf7782d01e14d56dcceea848d0ee12d
     required: false
   ../qtshadertools:
-    ref: d08af346bcad4b11f38e8126ad0f1ecbf3d96696
+    ref: e2fa906138eae24225d6cdce040d70065765a158
     required: true
