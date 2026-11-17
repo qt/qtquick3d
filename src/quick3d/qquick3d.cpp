@@ -233,6 +233,11 @@ QSurfaceFormat QQuick3D::idealSurfaceFormat(int samples)
         }
         fmt.setDepthBufferSize(24);
         fmt.setStencilBufferSize(8);
+        // Prefer 8bit color channels
+        fmt.setRedBufferSize(8);
+        fmt.setGreenBufferSize(8);
+        fmt.setBlueBufferSize(8);
+
         // Ignore MSAA here as that is a per-layer setting.
         return fmt;
     }();
