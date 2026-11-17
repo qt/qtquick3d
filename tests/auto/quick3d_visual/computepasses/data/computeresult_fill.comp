@@ -1,0 +1,45 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+// Fills every resource probed by ComputeResultExtension, plus a full-screen
+// image so the test can also confirm from the rendered output that the pass
+// really ran. The two probed images deliberately differ in size and format,
+// and the two probed buffers are distinct resources, so an id that resolved
+// to the wrong resource is caught.
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+SHADER_IMAGE("rgba8", probeImage, image2D, "writeonly");
+SHADER_IMAGE("r32ui", probeWideImage, uimage2D, "writeonly");
+SHADER_IMAGE("rgba8", displayImage, image2D, "writeonly");
+
+STORAGE_BUFFER(probeWrittenBuffer, "writeonly") {
+    vec4 writtenValues[];
+}
+
+STORAGE_BUFFER(probeEngineBuffer, "writeonly") {
+    vec4 engineValues[];
+}
+
+void main() {
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+
+    ivec2 displaySize = imageSize(displayImage);
+    if (coord.x < displaySize.x && coord.y < displaySize.y)
+        imageStore(displayImage, coord, vec4(0.0, 1.0, 0.0, 1.0));
+
+    ivec2 probeSize = imageSize(probeImage);
+    if (coord.x < probeSize.x && coord.y < probeSize.y)
+        imageStore(probeImage, coord, vec4(0.25, 0.5, 0.75, 1.0));
+
+    ivec2 wideSize = imageSize(probeWideImage);
+    if (coord.x < wideSize.x && coord.y < wideSize.y)
+        imageStore(probeWideImage, coord, uvec4(uint(coord.x), 0u, 0u, 0u));
+
+    // Must match s_expectedBufferValues in computeresultextension.cpp, which
+    // checks these back on the CPU via QRhi buffer readback.
+    if (coord == ivec2(0)) {
+        writtenValues[0] = vec4(0.25, 0.5, 0.75, 1.0);
+        engineValues[0] = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+}

@@ -22,6 +22,7 @@ qt_internal_add_test(tst_qquick3dcomputepasses
         lutbufferdata.cpp lutbufferdata.h
         resizablebufferdata.cpp resizablebufferdata.h
         bufferproviderextension.cpp bufferproviderextension.h
+        computeresultextension.cpp computeresultextension.h
         tst_computepasses.cpp
     INCLUDE_DIRECTORIES
         ../shared

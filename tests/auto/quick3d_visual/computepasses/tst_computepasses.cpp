@@ -4,6 +4,7 @@
 #include <QTest>
 #include <QtQuick/QQuickView>
 #include "../shared/util.h"
+#include "computeresultextension.h"
 #include <rhi/qrhi.h>
 #include <QtQuick3D/private/qquick3dshaderimage_p.h>
 
@@ -104,6 +105,8 @@ private slots:
     void testCustomMaterialWrite();
     void testBufferProvider();
     void testBufferProviderUnregistered();
+    void testComputeResultExtensionApi_data();
+    void testComputeResultExtensionApi();
 };
 
 void tst_ComputePasses::initTestCase()
@@ -471,6 +474,81 @@ void tst_ComputePasses::testBufferProviderUnregistered()
     QVERIFY(!result.isNull());
 
     QVERIFY(comparePixelNormPos(result, 0.5, 0.5, Qt::magenta, FUZZ));
+}
+
+void tst_ComputePasses::testComputeResultExtensionApi_data()
+{
+    QTest::addColumn<QString>("scene");
+    QTest::addColumn<QSize>("size");
+    // Where the pass' green display image shows up, in normalized coordinates.
+    QTest::addColumn<QPointF>("passOutputPos");
+    QTest::addColumn<int>("extraChecks");
+
+    // The extension is in the same View3D as the ComputePass and provides one
+    // of the buffers itself.
+    QTest::newRow("sameView") << QStringLiteral("computeresult.qml") << QSize(400, 400)
+                              << QPointF(0.5, 0.5) << int(ComputeResultExtension::ProvidedBufferIsOurs);
+    // The extension is in a different View3D than the ComputePass. The
+    // resources are window wide, so the lookups must still resolve.
+    QTest::newRow("otherView") << QStringLiteral("computeresult_multiview.qml") << QSize(400, 200)
+                               << QPointF(0.25, 0.5) << 0;
+}
+
+void tst_ComputePasses::testComputeResultExtensionApi()
+{
+    // A ComputeResultExtension (a C++ RenderExtension) looks up the GPU
+    // resources behind the ShaderImage/ShaderStorageBuffer objects a
+    // ComputePass writes, through QSSGFrameData::getShaderImageTexture() and
+    // getShaderStorageBuffer(), and verifies that every id resolved to the
+    // right resource; see computeresult.qml and computeresult_multiview.qml
+    // for the scenes and computeresultextension.h for the individual checks.
+    QFETCH(QString, scene);
+    QFETCH(QSize, size);
+    QFETCH(QPointF, passOutputPos);
+    QFETCH(int, extraChecks);
+
+    QScopedPointer<QQuickView> view(createView(scene, size));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    auto *probe = view->rootObject()->findChild<ComputeResultExtension *>(QLatin1String("probe"));
+    QVERIFY(probe);
+
+    const QImage result = grab(view.data());
+    QVERIFY(!result.isNull());
+    QVERIFY2(comparePixelNormPos(result, passOutputPos.x(), passOutputPos.y(), Qt::green, FUZZ),
+             "The compute pass itself did not run, so there was nothing for the probe to find");
+
+    // The buffer readback is asynchronous: QRhi only guarantees completion
+    // once a few more frames have been submitted. When the extension is in
+    // another View3D it may also be prepared before the pass in the first
+    // frame. So keep rendering until every expected check has held (in any
+    // frame) or we run out of patience.
+    int passed = 0;
+    int expected = 0;
+    for (int attempt = 0; attempt < 10; ++attempt) {
+        passed = probe->passedChecks();
+        expected = ComputeResultExtension::CoreChecks | extraChecks;
+        // Readback of a non-uniform buffer is not universally supported; where
+        // it is not, the rest of the checks still have to hold.
+        if (passed & ComputeResultExtension::ReadbackSupported)
+            expected |= ComputeResultExtension::ReadbackChecks;
+        if ((passed & expected) == expected)
+            break;
+        // A View3D renders again only when its scene changes. Mark the probe
+        // dirty so that it keeps running, otherwise a consumer View3D that was
+        // prepared before the producer in the first frame never sees the resources.
+        probe->update();
+        QVERIFY(waitForFrames(view.data(), 2));
+    }
+
+    if (!(passed & ComputeResultExtension::ReadbackSupported)) {
+        qInfo("QRhi::ReadBackNonUniformBuffer is not supported; the writtenBuffer "
+              "readback checks were skipped");
+    }
+
+    QVERIFY2((passed & expected) == expected,
+             ComputeResultExtension::describeMissingChecks(passed, expected).constData());
 }
 
 QTEST_MAIN(tst_ComputePasses)
