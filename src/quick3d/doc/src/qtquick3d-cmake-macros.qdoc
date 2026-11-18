@@ -1,0 +1,40 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtquick3d-cmake-qt6-add-lightprobe-images.html
+\ingroup cmake-commands-qtquick3d
+
+\title qt6_add_lightprobe_images
+\keyword qt6_add_lightprobe_images
+
+\section1 Description
+
+\c {.hdr -> .ktx} baker. Somewhat similar to \l {qt6_add_shaders()}.
+
+For example, the following autogenerates the lightprobe map at build time and
+includes it in the executable under \c {:/maps/OpenfootageNET_garage-1024.ktx}:
+
+\badcode
+qt6_add_lightprobe_images(principledmaterial "ibl_assets"
+    PREFIX
+         "/"
+    FILES
+        "maps/OpenfootageNET_garage-1024.hdr" )
+\endcode
+
+In addition to \c PREFIX, \c BASE is available, and works like in
+\c {qt6_add_resources}:
+Adding \c {BASE "maps"} in the above example would lead to getting
+\c {:/OpenfootageNET_garage-1024.ktx}
+
+\c OUTPUTS works like in \c qt6_add_shaders, which allows you to specify an
+alternative name for the resource system for each entry in \c FILES. For
+example, adding \c {OUTPUTS "alt/er/native/image.abc"} to the above example
+would generate \c {:/alt/er/native/image.abc}
+
+In short, the actual file name in the resource system is either
+\c {:/PREFIX/FILES[i]-BASE-".hdr"+".ktx"} or \c {:/PREFIX/OUTPUTS[i]}
+
+\sa {Pre-generating IBL cubemap}
+*/

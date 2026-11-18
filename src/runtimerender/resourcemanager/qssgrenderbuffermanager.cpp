@@ -708,7 +708,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
         cb->draw(36);
         QSSGRHICTX_STAT(context, draw(36, 1));
-        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32));
+        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32), QByteArrayLiteral("environment_map"));
 
         cb->endPass();
         QSSGRHICTX_STAT(context, endRenderPass());
@@ -873,7 +873,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
             cb->setShaderResources(preFilterSrb, 2, dynamicOffsets.constData());
             cb->draw(36);
             QSSGRHICTX_STAT(context, draw(36, 1));
-            Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32));
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32), QByteArrayLiteral("environment_map"));
             cb->endPass();
             QSSGRHICTX_STAT(context, endRenderPass());
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("environment_map", mipLevel, face));
@@ -1713,7 +1713,7 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
 
     // Build BVH
     bool hasIndexBuffer = false;
-    QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::Int32;
+    QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::UnsignedInt32;
     bool hasUV = false;
     int uvOffset = -1;
     int posOffset = -1;
@@ -1730,10 +1730,14 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
             uvOffset = attribute.offset;
         } else if (attribute.semantic == QSSGMesh::RuntimeMeshData::Attribute::IndexSemantic) {
             hasIndexBuffer = true;
-            if (attribute.componentType == QSSGMesh::Mesh::ComponentType::Int16)
-                indexBufferFormat = QSSGRenderComponentType::Int16;
-            else if (attribute.componentType == QSSGMesh::Mesh::ComponentType::Int32)
-                indexBufferFormat = QSSGRenderComponentType::Int32;
+            indexBufferFormat = attribute.componentType;
+            if (indexBufferFormat != QSSGRenderComponentType::Int16
+                && indexBufferFormat != QSSGRenderComponentType::Int32
+                && indexBufferFormat != QSSGRenderComponentType::UnsignedInt16
+                && indexBufferFormat != QSSGRenderComponentType::UnsignedInt32) {
+                qWarning() << "Unsupported index buffer format for geometry";
+                return nullptr;
+            }
         }
     }
 

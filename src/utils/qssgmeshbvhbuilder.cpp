@@ -163,6 +163,7 @@ QVector3D QSSGMeshBVHBuilder::getVertexBufferValuePosition(quint32 index) const
         return QVector3D();
 
     const quint32 offset = index * m_vertexStride + m_vertexPosOffset;
+    Q_ASSERT(offset < m_vertexBufferData.size());
     const QVector3D *position = reinterpret_cast<const QVector3D *>(m_vertexBufferData.begin() + offset);
 
     return *position;
@@ -174,6 +175,7 @@ QVector2D QSSGMeshBVHBuilder::getVertexBufferValueUV(quint32 index) const
         return QVector2D();
 
     const quint32 offset = index * m_vertexStride + m_vertexUVOffset;
+    Q_ASSERT(offset < m_vertexBufferData.size());
     const QVector2D *uv = reinterpret_cast<const QVector2D *>(m_vertexBufferData.begin() + offset);
 
     return *uv;
