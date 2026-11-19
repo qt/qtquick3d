@@ -1185,8 +1185,16 @@ void rhiPrepareRenderableImp(QSSGRhiContext *rhiCtx,
                                                              QRhiSampler::ClampToEdge,
                                                              QRhiSampler::ClampToEdge,
                                                              QRhiSampler::Repeat });
-                    if (reflectionSampler >= 0 && reflectionTexture)
+                    if (reflectionSampler >= 0) {
+                        // The shader samples the map even when the probe has no usable
+                        // texture, for example one in a format the GPU does not support
+                        if (!reflectionTexture) {
+                            QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                            reflectionTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+                            rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                        }
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
+                    }
                 }
 
                 if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
@@ -3465,8 +3473,16 @@ qsizetype RenderHelpers::rhiPrepareOriginalMaterialUserPass(QSSGRhiContext *rhiC
                                                              QRhiSampler::ClampToEdge,
                                                              QRhiSampler::ClampToEdge,
                                                              QRhiSampler::Repeat });
-                    if (reflectionSampler >= 0 && reflectionTexture)
+                    if (reflectionSampler >= 0) {
+                        // The shader samples the map even when the probe has no usable
+                        // texture, for example one in a format the GPU does not support
+                        if (!reflectionTexture) {
+                            QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                            reflectionTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+                            rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                        }
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
+                    }
                 }
 
                 if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
@@ -3841,8 +3857,14 @@ qsizetype RenderHelpers::rhiPrepareAugmentedUserPass(QSSGRhiContext *rhiCtx,
                                                              QRhiSampler::ClampToEdge,
                                                              QRhiSampler::ClampToEdge,
                                                              QRhiSampler::Repeat });
-                    if (reflectionSampler >= 0 && reflectionTexture)
+                    if (reflectionSampler >= 0) {
+                        if (!reflectionTexture) {
+                            QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                            reflectionTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+                            rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                        }
                         addTrackedTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
+                    }
                 }
                 if (int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
                     binding >= 0) {
