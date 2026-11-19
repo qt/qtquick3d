@@ -523,7 +523,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                         // so that assets including Windows relative path can be converted on Unix.
                         relativePath.replace("\\","/");
                         const auto path = sceneInfo.workingDir.absoluteFilePath(relativePath);
-                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QUrl{ path });
+                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGQmlUtilities::urlForFilePath(path));
                     }
                 }
             }

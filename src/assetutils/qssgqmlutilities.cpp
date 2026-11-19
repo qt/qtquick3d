@@ -674,6 +674,18 @@ QString stripParentDirectory(const QString &filePath) {
     return sourceCopy;
 }
 
+QUrl urlForFilePath(const QString &path)
+{
+    // Resource paths (":/...") are not valid relative URLs
+    if (path.startsWith(u':')) {
+        QUrl url;
+        url.setScheme(u"qrc"_s);
+        url.setPath(path.mid(1));
+        return url;
+    }
+    return QUrl(path);
+}
+
 static const char *blockBegin() { return " {\n"; }
 static const char *blockEnd() { return "}\n"; }
 static const char *comment() { return "// "; }

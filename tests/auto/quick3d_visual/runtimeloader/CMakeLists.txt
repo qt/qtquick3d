@@ -23,6 +23,17 @@ qt_internal_add_test(tst_qquick3druntimeloader
     TESTDATA ${test_data}
 )
 
+qt_internal_add_resource(tst_qquick3druntimeloader "qrcmodel"
+    PREFIX
+        "/qrcmodel"
+    BASE
+        "data"
+    FILES
+        "data/texquad.gltf"
+        "data/quad.bin"
+        "data/checker.png"
+)
+
 if(QT_BUILD_STANDALONE_TESTS)
     qt_import_qml_plugins(tst_qquick3druntimeloader)
 endif()

@@ -25,6 +25,7 @@
 #include <QHash>
 #include <QTextStream>
 #include <QtCore/QJsonObject>
+#include <QtCore/QUrl>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,6 +49,7 @@ QString Q_QUICK3DASSETUTILS_EXPORT variantToQml(const QVariant &variant);
 QString Q_QUICK3DASSETUTILS_EXPORT sanitizeQmlId(const QString &id);
 QString Q_QUICK3DASSETUTILS_EXPORT sanitizeQmlSourcePath(const QString &source, bool removeParentDirectory = false);
 QString Q_QUICK3DASSETUTILS_EXPORT stripParentDirectory(const QString &filePath);
+QUrl Q_QUICK3DASSETUTILS_EXPORT urlForFilePath(const QString &path);
 
 Q_QUICK3DASSETUTILS_EXPORT const char *getQmlElementName(const QSSGSceneDesc::Node &node);
 

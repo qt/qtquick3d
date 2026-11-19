@@ -1177,7 +1177,7 @@ QSSGSceneDesc::Texture *GltfSceneConverter::ensureTexture(const QSSGGltf::Textur
             return sceneTexture;
         }
         const QString path = QDir(m_document->baseDir).absoluteFilePath(resolved);
-        setProperty(*sceneTexture, "source", &QQuick3DTexture::setSource, QUrl { path });
+        setProperty(*sceneTexture, "source", &QQuick3DTexture::setSource, QSSGQmlUtilities::urlForFilePath(path));
         return sceneTexture;
     }
 

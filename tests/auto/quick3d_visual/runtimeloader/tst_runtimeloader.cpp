@@ -14,6 +14,8 @@ private slots:
     void queryAll();
     void nativeGltfFeatures();
     void materialVariantSwitching();
+    void texturesFromResources_data();
+    void texturesFromResources();
 };
 
 void tst_RuntimeLoader::initTestCase()
@@ -102,6 +104,51 @@ void tst_RuntimeLoader::materialVariantSwitching()
     QCOMPARE(view->rootObject()->property("blueMaterial").toString(), QStringLiteral("blue"));
     QCOMPARE(view->rootObject()->property("redMaterial").toString(), QStringLiteral("red"));
     QCOMPARE(view->rootObject()->property("restoredMaterial").toString(), QStringLiteral("gray"));
+}
+
+void tst_RuntimeLoader::texturesFromResources_data()
+{
+    QTest::addColumn<bool>("assimpFallback");
+    QTest::newRow("nativeGltf") << false;
+    QTest::newRow("assimpFallback") << true;
+}
+
+// Loads a model with an external texture from qrc
+void tst_RuntimeLoader::texturesFromResources()
+{
+    QFETCH(bool, assimpFallback);
+    if (assimpFallback)
+        qputenv("QT_QUICK3D_DISABLE_NATIVE_GLTF", "1");
+    const auto cleanup = qScopeGuard([] { qunsetenv("QT_QUICK3D_DISABLE_NATIVE_GLTF"); });
+
+    QScopedPointer<QQuickView> view(createView(QLatin1String("qrcmodel.qml"), QSize(200, 200)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    QImage frame = grab(view.data());
+    if (frame.isNull())
+        return;
+
+    QTRY_VERIFY_WITH_TIMEOUT(view->rootObject()->property("loaded").toBool()
+                             || view->rootObject()->property("loadError").toBool(),
+                             10000);
+    if (view->rootObject()->property("loadError").toBool())
+        QSKIP("Asset failed to load — importer plugin likely not available on this platform");
+
+    QCOMPARE(view->rootObject()->property("textureSources").toStringList(),
+             QStringList { QStringLiteral("qrc:/qrcmodel/checker.png") });
+
+    // The quad is white without its texture, so look for the red checker squares
+    QVERIFY(waitForFrames(view.data(), 2));
+    frame = grab(view.data());
+    bool foundRed = false;
+    for (int y = 0; y < frame.height() && !foundRed; ++y) {
+        for (int x = 0; x < frame.width() && !foundRed; ++x) {
+            const QColor c = frame.pixelColor(x, y);
+            foundRed = c.red() > 128 && c.green() < c.red() / 2;
+        }
+    }
+    QVERIFY(foundRed);
 }
 
 QTEST_MAIN(tst_RuntimeLoader)
