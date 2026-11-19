@@ -1582,7 +1582,11 @@ void DebugDrawPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 
         QSSGRhiShaderResourceBindingList bindings;
         bindings.addUniformBuffer(0, QRhiShaderResourceBinding::VertexStage, dcd.ubuf);
-        dcd.srb = rhiCtxD->srb(bindings);
+        if (!dcd.srb || bindings != dcd.bindings) {
+            rhiCtxD->releaseCachedSrb(dcd.bindings);
+            dcd.srb = rhiCtxD->srb(bindings);
+            dcd.bindings = bindings;
+        }
 
         rhiCtx->commandBuffer()->resourceUpdate(rub);
     }
