@@ -1077,11 +1077,13 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     rub = rhi->nextResourceUpdateBatch();
     const float resolution = environmentMapSize.width();
     const float lodBias = 0.0f;
-    const int sampleCount = 1024;
+    const int maxSampleCount = 1024;
     for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
         Q_ASSERT(mipmapCount - 2);
         const float roughness = float(mipLevel) / float(mipmapCount - 2);
         const int distribution = mipLevel == (mipmapCount - 1) ? 0 : 1; // last mip level is for irradiance
+        // At roughness 0 every GGX sample is the same direction
+        const int sampleCount = roughness == 0.0f ? 1 : maxSampleCount;
         rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize, 4, &roughness);
         rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize + 4, 4, &resolution);
         rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize + 4 + 4, 4, &lodBias);
