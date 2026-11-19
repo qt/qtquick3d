@@ -429,7 +429,8 @@ void fillPrefilterValues(float roughness, float resolution,
             sampleDirections.append(QVector4D(light, mipLevel));
             invTotalWeight += light.z();
             sampleCount++;
-            if (sampleCount >= prefilterSampleCount)
+            // At roughness 0 every GGX sample is the same direction
+            if (sampleCount >= prefilterSampleCount || roughness == 0.0f)
                 break;
         }
     }

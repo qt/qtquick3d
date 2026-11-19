@@ -1099,6 +1099,9 @@ bool QSSGRenderSkyMaterialManager::runPrefilterCycle(QSSGRenderSkyMaterial *inSk
         sliceData.resolution = fs.resolution;
         sliceData.sampleStart = quint32(fs.sliceSampleStart);
         sliceData.sampleEnd = quint32(fs.sliceSampleEnd);
+        // At roughness 0 every GGX sample is the same direction, so only sample 0 is needed
+        if (sliceData.roughness == 0.0f)
+            sliceData.sampleEnd = qMin(sliceData.sampleEnd, qMax(sliceData.sampleStart, 1u));
         sliceData.totalSampleCount = quint32(fs.totalSamples);
         sliceData._pad0 = sliceData._pad1 = sliceData._pad2 = 0;
         rub->updateDynamicBuffer(m_cache.uBufSlice, mipLevel * uBufSliceElementSize, sizeof(SliceData), &sliceData);
