@@ -234,11 +234,13 @@ ShadowResult qt_sampleDirectionalLight_pcf(in int lightIndex, in float zDepthVie
     // If no valid split found, return fully visible
     // Using a mask instead of early return
     float validSplit = step(0.0, float(splitIndex)); // 1.0 if splitIndex >= 0, 0.0 otherwise
+    // The arrays must not be indexed with -1 even if the result is masked
+    int currentSplit = max(splitIndex, 0);
 
     // Get current split shadow data
-    vec4 projCoord = ubDirectionalLights.directionalLights[lightIndex].matrices[splitIndex] * vec4(worldPos, 1.0);
-    vec3 dimensions = ubDirectionalLights.directionalLights[lightIndex].dimensionsInverted[splitIndex].xyz;
-    vec4 shadowAtlasInfo = ubDirectionalLights.directionalLights[lightIndex].atlasLocations[splitIndex];
+    vec4 projCoord = ubDirectionalLights.directionalLights[lightIndex].matrices[currentSplit] * vec4(worldPos, 1.0);
+    vec3 dimensions = ubDirectionalLights.directionalLights[lightIndex].dimensionsInverted[currentSplit].xyz;
+    vec4 shadowAtlasInfo = ubDirectionalLights.directionalLights[lightIndex].atlasLocations[currentSplit];
     float layerIndex = shadowAtlasInfo.w;
     vec2 uvAtlasOffset = shadowAtlasInfo.xy;
     float uvAtlasScale = shadowAtlasInfo.z;
