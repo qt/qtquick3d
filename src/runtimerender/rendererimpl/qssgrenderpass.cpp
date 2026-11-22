@@ -1833,16 +1833,18 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
             if (rhiAuxBuffer && rhiAuxBuffer->size() != (dim.width() * dim.height() * 4u)) {
                 if (rhiAuxBuffer->size() < (dim.width() * dim.height() * 4u))
                     extraNodeCount = ensureFreeNodes((dim.width() * dim.height() * 4u) - rhiAuxBuffer->size(), 32u * 1024u);
-                rhiAuxBuffer->destroy();
-                rhiAuxBuffer = nullptr;
+                delete rhiAuxBuffer;
+                oitCtx.auxBuffer = rhiAuxBuffer = nullptr;
             }
 #else
             if (rhiABufferImage->texture) {
                 const auto s = rhiAuxiliaryImage->texture->pixelSize();
                 if (s.width() * s.height() < dim.width() * dim.height())
                     extraNodeCount = ensureFreeNodes(dim.width() * dim.height() - s.width() * s.height(), 32u * 1024u);
-                rhiABufferImage->texture->destroy();
-                rhiAuxiliaryImage->texture->destroy();
+                delete rhiABufferImage->texture;
+                rhiABufferImage->texture = nullptr;
+                delete rhiAuxiliaryImage->texture;
+                rhiAuxiliaryImage->texture = nullptr;
             }
 #endif
 
@@ -1857,8 +1859,8 @@ void OITRenderPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
 
 #ifdef QSSG_OIT_USE_BUFFERS
             if (rhiABuffer && currentNodeCount * 16 != rhiABuffer->size()) {
-                rhiABuffer->destroy();
-                rhiABuffer = nullptr;
+                delete rhiABuffer;
+                oitCtx.aBuffer = rhiABuffer = nullptr;
             }
             if (!rhiABuffer) {
                 rhiABuffer = rhi->newBuffer(QRhiBuffer::Static, QRhiBuffer::StorageBuffer, currentNodeCount * 16);
