@@ -2905,16 +2905,16 @@ void QSSGLayerRenderData::prepareForRender()
         const auto *computePass = static_cast<const QSSGRenderComputePass *>(userPass);
         if (!computePass->willDispatch())
             continue;
-        const QByteArray &body = computePass->computeShader.body;
-        if (body.contains("SCREEN_TEXTURE"))
+        const auto &identifiers = computePass->computeShader.identifiers;
+        if (identifiers.contains(QByteArrayLiteral("SCREEN_TEXTURE")))
             layerPrepResult.flags.setRequiresScreenTexture(true);
-        if (body.contains("SCREEN_MIP_TEXTURE")) {
+        if (identifiers.contains(QByteArrayLiteral("SCREEN_MIP_TEXTURE"))) {
             layerPrepResult.flags.setRequiresScreenTexture(true);
             layerPrepResult.flags.setRequiresMipmapsForScreenTexture(true);
         }
-        if (body.contains("DEPTH_TEXTURE"))
+        if (identifiers.contains(QByteArrayLiteral("DEPTH_TEXTURE")))
             layerPrepResult.flags.setRequiresDepthTexture(true);
-        if (body.contains("AO_TEXTURE")) {
+        if (identifiers.contains(QByteArrayLiteral("AO_TEXTURE"))) {
             layerPrepResult.flags.setRequiresDepthTexture(true);
             layerPrepResult.flags.setRequiresSsaoPass(true);
         }
