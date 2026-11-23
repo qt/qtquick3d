@@ -2532,8 +2532,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
                 lightData.shadowBias = theLight->m_shadowBias;
                 // If all cascades are inactive, disable shadows for this light, as there are no casters.
-                const bool noCascades = !(pEntry->m_csmActive[0] || pEntry->m_csmActive[1] || pEntry->m_csmActive[2] || pEntry->m_csmActive[3]);
-                if (theLight->type == QSSGRenderLight::Type::DirectionalLight && noCascades)
+                if (theLight->type == QSSGRenderLight::Type::DirectionalLight && !pEntry->hasActiveCascades())
                     lightData.enableShadows = 0.0f;
                 lightData.shadowFactor = theLight->m_shadowFactor;
                 lightData.shadowMapFar = theLight->m_shadowMapFar;

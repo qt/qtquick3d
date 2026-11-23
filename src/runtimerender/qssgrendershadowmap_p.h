@@ -39,6 +39,7 @@ struct QSSGShadowMapEntry
     QSSGShadowMapEntry();
 
     static QSSGShadowMapEntry withAtlas(quint32 lightIdx);
+    bool hasActiveCascades() const;
 
     void destroyRhiResources();
 

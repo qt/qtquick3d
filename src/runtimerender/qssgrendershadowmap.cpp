@@ -9,6 +9,9 @@
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include "qssgrendercontextcore.h"
 
+#include <algorithm>
+#include <iterator>
+
 QT_BEGIN_NAMESPACE
 
 namespace AtlasHelpers {
@@ -554,6 +557,12 @@ QSSGShadowMapEntry QSSGShadowMapEntry::withAtlas(quint32 lightIdx)
     QSSGShadowMapEntry e;
     e.m_lightIndex = lightIdx;
     return e;
+}
+
+bool QSSGShadowMapEntry::hasActiveCascades() const
+{
+    const auto isActive = [](float cascade) { return cascade != 0.f; };
+    return std::any_of(std::begin(m_csmActive), std::end(m_csmActive), isActive);
 }
 
 void QSSGShadowMapEntry::destroyRhiResources()

@@ -456,9 +456,6 @@ void prepareComputePass(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGR
                         memcpy(lightData.matrices[i], pEntry->m_fixedScaleBiasMatrix[i].constData(), 16 * sizeof(float));
 
                     lightData.shadowBias = light->m_shadowBias;
-                    // If all cascades are inactive, disable shadows for this light, as there are no casters.
-                    const bool noCascades = !(pEntry->m_csmActive[0] || pEntry->m_csmActive[1] || pEntry->m_csmActive[2] || pEntry->m_csmActive[3]);
-
                     lightData.shadowFactor = light->m_shadowFactor;
                     lightData.shadowMapFar = light->m_shadowMapFar;
                     lightData.shadowPcfSamples = softShadowQualityToInt(light->m_softShadowQuality);
@@ -478,7 +475,7 @@ void prepareComputePass(QSSGRenderer &renderer, QSSGLayerRenderData &data, QSSGR
                     lightData.csmBlendRatio = light->m_csmBlendRatio;
                     for (quint32 i = 0; i < layerCount; ++i)
                         memcpy(lightData.dimensionsInverted[i], &pEntry->m_dimensionsInverted[i], 4 * sizeof(float));
-                    if (!noCascades)
+                    if (pEntry->hasActiveCascades())
                         lightData.enableShadows = 1.0f;
                 }
             }
